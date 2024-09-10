@@ -6,7 +6,7 @@ package connect
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_bot_association")
-func DataSourceBotAssociation() *schema.Resource {
+// @SDKDataSource("aws_connect_bot_association", name="Bot Association")
+func dataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotAssociationRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrInstanceID: {
 				Type:     schema.TypeString,
@@ -49,29 +50,28 @@ func DataSourceBotAssociation() *schema.Resource {
 
 func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	var name, region string
 	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		lexBot := expandLexBot(v.([]interface{}))
-		name = aws.StringValue(lexBot.Name)
-		region = aws.StringValue(lexBot.LexRegion)
+		lexBot := expandLexBot(v.([]interface{})[0].(map[string]interface{}))
+		name = aws.ToString(lexBot.Name)
+		region = aws.ToString(lexBot.LexRegion)
+		if region == "" {
+			region = meta.(*conns.AWSClient).Region
+		}
 	}
 
-	lexBot, err := FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
+	id := botAssociationCreateResourceID(instanceID, name, region)
+	lexBot, err := findBotAssociationByThreePartKey(ctx, conn, instanceID, name, region)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding Connect Bot Association (%s,%s): %s", instanceID, name, err)
-	}
-
-	if lexBot == nil {
-		return sdkdiag.AppendErrorf(diags, "finding Connect Bot Association (%s,%s) : not found", instanceID, name)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Bot Association (%s): %s", id, err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
 	d.Set(names.AttrInstanceID, instanceID)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)

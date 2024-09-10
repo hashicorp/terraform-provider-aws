@@ -619,8 +619,8 @@ func pipelineValidateActionProvider(i interface{}, path cty.Path) diag.Diagnosti
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary:  "The CodePipeline GitHub version 1 action provider is deprecated.",
-				Detail:   "Use a GitHub version 2 action (with a CodeStar Connection `aws_codestarconnections_connection`) instead. See https://docs.aws.amazon.com/codepipeline/latest/userguide/update-github-action-connections.html",
+				Summary:  "The CodePipeline GitHub version 1 action provider is no longer recommended.",
+				Detail:   "Use a GitHub version 2 action (with a CodeStar Connection `aws_codestarconnections_connection`) as recommended instead. See https://docs.aws.amazon.com/codepipeline/latest/userguide/update-github-action-connections.html",
 			},
 		}
 	}
@@ -666,7 +666,6 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 				if region != "" {
 					return nil, errors.New("region cannot be set for a single-region CodePipeline Pipeline")
 				}
-				v := v
 				apiObject.ArtifactStore = &v
 			}
 

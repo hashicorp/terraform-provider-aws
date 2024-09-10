@@ -629,8 +629,8 @@ type customModelResourceModel struct {
 	JobStatus            fwtypes.StringEnum[awstypes.ModelCustomizationJobStatus]              `tfsdk:"job_status"`
 	OutputDataConfig     fwtypes.ListNestedObjectValueOf[customModelOutputDataConfigModel]     `tfsdk:"output_data_config"`
 	RoleARN              fwtypes.ARN                                                           `tfsdk:"role_arn"`
-	Tags                 types.Map                                                             `tfsdk:"tags"`
-	TagsAll              types.Map                                                             `tfsdk:"tags_all"`
+	Tags                 tftags.Map                                                            `tfsdk:"tags"`
+	TagsAll              tftags.Map                                                            `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                        `tfsdk:"timeouts"`
 	TrainingDataConfig   fwtypes.ListNestedObjectValueOf[customModelTrainingDataConfigModel]   `tfsdk:"training_data_config"`
 	TrainingMetrics      fwtypes.ListNestedObjectValueOf[customModelTrainingMetricsModel]      `tfsdk:"training_metrics"`

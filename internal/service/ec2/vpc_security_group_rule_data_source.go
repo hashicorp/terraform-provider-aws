@@ -125,7 +125,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	data.ToPort = flex.Int32ToFramework(ctx, output.ToPort)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -149,6 +149,6 @@ type securityGroupRuleDataSourceModel struct {
 	ReferencedSecurityGroupID types.String `tfsdk:"referenced_security_group_id"`
 	SecurityGroupID           types.String `tfsdk:"security_group_id"`
 	SecurityGroupRuleID       types.String `tfsdk:"security_group_rule_id"`
-	Tags                      types.Map    `tfsdk:"tags"`
+	Tags                      tftags.Map   `tfsdk:"tags"`
 	ToPort                    types.Int64  `tfsdk:"to_port"`
 }

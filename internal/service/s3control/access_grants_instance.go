@@ -311,8 +311,8 @@ type accessGrantsInstanceResourceModel struct {
 	ID                           types.String `tfsdk:"id"`
 	IdentityCenterApplicationARN types.String `tfsdk:"identity_center_application_arn"`
 	IdentityCenterARN            fwtypes.ARN  `tfsdk:"identity_center_arn"`
-	Tags                         types.Map    `tfsdk:"tags"`
-	TagsAll                      types.Map    `tfsdk:"tags_all"`
+	Tags                         tftags.Map   `tfsdk:"tags"`
+	TagsAll                      tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (data *accessGrantsInstanceResourceModel) InitFromID() error {

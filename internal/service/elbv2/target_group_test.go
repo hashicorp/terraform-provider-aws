@@ -2062,8 +2062,6 @@ func TestAccELBV2TargetGroup_ALBAlias_missing(t *testing.T) {
 	}
 
 	for name, tc := range testcases { //nolint:paralleltest // false positive
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2555,6 +2553,42 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 	})
 }
 
+func TestAccELBV2TargetGroup_targetHealthStateUnhealthyDrainInterval(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup awstypes.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_unhealthyDrainInterval(rName, "TCP", 3600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.unhealthy_draining_interval", "3600"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_unhealthyDrainInterval(rName, "TLS", 3600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.unhealthy_draining_interval", "3600"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 	ctx := acctest.Context(t)
 	var targetGroup awstypes.TargetGroup
@@ -2767,8 +2801,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -2914,8 +2946,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -3056,8 +3086,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -3209,8 +3237,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -3272,8 +3298,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		healthCheckProtocol := healthCheckProtocol
-
 		t.Run(healthCheckProtocol, func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
@@ -3339,14 +3363,10 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 	}
 
 	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		protocol := protocol
-
 		t.Run(protocol, func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
@@ -3416,14 +3436,10 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 	}
 
 	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		protocol := protocol
-
 		t.Run(protocol, func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
@@ -3484,14 +3500,10 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 	}
 
 	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		protocol := protocol
-
 		t.Run(protocol, func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
@@ -4074,8 +4086,6 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		healthCheckProtocol := healthCheckProtocol
-
 		t.Run(healthCheckProtocol, func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
@@ -4134,8 +4144,6 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		healthCheckProtocol := healthCheckProtocol
-
 		t.Run(healthCheckProtocol, func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
@@ -4976,6 +4984,30 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName, protocol, enabled)
+}
+
+func testAccTargetGroupConfig_unhealthyDrainInterval(rName, protocol string, interval int) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 25
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
+
+  target_health_state {
+    enable_unhealthy_connection_termination = false
+    unhealthy_draining_interval             = %[3]d
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, protocol, interval)
 }
 
 func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCount string, targetGroupHealthPercentageEnabled string, unhealthyStateRoutingCount int, unhealthyStateRoutingPercentageEnabled string) string {

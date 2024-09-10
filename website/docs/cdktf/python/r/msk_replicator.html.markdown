@@ -59,6 +59,9 @@ class MyConvertedCode(TerraformStack):
                 target_compression_type="NONE",
                 target_kafka_cluster_arn=target.arn,
                 topic_replication=[MskReplicatorReplicationInfoListTopicReplication(
+                    starting_position=MskReplicatorReplicationInfoListTopicReplicationStartingPosition(
+                        type="LATEST"
+                    ),
                     topics_to_replicate=[".*"]
                 )
                 ]
@@ -98,7 +101,6 @@ The following arguments are required:
 * `target_kafka_cluster_arn` - (Required) The ARN of the target Kafka cluster.
 * `target_compression_type` - (Required) The type of compression to use writing records to target Kafka cluster.
 * `topic_replication` - (Required) Configuration relating to topic replication.
-* `starting_position` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 * `consumer_group_replication` - (Required) Configuration relating to consumer group replication.
 
 ### topic_replication Argument Reference
@@ -108,6 +110,7 @@ The following arguments are required:
 * `detect_and_copy_new_topics` - (Optional) Whether to periodically check for new topics and partitions.
 * `copy_access_control_lists_for_topics` - (Optional) Whether to periodically configure remote topic ACLs to match their corresponding upstream topics.
 * `copy_topic_configurations` - (Optional) Whether to periodically configure remote topics to match their corresponding upstream topics.
+* `starting_position` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 
 ### consumer_group_replication Argument Reference
 
@@ -159,4 +162,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8ecd22706723da4c85b1aeca7ff723bb482ec1e13d4e4ac7c2f6ea0cc32264ce -->
+<!-- cache-key: cdktf-0.20.1 input-0e60a252807fd8218137603e51d4ca0c238c8a12c16ad862d49c01b03e18c039 -->

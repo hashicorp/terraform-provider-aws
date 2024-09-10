@@ -50,11 +50,11 @@ func TestAccAppStreamImageDataSource_basic(t *testing.T) {
 
 // name        = "AppStream-WinServer2019-06-17-2024"
 func testAccImageDataSourceConfig_basic() string {
-	return (`
+	return `
 data "aws_appstream_image" "test" {
   name_regex  = "^AppStream-WinServer.*$"
   type        = "PUBLIC"
   most_recent = true
 }
-`)
+`
 }

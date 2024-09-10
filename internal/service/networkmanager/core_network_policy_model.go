@@ -14,7 +14,7 @@ type coreNetworkPolicyDocument struct {
 	Version                  string                                     `json:"version,omitempty"`
 	CoreNetworkConfiguration *coreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
 	Segments                 []*coreNetworkPolicySegment                `json:"segments"`
-	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups"`
+	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups,omitempty"`
 	SegmentActions           []*coreNetworkPolicySegmentAction          `json:"segment-actions,omitempty"`
 	AttachmentPolicies       []*coreNetworkPolicyAttachmentPolicy       `json:"attachment-policies,omitempty"`
 }
@@ -70,8 +70,8 @@ type coreNetworkPolicySegmentActionVia struct {
 	WithEdgeOverrides     []*coreNetworkPolicySegmentActionViaEdgeOverride `json:"with-edge-overrides,omitempty"`
 }
 type coreNetworkPolicySegmentActionViaEdgeOverride struct {
-	EdgeSets interface{} `json:"edge-sets,omitempty"`
-	UseEdge  string      `json:"use-edge,omitempty"`
+	EdgeSets        [][]string `json:"edge-sets,omitempty"`
+	UseEdgeLocation string     `json:"use-edge-location,omitempty"`
 }
 
 type coreNetworkPolicyAttachmentPolicy struct {

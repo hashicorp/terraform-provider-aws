@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"log"
-	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -199,6 +199,11 @@ func resourceEventSourceMapping() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.FunctionResponseType](),
 				},
 			},
+			names.AttrKMSKeyARN: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -229,8 +234,8 @@ func resourceEventSourceMapping() *schema.Resource {
 			"parallelization_factor": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 10),
 				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"queues": {
 				Type:     schema.TypeList,
@@ -276,7 +281,7 @@ func resourceEventSourceMapping() *schema.Resource {
 									news := strings.Split(new, ",")
 									sort.Strings(news)
 
-									return reflect.DeepEqual(olds, news)
+									return slices.Equal(olds, news)
 								}
 
 								return old == new
@@ -412,6 +417,10 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+		input.KMSKeyArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
 		input.MaximumBatchingWindowInSeconds = aws.Int32(int32(v.(int)))
 	}
@@ -541,6 +550,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", output.FunctionArn)
 	d.Set("function_response_types", output.FunctionResponseTypes)
+	d.Set(names.AttrKMSKeyARN, output.KMSKeyArn)
 	if output.LastModified != nil {
 		d.Set("last_modified", aws.ToTime(output.LastModified).Format(time.RFC3339))
 	} else {
@@ -648,6 +658,10 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 
 	if d.HasChange("function_response_types") {
 		input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](d.Get("function_response_types").(*schema.Set))
+	}
+
+	if d.HasChange(names.AttrKMSKeyARN) {
+		input.KMSKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 	}
 
 	if d.HasChange("maximum_batching_window_in_seconds") {

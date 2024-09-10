@@ -90,7 +90,7 @@ func diagError(service, action, resource, id string, gotError error) diag.Diagno
 
 func AppendDiagErrorMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
 	return append(diags,
-		diagError(service, action, resource, id, fmt.Errorf(message)),
+		diagError(service, action, resource, id, errors.New(message)),
 	)
 }
 
@@ -104,7 +104,7 @@ func AppendDiagWarningMessage(diags diag.Diagnostics, service, action, resource,
 	return append(diags,
 		diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  ProblemStandardMessage(service, action, resource, id, fmt.Errorf(message)),
+			Summary:  ProblemStandardMessage(service, action, resource, id, errors.New(message)),
 		},
 	)
 }

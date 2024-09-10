@@ -263,7 +263,8 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 						"tags": schema.MapAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tags to default across all resources",
+							Description: "Resource tags to default across all resources. " +
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
 						},
 					},
 				},
@@ -279,12 +280,14 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 						"key_prefixes": schema.SetAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tag key prefixes to ignore across all resources.",
+							Description: "Resource tag key prefixes to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeyPrefixesEnvVar + " environment variable.",
 						},
 						"keys": schema.SetAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tag keys to ignore across all resources.",
+							Description: "Resource tag keys to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeysEnvVar + " environment variable.",
 						},
 					},
 				},
@@ -316,7 +319,6 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
-			v := v
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
@@ -391,7 +393,6 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkResources(ctx) {
-			v := v
 			inner, err := v.Factory(ctx)
 
 			if err != nil {

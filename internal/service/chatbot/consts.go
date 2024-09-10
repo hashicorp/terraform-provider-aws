@@ -5,4 +5,5 @@ package chatbot
 
 const (
 	ResNameSlackChannelConfiguration = "Slack Channel Configuration"
+	ResNameTeamsChannelConfiguration = "Teams Channel Configuration"
 )

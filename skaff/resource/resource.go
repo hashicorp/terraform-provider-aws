@@ -14,20 +14,20 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed resource.tmpl
+//go:embed resource.gtpl
 var resourceTmpl string
 
-//go:embed resourcefw.tmpl
+//go:embed resourcefw.gtpl
 var resourceFrameworkTmpl string
 
-//go:embed resourcetest.tmpl
+//go:embed resourcetest.gtpl
 var resourceTestTmpl string
 
-//go:embed websitedoc.tmpl
+//go:embed websitedoc.gtpl
 var websiteTmpl string
 
 type TemplateData struct {
@@ -69,32 +69,22 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 
 	snakeName = convert.ToSnakeCase(resName, snakeName)
 
-	s, err := names.ProviderNameUpper(servicePackage)
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
-		return fmt.Errorf("error getting service connection name: %w", err)
-	}
-
-	sn, err := names.FullHumanFriendly(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting AWS service name: %w", err)
-	}
-
-	hf, err := names.HumanFriendly(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting human-friendly name: %w", err)
+		return fmt.Errorf("error looking up service package data for %q: %w", servicePackage, err)
 	}
 
 	templateData := TemplateData{
 		Resource:             resName,
 		ResourceLower:        strings.ToLower(resName),
 		ResourceSnake:        snakeName,
-		HumanFriendlyService: hf,
+		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
 		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
-		Service:              s,
-		ServiceLower:         strings.ToLower(s),
-		AWSServiceName:       sn,
+		Service:              service.ProviderNameUpper(),
+		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
+		AWSServiceName:       service.FullHumanFriendly(),
 		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
 		HumanResourceName:    convert.ToHumanResName(resName),

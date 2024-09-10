@@ -158,6 +158,9 @@ The following arguments are optional:
 ### password_policy
 
 * `minimum_length` - (Optional) Minimum length of the password policy that you have set.
+* `password_history_size` - (Optional) Number of previous passwords that you want Amazon Cognito to restrict each user from reusing. Users can't set a password that matches any of number of previous passwords specified by this argument. A value of 0 means that password history is not enforced. Valid values are between 0 and 24.
+
+  **Note:** This argument requires advanced security features to be active in the user pool.
 * `require_lowercase` - (Optional) Whether you have required users to use at least one lowercase letter in their password.
 * `require_numbers` - (Optional) Whether you have required users to use at least one number in their password.
 * `require_symbols` - (Optional) Whether you have required users to use at least one symbol in their password.

@@ -30,7 +30,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Deployment",
 		},
 		{
-			Factory: newResourceIndex,
+			Factory: newResourceDefaultAutoScalingConfigurationVersion,
 			Name:    "Default AutoScaling Configuration Version",
 		},
 	}
