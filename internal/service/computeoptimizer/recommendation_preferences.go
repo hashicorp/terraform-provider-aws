@@ -163,7 +163,7 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 				CustomType: fwtypes.NewListNestedObjectTypeOf[utilizationPreferenceModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"metric_name": schema.StringAttribute{
+						names.AttrMetricName: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.CustomizableMetricName](),
 							Required:   true,
 						},

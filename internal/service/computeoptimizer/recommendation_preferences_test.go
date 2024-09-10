@@ -47,13 +47,13 @@ func testAccRecommendationPreferences_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("inferred_workload_types"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("look_back_period"), knownvalue.StringExact("DAYS_32")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("preferred_resource"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_type"), knownvalue.StringExact("Ec2Instance")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceType), knownvalue.StringExact("Ec2Instance")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("savings_estimation_mode"), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope"), knownvalue.ListSizeExact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope"), knownvalue.ListExact(
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), knownvalue.ListExact(
 						[]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact("AccountId"),
+								names.AttrName: knownvalue.StringExact("AccountId"),
 							}),
 						}),
 					),
@@ -105,7 +105,7 @@ func testAccCheckRecommendationPreferencesExists(ctx context.Context, n string, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ComputeOptimizerClient(ctx)
 
-		output, err := tfcomputeoptimizer.FindRecommendationPreferencesByThreePartKey(ctx, conn, rs.Primary.Attributes["resource_type"], rs.Primary.Attributes["scope.0.name"], rs.Primary.Attributes["scope.0.value"])
+		output, err := tfcomputeoptimizer.FindRecommendationPreferencesByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceType], rs.Primary.Attributes["scope.0.name"], rs.Primary.Attributes["scope.0.value"])
 
 		if err != nil {
 			return err
@@ -126,7 +126,7 @@ func testAccCheckRecommendationPreferencesDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			_, err := tfcomputeoptimizer.FindRecommendationPreferencesByThreePartKey(ctx, conn, rs.Primary.Attributes["resource_type"], rs.Primary.Attributes["scope.0.name"], rs.Primary.Attributes["scope.0.value"])
+			_, err := tfcomputeoptimizer.FindRecommendationPreferencesByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceType], rs.Primary.Attributes["scope.0.name"], rs.Primary.Attributes["scope.0.value"])
 
 			if tfresource.NotFound(err) {
 				continue
