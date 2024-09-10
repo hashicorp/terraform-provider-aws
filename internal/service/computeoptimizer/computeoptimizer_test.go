@@ -22,7 +22,8 @@ func TestAccComputeOptimizer_serial(t *testing.T) {
 			"includeMemberAccounts": testAccEnrollmentStatus_includeMemberAccounts,
 		},
 		"RecommendationPreferences": {
-			acctest.CtBasic: testAccRecommendationPreferences_basic,
+			acctest.CtBasic:      testAccRecommendationPreferences_basic,
+			acctest.CtDisappears: testAccRecommendationPreferences_disappears,
 		},
 	}
 

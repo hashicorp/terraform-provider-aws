@@ -69,6 +69,33 @@ func testAccRecommendationPreferences_basic(t *testing.T) {
 	})
 }
 
+func testAccRecommendationPreferences_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RecommendationPreferencesDetail
+	resourceName := "aws_computeoptimizer_recommendation_preferences.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComputeOptimizerEndpointID)
+			testAccPreCheckEnrollmentStatus(ctx, t, "Active")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComputeOptimizerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecommendationPreferencesDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecommendationPreferencesConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecommendationPreferencesExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcomputeoptimizer.ResourceRecommendationPreferences, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRecommendationPreferencesExists(ctx context.Context, n string, v *awstypes.RecommendationPreferencesDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

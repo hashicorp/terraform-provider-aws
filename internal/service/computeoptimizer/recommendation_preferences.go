@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/computeoptimizer/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -100,6 +101,12 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 			"preferred_resource": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[preferredResourceModel](ctx),
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						objectvalidator.AtLeastOneOf(
+							path.MatchRelative().AtParent().AtName("exclude_list"),
+							path.MatchRelative().AtParent().AtName("include_list"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						"exclude_list": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
@@ -347,10 +354,6 @@ func (r *recommendationPreferencesResource) ConfigValidators(context.Context) []
 			path.MatchRoot("preferred_resource"),
 			path.MatchRoot("savings_estimation_mode"),
 			path.MatchRoot("utilization_preference"),
-		),
-		resourcevalidator.AtLeastOneOf(
-			path.MatchRoot("preferred_resource").AtListIndex(0).AtName("exclude_list"),
-			path.MatchRoot("preferred_resource").AtListIndex(0).AtName("include_list"),
 		),
 	}
 }
