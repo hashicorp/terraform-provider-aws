@@ -8,19 +8,19 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -35,6 +35,8 @@ import (
 
 // @FrameworkResource("aws_datazone_asset_type", name="Asset Type")
 func newResourceAssetType(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceAssetType{}
+	r.SetDefaultCreateTimeout(30 * time.Second)
 	return &resourceAssetType{}, nil
 }
 
@@ -48,16 +50,19 @@ type resourceAssetType struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceAssetType) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceAssetType) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_datazone_asset_type"
 }
 
-func (r *resourceAssetType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceAssetType) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"created_by": schema.StringAttribute{
 				Computed: true,
@@ -111,14 +116,11 @@ func (r *resourceAssetType) Schema(ctx context.Context, req resource.SchemaReque
 		Blocks: map[string]schema.Block{
 			"forms_input": schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[resourceFormEntryInputData](ctx),
-				Validators: []validator.Set{
-					setvalidator.IsRequired(),
-				},
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
+					Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 						"map_block_key": schema.StringAttribute{
 							Required: true,
 						},
@@ -134,6 +136,9 @@ func (r *resourceAssetType) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+			}),
 		},
 	}
 }
@@ -153,6 +158,11 @@ func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	in.OwningProjectIdentifier = plan.OwningProjectId.ValueStringPointer()
+
+	if in.FormsInput == nil {
+		in.FormsInput = map[string]awstypes.FormEntryInput{}
+	}
+
 	out, err := conn.CreateAssetType(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -170,13 +180,24 @@ func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+		return findAssetTypeByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Name.ValueString())
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameAssetType, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	output := outputRaw.(*datazone.GetAssetTypeOutput)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, flex.WithIgnoredFieldNamesAppend("OwningProjectId"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	//plan.OriginDomainId = flex.StringToFrameworkLegacy(ctx, out.OriginDomainId)
-	//plan.OriginProjectId = flex.StringToFrameworkLegacy(ctx, out.OriginProjectId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -188,7 +209,7 @@ func (r *resourceAssetType) Read(ctx context.Context, req resource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	out, err := findAssetTypeByID(ctx, conn, state.DomainIdentifier.ValueString(), state.Name.ValueString(), state.Revision.ValueString())
+	out, err := findAssetTypeByID(ctx, conn, state.DomainIdentifier.ValueString(), state.Name.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -197,7 +218,7 @@ func (r *resourceAssetType) Read(ctx context.Context, req resource.ReadRequest, 
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameAssetType, state.Name.ValueString(), err),
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameAssetType, state.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -208,9 +229,6 @@ func (r *resourceAssetType) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	state.OwningProjectId = flex.StringToFramework(ctx, out.OwningProjectId)
-	state.OriginDomainId = flex.StringToFrameworkLegacy(ctx, out.OriginDomainId)
-	state.OriginProjectId = flex.StringToFrameworkLegacy(ctx, out.OriginProjectId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -241,23 +259,23 @@ func (r *resourceAssetType) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 }
+
 func (r *resourceAssetType) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "domain_identifier,id,revision"`, req.ID))
+		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "domain_identifier,name"`, req.ID))
+		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrNames), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("revision"), parts[1])...)
 
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
 }
 
-func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id, revision string) (*datazone.GetAssetTypeOutput, error) {
+func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id string) (*datazone.GetAssetTypeOutput, error) {
 	in := &datazone.GetAssetTypeInput{
 		DomainIdentifier: aws.String(domainId),
 		Identifier:       aws.String(id),
-		Revision:         aws.String(revision),
 	}
 
 	out, err := conn.GetAssetType(ctx, in)
@@ -290,9 +308,11 @@ type resourceAssetTypeData struct {
 	OriginProjectId  types.String                                               `tfsdk:"origin_project_id"`
 	OwningProjectId  types.String                                               `tfsdk:"owning_project_identifier"`
 	Revision         types.String                                               `tfsdk:"revision"`
+	Timeouts         timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
 type resourceFormEntryInputData struct {
+	MapBlockKey    types.String `tfsdk:"map_block_key"`
 	TypeIdentifier types.String `tfsdk:"type_identifier"`
 	TypeRevision   types.String `tfsdk:"type_revision"`
 	Required       types.Bool   `tfsdk:"required"`

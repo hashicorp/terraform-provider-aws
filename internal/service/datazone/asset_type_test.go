@@ -54,18 +54,18 @@ func TestAccDataZoneAssetType_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(resourceName, "revision"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", domainName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "owning_project_id", projectName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "origin_domain_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, strings.ReplaceAll(rName, "-", "_")),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "owning_project_identifier", projectName, names.AttrID),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAuthorizerAssetTypeImportStateIdFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateIdFunc:                    testAccAssetTypeImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -114,7 +114,7 @@ func testAccCheckAssetTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfdatazone.FindAssetTypeByID(ctx, conn, rs.Primary.Attributes["domain_id"], rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["revision"])
+			_, err := tfdatazone.FindAssetTypeByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName])
 			if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsA[*types.AccessDeniedException](err) {
 				return nil
 			}
@@ -141,7 +141,7 @@ func testAccCheckAssetTypeExists(ctx context.Context, name string, assettype *da
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := tfdatazone.FindAssetTypeByID(ctx, conn, rs.Primary.Attributes["domain_id"], rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["revision"])
+		resp, err := tfdatazone.FindAssetTypeByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameAssetType, rs.Primary.ID, err)
@@ -153,52 +153,24 @@ func testAccCheckAssetTypeExists(ctx context.Context, name string, assettype *da
 	}
 }
 
-func testAccAuthorizerAssetTypeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAssetTypeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["revision"]}, ","), nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName]}, ","), nil
 	}
 }
 
 func testAccAssetTypeConfig_basic(rName, pName, dName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(pName, dName), fmt.Sprint(`
-resource "aws_datazone_form_type" "test" {
-  description               = "desc"
-  name                      = "SageMakerModelFormType"
-  domain_identifier         = aws_datazone_domain.test.id
-  owning_project_identifier = aws_datazone_project.test.id
-  status                    = "ENABLED"
-  model {
-    smithy = <<EOF
-	structure SageMakerModelFormType {
-			@required
-			@amazon.datazone#searchable
-			modelName: String
-			@required
-			modelArn: String
-			@required
-			creationTime: String
-			}
-		EOF
-  }
-}
-
+	return acctest.ConfigCompose(testAccProjectConfig_basic(pName, dName), fmt.Sprintf(`
 resource "aws_datazone_asset_type" "test" {
-	description = "desc"
-	domain_identifier = aws_datazone_domain.test.id
-	name = "hi"
-	owning_project_identifier = aws_datazone_project.test.id
-	forms_input = {
-		"first" = {
-				required = true
-				type_identifier = aws_datazone_form_type.test.name
-				type_revision = aws_datazone_form_type.test.revision
-		}
-	}
+  description               = %[1]q
+  domain_identifier         = aws_datazone_domain.test.id
+  name                      = %[2]q
+  owning_project_identifier = aws_datazone_project.test.id
 }
-`))
+`, rName, strings.ReplaceAll(rName, "-", "_")))
 }
