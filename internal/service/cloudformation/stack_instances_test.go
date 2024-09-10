@@ -556,7 +556,7 @@ func testAccCheckStackInstancesExists(ctx context.Context, resourceName string, 
 		}
 
 		deployedByOU := false
-		if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
+		if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
 			deployedByOU = true
 		}
 
@@ -604,7 +604,7 @@ func testAccCheckStackInstancesForOrganizationalUnitExists(ctx context.Context, 
 		}
 
 		deployedByOU := false
-		if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
+		if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
 			deployedByOU = true
 		}
 
@@ -648,7 +648,7 @@ func testAccCheckStackInstancesForOrganizationalUnitDestroy(ctx context.Context)
 			}
 
 			deployedByOU := false
-			if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
+			if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
 				deployedByOU = true
 			}
 
@@ -697,7 +697,7 @@ func testAccCheckStackInstancesDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			deployedByOU := false
-			if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
+			if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
 				deployedByOU = true
 			}
 
