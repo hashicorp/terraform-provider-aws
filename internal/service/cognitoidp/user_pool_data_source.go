@@ -183,7 +183,7 @@ type userPoolDataSourceModel struct {
 	SMSConfigurationFailure  types.String                                                     `tfsdk:"sms_configuration_failure"`
 	SMSVerificationMessage   types.String                                                     `tfsdk:"sms_verification_message"`
 	UserPoolID               types.String                                                     `tfsdk:"user_pool_id"`
-	UserPoolTags             types.Map                                                        `tfsdk:"user_pool_tags"`
+	UserPoolTags             tftags.Map                                                       `tfsdk:"user_pool_tags"`
 	UsernameAttributes       fwtypes.ListValueOf[types.String]                                `tfsdk:"username_attributes"`
 }
 
