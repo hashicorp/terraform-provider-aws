@@ -129,22 +129,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Slot Type using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Slot Type using a comma-delimited string concatenating `bot_id`, `bot_version`, `locale_id`, and `slot_type_id`. For example:
 
 ```terraform
 import {
   to = aws_lexv2models_slot_type.example
-  id = "slot_type-id-12345678"
+  id = "bot-1234,DRAFT,en_US,slot_type-id-12345678"
 }
 ```
 
-Using `terraform import`, import Lex V2 Models Slot Type using the `example_id_arg`. For example:
+Using `terraform import`, import Lex V2 Models Slot Type using using a comma-delimited string concatenating `bot_id`, `bot_version`, `locale_id`, and `slot_type_id`. For example:
 
 ```console
 % terraform import aws_lexv2models_slot_type.example bot-1234,DRAFT,en_US,slot_type-id-12345678
