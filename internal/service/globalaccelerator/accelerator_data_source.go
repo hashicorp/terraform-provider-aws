@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -73,10 +72,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ipSetModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						names.AttrIPAddresses: types.ListType{ElemType: types.StringType},
-						"ip_family":           types.StringType,
-					},
+					AttrTypes: fwtypes.AttributeTypesMust[ipSetModel](ctx),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
