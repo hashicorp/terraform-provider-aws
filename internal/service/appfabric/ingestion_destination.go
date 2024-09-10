@@ -39,8 +39,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Ingestion Destination")
+// @FrameworkResource("aws_appfabric_ingestion_destination", name="Ingestion Destination")
 // @Tags(identifierAttribute="arn")
+// TODO: Tests need additional setup
+// @Testing(tagsTest=false)
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.IngestionDestination")
 func newIngestionDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingestionDestinationResource{}
 
@@ -535,8 +539,8 @@ type ingestionDestinationResourceModel struct {
 	ID                       types.String                                                   `tfsdk:"id"`
 	IngestionARN             fwtypes.ARN                                                    `tfsdk:"ingestion_arn"`
 	ProcessingConfiguration  fwtypes.ListNestedObjectValueOf[processingConfigurationModel]  `tfsdk:"processing_configuration"`
-	Tags                     types.Map                                                      `tfsdk:"tags"`
-	TagsAll                  types.Map                                                      `tfsdk:"tags_all"`
+	Tags                     tftags.Map                                                     `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                 `tfsdk:"timeouts"`
 }
 

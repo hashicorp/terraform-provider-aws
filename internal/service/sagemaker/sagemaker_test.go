@@ -23,7 +23,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-// Tests are serialized as SagmMaker Domain resources are limited to 1 per account by default.
+// Tests are serialized as SageMaker Domain resources are limited to 1 per account by default.
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
 // SageMaker Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
@@ -37,6 +37,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
 			"space":                 testAccApp_space,
+			"decodeAppId":           testAccDecodeAppID,
 		},
 		"Domain": {
 			acctest.CtBasic:                            testAccDomain_basic,
@@ -69,10 +70,16 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"rStudioServerProAppSettings":                             testAccDomain_rStudioServerProAppSettings,
 			"rStudioServerProDomainSettings":                          testAccDomain_rStudioServerProDomainSettings,
 			"spaceSettingsKernelGatewayAppSettings":                   testAccDomain_spaceSettingsKernelGatewayAppSettings,
+			"spaceSettingsJupyterLabAppSettings":                      testAccDomain_spaceSettingsJupyterLabAppSettings,
+			"spaceSettingsSpaceStorageSettings":                       testAccDomain_spaceSettingsSpaceStorageSettings,
+			"spaceSettingsCustomPOSIXUserConfig":                      testAccDomain_spaceSettingsCustomPOSIXUserConfig,
+			"spaceSettingsCustomFileSystemConfigs":                    testAccDomain_spaceSettingsCustomFileSystemConfigs,
 			"code":                                                    testAccDomain_jupyterServerAppSettings_code,
 			"efs":                                                     testAccDomain_efs,
 			"posix":                                                   testAccDomain_posix,
 			"spaceStorageSettings":                                    testAccDomain_spaceStorageSettings,
+			"studioWebPortalSettings_hiddenAppTypes":                  testAccDomain_studioWebPortalSettings_hiddenAppTypes,
+			"studioWebPortalSettings_hiddenMlTools":                   testAccDomain_studioWebPortalSettings_hiddenMlTools,
 		},
 		"FlowDefinition": {
 			acctest.CtBasic:                  testAccFlowDefinition_basic,
@@ -105,6 +112,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
 			"codeEditorAppSettings_customImage":        testAccUserProfile_codeEditorAppSettings_customImage,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
+			"studioWebPortalSettings_hiddenAppTypes":   testAccUserProfile_studioWebPortalSettings_hiddenAppTypes,
+			"studioWebPortalSettings_hiddenMlTools":    testAccUserProfile_studioWebPortalSettings_hiddenMlTools,
 		},
 		"Workforce": {
 			acctest.CtDisappears: testAccWorkforce_disappears,

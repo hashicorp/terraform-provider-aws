@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -72,7 +72,7 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -113,7 +113,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +150,7 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -196,7 +196,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -218,7 +218,7 @@ func TestAccRedshiftEventSubscription_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redshift.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *awstypes.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +229,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redsh
 			return fmt.Errorf("No Redshift Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		out, err := tfredshift.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
@@ -245,7 +245,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redsh
 
 func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_event_subscription" {

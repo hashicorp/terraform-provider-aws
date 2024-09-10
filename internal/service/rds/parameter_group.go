@@ -121,7 +121,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
-		Tags:                   getTagsInV2(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBParameterGroup(ctx, input)

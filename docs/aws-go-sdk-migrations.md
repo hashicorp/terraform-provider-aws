@@ -61,27 +61,27 @@ In each go source file with a V1 SDK import, the library should be replaced with
 
 ```go
 // Remove
-github.com/aws-sdk-go/service/<service>
+github.com/aws/aws-sdk-go/service/<service>
 ```
 
 ```go
 // Add
-github.com/aws-sdk-go-v2/service/<service>
-awstypes github.com/aws-sdk-go-v2/service/<service>/types
+github.com/aws/aws-sdk-go-v2/service/<service>
+awstypes github.com/aws/aws-sdk-go-v2/service/<service>/types
 ```
 
 If the `aws` or `arn` packages are used, these should also be upgraded.
 
 ```
 // Remove
-github.com/aws-sdk-go/aws
-github.com/aws-sdk-go/aws/arn
+github.com/aws/aws-sdk-go/aws
+github.com/aws/aws-sdk-go/aws/arn
 ```
 
 ```
 // Add
-github.com/aws-sdk-go-v2/aws
-github.com/aws-sdk-go-v2/aws/arn
+github.com/aws/aws-sdk-go-v2/aws
+github.com/aws/aws-sdk-go-v2/aws/arn
 ```
 
 ## Client

@@ -1,3 +1,2 @@
 *                 @hashicorp/terraform-aws
-/.github/         @breathingdust @justinretzolk
-/.github/*.yml    @hashicorp/terraform-aws
+/.github/         @breathingdust @justinretzolk @hashicorp/terraform-aws
