@@ -88,18 +88,6 @@ func (r *resourceAssetType) Schema(ctx context.Context, _ resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"origin_domain_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"origin_project_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"revision": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -304,8 +292,6 @@ type resourceAssetTypeData struct {
 	DomainIdentifier types.String                                               `tfsdk:"domain_identifier"`
 	FormsInput       fwtypes.SetNestedObjectValueOf[resourceFormEntryInputData] `tfsdk:"forms_input"`
 	Name             types.String                                               `tfsdk:"name"`
-	OriginDomainId   types.String                                               `tfsdk:"origin_domain_id"`
-	OriginProjectId  types.String                                               `tfsdk:"origin_project_id"`
 	OwningProjectId  types.String                                               `tfsdk:"owning_project_identifier"`
 	Revision         types.String                                               `tfsdk:"revision"`
 	Timeouts         timeouts.Value                                             `tfsdk:"timeouts"`
