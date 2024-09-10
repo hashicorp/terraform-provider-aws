@@ -209,7 +209,7 @@ func resourceStackInstances() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": { // read output
+						names.AttrRegion: { // read output
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -221,11 +221,11 @@ func resourceStackInstances() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": { // read output
+						names.AttrStatus: { // read output
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_reason": { // read output
+						names.AttrStatusReason: { // read output
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -257,7 +257,6 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk(AttrRegions); ok && v.(*schema.Set).Len() > 0 {
 		input.Regions = flex.ExpandStringValueSet(v.(*schema.Set))
-
 	}
 
 	if v, ok := d.GetOk(AttrRegions); !ok || v.(*schema.Set).Len() == 0 {
@@ -755,11 +754,11 @@ func flattenStackInstancesSummaries(apiObject []awstypes.StackInstanceSummary) [
 			names.AttrAccountID:      obj.Account,
 			"drift_status":           obj.DriftStatus,
 			"organizational_unit_id": obj.OrganizationalUnitId,
-			"region":                 obj.Region,
+			names.AttrRegion:         obj.Region,
 			"stack_id":               obj.StackId,
 			"stack_set_id":           obj.StackSetId,
-			"status":                 obj.Status,
-			"status_reason":          obj.StatusReason,
+			names.AttrStatus:         obj.Status,
+			names.AttrStatusReason:   obj.StatusReason,
 		}
 
 		if obj.StackInstanceStatus != nil {
