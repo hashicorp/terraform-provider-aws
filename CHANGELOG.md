@@ -1,5 +1,13 @@
 ## 5.67.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_lexv2models_slot_type: Within the `value_selection_setting.advanced_recognition_setting` block, the `audio_recognition_setting` argument has been renamed `audio_recognition_strategy` ([#39254](https://github.com/hashicorp/terraform-provider-aws/issues/39254))
+
+NOTES:
+
+* resource/aws_lexv2models_slot_type: Within the `value_selection_setting.advanced_recognition_setting` block, the `audio_recognition_setting` argument has been renamed `audio_recognition_strategy`. See the [linked pull request](https://github.com/hashicorp/terraform-provider-aws/pull/39254) for additional justification on this change. The previous misnaming effectively made this argument unusable, therefore a breaking change in a minor version was deemed acceptable. ([#39254](https://github.com/hashicorp/terraform-provider-aws/issues/39254))
+
 FEATURES:
 
 * **New Resource:** `aws_lambda_function_recursion_config` ([#39153](https://github.com/hashicorp/terraform-provider-aws/issues/39153))
