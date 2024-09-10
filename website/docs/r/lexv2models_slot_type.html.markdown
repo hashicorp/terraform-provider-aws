@@ -15,42 +15,62 @@ Terraform resource for managing an AWS Lex V2 Models Slot Type.
 ### Basic Usage
 
 ```terraform
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonLexFullAccess"
-}
-
-resource "aws_lexv2models_bot" "test" {
-  name                        = "testbot"
+resource "aws_lexv2models_bot" "example" {
+  name                        = "example"
   idle_session_ttl_in_seconds = 60
-  role_arn                    = aws_iam_role.test.arn
+  role_arn                    = aws_iam_role.example.arn
 
   data_privacy {
     child_directed = true
   }
 }
 
-resource "aws_lexv2models_bot_locale" "test" {
+resource "aws_lexv2models_bot_locale" "example" {
   locale_id                        = "en_US"
-  bot_id                           = aws_lexv2models_bot.test.id
+  bot_id                           = aws_lexv2models_bot.example.id
   bot_version                      = "DRAFT"
   n_lu_intent_confidence_threshold = 0.7
 }
 
-resource "aws_lexv2models_bot_version" "test" {
-  bot_id = aws_lexv2models_bot.test.id
+resource "aws_lexv2models_bot_version" "example" {
+  bot_id = aws_lexv2models_bot.example.id
   locale_specification = {
-    (aws_lexv2models_bot_locale.test.locale_id) = {
+    (aws_lexv2models_bot_locale.example.locale_id) = {
       source_bot_version = "DRAFT"
     }
   }
 }
 
-resource "aws_lexv2models_slot_type" "test" {
-  bot_id      = aws_lexv2models_bot.test.id
-  bot_version = aws_lexv2models_bot_locale.test.bot_version
-  name        = "test"
-  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+resource "aws_lexv2models_slot_type" "example" {
+  bot_id      = aws_lexv2models_bot.example.id
+  bot_version = aws_lexv2models_bot_locale.example.bot_version
+  name        = "example"
+  locale_id   = aws_lexv2models_bot_locale.example.locale_id
+}
+```
+
+### `value_selection_setting` Usage
+
+```terraform
+resource "aws_lexv2models_slot_type" "example" {
+  bot_id      = aws_lexv2models_bot.example.id
+  bot_version = aws_lexv2models_bot_locale.example.bot_version
+  name        = "example"
+  locale_id   = aws_lexv2models_bot_locale.example.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "OriginalValue"
+
+    advanced_recognition_setting {
+      audio_recognition_strategy = "UseSlotValuesAsCustomVocabulary"
+    }
+  }
+
+  slot_type_values {
+    sample_value {
+      value = "exampleValue"
+    }
+  }
 }
 ```
 
