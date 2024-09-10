@@ -91,10 +91,11 @@ func resourceCluster() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
 			},
 			"mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      string(types.ClusterModeFips),
-				ValidateFunc: validation.StringInSlice(validClusterModes(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ClusterMode](),
 			},
 			"security_group_id": {
 				Type:     schema.TypeString,
@@ -134,14 +135,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("mode"); ok && v != "" {
-		switch v.(string) {
-		case string(types.ClusterModeFips):
-			input.Mode = types.ClusterModeFips
-		case string(types.ClusterModeNonFips):
-			input.Mode = types.ClusterModeNonFips
-		default:
-			sdkdiag.AppendErrorf(diags, "invalid cluster mode: %s", v)
-		}
+		input.Mode = types.ClusterMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("source_backup_identifier"); ok {
@@ -388,13 +382,4 @@ func flattenCertificates(apiObject *types.Cluster) []map[string]interface{} {
 	}
 
 	return []map[string]interface{}{}
-}
-
-func validClusterModes() []string {
-	var clusterModeStrings []string
-	for _, mode := range types.ClusterModeFips.Values() {
-		clusterModeStrings = append(clusterModeStrings, string(mode))
-	}
-
-	return clusterModeStrings
 }
