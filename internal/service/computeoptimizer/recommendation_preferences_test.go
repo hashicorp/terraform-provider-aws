@@ -203,7 +203,7 @@ func testAccRecommendationPreferences_utilizationPreferences(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("utilization_preference"), knownvalue.ListExact(
 						[]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"metric_name": knownvalue.StringExact("CpuUtilization"),
+								names.AttrMetricName: knownvalue.StringExact("CpuUtilization"),
 								"metric_parameters": knownvalue.ListExact(
 									[]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -214,7 +214,7 @@ func testAccRecommendationPreferences_utilizationPreferences(t *testing.T) {
 								),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"metric_name": knownvalue.StringExact("MemoryUtilization"),
+								names.AttrMetricName: knownvalue.StringExact("MemoryUtilization"),
 								"metric_parameters": knownvalue.ListExact(
 									[]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -258,7 +258,7 @@ func testAccRecommendationPreferences_utilizationPreferences(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("utilization_preference"), knownvalue.ListExact(
 						[]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"metric_name": knownvalue.StringExact("CpuUtilization"),
+								names.AttrMetricName: knownvalue.StringExact("CpuUtilization"),
 								"metric_parameters": knownvalue.ListExact(
 									[]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
