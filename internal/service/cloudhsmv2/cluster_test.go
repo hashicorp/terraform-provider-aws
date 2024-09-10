@@ -38,6 +38,7 @@ func testAccCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_state", string(types.ClusterStateUninitialized)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_type", "hsm1.medium"),
+					resource.TestCheckResourceAttr(resourceName, "mode", "FIPS"),
 					resource.TestMatchResourceAttr(resourceName, "security_group_id", regexache.MustCompile(`^sg-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "source_backup_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
@@ -126,7 +127,7 @@ func testAccCluster_tags(t *testing.T) {
 	})
 }
 
-func testAccCluster_hsmtype(t *testing.T) {
+func testAccCluster_hsmType(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -142,6 +143,7 @@ func testAccCluster_hsmtype(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hsm_type", "hsm2m.medium"),
+					resource.TestCheckResourceAttr(resourceName, "mode", "NON_FIPS"),
 				),
 			},
 			{
@@ -212,7 +214,7 @@ func testAccClusterConfig_hsm2m_medium(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), `
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm2m.medium"
-  mode 		 = "NON_FIPS"
+  mode       = "NON_FIPS"
   subnet_ids = aws_subnet.test[*].id
 }
 `)
