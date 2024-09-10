@@ -38,7 +38,7 @@ func testAccCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_state", string(types.ClusterStateUninitialized)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_type", "hsm1.medium"),
-					resource.TestCheckResourceAttr(resourceName, "mode", "FIPS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMode, "FIPS"),
 					resource.TestMatchResourceAttr(resourceName, "security_group_id", regexache.MustCompile(`^sg-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "source_backup_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
@@ -143,7 +143,7 @@ func testAccCluster_hsmType(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hsm_type", "hsm2m.medium"),
-					resource.TestCheckResourceAttr(resourceName, "mode", "NON_FIPS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMode, "NON_FIPS"),
 				),
 			},
 			{

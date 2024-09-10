@@ -90,7 +90,7 @@ func resourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
 			},
-			"mode": {
+			names.AttrMode: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -134,7 +134,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		TagList:   getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("mode"); ok && v != "" {
+	if v, ok := d.GetOk(names.AttrMode); ok && v != "" {
 		input.Mode = types.ClusterMode(v.(string))
 	}
 
@@ -184,7 +184,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_id", cluster.ClusterId)
 	d.Set("cluster_state", cluster.State)
 	d.Set("hsm_type", cluster.HsmType)
-	d.Set("mode", cluster.Mode)
+	d.Set(names.AttrMode, cluster.Mode)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
 	d.Set(names.AttrSubnetIDs, tfmaps.Values(cluster.SubnetMapping))
