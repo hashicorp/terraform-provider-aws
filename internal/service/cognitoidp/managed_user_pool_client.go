@@ -39,7 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Managed User Pool Client")
+// @FrameworkResource("aws_cognito_managed_user_pool_client", name="Managed User Pool Client")
 func newManagedUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &managedUserPoolClientResource{}, nil
 }

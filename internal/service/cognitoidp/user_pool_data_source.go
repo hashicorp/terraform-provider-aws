@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_cognito_user_group", name="User Pool")
+// @FrameworkDataSource("aws_cognito_user_pool", name="User Pool")
+// @Testing(tagsTest=true)
 func newUserPoolDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &userPoolDataSource{}, nil
 }

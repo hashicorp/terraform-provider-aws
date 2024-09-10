@@ -32,6 +32,8 @@ import (
 
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
 // @Tags
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolType")
+// @Testing(tagsTest=false)
 func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolCreate,
