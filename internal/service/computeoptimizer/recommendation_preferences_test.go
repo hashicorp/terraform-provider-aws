@@ -46,6 +46,7 @@ func testAccRecommendationPreferences_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("external_metrics_preference"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("inferred_workload_types"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("look_back_period"), knownvalue.StringExact("DAYS_32")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("preferred_resource"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_type"), knownvalue.StringExact("Ec2Instance")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("savings_estimation_mode"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope"), knownvalue.ListSizeExact(1)),
