@@ -294,7 +294,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 
 	id, err := flex.FlattenResourceId([]string{stackSetName, callAs, deployedByOU}, stackInstancesResourceIDPartCount, true)
 	if err != nil {
-		return create.DiagError(names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackInstances, stackSetName, err)
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackInstances, stackSetName, err)
 	}
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
@@ -355,7 +355,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 	)
 
 	if err != nil {
-		return create.DiagError(names.CloudFormation, create.ErrActionCreating, ResNameStackInstances, id, err)
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionCreating, ResNameStackInstances, id, err)
 	}
 
 	return append(diags, resourceStackInstancesRead(ctx, d, meta)...)
@@ -368,7 +368,7 @@ func resourceStackInstancesRead(ctx context.Context, d *schema.ResourceData, met
 	// is simplicity. The downside is that we hoover up all stack instances for the stack set.
 	parts, err := flex.ExpandResourceId(d.Id(), stackInstancesResourceIDPartCount, true)
 	if err != nil {
-		return create.DiagError(names.CloudFormation, create.ErrActionExpandingResourceId, ResNameStackInstances, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionExpandingResourceId, ResNameStackInstances, d.Id(), err)
 	}
 
 	stackSetName, callAs, deployedByOU := parts[0], parts[1], parts[2]
@@ -386,7 +386,7 @@ func resourceStackInstancesRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFormation, create.ErrActionReading, ResNameStackInstances, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionReading, ResNameStackInstances, d.Id(), err)
 	}
 
 	if len(stackInstances.OUs) > 0 {
@@ -399,7 +399,7 @@ func resourceStackInstancesRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("stack_set_id", stackInstances.StackSetID)
 
 	if err := d.Set("parameter_overrides", flattenAllParameters(stackInstances.ParameterOverrides)); err != nil {
-		return create.DiagError(names.CloudFormation, create.ErrActionReading, ResNameStackInstances, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionReading, ResNameStackInstances, d.Id(), err)
 	}
 
 	return diags
@@ -426,8 +426,8 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
 
 		if axe := o.Difference(n); axe.Len() > 0 {
-			if err := deleteStackInstances(ctx, d, meta, accounts, flex.ExpandStringValueList(axe.List()), dtAccounts, dtOUs); err != nil {
-				return create.DiagError(names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
+			if err := deleteStackInstances(ctx, d, meta, accounts, flex.ExpandStringValueSet(axe), dtAccounts, dtOUs); err != nil {
+				return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
 			}
 		}
 
@@ -444,8 +444,8 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
 
 		if axe := o.Difference(n); axe.Len() > 0 {
-			if err := deleteStackInstances(ctx, d, meta, flex.ExpandStringValueList(axe.List()), regions, dtAccounts, dtOUs); err != nil {
-				return create.DiagError(names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
+			if err := deleteStackInstances(ctx, d, meta, flex.ExpandStringValueSet(axe), regions, dtAccounts, dtOUs); err != nil {
+				return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
 			}
 		}
 
@@ -462,8 +462,8 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
 
 		if axe := o.Difference(n); axe.Len() > 0 {
-			if err := deleteStackInstances(ctx, d, meta, accounts, regions, flex.ExpandStringValueList(axe.List()), dtOUs); err != nil {
-				return create.DiagError(names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
+			if err := deleteStackInstances(ctx, d, meta, accounts, regions, flex.ExpandStringValueSet(axe), dtOUs); err != nil {
+				return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
 			}
 		}
 
@@ -480,8 +480,8 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
 
 		if axe := o.Difference(n); axe.Len() > 0 {
-			if err := deleteStackInstances(ctx, d, meta, accounts, regions, dtAccounts, flex.ExpandStringValueList(axe.List())); err != nil {
-				return create.DiagError(names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
+			if err := deleteStackInstances(ctx, d, meta, accounts, regions, dtAccounts, flex.ExpandStringValueSet(axe)); err != nil {
+				return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
 			}
 		}
 
@@ -502,7 +502,7 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		input := &cloudformation.UpdateStackInstancesInput{
 			OperationId:        aws.String(sdkid.UniqueId()),
 			ParameterOverrides: []awstypes.Parameter{},
-			Regions:            flex.ExpandStringValueList(d.Get(AttrRegions).(*schema.Set).List()),
+			Regions:            flex.ExpandStringValueSet(d.Get(AttrRegions).(*schema.Set)),
 			StackSetName:       aws.String(d.Get("stack_set_name").(string)),
 		}
 
@@ -531,11 +531,11 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		output, err := conn.UpdateStackInstances(ctx, input)
 		if err != nil {
-			return create.DiagError(names.CloudFormation, create.ErrActionUpdating, ResNameStackInstances, d.Id(), err)
+			return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionUpdating, ResNameStackInstances, d.Id(), err)
 		}
 
 		if _, err := waitStackSetOperationSucceeded(ctx, conn, d.Get("stack_set_name").(string), aws.ToString(output.OperationId), d.Get("call_as").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.CloudFormation, create.ErrActionWaitingForUpdate, ResNameStackInstances, d.Id(), err)
+			return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionWaitingForUpdate, ResNameStackInstances, d.Id(), err)
 		}
 	}
 
@@ -543,14 +543,15 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceStackInstancesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// delete everything
+	var diags diag.Diagnostics
+
 	accounts := flex.ExpandStringValueSet(d.Get(AttrAccounts).(*schema.Set))
 	regions := flex.ExpandStringValueSet(d.Get(AttrRegions).(*schema.Set))
 	dtAccounts := flex.ExpandStringValueSet(d.Get(AttrDTAccounts).(*schema.Set))
 	dtOUs := flex.ExpandStringValueSet(d.Get(AttrDTOUs).(*schema.Set))
 
 	if err := deleteStackInstances(ctx, d, meta, accounts, regions, dtAccounts, dtOUs); err != nil {
-		return create.DiagError(names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
 	}
 
 	return diag.Diagnostics{}
