@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/computeoptimizer/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -52,6 +53,7 @@ func (*recommendationPreferencesResource) Metadata(_ context.Context, request re
 
 func (r *recommendationPreferencesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+
 		Attributes: map[string]schema.Attribute{
 			"enhanced_infrastructure_metrics": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EnhancedInfrastructureMetrics](),
@@ -129,6 +131,8 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 					listplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -309,6 +313,20 @@ func (r *recommendationPreferencesResource) Delete(ctx context.Context, request 
 	}
 }
 
+func (r *recommendationPreferencesResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.AtLeastOneOf(
+			path.MatchRoot("enhanced_infrastructure_metrics"),
+			path.MatchRoot("external_metrics_preference"),
+			path.MatchRoot("inferred_workload_types"),
+			path.MatchRoot("look_back_period"),
+			path.MatchRoot("preferred_resource"),
+			path.MatchRoot("savings_estimation_mode"),
+			path.MatchRoot("utilization_preference"),
+		),
+	}
+}
+
 func findRecommendationPreferencesByThreePartKey(ctx context.Context, conn *computeoptimizer.Client, resourceType, scopeName, scopeValue string) (*awstypes.RecommendationPreferencesDetail, error) {
 	input := &computeoptimizer.GetRecommendationPreferencesInput{
 		ResourceType: awstypes.ResourceType(resourceType),
@@ -371,34 +389,28 @@ type recommendationPreferencesResourceModel struct {
 }
 
 const (
-	recommendationPreferencesResourceIDPartCount = 2
+	recommendationPreferencesResourceIDPartCount = 3
 )
 
 func (m *recommendationPreferencesResourceModel) InitFromID(ctx context.Context) error {
-	parts, err := flex.ExpandResourceId(m.ID.ValueString(), recommendationPreferencesResourceIDPartCount, true)
+	parts, err := flex.ExpandResourceId(m.ID.ValueString(), recommendationPreferencesResourceIDPartCount, false)
 	if err != nil {
 		return err
 	}
 
 	m.ResourceType = types.StringValue(parts[0])
-	if parts[1] != "" && parts[2] != "" {
-		scope := &scopeModel{
-			Name:  fwtypes.StringEnumValue(awstypes.ScopeName(parts[1])),
-			Value: types.StringValue(parts[2]),
-		}
-		m.Scope = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, scope)
+	scope := &scopeModel{
+		Name:  fwtypes.StringEnumValue(awstypes.ScopeName(parts[1])),
+		Value: types.StringValue(parts[2]),
 	}
+	m.Scope = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, scope)
 
 	return nil
 }
 
 func (m *recommendationPreferencesResourceModel) setID(ctx context.Context) {
-	if m.Scope.IsNull() {
-		m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.ResourceType.ValueString(), "", ""}, recommendationPreferencesResourceIDPartCount, true)))
-	} else {
-		scope := fwdiag.Must(m.Scope.ToPtr(ctx))
-		m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString()}, recommendationPreferencesResourceIDPartCount, false)))
-	}
+	scope := fwdiag.Must(m.Scope.ToPtr(ctx))
+	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString()}, recommendationPreferencesResourceIDPartCount, false)))
 }
 
 type externalMetricsPreferenceModel struct {
