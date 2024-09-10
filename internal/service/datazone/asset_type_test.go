@@ -19,9 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataZoneAssetType_basic(t *testing.T) {
@@ -52,15 +51,14 @@ func TestAccDataZoneAssetType_basic(t *testing.T) {
 				Config: testAccAssetTypeConfig_basic(rName, pName, dName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssetTypeExists(ctx, resourceName, &assettype),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(resourceName, "revision"),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", domainName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "owning_project_id", projectName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "description", "origin_domain_id"),
-					/// ???
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_id", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "owning_project_id", projectName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "origin_domain_id"),
 				),
 			},
 			{
@@ -162,7 +160,7 @@ func testAccAuthorizerAssetTypeImportStateIdFunc(resourceName string) resource.I
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes["name"], rs.Primary.Attributes["revision"]}, ","), nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["revision"]}, ","), nil
 	}
 }
 
