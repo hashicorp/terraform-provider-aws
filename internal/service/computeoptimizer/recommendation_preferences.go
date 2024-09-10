@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/computeoptimizer/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -67,6 +66,7 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 			"look_back_period": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LookBackPeriodPreference](),
 				Optional:   true,
+				Computed:   true,
 			},
 			names.AttrResourceType: schema.StringAttribute{
 				Required: true,
@@ -100,14 +100,12 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 			"preferred_resource": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[preferredResourceModel](ctx),
 				NestedObject: schema.NestedBlockObject{
-					Validators: []validator.Object{
-						objectvalidator.ExactlyOneOf(path.MatchRelative().AtName("exclude_list"), path.MatchRelative().AtName("include_list")),
-					},
 					Attributes: map[string]schema.Attribute{
 						"exclude_list": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
 							Validators: []validator.Set{
+								setvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("include_list")),
 								setvalidator.SizeAtMost(1000),
 							},
 						},
@@ -115,6 +113,7 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
 							Validators: []validator.Set{
+								setvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("exclude_list")),
 								setvalidator.SizeAtMost(1000),
 							},
 						},
@@ -216,6 +215,18 @@ func (r *recommendationPreferencesResource) Create(ctx context.Context, request 
 	// Set values for unknowns.
 	data.setID(ctx)
 
+	// Read the resource to get other Computed attribute values.
+	scope := fwdiag.Must(data.Scope.ToPtr(ctx))
+	output, err := findRecommendationPreferencesByThreePartKey(ctx, conn, data.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Compute Optimizer Recommendation Preferences (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	data.LookBackPeriod = fwtypes.StringEnumValue(output.LookBackPeriod)
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -234,7 +245,8 @@ func (r *recommendationPreferencesResource) Read(ctx context.Context, request re
 
 	conn := r.Meta().ComputeOptimizerClient(ctx)
 
-	output, err := findRecommendationPreferencesByThreePartKey(ctx, conn, data.ResourceType.ValueString(), "", "")
+	scope := fwdiag.Must(data.Scope.ToPtr(ctx))
+	output, err := findRecommendationPreferencesByThreePartKey(ctx, conn, data.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -280,6 +292,18 @@ func (r *recommendationPreferencesResource) Update(ctx context.Context, request 
 		return
 	}
 
+	// Read the resource to get Computed attribute values.
+	scope := fwdiag.Must(new.Scope.ToPtr(ctx))
+	output, err := findRecommendationPreferencesByThreePartKey(ctx, conn, new.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Compute Optimizer Recommendation Preferences (%s)", new.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	new.LookBackPeriod = fwtypes.StringEnumValue(output.LookBackPeriod)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
@@ -323,6 +347,10 @@ func (r *recommendationPreferencesResource) ConfigValidators(context.Context) []
 			path.MatchRoot("preferred_resource"),
 			path.MatchRoot("savings_estimation_mode"),
 			path.MatchRoot("utilization_preference"),
+		),
+		resourcevalidator.AtLeastOneOf(
+			path.MatchRoot("preferred_resource").AtListIndex(0).AtName("exclude_list"),
+			path.MatchRoot("preferred_resource").AtListIndex(0).AtName("include_list"),
 		),
 	}
 }
