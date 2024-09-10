@@ -36,7 +36,6 @@ const (
 	AttrClientSecret               = "client_secret"
 	AttrCloudWatchLogGroupARN      = "cloudwatch_log_group_arn"
 	AttrCloudWatchLogs             = "cloudwatch_logs"
-	AttrCloudHSMType               = "hsm_type"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrClusterName                = "cluster_name"
 	AttrComment                    = "comment"
