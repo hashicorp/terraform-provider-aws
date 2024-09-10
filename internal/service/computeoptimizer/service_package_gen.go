@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newEnrollmentStatusResource,
 			Name:    "Enrollment Status",
 		},
+		{
+			Factory: newRecommendationPreferencesResource,
+			Name:    "Recommendation Preferences",
+		},
 	}
 }
 

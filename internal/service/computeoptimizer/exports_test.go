@@ -5,7 +5,9 @@ package computeoptimizer
 
 // Exports for use in tests only.
 var (
-	ResourceEnrollmentStatus = newEnrollmentStatusResource
+	ResourceEnrollmentStatus          = newEnrollmentStatusResource
+	ResourceRecommendationPreferences = newRecommendationPreferencesResource
 
-	FindEnrollmentStatus = findEnrollmentStatus
+	FindEnrollmentStatus                        = findEnrollmentStatus
+	FindRecommendationPreferencesByThreePartKey = findRecommendationPreferencesByThreePartKey
 )

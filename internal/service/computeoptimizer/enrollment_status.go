@@ -47,7 +47,7 @@ type enrollmentStatusResource struct {
 	framework.WithImportByID
 }
 
-func (r *enrollmentStatusResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*enrollmentStatusResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_computeoptimizer_enrollment_status"
 }
 
