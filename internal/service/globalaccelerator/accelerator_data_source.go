@@ -47,11 +47,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				CustomType: fwtypes.NewListNestedObjectTypeOf[acceleratorAttributesModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"flow_logs_enabled":   types.BoolType,
-						"flow_logs_s3_bucket": types.StringType,
-						"flow_logs_s3_prefix": types.StringType,
-					},
+					AttrTypes: fwtypes.AttributeTypesMust[acceleratorAttributesModel](ctx),
 				},
 			},
 			names.AttrDNSName: schema.StringAttribute{
