@@ -253,19 +253,19 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	out, err := findFleetByARNOrNames(ctx, conn, d.Id())
-
-	if out == nil || len(out.Fleets) == 0 {
-		log.Printf("[WARN] CodeBuild Fleet (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
+	fleets, err := findFleetByARNOrNames(ctx, conn, d.Id(), true)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameFleet, d.Id(), err)
 	}
 
-	fleet := out.Fleets[0]
+	if len(fleets) == 0 {
+		log.Printf("[WARN] CodeBuild Fleet (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	fleet := fleets[0]
 
 	d.Set(names.AttrARN, fleet.Arn)
 	d.Set("base_capacity", fleet.BaseCapacity)
@@ -385,10 +385,6 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionDeleting, ResNameFleet, d.Id(), err)
 	}
 
-	if err := waitFleetDeleted(ctx, conn, d.Id()); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForDeletion, ResNameFleet, d.Id(), err)
-	}
-
 	return diags
 }
 
@@ -409,24 +405,9 @@ func waitFleetActive(ctx context.Context, conn *codebuild.Client, id string) err
 	return err
 }
 
-func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, id string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(types.FleetStatusCodeDeleting, "PENDING_DELETION"),
-		Target:     []string{},
-		Refresh:    statusFleet(ctx, conn, id, true),
-		Timeout:    90 * time.Minute,
-		MinTimeout: 15 * time.Second,
-		Delay:      15 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
 func statusFleet(ctx context.Context, conn *codebuild.Client, id string, delete bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findFleetByARNOrNames(ctx, conn, id)
+		fleets, err := findFleetByARNOrNames(ctx, conn, id, true)
 		if tfresource.NotFound(err) && delete {
 			return nil, "", nil
 		}
@@ -434,28 +415,45 @@ func statusFleet(ctx context.Context, conn *codebuild.Client, id string, delete 
 			return nil, "", err
 		}
 
-		return out, string(out.Fleets[0].Status.StatusCode), nil
+		return fleets, string(fleets[0].Status.StatusCode), nil
 	}
 }
 
-func findFleetByARNOrNames(ctx context.Context, conn *codebuild.Client, arn string) (*codebuild.BatchGetFleetsOutput, error) {
+func findFleetByARNOrNames(ctx context.Context, conn *codebuild.Client, arn string, skipPendingDeletion bool) ([]types.Fleet, error) {
 	input := &codebuild.BatchGetFleetsInput{
 		Names: []string{arn},
 	}
 	output, err := conn.BatchGetFleets(ctx, input)
 
-	if output == nil || len(output.Fleets) == 0 || len(output.FleetsNotFound) > 0 {
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.FleetsNotFound) > 0 {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	if err != nil {
-		return nil, err
+	fleets := []types.Fleet{}
+
+	for _, fleet := range output.Fleets {
+		if skipPendingDeletion && fleet.Status.StatusCode == types.FleetStatusCodePendingDeletion {
+			continue
+		}
+
+		fleets = append(fleets, fleet)
 	}
 
-	return output, nil
+	if len(fleets) == 0 {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	return fleets, nil
 }
 
 func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConfigurationInput {

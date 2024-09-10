@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -318,7 +319,7 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcodebuild.FindFleetByARNOrNames(ctx, conn, rs.Primary.ID)
+			_, err := tfcodebuild.FindFleetByARNOrNames(ctx, conn, rs.Primary.ID, true)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -344,18 +345,18 @@ func testAccCheckFleetExists(ctx context.Context, n string) resource.TestCheckFu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
 
-		fleet, err := tfcodebuild.FindFleetByARNOrNames(ctx, conn, rs.Primary.ID)
+		fleets, err := tfcodebuild.FindFleetByARNOrNames(ctx, conn, rs.Primary.ID, true)
 		if err != nil {
 			return err
 		}
 
-		if len(fleet.Fleets) == 0 {
+		if len(fleets) == 0 {
 			return fmt.Errorf("Fleet not found: %s", rs.Primary.ID)
 		}
 
 		expectedName := rs.Primary.Attributes[names.AttrName]
-		if *fleet.Fleets[0].Name != expectedName {
-			return fmt.Errorf("Fleet name mismatch, expected: %s, got: %s", expectedName, *fleet.Fleets[0].Name)
+		if aws.ToString(fleets[0].Name) != expectedName {
+			return fmt.Errorf("Fleet name mismatch, expected: %s, got: %s", expectedName, aws.ToString(fleets[0].Name))
 		}
 
 		return nil

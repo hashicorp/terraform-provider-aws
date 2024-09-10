@@ -160,12 +160,13 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 	name := d.Get(names.AttrName).(string)
 
-	out, err := findFleetByARNOrNames(ctx, conn, name)
+	fleets, err := findFleetByARNOrNames(ctx, conn, name, true)
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, DSNameFleet, name, err)
 	}
 
-	fleet := out.Fleets[0]
+	fleet := fleets[0]
 
 	d.SetId(aws.StringValue(fleet.Arn))
 
