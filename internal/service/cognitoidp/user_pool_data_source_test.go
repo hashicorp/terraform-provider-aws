@@ -45,6 +45,7 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("user_pool_tags"), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 		},
@@ -102,6 +103,7 @@ func TestAccCognitoIDPUserPoolDataSource_userPoolTags(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("user_pool_tags"), resourceName, tfjsonpath.New(names.AttrTagsAll), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrTags), resourceName, tfjsonpath.New(names.AttrTagsAll), compare.ValuesSame()),
 				},
 			},
 		},
