@@ -22,9 +22,10 @@ func TestAccComputeOptimizer_serial(t *testing.T) {
 			"includeMemberAccounts": testAccEnrollmentStatus_includeMemberAccounts,
 		},
 		"RecommendationPreferences": {
-			acctest.CtBasic:      testAccRecommendationPreferences_basic,
-			acctest.CtDisappears: testAccRecommendationPreferences_disappears,
-			"preferredResources": testAccRecommendationPreferences_preferredResources,
+			acctest.CtBasic:          testAccRecommendationPreferences_basic,
+			acctest.CtDisappears:     testAccRecommendationPreferences_disappears,
+			"preferredResources":     testAccRecommendationPreferences_preferredResources,
+			"utilizationPreferences": testAccRecommendationPreferences_utilizationPreferences,
 		},
 	}
 

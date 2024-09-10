@@ -184,7 +184,7 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 									},
 									"threshold": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.CustomizableMetricThreshold](),
-										Required:   true,
+										Optional:   true,
 									},
 								},
 							},

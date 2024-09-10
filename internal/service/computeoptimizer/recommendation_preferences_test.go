@@ -163,6 +163,119 @@ func testAccRecommendationPreferences_preferredResources(t *testing.T) {
 	})
 }
 
+func testAccRecommendationPreferences_utilizationPreferences(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RecommendationPreferencesDetail
+	resourceName := "aws_computeoptimizer_recommendation_preferences.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComputeOptimizerEndpointID)
+			testAccPreCheckEnrollmentStatus(ctx, t, "Active")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComputeOptimizerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecommendationPreferencesDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecommendationPreferencesConfig_utilizationPreferences,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecommendationPreferencesExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enhanced_infrastructure_metrics"), knownvalue.StringExact("Active")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("external_metrics_preference"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("inferred_workload_types"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("look_back_period"), knownvalue.StringExact("DAYS_93")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("preferred_resource"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceType), knownvalue.StringExact("Ec2Instance")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("savings_estimation_mode"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), knownvalue.ListExact(
+						[]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								names.AttrName: knownvalue.StringExact("AccountId"),
+							}),
+						}),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("utilization_preference"), knownvalue.ListSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("utilization_preference"), knownvalue.ListExact(
+						[]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"metric_name": knownvalue.StringExact("CpuUtilization"),
+								"metric_parameters": knownvalue.ListExact(
+									[]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"headroom":  knownvalue.StringExact("PERCENT_20"),
+											"threshold": knownvalue.StringExact("P95"),
+										}),
+									},
+								),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"metric_name": knownvalue.StringExact("MemoryUtilization"),
+								"metric_parameters": knownvalue.ListExact(
+									[]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"headroom":  knownvalue.StringExact("PERCENT_30"),
+											"threshold": knownvalue.Null(),
+										}),
+									},
+								),
+							}),
+						}),
+					),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRecommendationPreferencesConfig_utilizationPreferencesUpdated,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecommendationPreferencesExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enhanced_infrastructure_metrics"), knownvalue.StringExact("Inactive")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("external_metrics_preference"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("inferred_workload_types"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("look_back_period"), knownvalue.StringExact("DAYS_14")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("preferred_resource"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceType), knownvalue.StringExact("Ec2Instance")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("savings_estimation_mode"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), knownvalue.ListExact(
+						[]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								names.AttrName: knownvalue.StringExact("AccountId"),
+							}),
+						}),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("utilization_preference"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("utilization_preference"), knownvalue.ListExact(
+						[]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"metric_name": knownvalue.StringExact("CpuUtilization"),
+								"metric_parameters": knownvalue.ListExact(
+									[]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"headroom":  knownvalue.StringExact("PERCENT_0"),
+											"threshold": knownvalue.StringExact("P90"),
+										}),
+									},
+								),
+							}),
+						}),
+					),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckRecommendationPreferencesExists(ctx context.Context, n string, v *awstypes.RecommendationPreferencesDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -243,6 +356,57 @@ resource "aws_computeoptimizer_recommendation_preferences" "test" {
   preferred_resource {
     include_list = ["m5.xlarge", "r5"]
     name         = "Ec2InstanceTypes"
+  }
+}
+`
+
+const testAccRecommendationPreferencesConfig_utilizationPreferences = `
+data "aws_caller_identity" "current" {}
+
+resource "aws_computeoptimizer_recommendation_preferences" "test" {
+  resource_type = "Ec2Instance"
+  scope {
+    name  = "AccountId"
+    value = data.aws_caller_identity.current.account_id
+  }
+
+  enhanced_infrastructure_metrics = "Active"
+
+  utilization_preference {
+    metric_name = "CpuUtilization"
+    metric_parameters {
+      headroom  = "PERCENT_20"
+      threshold = "P95"
+    }
+  }
+
+  utilization_preference {
+    metric_name = "MemoryUtilization"
+    metric_parameters {
+      headroom = "PERCENT_30"
+    }
+  }
+}
+`
+
+const testAccRecommendationPreferencesConfig_utilizationPreferencesUpdated = `
+data "aws_caller_identity" "current" {}
+
+resource "aws_computeoptimizer_recommendation_preferences" "test" {
+  resource_type = "Ec2Instance"
+  scope {
+    name  = "AccountId"
+    value = data.aws_caller_identity.current.account_id
+  }
+
+  enhanced_infrastructure_metrics = "Inactive"
+
+  utilization_preference {
+    metric_name = "CpuUtilization"
+    metric_parameters {
+      headroom  = "PERCENT_0"
+      threshold = "P90"
+    }
   }
 }
 `

@@ -86,7 +86,7 @@ You must specify either an `include_list` or `exclude_list`.
 * `metric_name` - (Required) The name of the resource utilization metric name to customize. Valid values: `CpuUtilization`, `MemoryUtilization`.
 * `metric_parameters` - (Required) The parameters to set when customizing the resource utilization thresholds.
     * `headroom` - (Required) The headroom value in percentage used for the specified metric parameter. Valid values: `PERCENT_30`, `PERCENT_20`, `PERCENT_10`, `PERCENT_0`.
-    * `threshold` - (Required) The threshold value used for the specified metric parameter. You can only specify the threshold value for CPU utilization. Valid values: `P90`, `P95`, `P99_5`.
+    * `threshold` - (Optional) The threshold value used for the specified metric parameter. You can only specify the threshold value for CPU utilization. Valid values: `P90`, `P95`, `P99_5`.
 
 ## Attribute Reference
 
