@@ -149,7 +149,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFormation stack instances using the stack set name and `call_as` separated by commas (`,`). (If you are importing a stack instance targetting OUs, see the example below.) For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFormation stack instances using the stack set name and `call_as` separated by commas (`,`). (If you are importing a stack instance targeting OUs, see the example below.) For example:
 
 ```terraform
 import {
@@ -167,7 +167,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudFormation stack instances using the stack set name and `call_as` separated by commas (`,`). (If you are importing a stack instance targetting OUs, see the example below.) For example:
+Using `terraform import`, import CloudFormation stack instances using the stack set name and `call_as` separated by commas (`,`). (If you are importing a stack instance targeting OUs, see the example below.) For example:
 
 ```console
 % terraform import aws_cloudformation_stack_instances.example example,SELF
