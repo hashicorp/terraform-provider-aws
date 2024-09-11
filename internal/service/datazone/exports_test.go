@@ -5,6 +5,7 @@ package datazone
 
 // Exports for use in tests only.
 var (
+	ResourceAssetType                         = newResourceAssetType
 	ResourceDomain                            = newResourceDomain
 	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
 	ResourceEnvironment                       = newResourceEnvironment
@@ -14,6 +15,7 @@ var (
 	ResourceGlossaryTerm                      = newResourceGlossaryTerm
 	ResourceProject                           = newResourceProject
 
+	FindAssetTypeByID          = findAssetTypeByID
 	FindEnvironmentByID        = findEnvironmentByID
 	FindEnvironmentProfileByID = findEnvironmentProfileByID
 	FindFormTypeByID           = findFormTypeByID
