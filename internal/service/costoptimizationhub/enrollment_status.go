@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -55,8 +54,8 @@ func (r *resourceEnrollmentStatus) Metadata(_ context.Context, request resource.
 func (r *resourceEnrollmentStatus) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"status": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.EnrollmentStatus](),
@@ -106,8 +105,8 @@ func (r *resourceEnrollmentStatus) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
-	data.Status = flex.StringValueToFramework(ctx, aws.ToString(out.Status))
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.Status = fwflex.StringValueToFramework(ctx, aws.ToString(out.Status))
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -151,7 +150,7 @@ func (r *resourceEnrollmentStatus) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	data.Status = flex.StringValueToFramework(ctx, out.Items[0].Status)
+	data.Status = fwflex.StringValueToFramework(ctx, out.Items[0].Status)
 
 	// out includes the IncludeMemberAccounts field ATM but it is always nil. Thus, we cannot update state
 	// and drift detection is not possible. (However, we can still update if the configuration changes.)
@@ -159,7 +158,7 @@ func (r *resourceEnrollmentStatus) Read(ctx context.Context, request resource.Re
 
 	// data.IncludeMemberAccounts = types.BoolValue(false)
 	// if out.IncludeMemberAccounts != nil {
-	// 	data.IncludeMemberAccounts = flex.BoolToFramework(ctx, out.IncludeMemberAccounts)
+	// 	data.IncludeMemberAccounts = fwflex.BoolToFramework(ctx, out.IncludeMemberAccounts)
 	// }
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -201,7 +200,7 @@ func (r *resourceEnrollmentStatus) Update(ctx context.Context, request resource.
 		}
 
 		old.ID = new.ID
-		old.Status = flex.StringValueToFramework(ctx, *out.Status)
+		old.Status = fwflex.StringValueToFramework(ctx, *out.Status)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &old)...)
@@ -254,7 +253,7 @@ func findEnrollmentStatus(ctx context.Context, conn *costoptimizationhub.Client)
 }
 
 func (r *resourceEnrollmentStatus) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourceEnrollmentStatusData struct {
