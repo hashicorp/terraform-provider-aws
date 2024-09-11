@@ -42,3 +42,27 @@ func TestAccBatchJobDefinitionDataSource_tags(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBatchJobDefinitionDataSource_tags_None(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_batch_job_definition.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}

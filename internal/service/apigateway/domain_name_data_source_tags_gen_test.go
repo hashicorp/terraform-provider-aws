@@ -45,3 +45,31 @@ func TestAccAPIGatewayDomainNameDataSource_tags(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAPIGatewayDomainNameDataSource_tags_None(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_api_gateway_domain_name.test"
+	rName := acctest.RandomSubdomain()
+	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/DomainName/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:          config.StringVariable(rName),
+					acctest.CtResourceTags:   nil,
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}

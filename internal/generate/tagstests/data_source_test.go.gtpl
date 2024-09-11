@@ -132,3 +132,27 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 		},
 	})
 }
+
+func {{ template "testname" . }}_tags_None(t *testing.T) {
+	{{- template "Init" . }}
+
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+		{{ template "TestCaseSetup" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/data.tags/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName:        config.StringVariable(rName),{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}

@@ -42,3 +42,27 @@ func TestAccIAMUserDataSource_tags(t *testing.T) {
 		},
 	})
 }
+
+func TestAccIAMUserDataSource_tags_None(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_iam_user.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/User/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}

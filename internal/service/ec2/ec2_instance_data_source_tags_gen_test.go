@@ -42,3 +42,27 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 		},
 	})
 }
+
+func TestAccEC2InstanceDataSource_tags_None(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}

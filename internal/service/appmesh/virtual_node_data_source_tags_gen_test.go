@@ -52,3 +52,27 @@ func testAccAppMeshVirtualNodeDataSource_tags(t *testing.T) {
 		},
 	})
 }
+
+func testAccAppMeshVirtualNodeDataSource_tags_None(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_appmesh_virtual_node.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualNode/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
