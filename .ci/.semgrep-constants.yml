@@ -13,8 +13,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrARN"
+    options:
+      constant_propagation: false
 
   - id: literal-arns-string-constant
     languages: [go]
@@ -28,8 +31,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrARNs"
+    options:
+      constant_propagation: false
 
   - id: literal-aws_account_id-string-constant
     languages: [go]
@@ -43,8 +49,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAWSAccountID"
+    options:
+      constant_propagation: false
 
   - id: literal-access_key-string-constant
     languages: [go]
@@ -58,8 +67,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAccessKey"
+    options:
+      constant_propagation: false
 
   - id: literal-account_id-string-constant
     languages: [go]
@@ -73,8 +85,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAccountID"
+    options:
+      constant_propagation: false
 
   - id: literal-action-string-constant
     languages: [go]
@@ -88,8 +103,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAction"
+    options:
+      constant_propagation: false
 
   - id: literal-actions-string-constant
     languages: [go]
@@ -103,8 +121,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrActions"
+    options:
+      constant_propagation: false
 
   - id: literal-address-string-constant
     languages: [go]
@@ -118,8 +139,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAddress"
+    options:
+      constant_propagation: false
 
   - id: literal-alias-string-constant
     languages: [go]
@@ -133,8 +157,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAlias"
+    options:
+      constant_propagation: false
 
   - id: literal-allocated_storage-string-constant
     languages: [go]
@@ -148,8 +175,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAllocatedStorage"
+    options:
+      constant_propagation: false
 
   - id: literal-allow_major_version_upgrade-string-constant
     languages: [go]
@@ -163,8 +193,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAllowMajorVersionUpgrade"
+    options:
+      constant_propagation: false
 
   - id: literal-application_id-string-constant
     languages: [go]
@@ -178,8 +211,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrApplicationID"
+    options:
+      constant_propagation: false
 
   - id: literal-apply_immediately-string-constant
     languages: [go]
@@ -193,8 +229,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrApplyImmediately"
+    options:
+      constant_propagation: false
 
   - id: literal-association_id-string-constant
     languages: [go]
@@ -208,8 +247,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAssociationID"
+    options:
+      constant_propagation: false
 
   - id: literal-attributes-string-constant
     languages: [go]
@@ -223,8 +265,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAttributes"
+    options:
+      constant_propagation: false
 
   - id: literal-auto_minor_version_upgrade-string-constant
     languages: [go]
@@ -238,8 +283,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAutoMinorVersionUpgrade"
+    options:
+      constant_propagation: false
 
   - id: literal-availability_zone-string-constant
     languages: [go]
@@ -253,8 +301,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAvailabilityZone"
+    options:
+      constant_propagation: false
 
   - id: literal-availability_zones-string-constant
     languages: [go]
@@ -268,8 +319,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrAvailabilityZones"
+    options:
+      constant_propagation: false
 
   - id: literal-bucket-string-constant
     languages: [go]
@@ -283,8 +337,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrBucket"
+    options:
+      constant_propagation: false
 
   - id: literal-bucket_name-string-constant
     languages: [go]
@@ -298,8 +355,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrBucketName"
+    options:
+      constant_propagation: false
 
   - id: literal-bucket_prefix-string-constant
     languages: [go]
@@ -313,8 +373,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrBucketPrefix"
+    options:
+      constant_propagation: false
 
   - id: literal-cidr_block-string-constant
     languages: [go]
@@ -328,8 +391,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCIDRBlock"
+    options:
+      constant_propagation: false
 
   - id: literal-capacity_provider_strategy-string-constant
     languages: [go]
@@ -343,8 +409,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCapacityProviderStrategy"
+    options:
+      constant_propagation: false
 
   - id: literal-catalog_id-string-constant
     languages: [go]
@@ -358,8 +427,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCatalogID"
+    options:
+      constant_propagation: false
 
   - id: literal-certificate-string-constant
     languages: [go]
@@ -373,8 +445,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCertificate"
+    options:
+      constant_propagation: false
 
   - id: literal-certificate_arn-string-constant
     languages: [go]
@@ -388,8 +463,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCertificateARN"
+    options:
+      constant_propagation: false
 
   - id: literal-certificate_chain-string-constant
     languages: [go]
@@ -403,8 +481,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCertificateChain"
+    options:
+      constant_propagation: false
 
   - id: literal-client_id-string-constant
     languages: [go]
@@ -418,8 +499,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrClientID"
+    options:
+      constant_propagation: false
 
   - id: literal-client_secret-string-constant
     languages: [go]
@@ -433,8 +517,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrClientSecret"
+    options:
+      constant_propagation: false
 
   - id: literal-cloudwatch_log_group_arn-string-constant
     languages: [go]
@@ -448,8 +535,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCloudWatchLogGroupARN"
+    options:
+      constant_propagation: false
 
   - id: literal-cloudwatch_logs-string-constant
     languages: [go]
@@ -463,8 +553,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCloudWatchLogs"
+    options:
+      constant_propagation: false
 
   - id: literal-cluster_identifier-string-constant
     languages: [go]
@@ -478,8 +571,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrClusterIdentifier"
+    options:
+      constant_propagation: false
 
   - id: literal-cluster_name-string-constant
     languages: [go]
@@ -493,8 +589,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrClusterName"
+    options:
+      constant_propagation: false
 
   - id: literal-comment-string-constant
     languages: [go]
@@ -508,8 +607,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrComment"
+    options:
+      constant_propagation: false
 
   - id: literal-condition-string-constant
     languages: [go]
@@ -523,8 +625,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCondition"
+    options:
+      constant_propagation: false
 
   - id: literal-configuration-string-constant
     languages: [go]
@@ -538,8 +643,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrConfiguration"
+    options:
+      constant_propagation: false
 
   - id: literal-connection_id-string-constant
     languages: [go]
@@ -553,8 +661,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrConnectionID"
+    options:
+      constant_propagation: false
 
   - id: literal-content-string-constant
     languages: [go]
@@ -568,8 +679,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrContent"
+    options:
+      constant_propagation: false
 
   - id: literal-content_type-string-constant
     languages: [go]
@@ -583,8 +697,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrContentType"
+    options:
+      constant_propagation: false
 
   - id: literal-create_time-string-constant
     languages: [go]
@@ -598,8 +715,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCreateTime"
+    options:
+      constant_propagation: false
 
   - id: literal-created_at-string-constant
     languages: [go]
@@ -613,8 +733,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCreatedAt"
+    options:
+      constant_propagation: false
 
   - id: literal-created_date-string-constant
     languages: [go]
@@ -628,8 +751,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCreatedDate"
+    options:
+      constant_propagation: false
 
   - id: literal-created_time-string-constant
     languages: [go]
@@ -643,8 +769,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCreatedTime"
+    options:
+      constant_propagation: false
 
   - id: literal-creation_date-string-constant
     languages: [go]
@@ -658,8 +787,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCreationDate"
+    options:
+      constant_propagation: false
 
   - id: literal-creation_time-string-constant
     languages: [go]
@@ -673,8 +805,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrCreationTime"
+    options:
+      constant_propagation: false
 
   - id: literal-dns_name-string-constant
     languages: [go]
@@ -688,8 +823,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDNSName"
+    options:
+      constant_propagation: false
 
   - id: literal-database-string-constant
     languages: [go]
@@ -703,8 +841,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDatabase"
+    options:
+      constant_propagation: false
 
   - id: literal-database_name-string-constant
     languages: [go]
@@ -718,8 +859,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDatabaseName"
+    options:
+      constant_propagation: false
 
   - id: literal-default_action-string-constant
     languages: [go]
@@ -733,8 +877,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDefaultAction"
+    options:
+      constant_propagation: false
 
   - id: literal-default_value-string-constant
     languages: [go]
@@ -748,8 +895,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDefaultValue"
+    options:
+      constant_propagation: false
 
   - id: literal-delete_on_termination-string-constant
     languages: [go]
@@ -763,8 +913,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDeleteOnTermination"
+    options:
+      constant_propagation: false
 
   - id: literal-deletion_protection-string-constant
     languages: [go]
@@ -778,8 +931,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDeletionProtection"
+    options:
+      constant_propagation: false
 
   - id: literal-description-string-constant
     languages: [go]
@@ -793,8 +949,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDescription"
+    options:
+      constant_propagation: false
 
   - id: literal-destination-string-constant
     languages: [go]
@@ -808,8 +967,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDestination"
+    options:
+      constant_propagation: false
 
   - id: literal-destination_arn-string-constant
     languages: [go]
@@ -823,8 +985,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDestinationARN"
+    options:
+      constant_propagation: false
 
   - id: literal-device_name-string-constant
     languages: [go]
@@ -838,8 +1003,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDeviceName"
+    options:
+      constant_propagation: false
 
   - id: literal-display_name-string-constant
     languages: [go]
@@ -853,8 +1021,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDisplayName"
+    options:
+      constant_propagation: false
 
   - id: literal-domain-string-constant
     languages: [go]
@@ -868,8 +1039,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDomain"
+    options:
+      constant_propagation: false
 
   - id: literal-domain_name-string-constant
     languages: [go]
@@ -883,8 +1057,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDomainName"
+    options:
+      constant_propagation: false
 
   - id: literal-duration-string-constant
     languages: [go]
@@ -898,8 +1075,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrDuration"
+    options:
+      constant_propagation: false
 
   - id: literal-email-string-constant
     languages: [go]
@@ -913,8 +1093,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEmail"
+    options:
+      constant_propagation: false
 
   - id: literal-enabled-string-constant
     languages: [go]
@@ -928,8 +1111,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEnabled"
+    options:
+      constant_propagation: false
 
   - id: literal-encrypted-string-constant
     languages: [go]
@@ -943,8 +1129,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEncrypted"
+    options:
+      constant_propagation: false
 
   - id: literal-encryption_configuration-string-constant
     languages: [go]
@@ -958,8 +1147,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEncryptionConfiguration"
+    options:
+      constant_propagation: false
 
   - id: literal-endpoint-string-constant
     languages: [go]
@@ -973,8 +1165,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEndpoint"
+    options:
+      constant_propagation: false
 
   - id: literal-endpoint_type-string-constant
     languages: [go]
@@ -988,8 +1183,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEndpointType"
+    options:
+      constant_propagation: false
 
   - id: literal-endpoints-string-constant
     languages: [go]
@@ -1003,8 +1201,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEndpoints"
+    options:
+      constant_propagation: false
 
   - id: literal-engine-string-constant
     languages: [go]
@@ -1018,8 +1219,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEngine"
+    options:
+      constant_propagation: false
 
   - id: literal-engine_version-string-constant
     languages: [go]
@@ -1033,8 +1237,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEngineVersion"
+    options:
+      constant_propagation: false
 
   - id: literal-environment-string-constant
     languages: [go]
@@ -1048,8 +1255,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrEnvironment"
+    options:
+      constant_propagation: false
 
   - id: literal-execution_role_arn-string-constant
     languages: [go]
@@ -1063,8 +1273,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrExecutionRoleARN"
+    options:
+      constant_propagation: false
 
   - id: literal-expected_bucket_owner-string-constant
     languages: [go]
@@ -1078,8 +1291,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrExpectedBucketOwner"
+    options:
+      constant_propagation: false
 
   - id: literal-expression-string-constant
     languages: [go]
@@ -1093,8 +1309,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrExpression"
+    options:
+      constant_propagation: false
 
   - id: literal-external_id-string-constant
     languages: [go]
@@ -1108,8 +1327,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrExternalID"
+    options:
+      constant_propagation: false
 
   - id: literal-family-string-constant
     languages: [go]
@@ -1123,8 +1345,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrFamily"
+    options:
+      constant_propagation: false
 
   - id: literal-field-string-constant
     languages: [go]
@@ -1138,8 +1363,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrField"
+    options:
+      constant_propagation: false
 
   - id: literal-file_system_id-string-constant
     languages: [go]
@@ -1153,8 +1381,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrFileSystemID"
+    options:
+      constant_propagation: false
 
   - id: literal-filter-string-constant
     languages: [go]
@@ -1168,8 +1399,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrFilter"
+    options:
+      constant_propagation: false
 
   - id: literal-final_snapshot_identifier-string-constant
     languages: [go]
@@ -1183,8 +1417,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrFinalSnapshotIdentifier"
+    options:
+      constant_propagation: false
 
   - id: literal-force_delete-string-constant
     languages: [go]
@@ -1198,8 +1435,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrForceDelete"
+    options:
+      constant_propagation: false
 
   - id: literal-force_destroy-string-constant
     languages: [go]
@@ -1213,8 +1453,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrForceDestroy"
+    options:
+      constant_propagation: false
 
   - id: literal-format-string-constant
     languages: [go]
@@ -1228,8 +1471,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrFormat"
+    options:
+      constant_propagation: false
 
   - id: literal-function_arn-string-constant
     languages: [go]
@@ -1243,8 +1489,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrFunctionARN"
+    options:
+      constant_propagation: false
 
   - id: literal-group_name-string-constant
     languages: [go]
@@ -1258,8 +1507,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrGroupName"
+    options:
+      constant_propagation: false
 
   - id: literal-header-string-constant
     languages: [go]
@@ -1273,8 +1525,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrHeader"
+    options:
+      constant_propagation: false
 
   - id: literal-health_check-string-constant
     languages: [go]
@@ -1288,8 +1543,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrHealthCheck"
+    options:
+      constant_propagation: false
 
   - id: literal-hosted_zone_id-string-constant
     languages: [go]
@@ -1303,8 +1561,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrHostedZoneID"
+    options:
+      constant_propagation: false
 
   - id: literal-iam_role_arn-string-constant
     languages: [go]
@@ -1318,8 +1579,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIAMRoleARN"
+    options:
+      constant_propagation: false
 
   - id: literal-id-string-constant
     languages: [go]
@@ -1333,8 +1597,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrID"
+    options:
+      constant_propagation: false
 
   - id: literal-ids-string-constant
     languages: [go]
@@ -1348,8 +1615,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIDs"
+    options:
+      constant_propagation: false
 
   - id: literal-iops-string-constant
     languages: [go]
@@ -1363,8 +1633,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIOPS"
+    options:
+      constant_propagation: false
 
   - id: literal-ip_address-string-constant
     languages: [go]
@@ -1378,8 +1651,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIPAddress"
+    options:
+      constant_propagation: false
 
   - id: literal-ip_address_type-string-constant
     languages: [go]
@@ -1393,8 +1669,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIPAddressType"
+    options:
+      constant_propagation: false
 
   - id: literal-ip_addresses-string-constant
     languages: [go]
@@ -1408,8 +1687,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIPAddresses"
+    options:
+      constant_propagation: false
 
   - id: literal-identifier-string-constant
     languages: [go]
@@ -1423,8 +1705,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIdentifier"
+    options:
+      constant_propagation: false
 
   - id: literal-instance_count-string-constant
     languages: [go]
@@ -1438,8 +1723,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrInstanceCount"
+    options:
+      constant_propagation: false
 
   - id: literal-instance_id-string-constant
     languages: [go]
@@ -1453,8 +1741,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrInstanceID"
+    options:
+      constant_propagation: false
 
   - id: literal-instance_type-string-constant
     languages: [go]
@@ -1468,8 +1759,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrInstanceType"
+    options:
+      constant_propagation: false
 
   - id: literal-interval-string-constant
     languages: [go]
@@ -1483,8 +1777,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrInterval"
+    options:
+      constant_propagation: false
 
   - id: literal-issuer-string-constant
     languages: [go]
@@ -1498,8 +1795,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrIssuer"
+    options:
+      constant_propagation: false
 
   - id: literal-json-string-constant
     languages: [go]
@@ -1513,8 +1813,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrJSON"
+    options:
+      constant_propagation: false
 
   - id: literal-kms_key-string-constant
     languages: [go]
@@ -1528,8 +1831,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrKMSKey"
+    options:
+      constant_propagation: false
 
   - id: literal-kms_key_arn-string-constant
     languages: [go]
@@ -1543,8 +1849,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrKMSKeyARN"
+    options:
+      constant_propagation: false
 
   - id: literal-kms_key_id-string-constant
     languages: [go]
@@ -1558,8 +1867,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrKMSKeyID"
+    options:
+      constant_propagation: false
 
   - id: literal-key-string-constant
     languages: [go]
@@ -1573,8 +1885,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrKey"
+    options:
+      constant_propagation: false
 
   - id: literal-key_id-string-constant
     languages: [go]
@@ -1588,8 +1903,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrKeyID"
+    options:
+      constant_propagation: false
 
   - id: literal-language_code-string-constant
     languages: [go]
@@ -1603,8 +1921,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrLanguageCode"
+    options:
+      constant_propagation: false
 
   - id: literal-last_updated_date-string-constant
     languages: [go]
@@ -1618,8 +1939,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrLastUpdatedDate"
+    options:
+      constant_propagation: false
 
   - id: literal-last_updated_time-string-constant
     languages: [go]
@@ -1633,8 +1957,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrLastUpdatedTime"
+    options:
+      constant_propagation: false
 
   - id: literal-launch_template-string-constant
     languages: [go]
@@ -1648,8 +1975,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrLaunchTemplate"
+    options:
+      constant_propagation: false
 
   - id: literal-location-string-constant
     languages: [go]
@@ -1663,8 +1993,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrLocation"
+    options:
+      constant_propagation: false
 
   - id: literal-log_group_name-string-constant
     languages: [go]
@@ -1678,8 +2011,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrLogGroupName"
+    options:
+      constant_propagation: false
 
   - id: literal-logging_configuration-string-constant
     languages: [go]
@@ -1693,8 +2029,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrLoggingConfiguration"
+    options:
+      constant_propagation: false
 
   - id: literal-max-string-constant
     languages: [go]
@@ -1708,8 +2047,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrMax"
+    options:
+      constant_propagation: false
 
   - id: literal-max_capacity-string-constant
     languages: [go]
@@ -1723,8 +2065,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrMaxCapacity"
+    options:
+      constant_propagation: false
 
   - id: literal-message-string-constant
     languages: [go]
@@ -1738,8 +2083,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrMessage"
+    options:
+      constant_propagation: false
 
   - id: literal-metric_name-string-constant
     languages: [go]
@@ -1753,8 +2101,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrMetricName"
+    options:
+      constant_propagation: false
 
   - id: literal-min-string-constant
     languages: [go]
@@ -1768,8 +2119,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrMin"
+    options:
+      constant_propagation: false
 
   - id: literal-mode-string-constant
     languages: [go]
@@ -1783,8 +2137,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrMode"
+    options:
+      constant_propagation: false
 
   - id: literal-most_recent-string-constant
     languages: [go]
@@ -1798,8 +2155,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrMostRecent"
+    options:
+      constant_propagation: false
 
   - id: literal-name-string-constant
     languages: [go]
@@ -1813,8 +2173,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrName"
+    options:
+      constant_propagation: false
 
   - id: literal-name_prefix-string-constant
     languages: [go]
@@ -1828,8 +2191,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrNamePrefix"
+    options:
+      constant_propagation: false
 
   - id: literal-names-string-constant
     languages: [go]
@@ -1843,8 +2209,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrNames"
+    options:
+      constant_propagation: false
 
   - id: literal-namespace-string-constant
     languages: [go]
@@ -1858,8 +2227,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrNamespace"
+    options:
+      constant_propagation: false
 
   - id: literal-network_configuration-string-constant
     languages: [go]
@@ -1873,8 +2245,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrNetworkConfiguration"
+    options:
+      constant_propagation: false
 
   - id: literal-network_interface_id-string-constant
     languages: [go]
@@ -1888,8 +2263,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrNetworkInterfaceID"
+    options:
+      constant_propagation: false
 
   - id: literal-owner-string-constant
     languages: [go]
@@ -1903,8 +2281,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrOwner"
+    options:
+      constant_propagation: false
 
   - id: literal-owner_account_id-string-constant
     languages: [go]
@@ -1918,8 +2299,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrOwnerAccountID"
+    options:
+      constant_propagation: false
 
   - id: literal-owner_id-string-constant
     languages: [go]
@@ -1933,8 +2317,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrOwnerID"
+    options:
+      constant_propagation: false
 
   - id: literal-parameter-string-constant
     languages: [go]
@@ -1948,8 +2335,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrParameter"
+    options:
+      constant_propagation: false
 
   - id: literal-parameter_group_name-string-constant
     languages: [go]
@@ -1963,8 +2353,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrParameterGroupName"
+    options:
+      constant_propagation: false
 
   - id: literal-parameters-string-constant
     languages: [go]
@@ -1978,8 +2371,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrParameters"
+    options:
+      constant_propagation: false
 
   - id: literal-password-string-constant
     languages: [go]
@@ -1993,8 +2389,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPassword"
+    options:
+      constant_propagation: false
 
   - id: literal-path-string-constant
     languages: [go]
@@ -2008,8 +2407,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPath"
+    options:
+      constant_propagation: false
 
   - id: literal-permissions-string-constant
     languages: [go]
@@ -2023,8 +2425,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPermissions"
+    options:
+      constant_propagation: false
 
   - id: literal-policy-string-constant
     languages: [go]
@@ -2038,8 +2443,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPolicy"
+    options:
+      constant_propagation: false
 
   - id: literal-port-string-constant
     languages: [go]
@@ -2053,8 +2461,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPort"
+    options:
+      constant_propagation: false
 
   - id: literal-preferred_maintenance_window-string-constant
     languages: [go]
@@ -2068,8 +2479,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPreferredMaintenanceWindow"
+    options:
+      constant_propagation: false
 
   - id: literal-prefix-string-constant
     languages: [go]
@@ -2083,8 +2497,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPrefix"
+    options:
+      constant_propagation: false
 
   - id: literal-principal-string-constant
     languages: [go]
@@ -2098,8 +2515,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPrincipal"
+    options:
+      constant_propagation: false
 
   - id: literal-priority-string-constant
     languages: [go]
@@ -2113,8 +2533,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPriority"
+    options:
+      constant_propagation: false
 
   - id: literal-private_key-string-constant
     languages: [go]
@@ -2128,8 +2551,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPrivateKey"
+    options:
+      constant_propagation: false
 
   - id: literal-profile-string-constant
     languages: [go]
@@ -2143,8 +2569,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrProfile"
+    options:
+      constant_propagation: false
 
   - id: literal-propagate_tags-string-constant
     languages: [go]
@@ -2158,8 +2587,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPropagateTags"
+    options:
+      constant_propagation: false
 
   - id: literal-properties-string-constant
     languages: [go]
@@ -2173,8 +2605,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrProperties"
+    options:
+      constant_propagation: false
 
   - id: literal-protocol-string-constant
     languages: [go]
@@ -2188,8 +2623,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrProtocol"
+    options:
+      constant_propagation: false
 
   - id: literal-provider_name-string-constant
     languages: [go]
@@ -2203,8 +2641,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrProviderName"
+    options:
+      constant_propagation: false
 
   - id: literal-public_key-string-constant
     languages: [go]
@@ -2218,8 +2659,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPublicKey"
+    options:
+      constant_propagation: false
 
   - id: literal-publicly_accessible-string-constant
     languages: [go]
@@ -2233,8 +2677,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPubliclyAccessible"
+    options:
+      constant_propagation: false
 
   - id: literal-region-string-constant
     languages: [go]
@@ -2248,8 +2695,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrRegion"
+    options:
+      constant_propagation: false
 
   - id: literal-repository_name-string-constant
     languages: [go]
@@ -2263,8 +2713,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrRepositoryName"
+    options:
+      constant_propagation: false
 
   - id: literal-resource_arn-string-constant
     languages: [go]
@@ -2278,8 +2731,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrResourceARN"
+    options:
+      constant_propagation: false
 
   - id: literal-resource_id-string-constant
     languages: [go]
@@ -2293,8 +2749,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrResourceID"
+    options:
+      constant_propagation: false
 
   - id: literal-resource_owner-string-constant
     languages: [go]
@@ -2308,8 +2767,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrResourceOwner"
+    options:
+      constant_propagation: false
 
   - id: literal-resource_tags-string-constant
     languages: [go]
@@ -2323,8 +2785,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrResourceTags"
+    options:
+      constant_propagation: false
 
   - id: literal-resource_type-string-constant
     languages: [go]
@@ -2338,8 +2803,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrResourceType"
+    options:
+      constant_propagation: false
 
   - id: literal-resources-string-constant
     languages: [go]
@@ -2353,8 +2821,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrResources"
+    options:
+      constant_propagation: false
 
   - id: literal-retention_period-string-constant
     languages: [go]
@@ -2368,8 +2839,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrRetentionPeriod"
+    options:
+      constant_propagation: false
 
   - id: literal-role-string-constant
     languages: [go]
@@ -2383,8 +2857,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrRole"
+    options:
+      constant_propagation: false
 
   - id: literal-role_arn-string-constant
     languages: [go]
@@ -2398,8 +2875,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrRoleARN"
+    options:
+      constant_propagation: false
 
   - id: literal-rule-string-constant
     languages: [go]
@@ -2413,8 +2893,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrRule"
+    options:
+      constant_propagation: false
 
   - id: literal-s3_bucket-string-constant
     languages: [go]
@@ -2428,8 +2911,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrS3Bucket"
+    options:
+      constant_propagation: false
 
   - id: literal-s3_bucket_name-string-constant
     languages: [go]
@@ -2443,8 +2929,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrS3BucketName"
+    options:
+      constant_propagation: false
 
   - id: literal-s3_key_prefix-string-constant
     languages: [go]
@@ -2458,8 +2947,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrS3KeyPrefix"
+    options:
+      constant_propagation: false
 
   - id: literal-sns_topic_arn-string-constant
     languages: [go]
@@ -2473,8 +2965,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSNSTopicARN"
+    options:
+      constant_propagation: false
 
   - id: literal-schedule-string-constant
     languages: [go]
@@ -2488,8 +2983,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSchedule"
+    options:
+      constant_propagation: false
 
   - id: literal-schedule_expression-string-constant
     languages: [go]
@@ -2503,8 +3001,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrScheduleExpression"
+    options:
+      constant_propagation: false
 
   - id: literal-schema-string-constant
     languages: [go]
@@ -2518,8 +3019,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSchema"
+    options:
+      constant_propagation: false
 
   - id: literal-scope-string-constant
     languages: [go]
@@ -2533,8 +3037,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrScope"
+    options:
+      constant_propagation: false
 
   - id: literal-secret_key-string-constant
     languages: [go]
@@ -2548,8 +3055,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSecretKey"
+    options:
+      constant_propagation: false
 
   - id: literal-security_group_ids-string-constant
     languages: [go]
@@ -2563,8 +3073,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSecurityGroupIDs"
+    options:
+      constant_propagation: false
 
   - id: literal-security_groups-string-constant
     languages: [go]
@@ -2578,8 +3091,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSecurityGroups"
+    options:
+      constant_propagation: false
 
   - id: literal-service_name-string-constant
     languages: [go]
@@ -2593,8 +3109,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrServiceName"
+    options:
+      constant_propagation: false
 
   - id: literal-service_role-string-constant
     languages: [go]
@@ -2608,8 +3127,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrServiceRole"
+    options:
+      constant_propagation: false
 
   - id: literal-service_role_arn-string-constant
     languages: [go]
@@ -2623,8 +3145,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrServiceRoleARN"
+    options:
+      constant_propagation: false
 
   - id: literal-session-string-constant
     languages: [go]
@@ -2638,8 +3163,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSession"
+    options:
+      constant_propagation: false
 
   - id: literal-shared_config_files-string-constant
     languages: [go]
@@ -2653,8 +3181,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSharedConfigFiles"
+    options:
+      constant_propagation: false
 
   - id: literal-size-string-constant
     languages: [go]
@@ -2668,8 +3199,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSize"
+    options:
+      constant_propagation: false
 
   - id: literal-skip_credentials_validation-string-constant
     languages: [go]
@@ -2683,8 +3217,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSkipCredentialsValidation"
+    options:
+      constant_propagation: false
 
   - id: literal-skip_destroy-string-constant
     languages: [go]
@@ -2698,8 +3235,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSkipDestroy"
+    options:
+      constant_propagation: false
 
   - id: literal-skip_requesting_account_id-string-constant
     languages: [go]
@@ -2713,8 +3253,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSkipRequestingAccountID"
+    options:
+      constant_propagation: false
 
   - id: literal-snapshot_id-string-constant
     languages: [go]
@@ -2728,8 +3271,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSnapshotID"
+    options:
+      constant_propagation: false
 
   - id: literal-source-string-constant
     languages: [go]
@@ -2743,8 +3289,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSource"
+    options:
+      constant_propagation: false
 
   - id: literal-source_type-string-constant
     languages: [go]
@@ -2758,8 +3307,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSourceType"
+    options:
+      constant_propagation: false
 
   - id: literal-stage-string-constant
     languages: [go]
@@ -2773,8 +3325,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStage"
+    options:
+      constant_propagation: false
 
   - id: literal-start_time-string-constant
     languages: [go]
@@ -2788,8 +3343,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStartTime"
+    options:
+      constant_propagation: false
 
   - id: literal-state-string-constant
     languages: [go]
@@ -2803,8 +3361,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrState"
+    options:
+      constant_propagation: false
 
   - id: literal-status-string-constant
     languages: [go]
@@ -2818,8 +3379,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStatus"
+    options:
+      constant_propagation: false
 
   - id: literal-status_code-string-constant
     languages: [go]
@@ -2833,8 +3397,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStatusCode"
+    options:
+      constant_propagation: false
 
   - id: literal-status_message-string-constant
     languages: [go]
@@ -2848,8 +3415,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStatusMessage"
+    options:
+      constant_propagation: false
 
   - id: literal-status_reason-string-constant
     languages: [go]
@@ -2863,8 +3433,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStatusReason"
+    options:
+      constant_propagation: false
 
   - id: literal-storage_class-string-constant
     languages: [go]
@@ -2878,8 +3451,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStorageClass"
+    options:
+      constant_propagation: false
 
   - id: literal-storage_encrypted-string-constant
     languages: [go]
@@ -2893,8 +3469,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStorageEncrypted"
+    options:
+      constant_propagation: false
 
   - id: literal-storage_type-string-constant
     languages: [go]
@@ -2908,8 +3487,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStorageType"
+    options:
+      constant_propagation: false
 
   - id: literal-stream_arn-string-constant
     languages: [go]
@@ -2923,8 +3505,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrStreamARN"
+    options:
+      constant_propagation: false
 
   - id: literal-subnet_id-string-constant
     languages: [go]
@@ -2938,8 +3523,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSubnetID"
+    options:
+      constant_propagation: false
 
   - id: literal-subnet_ids-string-constant
     languages: [go]
@@ -2953,8 +3541,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSubnetIDs"
+    options:
+      constant_propagation: false
 
   - id: literal-subnets-string-constant
     languages: [go]
@@ -2968,8 +3559,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSubnets"
+    options:
+      constant_propagation: false
 
   - id: literal-table_name-string-constant
     languages: [go]
@@ -2983,8 +3577,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTableName"
+    options:
+      constant_propagation: false
 
   - id: literal-tags-string-constant
     languages: [go]
@@ -2998,8 +3595,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTags"
+    options:
+      constant_propagation: false
 
   - id: literal-tags_all-string-constant
     languages: [go]
@@ -3013,8 +3613,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTagsAll"
+    options:
+      constant_propagation: false
 
   - id: literal-target-string-constant
     languages: [go]
@@ -3028,8 +3631,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTarget"
+    options:
+      constant_propagation: false
 
   - id: literal-target_arn-string-constant
     languages: [go]
@@ -3043,8 +3649,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTargetARN"
+    options:
+      constant_propagation: false
 
   - id: literal-throughput-string-constant
     languages: [go]
@@ -3058,8 +3667,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrThroughput"
+    options:
+      constant_propagation: false
 
   - id: literal-timeout-string-constant
     languages: [go]
@@ -3073,8 +3685,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTimeout"
+    options:
+      constant_propagation: false
 
   - id: literal-timeouts-string-constant
     languages: [go]
@@ -3088,8 +3703,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTimeouts"
+    options:
+      constant_propagation: false
 
   - id: literal-topic_arn-string-constant
     languages: [go]
@@ -3103,8 +3721,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTopicARN"
+    options:
+      constant_propagation: false
 
   - id: literal-transit_gateway_attachment_id-string-constant
     languages: [go]
@@ -3118,8 +3739,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTransitGatewayAttachmentID"
+    options:
+      constant_propagation: false
 
   - id: literal-transit_gateway_id-string-constant
     languages: [go]
@@ -3133,8 +3757,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTransitGatewayID"
+    options:
+      constant_propagation: false
 
   - id: literal-triggers-string-constant
     languages: [go]
@@ -3148,8 +3775,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrTriggers"
+    options:
+      constant_propagation: false
 
   - id: literal-type-string-constant
     languages: [go]
@@ -3163,8 +3793,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrType"
+    options:
+      constant_propagation: false
 
   - id: literal-uri-string-constant
     languages: [go]
@@ -3178,8 +3811,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrURI"
+    options:
+      constant_propagation: false
 
   - id: literal-url-string-constant
     languages: [go]
@@ -3193,8 +3829,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrURL"
+    options:
+      constant_propagation: false
 
   - id: literal-unit-string-constant
     languages: [go]
@@ -3208,8 +3847,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrUnit"
+    options:
+      constant_propagation: false
 
   - id: literal-user_name-string-constant
     languages: [go]
@@ -3223,8 +3865,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrUserName"
+    options:
+      constant_propagation: false
 
   - id: literal-user_pool_id-string-constant
     languages: [go]
@@ -3238,8 +3883,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrUserPoolID"
+    options:
+      constant_propagation: false
 
   - id: literal-username-string-constant
     languages: [go]
@@ -3253,8 +3901,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrUsername"
+    options:
+      constant_propagation: false
 
   - id: literal-vpc_config-string-constant
     languages: [go]
@@ -3268,8 +3919,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCConfig"
+    options:
+      constant_propagation: false
 
   - id: literal-vpc_configuration-string-constant
     languages: [go]
@@ -3283,8 +3937,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCConfiguration"
+    options:
+      constant_propagation: false
 
   - id: literal-vpc_endpoint_id-string-constant
     languages: [go]
@@ -3298,8 +3955,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCEndpointID"
+    options:
+      constant_propagation: false
 
   - id: literal-vpc_id-string-constant
     languages: [go]
@@ -3313,8 +3973,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCID"
+    options:
+      constant_propagation: false
 
   - id: literal-vpc_security_group_ids-string-constant
     languages: [go]
@@ -3328,8 +3991,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCSecurityGroupIDs"
+    options:
+      constant_propagation: false
 
   - id: literal-value-string-constant
     languages: [go]
@@ -3343,8 +4009,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrValue"
+    options:
+      constant_propagation: false
 
   - id: literal-values-string-constant
     languages: [go]
@@ -3358,8 +4027,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrValues"
+    options:
+      constant_propagation: false
 
   - id: literal-version-string-constant
     languages: [go]
@@ -3373,8 +4045,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVersion"
+    options:
+      constant_propagation: false
 
   - id: literal-virtual_name-string-constant
     languages: [go]
@@ -3388,8 +4063,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVirtualName"
+    options:
+      constant_propagation: false
 
   - id: literal-volume_size-string-constant
     languages: [go]
@@ -3403,8 +4081,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVolumeSize"
+    options:
+      constant_propagation: false
 
   - id: literal-volume_type-string-constant
     languages: [go]
@@ -3418,8 +4099,11 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVolumeType"
+    options:
+      constant_propagation: false
 
   - id: literal-weight-string-constant
     languages: [go]
@@ -3433,5 +4117,8 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrWeight"
+    options:
+      constant_propagation: false
