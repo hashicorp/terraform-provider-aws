@@ -22,4 +22,5 @@ var (
 	FindContactListByID                              = findContactListByID
 	FindDedicatedIPByTwoPartKey                      = findDedicatedIPByTwoPartKey
 	FindDedicatedIPPoolByName                        = findDedicatedIPPoolByName
+	FindEmailIdentityByID                            = findEmailIdentityByID
 )
