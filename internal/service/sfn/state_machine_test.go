@@ -605,7 +605,7 @@ func TestAccSFNStateMachine_definitionValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStateMachineConfig_invalidDefinition(rName),
-				ExpectError: regexache.MustCompile("invalid state machine definition:.*"),
+				ExpectError: regexache.MustCompile("invalid Step Functions State Machine definition: .+"),
 			},
 		},
 	})
