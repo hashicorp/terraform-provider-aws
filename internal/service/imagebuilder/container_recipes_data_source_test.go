@@ -28,8 +28,8 @@ func TestAccImageBuilderContainerRecipesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccContainerRecipesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),
 			},
 		},

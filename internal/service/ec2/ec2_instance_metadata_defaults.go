@@ -30,7 +30,7 @@ const (
 	httpPutResponseHopLimitNoPreference = -1
 )
 
-// @FrameworkResource(name="Instance Metadata Defaults")
+// @FrameworkResource("aws_ec2_instance_metadata_defaults", name="Instance Metadata Defaults")
 func newInstanceMetadataDefaultsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &instanceMetadataDefaultsResource{}
 
@@ -98,7 +98,7 @@ func (r *instanceMetadataDefaultsResource) ConfigValidators(context.Context) []r
 }
 
 func (r *instanceMetadataDefaultsResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data instanceMetadataDefaultsModel
+	var data instanceMetadataDefaultsResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -127,7 +127,7 @@ func (r *instanceMetadataDefaultsResource) Create(ctx context.Context, request r
 }
 
 func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data instanceMetadataDefaultsModel
+	var data instanceMetadataDefaultsResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -176,7 +176,7 @@ func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request res
 
 // Update is very similar to Create as AWS has a single API call ModifyInstanceMetadataDefaults
 func (r *instanceMetadataDefaultsResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new instanceMetadataDefaultsModel
+	var new instanceMetadataDefaultsResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -236,7 +236,7 @@ func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awsty
 	return output.AccountLevel, nil
 }
 
-type instanceMetadataDefaultsModel struct {
+type instanceMetadataDefaultsResourceModel struct {
 	HttpEndpoint            fwtypes.StringEnum[awstypes.DefaultInstanceMetadataEndpointState] `tfsdk:"http_endpoint"`
 	HttpPutResponseHopLimit types.Int64                                                       `tfsdk:"http_put_response_hop_limit"`
 	HttpTokens              fwtypes.StringEnum[awstypes.MetadataDefaultHttpTokensState]       `tfsdk:"http_tokens"`

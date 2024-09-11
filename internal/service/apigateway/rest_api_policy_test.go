@@ -38,20 +38,20 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Action":"execute-api:Invoke".+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Action":"execute-api:Invoke".+`)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 			{
 				Config: testAccRestAPIPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
 			},
 		},
 	})
@@ -136,7 +136,7 @@ func testAccCheckRestAPIPolicyExists(ctx context.Context, n string, res *apigate
 		}
 
 		if aws.ToString(describe.Id) != rs.Primary.ID &&
-			policy != rs.Primary.Attributes["policy"] {
+			policy != rs.Primary.Attributes[names.AttrPolicy] {
 			return fmt.Errorf("API Gateway REST API Policy not found")
 		}
 

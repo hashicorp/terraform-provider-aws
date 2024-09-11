@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudsearch_domain_service_access_policy", name="Domain Service Access Policy")
@@ -53,7 +54,7 @@ func resourceDomainServiceAccessPolicy() *schema.Resource {
 					return json
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -71,7 +72,7 @@ func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(policy),
 		DomainName:     aws.String(domainName),
@@ -117,7 +118,7 @@ func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("access_policy", policyToSet)
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 
 	return diags
 }

@@ -36,9 +36,9 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_description", "desc1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
 			{
@@ -92,11 +92,11 @@ func TestAccDMSReplicationSubnetGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSubnetGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccReplicationSubnetGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -105,20 +105,20 @@ func TestAccDMSReplicationSubnetGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSubnetGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccReplicationSubnetGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccReplicationSubnetGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccReplicationSubnetGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -132,7 +132,7 @@ func testAccCheckReplicationSubnetGroupExists(ctx context.Context, n string) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindReplicationSubnetGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -142,7 +142,7 @@ func testAccCheckReplicationSubnetGroupExists(ctx context.Context, n string) res
 
 func testAccCheckReplicationSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_replication_subnet_group" {

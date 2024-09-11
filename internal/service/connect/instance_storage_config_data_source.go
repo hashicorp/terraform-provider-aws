@@ -5,36 +5,37 @@ package connect
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_instance_storage_config")
-func DataSourceInstanceStorageConfig() *schema.Resource {
+// @SDKDataSource("aws_connect_instance_storage_config", name="Instance Storage Config")
+func dataSourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceStorageConfigRead,
+
 		Schema: map[string]*schema.Schema{
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"resource_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(connect.InstanceStorageResourceType_Values(), false),
+			names.AttrResourceType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.InstanceStorageResourceType](),
 			},
 			"storage_config": {
 				Type:     schema.TypeList,
@@ -58,7 +59,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -79,14 +80,14 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -102,11 +103,11 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"bucket_prefix": {
+									names.AttrBucketPrefix: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -119,7 +120,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -129,7 +130,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 								},
 							},
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,36 +143,22 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 
 func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	associationId := d.Get("association_id").(string)
-	instanceId := d.Get("instance_id").(string)
-	resourceType := d.Get("resource_type").(string)
-
-	input := &connect.DescribeInstanceStorageConfigInput{
-		AssociationId: aws.String(associationId),
-		InstanceId:    aws.String(instanceId),
-		ResourceType:  aws.String(resourceType),
-	}
-
-	resp, err := conn.DescribeInstanceStorageConfigWithContext(ctx, input)
+	associationID := d.Get(names.AttrAssociationID).(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	resourceType := awstypes.InstanceStorageResourceType(d.Get(names.AttrResourceType).(string))
+	id := instanceStorageConfigCreateResourceID(instanceID, associationID, resourceType)
+	storageConfig, err := findInstanceStorageConfigByThreePartKey(ctx, conn, instanceID, associationID, resourceType)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Instance Storage Config for Connect Instance (%s,%s,%s): %s", associationId, instanceId, resourceType, err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Instance Storage Config (%s): %s", id, err)
 	}
 
-	if resp == nil || resp.StorageConfig == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Instance Storage Config: empty response")
-	}
-
-	storageConfig := resp.StorageConfig
-
+	d.SetId(id)
 	if err := d.Set("storage_config", flattenStorageConfig(storageConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
 	}
-
-	d.SetId(fmt.Sprintf("%s:%s:%s", instanceId, associationId, resourceType))
 
 	return diags
 }

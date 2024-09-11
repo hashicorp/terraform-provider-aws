@@ -30,7 +30,7 @@ func TestAccQuickSightDataSetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDataSetDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 				),
 			},
 		},
@@ -39,7 +39,7 @@ func TestAccQuickSightDataSetDataSource_basic(t *testing.T) {
 
 func testAccDataSetDataSourceConfig_basic(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q

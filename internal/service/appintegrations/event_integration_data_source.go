@@ -6,26 +6,28 @@ package appintegrations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_appintegrations_event_integration", name="Event Integration")
+// @Tags
 func DataSourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEventIntegrationRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,7 +36,7 @@ func DataSourceEventIntegration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -45,11 +47,11 @@ func DataSourceEventIntegration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -57,11 +59,10 @@ func DataSourceEventIntegration() *schema.Resource {
 func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	name := d.Get("name").(string)
-	output, err := conn.GetEventIntegrationWithContext(ctx, &appintegrationsservice.GetEventIntegrationInput{
+	name := d.Get(names.AttrName).(string)
+	output, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
 		Name: aws.String(name),
 	})
 
@@ -69,18 +70,16 @@ func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading AppIntegrations Event Integration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Name))
-	d.Set("arn", output.EventIntegrationArn)
-	d.Set("description", output.Description)
+	d.SetId(aws.ToString(output.Name))
+	d.Set(names.AttrARN, output.EventIntegrationArn)
+	d.Set(names.AttrDescription, output.Description)
 	if err := d.Set("event_filter", flattenEventFilter(output.EventFilter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting event_filter: %s", err)
 	}
 	d.Set("eventbridge_bus", output.EventBridgeBus)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 
-	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

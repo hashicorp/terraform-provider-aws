@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_documentation_version", name="Documentation Version")
@@ -34,7 +35,7 @@ func resourceDocumentationVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -43,7 +44,7 @@ func resourceDocumentationVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,11 +59,11 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 
 	apiID := d.Get("rest_api_id").(string)
 	input := &apigateway.CreateDocumentationVersionInput{
-		DocumentationVersion: aws.String(d.Get("version").(string)),
+		DocumentationVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		RestApiId:            aws.String(apiID),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -98,9 +99,9 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Documentation Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", version.Description)
+	d.Set(names.AttrDescription, version.Description)
 	d.Set("rest_api_id", apiID)
-	d.Set("version", version.Version)
+	d.Set(names.AttrVersion, version.Version)
 
 	return diags
 }
@@ -120,7 +121,7 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 			{
 				Op:    types.OpReplace,
 				Path:  aws.String("/description"),
-				Value: aws.String(d.Get("description").(string)),
+				Value: aws.String(d.Get(names.AttrDescription).(string)),
 			},
 		},
 		RestApiId: aws.String(apiID),

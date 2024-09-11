@@ -32,8 +32,8 @@ func testAccNotificationChannelDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNotificationChannelDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", notificationChannelResourceName, "id"),
-					resource.TestCheckResourceAttr(dataSourceName, "sns.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, notificationChannelResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "sns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "sns.0.topic_name", notificationChannelResourceName, "sns.0.topic_name"),
 				),
 			},

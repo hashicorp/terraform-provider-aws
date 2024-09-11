@@ -77,6 +77,7 @@ const (
 )
 
 func resourceAccountVDMAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.PutAccountVdmAttributesInput{
@@ -95,21 +96,22 @@ func resourceAccountVDMAttributesUpdate(ctx context.Context, d *schema.ResourceD
 
 	out, err := conn.PutAccountVdmAttributes(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameAccountVDMAttributes, "", err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameAccountVDMAttributes, "", err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameAccountVDMAttributes, "", errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameAccountVDMAttributes, "", errors.New("empty output"))
 	}
 
 	if d.IsNewResource() {
 		d.SetId("ses-account-vdm-attributes")
 	}
 
-	return resourceAccountVDMAttributesRead(ctx, d, meta)
+	return append(diags, resourceAccountVDMAttributesRead(ctx, d, meta)...)
 }
 
 func resourceAccountVDMAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindAccountVDMAttributes(ctx, conn)
@@ -117,31 +119,32 @@ func resourceAccountVDMAttributesRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 AccountVDMAttributes (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameAccountVDMAttributes, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameAccountVDMAttributes, d.Id(), err)
 	}
 
 	if out.DashboardAttributes != nil {
 		if err := d.Set("dashboard_attributes", []interface{}{flattenDashboardAttributes(out.DashboardAttributes)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameAccountVDMAttributes, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameAccountVDMAttributes, d.Id(), err)
 		}
 	}
 
 	if out.GuardianAttributes != nil {
 		if err := d.Set("guardian_attributes", []interface{}{flattenGuardianAttributes(out.GuardianAttributes)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameAccountVDMAttributes, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameAccountVDMAttributes, d.Id(), err)
 		}
 	}
 
 	d.Set("vdm_enabled", out.VdmEnabled)
 
-	return nil
+	return diags
 }
 
 func resourceAccountVDMAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 AccountVDMAttributes %s", d.Id())
@@ -155,13 +158,13 @@ func resourceAccountVDMAttributesDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameAccountVDMAttributes, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameAccountVDMAttributes, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindAccountVDMAttributes(ctx context.Context, conn *sesv2.Client) (*types.VdmAttributes, error) {

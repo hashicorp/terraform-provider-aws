@@ -13,7 +13,7 @@ For community members interested in contributing to this effort, this guide docu
 
 ### Re-generate Service Client
 
-When fully replacing the client, [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/data/names_data.csv) should be updated to remove the v1 indicator and add v2 (ie. delete the `1` in the `ClientSDKV1` column and add a `2` in the `ClientSDKV2` column).
+When fully replacing the client, [`names/data/names_data.hcl`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/data/names_data.hcl) should be updated to remove the v1 indicator and add v2 (ie. delete the `1` in the `ClientSDKV1` column and add a `2` in the `ClientSDKV2` column).
 Once complete, re-generate the client.
 
 ```console
@@ -43,8 +43,16 @@ PKG=ec2 make awssdkpatch-apply
 You may also optionally generate the patch and use [`gopatch`](https://github.com/uber-go/gopatch) to preview differences before modfiying any files.
 
 ```console
-PKG=ec2 make awssdkpatch-gen
+make awssdkpatch-gen PKG=ec2
 gopatch -d -p awssdk.patch ./internal/service/ec2/...
+```
+
+#### Custom options
+
+To set additional `awssdkpatch` flags during patch generation, use the `AWSSDKPATCH_OPTS` environment variable.
+
+```console
+make awssdkpatch-gen PKG=ec2 AWSSDKPATCH_OPTS="-multiclient"
 ```
 
 ## Imports
@@ -53,25 +61,27 @@ In each go source file with a V1 SDK import, the library should be replaced with
 
 ```go
 // Remove
-github.com/aws-sdk-go/service/<service>
+github.com/aws/aws-sdk-go/service/<service>
 ```
 
 ```go
 // Add
-github.com/aws-sdk-go-v2/service/<service>
-awstypes github.com/aws-sdk-go-v2/service/<service>/types
+github.com/aws/aws-sdk-go-v2/service/<service>
+awstypes github.com/aws/aws-sdk-go-v2/service/<service>/types
 ```
 
-If the `aws` package is used, this should also be upgraded.
+If the `aws` or `arn` packages are used, these should also be upgraded.
 
 ```
 // Remove
-github.com/aws-sdk-go/aws
+github.com/aws/aws-sdk-go/aws
+github.com/aws/aws-sdk-go/aws/arn
 ```
 
 ```
 // Add
-github.com/aws-sdk-go-v2/aws
+github.com/aws/aws-sdk-go-v2/aws
+github.com/aws/aws-sdk-go-v2/aws/arn
 ```
 
 ## Client
@@ -247,31 +257,31 @@ ValidateFunc: validation.StringInSlice(<service>.Thing_Values(), false),
 ValidateDiagFunc: enum.Validate[awstypes.Thing](),
 ```
 
-## Acceptance Testing `ErrorCheck`
+## Acceptance Testing `PreCheckPartitionHasService`
 
 With V1, this check relies on the endpoint ID constant included in the SDK.
-These are not included in the V2 SDK, but can be replaced with a generated constant from the `names` package.
+These are not included in the V2 SDK, but can be replaced with a constant from the `names` package.
 
 ```go
 // Remove
-ErrorCheck: acctest.ErrorCheck(t, <service>.EndpointsID),
+acctest.PreCheckPartitionHasService(t, <service>.EndpointsID),
 ```
 
 ```go
 // Add
-ErrorCheck: acctest.ErrorCheck(t, names.<service>ServiceID),
+acctest.PreCheckPartitionHasService(t, names.<Service>EndpointID),
 ```
 
 For example,
 
 ```
-ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+acctest.PreCheckPartitionHasService(t, ssoadmin.EndpointsID),
 ```
 
 becomes:
 
 ```go
-ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
+acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID),
 ```
 
 ## Pagination

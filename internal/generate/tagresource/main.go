@@ -15,10 +15,11 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 var (
-	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagFunc     = flag.String("GetTagFunc", "findTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
 	updateTagsFunc = flag.String("UpdateTagsFunc", "updateTags", "updateTagsFunc")
 )
@@ -58,13 +59,17 @@ func main() {
 	}
 
 	resourceName := fmt.Sprintf("aws_%s_tag", servicePackage)
+
+	ian := *idAttribName
+	ian = namesgen.ConstOrQuote(ian)
+
 	templateData := TemplateData{
 		AWSServiceUpper:      u,
 		ProviderResourceName: resourceName,
 		ServicePackage:       servicePackage,
 
 		GetTagFunc:     *getTagFunc,
-		IDAttribName:   *idAttribName,
+		IDAttribName:   ian,
 		UpdateTagsFunc: *updateTagsFunc,
 	}
 

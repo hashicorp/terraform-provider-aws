@@ -38,7 +38,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_basic(t *testing.T) {
 					testAccCheckCustomerManagedPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.name", rNamePolicy1),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_forceNew(t *testing.T) {
 					testAccCheckCustomerManagedPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.name", rNamePolicy2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -168,7 +168,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_multipleManagedPolicies(t *t
 					testAccCheckCustomerManagedPolicyAttachmentExists(ctx, resource2Name),
 					resource.TestCheckResourceAttr(resource2Name, "customer_managed_policy_reference.0.name", rNamePolicy3),
 					resource.TestCheckResourceAttrPair(resource2Name, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resource2Name, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resource2Name, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{

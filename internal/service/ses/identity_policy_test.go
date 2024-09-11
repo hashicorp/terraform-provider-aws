@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -132,7 +132,7 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 
 func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_identity_policy" {
@@ -146,16 +146,16 @@ func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 
 			input := &ses.GetIdentityPoliciesInput{
 				Identity:    aws.String(identityARN),
-				PolicyNames: aws.StringSlice([]string{policyName}),
+				PolicyNames: []string{policyName},
 			}
 
-			output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
+			output, err := conn.GetIdentityPolicies(ctx, input)
 
 			if err != nil {
 				return err
 			}
 
-			if output != nil && len(output.Policies) > 0 && aws.StringValue(output.Policies[policyName]) != "" {
+			if output != nil && len(output.Policies) > 0 && output.Policies[policyName] != "" {
 				return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
 			}
 		}
@@ -175,7 +175,7 @@ func testAccCheckIdentityPolicyExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("SES Identity Policy ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {
@@ -184,10 +184,10 @@ func testAccCheckIdentityPolicyExists(ctx context.Context, resourceName string) 
 
 		input := &ses.GetIdentityPoliciesInput{
 			Identity:    aws.String(identityARN),
-			PolicyNames: aws.StringSlice([]string{policyName}),
+			PolicyNames: []string{policyName},
 		}
 
-		output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
+		output, err := conn.GetIdentityPolicies(ctx, input)
 
 		if err != nil {
 			return err

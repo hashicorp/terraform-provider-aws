@@ -27,7 +27,7 @@ Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and
 
 In the `internal/service/<service>/<service>_data_source.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, and choose the correct data type.
 
-Attribute names are to be specified in `snake_case` as opposed to the AWS API which is `CamelCase`
+Attribute names are to be specified in `snake_case` as opposed to the AWS API which is `CamelCase`.
 
 ### Implement Read Handler
 

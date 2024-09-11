@@ -77,8 +77,11 @@ const (
 	orgConfigMutex                   = "f14b54d7-2b10-58c2-9c1b-c48260a4825d"
 )
 
-func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.SetId(meta.(*conns.AWSClient).AccountID)
+
 	return append(diags, resourceOrganizationConfigurationUpdate(ctx, d, meta)...)
 }
 

@@ -33,7 +33,7 @@ func TestAccRedshiftServerlessUsageLimit_basic(t *testing.T) {
 				Config: testAccUsageLimitConfig_basic(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_workgroup.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_redshiftserverless_workgroup.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "amount", "60"),
 					resource.TestCheckResourceAttr(resourceName, "usage_type", "serverless-compute"),
 					resource.TestCheckResourceAttr(resourceName, "breach_action", "log"),
@@ -49,7 +49,7 @@ func TestAccRedshiftServerlessUsageLimit_basic(t *testing.T) {
 				Config: testAccUsageLimitConfig_basic(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_workgroup.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_redshiftserverless_workgroup.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "amount", "120"),
 				),
 			},
@@ -82,7 +82,7 @@ func TestAccRedshiftServerlessUsageLimit_disappears(t *testing.T) {
 
 func testAccCheckUsageLimitDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_usage_limit" {
@@ -116,7 +116,7 @@ func testAccCheckUsageLimitExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("Redshift Serverless Usage Limit is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindUsageLimitByName(ctx, conn, rs.Primary.ID)
 

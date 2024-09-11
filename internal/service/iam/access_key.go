@@ -25,6 +25,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_access_key", name="Access Key")
@@ -94,7 +95,7 @@ func resourceAccessKey() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.StatusTypeActive,
@@ -161,7 +162,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 	}
 
-	if v, ok := d.GetOk("status"); ok && v.(string) == string(awstypes.StatusTypeInactive) {
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) == string(awstypes.StatusTypeInactive) {
 		input := &iam.UpdateAccessKeyInput{
 			AccessKeyId: aws.String(d.Id()),
 			Status:      awstypes.StatusTypeInactive,
@@ -211,7 +212,7 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("create_date", nil)
 	}
 
-	d.Set("status", key.Status)
+	d.Set(names.AttrStatus, key.Status)
 	d.Set("user", key.UserName)
 
 	return diags
@@ -226,7 +227,7 @@ func resourceAccessKeyReadResult(d *schema.ResourceData, key *awstypes.AccessKey
 		d.Set("create_date", nil)
 	}
 
-	d.Set("status", key.Status)
+	d.Set(names.AttrStatus, key.Status)
 	d.Set("user", key.UserName)
 }
 
@@ -234,7 +235,7 @@ func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChange("status") {
+	if d.HasChange(names.AttrStatus) {
 		if err := resourceAccessKeyStatusUpdate(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Access Key (%s): %s", d.Id(), err)
 		}
@@ -267,7 +268,7 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 func resourceAccessKeyStatusUpdate(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
 	request := &iam.UpdateAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
-		Status:      awstypes.StatusType(d.Get("status").(string)),
+		Status:      awstypes.StatusType(d.Get(names.AttrStatus).(string)),
 		UserName:    aws.String(d.Get("user").(string)),
 	}
 

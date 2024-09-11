@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
     const awsLightsailInstanceTest = new LightsailInstance(this, "test_2", {
       availabilityZone: Token.asString(Fn.lookupNested(available.names, ["0"])),
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       name: "test-instance",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -114,4 +114,4 @@ Using `terraform import`, import `aws_lightsail_lb_attachment` using the name at
 % terraform import aws_lightsail_lb_attachment.test example-load-balancer,example-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1f5a78fef900db643827102ff8c8ece3850d79f4a93a4cdfb83fba4a5ff25956 -->
+<!-- cache-key: cdktf-0.20.1 input-d7f55c172f805ac505cedcf63850df8db630bc587a21a031b9908cb01167fd47 -->

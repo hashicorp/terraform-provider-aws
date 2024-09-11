@@ -96,6 +96,7 @@ interpolation.
                 * `instanceGenerations` - List of instance generation names.
                 * `localStorage` - Indicates whether instance types with instance store volumes are included, excluded, or required.
                 * `localStorageTypes` - List of local storage type names.
+                * `maxSpotPriceAsPercentageOfOptimalOnDemandPrice` - Price protection threshold for Spot Instances.
                 * `memoryGibPerVcpu` - List of objects describing the minimum and maximum amount of memory (GiB) per vCPU.
                     * `min` - Minimum.
                     * `max` - Maximum.
@@ -147,4 +148,4 @@ interpolation.
     * `poolState` - Instance state to transition to after the lifecycle actions are complete.
 * `warmPoolSize` - Current size of the warm pool.
 
-<!-- cache-key: cdktf-0.20.1 input-26572cc32b6838affc843d4557992ced62698f925facebdb8877cf21be04699b -->
+<!-- cache-key: cdktf-0.20.1 input-ebf8888e7d02b248dc689ab89018f2682fdfa4054d736231065c99862872c406 -->

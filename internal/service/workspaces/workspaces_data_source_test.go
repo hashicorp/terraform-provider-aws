@@ -14,16 +14,16 @@ func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Bundle": {
-			"basic":                   testAccWorkspaceBundleDataSource_basic,
+			acctest.CtBasic:           testAccWorkspaceBundleDataSource_basic,
 			"bundleIDAndNameConflict": testAccWorkspaceBundleDataSource_bundleIDAndNameConflict,
 			"byOwnerName":             testAccWorkspaceBundleDataSource_byOwnerName,
 			"privateOwner":            testAccWorkspaceBundleDataSource_privateOwner,
 		},
 		"Directory": {
-			"basic": testAccDirectoryDataSource_basic,
+			acctest.CtBasic: testAccDirectoryDataSource_basic,
 		},
 		"Image": {
-			"basic": testAccImageDataSource_basic,
+			acctest.CtBasic: testAccImageDataSource_basic,
 		},
 		"Workspace": {
 			"byWorkspaceID":                     testAccWorkspaceDataSource_byWorkspaceID,

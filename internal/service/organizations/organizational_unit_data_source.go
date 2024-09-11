@@ -7,26 +7,28 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_organizations_organizational_unit", name="Organizational Unit")
-func DataSourceOrganizationalUnit() *schema.Resource {
+func dataSourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -41,24 +43,24 @@ func DataSourceOrganizationalUnit() *schema.Resource {
 
 func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	parentID := d.Get("parent_id").(string)
 	input := &organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(parentID),
 	}
 
-	ou, err := findOrganizationalUnitForParent(ctx, conn, input, func(v *organizations.OrganizationalUnit) bool {
-		return aws.StringValue(v.Name) == name
+	ou, err := findOrganizationalUnitForParent(ctx, conn, input, func(v *awstypes.OrganizationalUnit) bool {
+		return aws.ToString(v.Name) == name
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s/%s): %s", parentID, name, err)
 	}
 
-	d.SetId(aws.StringValue(ou.Id))
-	d.Set("arn", ou.Arn)
+	d.SetId(aws.ToString(ou.Id))
+	d.Set(names.AttrARN, ou.Arn)
 
 	return diags
 }

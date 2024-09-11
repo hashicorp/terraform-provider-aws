@@ -1,0 +1,79 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package sagemaker
+
+// Exports for use in tests only.
+var (
+	ResourceApp                                    = resourceApp
+	ResourceAppImageConfig                         = resourceAppImageConfig
+	ResourceCodeRepository                         = resourceCodeRepository
+	ResourceDataQualityJobDefinition               = resourceDataQualityJobDefinition
+	ResourceDevice                                 = resourceDevice
+	ResourceDeviceFleet                            = resourceDeviceFleet
+	ResourceDomain                                 = resourceDomain
+	ResourceEndpoint                               = resourceEndpoint
+	ResourceEndpointConfiguration                  = resourceEndpointConfiguration
+	ResourceFeatureGroup                           = resourceFeatureGroup
+	ResourceFlowDefinition                         = resourceFlowDefinition
+	ResourceHumanTaskUI                            = resourceHumanTaskUI
+	ResourceImage                                  = resourceImage
+	ResourceImageVersion                           = resourceImageVersion
+	ResourceModel                                  = resourceModel
+	ResourceModelPackageGroup                      = resourceModelPackageGroup
+	ResourceModelPackageGroupPolicy                = resourceModelPackageGroupPolicy
+	ResourceMonitoringSchedule                     = resourceMonitoringSchedule
+	ResourceNotebookInstance                       = resourceNotebookInstance
+	ResourceNotebookInstanceLifeCycleConfiguration = resourceNotebookInstanceLifeCycleConfiguration
+	ResourcePipeline                               = resourcePipeline
+	ResourceProject                                = resourceProject
+	ResourceSpace                                  = resourceSpace
+	ResourceStudioLifecycleConfig                  = resourceStudioLifecycleConfig
+	ResourceUserProfile                            = resourceUserProfile
+	ResourceWorkforce                              = resourceWorkforce
+	ResourceWorkteam                               = resourceWorkteam
+
+	FindAppByName                             = findAppByName
+	FindAppImageConfigByName                  = findAppImageConfigByName
+	FindCodeRepositoryByName                  = findCodeRepositoryByName
+	FindDataQualityJobDefinitionByName        = findDataQualityJobDefinitionByName
+	FindDeviceByName                          = findDeviceByName
+	FindDeviceFleetByName                     = findDeviceFleetByName
+	FindDomainByName                          = findDomainByName
+	FindEndpointByName                        = findEndpointByName
+	FindEndpointConfigByName                  = findEndpointConfigByName
+	FindFeatureGroupByName                    = findFeatureGroupByName
+	FindFlowDefinitionByName                  = findFlowDefinitionByName
+	FindHumanTaskUIByName                     = findHumanTaskUIByName
+	FindImageByName                           = findImageByName
+	FindImageVersionByName                    = findImageVersionByName
+	FindModelByName                           = findModelByName
+	FindModelPackageGroupByName               = findModelPackageGroupByName
+	FindModelPackageGroupPolicyByName         = findModelPackageGroupPolicyByName
+	FindMonitoringScheduleByName              = findMonitoringScheduleByName
+	FindNotebookInstanceByName                = findNotebookInstanceByName
+	FindNotebookInstanceLifecycleConfigByName = findNotebookInstanceLifecycleConfigByName
+	FindPipelineByName                        = findPipelineByName
+	FindProjectByName                         = findProjectByName
+	FindServicecatalogPortfolioStatus         = findServicecatalogPortfolioStatus
+	FindSpaceByName                           = findSpaceByName
+	FindStudioLifecycleConfigByName           = findStudioLifecycleConfigByName
+	FindUserProfileByName                     = findUserProfileByName
+	FindWorkforceByName                       = findWorkforceByName
+	FindWorkteamByName                        = findWorkteamByName
+
+	DecodeAppID                                    = decodeAppID
+	DecodeDeviceId                                 = decodeDeviceId
+	PrebuiltECRImageCreatePath                     = prebuiltECRImageCreatePath
+	PrebuiltECRImageIDByRegion_factorMachines      = prebuiltECRImageIDByRegion_factorMachines
+	PrebuiltECRImageIDByRegion_XGBoost             = prebuiltECRImageIDByRegion_XGBoost
+	PrebuiltECRImageIDByRegion_clarify             = prebuiltECRImageIDByRegion_clarify
+	PrebuiltECRImageIDByRegion_dataWrangler        = prebuiltECRImageIDByRegion_dataWrangler
+	PrebuiltECRImageIDByRegion_debugger            = prebuiltECRImageIDByRegion_debugger
+	PrebuiltECRImageIDByRegion_deepLearning        = prebuiltECRImageIDByRegion_deepLearning
+	PrebuiltECRImageIDByRegion_inferentiaNeo       = prebuiltECRImageIDByRegion_inferentiaNeo
+	PrebuiltECRImageIDByRegion_SageMakerBasePython = prebuiltECRImageIDByRegion_SageMakerBasePython // nosemgrep:ci.sagemaker-in-var-name
+	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
+	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
+	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
+)

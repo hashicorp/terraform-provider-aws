@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_workforce: add `oidc_config.authentication_request_extra_params` and `oidc_config.scope` arguments
+```

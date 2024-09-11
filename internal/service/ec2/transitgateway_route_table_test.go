@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ import (
 
 func testAccTransitGatewayRouteTable_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayRouteTable1 ec2.TransitGatewayRouteTable
+	var transitGatewayRouteTable1 awstypes.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,11 +44,11 @@ func testAccTransitGatewayRouteTable_basic(t *testing.T, semaphore tfsync.Semaph
 				Config: testAccTransitGatewayRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`transit-gateway-route-table/tgw-rtb-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "default_association_route_table", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_propagation_route_table", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-route-table/tgw-rtb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "default_association_route_table", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_propagation_route_table", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -62,7 +62,7 @@ func testAccTransitGatewayRouteTable_basic(t *testing.T, semaphore tfsync.Semaph
 
 func testAccTransitGatewayRouteTable_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayRouteTable1 ec2.TransitGatewayRouteTable
+	var transitGatewayRouteTable1 awstypes.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -90,8 +90,8 @@ func testAccTransitGatewayRouteTable_disappears(t *testing.T, semaphore tfsync.S
 
 func testAccTransitGatewayRouteTable_disappears_TransitGateway(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGateway1 ec2.TransitGateway
-	var transitGatewayRouteTable1 ec2.TransitGatewayRouteTable
+	var transitGateway1 awstypes.TransitGateway
+	var transitGatewayRouteTable1 awstypes.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -121,7 +121,7 @@ func testAccTransitGatewayRouteTable_disappears_TransitGateway(t *testing.T, sem
 
 func testAccTransitGatewayRouteTable_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayRouteTable1, transitGatewayRouteTable2, transitGatewayRouteTable3 ec2.TransitGatewayRouteTable
+	var transitGatewayRouteTable1, transitGatewayRouteTable2, transitGatewayRouteTable3 awstypes.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -136,11 +136,11 @@ func testAccTransitGatewayRouteTable_tags(t *testing.T, semaphore tfsync.Semapho
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTransitGatewayRouteTableConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -149,29 +149,29 @@ func testAccTransitGatewayRouteTable_tags(t *testing.T, semaphore tfsync.Semapho
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayRouteTableConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayRouteTableConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable2),
 					testAccCheckTransitGatewayRouteTableNotRecreated(&transitGatewayRouteTable1, &transitGatewayRouteTable2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTransitGatewayRouteTableConfig_tags1(rName, "key2", "value2"),
+				Config: testAccTransitGatewayRouteTableConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable3),
 					testAccCheckTransitGatewayRouteTableNotRecreated(&transitGatewayRouteTable2, &transitGatewayRouteTable3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTransitGatewayRouteTableExists(ctx context.Context, n string, v *ec2.TransitGatewayRouteTable) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTableExists(ctx context.Context, n string, v *awstypes.TransitGatewayRouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -182,7 +182,7 @@ func testAccCheckTransitGatewayRouteTableExists(ctx context.Context, n string, v
 			return fmt.Errorf("No EC2 Transit Gateway Route Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayRouteTableByID(ctx, conn, rs.Primary.ID)
 
@@ -198,7 +198,7 @@ func testAccCheckTransitGatewayRouteTableExists(ctx context.Context, n string, v
 
 func testAccCheckTransitGatewayRouteTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_route_table" {
@@ -222,9 +222,9 @@ func testAccCheckTransitGatewayRouteTableDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckTransitGatewayRouteTableNotRecreated(i, j *ec2.TransitGatewayRouteTable) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTableNotRecreated(i, j *awstypes.TransitGatewayRouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.TransitGatewayRouteTableId) != aws.StringValue(j.TransitGatewayRouteTableId) {
+		if aws.ToString(i.TransitGatewayRouteTableId) != aws.ToString(j.TransitGatewayRouteTableId) {
 			return errors.New("EC2 Transit Gateway Route Table was recreated")
 		}
 

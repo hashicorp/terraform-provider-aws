@@ -62,7 +62,7 @@ func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resou
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -72,7 +72,7 @@ func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resou
 					fwvalidators.AWSAccountID(),
 				},
 			},
-			"iam_role_arn": schema.StringAttribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
@@ -296,8 +296,8 @@ type accessGrantsLocationResourceModel struct {
 	IAMRoleARN              fwtypes.ARN  `tfsdk:"iam_role_arn"`
 	ID                      types.String `tfsdk:"id"`
 	LocationScope           types.String `tfsdk:"location_scope"`
-	Tags                    types.Map    `tfsdk:"tags"`
-	TagsAll                 types.Map    `tfsdk:"tags_all"`
+	Tags                    tftags.Map   `tfsdk:"tags"`
+	TagsAll                 tftags.Map   `tfsdk:"tags_all"`
 }
 
 const (

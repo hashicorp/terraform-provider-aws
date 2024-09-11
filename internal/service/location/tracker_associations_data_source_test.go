@@ -27,7 +27,7 @@ func TestAccLocationTrackerAssociationsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTrackerAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "consumer_arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "consumer_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "consumer_arns.0", "aws_location_tracker_association.test", "consumer_arn"),
 				),
 			},

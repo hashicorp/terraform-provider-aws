@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_acmpca_certificate", name="Certificate")
@@ -19,12 +20,12 @@ func dataSourceCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +34,7 @@ func dataSourceCertificate() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +46,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	certificateARN := d.Get("arn").(string)
+	certificateARN := d.Get(names.AttrARN).(string)
 	output, err := findCertificateByTwoPartKey(ctx, conn, certificateARN, d.Get("certificate_authority_arn").(string))
 
 	if err != nil {
@@ -53,8 +54,8 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(certificateARN)
-	d.Set("certificate", output.Certificate)
-	d.Set("certificate_chain", output.CertificateChain)
+	d.Set(names.AttrCertificate, output.Certificate)
+	d.Set(names.AttrCertificateChain, output.CertificateChain)
 
 	return diags
 }

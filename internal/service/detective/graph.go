@@ -8,12 +8,13 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/detective"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,7 +37,7 @@ func ResourceGraph() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,21 +59,21 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	const (
 		timeout = 4 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	input := &detective.CreateGraphInput{
 		Tags: getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
-		return conn.CreateGraphWithContext(ctx, input)
-	}, detective.ErrCodeInternalServerException)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, timeout, func() (interface{}, error) {
+		return conn.CreateGraph(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Detective Graph: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*detective.CreateGraphOutput).GraphArn))
+	d.SetId(aws.ToString(outputRaw.(*detective.CreateGraphOutput).GraphArn))
 
 	return append(diags, resourceGraphRead(ctx, d, meta)...)
 }
@@ -80,7 +81,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	graph, err := FindGraphByARN(ctx, conn, d.Id())
 
@@ -94,7 +95,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Detective Graph (%s): %s", d.Id(), err)
 	}
 
-	d.Set("created_time", aws.TimeValue(graph.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(graph.CreatedTime).Format(time.RFC3339))
 	d.Set("graph_arn", graph.Arn)
 
 	return diags
@@ -108,14 +109,14 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Graph: %s", d.Id())
-	_, err := conn.DeleteGraphWithContext(ctx, &detective.DeleteGraphInput{
+	_, err := conn.DeleteGraph(ctx, &detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -126,43 +127,41 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) (*detective.Graph, error) {
+func FindGraphByARN(ctx context.Context, conn *detective.Client, arn string) (*awstypes.Graph, error) {
 	input := &detective.ListGraphsInput{}
 
-	return findGraph(ctx, conn, input, func(v *detective.Graph) bool {
-		return aws.StringValue(v.Arn) == arn
+	return findGraph(ctx, conn, input, func(v awstypes.Graph) bool {
+		return aws.ToString(v.Arn) == arn
 	})
 }
 
-func findGraph(ctx context.Context, conn *detective.Detective, input *detective.ListGraphsInput, filter tfslices.Predicate[*detective.Graph]) (*detective.Graph, error) {
+func findGraph(ctx context.Context, conn *detective.Client, input *detective.ListGraphsInput, filter tfslices.Predicate[awstypes.Graph]) (*awstypes.Graph, error) {
 	output, err := findGraphs(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findGraphs(ctx context.Context, conn *detective.Detective, input *detective.ListGraphsInput, filter tfslices.Predicate[*detective.Graph]) ([]*detective.Graph, error) {
-	var output []*detective.Graph
+func findGraphs(ctx context.Context, conn *detective.Client, input *detective.ListGraphsInput, filter tfslices.Predicate[awstypes.Graph]) ([]awstypes.Graph, error) {
+	var output []awstypes.Graph
 
-	err := conn.ListGraphsPagesWithContext(ctx, input, func(page *detective.ListGraphsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := detective.NewListGraphsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.GraphList {
-			if v != nil && filter(v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil

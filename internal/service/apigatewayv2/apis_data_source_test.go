@@ -20,7 +20,7 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,8 +29,8 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -44,7 +44,7 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,8 +53,8 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_protocolType(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -78,9 +78,9 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_tags(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
-					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", acctest.Ct0),
 				),
 			},
 		},

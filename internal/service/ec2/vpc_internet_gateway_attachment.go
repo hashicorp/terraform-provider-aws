@@ -10,16 +10,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_internet_gateway_attachment")
-func ResourceInternetGatewayAttachment() *schema.Resource {
+// @SDKResource("aws_internet_gateway_attachment", name="Internet Gateway Attachment")
+func resourceInternetGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInternetGatewayAttachmentCreate,
 		ReadWithoutTimeout:   resourceInternetGatewayAttachmentRead,
@@ -40,7 +41,7 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,32 +52,32 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 
 func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	igwID := d.Get("internet_gateway_id").(string)
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(names.AttrVPCID).(string)
 
 	if err := attachInternetGateway(ctx, conn, igwID, vpcID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway Attachment: %s", err)
 	}
 
-	d.SetId(InternetGatewayAttachmentCreateResourceID(igwID, vpcID))
+	d.SetId(internetGatewayAttachmentCreateResourceID(igwID, vpcID))
 
 	return append(diags, resourceInternetGatewayAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
+	igwID, vpcID, err := internetGatewayAttachmentParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindInternetGatewayAttachment(ctx, conn, igwID, vpcID)
+		return findInternetGatewayAttachment(ctx, conn, igwID, vpcID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -89,19 +90,19 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
-	igw := outputRaw.(*ec2.InternetGatewayAttachment)
+	igw := outputRaw.(*awstypes.InternetGatewayAttachment)
 
 	d.Set("internet_gateway_id", igwID)
-	d.Set("vpc_id", igw.VpcId)
+	d.Set(names.AttrVPCID, igw.VpcId)
 
 	return diags
 }
 
 func resourceInternetGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
+	igwID, vpcID, err := internetGatewayAttachmentParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
@@ -115,14 +116,14 @@ func resourceInternetGatewayAttachmentDelete(ctx context.Context, d *schema.Reso
 
 const internetGatewayAttachmentIDSeparator = ":"
 
-func InternetGatewayAttachmentCreateResourceID(igwID, vpcID string) string {
+func internetGatewayAttachmentCreateResourceID(igwID, vpcID string) string {
 	parts := []string{igwID, vpcID}
 	id := strings.Join(parts, internetGatewayAttachmentIDSeparator)
 
 	return id
 }
 
-func InternetGatewayAttachmentParseResourceID(id string) (string, string, error) {
+func internetGatewayAttachmentParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, internetGatewayAttachmentIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

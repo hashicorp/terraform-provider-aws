@@ -66,6 +66,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to this policy.
+* `attachmentCount` - Number of entities (users, groups, and roles) that the policy is attached to.
 * `id` - ARN assigned by AWS to this policy.
 * `policyId` - Policy's ID.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -102,4 +103,4 @@ Using `terraform import`, import IAM Policies using the `arn`. For example:
 % terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-240c2c5ad6da3024c6cd054cd2c83edb356bbba56c9e4080b9295cb3f1716023 -->
+<!-- cache-key: cdktf-0.20.1 input-dff5b03af44dda5789d4b91683222d0bf3613c1046ddc1a9a9738897fa90bd06 -->

@@ -36,16 +36,16 @@ func ResourceApplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -61,13 +61,13 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	applicationName := d.Get("name").(string)
+	applicationName := d.Get(names.AttrName).(string)
 	input := &appconfig.CreateApplicationInput{
 		Name: aws.String(applicationName),
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -118,9 +118,9 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		Service:   "appconfig",
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("name", output.Name)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrDescription, output.Description)
 
 	return diags
 }
@@ -129,17 +129,17 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		updateInput := &appconfig.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			updateInput.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			updateInput.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("name") {
-			updateInput.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			updateInput.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		_, err := conn.UpdateApplication(ctx, updateInput)

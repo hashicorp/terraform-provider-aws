@@ -8,57 +8,60 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_event_permission")
-func ResourcePermission() *schema.Resource {
+// @SDKResource("aws_cloudwatch_event_permission", name="Permission")
+func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
 		ReadWithoutTimeout:   resourcePermissionRead,
 		UpdateWithoutTimeout: resourcePermissionUpdate,
 		DeleteWithoutTimeout: resourcePermissionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "events:PutEvents",
 				ValidateFunc: validatePermissionAction,
 			},
-			"condition": {
+			names.AttrCondition: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -73,7 +76,7 @@ func ResourcePermission() *schema.Resource {
 				ValidateFunc: validBusName,
 				Default:      DefaultEventBusName,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validatePermissionPrincipal,
@@ -90,26 +93,25 @@ func ResourcePermission() *schema.Resource {
 
 func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn(ctx)
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
-
-	input := eventbridge.PutPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
-		Condition:    expandCondition(d.Get("condition").([]interface{})),
+	id := permissionCreateResourceID(eventBusName, statementID)
+	input := &eventbridge.PutPermissionInput{
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
+		Condition:    expandCondition(d.Get(names.AttrCondition).([]interface{})),
 		EventBusName: aws.String(eventBusName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
-	log.Printf("[DEBUG] Creating EventBridge permission: %s", input)
-	_, err := conn.PutPermissionWithContext(ctx, &input)
+	_, err := conn.PutPermission(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating EventBridge permission failed: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Permission (%s): %s", id, err)
 	}
 
-	id := PermissionCreateResourceID(eventBusName, statementID)
 	d.SetId(id)
 
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
@@ -118,121 +120,77 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn(ctx)
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := permissionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EventBridge permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	input := eventbridge.DescribeEventBusInput{
-		Name: aws.String(eventBusName),
-	}
-	var output *eventbridge.DescribeEventBusOutput
-	var policyStatement *PermissionPolicyStatement
 
-	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
-		output, err = conn.DescribeEventBusWithContext(ctx, &input)
-		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
-		}
-
-		policyStatement, err = getPolicyStatement(output, statementID)
-		if err != nil {
-			return retry.RetryableError(err)
-		}
-		return nil
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return findPermissionByTwoPartKey(ctx, conn, eventBusName, statementID)
 	})
 
-	if tfresource.TimedOut(err) {
-		output, err = conn.DescribeEventBusWithContext(ctx, &input)
-		if output != nil {
-			policyStatement, err = getPolicyStatement(output, statementID)
-		}
-	}
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EventBridge permission (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EventBridge Permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EventBridge permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Permission (%s): %s", d.Id(), err)
 	}
 
-	d.Set("action", policyStatement.Action)
-	busName := aws.StringValue(output.Name)
-	if busName == "" {
-		busName = DefaultEventBusName
-	}
-	d.Set("event_bus_name", busName)
+	policyStatement := outputRaw.(*permissionPolicyStatement)
 
-	if err := d.Set("condition", flattenPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
+	d.Set(names.AttrAction, policyStatement.Action)
+	if err := d.Set(names.AttrCondition, flattenPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
-
+	d.Set("event_bus_name", eventBusName)
 	switch principal := policyStatement.Principal.(type) {
 	case string:
-		d.Set("principal", principal)
+		d.Set(names.AttrPrincipal, principal)
 	case map[string]interface{}:
 		if v, ok := principal["AWS"].(string); ok {
 			if arn.IsARN(v) {
 				principalARN, err := arn.Parse(v)
-
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "parsing EventBridge Permission (%s) principal as ARN (%s): %s", d.Id(), v, err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 
-				d.Set("principal", principalARN.AccountID)
+				d.Set(names.AttrPrincipal, principalARN.AccountID)
 			} else {
-				d.Set("principal", v)
+				d.Set(names.AttrPrincipal, v)
 			}
 		}
 	}
-
 	d.Set("statement_id", policyStatement.Sid)
 
 	return diags
 }
 
-func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID string) (*PermissionPolicyStatement, error) {
-	var policyDoc PermissionPolicyDoc
-
-	if output == nil || output.Policy == nil {
-		return nil, &retry.NotFoundError{
-			Message:      fmt.Sprintf("EventBridge permission %q not found", statementID),
-			LastResponse: output,
-		}
-	}
-
-	err := json.Unmarshal([]byte(*output.Policy), &policyDoc)
-	if err != nil {
-		return nil, fmt.Errorf("reading EventBridge permission (%s): %w", statementID, err)
-	}
-
-	return FindPermissionPolicyStatementByID(&policyDoc, statementID)
-}
-
 func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn(ctx)
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := permissionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EventBridge permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	input := eventbridge.PutPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
-		Condition:    expandCondition(d.Get("condition").([]interface{})),
+
+	input := &eventbridge.PutPermissionInput{
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
+		Condition:    expandCondition(d.Get(names.AttrCondition).([]interface{})),
 		EventBusName: aws.String(eventBusName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
-	_, err = conn.PutPermissionWithContext(ctx, &input)
+	_, err = conn.PutPermission(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EventBridge permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge Permission (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
@@ -240,26 +198,154 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn(ctx)
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := permissionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EventBridge permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	input := eventbridge.RemovePermissionInput{
+
+	log.Printf("[DEBUG] Deleting EventBridge Permission: %s", d.Id())
+	_, err = conn.RemovePermission(ctx, &eventbridge.RemovePermissionInput{
 		EventBusName: aws.String(eventBusName),
 		StatementId:  aws.String(statementID),
-	}
+	})
 
-	log.Printf("[DEBUG] Delete EventBridge permission: %s", input)
-	_, err = conn.RemovePermissionWithContext(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EventBridge permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Permission (%s): %s", d.Id(), err)
 	}
 	return diags
+}
+
+func findPermissionByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBusName, statementID string) (*permissionPolicyStatement, error) {
+	output, err := findEventBusPolicyByName(ctx, conn, eventBusName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var policyDoc permissionPolicyDoc
+	if err := json.Unmarshal([]byte(aws.ToString(output)), &policyDoc); err != nil {
+		return nil, err
+	}
+
+	for _, statement := range policyDoc.Statements {
+		if statement.Sid == statementID {
+			return &statement, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+const permissionResourceIDSeparator = "/"
+
+func permissionCreateResourceID(eventBusName, statementID string) string {
+	if eventBusName == "" || eventBusName == DefaultEventBusName {
+		return statementID
+	}
+
+	parts := []string{eventBusName, statementID}
+	id := strings.Join(parts, permissionResourceIDSeparator)
+
+	return id
+}
+
+func permissionParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, permissionResourceIDSeparator)
+
+	if len(parts) == 1 && parts[0] != "" {
+		return DefaultEventBusName, parts[0], nil
+	}
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sSTATEMENTID or STATEMENTID", id, permissionResourceIDSeparator)
+}
+
+// PermissionPolicyDoc represents the Policy attribute of DescribeEventBus
+// See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
+type permissionPolicyDoc struct {
+	Version    string
+	ID         string                      `json:"Id,omitempty"`
+	Statements []permissionPolicyStatement `json:"Statement"`
+}
+
+// PermissionPolicyStatement represents the Statement attribute of PermissionPolicyDoc
+// See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
+type permissionPolicyStatement struct {
+	Sid       string
+	Effect    string
+	Action    string
+	Condition *permissionPolicyStatementCondition `json:"Condition,omitempty"`
+	Principal interface{}                         // "*" or {"AWS": "arn:aws:iam::111111111111:root"}
+	Resource  string
+}
+
+// PermissionPolicyStatementCondition represents the Condition attribute of PermissionPolicyStatement
+// See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
+type permissionPolicyStatementCondition struct {
+	Key   string
+	Type  string
+	Value string
+}
+
+func (c *permissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
+	var out permissionPolicyStatementCondition
+
+	// JSON representation: \"Condition\":{\"StringEquals\":{\"aws:PrincipalOrgID\":\"o-0123456789\"}}
+	var data map[string]map[string]string
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+
+	for typeKey, typeValue := range data {
+		for conditionKey, conditionValue := range typeValue {
+			out = permissionPolicyStatementCondition{
+				Key:   conditionKey,
+				Type:  typeKey,
+				Value: conditionValue,
+			}
+		}
+	}
+
+	*c = out
+	return nil
+}
+
+func expandCondition(l []interface{}) *types.Condition {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	condition := &types.Condition{
+		Key:   aws.String(m[names.AttrKey].(string)),
+		Type:  aws.String(m[names.AttrType].(string)),
+		Value: aws.String(m[names.AttrValue].(string)),
+	}
+
+	return condition
+}
+
+func flattenPermissionPolicyStatementCondition(c *permissionPolicyStatementCondition) []interface{} {
+	if c == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrKey:   c.Key,
+		names.AttrType:  c.Type,
+		names.AttrValue: c.Value,
+	}
+
+	return []interface{}{m}
 }
 
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
@@ -295,130 +381,4 @@ func validatePermissionStatementID(v interface{}, k string) (ws []string, es []e
 		es = append(es, fmt.Errorf("%q must be one or more alphanumeric, hyphen, or underscore characters", k))
 	}
 	return
-}
-
-// PermissionPolicyDoc represents the Policy attribute of DescribeEventBus
-// See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
-type PermissionPolicyDoc struct {
-	Version    string
-	ID         string                      `json:"Id,omitempty"`
-	Statements []PermissionPolicyStatement `json:"Statement"`
-}
-
-// String returns the string representation
-func (d PermissionPolicyDoc) String() string {
-	return awsutil.Prettify(d)
-}
-
-// GoString returns the string representation
-func (d PermissionPolicyDoc) GoString() string {
-	return d.String()
-}
-
-// PermissionPolicyStatement represents the Statement attribute of PermissionPolicyDoc
-// See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
-type PermissionPolicyStatement struct {
-	Sid       string
-	Effect    string
-	Action    string
-	Condition *PermissionPolicyStatementCondition `json:"Condition,omitempty"`
-	Principal interface{}                         // "*" or {"AWS": "arn:aws:iam::111111111111:root"}
-	Resource  string
-}
-
-// String returns the string representation
-func (s PermissionPolicyStatement) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s PermissionPolicyStatement) GoString() string {
-	return s.String()
-}
-
-// PermissionPolicyStatementCondition represents the Condition attribute of PermissionPolicyStatement
-// See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
-type PermissionPolicyStatementCondition struct {
-	Key   string
-	Type  string
-	Value string
-}
-
-// String returns the string representation
-func (c PermissionPolicyStatementCondition) String() string {
-	return awsutil.Prettify(c)
-}
-
-// GoString returns the string representation
-func (c PermissionPolicyStatementCondition) GoString() string {
-	return c.String()
-}
-
-func (c *PermissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
-	var out PermissionPolicyStatementCondition
-
-	// JSON representation: \"Condition\":{\"StringEquals\":{\"aws:PrincipalOrgID\":\"o-0123456789\"}}
-	var data map[string]map[string]string
-	if err := json.Unmarshal(b, &data); err != nil {
-		return err
-	}
-
-	for typeKey, typeValue := range data {
-		for conditionKey, conditionValue := range typeValue {
-			out = PermissionPolicyStatementCondition{
-				Key:   conditionKey,
-				Type:  typeKey,
-				Value: conditionValue,
-			}
-		}
-	}
-
-	*c = out
-	return nil
-}
-
-func FindPermissionPolicyStatementByID(policy *PermissionPolicyDoc, id string) (
-	*PermissionPolicyStatement, error) {
-	log.Printf("[DEBUG] Finding statement (%s) in EventBridge permission policy: %s", id, policy)
-	for _, statement := range policy.Statements {
-		if statement.Sid == id {
-			return &statement, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{
-		LastRequest:  id,
-		LastResponse: policy,
-		Message:      fmt.Sprintf("Failed to find statement (%s) in EventBridge permission policy: %s", id, policy),
-	}
-}
-
-func expandCondition(l []interface{}) *eventbridge.Condition {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	condition := &eventbridge.Condition{
-		Key:   aws.String(m["key"].(string)),
-		Type:  aws.String(m["type"].(string)),
-		Value: aws.String(m["value"].(string)),
-	}
-
-	return condition
-}
-
-func flattenPermissionPolicyStatementCondition(c *PermissionPolicyStatementCondition) []interface{} {
-	if c == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"key":   c.Key,
-		"type":  c.Type,
-		"value": c.Value,
-	}
-
-	return []interface{}{m}
 }

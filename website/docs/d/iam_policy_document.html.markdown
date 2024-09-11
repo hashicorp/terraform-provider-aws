@@ -536,3 +536,4 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
+* `minified_json` - Minified JSON policy document rendered based on the arguments above.

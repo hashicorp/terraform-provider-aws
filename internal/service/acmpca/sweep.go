@@ -56,7 +56,7 @@ func sweepCertificateAuthorities(region string) error {
 			r := resourceCertificateAuthority()
 			d := r.Data(nil)
 			d.SetId(arn)
-			d.Set("permanent_deletion_time_in_days", 7) //nolint:gomnd
+			d.Set("permanent_deletion_time_in_days", 7) //nolint:mnd // 7 days is the default value
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

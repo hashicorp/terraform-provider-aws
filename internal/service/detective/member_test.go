@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/detective"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +20,7 @@ import (
 
 func testAccMember_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var detectiveOutput detective.MemberDetail
+	var detectiveOutput awstypes.MemberDetail
 	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := testAccMemberFromEnv(t)
@@ -39,10 +39,10 @@ func testAccMember_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.MemberStatusInvited)),
 				),
 			},
 			{
@@ -58,7 +58,7 @@ func testAccMember_basic(t *testing.T) {
 
 func testAccMember_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var detectiveOutput detective.MemberDetail
+	var detectiveOutput awstypes.MemberDetail
 	resourceName := "aws_detective_member.test"
 	email := testAccMemberFromEnv(t)
 
@@ -85,7 +85,7 @@ func testAccMember_disappears(t *testing.T) {
 
 func testAccMember_message(t *testing.T) {
 	ctx := acctest.Context(t)
-	var detectiveOutput detective.MemberDetail
+	var detectiveOutput awstypes.MemberDetail
 	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := testAccMemberFromEnv(t)
@@ -104,30 +104,30 @@ func testAccMember_message(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.MemberStatusInvited)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"message", "disable_email_notification"},
+				ImportStateVerifyIgnore: []string{names.AttrMessage, "disable_email_notification"},
 			},
 		},
 	})
 }
 
-func testAccCheckMemberExists(ctx context.Context, n string, v *detective.MemberDetail) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, n string, v *awstypes.MemberDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
 
 		graphARN, accountID, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -148,7 +148,7 @@ func testAccCheckMemberExists(ctx context.Context, n string, v *detective.Member
 
 func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_member" {

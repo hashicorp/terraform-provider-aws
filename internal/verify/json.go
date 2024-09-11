@@ -15,7 +15,6 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 // SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
@@ -85,6 +84,9 @@ func SuppressEquivalentJSONOrYAMLDiffs(k, old, new string, d *schema.ResourceDat
 }
 
 func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
+	if v, ok := templateString.(string); ok {
+		templateString = strings.ReplaceAll(v, "\r\n", "\n")
+	}
 	if looksLikeJSONString(templateString) {
 		return structure.NormalizeJsonString(templateString.(string))
 	}
@@ -208,18 +210,4 @@ func LegacyPolicyToSet(exist, new string) (string, error) {
 	}
 
 	return policyToSet, nil
-}
-
-// SuppressEquivalentJSONRemovingFieldsDiffs returns a difference suppression function that compares
-// two JSON strings and returns `true` if they are equivalent once the specified fields have been removed.
-func SuppressEquivalentJSONRemovingFieldsDiffs(fields ...string) schema.SchemaDiffSuppressFunc {
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
-			return old == new
-		}
-
-		old, new = tfjson.RemoveFields(old, fields...), tfjson.RemoveFields(new, fields...)
-
-		return JSONStringsEqual(old, new)
-	}
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_foundation_model"
 description: |-
@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Model provider name.
 * `responseStreamingSupported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.1 input-6ca1c6ae02f6bf6eaa998eb031be9be04ad923c654a4f003585ee4d02856b78b -->
+<!-- cache-key: cdktf-0.20.1 input-62b828c977f074f9a7e3ab00ef3ef26d43210725821dc2b7eeecc7e84900c311 -->

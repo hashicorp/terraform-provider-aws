@@ -33,8 +33,8 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_iam_pattern(t *testing.T
 				Config: testAccPrincipalPortfolioAssociationConfig_iam_pattern(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "IAM_PATTERN"),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_migrateV0(t *testing.T) 
 
 func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_principal_portfolio_association" {
@@ -174,7 +174,7 @@ func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, n stri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		_, err = tfservicecatalog.FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 

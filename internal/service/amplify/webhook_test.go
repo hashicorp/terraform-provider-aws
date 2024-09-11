@@ -36,10 +36,10 @@ func testAccWebhook_basic(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/webhooks/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/webhooks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestMatchResourceAttr(resourceName, "url", regexache.MustCompile(fmt.Sprintf(`^https://webhooks.amplify.%s.%s/.+$`, acctest.Region(), acctest.PartitionDNSSuffix()))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(fmt.Sprintf(`^https://webhooks.amplify.%s.%s/.+$`, acctest.Region(), acctest.PartitionDNSSuffix()))),
 				),
 			},
 			{
@@ -92,7 +92,7 @@ func testAccWebhook_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-1", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", "testdescription1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription1"),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func testAccWebhook_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-2", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", "testdescription2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription2"),
 				),
 			},
 		},

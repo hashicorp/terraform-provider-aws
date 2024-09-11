@@ -8,15 +8,17 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +28,8 @@ import (
 
 // @SDKResource("aws_placement_group", name="Placement Group")
 // @Tags(identifierAttribute="placement_group_id")
-func ResourcePlacementGroup() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlacementGroupCreate,
 		ReadWithoutTimeout:   resourcePlacementGroupRead,
@@ -38,11 +41,11 @@ func ResourcePlacementGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,17 +63,17 @@ func ResourcePlacementGroup() *schema.Resource {
 				Computed: true,
 			},
 			"spread_level": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.SpreadLevel_Values(), false),
+				Type:             schema.TypeString,
+				Computed:         true,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.SpreadLevel](),
 			},
 			"strategy": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.PlacementStrategy_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PlacementStrategy](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -85,24 +88,24 @@ func ResourcePlacementGroup() *schema.Resource {
 
 func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
-		Strategy:          aws.String(d.Get("strategy").(string)),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypePlacementGroup),
+		Strategy:          awstypes.PlacementStrategy(d.Get("strategy").(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePlacementGroup),
 	}
 
 	if v, ok := d.GetOk("partition_count"); ok {
-		input.PartitionCount = aws.Int64(int64(v.(int)))
+		input.PartitionCount = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("spread_level"); ok {
-		input.SpreadLevel = aws.String(v.(string))
+		input.SpreadLevel = awstypes.SpreadLevel(v.(string))
 	}
 
-	_, err := conn.CreatePlacementGroupWithContext(ctx, input)
+	_, err := conn.CreatePlacementGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Placement Group (%s): %s", name, err)
@@ -110,7 +113,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(name)
 
-	_, err = WaitPlacementGroupCreated(ctx, conn, d.Id())
+	_, err = waitPlacementGroupCreated(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Placement Group (%s) create: %s", d.Id(), err)
@@ -121,9 +124,9 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	pg, err := FindPlacementGroupByName(ctx, conn, d.Id())
+	pg, err := findPlacementGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Placement Group (%s) not found, removing from state", d.Id())
@@ -137,13 +140,13 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("name", pg.GroupName)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, pg.GroupName)
 	d.Set("partition_count", pg.PartitionCount)
 	d.Set("placement_group_id", pg.GroupId)
 	d.Set("spread_level", pg.SpreadLevel)
@@ -164,10 +167,10 @@ func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
-	_, err := conn.DeletePlacementGroupWithContext(ctx, &ec2.DeletePlacementGroupInput{
+	_, err := conn.DeletePlacementGroup(ctx, &ec2.DeletePlacementGroupInput{
 		GroupName: aws.String(d.Id()),
 	})
 
@@ -179,7 +182,7 @@ func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Placement Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitPlacementGroupDeleted(ctx, conn, d.Id())
+	_, err = waitPlacementGroupDeleted(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Placement Group (%s) delete: %s", d.Id(), err)
@@ -190,13 +193,13 @@ func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() == "" {
-		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != ec2.PlacementGroupStrategyPartition {
+		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != string(awstypes.PlacementGroupStrategyPartition) {
 			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)
 		}
 	}
 
 	if diff.Id() == "" {
-		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != "" && strategy != ec2.PlacementGroupStrategySpread {
+		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != "" && strategy != string(awstypes.PlacementGroupStrategySpread) {
 			return fmt.Errorf("spread_level must not be set when strategy = %q", strategy)
 		}
 	}

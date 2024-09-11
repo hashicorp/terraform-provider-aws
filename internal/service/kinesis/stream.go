@@ -83,7 +83,7 @@ func resourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -102,16 +102,16 @@ func resourceStream() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      24,
@@ -152,7 +152,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kinesis.CreateStreamInput{
 		StreamName: aws.String(name),
 	}
@@ -181,7 +181,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		d.SetId(aws.ToString(streamDescription.StreamARN))
 	}
 
-	if v, ok := d.GetOk("retention_period"); ok && v.(int) > 0 {
+	if v, ok := d.GetOk(names.AttrRetentionPeriod); ok && v.(int) > 0 {
 		input := &kinesis.IncreaseStreamRetentionPeriodInput{
 			RetentionPeriodHours: aws.Int32(int32(v.(int))),
 			StreamName:           aws.String(name),
@@ -217,7 +217,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("encryption_type"); ok {
 		if v := types.EncryptionType(v.(string)); v == types.EncryptionTypeKms {
-			kmsKeyID, ok := d.GetOk("kms_key_id")
+			kmsKeyID, ok := d.GetOk(names.AttrKMSKeyID)
 			if !ok {
 				return sdkdiag.AppendErrorf(diags, "KMS Key ID required when setting encryption_type is not set as NONE")
 			}
@@ -251,7 +251,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	stream, err := findStreamByName(ctx, conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -264,11 +264,11 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Kinesis Stream (%s): %s", name, err)
 	}
 
-	d.Set("arn", stream.StreamARN)
+	d.Set(names.AttrARN, stream.StreamARN)
 	d.Set("encryption_type", stream.EncryptionType)
-	d.Set("kms_key_id", stream.KeyId)
-	d.Set("name", stream.StreamName)
-	d.Set("retention_period", stream.RetentionPeriodHours)
+	d.Set(names.AttrKMSKeyID, stream.KeyId)
+	d.Set(names.AttrName, stream.StreamName)
+	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)
 	streamMode := types.StreamModeProvisioned
 	if details := stream.StreamModeDetails; details != nil {
 		streamMode = details.StreamMode
@@ -297,7 +297,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	if d.HasChange("stream_mode_details.0.stream_mode") {
 		input := &kinesis.UpdateStreamModeInput{
@@ -336,8 +336,8 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("retention_period") {
-		oraw, nraw := d.GetChange("retention_period")
+	if d.HasChange(names.AttrRetentionPeriod) {
+		oraw, nraw := d.GetChange(names.AttrRetentionPeriod)
 		o := oraw.(int)
 		n := nraw.(int)
 
@@ -414,9 +414,9 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("encryption_type", "kms_key_id") {
+	if d.HasChanges("encryption_type", names.AttrKMSKeyID) {
 		oldEncryptionType, newEncryptionType := d.GetChange("encryption_type")
-		oldKeyID, newKeyID := d.GetChange("kms_key_id")
+		oldKeyID, newKeyID := d.GetChange(names.AttrKMSKeyID)
 
 		switch oldEncryptionType, newEncryptionType, newKeyID := types.EncryptionType(oldEncryptionType.(string)), types.EncryptionType(newEncryptionType.(string)), newKeyID.(string); newEncryptionType {
 		case types.EncryptionTypeKms:
@@ -468,7 +468,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	log.Printf("[DEBUG] Deleting Kinesis Stream: (%s)", name)
 	_, err := conn.DeleteStream(ctx, &kinesis.DeleteStreamInput{
@@ -501,7 +501,7 @@ func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(output.StreamARN))
-	d.Set("name", output.StreamName)
+	d.Set(names.AttrName, output.StreamName)
 	return []*schema.ResourceData{d}, nil
 }
 

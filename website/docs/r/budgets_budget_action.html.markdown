@@ -36,6 +36,11 @@ resource "aws_budgets_budget_action" "example" {
     address           = "example@example.example"
     subscription_type = "EMAIL"
   }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
 }
 
 data "aws_iam_policy_document" "example" {
@@ -95,6 +100,7 @@ This resource supports the following arguments:
 * `execution_role_arn` - (Required) The role passed for action execution and reversion. Roles and actions must be in the same account.
 * `notification_type` - (Required) The type of a notification. Valid values are `ACTUAL` or `FORECASTED`.
 * `subscriber` - (Required) A list of subscribers. See [Subscriber](#subscriber).
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Action Threshold
 
@@ -138,6 +144,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of resource.
 * `arn` - The ARN of the budget action.
 * `status` - The status of the budget action.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

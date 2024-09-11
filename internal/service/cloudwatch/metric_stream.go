@@ -50,11 +50,11 @@ func resourceMetricStream() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func resourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -98,7 +98,7 @@ func resourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -115,20 +115,20 @@ func resourceMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateMetricStreamName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validateMetricStreamName,
 			},
 			"output_format": {
@@ -136,12 +136,12 @@ func resourceMetricStream() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.MetricStreamOutputFormat](),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -178,12 +178,12 @@ func resourceMetricStream() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -204,13 +204,13 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &cloudwatch.PutMetricStreamInput{
 		FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
 		IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 		Name:                         aws.String(name),
 		OutputFormat:                 types.MetricStreamOutputFormat(d.Get("output_format").(string)),
-		RoleArn:                      aws.String(d.Get("role_arn").(string)),
+		RoleArn:                      aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:                         getTagsIn(ctx),
 	}
 
@@ -278,8 +278,8 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting exclude_filter: %s", err)
@@ -293,11 +293,11 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("include_linked_accounts_metrics", output.IncludeLinkedAccountsMetrics)
 	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("output_format", output.OutputFormat)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("state", output.State)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrState, output.State)
 	if output.StatisticsConfigurations != nil {
 		if err := d.Set("statistics_configuration", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting statistics_configuration: %s", err)
@@ -311,13 +311,13 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudwatch.PutMetricStreamInput{
 			FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
 			IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 			Name:                         aws.String(d.Id()),
 			OutputFormat:                 types.MetricStreamOutputFormat(d.Get("output_format").(string)),
-			RoleArn:                      aws.String(d.Get("role_arn").(string)),
+			RoleArn:                      aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
 		if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -468,7 +468,7 @@ func expandMetricStreamFilters(tfList []interface{}) []types.MetricStreamFilter 
 			apiObject.MetricNames = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := tfMap["namespace"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 			apiObject.Namespace = aws.String(v)
 		}
 
@@ -496,7 +496,7 @@ func flattenMetricStreamFilters(apiObjects []types.MetricStreamFilter) []interfa
 			}
 
 			if v := apiObject.Namespace; v != nil {
-				tfMap["namespace"] = aws.ToString(v)
+				tfMap[names.AttrNamespace] = aws.ToString(v)
 			}
 
 			tfList = append(tfList, tfMap)
@@ -546,11 +546,11 @@ func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []interface
 
 		apiObject := types.MetricStreamStatisticsMetric{}
 
-		if v, ok := tfMap["metric_name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
 			apiObject.MetricName = aws.String(v)
 		}
 
-		if v, ok := tfMap["namespace"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 			apiObject.Namespace = aws.String(v)
 		}
 
@@ -599,11 +599,11 @@ func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(apiObjects []type
 		tfMap := map[string]interface{}{}
 
 		if v := apiObject.MetricName; v != nil {
-			tfMap["metric_name"] = aws.ToString(v)
+			tfMap[names.AttrMetricName] = aws.ToString(v)
 		}
 
 		if v := apiObject.Namespace; v != nil {
-			tfMap["namespace"] = aws.ToString(v)
+			tfMap[names.AttrNamespace] = aws.ToString(v)
 		}
 
 		tfList = append(tfList, tfMap)

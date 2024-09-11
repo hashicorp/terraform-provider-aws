@@ -10,13 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -63,8 +60,8 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 	meta.ServicePackages = servicePackageMap
 
 	conf := &conns.Config{
+		MaxRetries:       5,
 		Region:           region,
-		RetryMode:        aws_sdkv2.RetryModeAdaptive,
 		SuppressDebugLog: true,
 	}
 
@@ -113,8 +110,6 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
-		sweepable := sweepable
-
 		g.Go(func() error {
 			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
 		})
@@ -122,11 +117,6 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 
 	return g.Wait().ErrorOrNil()
 }
-
-// Deprecated: Usse awsv1.SkipSweepError
-//
-//nolint:stylecheck // It's not required for functions, so why for variables?
-var SkipSweepError = awsv1.SkipSweepError
 
 func Partition(region string) string {
 	return names.PartitionForRegion(region)
@@ -137,36 +127,3 @@ func PartitionDNSSuffix(region string) string {
 }
 
 type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)
-
-func Register(name string, f SweeperFn, dependencies ...string) {
-	resource.AddTestSweepers(name, &resource.Sweeper{
-		Name: name,
-		F: func(region string) error {
-			ctx := Context(region)
-			ctx = logWithResourceType(ctx, name)
-
-			client, err := SharedRegionalSweepClient(ctx, region)
-			if err != nil {
-				return fmt.Errorf("getting client: %w", err)
-			}
-			sweepResources, err := f(ctx, client)
-
-			if SkipSweepError(err) {
-				tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-					"error": err.Error(),
-				})
-				return nil
-			}
-			if err != nil {
-				return fmt.Errorf("listing %q (%s): %w", name, region, err)
-			}
-
-			err = SweepOrchestrator(ctx, sweepResources)
-			if err != nil {
-				return fmt.Errorf("sweeping %q (%s): %w", name, region, err)
-			}
-
-			return nil
-		},
-	})
-}

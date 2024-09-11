@@ -54,7 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `accessString` - (Required) The access permissions string used for this user.
+* `accessString` - (Required) Access permissions string used for this user.
 * `authenticationMode` - (Required) Denotes the user's authentication properties. Detailed below.
 * `userName` - (Required, Forces new resource) Name of the MemoryDB user. Up to 40 characters.
 
@@ -64,18 +64,18 @@ The following arguments are optional:
 
 ### authentication_mode Configuration Block
 
-* `passwords` - (Required) The set of passwords used for authentication. You can create up to two passwords for each user.
-* `type` - (Required) Indicates whether the user requires a password to authenticate. Must be set to `password`.
+* `passwords` - (Optional) Set of passwords used for authentication if `type` is set to `password`. You can create up to two passwords for each user.
+* `type` - (Required) Specifies the authentication type. Valid values are: `password` or `iam`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `userName`.
-* `arn` - The ARN of the user.
-* `minimumEngineVersion` - The minimum engine version supported for the user.
+* `arn` - ARN of the user.
+* `minimumEngineVersion` - Minimum engine version supported for the user.
 * `authenticationMode` configuration block
-    * `passwordCount` - The number of passwords belonging to the user.
+    * `passwordCount` - Number of passwords belonging to the user if `type` is set to `password`.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -108,4 +108,4 @@ Using `terraform import`, import a user using the `userName`. For example:
 
 The `passwords` are not available for imported resources, as this information cannot be read back from the MemoryDB API.
 
-<!-- cache-key: cdktf-0.20.1 input-f5d027129bff54db7aaaaecf18b5e8da10653dddeb0e00e2f474bf78aa1508d7 -->
+<!-- cache-key: cdktf-0.20.1 input-8c6cc1a5c60698cc0828c16299a72dd453f126f87266657015b604a945f482b4 -->

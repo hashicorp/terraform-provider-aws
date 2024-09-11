@@ -21,11 +21,11 @@ func DataSourceSink() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSinkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +37,7 @@ func DataSourceSink() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -47,30 +47,31 @@ const (
 )
 
 func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	sinkIdentifier := d.Get("sink_identifier").(string)
 
 	out, err := findSinkByID(ctx, conn, sinkIdentifier)
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, sinkIdentifier, err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, sinkIdentifier, err)
 	}
 
 	d.SetId(aws.ToString(out.Arn))
 
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrName, out.Name)
 	d.Set("sink_id", out.Id)
 
 	tags, err := listTags(ctx, conn, d.Id())
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, DSNameSink, d.Id(), err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionSetting, DSNameSink, d.Id(), err)
 	}
 
 	return nil

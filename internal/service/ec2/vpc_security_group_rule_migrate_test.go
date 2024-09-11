@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestSecurityGroupRuleMigrateState(t *testing.T) {
@@ -24,13 +26,13 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "sg-4235098228",
 			Attributes: map[string]string{
-				"self":                     "false",
-				"to_port":                  "0",
+				"self":                     acctest.CtFalse,
+				"to_port":                  acctest.Ct0,
 				"security_group_id":        "sg-13877277",
-				"cidr_blocks.#":            "0",
-				"type":                     "ingress",
-				"protocol":                 "-1",
-				"from_port":                "0",
+				"cidr_blocks.#":            acctest.Ct0,
+				names.AttrType:             "ingress",
+				names.AttrProtocol:         "-1",
+				"from_port":                acctest.Ct0,
 				"source_security_group_id": "sg-11877275",
 			},
 			Expected: "sgrule-2889201120",
@@ -40,16 +42,16 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 			ID:           "sg-1021609891",
 			Attributes: map[string]string{
 				"security_group_id": "sg-0981746d",
-				"from_port":         "0",
-				"to_port":           "0",
-				"type":              "ingress",
-				"self":              "false",
-				"protocol":          "-1",
+				"from_port":         acctest.Ct0,
+				"to_port":           acctest.Ct0,
+				names.AttrType:      "ingress",
+				"self":              acctest.CtFalse,
+				names.AttrProtocol:  "-1",
 				"cidr_blocks.0":     "172.16.1.0/24",
 				"cidr_blocks.1":     "172.16.2.0/24",
 				"cidr_blocks.2":     "172.16.3.0/24",
 				"cidr_blocks.3":     "172.16.4.0/24",
-				"cidr_blocks.#":     "4"},
+				"cidr_blocks.#":     acctest.Ct4},
 			Expected: "sgrule-1826358977",
 		},
 	}

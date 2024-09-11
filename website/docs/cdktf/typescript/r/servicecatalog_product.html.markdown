@@ -55,7 +55,7 @@ The following arguments are required:
 
 * `name` - (Required) Name of the product.
 * `owner` - (Required) Owner of the product.
-* `provisioningArtifactParameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. Detailed below.
+* `provisioningArtifactParameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. See [`provisioningArtifactParameters` Block](#provisioning_artifact_parameters-block) for details.
 * `type` - (Required) Type of product. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html#API_CreateProduct_RequestSyntax) for valid list of values.
 
 The following arguments are optional:
@@ -68,9 +68,9 @@ The following arguments are optional:
 * `supportUrl` - (Optional) Contact URL for product support.
 * `tags` - (Optional) Tags to apply to the product. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### provisioning_artifact_parameters
+### `provisioningArtifactParameters` Block
 
-This argument supports the following arguments:
+The `provisioningArtifactParameters` configuration block supports the following arguments:
 
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disableTemplateValidation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
@@ -131,4 +131,4 @@ Using `terraform import`, import `aws_servicecatalog_product` using the product 
 % terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1f4523af61444a389c63a7aa67dc5375eed39f2f4564f496463f6674fac90f74 -->
+<!-- cache-key: cdktf-0.20.1 input-555bf936590705c11ffd58506686ab02acd4f1e772862100e0dcf4858b9f8b7f -->

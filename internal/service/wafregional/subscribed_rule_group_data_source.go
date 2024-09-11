@@ -5,18 +5,17 @@ package wafregional
 
 import (
 	"context"
-	"errors"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	DSNameSubscribedRuleGroup = "Subscribed Rule Group Data Source"
 )
 
 // @SDKDataSource("aws_wafregional_subscribed_rule_group", name="Subscribed Rule Group")
@@ -25,42 +24,90 @@ func dataSourceSubscribedRuleGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+			names.AttrMetricName: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
 			},
-			"metric_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
 			},
 		},
 	}
 }
 
 func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
-	name, nameOk := d.Get("name").(string)
-	metricName, metricNameOk := d.Get("metric_name").(string)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
-	// Error out if string-assertion fails for either name or metricName
-	if !nameOk || !metricNameOk {
-		if !nameOk {
-			name = DSNameSubscribedRuleGroup
+	var filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]
+
+	if v, ok := d.GetOk(names.AttrMetricName); ok {
+		name := v.(string)
+		filter = func(v *awstypes.SubscribedRuleGroupSummary) bool {
+			return aws.ToString(v.MetricName) == name
+		}
+	}
+
+	if v, ok := d.GetOk(names.AttrName); ok {
+		name := v.(string)
+		f := func(v *awstypes.SubscribedRuleGroupSummary) bool {
+			return aws.ToString(v.Name) == name
 		}
 
-		err := errors.New("unable to read attributes")
-		return create.DiagError(names.WAFRegional, create.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
+		if filter != nil {
+			filter = tfslices.PredicateAnd(filter, f)
+		} else {
+			filter = f
+		}
 	}
 
-	output, err := FindSubscribedRuleGroupByNameOrMetricName(ctx, conn, name, metricName)
+	input := &wafregional.ListSubscribedRuleGroupsInput{}
+	output, err := findSubscribedRuleGroup(ctx, conn, input, filter)
 
 	if err != nil {
-		return create.DiagError(names.WAFRegional, create.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Regional Subscribed Rule Group", err))
 	}
 
-	d.SetId(aws.StringValue(output.RuleGroupId))
-	d.Set("metric_name", output.MetricName)
-	d.Set("name", output.Name)
+	d.SetId(aws.ToString(output.RuleGroupId))
+	d.Set(names.AttrMetricName, output.MetricName)
+	d.Set(names.AttrName, output.Name)
 
-	return nil
+	return diags
+}
+
+func findSubscribedRuleGroup(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) (*awstypes.SubscribedRuleGroupSummary, error) {
+	output, err := findSubscribedRuleGroups(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSubscribedRuleGroups(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) ([]awstypes.SubscribedRuleGroupSummary, error) {
+	var output []awstypes.SubscribedRuleGroupSummary
+
+	err := listSubscribedRuleGroupsPages(ctx, conn, input, func(page *wafregional.ListSubscribedRuleGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.RuleGroups {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
