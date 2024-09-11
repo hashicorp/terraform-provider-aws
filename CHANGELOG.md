@@ -11,7 +11,9 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_codebuild_fleet` ([#39237](https://github.com/hashicorp/terraform-provider-aws/issues/39237))
 * **New Resource:** `aws_cloudformation_stack_instances` ([#36794](https://github.com/hashicorp/terraform-provider-aws/issues/36794))
+* **New Resource:** `aws_codebuild_fleet` ([#39237](https://github.com/hashicorp/terraform-provider-aws/issues/39237))
 * **New Resource:** `aws_computeoptimizer_enrollment_status` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
 * **New Resource:** `aws_computeoptimizer_recommendation_preferences` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
 * **New Resource:** `aws_datazone_asset_type` ([#38812](https://github.com/hashicorp/terraform-provider-aws/issues/38812))
@@ -25,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_amplify_app: Add `cache_config` argument ([#39215](https://github.com/hashicorp/terraform-provider-aws/issues/39215))
 * resource/aws_cloudhsm_v2_cluster: Add `mode` argument ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
 * resource/aws_cloudhsm_v2_cluster: Support `hsm2m.medium` as a valid value for `hsm_type` ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
+* resource/aws_codebuild_project: Add `fleet` attribute in `environment` configuration block ([#39237](https://github.com/hashicorp/terraform-provider-aws/issues/39237))
 * resource/aws_kinesis_firehose_delivery_stream: Add `snowflake_configuration.buffering_internal` and `snowflake_configuration.buffering_size` arguments ([#39214](https://github.com/hashicorp/terraform-provider-aws/issues/39214))
 * resource/aws_quicksight_user: Add `READER_PRO`, `AUTHOR_PRO`, and `ADMIN_PRO` as valid values for the `user_role` argument ([#39220](https://github.com/hashicorp/terraform-provider-aws/issues/39220))
 * resource/aws_sagemaker_domain: Add `default_user_settings.studio_web_portal_settings`, `default_space_settings.jupyter_lab_app_settings`, `default_space_settings.space_storage_settings`, `default_space_settings.custom_posix_user_config`, and `default_space_settings.custom_file_system_config` configuration blocks ([#38457](https://github.com/hashicorp/terraform-provider-aws/issues/38457))
@@ -42,6 +45,7 @@ BUG FIXES:
 * resource/aws_networkfirewall_tls_inspection_configuration: Fix issue where `check_certificate_revovation_status` is ignored due to bad autoflex field mapping ([#39211](https://github.com/hashicorp/terraform-provider-aws/issues/39211))
 * resource/aws_quicksight_data_set: Change `permissions.actions` `MaxItems` from `16` to `20`. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39226](https://github.com/hashicorp/terraform-provider-aws/issues/39226))
 * resource/aws_quicksight_vpc_connection: Remove `vpc_connection_id` regular expression validator. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39231](https://github.com/hashicorp/terraform-provider-aws/issues/39231))
+* resource/aws_sesv2_configuration_set: Allow `suppression_options.suppressed_reasons` to be an empty list (`[]`) in order to disable the suppression list ([#29671](https://github.com/hashicorp/terraform-provider-aws/issues/29671))
 * resource/aws_verifiedaccess_endpoint: fix crash when updating `load_balancer_options.subnet_ids` ([#39196](https://github.com/hashicorp/terraform-provider-aws/issues/39196))
 
 ## 5.66.0 (September  5, 2024)
