@@ -33,7 +33,6 @@ func (r *Results) IgnoredFieldNamesOpts() []AutoFlexOptionsFunc {
 }
 
 // IgnoredFieldNames returns the list of ignored field names
-// IgnoredFieldNames returns the list of ignored field names
 func (r *Results) IgnoredFieldNames() []string {
 	return r.ignoredFieldNames
 }
