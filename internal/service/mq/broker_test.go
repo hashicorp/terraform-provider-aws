@@ -1192,7 +1192,7 @@ func TestAccMQBroker_RabbitMQ_autoMinorVersionUpgrade(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_RabbitMQ_autoMinorVersionUpgrade(rName, testAccRabbitVersion, true),
+				Config: testAccBrokerConfig_rabbitAutoMinorVersionUpgrade(rName, testAccRabbitVersion, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
@@ -1239,7 +1239,7 @@ func TestAccMQBroker_RabbitMQ_normalizedEngineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_RabbitMQ_autoMinorVersionUpgrade(rName, testAccRabbitVersionNormalized3_13, true),
+				Config: testAccBrokerConfig_rabbitAutoMinorVersionUpgrade(rName, testAccRabbitVersionNormalized3_13, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
@@ -2312,7 +2312,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfig_RabbitMQ_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
+func testAccBrokerConfig_rabbitAutoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
