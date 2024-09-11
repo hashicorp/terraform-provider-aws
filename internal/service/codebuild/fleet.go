@@ -5,6 +5,7 @@ package codebuild
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -27,7 +28,7 @@ import (
 
 // @SDKResource("aws_codebuild_fleet", name="Fleet")
 // @Tags(identifierAttribute="arn")
-func ResourceFleet() *schema.Resource {
+func resourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
 		ReadWithoutTimeout:   resourceFleetRead,
@@ -194,7 +195,7 @@ func ResourceFleet() *schema.Resource {
 }
 
 const (
-	ResNameFleet = "Fleet"
+	resNameFleet = "Fleet"
 )
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -236,13 +237,16 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}, "ot authorized to perform")
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, resNameFleet, d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*codebuild.CreateFleetOutput).Fleet.Arn))
 
-	if err := waitFleetActive(ctx, conn, d.Id()); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForCreation, ResNameFleet, d.Id(), err)
+	const (
+		timeout = 20 * time.Minute
+	)
+	if _, err := waitFleetCreated(ctx, conn, d.Id(), timeout); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForCreation, resNameFleet, d.Id(), err)
 	}
 
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
@@ -253,50 +257,45 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	fleets, err := findFleetByARNOrNames(ctx, conn, d.Id(), true)
+	fleet, err := findFleetByARN(ctx, conn, d.Id())
 
-	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameFleet, d.Id(), err)
-	}
-
-	if len(fleets) == 0 {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	fleet := fleets[0]
+	if err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, resNameFleet, d.Id(), err)
+	}
 
 	d.Set(names.AttrARN, fleet.Arn)
 	d.Set("base_capacity", fleet.BaseCapacity)
 	d.Set("compute_type", fleet.ComputeType)
-	d.Set("created", fleet.Created.String())
+	d.Set("created", aws.ToTime(fleet.Created).Format(time.RFC3339))
 	d.Set("environment_type", fleet.EnvironmentType)
 	d.Set("fleet_service_role", fleet.FleetServiceRole)
 	d.Set(names.AttrID, fleet.Id)
 	d.Set("image_id", fleet.ImageId)
-	d.Set("last_modified", fleet.LastModified.String())
+	d.Set("last_modified", aws.ToTime(fleet.LastModified).Format(time.RFC3339))
 	d.Set(names.AttrName, fleet.Name)
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
-
 	if fleet.ScalingConfiguration != nil {
 		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 		}
 	} else {
 		d.Set("scaling_configuration", nil)
 	}
-
 	if fleet.Status != nil {
 		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 		}
 	} else {
 		d.Set(names.AttrStatus, nil)
 	}
-
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(fleet.VpcConfig)); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 	}
 
 	setTagsOut(ctx, fleet.Tags)
@@ -351,18 +350,19 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input.Tags = getTagsIn(ctx)
 
-	log.Printf("[DEBUG] Updating CodeBuild Fleet (%s): %#v", d.Id(), input)
-
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.UpdateFleet(ctx, input)
 	}, "ot authorized to perform")
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionUpdating, ResNameFleet, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionUpdating, resNameFleet, d.Id(), err)
 	}
 
-	if err := waitFleetActive(ctx, conn, d.Id()); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForUpdate, ResNameFleet, d.Id(), err)
+	const (
+		timeout = 20 * time.Minute
+	)
+	if _, err := waitFleetUpdated(ctx, conn, d.Id(), timeout); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForUpdate, resNameFleet, d.Id(), err)
 	}
 
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
@@ -372,8 +372,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	log.Printf("[INFO] Deleting CodeBuild Fleet %s", d.Id())
-
+	log.Printf("[INFO] Deleting CodeBuild Fleet: %s", d.Id())
 	_, err := conn.DeleteFleet(ctx, &codebuild.DeleteFleetInput{
 		Arn: aws.String(d.Id()),
 	})
@@ -381,79 +380,145 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionDeleting, ResNameFleet, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionDeleting, resNameFleet, d.Id(), err)
+	}
+
+	const (
+		timeout = 20 * time.Minute
+	)
+	if _, err := waitFleetDeleted(ctx, conn, d.Id(), timeout); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForDeletion, resNameFleet, d.Id(), err)
 	}
 
 	return diags
 }
 
-func waitFleetActive(ctx context.Context, conn *codebuild.Client, id string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.FleetStatusCodeCreating, types.FleetStatusCodeUpdating, types.FleetStatusCodeDeleting, types.FleetStatusCodeRotating),
-		Target:                    enum.Slice(types.FleetStatusCodeActive),
-		Refresh:                   statusFleet(ctx, conn, id, false),
-		Timeout:                   20 * time.Minute,
-		MinTimeout:                15 * time.Second,
-		Delay:                     15 * time.Second,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func statusFleet(ctx context.Context, conn *codebuild.Client, id string, delete bool) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		fleets, err := findFleetByARNOrNames(ctx, conn, id, true)
-		if tfresource.NotFound(err) && delete {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return fleets, string(fleets[0].Status.StatusCode), nil
-	}
-}
-
-func findFleetByARNOrNames(ctx context.Context, conn *codebuild.Client, arn string, skipPendingDeletion bool) ([]types.Fleet, error) {
+func findFleetByARN(ctx context.Context, conn *codebuild.Client, arn string) (*types.Fleet, error) {
 	input := &codebuild.BatchGetFleetsInput{
 		Names: []string{arn},
 	}
+
+	output, err := findFleet(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode := output.Status.StatusCode; statusCode == types.FleetStatusCodePendingDeletion {
+		return nil, &retry.NotFoundError{
+			Message:     string(statusCode),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findFleet(ctx context.Context, conn *codebuild.Client, input *codebuild.BatchGetFleetsInput) (*types.Fleet, error) {
+	output, err := findFleets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *types.Fleet) bool {
+		return v.Status != nil
+	})
+}
+
+func findFleets(ctx context.Context, conn *codebuild.Client, input *codebuild.BatchGetFleetsInput) ([]types.Fleet, error) {
 	output, err := conn.BatchGetFleets(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.FleetsNotFound) > 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	fleets := []types.Fleet{}
+	return output.Fleets, nil
+}
 
-	for _, fleet := range output.Fleets {
-		if skipPendingDeletion && fleet.Status.StatusCode == types.FleetStatusCodePendingDeletion {
-			continue
+func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFleetByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		fleets = append(fleets, fleet)
-	}
-
-	if len(fleets) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, "", err
 		}
+
+		return output, string(output.Status.StatusCode), nil
+	}
+}
+
+func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.FleetStatusCodeCreating, types.FleetStatusCodeRotating),
+		Target:     enum.Slice(types.FleetStatusCodeActive),
+		Refresh:    statusFleet(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
 	}
 
-	return fleets, nil
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Fleet); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.FleetStatusCodeUpdating, types.FleetStatusCodeRotating),
+		Target:     enum.Slice(types.FleetStatusCodeActive),
+		Refresh:    statusFleet(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Fleet); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.FleetStatusCodeDeleting),
+		Target:     []string{},
+		Refresh:    statusFleet(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Fleet); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConfigurationInput {
@@ -487,13 +552,11 @@ func expandTargetTrackingScalingConfigs(tfList []interface{}) []types.TargetTrac
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
 		apiObject := expandTargetTrackingScalingConfig(tfMap)
-
 		if apiObject == nil {
 			continue
 		}
@@ -522,24 +585,26 @@ func expandTargetTrackingScalingConfig(tfMap map[string]interface{}) *types.Targ
 }
 
 func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
-	if apiObject != nil {
-		if v := apiObject.DesiredCapacity; v != nil {
-			tfMap["desired_capacity"] = aws.ToInt32(v)
-		}
+	if v := apiObject.DesiredCapacity; v != nil {
+		tfMap["desired_capacity"] = aws.ToInt32(v)
+	}
 
-		if v := apiObject.MaxCapacity; v != nil {
-			tfMap[names.AttrMaxCapacity] = aws.ToInt32(v)
-		}
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.ToInt32(v)
+	}
 
-		if v := apiObject.ScalingType; v != "" {
-			tfMap["scaling_type"] = v
-		}
+	if v := apiObject.ScalingType; v != "" {
+		tfMap["scaling_type"] = v
+	}
 
-		if v := apiObject.TargetTrackingScalingConfigs; v != nil {
-			tfMap["target_tracking_scaling_configs"] = flattenTargetTrackingScalingConfigs(v)
-		}
+	if v := apiObject.TargetTrackingScalingConfigs; v != nil {
+		tfMap["target_tracking_scaling_configs"] = flattenTargetTrackingScalingConfigs(v)
 	}
 
 	return tfMap
@@ -550,16 +615,20 @@ func flattenTargetTrackingScalingConfigs(apiObjects []types.TargetTrackingScalin
 		return nil
 	}
 
-	var tfMaps []interface{}
+	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfMaps = append(tfMaps, flattenTargetTrackingScalingConfig(apiObject))
+		tfList = append(tfList, flattenTargetTrackingScalingConfig(&apiObject))
 	}
 
-	return tfMaps
+	return tfList
 }
 
-func flattenTargetTrackingScalingConfig(apiObject types.TargetTrackingScalingConfiguration) map[string]interface{} {
+func flattenTargetTrackingScalingConfig(apiObject *types.TargetTrackingScalingConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.MetricType; v != "" {

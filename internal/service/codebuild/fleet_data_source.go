@@ -5,8 +5,9 @@ package codebuild
 
 import (
 	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,7 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_codebuild_fleet", name="Fleet")
-func DataSourceFleet() *schema.Resource {
+func dataSourceFleet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFleetRead,
 
@@ -151,7 +152,7 @@ func DataSourceFleet() *schema.Resource {
 }
 
 const (
-	DSNameFleet = "Fleet Data Source"
+	dsNameFleet = "Fleet Data Source"
 )
 
 func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -160,46 +161,41 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 	name := d.Get(names.AttrName).(string)
 
-	fleets, err := findFleetByARNOrNames(ctx, conn, name, true)
+	fleet, err := findFleetByARN(ctx, conn, name)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, DSNameFleet, name, err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, dsNameFleet, name, err)
 	}
 
-	fleet := fleets[0]
-
-	d.SetId(aws.StringValue(fleet.Arn))
-
+	d.SetId(aws.ToString(fleet.Arn))
 	d.Set(names.AttrARN, fleet.Arn)
 	d.Set("base_capacity", fleet.BaseCapacity)
 	d.Set("compute_type", fleet.ComputeType)
-	d.Set("created", fleet.Created.String())
+	d.Set("created", aws.ToTime(fleet.Created).Format(time.RFC3339))
 	d.Set("environment_type", fleet.EnvironmentType)
 	d.Set("fleet_service_role", fleet.FleetServiceRole)
 	d.Set("image_id", fleet.ImageId)
-	d.Set("last_modified", fleet.LastModified.String())
-	d.Set("overflow_behavior", fleet.OverflowBehavior)
+	d.Set("last_modified", aws.ToTime(fleet.LastModified).Format(time.RFC3339))
 	d.Set(names.AttrName, fleet.Name)
-
+	d.Set("overflow_behavior", fleet.OverflowBehavior)
 	if fleet.ScalingConfiguration != nil {
 		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 		}
 	}
 	if fleet.Status != nil {
 		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 		}
 	}
-
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(fleet.VpcConfig)); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 	}
 
 	return diags
