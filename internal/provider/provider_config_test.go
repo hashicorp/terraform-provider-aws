@@ -381,9 +381,7 @@ func TestProviderConfig_Authentication_LegacySSO(t *testing.T) { //nolint:parall
 	configtesting.LegacySSO(t, &testDriver{})
 }
 
-func TestProviderConfig_AssumeRole(t *testing.T) {
-	t.Parallel()
-
+func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 	testCases := map[string]struct {
 		Config                   map[string]any
 		ExpectedCredentialsValue aws.Credentials
@@ -477,10 +475,8 @@ func TestProviderConfig_AssumeRole(t *testing.T) {
 		},
 	}
 
-	for name, tc := range testCases {
+	for name, tc := range testCases { //nolint:paralleltest
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			ctx := context.TODO()
 
 			servicemocks.InitSessionTestEnv(t)
