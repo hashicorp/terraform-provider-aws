@@ -372,7 +372,7 @@ func testAccConfigurationSetConfig_suppressedReasonsEmpty(rName string) string {
 resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
   suppression_options {
-	suppressed_reasons = []
+    suppressed_reasons = []
   }
 }
 `, rName)
