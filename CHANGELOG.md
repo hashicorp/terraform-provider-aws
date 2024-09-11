@@ -16,6 +16,7 @@ FEATURES:
 * **New Resource:** `aws_codebuild_fleet` ([#39237](https://github.com/hashicorp/terraform-provider-aws/issues/39237))
 * **New Resource:** `aws_computeoptimizer_enrollment_status` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
 * **New Resource:** `aws_computeoptimizer_recommendation_preferences` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
+* **New Resource:** `aws_costoptimizationhub_enrollment_status` ([#36440](https://github.com/hashicorp/terraform-provider-aws/issues/36440))
 * **New Resource:** `aws_datazone_asset_type` ([#38812](https://github.com/hashicorp/terraform-provider-aws/issues/38812))
 * **New Resource:** `aws_datazone_environment_profile` ([#38581](https://github.com/hashicorp/terraform-provider-aws/issues/38581))
 * **New Resource:** `aws_lambda_function_recursion_config` ([#39153](https://github.com/hashicorp/terraform-provider-aws/issues/39153))
@@ -25,6 +26,7 @@ ENHANCEMENTS:
 * data-source/aws_acm_certificate: Mark `domain` and `tags` as Optional. This enables certificates to be matched based on tags ([#31453](https://github.com/hashicorp/terraform-provider-aws/issues/31453))
 * data-source/aws_kinesis_stream: Add `encryption_type` and `kms_key_id` attributes ([#39212](https://github.com/hashicorp/terraform-provider-aws/issues/39212))
 * datasource/aws_cognito_user_pool: Deprecates `user_pool_tags` in favor of standard `tags`. ([#39260](https://github.com/hashicorp/terraform-provider-aws/issues/39260))
+* provider: Adds support for IAM role chaining. The provider attribute `assume_role` now accepts multiple elements. ([#39255](https://github.com/hashicorp/terraform-provider-aws/issues/39255))
 * resource/aws_amplify_app: Add `cache_config` argument ([#39215](https://github.com/hashicorp/terraform-provider-aws/issues/39215))
 * resource/aws_cloudhsm_v2_cluster: Add `mode` argument ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
 * resource/aws_cloudhsm_v2_cluster: Support `hsm2m.medium` as a valid value for `hsm_type` ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
@@ -40,6 +42,7 @@ BUG FIXES:
 
 * data-source/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
 * datasource/aws_cognito_user_pool: Fixes value conversion error. ([#39260](https://github.com/hashicorp/terraform-provider-aws/issues/39260))
+* provider: Fix empty tags drift on fwprovider resources ([#38636](https://github.com/hashicorp/terraform-provider-aws/issues/38636))
 * resource/aws_batch_job_queue: Fixes error in schema migration function. ([#39257](https://github.com/hashicorp/terraform-provider-aws/issues/39257))
 * resource/aws_cognito_user_pool: Correctly unsets tags. ([#39260](https://github.com/hashicorp/terraform-provider-aws/issues/39260))
 * resource/aws_ecr_repository_policy: Fix retry logic handling eventual consistency of newly created IAM roles ([#39190](https://github.com/hashicorp/terraform-provider-aws/issues/39190))
@@ -49,6 +52,7 @@ BUG FIXES:
 * resource/aws_quicksight_data_set: Change `permissions.actions` `MaxItems` from `16` to `20`. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39226](https://github.com/hashicorp/terraform-provider-aws/issues/39226))
 * resource/aws_quicksight_vpc_connection: Remove `vpc_connection_id` regular expression validator. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39231](https://github.com/hashicorp/terraform-provider-aws/issues/39231))
 * resource/aws_sesv2_configuration_set: Allow `suppression_options.suppressed_reasons` to be an empty list (`[]`) in order to disable the suppression list ([#29671](https://github.com/hashicorp/terraform-provider-aws/issues/29671))
+* resource/aws_sesv2_configuration_set_event_destination: Change `event_destination.matching_event_types` from `TypeList` to `TypeSet` as order is not significant ([#36897](https://github.com/hashicorp/terraform-provider-aws/issues/36897))
 * resource/aws_verifiedaccess_endpoint: fix crash when updating `load_balancer_options.subnet_ids` ([#39196](https://github.com/hashicorp/terraform-provider-aws/issues/39196))
 
 ## 5.66.0 (September  5, 2024)
