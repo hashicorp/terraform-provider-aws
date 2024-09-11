@@ -23,6 +23,7 @@ func testAccDRSReplicationConfigurationTemplate_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccDRSReplicationConfigurationTemplate_tags,
 		"null":                                      testAccDRSReplicationConfigurationTemplate_tags_null,
+		"emptyMap":                                  testAccDRSReplicationConfigurationTemplate_tags_emptyMap,
 		"AddOnUpdate":                               testAccDRSReplicationConfigurationTemplate_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Add,
@@ -275,6 +276,56 @@ func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+				},
+			},
+		},
+	})
+}
+
+func testAccDRSReplicationConfigurationTemplate_tags_emptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ReplicationConfigurationTemplate
+	resourceName := "aws_drs_replication_configuration_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
+		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfigurationTemplate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfigurationTemplate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
