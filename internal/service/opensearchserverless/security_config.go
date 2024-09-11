@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwdiff "github.com/hashicorp/terraform-provider-aws/internal/framework/diff"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -209,7 +208,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, diags := fwdiff.Calculate(ctx, plan, state)
+	diff, diags := fwflex.Calculate(ctx, plan, state)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return

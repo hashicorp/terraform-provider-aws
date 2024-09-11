@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package diff
+package flex
 
 // ChangeOption is a type alias for a functional option that modifies ChangeOptions
 type ChangeOption func(*ChangeOptions)

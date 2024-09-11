@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package diff
+package flex
 
 import (
 	"context"
@@ -11,13 +11,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 type Results struct {
 	hasChanges            bool
 	ignoredFieldNames     []string
-	flexIgnoredFieldNames []fwflex.AutoFlexOptionsFunc
+	flexIgnoredFieldNames []AutoFlexOptionsFunc
 }
 
 // HasChanges returns whether there are changes between the plan and state values
@@ -26,9 +25,9 @@ func (r *Results) HasChanges() bool {
 }
 
 // IgnoredFieldNamesOpts returns the list of ignored field names as AutoFlexOptionsFunc
-func (r *Results) IgnoredFieldNamesOpts() []fwflex.AutoFlexOptionsFunc {
+func (r *Results) IgnoredFieldNamesOpts() []AutoFlexOptionsFunc {
 	for _, v := range r.ignoredFieldNames {
-		r.flexIgnoredFieldNames = append(r.flexIgnoredFieldNames, fwflex.WithIgnoredFieldNamesAppend(v))
+		r.flexIgnoredFieldNames = append(r.flexIgnoredFieldNames, WithIgnoredFieldNamesAppend(v))
 	}
 	return r.flexIgnoredFieldNames
 }

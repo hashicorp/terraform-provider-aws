@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package diff_test
+package flex_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	fwdiff "github.com/hashicorp/terraform-provider-aws/internal/framework/diff"
+	fwdiff "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 type testResourceData1 struct {
@@ -83,7 +83,7 @@ func TestCalculate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			results, diags := fwdiff.Calculate(context.Background(), test.plan, test.state)
+			results, diags := Calculate(context.Background(), test.plan, test.state)
 
 			if diff := cmp.Diff(diags.HasError(), test.expectErr); diff != "" {
 				t.Fatalf("unexpected diff (+wanted, -got): %s", diff)
@@ -129,7 +129,7 @@ func TestWithException(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			results, _ := fwdiff.Calculate(context.Background(), test.plan, test.state, test.withException...)
+			results, _ := Calculate(context.Background(), test.plan, test.state, test.withException...)
 
 			if diff := cmp.Diff(results.IgnoredFieldNames(), test.expectedIgnoredFieldNames); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

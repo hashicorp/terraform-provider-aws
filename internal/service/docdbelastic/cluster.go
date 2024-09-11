@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwdiff "github.com/hashicorp/terraform-provider-aws/internal/framework/diff"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -283,7 +282,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := fwdiff.Calculate(ctx, plan, state)
+	diff, d := fwflex.Calculate(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -291,7 +290,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 	if diff.HasChanges() {
 		input := docdbelastic.UpdateClusterInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.FlexIgnoredFieldNames()...)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
