@@ -30,71 +30,60 @@ func (r *Results) FlexIgnoredFieldNames() []fwflex.AutoFlexOptionsFunc {
 	for _, v := range r.ignoredFieldNames {
 		r.flexIgnoredFieldNames = append(r.flexIgnoredFieldNames, fwflex.WithIgnoredFieldNamesAppend(v))
 	}
-
 	return r.flexIgnoredFieldNames
 }
 
+// IgnoredFieldNames returns the list of ignored field names
 func (r *Results) IgnoredFieldNames() []string {
 	return r.ignoredFieldNames
 }
 
 // Calculate compares the plan and state values and returns whether there are changes
-func Calculate(ctx context.Context, plan, state any, options ...ChangeOptionsFunc) (*Results, diag.Diagnostics) {
+func Calculate(ctx context.Context, plan, state any, options ...ChangeOption) (*Results, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	opts := initChangeOptions(options)
+	opts := NewChangeOptions(options...)
 
-	p, s := setValue(reflect.ValueOf(plan)), setValue(reflect.ValueOf(state))
-	typeOfP, typesOfS := p.Type(), s.Type()
+	planValue, stateValue := dereferencePointer(reflect.ValueOf(plan)), dereferencePointer(reflect.ValueOf(state))
+	planType, stateType := planValue.Type(), stateValue.Type()
 	var ignoredFields []string
 	result := Results{}
 
-	if typeOfP != typesOfS {
+	if planType != stateType {
 		diags.AddError(
 			"Type mismatch between plan and state",
-			fmt.Sprintf("plan type: %s, state type: %s", typeOfP.String(), typesOfS.String()),
+			fmt.Sprintf("plan type: %s, state type: %s", planType.String(), stateType.String()),
 		)
 		return &result, diags
 	}
 
 	var hasChanges bool
-	// check every field on the plan struct
-	for i := 0; i < p.NumField(); i++ {
-		name := typeOfP.Field(i).Name
+	for i := 0; i < planValue.NumField(); i++ {
+		fieldName := planType.Field(i).Name
 
-		// skip fields that are handled outside of regular update flow
-		if slices.Contains(skippedFields(), name) {
+		if shouldSkipField(fieldName, opts.IgnoredFields) {
+			ignoredFields = append(ignoredFields, fieldName)
 			continue
 		}
 
-		if slices.Contains(opts.ignoredFieldNames, name) {
-			ignoredFields = append(ignoredFields, name)
+		if !fieldExistsInState(stateType, fieldName) {
 			continue
 		}
 
-		// if the field is not present in the state, skip it
-		_, sHasField := typesOfS.FieldByName(name)
-		if !sHasField {
+		if !implementsAttrValue(planValue.FieldByName(fieldName)) || !implementsAttrValue(stateValue.FieldByName(fieldName)) {
 			continue
 		}
 
-		// if the fields do not implement the correct interfaces, skip it
-		fieldType := reflect.TypeFor[attr.Value]()
-		if !p.FieldByName(name).Type().Implements(fieldType) || !s.FieldByName(name).Type().Implements(fieldType) {
+		planFieldValue := planValue.FieldByName(fieldName).Interface().(attr.Value)
+		stateFieldValue := stateValue.FieldByName(fieldName).Interface().(attr.Value)
+
+		if !planFieldValue.Type(ctx).Equal(stateFieldValue.Type(ctx)) {
 			continue
 		}
 
-		pValue := p.FieldByName(name).Interface().(attr.Value)
-		sValue := s.FieldByName(name).Interface().(attr.Value)
-
-		// check that the types are the same so that they can be compared
-		if !pValue.Type(ctx).Equal(sValue.Type(ctx)) {
-			continue
-		}
-
-		if ok := !pValue.Equal(sValue); ok {
-			hasChanges = ok
+		if !planFieldValue.Equal(stateFieldValue) {
+			hasChanges = true
 		} else {
-			ignoredFields = append(ignoredFields, name)
+			ignoredFields = append(ignoredFields, fieldName)
 		}
 	}
 
@@ -104,11 +93,24 @@ func Calculate(ctx context.Context, plan, state any, options ...ChangeOptionsFun
 	return &result, diags
 }
 
-func setValue(value reflect.Value) reflect.Value {
+func dereferencePointer(value reflect.Value) reflect.Value {
 	if value.Kind() == reflect.Ptr {
 		return value.Elem()
 	}
 	return value
+}
+
+func shouldSkipField(fieldName string, ignoredFieldNames []string) bool {
+	return slices.Contains(skippedFields(), fieldName) || slices.Contains(ignoredFieldNames, fieldName)
+}
+
+func fieldExistsInState(stateType reflect.Type, fieldName string) bool {
+	_, exists := stateType.FieldByName(fieldName)
+	return exists
+}
+
+func implementsAttrValue(field reflect.Value) bool {
+	return field.Type().Implements(reflect.TypeOf((*attr.Value)(nil)).Elem())
 }
 
 func skippedFields() []string {
