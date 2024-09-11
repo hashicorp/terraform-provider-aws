@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -18,8 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,12 +48,12 @@ type resourceEnrollmentStatus struct {
 	framework.WithImportByID
 }
 
-func (r *resourceEnrollmentStatus) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_costoptimizationhub_enrollment_status"
+func (r *resourceEnrollmentStatus) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_costoptimizationhub_enrollment_status"
 }
 
-func (r *resourceEnrollmentStatus) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourceEnrollmentStatus) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": framework.IDAttribute(),
 			"status": schema.StringAttribute{
@@ -67,140 +71,166 @@ func (r *resourceEnrollmentStatus) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceEnrollmentStatus) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().CostOptimizationHubClient(ctx)
-
-	var plan resourceEnrollmentStatusData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceEnrollmentStatus) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceEnrollmentStatusData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	//Input for UpdateEnrollmentStatus
-	in := &costoptimizationhub.UpdateEnrollmentStatusInput{
-		Status: awstypes.EnrollmentStatus("Active"),
+	input := &costoptimizationhub.UpdateEnrollmentStatusInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if !plan.IncludeMemberAccounts.IsNull() {
-		in.IncludeMemberAccounts = plan.IncludeMemberAccounts.ValueBoolPointer()
-	}
+	input.Status = awstypes.EnrollmentStatus("Active") // Computed
 
-	out, err := conn.UpdateEnrollmentStatus(ctx, in)
+	conn := r.Meta().CostOptimizationHubClient(ctx)
+
+	out, err := conn.UpdateEnrollmentStatus(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, "UpdateEnrollmentStatus", err),
 			err.Error(),
 		)
 		return
 	}
+
 	if out == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, "UpdateEnrollmentStatus", nil),
 			errors.New("empty out").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
-	plan.Status = flex.StringValueToFramework(ctx, *out.Status)
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.Status = flex.StringValueToFramework(ctx, aws.ToString(out.Status))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceEnrollmentStatus) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().CostOptimizationHubClient(ctx)
-
-	var state resourceEnrollmentStatusData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceEnrollmentStatus) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceEnrollmentStatusData
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().CostOptimizationHubClient(ctx)
+
 	out, err := findEnrollmentStatus(ctx, conn)
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionSetting, ResNameEnrollmentStatus, state.ID.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionSetting, ResNameEnrollmentStatus, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	//For this Enrollment resource, The non-existence of this resource will mean status will be "Inactive"
-	//So if that is the case, remove the resource from state
-	if out.Items[0].Status == "Inactive" {
-		resp.State.RemoveResource(ctx)
+	//So if that is the case, remove the resource from data
+	if out != nil && len(out.Items) > 0 && out.Items[0].Status == "Inactive" {
+		response.State.RemoveResource(ctx)
 		return
 	}
 
-	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
-	state.Status = flex.StringValueToFramework(ctx, out.Items[0].Status)
-	state.IncludeMemberAccounts = flex.BoolToFramework(ctx, out.IncludeMemberAccounts)
+	// Set attributes for import.
+	// A gratuitous call to Autoflex since status is in out.Items[0].Status.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	data.Status = flex.StringValueToFramework(ctx, out.Items[0].Status)
+
+	// out includes the IncludeMemberAccounts field ATM but it is always nil. Thus, we cannot update state
+	// and drift detection is not possible. (However, we can still update if the configuration changes.)
+	// If drift detection becomes possible, we can uncomment the following code:
+
+	// data.IncludeMemberAccounts = types.BoolValue(false)
+	// if out.IncludeMemberAccounts != nil {
+	// 	data.IncludeMemberAccounts = flex.BoolToFramework(ctx, out.IncludeMemberAccounts)
+	// }
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceEnrollmentStatus) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().CostOptimizationHubClient(ctx)
-
-	var plan, state resourceEnrollmentStatusData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceEnrollmentStatus) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new resourceEnrollmentStatusData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &old)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.IncludeMemberAccounts.Equal(state.IncludeMemberAccounts) {
-		in := &costoptimizationhub.UpdateEnrollmentStatusInput{
+	// out includes the IncludeMemberAccounts field ATM but it is always nil. Thus, we cannot update state
+	// and drift detection is not possible. However, we can still update if the configuration changes.
+	if !old.IncludeMemberAccounts.Equal(new.IncludeMemberAccounts) {
+		input := &costoptimizationhub.UpdateEnrollmentStatusInput{
 			Status:                awstypes.EnrollmentStatus("Active"),
-			IncludeMemberAccounts: plan.IncludeMemberAccounts.ValueBoolPointer(),
+			IncludeMemberAccounts: old.IncludeMemberAccounts.ValueBoolPointer(),
 		}
 
-		out, err := conn.UpdateEnrollmentStatus(ctx, in)
+		conn := r.Meta().CostOptimizationHubClient(ctx)
+
+		out, err := conn.UpdateEnrollmentStatus(ctx, input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, plan.ID.String(), err),
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, old.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
+
 		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, plan.ID.String(), nil),
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, old.ID.String(), nil),
 				errors.New("empty out").Error(),
 			)
 			return
 		}
-		plan.ID = state.ID
-		plan.Status = flex.StringValueToFramework(ctx, *out.Status)
+
+		old.ID = new.ID
+		old.Status = flex.StringValueToFramework(ctx, *out.Status)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &old)...)
 }
 
-func (r *resourceEnrollmentStatus) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().CostOptimizationHubClient(ctx)
-
-	var state resourceEnrollmentStatusData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceEnrollmentStatus) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourceEnrollmentStatusData
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &costoptimizationhub.UpdateEnrollmentStatusInput{
+	input := &costoptimizationhub.UpdateEnrollmentStatusInput{
 		Status: awstypes.EnrollmentStatus("Inactive"),
 	}
 
-	out, err := conn.UpdateEnrollmentStatus(ctx, in)
+	conn := r.Meta().CostOptimizationHubClient(ctx)
+
+	out, err := conn.UpdateEnrollmentStatus(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, "UpdateEnrollmentStatus", err),
 			err.Error(),
 		)
 		return
 	}
+
 	if out == nil || out.Status == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNameEnrollmentStatus, "UpdateEnrollmentStatus", nil),
 			errors.New("empty out").Error(),
 		)
@@ -209,20 +239,22 @@ func (r *resourceEnrollmentStatus) Delete(ctx context.Context, req resource.Dele
 }
 
 func findEnrollmentStatus(ctx context.Context, conn *costoptimizationhub.Client) (*costoptimizationhub.ListEnrollmentStatusesOutput, error) {
-	in := &costoptimizationhub.ListEnrollmentStatusesInput{
-		IncludeOrganizationInfo: false, //Pass in false to get only this account's status (and not its member accounts)
+	input := &costoptimizationhub.ListEnrollmentStatusesInput{
+		IncludeOrganizationInfo: false, //Pass input false to get only this account's status (and not its member accounts)
 	}
 
-	out, err := conn.ListEnrollmentStatuses(ctx, in)
+	out, err := conn.ListEnrollmentStatuses(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 
+	// out includes the IncludeMemberAccounts field ATM but it is always nil
+
 	return out, nil
 }
 
-func (r *resourceEnrollmentStatus) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *resourceEnrollmentStatus) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
 type resourceEnrollmentStatusData struct {
