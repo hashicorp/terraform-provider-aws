@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -290,7 +290,9 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
+			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
+
+			for _, chunk := range chunks {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToAdd: chunk,
 					Name:            aws.String(d.Id()),
@@ -424,7 +426,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for chunk := range slices.Chunk(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
+		for _, chunk := range tfslices.Chunks(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToAdd: chunk,
 				Name:            aws.String(d.Id()),
@@ -438,7 +440,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for chunk := range slices.Chunk(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
+		for _, chunk := range tfslices.Chunks(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToRemove: chunk,
 				Name:               aws.String(d.Id()),
@@ -515,7 +517,9 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
+			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
+
+			for _, chunk := range chunks {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToRemove: chunk,
 					Name:               aws.String(d.Id()),

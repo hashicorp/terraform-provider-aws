@@ -208,7 +208,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[AdvancedRecognitionSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"audio_recognition_setting": schema.StringAttribute{
+									"audio_recognition_strategy": schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.AudioRecognitionStrategy](),
@@ -488,7 +488,7 @@ type SlotTypeValues struct {
 }
 
 type AdvancedRecognitionSetting struct {
-	AudioRecognitionSetting types.String `tfsdk:"audio_recognition_setting"`
+	AudioRecognitionStrategy types.String `tfsdk:"audio_recognition_strategy"`
 }
 
 type RegexFilter struct {
