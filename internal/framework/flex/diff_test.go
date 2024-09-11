@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	fwdiff "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 type testResourceData1 struct {
@@ -83,7 +83,7 @@ func TestCalculate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			results, diags := Calculate(context.Background(), test.plan, test.state)
+			results, diags := fwflex.Calculate(context.Background(), test.plan, test.state)
 
 			if diff := cmp.Diff(diags.HasError(), test.expectErr); diff != "" {
 				t.Fatalf("unexpected diff (+wanted, -got): %s", diff)
@@ -110,13 +110,13 @@ func TestWithException(t *testing.T) {
 	testCases := map[string]struct {
 		plan                      any
 		state                     any
-		withException             []fwdiff.ChangeOption
+		withException             []fwflex.ChangeOption
 		expectedIgnoredFieldNames []string
 	}{
 		"ignore changed field": {
 			plan:          testResourceData1{Name: types.StringValue("test2"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
 			state:         testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
-			withException: []fwdiff.ChangeOption{fwdiff.WithIgnoredField("Name")},
+			withException: []fwflex.ChangeOption{fwflex.WithIgnoredField("Name")},
 			expectedIgnoredFieldNames: []string{
 				"Name",
 				"Number",
@@ -129,7 +129,7 @@ func TestWithException(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			results, _ := Calculate(context.Background(), test.plan, test.state, test.withException...)
+			results, _ := fwflex.Calculate(context.Background(), test.plan, test.state, test.withException...)
 
 			if diff := cmp.Diff(results.IgnoredFieldNames(), test.expectedIgnoredFieldNames); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
