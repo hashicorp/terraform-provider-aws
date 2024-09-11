@@ -33,7 +33,7 @@ resource "aws_costoptimizationhub_enrollment_status" "example" {
 
 The following arguments are optional:
 
-* `include_member_accounts` - (Optional) Flag to enroll member accounts of the organization if the account is the management account. No drift detection is currently supported for this argument. Default value is `false`. 
+* `include_member_accounts` - (Optional) Flag to enroll member accounts of the organization if the account is the management account. No drift detection is currently supported for this argument. Default value is `false`.
 
 ## Attribute Reference
 
