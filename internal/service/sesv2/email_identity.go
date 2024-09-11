@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_sesv2_email_identity", name="Email Identity")
 // @Tags(identifierAttribute="arn")
-func ResourceEmailIdentity() *schema.Resource {
+func resourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityCreate,
 		ReadWithoutTimeout:   resourceEmailIdentityRead,

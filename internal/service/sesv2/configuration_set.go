@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_sesv2_configuration_set", name="Configuration Set")
 // @Tags(identifierAttribute="arn")
-func ResourceConfigurationSet() *schema.Resource {
+func resourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
 		ReadWithoutTimeout:   resourceConfigurationSetRead,

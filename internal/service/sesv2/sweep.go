@@ -47,7 +47,7 @@ func sweepConfigurationSets(region string) error {
 		}
 
 		for _, configurationSet := range page.ConfigurationSets {
-			r := ResourceConfigurationSet()
+			r := resourceConfigurationSet()
 			d := r.Data(nil)
 
 			d.SetId(configurationSet)
@@ -94,7 +94,7 @@ func sweepContactLists(region string) error {
 		}
 
 		for _, contactList := range page.ContactLists {
-			r := ResourceContactList()
+			r := resourceContactList()
 			d := r.Data(nil)
 
 			d.SetId(aws.ToString(contactList.ContactListName))

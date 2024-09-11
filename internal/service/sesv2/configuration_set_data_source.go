@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sesv2_configuration_set")
-func DataSourceConfigurationSet() *schema.Resource {
+// @SDKDataSource("aws_sesv2_configuration_set", name="Configuration Set")
+func dataSourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationSetRead,
 

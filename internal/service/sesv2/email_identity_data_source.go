@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sesv2_email_identity")
+// @SDKDataSource("aws_sesv2_email_identity", name="Email Identity")
 // @Tags(identifierAttribute="arn")
-func DataSourceEmailIdentity() *schema.Resource {
+func dataSourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 

@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sesv2_email_identity_mail_from_attributes")
-func DataSourceEmailIdentityMailFromAttributes() *schema.Resource {
+// @SDKDataSource("aws_sesv2_email_identity_mail_from_attributes", name="Email Identity Mail From Attributes")
+func dataSourceEmailIdentityMailFromAttributes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityMailFromAttributesRead,
 

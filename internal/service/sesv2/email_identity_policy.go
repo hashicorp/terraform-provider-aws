@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_sesv2_email_identity_policy", name="Email Identity Policy")
-func ResourceEmailIdentityPolicy() *schema.Resource {
+func resourceEmailIdentityPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityPolicyCreate,
 		ReadWithoutTimeout:   resourceEmailIdentityPolicyRead,

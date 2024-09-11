@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_sesv2_contact_list", name="Contact List")
 // @Tags(identifierAttribute="arn")
-func ResourceContactList() *schema.Resource {
+func resourceContactList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactListCreate,
 		ReadWithoutTimeout:   resourceContactListRead,

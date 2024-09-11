@@ -21,7 +21,7 @@ import (
 )
 
 // @SDKResource("aws_sesv2_account_vdm_attributes", name="Account VDM Attributes")
-func ResourceAccountVDMAttributes() *schema.Resource {
+func resourceAccountVDMAttributes() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountVDMAttributesUpdate,
 		ReadWithoutTimeout:   resourceAccountVDMAttributesRead,
