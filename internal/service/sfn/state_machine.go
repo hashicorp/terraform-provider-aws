@@ -564,28 +564,30 @@ func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
 func stateMachineDefinitionValidate(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	definition := d.Get("definition").(string)
-	if definition == "" {
-		return nil
-	}
+	if d.HasChange("definition") {
+		definition := d.Get("definition").(string)
+		if definition == "" {
+			return nil
+		}
 
-	input := &sfn.ValidateStateMachineDefinitionInput{
-		Definition: aws.String(definition),
-		Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
-	}
+		input := &sfn.ValidateStateMachineDefinitionInput{
+			Definition: aws.String(definition),
+			Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
+		}
 
-	output, err := conn.ValidateStateMachineDefinition(ctx, input)
+		output, err := conn.ValidateStateMachineDefinition(ctx, input)
 
-	if err != nil {
-		return fmt.Errorf("validating Step Functions State Machine definition: %w", err)
-	}
+		if err != nil {
+			return fmt.Errorf("validating Step Functions State Machine definition: %w", err)
+		}
 
-	if result := output.Result; result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
-		errs := tfslices.ApplyToAll(output.Diagnostics, func(v awstypes.ValidateStateMachineDefinitionDiagnostic) error {
-			return fmt.Errorf("%s (%s): %s", v.Severity, aws.ToString(v.Code), aws.ToString(v.Message))
-		})
+		if result := output.Result; result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
+			errs := tfslices.ApplyToAll(output.Diagnostics, func(v awstypes.ValidateStateMachineDefinitionDiagnostic) error {
+				return fmt.Errorf("%s (%s): %s", v.Severity, aws.ToString(v.Code), aws.ToString(v.Message))
+			})
 
-		return fmt.Errorf("invalid Step Functions State Machine definition: %w", errors.Join(errs...))
+			return fmt.Errorf("invalid Step Functions State Machine definition: %w", errors.Join(errs...))
+		}
 	}
 
 	return nil
