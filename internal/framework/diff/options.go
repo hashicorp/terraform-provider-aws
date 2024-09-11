@@ -3,28 +3,30 @@
 
 package diff
 
-// ChangeOptionsFunc is a type alias for a changeOptions functional option
-type ChangeOptionsFunc func(*changeOptions)
+// ChangeOption is a type alias for a functional option that modifies ChangeOptions
+type ChangeOption func(*ChangeOptions)
 
-type changeOptions struct {
-	ignoredFieldNames []string
+// ChangeOptions holds configuration for calculating plan changes
+type ChangeOptions struct {
+	IgnoredFields []string
 }
 
-// WithException specifies a field name to be ignored when calculating plan changes
-func WithException(s string) ChangeOptionsFunc {
-	return func(o *changeOptions) {
-		o.ignoredFieldNames = append(o.ignoredFieldNames, s)
+// WithIgnoredField specifies a field name to be ignored when calculating plan changes
+func WithIgnoredField(fieldName string) ChangeOption {
+	return func(o *ChangeOptions) {
+		o.IgnoredFields = append(o.IgnoredFields, fieldName)
 	}
 }
 
-func initChangeOptions(options []ChangeOptionsFunc) *changeOptions {
-	o := changeOptions{
-		ignoredFieldNames: make([]string, 0),
+// NewChangeOptions initializes ChangeOptions with the provided options
+func NewChangeOptions(options ...ChangeOption) *ChangeOptions {
+	opts := &ChangeOptions{
+		IgnoredFields: make([]string, 0),
 	}
 
 	for _, opt := range options {
-		opt(&o)
+		opt(opts)
 	}
 
-	return &o
+	return opts
 }
