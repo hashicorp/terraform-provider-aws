@@ -7,9 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
 	"log"
 	"time"
+
+	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -187,48 +188,46 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	in := &sesv2.CreateConfigurationSetInput{
+	input := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.DeliveryOptions = expandDeliveryOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.DeliveryOptions = expandDeliveryOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("reputation_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.ReputationOptions = expandReputationOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.ReputationOptions = expandReputationOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("sending_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.SendingOptions = expandSendingOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.SendingOptions = expandSendingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	rawConfigMap := d.GetRawConfig().AsValueMap()
-	if v, ok := rawConfigMap["suppression_options"]; ok && v.LengthInt() > 0 {
+	if v, ok := d.GetRawConfig().AsValueMap()["suppression_options"]; ok && v.LengthInt() > 0 {
 		if v, ok := v.Index(cty.NumberIntVal(0)).AsValueMap()["suppressed_reasons"]; ok && !v.IsNull() {
-
-			options := map[string]interface{}{
+			tfMap := map[string]interface{}{
 				"suppressed_reasons": []interface{}{},
 			}
 
-			for _, reason := range v.AsValueSlice() {
-				options["suppressed_reasons"] = append(options["suppressed_reasons"].([]interface{}), reason.AsString())
+			for _, v := range v.AsValueSlice() {
+				tfMap["suppressed_reasons"] = append(tfMap["suppressed_reasons"].([]interface{}), v.AsString())
 			}
 
-			in.SuppressionOptions = expandSuppressionOptions(options)
+			input.SuppressionOptions = expandSuppressionOptions(tfMap)
 		}
 	}
 
 	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	out, err := conn.CreateConfigurationSet(ctx, in)
+	out, err := conn.CreateConfigurationSet(ctx, input)
 	if err != nil {
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameConfigurationSet, d.Get("configuration_set_name").(string), err)
 	}
@@ -656,22 +655,21 @@ func expandSendingOptions(tfMap map[string]interface{}) *types.SendingOptions {
 }
 
 func expandSuppressionOptions(tfMap map[string]interface{}) *types.SuppressionOptions {
-
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.SuppressionOptions{}
+	apiObject := &types.SuppressionOptions{}
 
 	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok {
 		if len(v) > 0 {
-			a.SuppressedReasons = expandSuppressedReasons(v)
+			apiObject.SuppressedReasons = expandSuppressedReasons(v)
 		} else {
-			a.SuppressedReasons = make([]types.SuppressionListReason, 0)
+			apiObject.SuppressedReasons = make([]types.SuppressionListReason, 0)
 		}
 	}
 
-	return a
+	return apiObject
 }
 
 func expandSuppressedReasons(tfList []interface{}) []types.SuppressionListReason {
