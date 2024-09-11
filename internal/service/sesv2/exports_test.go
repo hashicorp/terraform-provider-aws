@@ -16,5 +16,6 @@ var (
 	ResourceEmailIdentityMailFromAttributes  = resourceEmailIdentityMailFromAttributes
 	ResourceEmailIdentityPolicy              = resourceEmailIdentityPolicy
 
-	FindContactListByID = findContactListByID
+	FindConfigurationSetByID = findConfigurationSetByID
+	FindContactListByID      = findContactListByID
 )

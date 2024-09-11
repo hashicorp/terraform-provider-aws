@@ -149,7 +149,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get("configuration_set_name").(string)
 
-	out, err := FindConfigurationSetByID(ctx, conn, name)
+	out, err := findConfigurationSetByID(ctx, conn, name)
 	if err != nil {
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameConfigurationSet, name, err)
 	}

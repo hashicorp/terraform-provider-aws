@@ -198,12 +198,11 @@ func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta
 		ContactListName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
+	if err != nil {
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameContactList, d.Id(), err)
 	}
 
