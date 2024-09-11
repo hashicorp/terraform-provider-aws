@@ -378,11 +378,11 @@ func findDataLake(ctx context.Context, conn *securitylake.Client, input *securit
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) ([]*awstypes.DataLakeResource, error) {
-	var dataLakes []*awstypes.DataLakeResource
+func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) ([]awstypes.DataLakeResource, error) {
+	var dataLakes []awstypes.DataLakeResource
 
 	output, err := conn.ListDataLakes(ctx, input)
 
@@ -395,7 +395,7 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	}
 
 	for _, v := range output.DataLakes {
-		if v := &v; filter(v) {
+		if filter(&v) {
 			dataLakes = append(dataLakes, v)
 		}
 	}

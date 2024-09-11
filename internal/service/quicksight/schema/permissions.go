@@ -24,7 +24,7 @@ func PermissionsSchema() *schema.Schema {
 					Type:     schema.TypeSet,
 					Required: true,
 					MinItems: 1,
-					MaxItems: 16,
+					MaxItems: 20,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrPrincipal: {

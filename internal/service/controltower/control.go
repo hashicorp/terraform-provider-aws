@@ -340,11 +340,11 @@ func findEnabledControl(ctx context.Context, conn *controltower.Client, input *c
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]*types.EnabledControlSummary, error) {
-	var output []*types.EnabledControlSummary
+func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]types.EnabledControlSummary, error) {
+	var output []types.EnabledControlSummary
 
 	pages := controltower.NewListEnabledControlsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -362,7 +362,7 @@ func findEnabledControls(ctx context.Context, conn *controltower.Client, input *
 		}
 
 		for _, v := range page.EnabledControls {
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
