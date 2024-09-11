@@ -463,20 +463,6 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
-func simplifiedVersion(engineType types.EngineType, autoMinorVersionUpgrade *bool, engineVersion *string) string {
-	if autoMinorVersionUpgrade == nil || !*autoMinorVersionUpgrade {
-		return *engineVersion
-	}
-	majorMinorEngineVersion := semver.MajorMinor("v" + *engineVersion)
-	rabbitSimplifiedVersion := "v3.13"
-	activeSimplifiedVersion := "v5.18"
-	if (strings.EqualFold(string(engineType), string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinorEngineVersion, rabbitSimplifiedVersion) == 0) ||
-		(strings.EqualFold(string(engineType), string(types.EngineTypeActivemq)) && semver.Compare(majorMinorEngineVersion, activeSimplifiedVersion) == 0) {
-		return majorMinorEngineVersion[1:]
-	}
-	return *engineVersion
-}
-
 func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -501,7 +487,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
-	d.Set(names.AttrEngineVersion, simplifiedVersion(output.EngineType, output.AutoMinorVersionUpgrade, output.EngineVersion))
+	d.Set(names.AttrEngineVersion, normalizeEngineVersion(output))
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
@@ -575,10 +561,11 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if errors != nil {
 			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), errors)
 		}
+
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
-			EngineVersion: aws.String(simplifiedVersion(output.EngineType, output.AutoMinorVersionUpgrade, output.EngineVersion)),
+			EngineVersion: aws.String(normalizeEngineVersion(output)),
 			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
 		}
 
@@ -929,6 +916,46 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 	}
 
 	return cr, di, ur, nil
+}
+
+// normalizeEngineVersion normalizes the engine version depending on whether auto
+// minor version upgrades are enabled
+//
+// Beginning with RabbitMQ v3.13 and ActiveMQ 5.18, brokers with `auto_minor_version_upgrade`
+// set to `true` will automatically receive patch updates during scheduled maintenance
+// windows. To account for automated changes to patch versions, the returned engine
+// value is normalized to only major/minor when these conditions are met.
+//
+// If `auto_minor_version_upgrade` is not enabled, or the engine version is less than
+// the version in which AWS began automatically applying patch upgrades, the engine
+// version is returned unmodified.
+//
+// Ref: https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/upgrading-brokers.html
+func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
+	if output == nil {
+		return ""
+	}
+
+	autoMinorVersionUpgrade := aws.ToBool(output.AutoMinorVersionUpgrade)
+	engineType := output.EngineType
+	engineVersion := aws.ToString(output.EngineVersion)
+	majorMinorEngineVersion := semver.MajorMinor("v" + engineVersion)
+
+	// initial versions where `auto_minor_version_upgrade` triggers automatic
+	// patch updates, and only the major/minor should be supplied to the update API
+	initRabbitVersion := "v3.13"
+	initActiveVersion := "v5.18"
+
+	if !autoMinorVersionUpgrade {
+		return engineVersion
+	}
+
+	if (strings.EqualFold(string(engineType), string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinorEngineVersion, initRabbitVersion) == 0) ||
+		(strings.EqualFold(string(engineType), string(types.EngineTypeActivemq)) && semver.Compare(majorMinorEngineVersion, initActiveVersion) == 0) {
+		return majorMinorEngineVersion[1:]
+	}
+
+	return engineVersion
 }
 
 func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {

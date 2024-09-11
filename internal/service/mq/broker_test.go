@@ -240,6 +240,97 @@ func TestDiffUsers(t *testing.T) {
 	}
 }
 
+func TestNormalizeEngineVersion(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		output *mq.DescribeBrokerOutput
+		want   string
+	}{
+		{"nil", nil, ""}, // should never happen in practice, but ensure no panic
+		{
+			"RabbitMQ, no auto, pre 3.13",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeRabbitmq,
+				EngineVersion:           aws.String("3.12.0"),
+				AutoMinorVersionUpgrade: aws.Bool(false),
+			},
+			"3.12.0",
+		},
+		{
+			"RabbitMQ, auto, pre 3.13",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeRabbitmq,
+				EngineVersion:           aws.String("3.12.0"),
+				AutoMinorVersionUpgrade: aws.Bool(true),
+			},
+			"3.12.0",
+		},
+		{
+			"RabbitMQ, no auto, post 3.13",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeRabbitmq,
+				EngineVersion:           aws.String("3.13.2"),
+				AutoMinorVersionUpgrade: aws.Bool(false),
+			},
+			"3.13.2",
+		},
+		{
+			"RabbitMQ, auto, post 3.13",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeRabbitmq,
+				EngineVersion:           aws.String("3.13.2"),
+				AutoMinorVersionUpgrade: aws.Bool(true),
+			},
+			"3.13",
+		},
+		{
+			"ActiveMQ, no auto, pre 5.18",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeActivemq,
+				EngineVersion:           aws.String("5.17.0"),
+				AutoMinorVersionUpgrade: aws.Bool(false),
+			},
+			"5.17.0",
+		},
+		{
+			"ActiveMQ, auto, pre 5.18",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeActivemq,
+				EngineVersion:           aws.String("5.17.0"),
+				AutoMinorVersionUpgrade: aws.Bool(true),
+			},
+			"5.17.0",
+		},
+		{
+			"ActiveMQ, no auto, post 5.18",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeActivemq,
+				EngineVersion:           aws.String("5.18.2"),
+				AutoMinorVersionUpgrade: aws.Bool(false),
+			},
+			"5.18.2",
+		},
+		{
+			"ActiveMQ, auto, post 5.18",
+			&mq.DescribeBrokerOutput{
+				EngineType:              types.EngineTypeActivemq,
+				EngineVersion:           aws.String("5.18.2"),
+				AutoMinorVersionUpgrade: aws.Bool(true),
+			},
+			"5.18",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tfmq.NormalizeEngineVersion(tt.output); got != tt.want {
+				t.Errorf("NormalizeEngineVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 const (
 	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
 	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
