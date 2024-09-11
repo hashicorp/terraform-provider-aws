@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,7 +83,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	id := lfTagCreateResourceID(catalogID, tagKey)
 
 	i := 0
-	for chunk := range slices.Chunk(tagValues.List(), lfTagsValuesMaxBatchSize) {
+	for _, chunk := range tfslices.Chunks(tagValues.List(), lfTagsValuesMaxBatchSize) {
 		if i == 0 {
 			input := &lakeformation.CreateLFTagInput{
 				CatalogId: aws.String(catalogID),
@@ -169,11 +169,11 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var toAddChunks, toDeleteChunks [][]interface{}
 	if len(toAdd.List()) > 0 {
-		toAddChunks = slices.Collect(slices.Chunk(toAdd.List(), lfTagsValuesMaxBatchSize))
+		toAddChunks = tfslices.Chunks(toAdd.List(), lfTagsValuesMaxBatchSize)
 	}
 
 	if len(toDelete.List()) > 0 {
-		toDeleteChunks = slices.Collect(slices.Chunk(toDelete.List(), lfTagsValuesMaxBatchSize))
+		toDeleteChunks = tfslices.Chunks(toDelete.List(), lfTagsValuesMaxBatchSize)
 	}
 
 	for {

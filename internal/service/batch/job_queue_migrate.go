@@ -60,8 +60,8 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 		Priority            types.Int64    `tfsdk:"priority"`
 		SchedulingPolicyARN types.String   `tfsdk:"scheduling_policy_arn"`
 		State               types.String   `tfsdk:"state"`
-		Tags                types.Map      `tfsdk:"tags"`     // nosemgrep:ci.semgrep.framework.model-tag-types
-		TagsAll             types.Map      `tfsdk:"tags_all"` // nosemgrep:ci.semgrep.framework.model-tag-types
+		Tags                tftags.Map     `tfsdk:"tags"`
+		TagsAll             tftags.Map     `tfsdk:"tags_all"`
 		Timeouts            timeouts.Value `tfsdk:"timeouts"`
 	}
 
@@ -80,8 +80,8 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 		JobStateTimeLimitActions: fwtypes.NewListNestedObjectValueOfNull[jobStateTimeLimitActionModel](ctx),
 		Priority:                 jobQueueDataV0.Priority,
 		State:                    jobQueueDataV0.State,
-		Tags:                     tftags.NewMapFromMapValue(jobQueueDataV0.Tags),
-		TagsAll:                  tftags.NewMapFromMapValue(jobQueueDataV0.TagsAll),
+		Tags:                     jobQueueDataV0.Tags,
+		TagsAll:                  jobQueueDataV0.TagsAll,
 		Timeouts:                 jobQueueDataV0.Timeouts,
 	}
 
