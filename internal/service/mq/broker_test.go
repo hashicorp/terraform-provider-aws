@@ -1787,13 +1787,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name             = %[1]q
-  engine_type             = "ActiveMQ"
-  engine_version          = %[2]q
-  host_instance_type      = "mq.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t2.micro"
+  security_groups            = [aws_security_group.test.id]
+  authentication_strategy    = "simple"
+  storage_type               = "efs"
   auto_minor_version_upgrade = %[3]t
 
   logs {
@@ -2363,11 +2363,11 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "RabbitMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
   auto_minor_version_upgrade = %[3]t
 
   user {
