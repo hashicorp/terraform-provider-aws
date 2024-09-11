@@ -371,8 +371,8 @@ This resource supports the following arguments:
 #### Share Rule arguments
 
 * `targetAccounts` - (Required) The IDs of the AWS accounts with which to share the snapshots.
-* `interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
-* `intervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `unshareInterval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
+* `unshareIntervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Cross Region Copy Rule arguments
 
@@ -433,4 +433,4 @@ Using `terraform import`, import DLM lifecycle policies using their policy ID. F
 % terraform import aws_dlm_lifecycle_policy.example policy-abcdef12345678901
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cd52275658ea26bb97d5ff6b8e5c283dfc879cf7239a8546704deb3cc7ac57ec -->
+<!-- cache-key: cdktf-0.20.1 input-98b410c783d951d1a60f9be62ad5384fba2c1f6b400fafa2a3f3737a5473088b -->

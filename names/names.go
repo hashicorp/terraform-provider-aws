@@ -63,6 +63,7 @@ const (
 	CodeStarConnectionsEndpointID          = "codestar-connections"
 	CognitoIdentityEndpointID              = "cognito-identity"
 	ComprehendEndpointID                   = "comprehend"
+	ComputeOptimizerEndpointID             = "compute-optimizer"
 	ConfigServiceEndpointID                = "config"
 	ConnectEndpointID                      = "connect"
 	DataExchangeEndpointID                 = "dataexchange"
@@ -78,6 +79,7 @@ const (
 	EKSEndpointID                          = "eks"
 	ELBEndpointID                          = "elasticloadbalancing"
 	EMREndpointID                          = "elasticmapreduce"
+	ElasticsearchEndpointID                = "es"
 	ElasticTranscoderEndpointID            = "elastictranscoder"
 	ElastiCacheEndpointID                  = "elasticache"
 	EventsEndpointID                       = "events"
@@ -111,6 +113,7 @@ const (
 	PipesEndpointID                        = "pipes"
 	PollyEndpointID                        = "polly"
 	QLDBEndpointID                         = "qldb"
+	QuickSightEndpointID                   = "quicksight"
 	RUMEndpointID                          = "rum"
 	RedshiftEndpointID                     = "redshift"
 	RedshiftServerlessEndpointID           = "redshift-serverless"
@@ -167,6 +170,7 @@ const (
 	APSoutheast2RegionID = "ap-southeast-2" // Asia Pacific (Sydney).
 	APSoutheast3RegionID = "ap-southeast-3" // Asia Pacific (Jakarta).
 	APSoutheast4RegionID = "ap-southeast-4" // Asia Pacific (Melbourne).
+	APSoutheast5RegionID = "ap-southeast-5" // Asia Pacific (Malaysia).
 	CACentral1RegionID   = "ca-central-1"   // Canada (Central).
 	CAWest1RegionID      = "ca-west-1"      // Canada West (Calgary).
 	EUCentral1RegionID   = "eu-central-1"   // Europe (Frankfurt).
@@ -217,6 +221,7 @@ var allRegionIDs = []string{
 	APSoutheast2RegionID,
 	APSoutheast3RegionID,
 	APSoutheast4RegionID,
+	APSoutheast5RegionID,
 	CACentral1RegionID,
 	CAWest1RegionID,
 	EUCentral1RegionID,
@@ -317,7 +322,7 @@ func IsOptInRegion(region string) bool {
 	switch region {
 	case AFSouth1RegionID,
 		APEast1RegionID, APSouth2RegionID,
-		APSoutheast3RegionID, APSoutheast4RegionID,
+		APSoutheast3RegionID, APSoutheast4RegionID, APSoutheast5RegionID,
 		CAWest1RegionID,
 		EUCentral2RegionID,
 		EUSouth1RegionID, EUSouth2RegionID,

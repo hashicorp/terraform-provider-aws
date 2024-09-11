@@ -41,7 +41,7 @@ func sweepConfigurationSets(region string) error {
 
 	input := &sesv2.ListConfigurationSetsInput{}
 
-	err = ListConfigurationSetsPages(ctx, conn, input, func(page *sesv2.ListConfigurationSetsOutput, lastPage bool) bool {
+	err = listConfigurationSetsPages(ctx, conn, input, func(page *sesv2.ListConfigurationSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -88,7 +88,7 @@ func sweepContactLists(region string) error {
 
 	input := &sesv2.ListContactListsInput{}
 
-	err = ListContactListsPages(ctx, conn, input, func(page *sesv2.ListContactListsOutput, lastPage bool) bool {
+	err = listContactListsPages(ctx, conn, input, func(page *sesv2.ListContactListsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -98,7 +98,6 @@ func flattenAddresses(apiObjects []types.Address) []interface{} {
 	var l []interface{}
 
 	for _, apiObject := range apiObjects {
-		apiObject := apiObject
 		l = append(l, flattenAddress(&apiObject))
 	}
 
@@ -193,7 +192,6 @@ func flattenEmails(apiObjects []types.Email) []interface{} {
 	var l []interface{}
 
 	for _, apiObject := range apiObjects {
-		apiObject := apiObject
 		l = append(l, flattenEmail(&apiObject))
 	}
 
@@ -266,7 +264,6 @@ func flattenExternalIds(apiObjects []types.ExternalId) []interface{} {
 	var l []interface{}
 
 	for _, apiObject := range apiObjects {
-		apiObject := apiObject
 		l = append(l, flattenExternalId(&apiObject))
 	}
 
@@ -389,7 +386,6 @@ func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []interface{} {
 	var l []interface{}
 
 	for _, apiObject := range apiObjects {
-		apiObject := apiObject
 		l = append(l, flattenPhoneNumber(&apiObject))
 	}
 

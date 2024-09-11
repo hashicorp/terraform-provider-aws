@@ -322,8 +322,8 @@ type resourceEnvironmentData struct {
 	Monitors      types.Set    `tfsdk:"monitor"`
 	Name          types.String `tfsdk:"name"`
 	State         types.String `tfsdk:"state"`
-	Tags          types.Map    `tfsdk:"tags"`
-	TagsAll       types.Map    `tfsdk:"tags_all"`
+	Tags          tftags.Map   `tfsdk:"tags"`
+	TagsAll       tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (d *resourceEnvironmentData) refreshFromCreateOutput(ctx context.Context, meta *conns.AWSClient, out *appconfig.CreateEnvironmentOutput) diag.Diagnostics {

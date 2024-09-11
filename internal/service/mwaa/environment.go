@@ -35,7 +35,7 @@ const (
 
 // @SDKResource("aws_mwaa_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
-func ResourceEnvironment() *schema.Resource {
+func resourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentCreate,
 		ReadWithoutTimeout:   resourceEnvironmentRead,
@@ -441,7 +441,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
-	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
+	environment, err := findEnvironmentByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MWAA Environment %s not found, removing from state", d.Id())
@@ -661,7 +661,7 @@ func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 	}
 }
 
-func FindEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) (*awstypes.Environment, error) {
+func findEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) (*awstypes.Environment, error) {
 	input := &mwaa.GetEnvironmentInput{
 		Name: aws.String(name),
 	}
@@ -688,7 +688,7 @@ func FindEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) 
 
 func statusEnvironment(ctx context.Context, conn *mwaa.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		environment, err := FindEnvironmentByName(ctx, conn, name)
+		environment, err := findEnvironmentByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -46,7 +46,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{- end }}
 {{- end }}
 
-{{ define "ImportBody" }}
+{{ define "CommonImportBody" -}}
 	ResourceName: resourceName,
 	ImportState:  true,
 {{ if gt (len .ImportStateID) 0 -}}
@@ -56,9 +56,45 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ end -}}
 	ImportStateVerify: true,
+{{- end }}
+
+{{ define "ImportBody" }}
+{{ template "CommonImportBody" . }}
 {{ if gt (len .ImportIgnore) 0 -}}
 	ImportStateVerifyIgnore: []string{
 	{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
+	},
+{{- end }}
+{{ end }}
+
+{{ define "ImportBodyIgnoreKey1" }}
+{{ template "CommonImportBody" . }}
+{{ if eq .Implementation "framework" -}}
+	ImportStateVerifyIgnore: []string{
+        acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+		{{ if gt (len .ImportIgnore) 0 -}}
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
+		{{ end -}}
+	},
+{{- else if gt (len .ImportIgnore) 0 -}}
+	ImportStateVerifyIgnore: []string{
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
+	},
+{{- end }}
+{{ end }}
+
+{{ define "ImportBodyIgnoreResourceKey1" }}
+{{ template "CommonImportBody" . }}
+{{ if eq .Implementation "framework" -}}
+	ImportStateVerifyIgnore: []string{
+        "tags.resourcekey1", // The canonical value returned by the AWS API is ""
+		{{ if gt (len .ImportIgnore) 0 -}}
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
+		{{ end -}}
+	},
+{{ else if gt (len .ImportIgnore) 0 -}}
+	ImportStateVerifyIgnore: []string{
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
 	},
 {{- end }}
 {{ end }}
@@ -347,8 +383,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_null(t *testing.T) {
-{{- if eq .Implementation "framework" }}
-	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{- if .SkipNullTags }}
+	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
 	{{- template "Init" . }}
 
@@ -371,16 +407,30 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					{{ if eq .Implementation "framework" -}}
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.Null(),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+					{{- else -}}
+                    statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					{{- end }}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.Null(),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
 						{{- else -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 						// TODO: Should be known
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 						{{- end }}
@@ -400,9 +450,10 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					}),
 					{{ template "AdditionalTfVars" . }}
 				},
-				{{- template "ImportBody" . -}}
+				{{- template "ImportBodyIgnoreKey1" . -}}
 			},
 			{{- end }}
+			{{ if eq .Implementation "sdk" -}}
 			{
 				{{ if .AlternateRegionProvider -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -416,6 +467,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1854,8 +1906,8 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 }
 
 func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
-{{- if eq .Implementation "framework" }}
-	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{- if .SkipNullTags }}
+	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
 	{{- template "Init" . }}
 
@@ -1883,18 +1935,36 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if eq .Implementation "framework" -}}
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.Null(),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+					{{- else -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
+					{{- end }}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.Null(),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{- else -}}
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						})),
+						{{- end }}
 					},
 				},
 			},
@@ -1916,7 +1986,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 					}),
 					{{ template "AdditionalTfVars" . }}
 				},
-				{{- template "ImportBody" . -}}
+				{{- template "ImportBodyIgnoreKey1" . -}}
 			},
 			{{- end }}
 		},
@@ -1924,8 +1994,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 }
 
 func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
-{{- if eq .Implementation "framework" }}
-	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{- if .SkipNullTags }}
+	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
 	{{- template "Init" . }}
 
@@ -1953,18 +2023,38 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if eq .Implementation "framework" -}}
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.Null(),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(""),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+					{{- else -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
+					{{- end }}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.Null(),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(""),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
+						{{- else -}}
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						})),
+						{{- end }}
 					},
 				},
 			},
@@ -1986,7 +2076,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 					}),
 					{{ template "AdditionalTfVars" . }}
 				},
-				{{- template "ImportBody" . -}}
+				{{- template "ImportBodyIgnoreResourceKey1" . -}}
 			},
 			{{- end }}
 		},

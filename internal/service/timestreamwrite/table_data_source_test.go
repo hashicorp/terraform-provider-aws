@@ -204,6 +204,7 @@ func TestAccTimestreamWriteTableDataSource_schema(t *testing.T) {
 		},
 	})
 }
+
 func testAccCheckTableDatasourceDestroy(ctx context.Context, databaseName string, tableName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
@@ -216,9 +217,10 @@ func testAccCheckTableDatasourceDestroy(ctx context.Context, databaseName string
 			return err
 		}
 
-		return fmt.Errorf(("Timestream Table %s still exists" + databaseName + " " + tableName))
+		return fmt.Errorf("Timestream database %s table %s still exists", databaseName, tableName)
 	}
 }
+
 func testAccCheckTableExistsNames(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -858,8 +858,8 @@ func expandIPPerms(group *awstypes.SecurityGroup, configured []interface{}) ([]a
 
 		if len(groups) > 0 {
 			perm.UserIdGroupPairs = make([]awstypes.UserIdGroupPair, len(groups))
-			for i, name := range groups {
-				ownerId, id := "", name
+			for i, id := range groups {
+				ownerId := ""
 				if items := strings.Split(id, "/"); len(items) > 1 {
 					ownerId, id = items[0], items[1]
 				}

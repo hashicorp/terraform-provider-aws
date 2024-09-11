@@ -45,7 +45,6 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 		"ApiMappingKey":      testAccAPIMapping_key,
 	}
 	for name, tc := range testCases { //nolint:paralleltest
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tc(t, rName, &certificateARN)
 		})

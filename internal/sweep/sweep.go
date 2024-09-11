@@ -110,8 +110,6 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
-		sweepable := sweepable
-
 		g.Go(func() error {
 			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
 		})

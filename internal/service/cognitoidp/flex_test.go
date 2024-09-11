@@ -152,7 +152,6 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			output := userPoolSchemaAttributeMatchesStandardAttribute(tc.Input)
@@ -255,7 +254,6 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			got := skipFlatteningStringAttributeContraints(tc.configured, tc.input)

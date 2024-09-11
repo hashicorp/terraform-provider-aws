@@ -75,6 +75,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
@@ -236,6 +237,7 @@ func registerSweepers() {
 	finspace.RegisterSweepers()
 	firehose.RegisterSweepers()
 	fis.RegisterSweepers()
+	fms.RegisterSweepers()
 	fsx.RegisterSweepers()
 	gamelift.RegisterSweepers()
 	glacier.RegisterSweepers()

@@ -865,7 +865,6 @@ func TestCheckDefinitionPropertyCombination(t *testing.T) {
 	}
 
 	for name, tCase := range testCases {
-		tCase := tCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

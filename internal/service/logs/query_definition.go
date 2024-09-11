@@ -178,8 +178,6 @@ func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 		}
 
 		for _, v := range page.QueryDefinitions {
-			v := v
-
 			if aws.ToString(v.QueryDefinitionId) == queryDefinitionID {
 				output = &v
 

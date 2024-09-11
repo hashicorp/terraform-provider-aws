@@ -47,7 +47,6 @@ func TestDNSSuffixForPartition(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -94,7 +93,6 @@ func TestIsOptInRegion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -141,7 +139,6 @@ func TestPartitionForRegion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -188,7 +185,6 @@ func TestReverseDNS(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -229,7 +225,6 @@ func TestProviderPackageForAlias(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -391,7 +386,6 @@ func TestServicesForDirectories(t *testing.T) {
 	}
 
 	for _, testCase := range ProviderPackages() {
-		testCase := testCase
 		t.Run(testCase, func(t *testing.T) {
 			t.Parallel()
 
@@ -449,7 +443,6 @@ func TestProviderNameUpper(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -512,7 +505,6 @@ func TestFullHumanFriendly(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -581,7 +573,6 @@ func TestAWSGoV1ClientName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 

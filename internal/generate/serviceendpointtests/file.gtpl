@@ -488,8 +488,6 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	{{ if and (ne .GoV1Package "") (ne .GoV2Package "") }}
 	t.Run("v1", func(t *testing.T) {
 		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
 			t.Run(name, func(t *testing.T) {
 				testEndpointCase(t, providerRegion, testcase, callServiceV1)
 			})
@@ -498,8 +496,6 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 
 	t.Run("v2", func(t *testing.T) {
 		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
 			t.Run(name, func(t *testing.T) {
 				testEndpointCase(t, providerRegion, testcase, callServiceV2)
 			})
@@ -507,8 +503,6 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	})
 	{{ else }}
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
             testEndpointCase(t, providerRegion, testcase, callService)
 		})

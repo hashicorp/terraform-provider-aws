@@ -4,7 +4,7 @@
 package errs
 
 import (
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -106,9 +106,9 @@ func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 }
 
 func errCodeContains(err error, code string) bool {
-	return tfawserr.ErrCodeContains(err, code) || tfawserr_sdkv2.ErrCodeContains(err, code)
+	return tfawserr_sdkv1.ErrCodeContains(err, code) || tfawserr_sdkv2.ErrCodeContains(err, code)
 }
 
 func errMessageContains(err error, code, message string) bool {
-	return tfawserr.ErrMessageContains(err, code, message) || tfawserr_sdkv2.ErrMessageContains(err, code, message)
+	return tfawserr_sdkv1.ErrMessageContains(err, code, message) || tfawserr_sdkv2.ErrMessageContains(err, code, message)
 }
