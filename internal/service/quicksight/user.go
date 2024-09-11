@@ -98,6 +98,9 @@ func resourceUser() *schema.Resource {
 						awstypes.UserRoleReader,
 						awstypes.UserRoleAuthor,
 						awstypes.UserRoleAdmin,
+						awstypes.UserRoleReaderPro,
+						awstypes.UserRoleAuthorPro,
+						awstypes.UserRoleAdminPro,
 					), false),
 				},
 			}

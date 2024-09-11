@@ -63,6 +63,7 @@ const (
 	CodeStarConnectionsEndpointID          = "codestar-connections"
 	CognitoIdentityEndpointID              = "cognito-identity"
 	ComprehendEndpointID                   = "comprehend"
+	ComputeOptimizerEndpointID             = "compute-optimizer"
 	ConfigServiceEndpointID                = "config"
 	ConnectEndpointID                      = "connect"
 	DataExchangeEndpointID                 = "dataexchange"
