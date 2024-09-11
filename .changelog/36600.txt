@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_datazone_domain
+```
+
+```release-note:new-resource
+aws_datazone_environment_blueprint_configuration
+```
+
+```release-note:new-data-source
+aws_datazone_environment_blueprint
+```

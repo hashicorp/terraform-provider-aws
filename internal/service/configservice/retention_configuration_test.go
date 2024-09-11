@@ -33,7 +33,7 @@ func testAccRetentionConfiguration_basic(t *testing.T) {
 				Config: testAccRetentionConfigurationConfig_basic(90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetentionConfigurationExists(ctx, resourceName, &rc),
-					resource.TestCheckResourceAttr(resourceName, "name", "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "default"),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", "90"),
 				),
 			},
@@ -46,7 +46,7 @@ func testAccRetentionConfiguration_basic(t *testing.T) {
 				Config: testAccRetentionConfigurationConfig_basic(180),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetentionConfigurationExists(ctx, resourceName, &rc),
-					resource.TestCheckResourceAttr(resourceName, "name", "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "default"),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", "180"),
 				),
 			},

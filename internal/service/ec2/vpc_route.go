@@ -10,15 +10,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -40,14 +42,14 @@ var routeValidTargets = []string{
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
-	"network_interface_id",
-	"transit_gateway_id",
-	"vpc_endpoint_id",
+	names.AttrNetworkInterfaceID,
+	names.AttrTransitGatewayID,
+	names.AttrVPCEndpointID,
 	"vpc_peering_connection_id",
 }
 
-// @SDKResource("aws_route")
-func ResourceRoute() *schema.Resource {
+// @SDKResource("aws_route", name="Route")
+func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
 		ReadWithoutTimeout:   resourceRouteRead,
@@ -131,18 +133,18 @@ func ResourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
@@ -159,7 +161,7 @@ func ResourceRoute() *schema.Resource {
 			//
 			// Computed attributes.
 			//
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +173,7 @@ func ResourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -181,16 +183,14 @@ func ResourceRoute() *schema.Resource {
 
 func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -200,18 +200,18 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder RouteFinder
+	var routeFinder routeFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case routeDestinationCIDRBlock:
 		input.DestinationCidrBlock = destination
-		routeFinder = FindRouteByIPv4Destination
+		routeFinder = findRouteByIPv4Destination
 	case routeDestinationIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = FindRouteByIPv6Destination
+		routeFinder = findRouteByIPv6Destination
 	case routeDestinationPrefixListID:
 		input.DestinationPrefixListId = destination
-		routeFinder = FindRouteByPrefixListIDDestination
+		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return sdkdiag.AppendErrorf(diags, "creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -241,9 +241,21 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Route: unexpected route target attribute: %q", targetAttributeKey)
 	}
 
+	route, err := routeFinder(ctx, conn, routeTableID, destination)
+
+	switch {
+	case err == nil:
+		if route.Origin == awstypes.RouteOriginCreateRoute {
+			return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
+		}
+	case tfresource.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
+	}
+
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
-			return conn.CreateRouteWithContext(ctx, input)
+			return conn.CreateRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
 		errCodeInvalidTransitGatewayIDNotFound,
@@ -258,9 +270,9 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	d.SetId(RouteCreateID(routeTableID, destination))
+	d.SetId(routeCreateID(routeTableID, destination))
 
-	if _, err := WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) create: %s", routeTableID, destination, err)
 	}
 
@@ -269,7 +281,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -277,14 +289,14 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	var routeFinder RouteFinder
+	var routeFinder routeFinder
 	switch destinationAttributeKey {
 	case routeDestinationCIDRBlock:
-		routeFinder = FindRouteByIPv4Destination
+		routeFinder = findRouteByIPv4Destination
 	case routeDestinationIPv6CIDRBlock:
-		routeFinder = FindRouteByIPv6Destination
+		routeFinder = findRouteByIPv6Destination
 	case routeDestinationPrefixListID:
-		routeFinder = FindRouteByPrefixListIDDestination
+		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -304,29 +316,29 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	route := outputRaw.(*ec2.Route)
+	route := outputRaw.(*awstypes.Route)
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
 	d.Set(routeDestinationIPv6CIDRBlock, route.DestinationIpv6CidrBlock)
 	d.Set(routeDestinationPrefixListID, route.DestinationPrefixListId)
 	// VPC Endpoint ID is returned in Gateway ID field
-	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
+	if strings.HasPrefix(aws.ToString(route.GatewayId), "vpce-") {
 		d.Set("gateway_id", "")
-		d.Set("vpc_endpoint_id", route.GatewayId)
+		d.Set(names.AttrVPCEndpointID, route.GatewayId)
 	} else {
 		d.Set("gateway_id", route.GatewayId)
-		d.Set("vpc_endpoint_id", "")
+		d.Set(names.AttrVPCEndpointID, "")
 	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
-	d.Set("instance_id", route.InstanceId)
+	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
-	d.Set("network_interface_id", route.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
 	d.Set("origin", route.Origin)
-	d.Set("state", route.State)
-	d.Set("transit_gateway_id", route.TransitGatewayId)
+	d.Set(names.AttrState, route.State)
+	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 
 	return diags
@@ -334,7 +346,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -353,18 +365,18 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder RouteFinder
+	var routeFinder routeFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case routeDestinationCIDRBlock:
 		input.DestinationCidrBlock = destination
-		routeFinder = FindRouteByIPv4Destination
+		routeFinder = findRouteByIPv4Destination
 	case routeDestinationIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = FindRouteByIPv6Destination
+		routeFinder = findRouteByIPv6Destination
 	case routeDestinationPrefixListID:
 		input.DestinationPrefixListId = destination
-		routeFinder = FindRouteByPrefixListIDDestination
+		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return sdkdiag.AppendErrorf(diags, "updating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -399,14 +411,14 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating Route: unexpected route target attribute: %q", targetAttributeKey)
 	}
 
-	log.Printf("[DEBUG] Updating Route: %s", input)
-	_, err = conn.ReplaceRouteWithContext(ctx, input)
+	log.Printf("[DEBUG] Updating Route: %v", input)
+	_, err = conn.ReplaceRoute(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	if _, err := WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) update: %s", routeTableID, destination, err)
 	}
 
@@ -415,7 +427,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -428,26 +440,26 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder RouteFinder
+	var routeFinder routeFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case routeDestinationCIDRBlock:
 		input.DestinationCidrBlock = destination
-		routeFinder = FindRouteByIPv4Destination
+		routeFinder = findRouteByIPv4Destination
 	case routeDestinationIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = FindRouteByIPv6Destination
+		routeFinder = findRouteByIPv6Destination
 	case routeDestinationPrefixListID:
 		input.DestinationPrefixListId = destination
-		routeFinder = FindRouteByPrefixListIDDestination
+		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return sdkdiag.AppendErrorf(diags, "deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
-	log.Printf("[DEBUG] Deleting Route: %s", input)
+	log.Printf("[DEBUG] Deleting Route: %v", input)
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
-			return conn.DeleteRouteWithContext(ctx, input)
+			return conn.DeleteRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
 	)
@@ -465,7 +477,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	if _, err := WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) delete: %s", routeTableID, destination, err)
 	}
 
@@ -489,7 +501,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set(routeDestinationPrefixListID, destination)
 	}
 
-	d.SetId(RouteCreateID(routeTableID, destination))
+	d.SetId(routeCreateID(routeTableID, destination))
 
 	return []*schema.ResourceData{d}, nil
 }

@@ -39,7 +39,7 @@ func resourceVPCConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func resourceVPCConnection() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +67,7 @@ func resourceVPCConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,10 +85,10 @@ func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &kafka.CreateVpcConnectionInput{
 		Authentication:   aws.String(d.Get("authentication").(string)),
 		ClientSubnets:    flex.ExpandStringValueSet(d.Get("client_subnets").(*schema.Set)),
-		SecurityGroups:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+		SecurityGroups:   flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 		TargetClusterArn: aws.String(d.Get("target_cluster_arn").(string)),
-		VpcId:            aws.String(d.Get("vpc_id").(string)),
+		VpcId:            aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	output, err := conn.CreateVpcConnection(ctx, input)
@@ -122,12 +122,12 @@ func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading MSK VPC Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.VpcConnectionArn)
+	d.Set(names.AttrARN, output.VpcConnectionArn)
 	d.Set("authentication", output.Authentication)
 	d.Set("client_subnets", flex.FlattenStringValueSet(output.Subnets))
-	d.Set("security_groups", flex.FlattenStringValueSet(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueSet(output.SecurityGroups))
 	d.Set("target_cluster_arn", output.TargetClusterArn)
-	d.Set("vpc_id", output.VpcId)
+	d.Set(names.AttrVPCID, output.VpcId)
 
 	setTagsOut(ctx, output.Tags)
 

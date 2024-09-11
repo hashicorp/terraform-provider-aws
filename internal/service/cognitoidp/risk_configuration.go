@@ -6,15 +6,19 @@ package cognitoidp
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -22,29 +26,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_risk_configuration")
-func ResourceRiskConfiguration() *schema.Resource {
+// @SDKResource("aws_cognito_risk_configuration", name="Risk Configuration")
+func resourceRiskConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRiskConfigurationPut,
 		ReadWithoutTimeout:   resourceRiskConfigurationRead,
-		DeleteWithoutTimeout: resourceRiskConfigurationDelete,
 		UpdateWithoutTimeout: resourceRiskConfigurationPut,
+		DeleteWithoutTimeout: resourceRiskConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"user_pool_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validUserPoolID,
-			},
-			"client_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"account_takeover_risk_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -56,7 +50,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -69,9 +63,9 @@ func ResourceRiskConfiguration() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"event_action": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AccountTakeoverEventActionType_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
 												},
 												"notify": {
 													Type:     schema.TypeBool,
@@ -87,9 +81,9 @@ func ResourceRiskConfiguration() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"event_action": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AccountTakeoverEventActionType_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
 												},
 												"notify": {
 													Type:     schema.TypeBool,
@@ -105,9 +99,9 @@ func ResourceRiskConfiguration() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"event_action": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AccountTakeoverEventActionType_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
 												},
 												"notify": {
 													Type:     schema.TypeBool,
@@ -216,33 +210,38 @@ func ResourceRiskConfiguration() *schema.Resource {
 					},
 				},
 			},
+			names.AttrClientID: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"compromised_credentials_risk_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"event_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.EventFilterType_Values(), false),
-							},
-						},
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_action": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CompromisedCredentialsEventActionType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CompromisedCredentialsEventActionType](),
 									},
 								},
+							},
+						},
+						"event_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.EventFilterType](),
 							},
 						},
 					},
@@ -284,109 +283,119 @@ func ResourceRiskConfiguration() *schema.Resource {
 					},
 				},
 			},
+			names.AttrUserPoolID: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validUserPoolID,
+			},
 		},
 	}
 }
 
 func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolId := d.Get("user_pool_id").(string)
-	id := userPoolId
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
+	id := userPoolID
 	input := &cognitoidentityprovider.SetRiskConfigurationInput{
-		UserPoolId: aws.String(userPoolId),
+		UserPoolId: aws.String(userPoolID),
 	}
 
-	if v, ok := d.GetOk("client_id"); ok {
-		input.ClientId = aws.String(v.(string))
-		id = fmt.Sprintf("%s:%s", userPoolId, v.(string))
-	}
-
-	if v, ok := d.GetOk("risk_exception_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.RiskExceptionConfiguration = expandRiskExceptionConfiguration(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("compromised_credentials_risk_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.CompromisedCredentialsRiskConfiguration = expandCompromisedCredentialsRiskConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrClientID); ok {
+		v := v.(string)
+		input.ClientId = aws.String(v)
+		id = userPoolID + riskConfigurationResourceIDSeparator + v
 	}
 
 	if v, ok := d.GetOk("account_takeover_risk_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.AccountTakeoverRiskConfiguration = expandAccountTakeoverRiskConfiguration(v.([]interface{}))
+		input.AccountTakeoverRiskConfiguration = expandAccountTakeoverRiskConfigurationType(v.([]interface{}))
 	}
 
-	_, err := conn.SetRiskConfigurationWithContext(ctx, input)
+	if v, ok := d.GetOk("compromised_credentials_risk_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.CompromisedCredentialsRiskConfiguration = expandCompromisedCredentialsRiskConfigurationType(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("risk_exception_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.RiskExceptionConfiguration = expandRiskExceptionConfigurationType(v.([]interface{}))
+	}
+
+	_, err := conn.SetRiskConfiguration(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting risk configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting Cognito Risk Configuration (%s): %s", id, err)
 	}
 
-	d.SetId(id)
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return append(diags, resourceRiskConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
+	userPoolID, clientID, err := riskConfigurationParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Cognito Risk Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	riskConfig, err := FindRiskConfigurationById(ctx, conn, d.Id())
+	riskConfig, err := findRiskConfigurationByTwoPartKey(ctx, conn, userPoolID, clientID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameRiskConfiguration, d.Id())
+		log.Printf("[WARN] Cognito Risk Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito Risk Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("user_pool_id", userPoolId)
-
-	if clientId != "" {
-		d.Set("client_id", clientId)
+	if err := d.Set("account_takeover_risk_configuration", flattenAccountTakeoverRiskConfigurationType(riskConfig.AccountTakeoverRiskConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting account_takeover_risk_configuration: %s", err)
 	}
-
+	if clientID != "" {
+		d.Set(names.AttrClientID, clientID)
+	}
+	if err := d.Set("compromised_credentials_risk_configuration", flattenCompromisedCredentialsRiskConfiguration(riskConfig.CompromisedCredentialsRiskConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting compromised_credentials_risk_configuration: %s", err)
+	}
 	if riskConfig.RiskExceptionConfiguration != nil {
 		if err := d.Set("risk_exception_configuration", flattenRiskExceptionConfiguration(riskConfig.RiskExceptionConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting risk_exception_configuration: %s", err)
 		}
 	}
-
-	if err := d.Set("compromised_credentials_risk_configuration", flattenCompromisedCredentialsRiskConfiguration(riskConfig.CompromisedCredentialsRiskConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting compromised_credentials_risk_configuration: %s", err)
-	}
-
-	if err := d.Set("account_takeover_risk_configuration", flattenAccountTakeoverRiskConfiguration(riskConfig.AccountTakeoverRiskConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting account_takeover_risk_configuration: %s", err)
-	}
+	d.Set(names.AttrUserPoolID, userPoolID)
 
 	return diags
 }
 
 func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
+	userPoolID, clientID, err := riskConfigurationParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cognito Risk Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &cognitoidentityprovider.SetRiskConfigurationInput{
-		UserPoolId: aws.String(userPoolId),
+		UserPoolId: aws.String(userPoolID),
+	}
+	if clientID != "" {
+		input.ClientId = aws.String(clientID)
 	}
 
-	if clientId != "" {
-		input.ClientId = aws.String(clientId)
-	}
+	log.Printf("[DEBUG] Deleting Cognito Risk Configuration: %s", d.Id())
+	_, err = conn.SetRiskConfiguration(ctx, input)
 
-	_, err = conn.SetRiskConfigurationWithContext(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Risk Configuration (%s): %s", d.Id(), err)
@@ -395,27 +404,70 @@ func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandRiskExceptionConfiguration(riskConfig []interface{}) *cognitoidentityprovider.RiskExceptionConfigurationType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+const riskConfigurationResourceIDSeparator = ":"
+
+func riskConfigurationParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, riskConfigurationResourceIDSeparator)
+
+	if len(parts) == 1 && parts[0] != "" {
+		return parts[0], "", nil
+	}
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected UserPoolID%[2]sClientID or UserPoolID", id, riskConfigurationResourceIDSeparator)
+}
+
+func findRiskConfigurationByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, clientID string) (*awstypes.RiskConfigurationType, error) {
+	input := &cognitoidentityprovider.DescribeRiskConfigurationInput{
+		UserPoolId: aws.String(userPoolID),
+	}
+	if clientID != "" {
+		input.ClientId = aws.String(clientID)
+	}
+
+	output, err := conn.DescribeRiskConfiguration(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RiskConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RiskConfiguration, nil
+}
+
+func expandRiskExceptionConfigurationType(tfList []interface{}) *awstypes.RiskExceptionConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.RiskExceptionConfigurationType{}
 
-	riskExceptionConfigurationType := &cognitoidentityprovider.RiskExceptionConfigurationType{}
-
-	if v, ok := config["blocked_ip_range_list"].(*schema.Set); ok && v.Len() > 0 {
-		riskExceptionConfigurationType.BlockedIPRangeList = flex.ExpandStringSet(v)
+	if v, ok := tfMap["blocked_ip_range_list"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.BlockedIPRangeList = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := config["skipped_ip_range_list"].(*schema.Set); ok && v.Len() > 0 {
-		riskExceptionConfigurationType.SkippedIPRangeList = flex.ExpandStringSet(v)
+	if v, ok := tfMap["skipped_ip_range_list"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SkippedIPRangeList = flex.ExpandStringValueSet(v)
 	}
 
-	return riskExceptionConfigurationType
+	return apiObject
 }
 
-func flattenRiskExceptionConfiguration(apiObject *cognitoidentityprovider.RiskExceptionConfigurationType) []interface{} {
+func flattenRiskExceptionConfiguration(apiObject *awstypes.RiskExceptionConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -423,37 +475,36 @@ func flattenRiskExceptionConfiguration(apiObject *cognitoidentityprovider.RiskEx
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BlockedIPRangeList; v != nil {
-		tfMap["blocked_ip_range_list"] = flex.FlattenStringSet(v)
+		tfMap["blocked_ip_range_list"] = v
 	}
 
 	if v := apiObject.SkippedIPRangeList; v != nil {
-		tfMap["skipped_ip_range_list"] = flex.FlattenStringSet(v)
+		tfMap["skipped_ip_range_list"] = v
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandCompromisedCredentialsRiskConfiguration(riskConfig []interface{}) *cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+func expandCompromisedCredentialsRiskConfigurationType(tfList []interface{}) *awstypes.CompromisedCredentialsRiskConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.CompromisedCredentialsRiskConfigurationType{}
 
-	riskExceptionConfigurationType := &cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType{}
-
-	if v, ok := config["event_filter"].(*schema.Set); ok && v.Len() > 0 {
-		riskExceptionConfigurationType.EventFilter = flex.ExpandStringSet(v)
+	if v, ok := tfMap["event_filter"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.EventFilter = flex.ExpandStringyValueSet[awstypes.EventFilterType](v)
 	}
 
-	if v, ok := config["actions"].([]interface{}); ok && len(v) > 0 {
-		riskExceptionConfigurationType.Actions = expandCompromisedCredentialsActions(v)
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+		apiObject.Actions = expandCompromisedCredentialsActionsType(v)
 	}
 
-	return riskExceptionConfigurationType
+	return apiObject
 }
 
-func flattenCompromisedCredentialsRiskConfiguration(apiObject *cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType) []interface{} {
+func flattenCompromisedCredentialsRiskConfiguration(apiObject *awstypes.CompromisedCredentialsRiskConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -461,67 +512,63 @@ func flattenCompromisedCredentialsRiskConfiguration(apiObject *cognitoidentitypr
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EventFilter; v != nil {
-		tfMap["event_filter"] = flex.FlattenStringSet(v)
+		tfMap["event_filter"] = v
 	}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = flattenCompromisedCredentialsActions(v)
+		tfMap[names.AttrActions] = flattenCompromisedCredentialsActions(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandCompromisedCredentialsActions(riskConfig []interface{}) *cognitoidentityprovider.CompromisedCredentialsActionsType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+func expandCompromisedCredentialsActionsType(tfList []interface{}) *awstypes.CompromisedCredentialsActionsType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.CompromisedCredentialsActionsType{}
 
-	compromisedCredentialsAction := &cognitoidentityprovider.CompromisedCredentialsActionsType{}
-
-	if v, ok := config["event_action"].(string); ok && v != "" {
-		compromisedCredentialsAction.EventAction = aws.String(v)
+	if v, ok := tfMap["event_action"].(string); ok && v != "" {
+		apiObject.EventAction = awstypes.CompromisedCredentialsEventActionType(v)
 	}
 
-	return compromisedCredentialsAction
+	return apiObject
 }
 
-func flattenCompromisedCredentialsActions(apiObject *cognitoidentityprovider.CompromisedCredentialsActionsType) []interface{} {
+func flattenCompromisedCredentialsActions(apiObject *awstypes.CompromisedCredentialsActionsType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.EventAction; v != nil {
-		tfMap["event_action"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"event_action": apiObject.EventAction,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandAccountTakeoverRiskConfiguration(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverRiskConfigurationType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+func expandAccountTakeoverRiskConfigurationType(tfList []interface{}) *awstypes.AccountTakeoverRiskConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.AccountTakeoverRiskConfigurationType{}
 
-	accountTakeoverRiskConfiguration := &cognitoidentityprovider.AccountTakeoverRiskConfigurationType{}
-
-	if v, ok := config["notify_configuration"].([]interface{}); ok && len(v) > 0 {
-		accountTakeoverRiskConfiguration.NotifyConfiguration = expandNotifyConfiguration(v)
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+		apiObject.Actions = expandAccountTakeoverActionsType(v)
 	}
 
-	if v, ok := config["actions"].([]interface{}); ok && len(v) > 0 {
-		accountTakeoverRiskConfiguration.Actions = expandAccountTakeoverActions(v)
+	if v, ok := tfMap["notify_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NotifyConfiguration = expandNotifyConfigurationType(v)
 	}
 
-	return accountTakeoverRiskConfiguration
+	return apiObject
 }
 
-func flattenAccountTakeoverRiskConfiguration(apiObject *cognitoidentityprovider.AccountTakeoverRiskConfigurationType) []interface{} {
+func flattenAccountTakeoverRiskConfigurationType(apiObject *awstypes.AccountTakeoverRiskConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -529,41 +576,40 @@ func flattenAccountTakeoverRiskConfiguration(apiObject *cognitoidentityprovider.
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = flattenAccountTakeoverActions(v)
+		tfMap[names.AttrActions] = flattenAccountTakeoverActionsType(v)
 	}
 
 	if v := apiObject.NotifyConfiguration; v != nil {
-		tfMap["notify_configuration"] = flattenNotifyConfiguration(v)
+		tfMap["notify_configuration"] = flattemNotifyConfigurationType(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandAccountTakeoverActions(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverActionsType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+func expandAccountTakeoverActionsType(tfList []interface{}) *awstypes.AccountTakeoverActionsType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.AccountTakeoverActionsType{}
 
-	actions := &cognitoidentityprovider.AccountTakeoverActionsType{}
-
-	if v, ok := config["high_action"].([]interface{}); ok && len(v) > 0 {
-		actions.HighAction = expandAccountTakeoverAction(v)
+	if v, ok := tfMap["high_action"].([]interface{}); ok && len(v) > 0 {
+		apiObject.HighAction = expandAccountTakeoverActionType(v)
 	}
 
-	if v, ok := config["low_action"].([]interface{}); ok && len(v) > 0 {
-		actions.LowAction = expandAccountTakeoverAction(v)
+	if v, ok := tfMap["low_action"].([]interface{}); ok && len(v) > 0 {
+		apiObject.LowAction = expandAccountTakeoverActionType(v)
 	}
 
-	if v, ok := config["medium_action"].([]interface{}); ok && len(v) > 0 {
-		actions.MediumAction = expandAccountTakeoverAction(v)
+	if v, ok := tfMap["medium_action"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MediumAction = expandAccountTakeoverActionType(v)
 	}
 
-	return actions
+	return apiObject
 }
 
-func flattenAccountTakeoverActions(apiObject *cognitoidentityprovider.AccountTakeoverActionsType) []interface{} {
+func flattenAccountTakeoverActionsType(apiObject *awstypes.AccountTakeoverActionsType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -571,153 +617,145 @@ func flattenAccountTakeoverActions(apiObject *cognitoidentityprovider.AccountTak
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HighAction; v != nil {
-		tfMap["high_action"] = flattenAccountTakeoverAction(v)
+		tfMap["high_action"] = flattenAccountTakeoverActionType(v)
 	}
 
 	if v := apiObject.LowAction; v != nil {
-		tfMap["low_action"] = flattenAccountTakeoverAction(v)
+		tfMap["low_action"] = flattenAccountTakeoverActionType(v)
 	}
 
 	if v := apiObject.MediumAction; v != nil {
-		tfMap["medium_action"] = flattenAccountTakeoverAction(v)
+		tfMap["medium_action"] = flattenAccountTakeoverActionType(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandAccountTakeoverAction(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverActionType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+func expandAccountTakeoverActionType(tfList []interface{}) *awstypes.AccountTakeoverActionType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.AccountTakeoverActionType{}
 
-	action := &cognitoidentityprovider.AccountTakeoverActionType{}
-
-	if v, ok := config["event_action"].(string); ok && v != "" {
-		action.EventAction = aws.String(v)
+	if v, ok := tfMap["event_action"].(string); ok && v != "" {
+		apiObject.EventAction = awstypes.AccountTakeoverEventActionType(v)
 	}
 
-	if v, ok := config["notify"].(bool); ok {
-		action.Notify = aws.Bool(v)
+	if v, ok := tfMap["notify"].(bool); ok {
+		apiObject.Notify = v
 	}
 
-	return action
+	return apiObject
 }
 
-func flattenAccountTakeoverAction(apiObject *cognitoidentityprovider.AccountTakeoverActionType) []interface{} {
+func flattenAccountTakeoverActionType(apiObject *awstypes.AccountTakeoverActionType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.EventAction; v != nil {
-		tfMap["event_action"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Notify; v != nil {
-		tfMap["notify"] = aws.BoolValue(v)
+	tfMap := map[string]interface{}{
+		"event_action": apiObject.EventAction,
+		"notify":       apiObject.Notify,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandNotifyConfiguration(riskConfig []interface{}) *cognitoidentityprovider.NotifyConfigurationType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+func expandNotifyConfigurationType(tfList []interface{}) *awstypes.NotifyConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.NotifyConfigurationType{}
 
-	notifConfig := &cognitoidentityprovider.NotifyConfigurationType{}
-
-	if v, ok := config["from"].(string); ok && v != "" {
-		notifConfig.From = aws.String(v)
+	if v, ok := tfMap["block_email"].([]interface{}); ok && len(v) > 0 {
+		apiObject.BlockEmail = expandNotifyEmailType(v)
 	}
 
-	if v, ok := config["reply_to"].(string); ok && v != "" {
-		notifConfig.ReplyTo = aws.String(v)
+	if v, ok := tfMap["from"].(string); ok && v != "" {
+		apiObject.From = aws.String(v)
 	}
 
-	if v, ok := config["source_arn"].(string); ok && v != "" {
-		notifConfig.SourceArn = aws.String(v)
+	if v, ok := tfMap["mfa_email"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MfaEmail = expandNotifyEmailType(v)
 	}
 
-	if v, ok := config["block_email"].([]interface{}); ok && len(v) > 0 {
-		notifConfig.BlockEmail = expandNotifyEmail(v)
+	if v, ok := tfMap["no_action_email"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NoActionEmail = expandNotifyEmailType(v)
 	}
 
-	if v, ok := config["mfa_email"].([]interface{}); ok && len(v) > 0 {
-		notifConfig.MfaEmail = expandNotifyEmail(v)
+	if v, ok := tfMap["reply_to"].(string); ok && v != "" {
+		apiObject.ReplyTo = aws.String(v)
 	}
 
-	if v, ok := config["no_action_email"].([]interface{}); ok && len(v) > 0 {
-		notifConfig.NoActionEmail = expandNotifyEmail(v)
+	if v, ok := tfMap["source_arn"].(string); ok && v != "" {
+		apiObject.SourceArn = aws.String(v)
 	}
 
-	return notifConfig
+	return apiObject
 }
 
-func flattenNotifyConfiguration(apiObject *cognitoidentityprovider.NotifyConfigurationType) []interface{} {
+func flattemNotifyConfigurationType(apiObject *awstypes.NotifyConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if v := apiObject.From; v != nil {
-		tfMap["from"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.ReplyTo; v != nil {
-		tfMap["reply_to"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.SourceArn; v != nil {
-		tfMap["source_arn"] = aws.StringValue(v)
-	}
 
 	if v := apiObject.BlockEmail; v != nil {
-		tfMap["block_email"] = flattenNotifyEmail(v)
+		tfMap["block_email"] = flattenNotifyEmailType(v)
+	}
+
+	if v := apiObject.From; v != nil {
+		tfMap["from"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MfaEmail; v != nil {
-		tfMap["mfa_email"] = flattenNotifyEmail(v)
+		tfMap["mfa_email"] = flattenNotifyEmailType(v)
 	}
 
 	if v := apiObject.NoActionEmail; v != nil {
-		tfMap["no_action_email"] = flattenNotifyEmail(v)
+		tfMap["no_action_email"] = flattenNotifyEmailType(v)
+	}
+
+	if v := apiObject.ReplyTo; v != nil {
+		tfMap["reply_to"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SourceArn; v != nil {
+		tfMap["source_arn"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandNotifyEmail(riskConfig []interface{}) *cognitoidentityprovider.NotifyEmailType {
-	if len(riskConfig) == 0 || riskConfig[0] == nil {
+func expandNotifyEmailType(tfList []interface{}) *awstypes.NotifyEmailType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	config := riskConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.NotifyEmailType{}
 
-	notifyEmail := &cognitoidentityprovider.NotifyEmailType{}
-
-	if v, ok := config["html_body"].(string); ok && v != "" {
-		notifyEmail.HtmlBody = aws.String(v)
+	if v, ok := tfMap["html_body"].(string); ok && v != "" {
+		apiObject.HtmlBody = aws.String(v)
 	}
 
-	if v, ok := config["subject"].(string); ok && v != "" {
-		notifyEmail.Subject = aws.String(v)
+	if v, ok := tfMap["subject"].(string); ok && v != "" {
+		apiObject.Subject = aws.String(v)
 	}
 
-	if v, ok := config["text_body"].(string); ok && v != "" {
-		notifyEmail.TextBody = aws.String(v)
+	if v, ok := tfMap["text_body"].(string); ok && v != "" {
+		apiObject.TextBody = aws.String(v)
 	}
 
-	return notifyEmail
+	return apiObject
 }
 
-func flattenNotifyEmail(apiObject *cognitoidentityprovider.NotifyEmailType) []interface{} {
+func flattenNotifyEmailType(apiObject *awstypes.NotifyEmailType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -725,30 +763,16 @@ func flattenNotifyEmail(apiObject *cognitoidentityprovider.NotifyEmailType) []in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HtmlBody; v != nil {
-		tfMap["html_body"] = aws.StringValue(v)
+		tfMap["html_body"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Subject; v != nil {
-		tfMap["subject"] = aws.StringValue(v)
+		tfMap["subject"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TextBody; v != nil {
-		tfMap["text_body"] = aws.StringValue(v)
+		tfMap["text_body"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
-}
-
-func RiskConfigurationParseID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-
-	if len(parts) > 2 || len(parts) < 1 {
-		return "", "", fmt.Errorf("wrong format of import ID (%s), use: 'userpool-id/client-id' or 'userpool-id'", id)
-	}
-
-	if len(parts) == 2 {
-		return parts[0], parts[1], nil
-	} else {
-		return parts[0], "", nil
-	}
 }

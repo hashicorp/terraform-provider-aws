@@ -59,6 +59,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `ownerId` - The ID of the AWS account that owns the Dedicated Host.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import hosts using the host `id`. For example:
@@ -87,4 +95,4 @@ Using `terraform import`, import hosts using the host `id`. For example:
 % terraform import aws_ec2_host.example h-0385a99d0e4b20cbb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7d7c66a25dca67846d4d6fca617b72c9903de5c7710e0dff44f2f8ae2633bebb -->
+<!-- cache-key: cdktf-0.20.1 input-e72ecf384fda2cca3d20b84aaf4f24de52e9cc761d5cc1f6a6d8b91d7bf13fac -->

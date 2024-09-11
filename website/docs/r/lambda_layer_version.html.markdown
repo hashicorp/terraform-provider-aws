@@ -53,13 +53,14 @@ The following arguments are optional:
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename`.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename`.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatible_architectures`, `compatible_runtimes`, `description`, `filename`, `layer_name`, `license_info`, `s3_bucket`, `s3_key`, `s3_object_version`, or `source_code_hash` forces deletion of the existing layer version and creation of a new layer version.
-* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
+* `source_code_hash` - (Optional) Virtual attribute used to trigger replacement when source code changes. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Lambda Layer with version.
+* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `created_date` - Date this resource was created.
 * `layer_arn` - ARN of the Lambda Layer without version.
 * `signing_job_arn` - ARN of a signing job.

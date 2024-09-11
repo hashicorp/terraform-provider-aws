@@ -48,11 +48,13 @@ class MyConvertedCode(TerraformStack):
 
 ~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `admin_contact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
 * `auto_renew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
+* `billing_contact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
+* `billing_privacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
 * `domain_name` - (Required) The name of the registered domain.
 * `name_server` - (Optional) The list of nameservers for the domain. See [`name_server` Blocks](#name_server-blocks) for more details.
 * `registrant_contact` - (Optional) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
@@ -64,7 +66,7 @@ This argument supports the following arguments:
 
 ### Contact Blocks
 
-The `admin_contact`, `registrant_contact` and `tech_contact` blocks support the following:
+The `admin_contact`, `billing_contact`, `registrant_contact` and `tech_contact` blocks support the following:
 
 * `address_line_1` - (Optional) First line of the contact's address.
 * `address_line_2` - (Optional) Second line of contact's address, if any.
@@ -137,4 +139,4 @@ Using `terraform import`, import domains using the domain name. For example:
 % terraform import aws_route53domains_registered_domain.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-41a47d4bcdaedeed1d522ab257d17e74b814853b0355455c3a3cc0b6e6f27c8b -->
+<!-- cache-key: cdktf-0.20.1 input-f3a43c49a370aa3f3597964c2d4afca7628a448994f55687aeb34234b8e0224c -->

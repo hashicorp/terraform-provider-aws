@@ -38,11 +38,11 @@ func testAccConformancePack_basic(t *testing.T) {
 				Config: testAccConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -74,7 +74,7 @@ func testAccConformancePack_updateName(t *testing.T) {
 				Config: testAccConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -82,11 +82,11 @@ func testAccConformancePack_updateName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &after),
 					testAccCheckConformancePackRecreated(&before, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rNameUpdated))),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rNameUpdated))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -141,11 +141,11 @@ func testAccConformancePack_inputParameters(t *testing.T) {
 				Config: testAccConformancePackConfig_inputParameter(rName, "TestKey", "TestValue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  "TestKey",
 						"parameter_value": "TestValue",
@@ -178,11 +178,11 @@ func testAccConformancePack_S3Delivery(t *testing.T) {
 				Config: testAccConformancePackConfig_s3Delivery(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -211,11 +211,11 @@ func testAccConformancePack_S3Template(t *testing.T) {
 				Config: testAccConformancePackConfig_s3Template(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -250,7 +250,7 @@ func testAccConformancePack_updateInputParameters(t *testing.T) {
 				Config: testAccConformancePackConfig_updateInputParameter(rName, "TestKey1", "TestKey2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  "TestKey1",
 						"parameter_value": "TestValue1",
@@ -271,7 +271,7 @@ func testAccConformancePack_updateInputParameters(t *testing.T) {
 				Config: testAccConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 		},
@@ -301,11 +301,11 @@ func testAccConformancePack_updateS3Delivery(t *testing.T) {
 				Config: testAccConformancePackConfig_s3Delivery(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -341,11 +341,11 @@ func testAccConformancePack_updateS3Template(t *testing.T) {
 				Config: testAccConformancePackConfig_s3Template(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -380,11 +380,11 @@ func testAccConformancePack_updateTemplateBody(t *testing.T) {
 				Config: testAccConformancePackConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -415,11 +415,11 @@ func testAccConformancePack_S3TemplateAndTemplateBody(t *testing.T) {
 				Config: testAccConformancePackConfig_s3TemplateAndTemplateBody(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
 				),
 			},
 			{

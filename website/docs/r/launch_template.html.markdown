@@ -119,9 +119,9 @@ This resource supports the following arguments:
   Specification](#credit-specification) below for more details.
 * `default_version` - (Optional) Default Version of the launch template.
 * `description` - (Optional) Description of the launch template.
-* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
+* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-stop-protection.html).
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
-  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
+  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
 * `elastic_gpu_specifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
@@ -130,7 +130,7 @@ This resource supports the following arguments:
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `image_id` - (Optional) The AMI from which to launch the instance.
+* `image_id` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instance_market_options` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -152,7 +152,7 @@ This resource supports the following arguments:
 * `ram_disk_id` - (Optional) The ID of the RAM disk.
 * `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
-* `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
+* `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details. Default tags [are currently not propagated to ASG created resources](https://github.com/hashicorp/terraform-provider-aws/issues/32328) so you may wish to inject your default tags into this variable against the relevant child resource types created.
 * `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `update_default_version` - (Optional) Whether to update Default Version each update. Conflicts with `default_version`.
 * `user_data` - (Optional) The base64-encoded user data to provide when launching the instance.
@@ -178,7 +178,7 @@ Each `block_device_mappings` supports the following:
 The `ebs` block supports the following:
 
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination.
-  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
+  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/preserving-volumes-on-termination.html) for more information.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
@@ -232,7 +232,7 @@ Attach an elastic GPU the instance.
 
 The `elastic_gpu_specifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 
@@ -351,6 +351,7 @@ This configuration block supports the following:
       * ssd - solid state drive
     ```
 
+* `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spot_max_price_percentage_over_lowest_price`
 * `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
@@ -367,7 +368,7 @@ This configuration block supports the following:
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `max_spot_price_as_percentage_of_optimal_on_demand_price`
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `total_local_storage_gb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.

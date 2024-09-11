@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/managedgrafana"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +21,7 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 	workspaceResourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,11 +29,11 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceAPIKeyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKey),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "key_role", managedgrafana.RoleEditor),
+					resource.TestCheckResourceAttr(resourceName, "key_role", string(awstypes.RoleEditor)),
 					resource.TestCheckResourceAttr(resourceName, "seconds_to_live", "3600"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 				),
 			},
 		},

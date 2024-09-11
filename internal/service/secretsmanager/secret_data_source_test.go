@@ -114,11 +114,11 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 		}
 
 		attrNames := []string{
-			"arn",
-			"description",
-			"kms_key_id",
-			"name",
-			"policy",
+			names.AttrARN,
+			names.AttrDescription,
+			names.AttrKMSKeyID,
+			names.AttrName,
+			names.AttrPolicy,
 			"tags.#",
 		}
 

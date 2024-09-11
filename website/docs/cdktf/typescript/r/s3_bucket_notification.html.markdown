@@ -12,7 +12,7 @@ description: |-
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 
-~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
+~> **NOTE:** S3 Buckets only support a single notification configuration resource. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. This resource will overwrite any existing event notifications configured for the S3 bucket it's associated with. See the example "Trigger multiple Lambda functions" for an option of how to configure multiple triggers within this resource.
 
 -> This resource cannot be used with S3 directory buckets.
 
@@ -497,4 +497,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5357aa38fd9b204541e907ee176be4b2983ad672823349cbe4ac358b8982320b -->
+<!-- cache-key: cdktf-0.20.1 input-ffc8a3d834243776f095d91cbf1034f45496ca04ecab5cc652f8eef56b45e134 -->

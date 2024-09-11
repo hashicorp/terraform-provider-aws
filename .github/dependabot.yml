@@ -1,12 +1,18 @@
 version: 2
 updates:
-  - directory: "/"
-    package-ecosystem: "github-actions"
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "daily"
 
-  - directory: "/"
-    package-ecosystem: "gomod"
+  - package-ecosystem: "gomod"
+    directories:
+      - "/"
+      - "/.ci/providerlint"
+      - "/.ci/tools"
+      - "/skaff"
+      - "/tools/awssdkpatch"
+      - "/tools/tfsdk2fw"
     groups:
       aws-sdk-go:
         patterns:
@@ -34,50 +40,15 @@ updates:
       - dependency-name: "github.com/hashicorp/terraform-plugin-log"
       # go-hclog should only be updated via terraform-plugin-log
       - dependency-name: "github.com/hashicorp/go-hclog"
-      - dependency-name: "golang.org/x/tools"
       # grpc should only be updated via terraform-plugin-go/terraform-plugin-framework
       - dependency-name: "google.golang.org/grpc"
+      # protobuf should only be updated via terraform-plugin-go/terraform-plugin-framework
+      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30
 
-  - directory: "/.ci/providerlint"
-    package-ecosystem: "gomod"
-    ignore:
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-    schedule:
-      interval: "daily"
-
-  - directory: "/.ci/tools"
-    package-ecosystem: "gomod"
-    ignore:
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-    schedule:
-      interval: "daily"
-
-  - directory: "/skaff"
-    package-ecosystem: "gomod"
-    ignore:
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-    schedule:
-      interval: "daily"
-
-  - directory: "/tools/tfsdk2fw"
-    package-ecosystem: "gomod"
-    allow:
-      - dependency-type: direct
-    ignore:
-      # terraform-plugin-sdk/v2 should only be updated via terraform-provider-aws
-      - dependency-name: "github.com/hashicorp/terraform-plugin-sdk/v2"
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-    schedule:
-      interval: "daily"
-
-  - directory: "/infrastructure/repository"
-    package-ecosystem: "terraform"
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/repository"
     schedule:
       interval: "daily"

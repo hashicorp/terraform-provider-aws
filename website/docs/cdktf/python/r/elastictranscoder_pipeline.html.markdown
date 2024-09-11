@@ -45,7 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `aws_kms_key_arn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `content_config` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
@@ -136,4 +136,4 @@ Using `terraform import`, import Elastic Transcoder pipelines using the `id`. Fo
 % terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6b409c28f1ed17363c636a956212b4fffbbcf9da888917717aff32273f1430a2 -->
+<!-- cache-key: cdktf-0.20.1 input-d637ae6851ebe5a730672dfa1ffb2f0583f0f26c659341ebee69f076e573b14b -->

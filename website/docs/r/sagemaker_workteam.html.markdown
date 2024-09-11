@@ -55,6 +55,7 @@ This resource supports the following arguments:
 * `workteam_name` - (Required) The name of the workforce.
 * `member_definition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognito_member_definition`. For workforces created using your own OIDC identity provider (IdP) use `oidc_member_definition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
 * `notification_configuration` - (Optional) Configures notification of workers regarding available or expiring work items. see [Notification Configuration](#notification-configuration) details below.
+* `worker_access_configuration` - (Optional) Use this optional parameter to constrain access to an Amazon S3 resource based on the IP address using supported IAM global condition keys. The Amazon S3 resource is accessed in the worker portal using a Amazon S3 presigned URL. see [Worker Access Configuration](#worker-access-configuration) details below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Member Definition
@@ -75,6 +76,19 @@ This resource supports the following arguments:
 ### Notification Configuration
 
 * `notification_topic_arn` - (Required) The ARN for the SNS topic to which notifications should be published.
+
+### Worker Access Configuration
+
+* `s3_presign` - (Required) Defines any Amazon S3 resource constraints. see [S3 Presign](#s3-presign) details below.
+
+#### S3 Presign
+
+* `iam_policy_constraints` - (Required) Use this parameter to specify the allowed request source. Possible sources are either SourceIp or VpcSourceIp. see [IAM Policy Constraints](#iam-policy-constraints) details below.
+
+##### IAM Policy Constraints
+
+* `source_ip` - (Optional) When SourceIp is Enabled the worker's IP address when a task is rendered in the worker portal is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. This IP address is checked by Amazon S3 and must match in order for the Amazon S3 resource to be rendered in the worker portal. Valid values are `Enabled` or `Disabled`
+* `vpc_source_ip` - (Optional) When VpcSourceIp is Enabled the worker's IP address when a task is rendered in private worker portal inside the VPC is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. To render the task successfully Amazon S3 checks that the presigned URL is being accessed over an Amazon S3 VPC Endpoint, and that the worker's IP address matches the IP address in the IAM policy. To learn more about configuring private worker portal, see [Use Amazon VPC mode from a private worker portal](https://docs.aws.amazon.com/sagemaker/latest/dg/samurai-vpc-worker-portal.html). Valid values are `Enabled` or `Disabled`
 
 ## Attribute Reference
 

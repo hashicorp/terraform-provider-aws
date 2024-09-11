@@ -71,14 +71,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the domain identity.
-* `verification_token` - A code which when added to the domain as a TXT record
-  will signal to SES that the owner of the domain has authorised SES to act on
-  their behalf. The domain identity will be in state "verification pending"
-  until this is done. See the [With Route53 Record](#with-route53-record) example
-  for how this might be achieved when the domain is hosted in Route 53 and
-  managed by Terraform.  Find out more about verifying domains in Amazon
-  SES in the [AWS SES
-  docs](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domains.html).
+* `verification_token` - A code which when added to the domain as a TXT record will signal to SES that the owner of the domain has authorized SES to act on their behalf. The domain identity will be in state "verification pending" until this is done. See the [With Route53 Record](#with-route53-record) example for how this might be achieved when the domain is hosted in Route 53 and managed by Terraform.  Find out more about verifying domains in Amazon SES in the [AWS SES docs](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domains.html).
 
 ## Import
 
@@ -105,4 +98,4 @@ Using `terraform import`, import SES domain identities using the domain name. Fo
 % terraform import aws_ses_domain_identity.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cc2858bb0b9356bccdccc74446c2439c161fce45d5adfa4eb3e71a8f789e30b8 -->
+<!-- cache-key: cdktf-0.20.1 input-e9c56869a46ad1b02fa7b205f2048ccc35a338dee7bb4db3f9882d9519cccda7 -->

@@ -1,0 +1,257 @@
+# Step 1: Convert AWS SDK v1 (core) to v2
+@@
+var x identifier
+@@
+-import "github.com/aws/aws-sdk-go/aws"
++import "github.com/aws/aws-sdk-go-v2/aws"
+aws.x
+
+@@
+var x identifier
+@@
+-import "github.com/aws/aws-sdk-go/aws/arn"
++import "github.com/aws/aws-sdk-go-v2/aws/arn"
+arn.x
+
+@@
+var x identifier
+@@
+-import "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
++import "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+tfawserr.x
+
+@@
+@@
+-aws.BoolValue
++aws.ToBool
+
+@@
+@@
+-aws.Float64Value
++aws.ToFloat64
+
+@@
+@@
+-aws.Int64Value
++aws.ToInt64
+
+@@
+@@
+-aws.StringValue
++aws.ToString
+
+@@
+@@
+-aws.TimeValue
++aws.ToTime
+
+@@
+var x expression
+@@
+-aws.StringSlice([]string{x})
++[]string{x}
+
+@@
+var x expression
+@@
+-aws.StringValueSlice(x)
++x
+
+@@
+var x expression
+@@
+-aws.StringValueMap(x)
++x
+
+# Replace endpoint constants which are not included in the V2 SDK
+@@
+@@
+-acctest.PreCheckPartitionHasService(t, {{ .GoV1Package }}.EndpointsID)
++acctest.PreCheckPartitionHasService(t, names.{{ .GoV1ClientTypeName }}EndpointID)
+
+# Step 2: Convert AWS SDK v1 (service) to v2
+@@
+var {{ .ImportAlias }}, x identifier
+@@
+-import {{ .ImportAlias }} "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
++import {{ .ImportAlias }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+{{ .ImportAlias }}.x
+
+# 2a: Most types are in the service's types package so do a simple mass-substitution
+# to get most things right
+@@
+var x identifier
+@@
+-{{ .ImportAlias }}.x
++awstypes.x
+
+@@
+var x identifier
+@@
++import awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}/types"
+awstypes.x
+
+@@
+@@
+-awstypes.{{ .GoV1ClientTypeName }}
++{{ .ImportAlias }}.Client
+
+@@
+@@
+-{{ .GoV1ClientTypeName }}Conn
++{{ .GoV1ClientTypeName }}Client
+
+# 2b: Types used for passing Input and Outputs to a service's CRUD operations
+# remain in the main service package, so 'unconvert' these from 2a above
+{{ $importAlias := .ImportAlias }}
+{{ range $typeName := .InputOutputTypes }}
+@@
+@@
+-awstypes.{{ $typeName }}
++{{ $importAlias }}.{{ $typeName }}
+{{ end }}
+
+{{ range $funcName := .ContextFunctions }}
+@@
+@@
+-{{ $funcName }}WithContext
++{{ $funcName }}
+{{ end }}
+
+# Step 3: Prefer the internal errs package when checking error codes
+#
+# gopatch doesn't understand generics yet. See https://github.com/uber-go/gopatch/issues/61.
+# for now we do our best with some simple substitutions but this will leave
+# tfresource.RetryWhenAWSErrMessageContains(...) still to convert to
+# tfresource.RetryWhenIsAErrorMessageContains[](...)
+{{- range $exceptionName := .Exceptions }}
+@@
+@@
+-tfawserr.ErrCodeEquals(err, awstypes.ErrCode{{ $exceptionName }})
++errs.IsA[*awstypes.{{ $exceptionName }}](err)
+
+@@
+var x identifier
+@@
+-tfawserr.ErrMessageContains(err, awstypes.ErrCode{{ $exceptionName }}, x)
++errs.IsAErrorMessageContains[*awstypes.{{ $exceptionName }}](err, x)
+{{- end }}
+
+@@
+var x identifier
+@@
++import "github.com/hashicorp/terraform-provider-aws/internal/errs"
+errs.x
+
+# Step 4: Migrate enum types
+#
+# Note: The validation changes will only be partially correct. The enum.Validate
+# function implements ValidateDiagFunc, while StringInSlice implements ValidateFunc.
+# Due to limitations with how gopatch handles multiple matches within an elision, we
+# cannot replace all instances of ValidateFunc inside the schema defintion (just
+# the first one). Instead, we'll insert the proper validation function and
+# ValidateFunc can be changed to ValidateDiagFunc manually.
+#
+# Ref: https://github.com/uber-go/gopatch/issues/10
+{{- range $enum := .EnumTypes }}
+
+# Replace enum validation for {{ $enum }}. Assign this to ValidateDiagFunc (instead of ValidateFunc) once patched.
+@@
+@@
+-validation.StringInSlice(awstypes.{{ $enum }}_Values(), false)
++enum.Validate[awstypes.{{ $enum }}]()
+
+# Replace enum {{ $enum }} assignment on input structs.
+@@
+var input identifier
+@@
+-input.{{ $enum }} = aws.String(...)
++input.{{ $enum }} = awstypes.{{ $enum }}(...)
+
+# Replace enum {{ $enum }} conversion on output structs.
+@@
+var output identifier
+@@
+-aws.ToString(output.{{ $enum }})
++string(output.{{ $enum }})
+{{- end }}
+
+@@
+var x identifier
+@@
++import "github.com/hashicorp/terraform-provider-aws/internal/enum"
+enum.x
+
+{{- if .MultiClient }}
+# Replace generated Tags function with the V2 variant.
+@@
+@@
+-Tags(...)
++TagsV2(...)
+
+# Replace generated KeyValueTags function with the V2 variant.
+@@
+@@
+-KeyValueTags(...)
++keyValueTagsV2(...)
+
+# Replace generated getTagsIn function with the V2 variant.
+@@
+@@
+-getTagsIn(...)
++getTagsInV2(...)
+
+# Replace generated getTagSpecificationsIn function with the V2 variant.
+@@
+@@
+-getTagSpecificationsIn(...)
++getTagSpecificationsInV2(...)
+
+# Replace generated setTagsOut function with the V2 variant.
+@@
+@@
+-setTagsOut(...)
++setTagsOutV2(...)
+
+# Replace generated createTags function with the V2 variant.
+@@
+@@
+-createTags(...)
++createTagsV2(...)
+
+# Replace generated updateTags function with the V2 variant.
+@@
+@@
+-updateTags(...)
++updateTagsV2(...)
+
+# Replace generated newFilter function with the V2 variant.
+@@
+@@
+-newFilter(...)
++newFilterV2(...)
+
+# Replace generated newAttributeFilterList function with the V2 variant.
+@@
+@@
+-newAttributeFilterList(...)
++newAttributeFilterListV2(...)
+
+# Replace generated newCustomFilterList function with the V2 variant.
+@@
+@@
+-newCustomFilterList(...)
++newCustomFilterListV2(...)
+
+# Replace generated newCustomFilterListFramework function with the V2 variant.
+@@
+@@
+-newCustomFilterListFramework(...)
++newCustomFilterListFrameworkV2(...)
+
+# Replace generated newTagFilterList function with the V2 variant.
+@@
+@@
+-newTagFilterList(...)
++newTagFilterListV2(...)
+{{- end }}

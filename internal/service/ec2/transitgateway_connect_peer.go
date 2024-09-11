@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,7 +31,8 @@ import (
 
 // @SDKResource("aws_ec2_transit_gateway_connect_peer", name="Transit Gateway Connect Peer")
 // @Tags(identifierAttribute="id")
-func ResourceTransitGatewayConnectPeer() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceTransitGatewayConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectPeerCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayConnectPeerRead,
@@ -49,7 +51,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +107,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPAddress,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -117,13 +119,13 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTransitGatewayConnectPeerInput{
-		InsideCidrBlocks:           flex.ExpandStringSet(d.Get("inside_cidr_blocks").(*schema.Set)),
+		InsideCidrBlocks:           flex.ExpandStringValueSet(d.Get("inside_cidr_blocks").(*schema.Set)),
 		PeerAddress:                aws.String(d.Get("peer_address").(string)),
-		TagSpecifications:          getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayConnectPeer),
-		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
+		TagSpecifications:          getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayConnectPeer),
+		TransitGatewayAttachmentId: aws.String(d.Get(names.AttrTransitGatewayAttachmentID).(string)),
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
@@ -133,7 +135,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.BgpOptions = &ec2.TransitGatewayConnectRequestBgpOptions{
+		input.BgpOptions = &awstypes.TransitGatewayConnectRequestBgpOptions{
 			PeerAsn: aws.Int64(v),
 		}
 	}
@@ -142,16 +144,16 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 		input.TransitGatewayAddress = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Peer: %s", input)
-	output, err := conn.CreateTransitGatewayConnectPeerWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Peer: %+v", input)
+	output, err := conn.CreateTransitGatewayConnectPeer(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Connect Peer: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.TransitGatewayConnectPeer.TransitGatewayConnectPeerId))
+	d.SetId(aws.ToString(output.TransitGatewayConnectPeer.TransitGatewayConnectPeerId))
 
-	if _, err := WaitTransitGatewayConnectPeerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitTransitGatewayConnectPeerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Connect Peer (%s) create: %s", d.Id(), err)
 	}
 
@@ -161,9 +163,9 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeerByID(ctx, conn, d.Id())
+	transitGatewayConnectPeer, err := findTransitGatewayConnectPeerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Connect Peer %s not found, removing from state", d.Id())
@@ -177,22 +179,22 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
 	}.String()
 	bgpConfigurations := transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations
-	d.Set("arn", arn)
-	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(bgpConfigurations[0].PeerAsn), 10))
+	d.Set(names.AttrARN, arn)
+	d.Set("bgp_asn", strconv.FormatInt(aws.ToInt64(bgpConfigurations[0].PeerAsn), 10))
 	d.Set("bgp_peer_address", bgpConfigurations[0].PeerAddress)
-	d.Set("bgp_transit_gateway_addresses", slices.ApplyToAll(bgpConfigurations, func(v *ec2.TransitGatewayAttachmentBgpConfiguration) string {
-		return aws.StringValue(v.TransitGatewayAddress)
+	d.Set("bgp_transit_gateway_addresses", slices.ApplyToAll(bgpConfigurations, func(v awstypes.TransitGatewayAttachmentBgpConfiguration) string {
+		return aws.ToString(v.TransitGatewayAddress)
 	}))
-	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
+	d.Set("inside_cidr_blocks", transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks)
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
-	d.Set("transit_gateway_attachment_id", transitGatewayConnectPeer.TransitGatewayAttachmentId)
+	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayConnectPeer.TransitGatewayAttachmentId)
 
 	setTagsOut(ctx, transitGatewayConnectPeer.Tags)
 
@@ -207,10 +209,10 @@ func resourceTransitGatewayConnectPeerUpdate(ctx context.Context, d *schema.Reso
 func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect Peer: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayConnectPeerWithContext(ctx, &ec2.DeleteTransitGatewayConnectPeerInput{
+	_, err := conn.DeleteTransitGatewayConnectPeer(ctx, &ec2.DeleteTransitGatewayConnectPeerInput{
 		TransitGatewayConnectPeerId: aws.String(d.Id()),
 	})
 
@@ -222,7 +224,7 @@ func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Connect Peer: %s", err)
 	}
 
-	if _, err := WaitTransitGatewayConnectPeerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitTransitGatewayConnectPeerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Connect Peer (%s) delete: %s", d.Id(), err)
 	}
 

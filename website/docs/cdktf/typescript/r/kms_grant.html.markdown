@@ -12,6 +12,9 @@ description: |-
 
 Provides a resource-based access control mechanism for a KMS customer master key.
 
+~> **Note:** All arguments including the grant token will be stored in the raw state as plain-text.
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
+
 ## Example Usage
 
 ```typescript
@@ -128,4 +131,4 @@ Using `terraform import`, import KMS Grants using the Key ID and Grant ID separa
 % terraform import aws_kms_grant.test 1234abcd-12ab-34cd-56ef-1234567890ab:abcde1237f76e4ba7987489ac329fbfba6ad343d6f7075dbd1ef191f0120514
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9587e187df46d671340d0a3dbe282bc6f1942797aabd7b8c41cc9d9588d41d93 -->
+<!-- cache-key: cdktf-0.20.1 input-36c7f3f97bbb167521114fdebc896b3fdaab1eead128fe4f8d93a9309408c388 -->

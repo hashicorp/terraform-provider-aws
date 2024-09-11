@@ -25,6 +25,36 @@ resource "aws_oam_link" "example" {
 }
 ```
 
+### Log Group Filtering
+
+```terraform
+resource "aws_oam_link" "example" {
+  label_template = "$AccountName"
+  link_configuration {
+    log_group_configuration {
+      filter = "LogGroupName LIKE 'aws/lambda/%' OR LogGroupName LIKE 'AWSLogs%'"
+    }
+  }
+  resource_types  = ["AWS::Logs::LogGroup"]
+  sink_identifier = aws_oam_sink.test.id
+}
+```
+
+### Metric Filtering
+
+```terraform
+resource "aws_oam_link" "example" {
+  label_template = "$AccountName"
+  link_configuration {
+    metric_configuration {
+      filter = "Namespace IN ('AWS/EC2', 'AWS/ELB', 'AWS/S3')"
+    }
+  }
+  resource_types  = ["AWS::CloudWatch::Metric"]
+  sink_identifier = aws_oam_sink.test.id
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -35,13 +65,34 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `link_configuration` - (Optional) Configuration for creating filters that specify that only some metric namespaces or log groups are to be shared from the source account to the monitoring account. See [`link_configuration` Block](#link_configuration-block) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `link_configuration` Block
+
+The `link_configuration` configuration block supports the following arguments:
+
+* `log_group_configuration` - (Optional) Configuration for filtering which log groups are to send log events from the source account to the monitoring account. See [`log_group_configuration` Block](#log_group_configuration-block) for details.
+* `metric_configuration` - (Optional) Configuration for filtering which metric namespaces are to be shared from the source account to the monitoring account. See [`metric_configuration` Block](#metric_configuration-block) for details.
+
+### `log_group_configuration` Block
+
+The `log_group_configuration` configuration block supports the following arguments:
+
+* `filter` - (Required) Filter string that specifies which log groups are to share their log events with the monitoring account. See [LogGroupConfiguration](https://docs.aws.amazon.com/OAM/latest/APIReference/API_LogGroupConfiguration.html) for details.
+
+### `metric_configuration` Block
+
+The `metric_configuration` configuration block supports the following arguments:
+
+* `filter` - (Required) Filter string that specifies  which metrics are to be shared with the monitoring account. See [MetricConfiguration](https://docs.aws.amazon.com/OAM/latest/APIReference/API_MetricConfiguration.html) for details.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
+* `id` - ARN of the link.
 * `label` - Label that is assigned to this link.
 * `link_id` - ID string that AWS generated as part of the link ARN.
 * `sink_arn` - ARN of the sink that is used for this link.

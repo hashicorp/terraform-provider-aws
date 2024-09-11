@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_identity_pool_provider_principal_tag")
-func ResourcePoolProviderPrincipalTag() *schema.Resource {
+// @SDKResource("aws_cognito_identity_pool_provider_principal_tag", name="Provider Principal Tags")
+func resourcePoolProviderPrincipalTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolProviderPrincipalTagCreate,
 		ReadWithoutTimeout:   resourcePoolProviderPrincipalTagRead,

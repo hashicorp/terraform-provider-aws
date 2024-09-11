@@ -27,11 +27,11 @@ func TestAccEC2Tag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, rBgpAsn, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccEC2Tag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, rBgpAsn, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTag(), resourceName),
@@ -80,11 +80,11 @@ func TestAccEC2Tag_value(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, rBgpAsn, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -93,11 +93,11 @@ func TestAccEC2Tag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTagConfig_basic(rName, rBgpAsn, "key1", "value1updated"),
+				Config: testAccTagConfig_basic(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
 				),
 			},
 		},

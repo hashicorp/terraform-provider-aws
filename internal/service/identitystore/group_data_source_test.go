@@ -31,10 +31,10 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayName(t *testing.T) {
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayName(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", acctest.Ct0),
 				),
 			},
 		},
@@ -59,10 +59,10 @@ func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T
 			{
 				Config: testAccGroupDataSourceConfig_uniqueAttributeDisplayName(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", acctest.Ct0),
 				),
 			},
 		},
@@ -87,10 +87,10 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayNameAndGroupID(t *testing.
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayNameAndGroupID(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", acctest.Ct0),
 				),
 			},
 		},

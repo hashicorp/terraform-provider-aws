@@ -35,8 +35,8 @@ func testAccConfigurationRecorderStatus_basic(t *testing.T) {
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -88,7 +88,7 @@ func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -100,14 +100,14 @@ func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
 		},

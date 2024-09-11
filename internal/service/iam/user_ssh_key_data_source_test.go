@@ -34,10 +34,10 @@ func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "encoding", resourceName, "encoding"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fingerprint", resourceName, "fingerprint"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "public_key", resourceName, "public_key"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPublicKey, resourceName, names.AttrPublicKey),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ssh_public_key_id", resourceName, "ssh_public_key_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "username", resourceName, "username"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUsername, resourceName, names.AttrUsername),
 				),
 			},
 		},

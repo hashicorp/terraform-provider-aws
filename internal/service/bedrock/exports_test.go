@@ -6,11 +6,14 @@ package bedrock
 // Exports for use in tests only.
 var (
 	ResourceCustomModel                         = newCustomModelResource
+	ResourceGuardrail                           = newResourceGuardrail
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
 
 	FindCustomModelByID                     = findCustomModelByID
+	FindGuardrailByID                       = findGuardrailByID
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
 	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID
-	WaitModelCustomizationJobCompleted      = waitModelCustomizationJobCompleted
+
+	WaitModelCustomizationJobCompleted = waitModelCustomizationJobCompleted
 )

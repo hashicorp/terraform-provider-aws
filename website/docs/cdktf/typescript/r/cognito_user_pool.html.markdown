@@ -176,7 +176,8 @@ The following arguments are optional:
 * `postConfirmation` - (Optional) Post-confirmation AWS Lambda trigger.
 * `preAuthentication` - (Optional) Pre-authentication AWS Lambda trigger.
 * `preSignUp` - (Optional) Pre-registration AWS Lambda trigger.
-* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation.
+* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the lambda_arn of `preTokenGenerationConfig`.
+* `preTokenGenerationConfig` - (Optional) Allow to customize access tokens. See [pre_token_configuration_type](#pre_token_configuration_type)
 * `userMigration` - (Optional) User migration Lambda config type.
 * `verifyAuthChallengeResponse` - (Optional) Verifies the authentication challenge response.
 * `kmsKeyId` - (Optional) The Amazon Resource Name of Key Management Service Customer master keys. Amazon Cognito uses the key to encrypt codes and temporary passwords sent to CustomEmailSender and CustomSMSSender.
@@ -193,9 +194,17 @@ The following arguments are optional:
 * `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
 * `lambdaVersion` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom SMS Lambda function. The only supported value is `V1_0`.
 
+#### pre_token_configuration_type
+
+* `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `preTokenGeneration`, its value must be identical to this one.
+* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
+
 ### password_policy
 
 * `minimumLength` - (Optional) Minimum length of the password policy that you have set.
+* `passwordHistorySize` - (Optional) Number of previous passwords that you want Amazon Cognito to restrict each user from reusing. Users can't set a password that matches any of number of previous passwords specified by this argument. A value of 0 means that password history is not enforced. Valid values are between 0 and 24.
+
+  **Note:** This argument requires advanced security features to be active in the user pool.
 * `requireLowercase` - (Optional) Whether you have required users to use at least one lowercase letter in their password.
 * `requireNumbers` - (Optional) Whether you have required users to use at least one number in their password.
 * `requireSymbols` - (Optional) Whether you have required users to use at least one symbol in their password.
@@ -339,4 +348,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-956f61f5814a7a2fe0cddeef5fa9d4a645f79dd8c9a568695d52c319ef5ea5d4 -->
+<!-- cache-key: cdktf-0.20.1 input-a5026c8f072622eb3e4e8544e9cd32706d5985790507f537d138da4206879cc1 -->

@@ -28,7 +28,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_distribution", name="Distribution")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Distribution")
 func ResourceDistribution() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionCreate,
@@ -55,7 +55,7 @@ func ResourceDistribution() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Amazon Resource Name (ARN) of the distribution.",
@@ -77,7 +77,7 @@ func ResourceDistribution() *schema.Resource {
 							Description:  "The cache behavior for the specified path.",
 							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/*), and file types (*.html, *jpg, *js). Directories and file paths are case-sensitive.",
@@ -196,7 +196,7 @@ func ResourceDistribution() *schema.Resource {
 				Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The timestamp when the distribution was created.",
@@ -217,25 +217,25 @@ func ResourceDistribution() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The domain name of the distribution.",
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "The IP address type of the distribution.",
 				ValidateFunc: validation.StringInSlice(flattenIPAddressTypeValues(types.IpAddressType("").Values()), false),
 				Default:      "dualstack",
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "An object that describes the location of the distribution, such as the AWS Region and Availability Zone.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "The Availability Zone.",
@@ -255,7 +255,7 @@ func ResourceDistribution() *schema.Resource {
 				Description: "Indicates whether the distribution is enabled.",
 				Default:     true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "The name of the distribution.",
@@ -268,7 +268,7 @@ func ResourceDistribution() *schema.Resource {
 				Description: "An object that describes the origin resource of the distribution, such as a Lightsail instance, bucket, or load balancer.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
@@ -286,7 +286,7 @@ func ResourceDistribution() *schema.Resource {
 							ValidateFunc: verify.ValidRegionName,
 							Description:  "The AWS Region name of the origin resource.",
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The resource type of the origin resource (e.g., Instance).",
@@ -299,12 +299,12 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The public DNS of the origin.",
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Lightsail resource type (e.g., Distribution).",
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The status of the distribution.",
@@ -334,7 +334,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	in := &lightsail.CreateDistributionInput{
 		BundleId:             aws.String(d.Get("bundle_id").(string)),
 		DefaultCacheBehavior: expandCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
-		DistributionName:     aws.String(d.Get("name").(string)),
+		DistributionName:     aws.String(d.Get(names.AttrName).(string)),
 		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -347,18 +347,22 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		in.CacheBehaviors = expandCacheBehaviorsPerPath(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		in.IpAddressType = types.IpAddressType(v.(string))
+	}
+
+	if v, ok := d.GetOk("certificate_name"); ok {
+		in.CertificateName = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateDistribution(ctx, in)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Distribution == nil {
-		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	id := aws.ToString(out.Distribution.Name)
@@ -412,7 +416,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("alternative_domain_names", out.AlternativeDomainNames)
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("bundle_id", out.BundleId)
 	if err := d.Set("cache_behavior", flattenCacheBehaviorsPerPath(out.CacheBehaviors)); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
@@ -427,22 +431,22 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("certificate_name", out.CertificateName)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
-	d.Set("domain_name", out.DomainName)
+	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
-	d.Set("ip_address_type", out.IpAddressType)
-	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})
+	d.Set(names.AttrIPAddressType, out.IpAddressType)
+	d.Set(names.AttrLocation, []interface{}{flattenResourceLocation(out.Location)})
 	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("origin_public_dns", out.OriginPublicDNS)
-	d.Set("resource_type", out.ResourceType)
-	d.Set("status", out.Status)
+	d.Set(names.AttrResourceType, out.ResourceType)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("support_code", out.SupportCode)
 
 	setTagsOut(ctx, out.Tags)
@@ -491,16 +495,21 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		update = true
 	}
 
+	if d.HasChanges("certificate_name") {
+		in.CertificateName = aws.String(d.Get("certificate_name").(string))
+		update = true
+	}
+
 	if d.HasChanges("bundle_id") {
 		bundleIn.BundleId = aws.String(d.Get("bundle_id").(string))
 		bundleUpdate = true
 	}
 
-	if d.HasChange("ip_address_type") {
+	if d.HasChange(names.AttrIPAddressType) {
 		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
 			ResourceType:  types.ResourceTypeDistribution,
-			IpAddressType: types.IpAddressType(d.Get("ip_address_type").(string)),
+			IpAddressType: types.IpAddressType(d.Get(names.AttrIPAddressType).(string)),
 		})
 
 		if err != nil {
@@ -704,7 +713,7 @@ func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[strin
 	}
 
 	if v := apiObject.Path; v != nil {
-		m["path"] = aws.ToString(v)
+		m[names.AttrPath] = aws.ToString(v)
 	}
 
 	return m
@@ -750,7 +759,7 @@ func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		m["name"] = aws.ToString(v)
+		m[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ProtocolPolicy; v != "" {
@@ -762,7 +771,7 @@ func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	}
 
 	if v := apiObject.ResourceType; v != "" {
-		m["resource_type"] = v
+		m[names.AttrResourceType] = v
 	}
 
 	return m
@@ -775,7 +784,7 @@ func expandInputOrigin(tfMap map[string]interface{}) *types.InputOrigin {
 
 	a := &types.InputOrigin{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		a.Name = aws.String(v)
 	}
 
@@ -801,7 +810,7 @@ func expandCacheBehaviorPerPath(tfMap map[string]interface{}) types.CacheBehavio
 		a.Behavior = types.BehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		a.Path = aws.String(v)
 	}
 

@@ -38,7 +38,7 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `server_properties` - (Required) Contents of the server.properties file. Supported properties are documented in the [MSK Developer Guide](https://docs.aws.amazon.com/msk/latest/developerguide/msk-configuration-properties.html).
-* `kafka_versions` - (Required) List of Apache Kafka versions which can use this configuration.
+* `kafka_versions` - (Optional) List of Apache Kafka versions which can use this configuration.
 * `name` - (Required) Name of the configuration.
 * `description` - (Optional) Description of the configuration.
 
@@ -74,4 +74,4 @@ Using `terraform import`, import MSK configurations using the configuration ARN.
 % terraform import aws_msk_configuration.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ec6fa52ad14d67e345a130b8ceb2e54616e97c5f4cb7c72faeeba7b9d508bcfc -->
+<!-- cache-key: cdktf-0.20.1 input-ffedd2e9eeefe3b9ec5b99c0db9745971668563dc15c5b00cae5765298088443 -->

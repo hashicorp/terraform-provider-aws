@@ -7,12 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_iot_event_configurations", name="Event Configurations")
-func ResourceEventConfigurations() *schema.Resource {
+func resourceEventConfigurations() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventConfigurationsPut,
 		ReadWithoutTimeout:   resourceEventConfigurationsRead,
@@ -36,7 +38,7 @@ func ResourceEventConfigurations() *schema.Resource {
 				Type:             schema.TypeMap,
 				Required:         true,
 				Elem:             &schema.Schema{Type: schema.TypeBool},
-				ValidateDiagFunc: verify.MapKeysAre(validation.ToDiagFunc(validation.StringInSlice(iot.EventType_Values(), false))),
+				ValidateDiagFunc: verify.MapKeysAre(enum.Validate[awstypes.EventType]()),
 			},
 		},
 	}
@@ -44,22 +46,22 @@ func ResourceEventConfigurations() *schema.Resource {
 
 func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	input := &iot.UpdateEventConfigurationsInput{}
 
 	if v, ok := d.GetOk("event_configurations"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EventConfigurations = tfmaps.ApplyToAllValues(v.(map[string]interface{}), func(v interface{}) *iot.Configuration {
-			return &iot.Configuration{
-				Enabled: aws.Bool(v.(bool)),
+		input.EventConfigurations = tfmaps.ApplyToAllValues(v.(map[string]interface{}), func(v interface{}) awstypes.Configuration {
+			return awstypes.Configuration{
+				Enabled: v.(bool),
 			}
 		})
 	}
 
-	_, err := conn.UpdateEventConfigurationsWithContext(ctx, input)
+	_, err := conn.UpdateEventConfigurations(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating IoT Event Configurations (%s): %s", meta.(*conns.AWSClient).Region, err)
+		return sdkdiag.AppendErrorf(diags, "updating IoT Event Configurations: %s", err)
 	}
 
 	if d.IsNewResource() {
@@ -71,7 +73,7 @@ func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData,
 
 func resourceEventConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	output, err := findEventConfigurations(ctx, conn)
 
@@ -85,16 +87,23 @@ func resourceEventConfigurationsRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading IoT Event Configurations (%s): %s", d.Id(), err)
 	}
 
-	d.Set("event_configurations", tfmaps.ApplyToAllValues(output, func(v *iot.Configuration) bool {
-		return aws.BoolValue(v.Enabled)
+	d.Set("event_configurations", tfmaps.ApplyToAllValues(output, func(v awstypes.Configuration) bool {
+		return v.Enabled
 	}))
 
 	return diags
 }
 
-func findEventConfigurations(ctx context.Context, conn *iot.IoT) (map[string]*iot.Configuration, error) {
+func findEventConfigurations(ctx context.Context, conn *iot.Client) (map[string]awstypes.Configuration, error) {
 	input := &iot.DescribeEventConfigurationsInput{}
-	output, err := conn.DescribeEventConfigurationsWithContext(ctx, input)
+	output, err := conn.DescribeEventConfigurations(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err

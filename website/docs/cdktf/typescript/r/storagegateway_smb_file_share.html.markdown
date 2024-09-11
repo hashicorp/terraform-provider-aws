@@ -88,7 +88,9 @@ This resource supports the following arguments:
 * `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kmsEncrypted` is true.
 * `objectAcl` - (Optional) Access Control List permission for S3 objects. Defaults to `private`.
 * `oplocksEnabled` - (Optional) Boolean to indicate Opportunistic lock (oplock) status. Defaults to `true`.
-* `cacheAttributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
+* `cacheAttributes` - (Optional) Refresh cache information. see [`cacheAttributes` Block](#cache_attributes-block) for more details.
+
+  **Note:** If you have previously included a `cacheAttributes` block in your configuration, removing it will not reset the refresh cache value and the previous value will remain. You must explicitly set a new value to change it.
 * `readOnly` - (Optional) Boolean to indicate write status of file share. File share does not accept writes if `true`. Defaults to `false`.
 * `requesterPays` - (Optional) Boolean who pays the cost of the request and the data download from the Amazon S3 bucket. Set this value to `true` if you want the requester to pay instead of the bucket owner. Defaults to `false`.
 * `smbAclEnabled` - (Optional) Set this value to `true` to enable ACL (access control list) on the SMB fileshare. Set it to `false` to map file and directory permissions to the POSIX permissions. This setting applies only to `ActiveDirectory` authentication type.
@@ -98,7 +100,9 @@ This resource supports the following arguments:
 * `notificationPolicy` - (Optional) The notification policy of the file share. For more information see the [AWS Documentation](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-NotificationPolicy). Default value is `{}`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### cache_attributes
+### `cacheAttributes` Block
+
+The `cacheAttributes` configuration block supports the following arguments:
 
 * `cacheStaleTimeoutInSeconds` - (Optional) Refreshes a file share's cache by using Time To Live (TTL).
  TTL is the length of time since the last refresh after which access to the directory would cause the file gateway
@@ -154,4 +158,4 @@ Using `terraform import`, import `aws_storagegateway_smb_file_share` using the S
 % terraform import aws_storagegateway_smb_file_share.example arn:aws:storagegateway:us-east-1:123456789012:share/share-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f3a37c6e0c1b6271a67b3fb55500798b56d200124be7a8d27c9e48b68c4fc362 -->
+<!-- cache-key: cdktf-0.20.1 input-266d36f4283c8f5cbf1514fda12c86d9206bde44c81510fef8f77f3c9788e4d7 -->

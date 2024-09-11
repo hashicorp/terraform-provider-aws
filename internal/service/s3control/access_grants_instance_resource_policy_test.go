@@ -31,15 +31,15 @@ func testAccAccessGrantsInstanceResourcePolicy_basic(t *testing.T) {
 				Config: testAccAccessGrantsInstanceResourcePolicyConfig_basic(`"s3:ListAccessGrants","s3:ListAccessGrantsLocations","s3:GetDataAccess"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 		},
 	})

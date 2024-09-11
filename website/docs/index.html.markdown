@@ -11,7 +11,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1336 resources and 548 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1410 resources and 578 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -312,7 +312,10 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `default_tags` - (Optional) Configuration block with resource tag settings to apply across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed to replace redundant per-resource `tags` configurations. Provider tags can be overridden with new values, but not excluded from specific resources. To override provider tag values, use the `tags` argument within a resource to configure new tag values for matching keys. See the [`default_tags`](#default_tags-configuration-block) Configuration Block section below for example usage and available arguments. This functionality is supported in all resources that implement `tags`, with the exception of the `aws_autoscaling_group` resource.
 * `ec2_metadata_service_endpoint` - (Optional) Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
 * `ec2_metadata_service_endpoint_mode` - (Optional) Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
-* `endpoints` - (Optional) Configuration block for customizing service endpoints. See the [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html) for more information about connecting to alternate AWS endpoints or AWS compatible solutions. See also `use_fips_endpoint`.
+* `endpoints` - (Optional) Configuration block for customizing service endpoints.
+  See the [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html) for more information about connecting to alternate AWS endpoints or AWS compatible solutions.
+  Can be used to specify FIPS endpoints for specific services
+  or, if using the parameter `use_fips_endpoints`, to override endpoints when there is no FIPS endpoint for the service.
 * `forbidden_account_ids` - (Optional) List of forbidden AWS account IDs to prevent you from mistakenly using the wrong one (and potentially end up destroying a live environment). Conflicts with `allowed_account_ids`.
 * `http_proxy` - (Optional) URL of a proxy to use for HTTP requests when accessing the AWS API.
   Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.
@@ -476,9 +479,13 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
 * `sts_region` - (Optional) AWS Region for STS. If unset, AWS will use the same Region for STS as other non-STS operations.
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
-* `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. By default each service's bucket has a capacity of 500 tokens.
+* `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. If no value is specified then client-side rate limiting is disabled. If a value is specified there is a greater likelihood of `retry quota exceeded` errors being raised.
 * `use_dualstack_endpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
-* `use_fips_endpoint` - (Optional) Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
+* `use_fips_endpoint` - (Optional) Force the provider to resolve endpoints with FIPS capability for all services.
+  Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared configfile (`use_fips_endpoint`).
+  This setting is ignored for any service with a custom endpoint specified.
+  Note that not all services or regions have valid FIPS endpoints.
+  The parameter `endpoints` can be used to override a particular service's endpoint if there is no valid FIPS endpoint.
 
 ### assume_role Configuration Block
 
@@ -644,9 +651,49 @@ vpc_resource_level_tags = tomap({
 })
 ```
 
+Example: Default tags from environment variables
+
+```terraform
+provider "aws" {
+  default_tags {
+    tags = {
+      Name = "Provider Tag"
+    }
+  }
+}
+
+resource "aws_vpc" "example" {
+  # ..other configuration...
+}
+
+output "vpc_resource_level_tags" {
+  value = aws_vpc.example.tags
+}
+
+output "vpc_all_tags" {
+  value = aws_vpc.example.tags_all
+}
+```
+
+Outputs:
+
+```console
+$ export TF_AWS_DEFAULT_TAGS_Environment=Test
+$ terraform apply
+...
+Outputs:
+
+vpc_all_tags = tomap({
+  "Environment" = "Test"
+  "Name" = "Provider Tag"
+})
+```
+
 The `default_tags` configuration block supports the following argument:
 
 * `tags` - (Optional) Key-value map of tags to apply to all resources.
+Default tags can also be provided via environment variables matching the pattern `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`.
+If a tag is present in both an environment variable and this argument, the value in the provider configuration takes precedence.
 
 ### ignore_tags Configuration Block
 
@@ -662,8 +709,18 @@ provider "aws" {
 
 The `ignore_tags` configuration block supports the following arguments:
 
-* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
-* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider.
+Ignored tag keys can also be provided via the `TF_AWS_IGNORE_TAGS_KEYS` environment variable.
+When supplying multiple keys, the values should be comma delimited.
+If both this argument and the corresponding environment variable are set, values from both sources are merged into a single list.
+This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value.
+If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider.
+Ignored tag key prefixes can also be provided via the `TF_AWS_IGNORE_TAGS_KEY_PREFIXES` environment variable.
+When supplying multiple key prefixes, the values should be comma delimited.
+If both this argument and the corresponding environment variable are set, values from both sources are merged into a single list.
+This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values.
+If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
 
 ## Getting the Account ID
 

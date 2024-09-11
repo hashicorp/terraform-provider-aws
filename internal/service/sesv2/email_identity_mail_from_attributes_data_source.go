@@ -48,7 +48,7 @@ func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schem
 	out, err := FindEmailIdentityByID(ctx, conn, name)
 
 	if err != nil {
-		return append(diags, create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityMailFromAttributes, name, err)...)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityMailFromAttributes, name, err)
 	}
 
 	d.SetId(name)

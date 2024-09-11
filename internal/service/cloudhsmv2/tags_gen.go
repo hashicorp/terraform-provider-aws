@@ -27,7 +27,7 @@ func listTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string, o
 
 	pages := cloudhsmv2.NewListTagsPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if err != nil {
 			return tftags.New(ctx, nil), err

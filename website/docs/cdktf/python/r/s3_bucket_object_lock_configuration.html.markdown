@@ -67,8 +67,8 @@ This resource supports the following arguments:
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `object_lock_enabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
 * `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object. [See below](#rule).
-* `token` - (Optional) Token to allow Object Lock to be enabled for an existing bucket. You must contact AWS support for the bucket's "Object Lock token".
-The token is generated in the back-end when [versioning](https://docs.aws.amazon.com/AmazonS3/latest/userguide/manage-versioning-examples.html) is enabled on a bucket. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
+* `token` - (Optional,Deprecated) This argument is deprecated and no longer needed to enable Object Lock.
+To enable Object Lock for an existing bucket, you must first enable versioning on the bucket and then enable Object Lock. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
 
 ### rule
 
@@ -132,4 +132,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_object_lock_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4d7d9e8c5531ad1d601dfbbd5380172a3536025efa8c1bfc1aadadb49e88b969 -->
+<!-- cache-key: cdktf-0.20.1 input-04229f8a16043f40fee3fe1809213d5d5d841f9682d1d7a469bac8f218d2914f -->

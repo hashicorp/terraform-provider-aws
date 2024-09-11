@@ -6,8 +6,7 @@ package backup
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,13 +37,13 @@ func ResourceGlobalSettings() *schema.Resource {
 
 func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.UpdateGlobalSettingsInput{
-		GlobalSettings: flex.ExpandStringMap(d.Get("global_settings").(map[string]interface{})),
+		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]interface{})),
 	}
 
-	_, err := conn.UpdateGlobalSettingsWithContext(ctx, input)
+	_, err := conn.UpdateGlobalSettings(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Backup Global Settings (%s): %s", meta.(*conns.AWSClient).AccountID, err)
 	}
@@ -56,14 +55,14 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	resp, err := conn.DescribeGlobalSettingsWithContext(ctx, &backup.DescribeGlobalSettingsInput{})
+	resp, err := conn.DescribeGlobalSettings(ctx, &backup.DescribeGlobalSettingsInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Backup Global Settings (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("global_settings", aws.StringValueMap(resp.GlobalSettings)); err != nil {
+	if err := d.Set("global_settings", resp.GlobalSettings); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_settings: %s", err)
 	}
 

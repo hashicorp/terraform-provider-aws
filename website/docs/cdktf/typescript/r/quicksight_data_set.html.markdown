@@ -262,7 +262,7 @@ The following arguments are required:
 * `dataSetId` - (Required, Forces new resource) Identifier for the data set.
 * `importMode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
-* `physicalTableMap` - (Required) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `physicalTableMap` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
 The following arguments are optional:
 
@@ -523,4 +523,4 @@ Using `terraform import`, import a QuickSight Data Set using the AWS account ID 
 % terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1a8603f1407762c148dd6779a52ba1f5c1ee5c07434a0e03886d6f8b8bec1425 -->
+<!-- cache-key: cdktf-0.20.1 input-ae2449dfd5efc39b58e023c817af1212bcd0cdfe28e4860659d5e073de156ebc -->

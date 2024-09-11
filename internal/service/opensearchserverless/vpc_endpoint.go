@@ -69,14 +69,14 @@ func (r *resourceVpcEndpoint) Metadata(_ context.Context, request resource.Metad
 func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
@@ -87,14 +87,14 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"subnet_ids": schema.SetAttribute{
+			names.AttrSubnetIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 6),
 				},
 			},
-			"vpc_id": schema.StringAttribute{
+			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
@@ -102,7 +102,7 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -181,6 +181,14 @@ func (r *resourceVpcEndpoint) Read(ctx context.Context, req resource.ReadRequest
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameVPCEndpoint, state.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -307,7 +315,7 @@ func (r *resourceVpcEndpoint) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceVpcEndpoint) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 // refreshFromOutput writes state data from an AWS response object

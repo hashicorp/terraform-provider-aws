@@ -60,7 +60,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the environment membership.
-* `user_id` - he user ID in AWS Identity and Access Management (AWS IAM) of the environment member.
+* `user_id` - The user ID in AWS Identity and Access Management (AWS IAM) of the environment member.
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import Cloud9 environment membership using the `enviro
 % terraform import aws_cloud9_environment_membership.test environment-id#user-arn
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-10e00164fec66c387e4ef6582684bf8de89732c31df86387c3215daa6335723f -->
+<!-- cache-key: cdktf-0.20.1 input-f6c7f63736e4a4ab1919a0e37f40bbf3bc5529ed6b2575d33fc736d43e14e65f -->

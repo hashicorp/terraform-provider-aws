@@ -6,7 +6,7 @@ package iot
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -14,7 +14,7 @@ import (
 )
 
 // @SDKDataSource("aws_iot_registration_code", name="Registration Code")
-func DataSourceRegistrationCode() *schema.Resource {
+func dataSourceRegistrationCode() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRegistrationCodeRead,
 
@@ -29,11 +29,11 @@ func DataSourceRegistrationCode() *schema.Resource {
 
 func dataSourceRegistrationCodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	input := &iot.GetRegistrationCodeInput{}
 
-	output, err := conn.GetRegistrationCodeWithContext(ctx, input)
+	output, err := conn.GetRegistrationCode(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IoT Registration Code: %s", err)

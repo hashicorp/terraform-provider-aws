@@ -83,11 +83,11 @@ func resourceConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -113,7 +113,7 @@ func resourceConfigurationAggregator() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -131,8 +131,8 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	if d.IsNewResource() || d.HasChangesExcept("tags", "tags_all") {
-		name := d.Get("name").(string)
+	if d.IsNewResource() || d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		name := d.Get(names.AttrName).(string)
 		input := &configservice.PutConfigurationAggregatorInput{
 			ConfigurationAggregatorName: aws.String(name),
 			Tags:                        getTagsIn(ctx),
@@ -179,8 +179,8 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("account_aggregation_source", flattenAccountAggregationSources(aggregator.AccountAggregationSources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting account_aggregation_source: %s", err)
 	}
-	d.Set("arn", aggregator.ConfigurationAggregatorArn)
-	d.Set("name", aggregator.ConfigurationAggregatorName)
+	d.Set(names.AttrARN, aggregator.ConfigurationAggregatorArn)
+	d.Set(names.AttrName, aggregator.ConfigurationAggregatorName)
 	if err := d.Set("organization_aggregation_source", flattenOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting organization_aggregation_source: %s", err)
 	}
@@ -288,7 +288,7 @@ func expandOrganizationAggregationSource(tfMap map[string]interface{}) *types.Or
 
 	apiObject := &types.OrganizationAggregationSource{
 		AllAwsRegions: tfMap["all_regions"].(bool),
-		RoleArn:       aws.String(tfMap["role_arn"].(string)),
+		RoleArn:       aws.String(tfMap[names.AttrRoleARN].(string)),
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
@@ -319,9 +319,9 @@ func flattenOrganizationAggregationSource(apiObject *types.OrganizationAggregati
 	}
 
 	tfMap := map[string]interface{}{
-		"all_regions": apiObject.AllAwsRegions,
-		"regions":     apiObject.AwsRegions,
-		"role_arn":    aws.ToString(apiObject.RoleArn),
+		"all_regions":     apiObject.AllAwsRegions,
+		"regions":         apiObject.AwsRegions,
+		names.AttrRoleARN: aws.ToString(apiObject.RoleArn),
 	}
 
 	return []interface{}{tfMap}

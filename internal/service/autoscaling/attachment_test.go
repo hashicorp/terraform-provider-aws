@@ -120,9 +120,32 @@ func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAttachmentConfig_elb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAttachmentByLoadBalancerNameExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_attachment" {
@@ -159,7 +182,7 @@ func testAccCheckAttachmentByLoadBalancerNameExists(ctx context.Context, n strin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		return tfautoscaling.FindAttachmentByLoadBalancerName(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
 	}
@@ -172,7 +195,7 @@ func testAccCheckAttachmentByTargetGroupARNExists(ctx context.Context, n string)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		return tfautoscaling.FindAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["lb_target_group_arn"])
 	}

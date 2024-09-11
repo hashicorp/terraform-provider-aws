@@ -20,8 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_resourcegroups_resource", name="Resource")
@@ -42,12 +44,12 @@ func resourceResource() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,10 +58,11 @@ func resourceResource() *schema.Resource {
 }
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	groupARN := d.Get("group_arn").(string)
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 	id := strings.Join([]string{strings.Split(strings.ToLower(groupARN), "/")[1], strings.Split(resourceARN, "/")[1]}, "_")
 	input := &resourcegroups.GroupResourcesInput{
 		Group:        aws.String(groupARN),
@@ -73,44 +76,46 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.Errorf("creating Resource Groups Resource (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Resource Groups Resource (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitResourceCreated(ctx, conn, groupARN, resourceARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Resource Groups Resource (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Resource Groups Resource (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceResourceRead(ctx, d, meta)
+	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
-	output, err := findResourceByTwoPartKey(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
+	output, err := findResourceByTwoPartKey(ctx, conn, d.Get("group_arn").(string), d.Get(names.AttrResourceARN).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ResourceGroups Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Resource Groups Resource (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Resource Groups Resource (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_arn", output.Identifier.ResourceArn)
-	d.Set("resource_type", output.Identifier.ResourceType)
+	d.Set(names.AttrResourceARN, output.Identifier.ResourceArn)
+	d.Set(names.AttrResourceType, output.Identifier.ResourceType)
 
-	return nil
+	return diags
 }
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	groupARN := d.Get("group_arn").(string)
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 
 	log.Printf("[INFO] Deleting Resource Groups Resource: %s", d.Id())
 	output, err := conn.UngroupResources(ctx, &resourcegroups.UngroupResourcesInput{
@@ -123,14 +128,14 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Resource Groups Resource (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Resource Groups Resource (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitResourceDeleted(ctx, conn, groupARN, resourceARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Resource Groups Resource (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Resource Groups Resource (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) (*types.ListGroupResourcesItem, error) {

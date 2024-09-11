@@ -26,7 +26,7 @@ func TestAccCognitoIDPUserPoolSigningCertificateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserPoolSigningCertificateDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrCertificate),
 				),
 			},
 		},
@@ -52,6 +52,12 @@ resource "aws_cognito_identity_provider" "test" {
 
   attribute_mapping = {
     email = "email"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      provider_details["ActiveEncryptionCertificate"],
+    ]
   }
 }
 

@@ -9,12 +9,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,7 +27,7 @@ import (
 
 // @SDKResource("aws_transfer_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
-func ResourceCertificate() *schema.Resource {
+func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,
@@ -40,18 +43,18 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -62,7 +65,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 200),
@@ -71,7 +74,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -82,10 +85,10 @@ func ResourceCertificate() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"usage": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(transfer.CertificateUsageType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.CertificateUsageType](),
 			},
 		},
 
@@ -95,27 +98,27 @@ func ResourceCertificate() *schema.Resource {
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	input := &transfer.ImportCertificateInput{
-		Certificate: aws.String(d.Get("certificate").(string)),
+		Certificate: aws.String(d.Get(names.AttrCertificate).(string)),
 		Tags:        getTagsIn(ctx),
-		Usage:       aws.String(d.Get("usage").(string)),
+		Usage:       awstypes.CertificateUsageType(d.Get("usage").(string)),
 	}
 
-	if v, ok := d.GetOk("certificate_chain"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
 		input.CertificateChain = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("private_key"); ok {
+	if v, ok := d.GetOk(names.AttrPrivateKey); ok {
 		input.PrivateKey = aws.String(v.(string))
 	}
 
-	output, err := conn.ImportCertificateWithContext(ctx, input)
+	output, err := conn.ImportCertificate(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "importing Transfer Certificate: %s", err)
@@ -128,9 +131,9 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	output, err := FindCertificateByID(ctx, conn, d.Id())
+	output, err := findCertificateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Certificate (%s) not found, removing from state", d.Id())
@@ -143,13 +146,14 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
-	d.Set("arn", output.Arn)
-	d.Set("certificate", output.Certificate)
-	d.Set("certificate_chain", output.CertificateChain)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrCertificate, output.Certificate)
+	d.Set(names.AttrCertificateChain, output.CertificateChain)
 	d.Set("certificate_id", output.CertificateId)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))
 	d.Set("usage", output.Usage)
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -157,15 +161,15 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &transfer.UpdateCertificateInput{
 			CertificateId: aws.String(d.Id()),
-			Description:   aws.String(d.Get("description").(string)),
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
-		_, err := conn.UpdateCertificateWithContext(ctx, input)
+		_, err := conn.UpdateCertificate(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Transfer Certificate (%s): %s", d.Id(), err)
@@ -177,14 +181,14 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Certificate: %s", d.Id())
-	_, err := conn.DeleteCertificateWithContext(ctx, &transfer.DeleteCertificateInput{
+	_, err := conn.DeleteCertificate(ctx, &transfer.DeleteCertificateInput{
 		CertificateId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -193,4 +197,29 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func findCertificateByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedCertificate, error) {
+	input := &transfer.DescribeCertificateInput{
+		CertificateId: aws.String(id),
+	}
+
+	output, err := conn.DescribeCertificate(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Certificate == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Certificate, nil
 }

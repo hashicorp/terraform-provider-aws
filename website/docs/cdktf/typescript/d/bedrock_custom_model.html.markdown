@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_model"
 description: |-
@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `validationMetrics` - The loss metric for each validator that you provided.
     * `validation_loss` - The validation loss associated with the validator.
   
-<!-- cache-key: cdktf-0.20.1 input-9d7ebec3f75401eee70e98691f002ad65f0b09c6fcd48e93308bf9aa6010f5da -->
+<!-- cache-key: cdktf-0.20.1 input-a690dde54b43034f963fb882a55edf456a82a6fff0d72e2dd7e489d45c4e07cb -->

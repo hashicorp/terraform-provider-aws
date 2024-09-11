@@ -34,8 +34,8 @@ func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 				),
 			},
 			{
@@ -128,9 +128,9 @@ func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
-		_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes["table_name"])
+		_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrStreamARN], rs.Primary.Attributes[names.AttrTableName])
 
 		return err
 	}
@@ -138,14 +138,14 @@ func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string
 
 func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_kinesis_streaming_destination" {
 				continue
 			}
 
-			_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes["table_name"])
+			_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrStreamARN], rs.Primary.Attributes[names.AttrTableName])
 
 			if tfresource.NotFound(err) {
 				continue

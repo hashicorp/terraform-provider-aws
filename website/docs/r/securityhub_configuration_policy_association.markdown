@@ -94,7 +94,7 @@ import {
 }
 ```
 
-Using `terraform import`, import an existing Security Hub enabled account using the universally unique identifier (UUID) of the policy. For example:
+Using `terraform import`, import an existing Security Hub enabled account using the target id. For example:
 
 ```console
 % terraform import aws_securityhub_configuration_policy_association.example_account_association 123456789012

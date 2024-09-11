@@ -6,8 +6,8 @@ package glue
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -21,13 +21,13 @@ const (
 )
 
 // statusMLTransform fetches the MLTransform and its Status
-func statusMLTransform(ctx context.Context, conn *glue.Glue, transformId string) retry.StateRefreshFunc {
+func statusMLTransform(ctx context.Context, conn *glue.Client, transformId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glue.GetMLTransformInput{
 			TransformId: aws.String(transformId),
 		}
 
-		output, err := conn.GetMLTransformWithContext(ctx, input)
+		output, err := conn.GetMLTransform(ctx, input)
 
 		if err != nil {
 			return nil, mlTransformStatusUnknown, err
@@ -37,12 +37,12 @@ func statusMLTransform(ctx context.Context, conn *glue.Glue, transformId string)
 			return output, mlTransformStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
 // statusRegistry fetches the Registry and its Status
-func statusRegistry(ctx context.Context, conn *glue.Glue, id string) retry.StateRefreshFunc {
+func statusRegistry(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRegistryByID(ctx, conn, id)
 		if err != nil {
@@ -53,12 +53,12 @@ func statusRegistry(ctx context.Context, conn *glue.Glue, id string) retry.State
 			return output, registryStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
 // statusSchema fetches the Schema and its Status
-func statusSchema(ctx context.Context, conn *glue.Glue, id string) retry.StateRefreshFunc {
+func statusSchema(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSchemaByID(ctx, conn, id)
 		if err != nil {
@@ -69,12 +69,12 @@ func statusSchema(ctx context.Context, conn *glue.Glue, id string) retry.StateRe
 			return output, schemaStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.SchemaStatus), nil
+		return output, string(output.SchemaStatus), nil
 	}
 }
 
 // statusSchemaVersion fetches the Schema Version and its Status
-func statusSchemaVersion(ctx context.Context, conn *glue.Glue, id string) retry.StateRefreshFunc {
+func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSchemaVersionByID(ctx, conn, id)
 		if err != nil {
@@ -85,18 +85,18 @@ func statusSchemaVersion(ctx context.Context, conn *glue.Glue, id string) retry.
 			return output, schemaVersionStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
 // statusTrigger fetches the Trigger and its Status
-func statusTrigger(ctx context.Context, conn *glue.Glue, triggerName string) retry.StateRefreshFunc {
+func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glue.GetTriggerInput{
 			Name: aws.String(triggerName),
 		}
 
-		output, err := conn.GetTriggerWithContext(ctx, input)
+		output, err := conn.GetTrigger(ctx, input)
 
 		if err != nil {
 			return nil, triggerStatusUnknown, err
@@ -106,11 +106,11 @@ func statusTrigger(ctx context.Context, conn *glue.Glue, triggerName string) ret
 			return output, triggerStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Trigger.State), nil
+		return output, string(output.Trigger.State), nil
 	}
 }
 
-func statusDevEndpoint(ctx context.Context, conn *glue.Glue, name string) retry.StateRefreshFunc {
+func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDevEndpointByName(ctx, conn, name)
 
@@ -122,11 +122,11 @@ func statusDevEndpoint(ctx context.Context, conn *glue.Glue, name string) retry.
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func statusPartitionIndex(ctx context.Context, conn *glue.Glue, id string) retry.StateRefreshFunc {
+func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindPartitionIndexByName(ctx, conn, id)
 
@@ -138,6 +138,6 @@ func statusPartitionIndex(ctx context.Context, conn *glue.Glue, id string) retry
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.IndexStatus), nil
+		return output, string(output.IndexStatus), nil
 	}
 }

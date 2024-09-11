@@ -56,6 +56,10 @@ The following arguments are optional:
 * `availability_zone_id` - (Optional) The identifier of the availability zones. If attaching a volume, the volume must be in the same availability zone as the dataview that you are attaching to.
 * `changeset_id` - (Optional) A unique identifier of the changeset of the database that you want to use to ingest data.
 * `description` - (Optional) A description for the dataview.
+* `read_write` - (Optional) The option to specify whether you want to make the dataview writable to perform database maintenance. The following are some considerations related to writable dataviews.
+    * You cannot create partial writable dataviews. When you create writeable dataviews you must provide the entire database path. You cannot perform updates on a writeable dataview. Hence, `auto_update` must be set as `false` if `read_write` is `true` for a dataview.
+    * You must also use a unique volume for creating a writeable dataview. So, if you choose a volume that is already in use by another dataview, the dataview creation fails.
+    * Once you create a dataview as writeable, you cannot change it to read-only. So, you cannot update the `read_write` parameter later.
 * `segment_configurations` - (Optional) The configuration that contains the database path of the data that you want to place on each selected volume. Each segment must have a unique database path for each volume. If you do not explicitly specify any database path for a volume, they are accessible from the cluster through the default S3/object store segment. See [segment_configurations](#segment_configurations-argument-reference) below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -63,6 +67,7 @@ The following arguments are optional:
 
 * `db_paths` - (Required) The database path of the data that you want to place on each selected volume. Each segment must have a unique database path for each volume.
 * `volume_name` - (Required) The name of the volume that you want to attach to a dataview. This volume must be in the same availability zone as the dataview that you are attaching to.
+* `on_demand` - (Optional) Enables on-demand caching on the selected database path when a particular file or a column of the database is accessed. When on demand caching is **True**, dataviews perform minimal loading of files on the filesystem as needed. When it is set to **False**, everything is cached. The default value is **False**.
 
 ## Attribute Reference
 

@@ -7,22 +7,24 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_ipam_pools")
-func DataSourceIPAMPools() *schema.Resource {
+// @SDKDataSource("aws_vpc_ipam_pools", name="IPAM Pools")
+func dataSourceIPAMPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -45,7 +47,7 @@ func DataSourceIPAMPools() *schema.Resource {
 							Computed: true,
 						},
 						"allocation_resource_tags": tftags.TagsSchemaComputed(),
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -57,11 +59,11 @@ func DataSourceIPAMPools() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -89,11 +91,11 @@ func DataSourceIPAMPools() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -103,20 +105,20 @@ func DataSourceIPAMPools() *schema.Resource {
 
 func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	pools, err := FindIPAMPools(ctx, conn, input)
+	pools, err := findIPAMPools(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Pools: %s", err)
@@ -128,7 +130,7 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func flattenIPAMPools(ctx context.Context, c []*ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenIPAMPools(ctx context.Context, c []awstypes.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	pools := []interface{}{}
 	for _, pool := range c {
 		pools = append(pools, flattenIPAMPool(ctx, pool, ignoreTagsConfig))
@@ -136,28 +138,28 @@ func flattenIPAMPools(ctx context.Context, c []*ec2.IpamPool, ignoreTagsConfig *
 	return pools
 }
 
-func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+func flattenIPAMPool(ctx context.Context, p awstypes.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	pool := make(map[string]interface{})
 
-	pool["address_family"] = aws.StringValue(p.AddressFamily)
-	pool["allocation_default_netmask_length"] = aws.Int64Value(p.AllocationDefaultNetmaskLength)
-	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
-	pool["allocation_min_netmask_length"] = aws.Int64Value(p.AllocationMinNetmaskLength)
-	pool["allocation_resource_tags"] = KeyValueTags(ctx, tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
-	pool["arn"] = aws.StringValue(p.IpamPoolArn)
-	pool["auto_import"] = aws.BoolValue(p.AutoImport)
-	pool["aws_service"] = aws.StringValue(p.AwsService)
-	pool["description"] = aws.StringValue(p.Description)
-	pool["id"] = aws.StringValue(p.IpamPoolId)
-	pool["ipam_scope_id"] = strings.Split(aws.StringValue(p.IpamScopeArn), "/")[1]
-	pool["ipam_scope_type"] = aws.StringValue(p.IpamScopeType)
-	pool["locale"] = aws.StringValue(p.Locale)
-	pool["pool_depth"] = aws.Int64Value(p.PoolDepth)
-	pool["publicly_advertisable"] = aws.BoolValue(p.PubliclyAdvertisable)
-	pool["source_ipam_pool_id"] = aws.StringValue(p.SourceIpamPoolId)
-	pool["state"] = aws.StringValue(p.State)
+	pool["address_family"] = p.AddressFamily
+	pool["allocation_default_netmask_length"] = aws.ToInt32(p.AllocationDefaultNetmaskLength)
+	pool["allocation_max_netmask_length"] = aws.ToInt32(p.AllocationMaxNetmaskLength)
+	pool["allocation_min_netmask_length"] = aws.ToInt32(p.AllocationMinNetmaskLength)
+	pool["allocation_resource_tags"] = keyValueTags(ctx, tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
+	pool[names.AttrARN] = aws.ToString(p.IpamPoolArn)
+	pool["auto_import"] = aws.ToBool(p.AutoImport)
+	pool["aws_service"] = p.AwsService
+	pool[names.AttrDescription] = aws.ToString(p.Description)
+	pool[names.AttrID] = aws.ToString(p.IpamPoolId)
+	pool["ipam_scope_id"] = strings.Split(aws.ToString(p.IpamScopeArn), "/")[1]
+	pool["ipam_scope_type"] = p.IpamScopeType
+	pool["locale"] = aws.ToString(p.Locale)
+	pool["pool_depth"] = aws.ToInt32(p.PoolDepth)
+	pool["publicly_advertisable"] = aws.ToBool(p.PubliclyAdvertisable)
+	pool["source_ipam_pool_id"] = aws.ToString(p.SourceIpamPoolId)
+	pool[names.AttrState] = p.State
 	if v := p.Tags; v != nil {
-		pool["tags"] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+		pool[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 	}
 
 	return pool

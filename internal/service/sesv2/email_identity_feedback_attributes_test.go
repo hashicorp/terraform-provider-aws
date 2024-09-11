@@ -109,7 +109,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
-					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -121,7 +121,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, false),
-					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", acctest.CtFalse),
 				),
 			},
 		},

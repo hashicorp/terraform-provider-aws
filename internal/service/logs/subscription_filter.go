@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_subscription_filter")
@@ -40,7 +41,7 @@ func resourceSubscriptionFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -57,18 +58,18 @@ func resourceSubscriptionFilter() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"log_group_name": {
+			names.AttrLogGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 512),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -83,10 +84,10 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	logGroupName := d.Get("log_group_name").(string)
-	name := d.Get("name").(string)
+	logGroupName := d.Get(names.AttrLogGroupName).(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.PutSubscriptionFilterInput{
-		DestinationArn: aws.String(d.Get("destination_arn").(string)),
+		DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
 		FilterName:     aws.String(name),
 		FilterPattern:  aws.String(d.Get("filter_pattern").(string)),
 		LogGroupName:   aws.String(logGroupName),
@@ -96,7 +97,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		input.Distribution = types.Distribution(v.(string))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -134,7 +135,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	subscriptionFilter, err := findSubscriptionFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Get("name").(string))
+	subscriptionFilter, err := findSubscriptionFilterByTwoPartKey(ctx, conn, d.Get(names.AttrLogGroupName).(string), d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Subscription Filter (%s) not found, removing from state", d.Id())
@@ -146,12 +147,12 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("destination_arn", subscriptionFilter.DestinationArn)
+	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
 	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
-	d.Set("log_group_name", subscriptionFilter.LogGroupName)
-	d.Set("name", subscriptionFilter.FilterName)
-	d.Set("role_arn", subscriptionFilter.RoleArn)
+	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
+	d.Set(names.AttrName, subscriptionFilter.FilterName)
+	d.Set(names.AttrRoleARN, subscriptionFilter.RoleArn)
 
 	return diags
 }
@@ -163,8 +164,8 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Subscription Filter: %s", d.Id())
 	_, err := conn.DeleteSubscriptionFilter(ctx, &cloudwatchlogs.DeleteSubscriptionFilterInput{
-		FilterName:   aws.String(d.Get("name").(string)),
-		LogGroupName: aws.String(d.Get("log_group_name").(string)),
+		FilterName:   aws.String(d.Get(names.AttrName).(string)),
+		LogGroupName: aws.String(d.Get(names.AttrLogGroupName).(string)),
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -187,8 +188,8 @@ func resourceSubscriptionFilterImport(d *schema.ResourceData, meta interface{}) 
 	logGroupName := idParts[0]
 	filterNamePrefix := idParts[1]
 
-	d.Set("log_group_name", logGroupName)
-	d.Set("name", filterNamePrefix)
+	d.Set(names.AttrLogGroupName, logGroupName)
+	d.Set(names.AttrName, filterNamePrefix)
 	d.SetId(subscriptionFilterID(filterNamePrefix))
 
 	return []*schema.ResourceData{d}, nil

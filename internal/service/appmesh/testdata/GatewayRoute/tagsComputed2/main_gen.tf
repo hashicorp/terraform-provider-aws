@@ -1,0 +1,81 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+provider "null" {}
+
+resource "aws_appmesh_gateway_route" "test" {
+  name                 = var.rName
+  mesh_name            = aws_appmesh_mesh.test.name
+  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
+
+  spec {
+    http_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.test[0].name
+          }
+        }
+      }
+
+      match {
+        prefix = "/"
+      }
+    }
+  }
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
+  }
+}
+
+resource "aws_appmesh_mesh" "test" {
+  name = var.rName
+}
+
+resource "aws_appmesh_virtual_gateway" "test" {
+  name      = var.rName
+  mesh_name = aws_appmesh_mesh.test.name
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+  }
+}
+
+resource "aws_appmesh_virtual_service" "test" {
+  count = 2
+
+  name      = "${var.rName}-${count.index}"
+  mesh_name = aws_appmesh_mesh.test.name
+
+  spec {}
+}
+
+resource "null_resource" "test" {}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagValue" {
+  type     = string
+  nullable = false
+}

@@ -105,7 +105,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, v *types.LogStream)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindLogStreamByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+		output, err := tflogs.FindLogStreamByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -126,7 +126,7 @@ func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tflogs.FindLogStreamByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+			_, err := tflogs.FindLogStreamByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -150,7 +150,7 @@ func testAccStreamImportStateIdFunc(n string) resource.ImportStateIdFunc {
 			return "", fmt.Errorf("Not Found: %s", n)
 		}
 
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["log_group_name"], rs.Primary.ID), nil
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID), nil
 	}
 }
 

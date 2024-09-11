@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +19,8 @@ import (
 
 // @SDKResource("aws_default_security_group", name="Security Group")
 // @Tags(identifierAttribute="id")
-func ResourceDefaultSecurityGroup() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultSecurityGroupCreate,
@@ -32,32 +33,32 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 		},
 
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
-		MigrateState:  SecurityGroupMigrateState,
+		MigrateState:  securityGroupMigrateState,
 
 		// Keep in sync with aws_security_group's schema with the following changes:
 		//   - description is Computed-only
 		//   - name is Computed-only
 		//   - name_prefix is Computed-only
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"egress":  securityGroupRuleSetNestedBlock,
 			"ingress": securityGroupRuleSetNestedBlock,
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +70,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -84,41 +85,41 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": DefaultSecurityGroupName,
+				"group-name": defaultSecurityGroupName,
 			},
 		),
 	}
 
-	if v, ok := d.GetOk("vpc_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	} else {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
-				"description": "default group",
+				names.AttrDescription: "default group",
 			},
 		)...)
 	}
 
-	sg, err := FindSecurityGroup(ctx, conn, input)
+	sg, err := findSecurityGroup(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Default Security Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(sg.GroupId))
+	d.SetId(aws.ToString(sg.GroupId))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
+	oldTags := keyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !newTags.Equal(oldTags) {
 		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {

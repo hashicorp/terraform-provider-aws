@@ -45,51 +45,61 @@ resource "aws_sesv2_configuration_set" "example" {
 This resource supports the following arguments:
 
 * `configuration_set_name` - (Required) The name of the configuration set.
-* `delivery_options` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set.
-* `reputation_options` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set.
-* `sending_options` - (Optional) An object that defines whether or not Amazon SES can send email that you send using the configuration set.
-* `suppression_options` - (Optional) An object that contains information about the suppression list preferences for your account.
+* `delivery_options` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`delivery_options` Block](#delivery_options-block) for details.
+* `reputation_options` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set. See [`reputation_options` Block](#reputation_options-block) for details.
+* `sending_options` - (Optional) An object that defines whether or not Amazon SES can send email that you send using the configuration set. See [`sending_options` Block](#sending_options-block) for details.
+* `suppression_options` - (Optional) An object that contains information about the suppression list preferences for your account. See [`suppression_options` Block](#suppression_options-block) for details.
 * `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tracking_options` - (Optional) An object that defines the open and click tracking options for emails that you send using the configuration set.
-* `vdm_options` - (Optional) An object that defines the VDM settings that apply to emails that you send using the configuration set.
+* `tracking_options` - (Optional) An object that defines the open and click tracking options for emails that you send using the configuration set. See [`tracking_options` Block](#tracking_options-block) for details.
+* `vdm_options` - (Optional) An object that defines the VDM settings that apply to emails that you send using the configuration set. See [`vdm_options` Block](#vdm_options-block) for details.
 
-### delivery_options
+### `delivery_options` Block
 
-This argument supports the following arguments:
+The `delivery_options` configuration block supports the following arguments:
 
 * `sending_pool_name` - (Optional) The name of the dedicated IP pool to associate with the configuration set.
 * `tls_policy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `REQUIRE`, `OPTIONAL`.
 
-### reputation_options
+### `reputation_options` Block
 
-This argument supports the following arguments:
+The `reputation_options` configuration block supports the following arguments:
 
 * `reputation_metrics_enabled` - (Optional) If `true`, tracking of reputation metrics is enabled for the configuration set. If `false`, tracking of reputation metrics is disabled for the configuration set.
 
-### sending_options
+### `sending_options` Block
 
-This argument supports the following arguments:
+The `sending_options` configuration block supports the following arguments:
 
 * `sending_enabled` - (Optional) If `true`, email sending is enabled for the configuration set. If `false`, email sending is disabled for the configuration set.
 
-### suppression_options
+### `suppression_options` Block
+
+The `suppression_options` configuration block supports the following arguments:
 
 * `suppressed_reasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
 
-### tracking_options
+### `tracking_options` Block
+
+The `tracking_options` configuration block supports the following arguments:
 
 * `custom_redirect_domain` - (Required) The domain to use for tracking open and click events.
 
-### vdm_options
+### `vdm_options` Block
 
-* `dashboard_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard.
-* `guardian_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian.
+The `vdm_options` configuration block supports the following arguments:
 
-### dashboard_options
+* `dashboard_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard. See [`dashboard_options` Block](#dashboard_options-block) for details.
+* `guardian_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian. See [`guardian_options` Block](#guardian_options-block) for details.
+
+### `dashboard_options` Block
+
+The `dashboard_options` configuration block supports the following arguments:
 
 * `engagement_metrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
 
-### guardian_options
+### `guardian_options` Block
+
+The `guardian_options` configuration block supports the following arguments:
 
 * `optimized_shared_delivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
 

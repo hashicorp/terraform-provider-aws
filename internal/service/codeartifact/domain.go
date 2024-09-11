@@ -40,7 +40,7 @@ func resourceDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,11 +48,11 @@ func resourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -64,7 +64,7 @@ func resourceDomain() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +88,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domain := d.Get("domain").(string)
+	domain := d.Get(names.AttrDomain).(string)
 	input := &codeartifact.CreateDomainInput{
 		Domain: aws.String(domain),
 		Tags:   getTagsIn(ctx),
@@ -132,12 +132,12 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Domain (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", domain.Arn)
+	d.Set(names.AttrARN, domain.Arn)
 	d.Set("asset_size_bytes", strconv.FormatInt(domain.AssetSizeBytes, 10))
-	d.Set("created_time", domain.CreatedTime.Format(time.RFC3339))
-	d.Set("domain", domain.Name)
+	d.Set(names.AttrCreatedTime, domain.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrDomain, domain.Name)
 	d.Set("encryption_key", domain.EncryptionKey)
-	d.Set("owner", domain.Owner)
+	d.Set(names.AttrOwner, domain.Owner)
 	d.Set("repository_count", domain.RepositoryCount)
 	d.Set("s3_bucket_arn", domain.S3BucketArn)
 

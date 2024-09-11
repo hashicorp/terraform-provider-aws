@@ -295,12 +295,12 @@ The `overrideProvider` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the object.
 * `checksumCrc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
 * `checksumCrc32C` - The base64-encoded, 32-bit CRC32C checksum of the object.
 * `checksumSha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
 * `checksumSha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
-* `id` - `key` of the resource supplied above
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `versionId` - Unique version ID value for the object, if bucket versioning is enabled.
 
@@ -370,4 +370,4 @@ Import using S3 URL syntax:
 % terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-da443a7435cd306d2aaa0dfc48272a26369e8472b9f3329c1389cc34076a9517 -->
+<!-- cache-key: cdktf-0.20.1 input-34988cafa71f79b33d23c2b77bc24856b3a66f271edddbd9a0c2b27436c57a06 -->

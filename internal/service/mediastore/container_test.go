@@ -65,7 +65,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Config: testAccContainerConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
 				),
@@ -74,7 +74,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Config: testAccContainerConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
 				),
@@ -88,7 +88,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},

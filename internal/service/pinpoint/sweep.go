@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -27,14 +27,14 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.PinpointConn(ctx)
+	conn := client.PinpointClient(ctx)
 
 	input := &pinpoint.GetAppsInput{}
 
 	for {
-		output, err := conn.GetAppsWithContext(ctx, input)
+		output, err := conn.GetApps(ctx, input)
 		if err != nil {
-			if awsv1.SkipSweepError(err) {
+			if awsv2.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping Pinpoint app sweep for %s: %s", region, err)
 				return nil
 			}
@@ -47,10 +47,10 @@ func sweepApps(region string) error {
 		}
 
 		for _, item := range output.ApplicationsResponse.Item {
-			name := aws.StringValue(item.Name)
+			name := aws.ToString(item.Name)
 
 			log.Printf("[INFO] Deleting Pinpoint app %s", name)
-			_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{
+			_, err := conn.DeleteApp(ctx, &pinpoint.DeleteAppInput{
 				ApplicationId: item.Id,
 			})
 			if err != nil {

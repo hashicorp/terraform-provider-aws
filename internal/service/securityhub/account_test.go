@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 	controlFindingGeneratorDefaultValueFromAWS := "SECURITY_CONTROL"
-	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+	if acctest.Partition() == names.USGovCloudPartitionID {
 		controlFindingGeneratorDefaultValueFromAWS = ""
 	}
 
@@ -36,9 +35,9 @@ func testAccAccount_basic(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorDefaultValueFromAWS),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
 			},
 			{
@@ -87,7 +86,7 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 				Config: testAccAccountConfig_enableDefaultStandardsFalse,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtFalse),
 				),
 			},
 		},
@@ -100,7 +99,7 @@ func testAccAccount_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		// control_finding_generator not supported in AWS GovCloud.
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -109,7 +108,7 @@ func testAccAccount_full(t *testing.T) {
 				Config: testAccAccountConfig_full(false, "STANDARD_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
 				),
 			},
@@ -117,7 +116,7 @@ func testAccAccount_full(t *testing.T) {
 				Config: testAccAccountConfig_full(true, "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
@@ -152,7 +151,7 @@ func testAccAccount_migrateV0(t *testing.T) {
 				Config:                   testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 				),
 			},
 		},
@@ -164,10 +163,10 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 	controlFindingGeneratorExpectedValue := "SECURITY_CONTROL"
-	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+	if acctest.Partition() == names.USGovCloudPartitionID {
 		controlFindingGeneratorExpectedValue = ""
 	}
-	expectNonEmptyPlan := acctest.Partition() == endpoints.AwsUsGovPartitionID
+	expectNonEmptyPlan := acctest.Partition() == names.USGovCloudPartitionID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -184,9 +183,9 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorExpectedValue),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
 				ExpectNonEmptyPlan: expectNonEmptyPlan,
 			},

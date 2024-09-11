@@ -69,7 +69,7 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -79,7 +79,7 @@ func ResourceUser() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -87,7 +87,7 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -103,12 +103,12 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -121,11 +121,11 @@ func ResourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,7 +142,7 @@ func ResourceUser() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -197,12 +197,12 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -234,7 +234,7 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -259,9 +259,9 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	in := &identitystore.CreateUserInput{
-		DisplayName:     aws.String(d.Get("display_name").(string)),
+		DisplayName:     aws.String(d.Get(names.AttrDisplayName).(string)),
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-		UserName:        aws.String(d.Get("user_name").(string)),
+		UserName:        aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	if v, ok := d.GetOk("addresses"); ok && len(v.([]interface{})) > 0 {
@@ -276,7 +276,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Locale = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrName); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -345,7 +345,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
 	}
 
-	d.Set("display_name", out.DisplayName)
+	d.Set(names.AttrDisplayName, out.DisplayName)
 	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("locale", out.Locale)
 	d.Set("nickname", out.NickName)
@@ -354,7 +354,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("timezone", out.Timezone)
 	d.Set("title", out.Title)
 	d.Set("user_id", out.UserId)
-	d.Set("user_name", out.UserName)
+	d.Set(names.AttrUserName, out.UserName)
 	d.Set("user_type", out.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(out.Addresses)); err != nil {
@@ -369,7 +369,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
-	if err := d.Set("name", []interface{}{flattenName(out.Name)}); err != nil {
+	if err := d.Set(names.AttrName, []interface{}{flattenName(out.Name)}); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
@@ -419,7 +419,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Expand func(interface{}) interface{}
 	}{
 		{
-			Attribute: "display_name",
+			Attribute: names.AttrDisplayName,
 			Field:     "displayName",
 		},
 		{
@@ -506,7 +506,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = address.Primary
 
 					if v := address.Region; v != nil {
-						m["region"] = v
+						m[names.AttrRegion] = v
 					}
 
 					if v := address.StreetAddress; v != nil {
@@ -514,7 +514,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					}
 
 					if v := address.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					result = append(result, m)
@@ -539,11 +539,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = email.Primary
 
 					if v := email.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					if v := email.Value; v != nil {
-						m["value"] = v
+						m[names.AttrValue] = v
 					}
 
 					result = append(result, m)
@@ -568,11 +568,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = email.Primary
 
 					if v := email.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					if v := email.Value; v != nil {
-						m["value"] = v
+						m[names.AttrValue] = v
 					}
 
 					result = append(result, m)

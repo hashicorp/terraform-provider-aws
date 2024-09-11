@@ -232,7 +232,7 @@ class MyConvertedCode(TerraformStack):
 
 ~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
@@ -294,4 +294,4 @@ Using `terraform import`, import Flow Logs using the `id`. For example:
 % terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ba99115ba4c7445a82078abb9b916395973d9d2dc0bdb5b29e67695227dd0c49 -->
+<!-- cache-key: cdktf-0.20.1 input-2797f56a05abcc1992507bec694e30f058033f687a9d4a1c3b765cbb1123e5ee -->

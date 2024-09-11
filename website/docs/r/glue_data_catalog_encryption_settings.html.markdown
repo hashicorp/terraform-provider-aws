@@ -21,8 +21,9 @@ resource "aws_glue_data_catalog_encryption_settings" "example" {
     }
 
     encryption_at_rest {
-      catalog_encryption_mode = "SSE-KMS"
-      sse_aws_kms_key_id      = aws_kms_key.test.arn
+      catalog_encryption_mode         = "SSE-KMS"
+      catalog_encryption_service_role = aws_iam.role.test.arn
+      sse_aws_kms_key_id              = aws_kms_key.test.arn
     }
   }
 }
@@ -47,7 +48,8 @@ This resource supports the following arguments:
 
 ### encryption_at_rest
 
-* `catalog_encryption_mode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values are `DISABLED` and `SSE-KMS`.
+* `catalog_encryption_mode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values: `DISABLED`, `SSE-KMS`, `SSE-KMS-WITH-SERVICE-ROLE`.
+* `catalog_encryption_service_role` - (Optional) The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sse_aws_kms_key_id` - (Optional) The ARN of the AWS KMS key to use for encryption at rest.
 
 ## Attribute Reference

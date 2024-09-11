@@ -55,7 +55,7 @@ func (r *resourceApplicationAssignment) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"principal_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -175,7 +175,7 @@ func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource
 }
 
 func (r *resourceApplicationAssignment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationAssignmentByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationAssignmentOutput, error) {

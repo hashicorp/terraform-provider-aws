@@ -71,28 +71,27 @@ from imports.aws.ssoadmin_permission_set import SsoadminPermissionSet
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        example = IdentitystoreGroup(self, "example",
+        example = DataAwsSsoadminInstances(self, "example")
+        aws_identitystore_group_example = IdentitystoreGroup(self, "example_1",
             description="Admin Group",
             display_name="Admin",
             identity_store_id=Token.as_string(
-                Fn.lookup_nested(Fn.tolist(sso_instance.identity_store_ids), ["0"]))
+                Fn.lookup_nested(Fn.tolist(example.identity_store_ids), ["0"]))
         )
-        data_aws_ssoadmin_instances_example = DataAwsSsoadminInstances(self, "example_1")
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
-        data_aws_ssoadmin_instances_example.override_logical_id("example")
+        aws_identitystore_group_example.override_logical_id("example")
         aws_ssoadmin_permission_set_example = SsoadminPermissionSet(self, "example_2",
             instance_arn=Token.as_string(
-                Fn.lookup_nested(Fn.tolist(data_aws_ssoadmin_instances_example.arns), ["0"
-                ])),
+                Fn.lookup_nested(Fn.tolist(example.arns), ["0"])),
             name="Example"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_ssoadmin_permission_set_example.override_logical_id("example")
         SsoadminAccountAssignment(self, "account_assignment",
             instance_arn=Token.as_string(
-                Fn.lookup_nested(Fn.tolist(data_aws_ssoadmin_instances_example.arns), ["0"])),
+                Fn.lookup_nested(Fn.tolist(example.arns), ["0"])),
             permission_set_arn=Token.as_string(aws_ssoadmin_permission_set_example.arn),
-            principal_id=example.group_id,
+            principal_id=Token.as_string(aws_identitystore_group_example.group_id),
             principal_type="GROUP",
             target_id="123456789012",
             target_type="AWS_ACCOUNT"
@@ -101,8 +100,7 @@ class MyConvertedCode(TerraformStack):
         SsoadminManagedPolicyAttachment(self, "example_4",
             depends_on=[aws_ssoadmin_account_assignment_example],
             instance_arn=Token.as_string(
-                Fn.lookup_nested(Fn.tolist(data_aws_ssoadmin_instances_example.arns), ["0"
-                ])),
+                Fn.lookup_nested(Fn.tolist(example.arns), ["0"])),
             managed_policy_arn="arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup",
             permission_set_arn=Token.as_string(aws_ssoadmin_permission_set_example.arn)
         )
@@ -157,4 +155,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `manag
 % terraform import aws_ssoadmin_managed_policy_attachment.example arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3ae613164e2898519a779fb074c082ba87ada44375e8a7216ec430c9fd989cda -->
+<!-- cache-key: cdktf-0.20.1 input-73fefc01b46b4cf4489868580522a20327e26c603ae4140b5374affcfb50ca7b -->

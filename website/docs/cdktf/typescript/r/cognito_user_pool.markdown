@@ -176,7 +176,8 @@ The following arguments are optional:
 * `postConfirmation` - (Optional) Post-confirmation AWS Lambda trigger.
 * `preAuthentication` - (Optional) Pre-authentication AWS Lambda trigger.
 * `preSignUp` - (Optional) Pre-registration AWS Lambda trigger.
-* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation.
+* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the LambdaArn of `PreTokenGenerationConfig`.
+* `preTokenGenerationConfig` - (Optional) Allow to customize access tokens. See [pre_token_configuration_type](#pre_token_configuration_type)
 * `userMigration` - (Optional) User migration Lambda config type.
 * `verifyAuthChallengeResponse` - (Optional) Verifies the authentication challenge response.
 * `kmsKeyId` - (Optional) The Amazon Resource Name of Key Management Service Customer master keys. Amazon Cognito uses the key to encrypt codes and temporary passwords sent to CustomEmailSender and CustomSMSSender.
@@ -192,6 +193,11 @@ The following arguments are optional:
 
 * `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
 * `lambdaVersion` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom SMS Lambda function. The only supported value is `v10`.
+
+#### pre_token_configuration_type
+
+* `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `PreTokenGeneration`, its value must be identical to this one.
+* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `v10`, `v20`.
 
 ### password_policy
 

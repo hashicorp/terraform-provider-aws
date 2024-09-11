@@ -9,18 +9,21 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iot_thing_group_membership")
-func ResourceThingGroupMembership() *schema.Resource {
+// @SDKResource("aws_iot_thing_group_membership", name="Thing Group Membership")
+func resourceThingGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingGroupMembershipCreate,
 		ReadWithoutTimeout:   resourceThingGroupMembershipRead,
@@ -52,7 +55,7 @@ func ResourceThingGroupMembership() *schema.Resource {
 
 func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	thingGroupName := d.Get("thing_group_name").(string)
 	thingName := d.Get("thing_name").(string)
@@ -62,32 +65,30 @@ func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("override_dynamic_group"); ok {
-		input.OverrideDynamicGroups = aws.Bool(v.(bool))
+		input.OverrideDynamicGroups = v.(bool)
 	}
 
-	log.Printf("[DEBUG] Creating IoT Thing Group Membership: %s", input)
-	_, err := conn.AddThingToThingGroupWithContext(ctx, input)
+	_, err := conn.AddThingToThingGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "adding IoT Thing (%s) to IoT Thing Group (%s): %s", thingName, thingGroupName, err)
 	}
 
-	d.SetId(ThingGroupMembershipCreateResourceID(thingGroupName, thingName))
+	d.SetId(thingGroupMembershipCreateResourceID(thingGroupName, thingName))
 
 	return append(diags, resourceThingGroupMembershipRead(ctx, d, meta)...)
 }
 
 func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
-
+	thingGroupName, thingName, err := thingGroupMembershipParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Group Membership (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+	_, err = findThingGroupMembershipByTwoPartKey(ctx, conn, thingGroupName, thingName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Group Membership (%s) not found, removing from state", d.Id())
@@ -107,21 +108,20 @@ func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceThingGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
-
+	thingGroupName, thingName, err := thingGroupMembershipParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IoT Thing Group Membership (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group Membership: %s", d.Id())
-	_, err = conn.RemoveThingFromThingGroupWithContext(ctx, &iot.RemoveThingFromThingGroupInput{
+	_, err = conn.RemoveThingFromThingGroup(ctx, &iot.RemoveThingFromThingGroupInput{
 		ThingGroupName: aws.String(thingGroupName),
 		ThingName:      aws.String(thingName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -132,16 +132,64 @@ func resourceThingGroupMembershipDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
+func findThingGroupMembershipByTwoPartKey(ctx context.Context, conn *iot.Client, thingGroupName, thingName string) (*awstypes.GroupNameAndArn, error) {
+	input := &iot.ListThingGroupsForThingInput{
+		ThingName: aws.String(thingName),
+	}
+
+	return findThingGroup(ctx, conn, input, func(v *awstypes.GroupNameAndArn) bool {
+		return aws.ToString(v.GroupName) == thingGroupName
+	})
+}
+
+func findThingGroup(ctx context.Context, conn *iot.Client, input *iot.ListThingGroupsForThingInput, filter tfslices.Predicate[*awstypes.GroupNameAndArn]) (*awstypes.GroupNameAndArn, error) {
+	output, err := findThingGroups(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findThingGroups(ctx context.Context, conn *iot.Client, input *iot.ListThingGroupsForThingInput, filter tfslices.Predicate[*awstypes.GroupNameAndArn]) ([]awstypes.GroupNameAndArn, error) {
+	var output []awstypes.GroupNameAndArn
+
+	pages := iot.NewListThingGroupsForThingPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ThingGroups {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
 const thingGroupMembershipResourceIDSeparator = "/"
 
-func ThingGroupMembershipCreateResourceID(thingGroupName, thingName string) string {
+func thingGroupMembershipCreateResourceID(thingGroupName, thingName string) string {
 	parts := []string{thingGroupName, thingName}
 	id := strings.Join(parts, thingGroupMembershipResourceIDSeparator)
 
 	return id
 }
 
-func ThingGroupMembershipParseResourceID(id string) (string, string, error) {
+func thingGroupMembershipParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, thingGroupMembershipResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
