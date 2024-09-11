@@ -110,13 +110,13 @@ func TestWithException(t *testing.T) {
 	testCases := map[string]struct {
 		plan                      any
 		state                     any
-		withException             []fwdiff.ChangeOptionsFunc
+		withException             []fwdiff.ChangeOption
 		expectedIgnoredFieldNames []string
 	}{
 		"ignore changed field": {
 			plan:          testResourceData1{Name: types.StringValue("test2"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
 			state:         testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
-			withException: []fwdiff.ChangeOptionsFunc{fwdiff.WithException("Name")},
+			withException: []fwdiff.ChangeOption{fwdiff.WithIgnoredField("Name")},
 			expectedIgnoredFieldNames: []string{
 				"Name",
 				"Number",
