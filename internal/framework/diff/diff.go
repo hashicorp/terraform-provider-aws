@@ -25,7 +25,7 @@ func (r *Results) HasChanges() bool {
 	return r.hasChanges
 }
 
-// FlexIgnoredFieldNames returns the list of ignored field names as AutoFlexOptionsFunc
+// IgnoredFieldNamesOpts returns the list of ignored field names as AutoFlexOptionsFunc
 func (r *Results) IgnoredFieldNamesOpts() []fwflex.AutoFlexOptionsFunc {
 	for _, v := range r.ignoredFieldNames {
 		r.flexIgnoredFieldNames = append(r.flexIgnoredFieldNames, fwflex.WithIgnoredFieldNamesAppend(v))

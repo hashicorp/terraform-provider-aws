@@ -97,8 +97,8 @@ func TestCalculate(t *testing.T) {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 
-			if len(results.FlexIgnoredFieldNames()) != len(test.expectedIgnoredFieldNames) {
-				t.Errorf("unexpected length of FlexIgnoredFieldNames. got: %d, want: %d", len(results.FlexIgnoredFieldNames()), len(test.expectedIgnoredFieldNames))
+			if len(results.IgnoredFieldNamesOpts()) != len(test.expectedIgnoredFieldNames) {
+				t.Errorf("unexpected length of FlexIgnoredFieldNames. got: %d, want: %d", len(results.IgnoredFieldNamesOpts()), len(test.expectedIgnoredFieldNames))
 			}
 		})
 	}
@@ -135,8 +135,8 @@ func TestWithException(t *testing.T) {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 
-			if len(results.FlexIgnoredFieldNames()) != len(test.expectedIgnoredFieldNames) {
-				t.Errorf("unexpected length of FlexIgnoredFieldNames. got: %d, want: %d", len(results.FlexIgnoredFieldNames()), len(test.expectedIgnoredFieldNames))
+			if len(results.IgnoredFieldNamesOpts()) != len(test.expectedIgnoredFieldNames) {
+				t.Errorf("unexpected length of FlexIgnoredFieldNames. got: %d, want: %d", len(results.IgnoredFieldNamesOpts()), len(test.expectedIgnoredFieldNames))
 			}
 		})
 	}
