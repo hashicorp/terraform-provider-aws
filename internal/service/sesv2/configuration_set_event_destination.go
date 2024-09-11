@@ -545,7 +545,7 @@ func expandEventDestinationDefinition(tfMap map[string]interface{}) *types.Event
 	}
 
 	if v, ok := tfMap["matching_event_types"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.MatchingEventTypes = stringsToEventTypes(flex.ExpandStringSet(v))
+		apiObject.MatchingEventTypes = flex.ExpandStringyValueSet[types.EventType](v)
 	}
 
 	if v, ok := tfMap["pinpoint_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -673,14 +673,4 @@ func expandCloudWatchDimensionConfiguration(tfMap map[string]interface{}) *types
 	}
 
 	return apiObject
-}
-
-func stringsToEventTypes(values []*string) []types.EventType {
-	var eventTypes []types.EventType
-
-	for _, eventType := range values {
-		eventTypes = append(eventTypes, types.EventType(aws.ToString(eventType)))
-	}
-
-	return eventTypes
 }

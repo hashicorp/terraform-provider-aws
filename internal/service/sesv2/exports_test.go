@@ -21,4 +21,5 @@ var (
 	FindConfigurationSetEventDestinationByTwoPartKey = findConfigurationSetEventDestinationByTwoPartKey
 	FindContactListByID                              = findContactListByID
 	FindDedicatedIPByTwoPartKey                      = findDedicatedIPByTwoPartKey
+	FindDedicatedIPPoolByName                        = findDedicatedIPPoolByName
 )
