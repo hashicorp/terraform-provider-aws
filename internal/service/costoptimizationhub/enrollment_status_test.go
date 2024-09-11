@@ -40,8 +40,8 @@ func testAccEnrollmentStatus_basic(t *testing.T) {
 				Config: testAccEnrollmentStatusConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtFalse),
 				),
 			},
 			{
@@ -104,16 +104,16 @@ func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
 				Config: testAccEnrollmentStatusConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccEnrollmentStatusConfig_includeMemberAccounts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtTrue),
 				),
 			},
 			{
