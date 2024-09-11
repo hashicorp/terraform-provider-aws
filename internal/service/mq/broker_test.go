@@ -241,11 +241,12 @@ func TestDiffUsers(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer      = "5.17.6" // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder      = "5.16.7" // before changing, check b/c must be valid on GovCloud
-	testAccActiveVersionSimplified = "5.18"
-	testAccRabbitVersion           = "3.11.20" // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersionSimplified = "3.13"
+	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
+
+	testAccActiveVersionNormalized5_18 = "5.18"
+	testAccRabbitVersionNormalized3_13 = "3.13"
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
@@ -327,7 +328,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_basic_simplified_version(t *testing.T) {
+func TestAccMQBroker_normalizedEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -348,52 +349,15 @@ func TestAccMQBroker_basic_simplified_version(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_basic_autoMinorVersionUpgrade(rName, testAccActiveVersionSimplified, true),
+				Config: testAccBrokerConfig_autoMinorVersionUpgrade(rName, testAccActiveVersionNormalized5_18, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexache.MustCompile(`^[0-9]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccActiveVersionSimplified),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", acctest.Ct1),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.time_of_day"),
-					resource.TestCheckResourceAttr(resourceName, "logs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logs.0.general", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "efs"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "user.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access":   acctest.CtFalse,
-						"groups.#":         acctest.Ct0,
-						names.AttrUsername: "Test",
-						names.AttrPassword: "TestTest1234",
-					}),
+					// Starting in v5.18, the engine version should be normalized to remove
+					// the patch version as AWS automatically handles patch updates when
+					// `auto_minor_version_upgrade` is enabled.
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccActiveVersionNormalized5_18),
 				),
 			},
 			{
@@ -1207,7 +1171,7 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_RabbitMQ_basic_with_auto_minor_version_upgrade(t *testing.T) {
+func TestAccMQBroker_RabbitMQ_autoMinorVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1228,11 +1192,12 @@ func TestAccMQBroker_RabbitMQ_basic_with_auto_minor_version_upgrade(t *testing.T
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_rabbit_autoMinorVersionUpgrade(rName, testAccRabbitVersion, true),
+				Config: testAccBrokerConfig_RabbitMQ_autoMinorVersionUpgrade(rName, testAccRabbitVersion, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersion),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
@@ -1253,7 +1218,7 @@ func TestAccMQBroker_RabbitMQ_basic_with_auto_minor_version_upgrade(t *testing.T
 	})
 }
 
-func TestAccMQBroker_RabbitMQ_basic_simplified_version(t *testing.T) {
+func TestAccMQBroker_RabbitMQ_normalizedEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1274,20 +1239,15 @@ func TestAccMQBroker_RabbitMQ_basic_simplified_version(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_rabbit_autoMinorVersionUpgrade(rName, testAccRabbitVersionSimplified, true),
+				Config: testAccBrokerConfig_RabbitMQ_autoMinorVersionUpgrade(rName, testAccRabbitVersionNormalized3_13, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersionSimplified),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
-					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct1),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
-					resource.TestCheckResourceAttr(resourceName, "logs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logs.0.general", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+					// Starting in v3.13, the engine version should be normalized to remove
+					// the patch version as AWS automatically handles patch updates when
+					// `auto_minor_version_upgrade` is enabled.
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersionNormalized3_13),
 				),
 			},
 			{
@@ -1776,7 +1736,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfig_basic_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
+func testAccBrokerConfig_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -2352,7 +2312,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfig_rabbit_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
+func testAccBrokerConfig_RabbitMQ_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
