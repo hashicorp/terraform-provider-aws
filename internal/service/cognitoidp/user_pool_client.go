@@ -44,7 +44,7 @@ var (
 	timeUnitsType = fwtypes.StringEnumType[awstypes.TimeUnitsType]()
 )
 
-// @FrameworkResource(name="User Pool Client")
+// @FrameworkResource("aws_cognito_user_pool_client", name="User Pool Client")
 func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userPoolClientResource{}
 
