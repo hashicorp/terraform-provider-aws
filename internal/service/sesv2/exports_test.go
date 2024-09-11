@@ -23,4 +23,5 @@ var (
 	FindDedicatedIPByTwoPartKey                      = findDedicatedIPByTwoPartKey
 	FindDedicatedIPPoolByName                        = findDedicatedIPPoolByName
 	FindEmailIdentityByID                            = findEmailIdentityByID
+	FindEmailIdentityPolicyByTwoPartKey              = findEmailIdentityPolicyByTwoPartKey
 )
