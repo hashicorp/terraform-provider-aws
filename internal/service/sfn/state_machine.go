@@ -5,6 +5,7 @@ package sfn
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -192,7 +194,7 @@ func resourceStateMachine() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ValidateChange("definition", stateMachineDefinitionValidate),
+			stateMachineDefinitionValidate,
 			stateMachineUpdateComputedAttributesOnPublish,
 			verify.SetTagsDiff,
 		),
@@ -536,8 +538,7 @@ func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[s
 }
 
 func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	publish := d.Get("publish").(bool)
-	if publish && stateMachineNeedsConfigUpdate(d) {
+	if publish := d.Get("publish").(bool); publish && stateMachineNeedsConfigUpdate(d) {
 		d.SetNewComputed("revision_id")
 		d.SetNewComputed("state_machine_version_arn")
 	}
@@ -560,29 +561,31 @@ func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
 	return false
 }
 
-func stateMachineDefinitionValidate(ctx context.Context, oldValue, newValue, meta interface{}) error {
+func stateMachineDefinitionValidate(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	config := newValue.(string)
-
-	if config == "" {
+	definition := d.Get("definition").(string)
+	if definition == "" {
 		return nil
 	}
 
-	definitionOutput, err := conn.ValidateStateMachineDefinition(ctx, &sfn.ValidateStateMachineDefinitionInput{
-		Definition: aws.String(config),
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to validate state machine definition: %w", err)
+	input := &sfn.ValidateStateMachineDefinitionInput{
+		Definition: aws.String(definition),
+		Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
 	}
 
-	if definitionOutput.Result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
-		err := fmt.Errorf("invalid state machine definition:")
-		for _, diag := range definitionOutput.Diagnostics {
-			err = fmt.Errorf("%w\n%s (%s): %s", err, diag.Severity, *diag.Code, *diag.Message)
-		}
-		return err
+	output, err := conn.ValidateStateMachineDefinition(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("validating Step Functions State Machine definition: %w", err)
+	}
+
+	if result := output.Result; result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
+		errs := tfslices.ApplyToAll(output.Diagnostics, func(v awstypes.ValidateStateMachineDefinitionDiagnostic) error {
+			return fmt.Errorf("%s (%s): %s", v.Severity, aws.ToString(v.Code), aws.ToString(v.Message))
+		})
+
+		return fmt.Errorf("invalid Step Functions State Machine definition: %w", errors.Join(errs...))
 	}
 
 	return nil
