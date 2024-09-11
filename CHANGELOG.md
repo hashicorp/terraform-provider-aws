@@ -24,6 +24,7 @@ ENHANCEMENTS:
 
 * data-source/aws_acm_certificate: Mark `domain` and `tags` as Optional. This enables certificates to be matched based on tags ([#31453](https://github.com/hashicorp/terraform-provider-aws/issues/31453))
 * data-source/aws_kinesis_stream: Add `encryption_type` and `kms_key_id` attributes ([#39212](https://github.com/hashicorp/terraform-provider-aws/issues/39212))
+* datasource/aws_cognito_user_pool: Deprecates `user_pool_tags` in favor of standard `tags`. ([#39260](https://github.com/hashicorp/terraform-provider-aws/issues/39260))
 * resource/aws_amplify_app: Add `cache_config` argument ([#39215](https://github.com/hashicorp/terraform-provider-aws/issues/39215))
 * resource/aws_cloudhsm_v2_cluster: Add `mode` argument ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
 * resource/aws_cloudhsm_v2_cluster: Support `hsm2m.medium` as a valid value for `hsm_type` ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
@@ -38,7 +39,9 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
+* datasource/aws_cognito_user_pool: Fixes value conversion error. ([#39260](https://github.com/hashicorp/terraform-provider-aws/issues/39260))
 * resource/aws_batch_job_queue: Fixes error in schema migration function. ([#39257](https://github.com/hashicorp/terraform-provider-aws/issues/39257))
+* resource/aws_cognito_user_pool: Correctly unsets tags. ([#39260](https://github.com/hashicorp/terraform-provider-aws/issues/39260))
 * resource/aws_ecr_repository_policy: Fix retry logic handling eventual consistency of newly created IAM roles ([#39190](https://github.com/hashicorp/terraform-provider-aws/issues/39190))
 * resource/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
 * resource/aws_iam_role: Fix to reduce Terraform reporting differences when a role's ARN temporarily appears as the role's unique ID ([#36794](https://github.com/hashicorp/terraform-provider-aws/issues/36794))
