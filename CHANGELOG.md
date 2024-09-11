@@ -21,8 +21,10 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_acm_certificate: Mark `domain` and `tags` as Optional. This enables certificates to be matched based on tags ([#31453](https://github.com/hashicorp/terraform-provider-aws/issues/31453))
+* data-source/aws_kinesis_stream: Add `encryption_type` and `kms_key_id` attributes ([#39212](https://github.com/hashicorp/terraform-provider-aws/issues/39212))
 * resource/aws_cloudhsm_v2_cluster: Add `mode` argument ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
 * resource/aws_cloudhsm_v2_cluster: Support `hsm2m.medium` as a valid value for `hsm_type` ([#39206](https://github.com/hashicorp/terraform-provider-aws/issues/39206))
+* resource/aws_kinesis_firehose_delivery_stream: Add `snowflake_configuration.buffering_internal` and `snowflake_configuration.buffering_size` arguments ([#39214](https://github.com/hashicorp/terraform-provider-aws/issues/39214))
 * resource/aws_quicksight_user: Add `READER_PRO`, `AUTHOR_PRO`, and `ADMIN_PRO` as valid values for the `user_role` argument ([#39220](https://github.com/hashicorp/terraform-provider-aws/issues/39220))
 * resource/aws_sagemaker_domain: Add `default_user_settings.studio_web_portal_settings`, `default_space_settings.jupyter_lab_app_settings`, `default_space_settings.space_storage_settings`, `default_space_settings.custom_posix_user_config`, and `default_space_settings.custom_file_system_config` configuration blocks ([#38457](https://github.com/hashicorp/terraform-provider-aws/issues/38457))
 * resource/aws_sagemaker_endpoint_configuration: Add `production_variants.managed_instance_scaling` and `shadow_production_variants.managed_instance_scaling` configuration blocks ([#35479](https://github.com/hashicorp/terraform-provider-aws/issues/35479))
