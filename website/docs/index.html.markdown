@@ -77,6 +77,7 @@ and the [AWS SDKs](https://aws.amazon.com/tools/).
 The AWS Provider supports assuming an IAM role, either in
 the provider configuration block parameter `assume_role`
 or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
+If configuring the role in the provider configuration, the provider supports IAM Role Chaining by specifying a list of roles to assume.
 
 The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc).
 This can be configured either using environment variables or in a named profile.
@@ -181,6 +182,19 @@ provider "aws" {
     role_arn     = "arn:aws:iam::123456789012:role/ROLE_NAME"
     session_name = "SESSION_NAME"
     external_id  = "EXTERNAL_ID"
+  }
+}
+```
+
+To assume a role with role chaining, do the following:
+
+```terraform
+provider "aws" {
+  assume_role {
+    role_arn = "arn:aws:iam::123456789012:role/INITIAL_ROLE_NAME"
+  }
+  assume_role {
+    role_arn = "arn:aws:iam::123456789012:role/FINAL_ROLE_NAME"
   }
 }
 ```
@@ -304,7 +318,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 * `access_key` - (Optional) AWS access key. Can also be set with the `AWS_ACCESS_KEY_ID` environment variable, or via a shared credentials file if `profile` is specified. See also `secret_key`.
 * `allowed_account_ids` - (Optional) List of allowed AWS account IDs to prevent you from mistakenly using an incorrect one (and potentially end up destroying a live environment). Conflicts with `forbidden_account_ids`.
-* `assume_role` - (Optional) Configuration block for assuming an IAM role. See the [`assume_role` Configuration Block](#assume_role-configuration-block) section below. Only one `assume_role` block may be in the configuration.
+* `assume_role` - (Optional) List of configuration blocks for assuming an IAM role.
+  See the [`assume_role` Configuration Block](#assume_role-configuration-block) section below.
+  IAM Role Chaining is supported by specifying the roles to assume in order.
 * `assume_role_with_web_identity` - (Optional) Configuration block for assuming an IAM role using a web identity. See the [`assume_role_with_web_identity` Configuration Block](#assume_role_with_web_identity-configuration-block) section below. Only one `assume_role_with_web_identity` block may be in the configuration.
 * `custom_ca_bundle` - (Optional) File containing custom root and intermediate certificates.
   Can also be set using the `AWS_CA_BUNDLE` environment variable.
@@ -491,7 +507,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 The `assume_role` configuration block supports the following arguments:
 
-* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `duration` - (Optional) Duration of the assume role session.
+  You can provide a value from 15 minutes up to the maximum session duration setting for the role.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
