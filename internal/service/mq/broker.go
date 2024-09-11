@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"golang.org/x/mod/semver"
 	"log"
 	"reflect"
 	"strconv"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
+	"golang.org/x/mod/semver"
 )
 
 // @SDKResource("aws_mq_broker", name="Broker")
