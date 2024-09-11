@@ -14,6 +14,7 @@ FEATURES:
 * **New Resource:** `aws_cloudformation_stack_instances` ([#36794](https://github.com/hashicorp/terraform-provider-aws/issues/36794))
 * **New Resource:** `aws_computeoptimizer_enrollment_status` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
 * **New Resource:** `aws_computeoptimizer_recommendation_preferences` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
+* **New Resource:** `aws_datazone_asset_type` ([#38812](https://github.com/hashicorp/terraform-provider-aws/issues/38812))
 * **New Resource:** `aws_datazone_environment_profile` ([#38581](https://github.com/hashicorp/terraform-provider-aws/issues/38581))
 * **New Resource:** `aws_lambda_function_recursion_config` ([#39153](https://github.com/hashicorp/terraform-provider-aws/issues/39153))
 
@@ -34,6 +35,7 @@ BUG FIXES:
 * resource/aws_ecr_repository_policy: Fix retry logic handling eventual consistency of newly created IAM roles ([#39190](https://github.com/hashicorp/terraform-provider-aws/issues/39190))
 * resource/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
 * resource/aws_iam_role: Fix to reduce Terraform reporting differences when a role's ARN temporarily appears as the role's unique ID ([#36794](https://github.com/hashicorp/terraform-provider-aws/issues/36794))
+* resource/aws_networkfirewall_tls_inspection_configuration: Fix issue where `check_certificate_revovation_status` is ignored due to bad autoflex field mapping ([#39211](https://github.com/hashicorp/terraform-provider-aws/issues/39211))
 * resource/aws_quicksight_data_set: Change `permissions.actions` `MaxItems` from `16` to `20`. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39226](https://github.com/hashicorp/terraform-provider-aws/issues/39226))
 * resource/aws_quicksight_vpc_connection: Remove `vpc_connection_id` regular expression validator. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39231](https://github.com/hashicorp/terraform-provider-aws/issues/39231))
 * resource/aws_verifiedaccess_endpoint: fix crash when updating `load_balancer_options.subnet_ids` ([#39196](https://github.com/hashicorp/terraform-provider-aws/issues/39196))
