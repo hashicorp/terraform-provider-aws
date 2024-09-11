@@ -382,6 +382,8 @@ func TestProviderConfig_Authentication_LegacySSO(t *testing.T) { //nolint:parall
 }
 
 func TestProviderConfig_AssumeRole(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		Config                   map[string]any
 		ExpectedCredentialsValue aws.Credentials
@@ -477,6 +479,8 @@ func TestProviderConfig_AssumeRole(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.TODO()
 
 			servicemocks.InitSessionTestEnv(t)
@@ -485,7 +489,7 @@ func TestProviderConfig_AssumeRole(t *testing.T) {
 			defer closeSts()
 
 			config := map[string]any{
-				"region":                      "us-west-2",
+				"region":                      "us-west-2", //lintignore:AWSAT003
 				"access_key":                  servicemocks.MockStaticAccessKey,
 				"secret_key":                  servicemocks.MockStaticSecretKey,
 				"skip_credentials_validation": true,
