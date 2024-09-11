@@ -32,16 +32,6 @@ func StringValueFromFramework(ctx context.Context, v basetypes.StringValuable) s
 	return output
 }
 
-// StringFromFramework converts a single Framework String value to a string pointer slice.
-// A null String is converted to a nil slice.
-func StringSliceFromFramework(ctx context.Context, v basetypes.StringValuable) []*string {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	return []*string{StringFromFramework(ctx, v)}
-}
-
 // StringSliceValueFromFramework converts a single Framework String value to a string slice.
 // A null String is converted to a nil slice.
 func StringSliceValueFromFramework(ctx context.Context, v basetypes.StringValuable) []string {
