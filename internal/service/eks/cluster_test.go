@@ -52,7 +52,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
 					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^https://`)),
