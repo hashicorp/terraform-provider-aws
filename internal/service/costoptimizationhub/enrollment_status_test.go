@@ -23,12 +23,14 @@ import (
 func testAccEnrollmentStatus_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
+	var les costoptimizationhub.ListEnrollmentStatusesOutput
 	resourceName := "aws_costoptimizationhub_enrollment_status.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -37,7 +39,7 @@ func testAccEnrollmentStatus_basic(t *testing.T) {
 			{
 				Config: testAccEnrollmentStatusConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les_out),
+					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les),
 					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
 				),
@@ -59,6 +61,8 @@ func testAccEnrollmentStatus_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -75,6 +79,47 @@ func testAccEnrollmentStatus_disappears(t *testing.T) {
 			{
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var les costoptimizationhub.ListEnrollmentStatusesOutput
+	resourceName := "aws_costoptimizationhub_enrollment_status.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnrollmentStatusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnrollmentStatusConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
+				),
+			},
+			{
+				Config: testAccEnrollmentStatusConfig_includeMemberAccounts(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -131,37 +176,6 @@ func testAccCheckEnrollmentStatusIsActive(ctx context.Context, name string) reso
 	}
 }
 
-func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
-	resourceName := "aws_costoptimizationhub_enrollment_status.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnrollmentStatusDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnrollmentStatusConfig_IncludeMemberAccounts(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnrollmentStatusExists(ctx, resourceName, &les_out),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testAccCheckEnrollmentStatusExists(ctx context.Context, name string, enrollmentstatus *costoptimizationhub.ListEnrollmentStatusesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -195,7 +209,7 @@ resource "aws_costoptimizationhub_enrollment_status" "test" {
 `
 }
 
-func testAccEnrollmentStatusConfig_IncludeMemberAccounts() string {
+func testAccEnrollmentStatusConfig_includeMemberAccounts() string {
 	return `
 resource "aws_costoptimizationhub_enrollment_status" "test" {
   include_member_accounts = true
