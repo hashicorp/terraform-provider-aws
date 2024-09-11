@@ -1185,6 +1185,18 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:     schema.TypeString,
 								Required: true,
 							},
+							"buffering_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntBetween(0, 900),
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      1,
+								ValidateFunc: validation.IntBetween(1, 128),
+							},
 							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 							"content_column_name": {
 								Type:         schema.TypeString,
@@ -2728,7 +2740,11 @@ func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]interface{
 func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *types.SnowflakeDestinationConfiguration {
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.SnowflakeDestinationConfiguration{
-		AccountUrl:                aws.String(tfMap["account_url"].(string)),
+		AccountUrl: aws.String(tfMap["account_url"].(string)),
+		BufferingHints: &types.SnowflakeBufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
 		Database:                  aws.String(tfMap[names.AttrDatabase].(string)),
 		RetryOptions:              expandSnowflakeRetryOptions(tfMap),
 		RoleARN:                   aws.String(roleARN),
@@ -2792,7 +2808,11 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.SnowflakeDestinationUpdate {
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.SnowflakeDestinationUpdate{
-		AccountUrl:   aws.String(tfMap["account_url"].(string)),
+		AccountUrl: aws.String(tfMap["account_url"].(string)),
+		BufferingHints: &types.SnowflakeBufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
 		Database:     aws.String(tfMap[names.AttrDatabase].(string)),
 		RetryOptions: expandSnowflakeRetryOptions(tfMap),
 		RoleARN:      aws.String(roleARN),
@@ -3554,6 +3574,15 @@ func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinatio
 		"snowflake_vpc_configuration":   flattenSnowflakeVPCConfiguration(apiObject.SnowflakeVpcConfiguration),
 		"table":                         aws.ToString(apiObject.Table),
 		"user":                          aws.ToString(apiObject.User),
+	}
+
+	if v := apiObject.BufferingHints; v != nil {
+		if v.IntervalInSeconds != nil {
+			tfMap["buffering_interval"] = int(aws.ToInt32(v.IntervalInSeconds))
+		}
+		if v.SizeInMBs != nil {
+			tfMap["buffering_size"] = int(aws.ToInt32(v.SizeInMBs))
+		}
 	}
 
 	if apiObject.RetryOptions != nil {
