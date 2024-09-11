@@ -233,8 +233,8 @@ func TestAccSESV2ConfigurationSet_suppressedReasonsEmpty(t *testing.T) {
 				Config: testAccConfigurationSetConfig_suppressedReasonsEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", acctest.Ct0),
 				),
 			},
 			{
