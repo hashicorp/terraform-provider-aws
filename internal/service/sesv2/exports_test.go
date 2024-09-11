@@ -15,4 +15,6 @@ var (
 	ResourceEmailIdentityFeedbackAttributes  = resourceEmailIdentityFeedbackAttributes
 	ResourceEmailIdentityMailFromAttributes  = resourceEmailIdentityMailFromAttributes
 	ResourceEmailIdentityPolicy              = resourceEmailIdentityPolicy
+
+	FindContactListByID = findContactListByID
 )
