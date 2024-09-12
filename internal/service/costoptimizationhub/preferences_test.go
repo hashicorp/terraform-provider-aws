@@ -133,16 +133,23 @@ func testAccPreferences_savingsEstimationMode(t *testing.T) {
 		CheckDestroy:             testAccCheckPreferencesDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPreferencesConfig_SavingsEstimationMode(),
+				Config: testAccPreferencesConfig_SavingsEstimationMode(string(types.SavingsEstimationModeAfterDiscounts)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPreferencesExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "AfterDiscounts"),
+					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", string(types.SavingsEstimationModeAfterDiscounts)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPreferencesConfig_SavingsEstimationMode(string(types.SavingsEstimationModeBeforeDiscounts)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPreferencesExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", string(types.SavingsEstimationModeBeforeDiscounts)),
+				),
 			},
 		},
 	})
@@ -230,11 +237,13 @@ resource "aws_costoptimizationhub_preferences" "test" {
 `
 }
 
-func testAccPreferencesConfig_SavingsEstimationMode() string {
-	return testAccPreferencesBase() + `
+func testAccPreferencesConfig_SavingsEstimationMode(mode string) string {
+	return acctest.ConfigCompose(
+		testAccPreferencesBase(),
+		fmt.Sprintf(`
 resource "aws_costoptimizationhub_preferences" "test" {
-  savings_estimation_mode = "AfterDiscounts"
+  savings_estimation_mode = %[1]q
   depends_on              = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
 }
-`
+`, mode))
 }
