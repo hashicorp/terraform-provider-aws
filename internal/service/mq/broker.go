@@ -921,7 +921,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 // normalizeEngineVersion normalizes the engine version depending on whether auto
 // minor version upgrades are enabled
 //
-// Beginning with RabbitMQ v3.13 and ActiveMQ 5.18, brokers with `auto_minor_version_upgrade`
+// Beginning with RabbitMQ 3.13 and ActiveMQ 5.18, brokers with `auto_minor_version_upgrade`
 // set to `true` will automatically receive patch updates during scheduled maintenance
 // windows. To account for automated changes to patch versions, the returned engine
 // value is normalized to only major/minor when these conditions are met.
@@ -950,8 +950,8 @@ func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
 		return engineVersion
 	}
 
-	if (strings.EqualFold(string(engineType), string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinorEngineVersion, initRabbitVersion) == 0) ||
-		(strings.EqualFold(string(engineType), string(types.EngineTypeActivemq)) && semver.Compare(majorMinorEngineVersion, initActiveVersion) == 0) {
+	if (strings.EqualFold(string(engineType), string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinorEngineVersion, initRabbitVersion) >= 0) ||
+		(strings.EqualFold(string(engineType), string(types.EngineTypeActivemq)) && semver.Compare(majorMinorEngineVersion, initActiveVersion) >= 0) {
 		return majorMinorEngineVersion[1:]
 	}
 
