@@ -22,6 +22,7 @@ func testAccAppFabricAppBundle_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppFabricAppBundle_tags,
 		"null":                                      testAccAppFabricAppBundle_tags_null,
+		"EmptyMap":                                  testAccAppFabricAppBundle_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppFabricAppBundle_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppFabricAppBundle_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add,
@@ -262,6 +263,53 @@ func testAccAppFabricAppBundle_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+				},
+			},
+		},
+	})
+}
+
+func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.AppBundle
+	resourceName := "aws_appfabric_app_bundle.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AppBundle/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AppBundle/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

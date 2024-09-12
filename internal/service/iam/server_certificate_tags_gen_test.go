@@ -306,6 +306,75 @@ func TestAccIAMServerCertificate_tags_null(t *testing.T) {
 	})
 }
 
+func TestAccIAMServerCertificate_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.ServerCertificate
+	resourceName := "aws_iam_server_certificate.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:          config.StringVariable(rName),
+					acctest.CtResourceTags:   config.MapVariable(map[string]config.Variable{}),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:          config.StringVariable(rName),
+					acctest.CtResourceTags:   config.MapVariable(map[string]config.Variable{}),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrPrivateKey,
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:          config.StringVariable(rName),
+					acctest.CtResourceTags:   nil,
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
+				},
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func TestAccIAMServerCertificate_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ServerCertificate

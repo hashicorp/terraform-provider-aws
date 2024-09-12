@@ -1090,6 +1090,29 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"docker_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable_docker_access": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+									},
+									"vpc_only_trusted_accounts": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidAccountID,
+										},
+										MaxItems: 20,
+									},
+								},
+							},
+						},
 						"execution_role_identity_config": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -1412,6 +1435,10 @@ func expandDomainSettings(l []interface{}) *awstypes.DomainSettings {
 
 	config := &awstypes.DomainSettings{}
 
+	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+		config.DockerSettings = expandDockerSettings(v)
+	}
+
 	if v, ok := m["execution_role_identity_config"].(string); ok && v != "" {
 		config.ExecutionRoleIdentityConfig = awstypes.ExecutionRoleIdentityConfig(v)
 	}
@@ -1422,6 +1449,26 @@ func expandDomainSettings(l []interface{}) *awstypes.DomainSettings {
 
 	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettings = expandRStudioServerProDomainSettings(v)
+	}
+
+	return config
+}
+
+func expandDockerSettings(l []interface{}) *awstypes.DockerSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.DockerSettings{}
+
+	if v, ok := m["enable_docker_access"].(string); ok && v != "" {
+		config.EnableDockerAccess = awstypes.FeatureStatus(v)
+	}
+
+	if v, ok := m["vpc_only_trusted_accounts"].(*schema.Set); ok && v.Len() > 0 {
+		config.VpcOnlyTrustedAccounts = flex.ExpandStringValueSet(v)
 	}
 
 	return config
@@ -1464,8 +1511,48 @@ func expandDomainSettingsUpdate(l []interface{}) *awstypes.DomainSettingsForUpda
 
 	config := &awstypes.DomainSettingsForUpdate{}
 
+	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+		config.DockerSettings = expandDockerSettings(v)
+	}
+
 	if v, ok := m["execution_role_identity_config"].(string); ok && v != "" {
 		config.ExecutionRoleIdentityConfig = awstypes.ExecutionRoleIdentityConfig(v)
+	}
+
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+		config.SecurityGroupIds = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
+		config.RStudioServerProDomainSettingsForUpdate = expandRStudioServerProDomainSettingsUpdate(v)
+	}
+
+	return config
+}
+
+func expandRStudioServerProDomainSettingsUpdate(l []interface{}) *awstypes.RStudioServerProDomainSettingsForUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.RStudioServerProDomainSettingsForUpdate{}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandResourceSpec(v)
+	}
+
+	if v, ok := m["domain_execution_role_arn"].(string); ok && v != "" {
+		config.DomainExecutionRoleArn = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_connect_url"].(string); ok && v != "" {
+		config.RStudioConnectUrl = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_package_manager_url"].(string); ok && v != "" {
+		config.RStudioPackageManagerUrl = aws.String(v)
 	}
 
 	return config
@@ -2474,9 +2561,28 @@ func flattenDomainSettings(config *awstypes.DomainSettings) []map[string]interfa
 	}
 
 	m := map[string]interface{}{
+		"docker_settings":                     flattenDockerSettings(config.DockerSettings),
 		"execution_role_identity_config":      config.ExecutionRoleIdentityConfig,
 		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
 		names.AttrSecurityGroupIDs:            flex.FlattenStringValueSet(config.SecurityGroupIds),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDockerSettings(config *awstypes.DockerSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.EnableDockerAccess != "" {
+		m["enable_docker_access"] = config.EnableDockerAccess
+	}
+
+	if config.VpcOnlyTrustedAccounts != nil {
+		m["vpc_only_trusted_accounts"] = flex.FlattenStringValueSet(config.VpcOnlyTrustedAccounts)
 	}
 
 	return []map[string]interface{}{m}
