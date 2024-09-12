@@ -136,10 +136,13 @@ See the [`value_elicitation_setting` argument reference](#value_elicitation_sett
 The following arguments are optional:
 
 * `description` - (Optional) Description of the slot.
-* `multiple_values_setting` - (Optional) Whether the slot returns multiple values in one response. See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.
-* `obfuscation_setting` - (Optional) Determines how slot values are used in Amazon CloudWatch logs. See the [`obfuscation_setting` argument reference](#obfuscation_setting-argument-reference) below.
+* `multiple_values_setting` - (Optional) Whether the slot returns multiple values in one response.
+See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.
+* `obfuscation_setting` - (Optional) Determines how slot values are used in Amazon CloudWatch logs.
+See the [`obfuscation_setting` argument reference](#obfuscation_setting-argument-reference) below.
 * `slot_type_id` - (Optional) Unique identifier for the slot type associated with this slot.
 * `sub_slot_setting` - (Optional) Specifications for the constituent sub slots and the expression for the composite slot.
+See the [`sub_slot_setting` argument reference](#sub_slot_setting-argument-reference) below.
 
 ### `multiple_values_setting` Argument Reference
 
@@ -148,6 +151,18 @@ The following arguments are optional:
 ### `obfuscation_setting` Argument Reference
 
 * `obfuscation_setting_type` - (Required) Whether Amazon Lex obscures slot values in conversation logs. Valid values are `DefaultObfuscation` and `None`.
+
+### `sub_slot_setting` Argument Reference
+
+* `expression` - (Optional) Expression text for defining the constituent sub slots in the composite slot using logical `AND` and `OR` operators.
+* `slot_specification` - (Optional) Specifications for the constituent sub slots of a composite slot.
+See the [`slot_specification` argument reference](#slot_specification-argument-reference) below.
+
+#### `slot_specification` Argument Reference
+
+* `slot_type_id` - (Required) Unique identifier assigned to the slot type.
+* `value_elicitation_setting` - (Required) Elicitation setting details for constituent sub slots of a composite slot.
+See the [`value_elicitation_setting` argument reference](#value_elicitation_setting-argument-reference) below.
 
 ### `value_elicitation_setting` Argument Reference
 

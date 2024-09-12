@@ -600,13 +600,15 @@ resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" 
   destination = "snowflake"
 
   snowflake_configuration {
-    account_url = "https://example.snowflakecomputing.com"
-    database    = "example-db"
-    private_key = "..."
-    role_arn    = aws_iam_role.firehose.arn
-    schema      = "example-schema"
-    table       = "example-table"
-    user        = "example-usr"
+    account_url        = "https://example.snowflakecomputing.com"
+    buffering_size     = 15
+    buffering_interval = 600
+    database           = "example-db"
+    private_key        = "..."
+    role_arn           = aws_iam_role.firehose.arn
+    schema             = "example-schema"
+    table              = "example-table"
+    user               = "example-usr"
 
     s3_configuration {
       role_arn           = aws_iam_role.firehose.arn
@@ -796,6 +798,8 @@ The `http_endpoint_configuration` configuration block supports the following arg
 The `snowflake_configuration` configuration block supports the following arguments:
 
 * `account_url` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 128, before delivering it to the destination.  The default value is 1MB.
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 0 to 900, before delivering it to the destination.  The default value is 0s.
 * `private_key` - (Optional) The private key for authentication. This value is required if `secrets_manager_configuration` is not provided.
 * `key_passphrase` - (Optional) The passphrase for the private key.
 * `user` - (Optional) The user for authentication. This value is required if `secrets_manager_configuration` is not provided.

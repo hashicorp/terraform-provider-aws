@@ -24,6 +24,7 @@ func TestAccAmplify_serial(t *testing.T) {
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
+			"CacheConfig":              testAccApp_CacheConfig,
 			"CustomRules":              testAccApp_CustomRules,
 			"Description":              testAccApp_Description,
 			"EnvironmentVariables":     testAccApp_EnvironmentVariables,

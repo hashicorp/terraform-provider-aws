@@ -12,7 +12,7 @@ const (
 	trafficPolicyDocEndpointELB              trafficPolicyDocEndpointType = "elastic-load-balancer"
 	trafficPolicyDocEndpointNLB              trafficPolicyDocEndpointType = "network-load-balancer"
 	trafficPolicyDocEndpointS3Website        trafficPolicyDocEndpointType = "s3-website"
-	trafficPolicyDocEndpointValue            trafficPolicyDocEndpointType = "value" // nosemgrep:ci.literal-value-string-constant
+	trafficPolicyDocEndpointValue            trafficPolicyDocEndpointType = "value"
 )
 
 func (trafficPolicyDocEndpointType) Values() []trafficPolicyDocEndpointType {
@@ -23,7 +23,7 @@ func (trafficPolicyDocEndpointType) Values() []trafficPolicyDocEndpointType {
 		trafficPolicyDocEndpointELB,
 		trafficPolicyDocEndpointNLB,
 		trafficPolicyDocEndpointS3Website,
-		trafficPolicyDocEndpointValue, // nosemgrep:ci.literal-value-string-constant
+		trafficPolicyDocEndpointValue,
 	}
 }
 

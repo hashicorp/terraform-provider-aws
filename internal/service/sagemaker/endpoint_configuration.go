@@ -377,6 +377,34 @@ func resourceEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"managed_instance_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+									},
+								},
+							},
+						},
 						"variant_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -517,6 +545,34 @@ func resourceEndpointConfiguration() *schema.Resource {
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 200),
+									},
+								},
+							},
+						},
+						"managed_instance_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
 									},
 								},
 							},
@@ -737,6 +793,10 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 			l.EnableSSMAccess = aws.Bool(v)
 		}
 
+		if v, ok := data["managed_instance_scaling"].([]interface{}); ok && len(v) > 0 {
+			l.ManagedInstanceScaling = expandManagedInstanceScaling(v)
+		}
+
 		if v, ok := data["inference_ami_version"].(string); ok && v != "" {
 			l.InferenceAmiVersion = awstypes.ProductionVariantInferenceAmiVersion(v)
 		}
@@ -790,6 +850,10 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]i
 
 		if i.EnableSSMAccess != nil {
 			l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
+		}
+
+		if i.ManagedInstanceScaling != nil {
+			l["managed_instance_scaling"] = flattenManagedInstanceScaling(i.ManagedInstanceScaling)
 		}
 
 		result = append(result, l)
@@ -1056,6 +1120,30 @@ func expandCoreDumpConfig(configured []interface{}) *awstypes.ProductionVariantC
 	return c
 }
 
+func expandManagedInstanceScaling(configured []interface{}) *awstypes.ProductionVariantManagedInstanceScaling {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &awstypes.ProductionVariantManagedInstanceScaling{}
+
+	if v, ok := m[names.AttrStatus].(string); ok {
+		c.Status = awstypes.ManagedInstanceScalingStatus(v)
+	}
+
+	if v, ok := m["min_instance_count"].(int); ok && v > 0 {
+		c.MinInstanceCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["max_instance_count"].(int); ok && v > 0 {
+		c.MaxInstanceCount = aws.Int32(int32(v))
+	}
+
+	return c
+}
+
 func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -1181,6 +1269,28 @@ func flattenCoreDumpConfig(config *awstypes.ProductionVariantCoreDumpConfig) []m
 
 	if config.KmsKeyId != nil {
 		cfg[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenManagedInstanceScaling(config *awstypes.ProductionVariantManagedInstanceScaling) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.Status != "" {
+		cfg[names.AttrStatus] = config.Status
+	}
+
+	if config.MinInstanceCount != nil {
+		cfg["min_instance_count"] = aws.ToInt32(config.MinInstanceCount)
+	}
+
+	if config.MaxInstanceCount != nil {
+		cfg["max_instance_count"] = aws.ToInt32(config.MaxInstanceCount)
 	}
 
 	return []map[string]interface{}{cfg}

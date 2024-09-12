@@ -502,8 +502,8 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs]; ok {
-		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject

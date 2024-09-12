@@ -24,7 +24,7 @@ var tmpl string
 //go:embed constOrQuote.gtpl
 var constOrQuoteTmpl string
 
-//go:embed semgrep.tmpl
+//go:embed semgrep.gtpl
 var semgrepTmpl string
 
 type ConstantDatum struct {

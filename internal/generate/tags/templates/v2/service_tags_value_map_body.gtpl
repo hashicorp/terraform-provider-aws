@@ -19,7 +19,11 @@ func {{ .GetTagsInFunc }}(ctx context.Context) map[string]string {
 		}
 	}
 
+{{ if .EmptyMap -}}
+	return map[string]string{}
+{{- else -}}
 	return nil
+{{- end }}
 }
 
 // {{ .SetTagsOutFunc }} sets {{ .ServicePackage }} service tags in Context.

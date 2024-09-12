@@ -14,6 +14,9 @@ rules:
       - pattern-not-inside: 'config.Variables{ ... }'
       - pattern-not-inside: 'packageName = ...'
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.Attr{{ .Constant }}"
+    options:
+      constant_propagation: false
 {{ end -}}

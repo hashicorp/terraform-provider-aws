@@ -345,6 +345,90 @@ func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
 	})
 }
 
+func testAccUserProfile_studioWebPortalSettings_hiddenAppTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeUserProfileOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_user_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName, []string{"JupyterServer", "KernelGateway"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "JupyterServer"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "KernelGateway"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName, []string{"JupyterServer", "KernelGateway", "CodeEditor"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "JupyterServer"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "KernelGateway"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "CodeEditor"),
+				),
+			},
+		},
+	})
+}
+
+func testAccUserProfile_studioWebPortalSettings_hiddenMlTools(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeUserProfileOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_user_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName, []string{"DataWrangler", "FeatureStore"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "DataWrangler"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "FeatureStore"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName, []string{"DataWrangler", "FeatureStore", "EmrClusters"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "DataWrangler"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "FeatureStore"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "EmrClusters"),
+				),
+			},
+		},
+	})
+}
+
 func testAccUserProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
@@ -691,4 +775,52 @@ resource "aws_sagemaker_user_profile" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, baseImage))
+}
+
+func testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
+	var hiddenAppTypesString string
+	for i, appType := range hiddenAppTypes {
+		if i > 0 {
+			hiddenAppTypesString += ", "
+		}
+		hiddenAppTypesString += fmt.Sprintf("%q", appType)
+	}
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = %[1]q
+
+  user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    studio_web_portal_settings {
+      hidden_app_types = [%[2]s]
+    }
+  }
+}
+`, rName, hiddenAppTypesString))
+}
+
+func testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
+	var hiddenMlToolsString string
+	for i, mlTool := range hiddenMlTools {
+		if i > 0 {
+			hiddenMlToolsString += ", "
+		}
+		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
+	}
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = %[1]q
+
+  user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    studio_web_portal_settings {
+      hidden_ml_tools = [%[2]s]
+    }
+  }
+}
+`, rName, hiddenMlToolsString))
 }

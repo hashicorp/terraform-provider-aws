@@ -1238,6 +1238,298 @@ func testAccDomain_efs(t *testing.T) {
 	})
 }
 
+func testAccDomain_studioWebPortalSettings_hiddenAppTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName, []string{"JupyterServer", "KernelGateway"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "JupyterServer"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "KernelGateway"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName, []string{"JupyterServer", "KernelGateway", "CodeEditor"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "JupyterServer"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "KernelGateway"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "CodeEditor"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDomain_studioWebPortalSettings_hiddenMlTools(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName, []string{"DataWrangler", "FeatureStore"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "DataWrangler"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "FeatureStore"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName, []string{"DataWrangler", "FeatureStore", "EmrClusters"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "DataWrangler"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "FeatureStore"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "EmrClusters"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDomain_spaceSettingsJupyterLabAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName, "ml.t3.micro", "ml.t3.small"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.small"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName, "ml.t3.small", "ml.t3.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, "100", "200"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "100"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, "150", "250"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "150"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "250"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDomain_spaceSettingsCustomPOSIXUserConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_spaceSettingsCustomPOSIXUserConfig(rName, "1001", "10000", "1002", "20000"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.gid", "1002"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.uid", "20000"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_spaceSettingsCustomPOSIXUserConfig(rName, "2001", "20000", "2002", "40000"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "2001"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "20000"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.gid", "2002"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.uid", "40000"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDomain_spaceSettingsCustomFileSystemConfigs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_spaceSettingsCustomFileSystemConfigs(rName, "test-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_spaceSettingsCustomFileSystemConfigs(rName, "test-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -2381,4 +2673,214 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
+	var hiddenAppTypesString string
+	for i, appType := range hiddenAppTypes {
+		if i > 0 {
+			hiddenAppTypesString += ", "
+		}
+		hiddenAppTypesString += fmt.Sprintf("%q", appType)
+	}
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    studio_web_portal_settings {
+      hidden_app_types = [%[2]s]
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, hiddenAppTypesString))
+}
+
+func testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
+	var hiddenMlToolsString string
+	for i, mlTool := range hiddenMlTools {
+		if i > 0 {
+			hiddenMlToolsString += ", "
+		}
+		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
+	}
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    studio_web_portal_settings {
+      hidden_ml_tools = [%[2]s]
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, hiddenMlToolsString))
+}
+
+func testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName string, defaultUserSettingsinstanceType string, defaultSpaceSettingsinstanceType string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = %[2]q
+      }
+    }
+  }
+
+  default_space_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = %[3]q
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, defaultUserSettingsinstanceType, defaultSpaceSettingsinstanceType))
+}
+
+func testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName string, defaultUserSettingsMaxEbsVolumeSize string, defaultSpaceSettingsMaxEbsVolumeSize string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+    space_storage_settings {
+      default_ebs_storage_settings {
+        default_ebs_volume_size_in_gb = 10
+        maximum_ebs_volume_size_in_gb = %[2]q
+      }
+    }
+  }
+
+  default_space_settings {
+    execution_role = aws_iam_role.test.arn
+    space_storage_settings {
+      default_ebs_storage_settings {
+        default_ebs_volume_size_in_gb = 10
+        maximum_ebs_volume_size_in_gb = %[3]q
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, defaultUserSettingsMaxEbsVolumeSize, defaultSpaceSettingsMaxEbsVolumeSize))
+}
+
+func testAccDomainConfig_spaceSettingsCustomPOSIXUserConfig(rName string, defaultUserSettingsGid string, defaultUserSettingsUid string, defaultSpaceSettingsGid string, defaultSpaceSettingsUid string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+    custom_posix_user_config {
+      gid = %[2]q
+      uid = %[3]q
+    }
+  }
+
+  default_space_settings {
+    execution_role = aws_iam_role.test.arn
+    custom_posix_user_config {
+      gid = %[4]q
+      uid = %[5]q
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, defaultUserSettingsGid, defaultUserSettingsUid, defaultSpaceSettingsGid, defaultSpaceSettingsUid))
+}
+
+func testAccDomainConfig_spaceSettingsCustomFileSystemConfigs(rName string, efsName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[2]q
+  tags = {
+    Name = %[2]q
+  }
+}
+
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    custom_file_system_config {
+      efs_file_system_config {
+        file_system_id   = aws_efs_mount_target.test.file_system_id
+        file_system_path = "/"
+      }
+    }
+  }
+
+  default_space_settings {
+    execution_role = aws_iam_role.test.arn
+
+    custom_file_system_config {
+      efs_file_system_config {
+        file_system_id   = aws_efs_mount_target.test.file_system_id
+        file_system_path = "/"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, efsName))
 }

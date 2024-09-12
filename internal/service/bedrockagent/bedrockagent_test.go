@@ -27,6 +27,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"update":             testAccDataSource_update,
 			"semantic":           testAccDataSource_fullSemantic,
 			"hierarchical":       testAccDataSource_fullHierarchical,
+			"parsing":            testAccDataSource_parsing,
 		},
 	}
 

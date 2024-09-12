@@ -38,6 +38,7 @@ import (
 // @Tags(identifierAttribute="arn")
 func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcConnectionResource{}
+
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(5 * time.Minute)
@@ -78,10 +79,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.All(
-						stringvalidator.LengthAtMost(1000),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[\\w\\-]+`), ""),
-					),
+					stringvalidator.LengthAtMost(1000),
 				},
 			},
 			names.AttrName: schema.StringAttribute{

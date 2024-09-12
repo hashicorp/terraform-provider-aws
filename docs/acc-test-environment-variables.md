@@ -5,10 +5,6 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | Variable | Description |
 |----------|-------------|
 | `ACM_CERTIFICATE_ROOT_DOMAIN` | Root domain name to use with ACM Certificate testing. |
-| `ACM_CERTIFICATE_MULTIPLE_ISSUED_DOMAIN` | Domain name of ACM Certificate with multiple issued certificates. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
-| `ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN` | Amazon Resource Name of most recent ACM Certificate with multiple issued certificates. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
-| `ACM_CERTIFICATE_SINGLE_ISSUED_DOMAIN` | Domain name of ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
-| `ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN` | Amazon Resource Name of most recent ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
 | `ADM_CLIENT_ID` | Identifier for Amazon Device Manager Client in Pinpoint testing. |
 | `AMPLIFY_DOMAIN_NAME` | Domain name to use for Amplify domain association testing. |
 | `AMPLIFY_GITHUB_ACCESS_TOKEN` | GitHub access token used for AWS Amplify testing. |

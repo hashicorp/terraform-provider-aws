@@ -55,6 +55,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -553,16 +554,19 @@ func MatchResourceAttrGlobalHostname(resourceName, attributeName, serviceName st
 	}
 }
 
+func globalARNValue(arnService, arnResource string) string {
+	return arn.ARN{
+		AccountID: AccountID(),
+		Partition: Partition(),
+		Resource:  arnResource,
+		Service:   arnService,
+	}.String()
+}
+
 // CheckResourceAttrGlobalARN ensures the Terraform state exactly matches a formatted ARN without region
 func CheckResourceAttrGlobalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := arn.ARN{
-			AccountID: AccountID(),
-			Partition: Partition(),
-			Resource:  arnResource,
-			Service:   arnService,
-		}.String()
-		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+		return resource.TestCheckResourceAttr(resourceName, attributeName, globalARNValue(arnService, arnResource))(s)
 	}
 }
 
@@ -674,6 +678,16 @@ func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestC
 		if vNormal != expectedNormal {
 			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", n, key, expectedJSON, value)
 		}
+		return nil
+	})
+}
+
+func CheckResourceAttrJSONNoDiff(n, key, expectedJSON string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		if diff := jsoncmp.Diff(expectedJSON, value); diff != "" {
+			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+
 		return nil
 	})
 }

@@ -959,8 +959,7 @@ func resourceGroup() *schema.Resource {
 
 func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("instance_maintenance_policy")
-	oList := o.([]interface{})
-	nList := n.([]interface{})
+	oList, nList := o.([]interface{}), n.([]interface{})
 
 	if len(oList) == 0 && len(nList) != 0 {
 		tfMap := nList[0].(map[string]interface{})
@@ -968,6 +967,7 @@ func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.Resource
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -1500,22 +1500,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("traffic_source") {
 		o, n := d.GetChange("traffic_source")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
-			_, err := conn.DetachTrafficSources(ctx, &autoscaling.DetachTrafficSourcesInput{
+			input := &autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
-			})
+			}
+
+			_, err := conn.DetachTrafficSources(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
@@ -1527,10 +1522,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
-			_, err := conn.AttachTrafficSources(ctx, &autoscaling.AttachTrafficSourcesInput{
+			input := &autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
-			})
+			}
+
+			_, err := conn.AttachTrafficSources(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
@@ -1544,22 +1541,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("load_balancers") {
 		o, n := d.GetChange("load_balancers")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			_, err := conn.DetachLoadBalancers(ctx, &autoscaling.DetachLoadBalancersInput{
+			input := &autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
-			})
+			}
+
+			_, err := conn.DetachLoadBalancers(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
@@ -1571,10 +1563,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			_, err := conn.AttachLoadBalancers(ctx, &autoscaling.AttachLoadBalancersInput{
+			input := &autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
-			})
+			}
+
+			_, err := conn.AttachLoadBalancers(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
@@ -1588,22 +1582,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("target_group_arns") {
 		o, n := d.GetChange("target_group_arns")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			_, err := conn.DetachLoadBalancerTargetGroups(ctx, &autoscaling.DetachLoadBalancerTargetGroupsInput{
+			input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
-			})
+			}
+
+			_, err := conn.DetachLoadBalancerTargetGroups(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
@@ -1615,10 +1604,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			_, err := conn.AttachLoadBalancerTargetGroups(ctx, &autoscaling.AttachLoadBalancerTargetGroupsInput{
+			input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
-			})
+			}
+
+			_, err := conn.AttachLoadBalancerTargetGroups(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
@@ -1717,14 +1708,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("enabled_metrics") {
 		o, n := d.GetChange("enabled_metrics")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if disableMetrics := os.Difference(ns); disableMetrics.Len() != 0 {
 			input := &autoscaling.DisableMetricsCollectionInput{
@@ -1756,14 +1740,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("suspended_processes") {
 		o, n := d.GetChange("suspended_processes")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if resumeProcesses := os.Difference(ns); resumeProcesses.Len() != 0 {
 			input := &autoscaling.ResumeProcessesInput{

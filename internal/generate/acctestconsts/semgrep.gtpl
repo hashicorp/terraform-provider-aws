@@ -16,4 +16,6 @@ rules:
     {{- end }}
     severity: ERROR
     fix: "acctest.Ct{{ .Constant }}"
-{{- end }}
+    options:
+      constant_propagation: false
+{{ end -}}

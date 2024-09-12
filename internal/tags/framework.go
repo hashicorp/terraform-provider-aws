@@ -4,6 +4,7 @@
 package tags
 
 import (
+	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -18,8 +19,8 @@ func TagsAttribute() schema.Attribute {
 	}
 }
 
-func TagsAttributeComputedOnly() schema.Attribute {
-	return schema.MapAttribute{
+func TagsAttributeComputedOnly() dataschema.MapAttribute {
+	return dataschema.MapAttribute{
 		CustomType:  MapType,
 		ElementType: types.StringType,
 		Computed:    true,

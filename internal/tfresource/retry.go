@@ -126,32 +126,6 @@ func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, 
 	})
 }
 
-// RetryWhenMessageContains retries the specified function when it returns an error containing any of the specified messages.
-func RetryWhenMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes []string, messages []string) (interface{}, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		for i, message := range messages {
-			if tfawserr_sdkv1.ErrMessageContains(err, codes[i], message) || tfawserr_sdkv2.ErrMessageContains(err, codes[i], message) {
-				return true, err
-			}
-		}
-
-		return false, err
-	})
-}
-
-// RetryGWhenMessageContains retries the specified function when it returns an error containing any of the specified messages.
-func RetryGWhenMessageContains[T any](ctx context.Context, timeout time.Duration, f func() (T, error), codes []string, messages []string) (T, error) {
-	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
-		for i, message := range messages {
-			if tfawserr_sdkv1.ErrMessageContains(err, codes[i], message) || tfawserr_sdkv2.ErrMessageContains(err, codes[i], message) {
-				return true, err
-			}
-		}
-
-		return false, err
-	})
-}
-
 func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T](err) {
@@ -236,17 +210,6 @@ func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t
 	}
 
 	return output, nil
-}
-
-// RetryWhenHTTPStatusCodeEquals retries the specified function when it returns one of the specified HTTP status codes.
-func RetryWhenHTTPStatusCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), statusCodes ...int) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, statusCodes...) {
-			return true, err
-		}
-
-		return false, err
-	})
 }
 
 var ErrFoundResource = errors.New(`found resource`)
