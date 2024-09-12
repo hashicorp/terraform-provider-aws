@@ -5,16 +5,18 @@ package rolesanywhere
 
 import (
 	"context"
-	"errors"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
-	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,7 +25,7 @@ import (
 
 // @SDKResource("aws_rolesanywhere_profile", name="Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceProfile() *schema.Resource {
+func resourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
 		ReadWithoutTimeout:   resourceProfileRead,
@@ -64,7 +66,7 @@ func ResourceProfile() *schema.Resource {
 			},
 			"role_arns": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -87,7 +89,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get(names.AttrName).(string)
 	input := &rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
-		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
+		RoleArns: flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -100,7 +102,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("managed_policy_arns"); ok {
-		input.ManagedPolicyArns = expandStringList(v.(*schema.Set).List())
+		input.ManagedPolicyArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("require_instance_properties"); ok {
@@ -127,7 +129,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	profile, err := FindProfileByID(ctx, conn, d.Id())
+	profile, err := findProfileByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RolesAnywhere Profile (%s) not found, removing from state", d.Id())
@@ -165,7 +167,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("managed_policy_arns") {
-			input.ManagedPolicyArns = expandStringList(d.Get("managed_policy_arns").(*schema.Set).List())
+			input.ManagedPolicyArns = flex.ExpandStringValueSet(d.Get("managed_policy_arns").(*schema.Set))
 		}
 
 		if d.HasChange(names.AttrName) {
@@ -173,7 +175,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("role_arns") {
-			input.RoleArns = expandStringList(d.Get("role_arns").(*schema.Set).List())
+			input.RoleArns = flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set))
 		}
 
 		if d.HasChange("session_policy") {
@@ -214,8 +216,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ProfileId: aws.String(d.Id()),
 	})
 
-	var resourceNotFoundException *types.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -224,6 +225,31 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func findProfileByID(ctx context.Context, conn *rolesanywhere.Client, id string) (*awstypes.ProfileDetail, error) {
+	in := &rolesanywhere.GetProfileInput{
+		ProfileId: aws.String(id),
+	}
+
+	out, err := conn.GetProfile(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Profile == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Profile, nil
 }
 
 func disableProfile(ctx context.Context, profileId string, meta interface{}) error {

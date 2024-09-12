@@ -490,8 +490,8 @@ type domainResourceModel struct {
 	PortalUrl           types.String   `tfsdk:"portal_url"`
 	SkipDeletionCheck   types.Bool     `tfsdk:"skip_deletion_check"`
 	SingleSignOn        types.List     `tfsdk:"single_sign_on"`
-	Tags                types.Map      `tfsdk:"tags"`
-	TagsAll             types.Map      `tfsdk:"tags_all"`
+	Tags                tftags.Map     `tfsdk:"tags"`
+	TagsAll             tftags.Map     `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
 

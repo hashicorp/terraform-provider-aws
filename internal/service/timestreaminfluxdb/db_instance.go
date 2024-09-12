@@ -647,8 +647,8 @@ type resourceDBInstanceData struct {
 	Password                      types.String                                                  `tfsdk:"password"`
 	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
 	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
-	Tags                          types.Map                                                     `tfsdk:"tags"`
-	TagsAll                       types.Map                                                     `tfsdk:"tags_all"`
+	Tags                          tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                `tfsdk:"timeouts"`
 	Username                      types.String                                                  `tfsdk:"username"`
 	VPCSecurityGroupIDs           fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_security_group_ids"`

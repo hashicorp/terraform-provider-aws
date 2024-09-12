@@ -172,6 +172,7 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Parallel Computing Service
 Payment Cryptography Control Plane
 Pinpoint
 Polly

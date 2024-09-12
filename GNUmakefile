@@ -864,6 +864,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	go-misspell \
 	golangci-lint1 \
 	golangci-lint2 \
+	golangci-lint3 \
 	golangci-lint \
 	help \
 	import-lint \

@@ -616,8 +616,8 @@ type tlsInspectionConfigurationResourceModel struct {
 	EncryptionConfiguration        fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel]    `tfsdk:"encryption_configuration"`
 	ID                             types.String                                                     `tfsdk:"id"`
 	NumberOfAssociations           types.Int64                                                      `tfsdk:"number_of_associations"`
-	Tags                           types.Map                                                        `tfsdk:"tags"`
-	TagsAll                        types.Map                                                        `tfsdk:"tags_all"`
+	Tags                           tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                        tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts                       timeouts.Value                                                   `tfsdk:"timeouts"`
 	TLSInspectionConfiguration     fwtypes.ListNestedObjectValueOf[tlsInspectionConfigurationModel] `tfsdk:"tls_inspection_configuration"`
 	TLSInspectionConfigurationARN  types.String                                                     `tfsdk:"arn"`
@@ -646,10 +646,10 @@ type tlsInspectionConfigurationModel struct {
 }
 
 type serverCertificateConfigurationModel struct {
-	CertificateAuthorityARN           fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
-	CheckCertificateRevocationsStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
-	Scopes                            fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
-	ServerCertificates                fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
+	CertificateAuthorityARN          fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
+	CheckCertificateRevocationStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
+	Scopes                           fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
+	ServerCertificates               fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
 }
 
 type checkCertificateRevocationStatusActionsModel struct {

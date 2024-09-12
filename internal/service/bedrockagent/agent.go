@@ -576,8 +576,8 @@ type agentResourceModel struct {
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
-	Tags                        types.Map                                                         `tfsdk:"tags"`
-	TagsAll                     types.Map                                                         `tfsdk:"tags_all"`
+	Tags                        tftags.Map                                                        `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                                        `tfsdk:"tags_all"`
 	Timeouts                    timeouts.Value                                                    `tfsdk:"timeouts"`
 }
 
