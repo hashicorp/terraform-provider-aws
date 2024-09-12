@@ -24,8 +24,6 @@ const (
 	modelPackageGroupDeletedTimeout    = 10 * time.Minute
 	imageCreatedTimeout                = 10 * time.Minute
 	imageDeletedTimeout                = 10 * time.Minute
-	endpointDeletedTimeout             = 10 * time.Minute
-	endpointInServiceTimeout           = 60 * time.Minute
 	imageVersionCreatedTimeout         = 10 * time.Minute
 	imageVersionDeletedTimeout         = 10 * time.Minute
 	domainInServiceTimeout             = 20 * time.Minute
@@ -47,48 +45,6 @@ const (
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
-
-func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
-		Target:  []string{},
-		Refresh: statusEndpoint(ctx, conn, name),
-		Timeout: endpointDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
-		if output.EndpointStatus == awstypes.EndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
-		Target:  enum.Slice(awstypes.EndpointStatusInService),
-		Refresh: statusEndpoint(ctx, conn, name),
-		Timeout: endpointInServiceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
-		if output.EndpointStatus == awstypes.EndpointStatusFailed || output.FailureReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
-		}
-
-		return err
-	}
-
-	return err
-}
 
 func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
 	stateConf := &retry.StateChangeConf{
