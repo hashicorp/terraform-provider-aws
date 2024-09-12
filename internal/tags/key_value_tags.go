@@ -620,6 +620,8 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		return kvtm
 	case types.Map:
 		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
+	case Map:
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
@@ -806,18 +808,18 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 }
 
 // ResolveDuplicatesFramework resolves differences between incoming tags, defaultTags, and ignoreConfig
-func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags fwdiag.Diagnostics) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags *fwdiag.Diagnostics) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
 
-	var tagsAll types.Map
+	var tagsAll Map
 	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
 
 	if diags.HasError() {
 		return KeyValueTags{}
 	}
 
-	result := make(map[string]string)
+	result := make(map[string]string, len(t))
 	for k, v := range t {
 		result[k] = v.ValueString()
 	}

@@ -171,12 +171,14 @@ import (
 	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
 	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
+	pcs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcs"
 	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qbusiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
+	quicksight_sdkv2 "github.com/aws/aws-sdk-go-v2/service/quicksight"
 	ram_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ram"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -242,7 +244,6 @@ import (
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
-	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -916,6 +917,10 @@ func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sd
 	return errs.Must(client[*pcaconnectorad_sdkv2.Client](ctx, c, names.PCAConnectorAD, make(map[string]any)))
 }
 
+func (c *AWSClient) PCSClient(ctx context.Context) *pcs_sdkv2.Client {
+	return errs.Must(client[*pcs_sdkv2.Client](ctx, c, names.PCS, make(map[string]any)))
+}
+
 func (c *AWSClient) PaymentCryptographyClient(ctx context.Context) *paymentcryptography_sdkv2.Client {
 	return errs.Must(client[*paymentcryptography_sdkv2.Client](ctx, c, names.PaymentCryptography, make(map[string]any)))
 }
@@ -944,8 +949,8 @@ func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
 	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB, make(map[string]any)))
 }
 
-func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickSight {
-	return errs.Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight, make(map[string]any)))
+func (c *AWSClient) QuickSightClient(ctx context.Context) *quicksight_sdkv2.Client {
+	return errs.Must(client[*quicksight_sdkv2.Client](ctx, c, names.QuickSight, make(map[string]any)))
 }
 
 func (c *AWSClient) RAMClient(ctx context.Context) *ram_sdkv2.Client {

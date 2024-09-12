@@ -7,20 +7,31 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
-type ServiceRecord []string
+type ServiceRecord struct {
+	service Service
+}
 
 func (sr ServiceRecord) AWSCLIV2Command() string {
-	return sr[colAWSCLIV2Command]
+	result := sr.service.ProviderPackage
+	if sr.service.ServiceCli != nil {
+		result = sr.service.ServiceCli.AWSCLIV2Command
+	}
+	return result
 }
 
 func (sr ServiceRecord) AWSCLIV2CommandNoDashes() string {
-	return sr[colAWSCLIV2CommandNoDashes]
+	result := sr.service.ProviderPackage
+	if sr.service.ServiceCli != nil {
+		result = sr.service.ServiceCli.AWSCLIV2CommandNoDashes
+	}
+	return result
 }
 
 func (sr ServiceRecord) GoPackageName(version int) string {
@@ -32,42 +43,46 @@ func (sr ServiceRecord) GoPackageName(version int) string {
 }
 
 func (sr ServiceRecord) GoV1Package() string {
-	return sr[colGoV1Package]
+	result := sr.service.ProviderPackage
+	if sr.service.ServiceGoPackages != nil {
+		result = sr.service.ServiceGoPackages.V1Package
+	}
+	return result
 }
 
 func (sr ServiceRecord) GoV2Package() string {
-	return sr[colGoV2Package]
+	result := sr.service.ProviderPackage
+	if sr.service.ServiceGoPackages != nil {
+		result = sr.service.ServiceGoPackages.V2Package
+	}
+	return result
 }
 
 func (sr ServiceRecord) ProviderPackage() string {
-	pkg := sr.ProviderPackageCorrect()
-	if sr.ProviderPackageActual() != "" {
-		pkg = sr.ProviderPackageActual()
-	}
-	return pkg
-}
-
-func (sr ServiceRecord) ProviderPackageActual() string {
-	return sr[colProviderPackageActual]
+	return sr.service.ProviderPackage
 }
 
 func (sr ServiceRecord) ProviderPackageCorrect() string {
-	return sr[colProviderPackageCorrect]
+	result := sr.service.ProviderPackage
+	if len(sr.service.ServiceProviderPackageCorrect) > 0 {
+		result = sr.service.ServiceProviderPackageCorrect
+	}
+	return result
 }
 
 func (sr ServiceRecord) SplitPackageRealPackage() string {
-	return sr[colSplitPackageRealPackage]
+	return sr.service.ServiceSplitPackage
 }
 
 func (sr ServiceRecord) Aliases() []string {
-	if sr[colAliases] == "" {
-		return nil
+	if len(sr.service.ServiceNames.Aliases) > 0 {
+		return slices.Clone(sr.service.ServiceNames.Aliases)
 	}
-	return strings.Split(sr[colAliases], ";")
+	return nil
 }
 
 func (sr ServiceRecord) ProviderNameUpper() string {
-	return sr[colProviderNameUpper]
+	return sr.service.ServiceNames.ProviderNameUpper
 }
 
 func (sr ServiceRecord) ClientTypeName(version int) (s string) {
@@ -79,19 +94,29 @@ func (sr ServiceRecord) ClientTypeName(version int) (s string) {
 }
 
 func (sr ServiceRecord) GoV1ClientTypeName() string {
-	return sr[colGoV1ClientTypeName]
+	if sr.service.ServiceClient != nil {
+		return sr.service.ServiceClient.GoV1ClientTypeName
+	}
+	return ""
 }
 
-func (sr ServiceRecord) SkipClientGenerate() bool {
-	return sr[colSkipClientGenerate] != ""
+func (sr ServiceRecord) skipClientGenerate() bool {
+	if sr.service.ServiceClient != nil {
+		return sr.service.ServiceClient.SkipClientGenerate
+	}
+	return false
+}
+
+func (sr ServiceRecord) GenerateClient() bool {
+	return !sr.skipClientGenerate()
 }
 
 func (sr ServiceRecord) ClientSDKV1() bool {
-	return sr[colClientSDKV1] != ""
+	return slices.Contains(sr.service.ServiceSDK.Version, 1)
 }
 
 func (sr ServiceRecord) ClientSDKV2() bool {
-	return sr[colClientSDKV2] != ""
+	return slices.Contains(sr.service.ServiceSDK.Version, 2) //nolint:mnd
 }
 
 // SDKVersion returns:
@@ -118,26 +143,23 @@ func (sr ServiceRecord) ResourcePrefix() string {
 }
 
 func (sr ServiceRecord) ResourcePrefixActual() string {
-	return sr[colResourcePrefixActual]
+	return sr.service.ServiceResourcePrefix.ResourcePrefixActual
 }
 
 func (sr ServiceRecord) ResourcePrefixCorrect() string {
-	return sr[colResourcePrefixCorrect]
+	return sr.service.ServiceResourcePrefix.ResourcePrefixCorrect
 }
 
 func (sr ServiceRecord) FilePrefix() string {
-	return sr[colFilePrefix]
+	return sr.service.FilePrefix
 }
 
 func (sr ServiceRecord) DocPrefix() []string {
-	if sr[colDocPrefix] == "" {
-		return nil
-	}
-	return strings.Split(sr[colDocPrefix], ";")
+	return sr.service.DocPrefix
 }
 
 func (sr ServiceRecord) HumanFriendly() string {
-	return sr[colHumanFriendly]
+	return sr.service.ServiceNames.HumanFriendly
 }
 
 func (sr ServiceRecord) FullHumanFriendly() string {
@@ -149,35 +171,44 @@ func (sr ServiceRecord) FullHumanFriendly() string {
 }
 
 func (sr ServiceRecord) Brand() string {
-	return sr[colBrand]
+	return sr.service.Brand
 }
 
 func (sr ServiceRecord) Exclude() bool {
-	return sr[colExclude] != ""
+	return sr.service.Exclude
 }
 
 func (sr ServiceRecord) NotImplemented() bool {
-	return sr[colNotImplemented] != ""
+	return sr.service.NotImplemented
 }
 
 func (sr ServiceRecord) EndpointOnly() bool {
-	return sr[colEndpointOnly] != ""
+	if sr.service.ServiceEndpoints != nil {
+		return sr.service.ServiceEndpoints.EndpointOnly
+	}
+	return false
 }
 
-func (sr ServiceRecord) AllowedSubcategory() string {
-	return sr[colAllowedSubcategory]
+func (sr ServiceRecord) AllowedSubcategory() bool {
+	return sr.service.AllowedSubcategory
 }
 
 func (sr ServiceRecord) DeprecatedEnvVar() string {
-	return sr[colDeprecatedEnvVar]
+	if sr.service.ServiceEnvVars != nil {
+		return sr.service.ServiceEnvVars.DeprecatedEnvVar
+	}
+	return ""
 }
 
 func (sr ServiceRecord) TFAWSEnvVar() string {
-	return sr[colTFAWSEnvVar]
+	if sr.service.ServiceEnvVars != nil {
+		return sr.service.ServiceEnvVars.TFAWSEnvVar
+	}
+	return ""
 }
 
 func (sr ServiceRecord) SDKID() string {
-	return sr[colSDKID]
+	return sr.service.ServiceSDK.ID
 }
 
 func (sr ServiceRecord) AWSServiceEnvVar() string {
@@ -189,126 +220,31 @@ func (sr ServiceRecord) AWSConfigParameter() string {
 }
 
 func (sr ServiceRecord) EndpointAPICall() string {
-	return sr[colEndpointAPICall]
+	if sr.service.ServiceEndpoints != nil {
+		return sr.service.ServiceEndpoints.EndpointAPICall
+	}
+	return ""
 }
 
 func (sr ServiceRecord) EndpointAPIParams() string {
-	return sr[colEndpointAPIParams]
+	if sr.service.ServiceEndpoints != nil {
+		return sr.service.ServiceEndpoints.EndpointAPIParams
+	}
+	return ""
 }
 
 func (sr ServiceRecord) EndpointOverrideRegion() string {
-	return sr[colEndpointOverrideRegion]
+	return sr.service.ServiceEndpoints.EndpointRegionOverride
 }
 
 func (sr ServiceRecord) Note() string {
-	return sr[colNote]
+	return sr.service.Note
 }
 
 func parseService(curr Service) ServiceRecord {
-	record := make(ServiceRecord, colNote+1)
-
-	// provider packages/label
-	record[colProviderPackageActual] = curr.Label
-	record[colProviderPackageCorrect] = curr.Label
-
-	// cli_v2_command
-	if len(curr.ServiceCli) > 0 {
-		record[colAWSCLIV2Command] = curr.ServiceCli[0].AWSCLIV2Command
-		record[colAWSCLIV2CommandNoDashes] = curr.ServiceCli[0].AWSCLIV2CommandNoDashes
-	} else {
-		record[colAWSCLIV2Command] = curr.Label
-		record[colAWSCLIV2CommandNoDashes] = curr.Label
+	return ServiceRecord{
+		service: curr,
 	}
-
-	// go_packages
-	if len(curr.ServiceGoPackages) > 0 {
-		record[colGoV1Package] = curr.ServiceGoPackages[0].V1Package
-		record[colGoV2Package] = curr.ServiceGoPackages[0].V2Package
-	} else {
-		record[colGoV1Package] = curr.Label
-		record[colGoV2Package] = curr.Label
-	}
-
-	// sdk
-	if len(curr.ServiceSDK) > 0 {
-		record[colSDKID] = curr.ServiceSDK[0].ID
-		for _, i := range curr.ServiceSDK[0].Version {
-			if i == 1 {
-				record[colClientSDKV1] = "1"
-			}
-			if i == 2 {
-				record[colClientSDKV2] = "2"
-			}
-		}
-	}
-
-	// names
-	if len(curr.ServiceNames) > 0 {
-		record[colAliases] = strings.Join(curr.ServiceNames[0].Aliases, ";")
-		record[colProviderNameUpper] = curr.ServiceNames[0].ProviderNameUpper
-		record[colHumanFriendly] = curr.ServiceNames[0].HumanFriendly
-	}
-
-	// client
-	if len(curr.ServiceClient) > 0 {
-		record[colGoV1ClientTypeName] = curr.ServiceClient[0].GoV1ClientTypeName
-		if curr.ServiceClient[0].SkipClientGenerate {
-			record[colSkipClientGenerate] = "x"
-		} else {
-			record[colSkipClientGenerate] = ""
-		}
-	}
-
-	// env_var
-	if len(curr.ServiceEnvVars) > 0 {
-		record[colDeprecatedEnvVar] = curr.ServiceEnvVars[0].DeprecatedEnvVar
-		record[colTFAWSEnvVar] = curr.ServiceEnvVars[0].TFAWSEnvVar
-	}
-
-	// endpoint_info
-	if len(curr.ServiceEndpoints) > 0 {
-		record[colEndpointAPICall] = curr.ServiceEndpoints[0].EndpointAPICall
-		record[colEndpointAPIParams] = curr.ServiceEndpoints[0].EndpointAPIParams
-		record[colEndpointOverrideRegion] = curr.ServiceEndpoints[0].EndpointRegionOverride
-		if curr.ServiceEndpoints[0].EndpointOnly {
-			record[colEndpointOnly] = "x"
-		} else {
-			record[colEndpointOnly] = ""
-		}
-	}
-
-	// resource_prefix
-	if len(curr.ServiceResourcePrefix) > 0 {
-		record[colResourcePrefixActual] = curr.ServiceResourcePrefix[0].ResourcePrefixActual
-		record[colResourcePrefixCorrect] = curr.ServiceResourcePrefix[0].ResourcePrefixCorrect
-	}
-
-	// rest
-	record[colSplitPackageRealPackage] = curr.ServiceSplitPackage
-	record[colFilePrefix] = curr.FilePrefix
-	record[colDocPrefix] = strings.Join(curr.DocPrefix, ";")
-	record[colBrand] = curr.Brand
-	if curr.Exclude {
-		record[colExclude] = "x"
-	} else {
-		record[colExclude] = ""
-	}
-	if curr.NotImplemented {
-		record[colNotImplemented] = "x"
-	} else {
-		record[colNotImplemented] = ""
-	}
-	if curr.AllowedSubcategory {
-		record[colAllowedSubcategory] = "x"
-	} else {
-		record[colAllowedSubcategory] = ""
-	}
-	record[colNote] = curr.Note
-	if len(curr.ServiceProviderPackageCorrect) > 0 {
-		record[colProviderPackageCorrect] = curr.ServiceProviderPackageCorrect
-	}
-
-	return record
 }
 
 func ReadAllServiceData() (results []ServiceRecord, err error) {
@@ -383,15 +319,15 @@ type EndpointInfo struct {
 }
 
 type Service struct {
-	Label                 string           `hcl:"CLIV2Command,label"`
-	ServiceCli            []CLIV2Command   `hcl:"cli_v2_command,block"`
-	ServiceGoPackages     []GoPackages     `hcl:"go_packages,block"`
-	ServiceSDK            []SDK            `hcl:"sdk,block"`
-	ServiceNames          []Names          `hcl:"names,block"`
-	ServiceClient         []Client         `hcl:"client,block"`
-	ServiceEnvVars        []EnvVar         `hcl:"env_var,block"`
-	ServiceEndpoints      []EndpointInfo   `hcl:"endpoint_info,block"`
-	ServiceResourcePrefix []ResourcePrefix `hcl:"resource_prefix,block"`
+	ProviderPackage       string         `hcl:",label"`
+	ServiceCli            *CLIV2Command  `hcl:"cli_v2_command,block"`
+	ServiceGoPackages     *GoPackages    `hcl:"go_packages,block"`
+	ServiceSDK            SDK            `hcl:"sdk,block"`
+	ServiceNames          Names          `hcl:"names,block"`
+	ServiceClient         *Client        `hcl:"client,block"`
+	ServiceEnvVars        *EnvVar        `hcl:"env_var,block"`
+	ServiceEndpoints      *EndpointInfo  `hcl:"endpoint_info,block"`
+	ServiceResourcePrefix ResourcePrefix `hcl:"resource_prefix,block"`
 
 	SubService []Service `hcl:"sub_service,block"`
 
@@ -412,36 +348,3 @@ type Services struct {
 
 //go:embed names_data.hcl
 var b []byte
-
-const (
-	colAWSCLIV2Command = iota
-	colAWSCLIV2CommandNoDashes
-	colGoV1Package
-	colGoV2Package
-	colProviderPackageActual
-	colProviderPackageCorrect
-	colSplitPackageRealPackage
-	colAliases
-	colProviderNameUpper
-	colGoV1ClientTypeName
-	colSkipClientGenerate
-	colClientSDKV1
-	colClientSDKV2
-	colResourcePrefixActual
-	colResourcePrefixCorrect
-	colFilePrefix
-	colDocPrefix
-	colHumanFriendly
-	colBrand
-	colExclude        // If set, the service is completely ignored
-	colNotImplemented // If set, the service will be included in, e.g. labels, but not have a service client
-	colEndpointOnly   // If set, the service is included in list of endpoints
-	colAllowedSubcategory
-	colDeprecatedEnvVar  // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
-	colTFAWSEnvVar       // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
-	colSDKID             // Service SDK ID from AWS SDK for Go v2
-	colEndpointAPICall   // API call to use for endpoint tests
-	colEndpointAPIParams // Any needed parameters for endpoint tests
-	colEndpointOverrideRegion
-	colNote
-)

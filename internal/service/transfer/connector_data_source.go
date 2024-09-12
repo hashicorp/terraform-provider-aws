@@ -113,7 +113,7 @@ func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	tags := KeyValueTags(ctx, description.Connector.Tags).IgnoreAWS().IgnoreConfig(d.Meta().IgnoreTagsConfig)
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -127,7 +127,7 @@ type dsConnectorData struct {
 	SecurityPolicyName              types.String                                  `tfsdk:"security_policy_name"`
 	ServiceManagedEgressIpAddresses fwtypes.ListValueOf[types.String]             `tfsdk:"service_managed_egress_ip_addresses"`
 	SftpConfig                      fwtypes.ListNestedObjectValueOf[dsSftpConfig] `tfsdk:"sftp_config"`
-	Tags                            types.Map                                     `tfsdk:"tags"`
+	Tags                            tftags.Map                                    `tfsdk:"tags"`
 	Url                             types.String                                  `tfsdk:"url"`
 }
 

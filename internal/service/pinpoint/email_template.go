@@ -289,8 +289,8 @@ type emailTemplateData struct {
 	TemplateName  types.String                                   `tfsdk:"template_name"`
 	EmailTemplate fwtypes.ListNestedObjectValueOf[emailTemplate] `tfsdk:"email_template"`
 	Arn           types.String                                   `tfsdk:"arn"`
-	Tags          types.Map                                      `tfsdk:"tags"`
-	TagsAll       types.Map                                      `tfsdk:"tags_all"`
+	Tags          tftags.Map                                     `tfsdk:"tags"`
+	TagsAll       tftags.Map                                     `tfsdk:"tags_all"`
 }
 
 type emailTemplate struct {

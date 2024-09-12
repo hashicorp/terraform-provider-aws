@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -120,7 +120,7 @@ func filledMapVisualSchema() *schema.Schema {
 	}
 }
 
-func expandFilledMapVisual(tfList []interface{}) *quicksight.FilledMapVisual {
+func expandFilledMapVisual(tfList []interface{}) *awstypes.FilledMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -130,34 +130,34 @@ func expandFilledMapVisual(tfList []interface{}) *quicksight.FilledMapVisual {
 		return nil
 	}
 
-	visual := &quicksight.FilledMapVisual{}
+	apiObject := &awstypes.FilledMapVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
+		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandFilledMapConfiguration(v)
+		apiObject.ChartConfiguration = expandFilledMapConfiguration(v)
 	}
 	if v, ok := tfMap["conditional_formatting"].([]interface{}); ok && len(v) > 0 {
-		visual.ConditionalFormatting = expandFilledMapConditionalFormatting(v)
+		apiObject.ConditionalFormatting = expandFilledMapConditionalFormatting(v)
 	}
 	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
-		visual.ColumnHierarchies = expandColumnHierarchies(v)
+		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return visual
+	return apiObject
 }
 
-func expandFilledMapConfiguration(tfList []interface{}) *quicksight.FilledMapConfiguration {
+func expandFilledMapConfiguration(tfList []interface{}) *awstypes.FilledMapConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -167,31 +167,31 @@ func expandFilledMapConfiguration(tfList []interface{}) *quicksight.FilledMapCon
 		return nil
 	}
 
-	config := &quicksight.FilledMapConfiguration{}
+	apiObject := &awstypes.FilledMapConfiguration{}
 
 	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FieldWells = expandFilledMapFieldWells(v)
+		apiObject.FieldWells = expandFilledMapFieldWells(v)
 	}
 	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
-		config.Legend = expandLegendOptions(v)
+		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["map_style_options"].([]interface{}); ok && len(v) > 0 {
-		config.MapStyleOptions = expandGeospatialMapStyleOptions(v)
+		apiObject.MapStyleOptions = expandGeospatialMapStyleOptions(v)
 	}
 	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SortConfiguration = expandFilledMapSortConfiguration(v)
+		apiObject.SortConfiguration = expandFilledMapSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
-		config.Tooltip = expandTooltipOptions(v)
+		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 	if v, ok := tfMap["value_axis"].([]interface{}); ok && len(v) > 0 {
-		config.WindowOptions = expandGeospatialWindowOptions(v)
+		apiObject.WindowOptions = expandGeospatialWindowOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandFilledMapFieldWells(tfList []interface{}) *quicksight.FilledMapFieldWells {
+func expandFilledMapFieldWells(tfList []interface{}) *awstypes.FilledMapFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -201,16 +201,16 @@ func expandFilledMapFieldWells(tfList []interface{}) *quicksight.FilledMapFieldW
 		return nil
 	}
 
-	config := &quicksight.FilledMapFieldWells{}
+	apiObject := &awstypes.FilledMapFieldWells{}
 
 	if v, ok := tfMap["filled_map_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FilledMapAggregatedFieldWells = expandFilledMapAggregatedFieldWells(v)
+		apiObject.FilledMapAggregatedFieldWells = expandFilledMapAggregatedFieldWells(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandFilledMapAggregatedFieldWells(tfList []interface{}) *quicksight.FilledMapAggregatedFieldWells {
+func expandFilledMapAggregatedFieldWells(tfList []interface{}) *awstypes.FilledMapAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -220,19 +220,19 @@ func expandFilledMapAggregatedFieldWells(tfList []interface{}) *quicksight.Fille
 		return nil
 	}
 
-	config := &quicksight.FilledMapAggregatedFieldWells{}
+	apiObject := &awstypes.FilledMapAggregatedFieldWells{}
 
 	if v, ok := tfMap["geospatial"].([]interface{}); ok && len(v) > 0 {
-		config.Geospatial = expandDimensionFields(v)
+		apiObject.Geospatial = expandDimensionFields(v)
 	}
 	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		config.Values = expandMeasureFields(v)
+		apiObject.Values = expandMeasureFields(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandFilledMapSortConfiguration(tfList []interface{}) *quicksight.FilledMapSortConfiguration {
+func expandFilledMapSortConfiguration(tfList []interface{}) *awstypes.FilledMapSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -242,16 +242,16 @@ func expandFilledMapSortConfiguration(tfList []interface{}) *quicksight.FilledMa
 		return nil
 	}
 
-	config := &quicksight.FilledMapSortConfiguration{}
+	apiObject := &awstypes.FilledMapSortConfiguration{}
 
 	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
-		config.CategorySort = expandFieldSortOptionsList(v)
+		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandFilledMapConditionalFormatting(tfList []interface{}) *quicksight.FilledMapConditionalFormatting {
+func expandFilledMapConditionalFormatting(tfList []interface{}) *awstypes.FilledMapConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -261,53 +261,54 @@ func expandFilledMapConditionalFormatting(tfList []interface{}) *quicksight.Fill
 		return nil
 	}
 
-	config := &quicksight.FilledMapConditionalFormatting{}
+	apiObject := &awstypes.FilledMapConditionalFormatting{}
 
 	if v, ok := tfMap["conditional_formatting_options"].([]interface{}); ok && len(v) > 0 {
-		config.ConditionalFormattingOptions = expandFilledMapConditionalFormattingOptions(v)
+		apiObject.ConditionalFormattingOptions = expandFilledMapConditionalFormattingOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandFilledMapConditionalFormattingOptions(tfList []interface{}) []*quicksight.FilledMapConditionalFormattingOption {
+func expandFilledMapConditionalFormattingOptions(tfList []interface{}) []awstypes.FilledMapConditionalFormattingOption {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.FilledMapConditionalFormattingOption
+	var apiObjects []awstypes.FilledMapConditionalFormattingOption
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		opts := expandFilledMapConditionalFormattingOption(tfMap)
-		if opts == nil {
+		apiObject := expandFilledMapConditionalFormattingOption(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		options = append(options, opts)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return options
+	return apiObjects
 }
 
-func expandFilledMapConditionalFormattingOption(tfMap map[string]interface{}) *quicksight.FilledMapConditionalFormattingOption {
+func expandFilledMapConditionalFormattingOption(tfMap map[string]interface{}) *awstypes.FilledMapConditionalFormattingOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.FilledMapConditionalFormattingOption{}
+	apiObject := &awstypes.FilledMapConditionalFormattingOption{}
 
 	if v, ok := tfMap["shape"].([]interface{}); ok && len(v) > 0 {
-		options.Shape = expandFilledMapShapeConditionalFormatting(v)
+		apiObject.Shape = expandFilledMapShapeConditionalFormatting(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandFilledMapShapeConditionalFormatting(tfList []interface{}) *quicksight.FilledMapShapeConditionalFormatting {
+func expandFilledMapShapeConditionalFormatting(tfList []interface{}) *awstypes.FilledMapShapeConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -317,19 +318,19 @@ func expandFilledMapShapeConditionalFormatting(tfList []interface{}) *quicksight
 		return nil
 	}
 
-	options := &quicksight.FilledMapShapeConditionalFormatting{}
+	apiObject := &awstypes.FilledMapShapeConditionalFormatting{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		options.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrFormat].([]interface{}); ok && len(v) > 0 {
-		options.Format = expandShapeConditionalFormat(v)
+		apiObject.Format = expandShapeConditionalFormat(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandShapeConditionalFormat(tfList []interface{}) *quicksight.ShapeConditionalFormat {
+func expandShapeConditionalFormat(tfList []interface{}) *awstypes.ShapeConditionalFormat {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -339,23 +340,24 @@ func expandShapeConditionalFormat(tfList []interface{}) *quicksight.ShapeConditi
 		return nil
 	}
 
-	options := &quicksight.ShapeConditionalFormat{}
+	apiObject := &awstypes.ShapeConditionalFormat{}
 
 	if v, ok := tfMap["background_color"].([]interface{}); ok && len(v) > 0 {
-		options.BackgroundColor = expandConditionalFormattingColor(v)
+		apiObject.BackgroundColor = expandConditionalFormattingColor(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenFilledMapVisual(apiObject *quicksight.FilledMapVisual) []interface{} {
+func flattenFilledMapVisual(apiObject *awstypes.FilledMapVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
@@ -378,12 +380,13 @@ func flattenFilledMapVisual(apiObject *quicksight.FilledMapVisual) []interface{}
 	return []interface{}{tfMap}
 }
 
-func flattenFilledMapConfiguration(apiObject *quicksight.FilledMapConfiguration) []interface{} {
+func flattenFilledMapConfiguration(apiObject *awstypes.FilledMapConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.FieldWells != nil {
 		tfMap["field_wells"] = flattenFilledMapFieldWells(apiObject.FieldWells)
 	}
@@ -406,12 +409,13 @@ func flattenFilledMapConfiguration(apiObject *quicksight.FilledMapConfiguration)
 	return []interface{}{tfMap}
 }
 
-func flattenFilledMapFieldWells(apiObject *quicksight.FilledMapFieldWells) []interface{} {
+func flattenFilledMapFieldWells(apiObject *awstypes.FilledMapFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.FilledMapAggregatedFieldWells != nil {
 		tfMap["filled_map_aggregated_field_wells"] = flattenFilledMapAggregatedFieldWells(apiObject.FilledMapAggregatedFieldWells)
 	}
@@ -419,12 +423,13 @@ func flattenFilledMapFieldWells(apiObject *quicksight.FilledMapFieldWells) []int
 	return []interface{}{tfMap}
 }
 
-func flattenFilledMapAggregatedFieldWells(apiObject *quicksight.FilledMapAggregatedFieldWells) []interface{} {
+func flattenFilledMapAggregatedFieldWells(apiObject *awstypes.FilledMapAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Geospatial != nil {
 		tfMap["geospatial"] = flattenDimensionFields(apiObject.Geospatial)
 	}
@@ -435,12 +440,13 @@ func flattenFilledMapAggregatedFieldWells(apiObject *quicksight.FilledMapAggrega
 	return []interface{}{tfMap}
 }
 
-func flattenFilledMapSortConfiguration(apiObject *quicksight.FilledMapSortConfiguration) []interface{} {
+func flattenFilledMapSortConfiguration(apiObject *awstypes.FilledMapSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.CategorySort != nil {
 		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
@@ -448,12 +454,13 @@ func flattenFilledMapSortConfiguration(apiObject *quicksight.FilledMapSortConfig
 	return []interface{}{tfMap}
 }
 
-func flattenFilledMapConditionalFormatting(apiObject *quicksight.FilledMapConditionalFormatting) []interface{} {
+func flattenFilledMapConditionalFormatting(apiObject *awstypes.FilledMapConditionalFormatting) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.ConditionalFormattingOptions != nil {
 		tfMap["conditional_formatting_options"] = flattenFilledMapConditionalFormattingOption(apiObject.ConditionalFormattingOptions)
 	}
@@ -461,20 +468,18 @@ func flattenFilledMapConditionalFormatting(apiObject *quicksight.FilledMapCondit
 	return []interface{}{tfMap}
 }
 
-func flattenFilledMapConditionalFormattingOption(apiObject []*quicksight.FilledMapConditionalFormattingOption) []interface{} {
-	if len(apiObject) == 0 {
+func flattenFilledMapConditionalFormattingOption(apiObjects []awstypes.FilledMapConditionalFormattingOption) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
+	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{}
-		if config.Shape != nil {
-			tfMap["shape"] = flattenFilledMapShapeConditionalFormatting(config.Shape)
+
+		if apiObject.Shape != nil {
+			tfMap["shape"] = flattenFilledMapShapeConditionalFormatting(apiObject.Shape)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -483,14 +488,15 @@ func flattenFilledMapConditionalFormattingOption(apiObject []*quicksight.FilledM
 	return tfList
 }
 
-func flattenFilledMapShapeConditionalFormatting(apiObject *quicksight.FilledMapShapeConditionalFormatting) []interface{} {
+func flattenFilledMapShapeConditionalFormatting(apiObject *awstypes.FilledMapShapeConditionalFormatting) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Format != nil {
 		tfMap[names.AttrFormat] = flattenShapeConditionalFormat(apiObject.Format)
@@ -499,12 +505,13 @@ func flattenFilledMapShapeConditionalFormatting(apiObject *quicksight.FilledMapS
 	return []interface{}{tfMap}
 }
 
-func flattenShapeConditionalFormat(apiObject *quicksight.ShapeConditionalFormat) []interface{} {
+func flattenShapeConditionalFormat(apiObject *awstypes.ShapeConditionalFormat) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.BackgroundColor != nil {
 		tfMap["background_color"] = flattenConditionalFormattingColor(apiObject.BackgroundColor)
 	}
