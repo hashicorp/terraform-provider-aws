@@ -5,11 +5,10 @@ import (
 	"context"
 
 {{ range .Services }}
-	{{- if eq .SDKVersion "1" "1,2" }}
-	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	{{- end }}
-	{{- if eq .SDKVersion "2" "1,2" }}
-	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- if eq .SDKVersion 1 }}
+	{{ .GoPackage }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoPackage }}"
+	{{- else }}
+	{{ .GoPackage }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}"
 	{{- end }}
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -17,15 +16,13 @@ import (
 )
 
 {{ range .Services }}
-	{{if eq .SDKVersion "1" "1,2" }}
-func (c *AWSClient) {{ .ProviderNameUpper }}Conn(ctx context.Context) *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
-	return errs.Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
+	{{if eq .SDKVersion 1 }}
+func (c *AWSClient) {{ .ProviderNameUpper }}Conn(ctx context.Context) *{{ .GoPackage }}_sdkv1.{{ .GoV1ClientTypeName }} {
+	return errs.Must(conn[*{{ .GoPackage }}_sdkv1.{{ .GoV1ClientTypeName }}](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
 }
-	{{- end }}
-
-	{{if eq .SDKVersion "2" "1,2" }}
-func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoV2Package }}_sdkv2.Client {
-	return errs.Must(client[*{{ .GoV2Package }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
+	{{- else }}
+func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoPackage }}_sdkv2.Client {
+	return errs.Must(client[*{{ .GoPackage }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
 }
 	{{- end }}
 {{ end }}

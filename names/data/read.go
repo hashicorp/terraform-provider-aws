@@ -34,12 +34,14 @@ func (sr ServiceRecord) AWSCLIV2CommandNoDashes() string {
 	return result
 }
 
-func (sr ServiceRecord) GoPackageName(version int) string {
-	switch version {
+func (sr ServiceRecord) GoPackageName() string {
+	switch sr.SDKVersion() {
 	case 1:
 		return sr.GoV1Package()
+	case 2:
+		return sr.GoV2Package()
 	}
-	return sr.GoV2Package()
+	return ""
 }
 
 func (sr ServiceRecord) GoV1Package() string {
@@ -119,19 +121,11 @@ func (sr ServiceRecord) ClientSDKV2() bool {
 	return sr.service.ServiceSDK != nil && sr.service.ServiceSDK.Version == 2 //nolint:mnd
 }
 
-// SDKVersion returns:
-// * "1" if only SDK v1 is implemented
-// * "2" if only SDK v2 is implemented
-// * "1,2" if both are implemented
-func (sr ServiceRecord) SDKVersion() string {
-	if sr.ClientSDKV1() && sr.ClientSDKV2() {
-		return "1,2"
-	} else if sr.ClientSDKV1() {
-		return "1"
-	} else if sr.ClientSDKV2() {
-		return "2"
+func (sr ServiceRecord) SDKVersion() int {
+	if sr.service.ServiceSDK != nil {
+		return sr.service.ServiceSDK.Version
 	}
-	return ""
+	return 0
 }
 
 func (sr ServiceRecord) ResourcePrefix() string {
