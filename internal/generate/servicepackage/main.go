@@ -67,7 +67,7 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			GenerateClient:       !l.SkipClientGenerate(),
+			GenerateClient:       l.GenerateClient(),
 			ClientSDKV1:          l.ClientSDKV1(),
 			GoV1Package:          l.GoV1Package(),
 			ClientSDKV2:          l.ClientSDKV2(),

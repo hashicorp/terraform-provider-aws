@@ -32,7 +32,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="App Authorization Connection")
+// @FrameworkResource("aws_appfabric_app_authorization_connection", name="App Authorization Connection")
+// @Testing(serialize=true)
 func newAppAuthorizationConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationConnectionResource{}
 

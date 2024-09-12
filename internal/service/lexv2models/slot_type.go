@@ -164,9 +164,6 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"slot_type_values": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValues](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
@@ -211,7 +208,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[AdvancedRecognitionSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"audio_recognition_setting": schema.StringAttribute{
+									"audio_recognition_strategy": schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.AudioRecognitionStrategy](),
@@ -491,7 +488,7 @@ type SlotTypeValues struct {
 }
 
 type AdvancedRecognitionSetting struct {
-	AudioRecognitionSetting types.String `tfsdk:"audio_recognition_setting"`
+	AudioRecognitionStrategy types.String `tfsdk:"audio_recognition_strategy"`
 }
 
 type RegexFilter struct {

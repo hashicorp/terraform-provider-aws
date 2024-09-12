@@ -404,8 +404,8 @@ type scraperResourceModel struct {
 	RoleARN             types.String                                             `tfsdk:"role_arn"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
-	Tags                types.Map                                                `tfsdk:"tags"`
-	TagsAll             types.Map                                                `tfsdk:"tags_all"`
+	Tags                tftags.Map                                               `tfsdk:"tags"`
+	TagsAll             tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                           `tfsdk:"timeouts"`
 }
 

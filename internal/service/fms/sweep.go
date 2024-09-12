@@ -6,9 +6,11 @@ package fms
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -66,6 +68,7 @@ func sweepAdminAccount(region string) error {
 
 	r := resourceAdminAccount()
 	d := r.Data(nil)
+	d.SetId(aws.ToString(output.AdminAccount))
 	d.Set(names.AttrAccountID, output.AdminAccount)
 
 	sweepResources = append(sweepResources, newAdminAccountSweeper(r, d, client))
@@ -94,6 +97,13 @@ func newAdminAccountSweeper(resource *schema.Resource, d *schema.ResourceData, c
 func (aas adminAccountSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	err := aas.sweepable.Delete(ctx, timeout, optFns...)
 	if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
+		tflog.Warn(ctx, "Skipping resource", map[string]any{
+			"attr.account_id": aas.d.Get(names.AttrAccountID),
+			"error":           err.Error(),
+		})
+		return nil
+	}
+	if err != nil && errs.Must(regexp.MatchString(`InvalidOperationException: This operation is not supported in the '[-a-z0-9]+' region`, err.Error())) {
 		tflog.Warn(ctx, "Skipping resource", map[string]any{
 			"attr.account_id": aas.d.Get(names.AttrAccountID),
 			"error":           err.Error(),

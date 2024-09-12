@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
 
-go 1.23.0
+go 1.22.6
 
 require (
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
@@ -16,7 +16,7 @@ require (
 	github.com/zclconf/go-cty v1.15.0 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/text v0.18.0 // indirect
 )
 
 replace github.com/hashicorp/terraform-provider-aws => ../..

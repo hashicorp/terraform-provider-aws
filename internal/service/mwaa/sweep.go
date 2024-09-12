@@ -8,8 +8,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -28,34 +27,37 @@ func sweepEnvironment(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+	input := &mwaa.ListEnvironmentsInput{}
 	conn := client.MWAAClient(ctx)
-
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	pages := mwaa.NewListEnvironmentsPaginator(conn, &mwaa.ListEnvironmentsInput{})
+	pages := mwaa.NewListEnvironmentsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if err != nil {
-			if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
-				log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("error retrieving MWAA Environment: %s", err)
+
+		if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, name := range page.Environments {
-			r := ResourceEnvironment()
+		if err != nil {
+			return fmt.Errorf("error listing MWAA Environments (%s): %w", region, err)
+		}
+
+		for _, v := range page.Environments {
+			r := resourceEnvironment()
 			d := r.Data(nil)
-			d.SetId(name)
+			d.SetId(v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping MWAA Environment: %w", err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MWAA Environments (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
