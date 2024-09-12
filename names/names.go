@@ -368,16 +368,16 @@ func ReverseDNS(hostname string) string {
 // Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are
 // described in detail in README.md.
 type serviceDatum struct {
-	Aliases            []string
-	AWSServiceEnvVar   string
-	Brand              string
+	aliases            []string
+	awsServiceEnvVar   string
+	brand              string
 	isClientSDKV1      bool
-	DeprecatedEnvVar   string
-	GoV1ClientTypeName string
-	HumanFriendly      string
-	ProviderNameUpper  string
-	SDKID              string
-	TFAWSEnvVar        string
+	deprecatedEnvVar   string
+	goV1ClientTypeName string
+	humanFriendly      string
+	providerNameUpper  string
+	sdkID              string
+	tfAWSEnvVar        string
 }
 
 // serviceData key is the AWS provider service package
@@ -413,15 +413,15 @@ func readHCLIntoServiceData() error {
 		p := l.ProviderPackage()
 
 		sd := serviceDatum{
-			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
-			Brand:              l.Brand(),
+			awsServiceEnvVar:   l.AWSServiceEnvVar(),
+			brand:              l.Brand(),
 			isClientSDKV1:      l.IsClientSDKV1(),
-			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
-			GoV1ClientTypeName: l.GoV1ClientTypeName(),
-			HumanFriendly:      l.HumanFriendly(),
-			ProviderNameUpper:  l.ProviderNameUpper(),
-			SDKID:              l.SDKID(),
-			TFAWSEnvVar:        l.TFAWSEnvVar(),
+			deprecatedEnvVar:   l.DeprecatedEnvVar(),
+			goV1ClientTypeName: l.GoV1ClientTypeName(),
+			humanFriendly:      l.HumanFriendly(),
+			providerNameUpper:  l.ProviderNameUpper(),
+			sdkID:              l.SDKID(),
+			tfAWSEnvVar:        l.TFAWSEnvVar(),
 		}
 
 		a := []string{p}
@@ -430,7 +430,7 @@ func readHCLIntoServiceData() error {
 			a = append(a, l.Aliases()...)
 		}
 
-		sd.Aliases = a
+		sd.aliases = a
 
 		serviceData[p] = sd
 	}
@@ -440,7 +440,7 @@ func readHCLIntoServiceData() error {
 
 func ProviderPackageForAlias(serviceAlias string) (string, error) {
 	for k, v := range serviceData {
-		for _, hclKey := range v.Aliases {
+		for _, hclKey := range v.aliases {
 			if serviceAlias == hclKey {
 				return k, nil
 			}
@@ -466,7 +466,7 @@ func Aliases() []string {
 	keys := make([]string, 0)
 
 	for _, v := range serviceData {
-		keys = append(keys, v.Aliases...)
+		keys = append(keys, v.aliases...)
 	}
 
 	return keys
@@ -484,8 +484,8 @@ func Endpoints() []Endpoint {
 		ep := Endpoint{
 			ProviderPackage: k,
 		}
-		if len(v.Aliases) > 1 {
-			ep.Aliases = v.Aliases[1:]
+		if len(v.aliases) > 1 {
+			ep.Aliases = v.aliases[1:]
 		}
 		endpoints = append(endpoints, ep)
 	}
@@ -495,7 +495,7 @@ func Endpoints() []Endpoint {
 
 func ProviderNameUpper(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
-		return v.ProviderNameUpper, nil
+		return v.providerNameUpper, nil
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
@@ -504,7 +504,7 @@ func ProviderNameUpper(service string) (string, error) {
 // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
 func DeprecatedEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.DeprecatedEnvVar
+		return v.deprecatedEnvVar
 	}
 
 	return ""
@@ -513,7 +513,7 @@ func DeprecatedEnvVar(service string) string {
 // Deprecated `TF_AWS_<service>_ENDPOINT` envvar defined for some services
 func TFAWSEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.TFAWSEnvVar
+		return v.tfAWSEnvVar
 	}
 
 	return ""
@@ -522,7 +522,7 @@ func TFAWSEnvVar(service string) string {
 // Standard service endpoint envvar defined by AWS
 func AWSServiceEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.AWSServiceEnvVar
+		return v.awsServiceEnvVar
 	}
 
 	return ""
@@ -531,7 +531,7 @@ func AWSServiceEnvVar(service string) string {
 // Service SDK ID from AWS SDK for Go v2
 func SDKID(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.SDKID
+		return v.sdkID
 	}
 
 	return ""
@@ -547,11 +547,11 @@ func IsClientSDKV1(service string) bool {
 
 func FullHumanFriendly(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
-		if v.Brand == "" {
-			return v.HumanFriendly, nil
+		if v.brand == "" {
+			return v.humanFriendly, nil
 		}
 
-		return fmt.Sprintf("%s %s", v.Brand, v.HumanFriendly), nil
+		return fmt.Sprintf("%s %s", v.brand, v.humanFriendly), nil
 	}
 
 	if s, err := ProviderPackageForAlias(service); err == nil {
@@ -563,7 +563,7 @@ func FullHumanFriendly(service string) (string, error) {
 
 func HumanFriendly(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
-		return v.HumanFriendly, nil
+		return v.humanFriendly, nil
 	}
 
 	if s, err := ProviderPackageForAlias(service); err == nil {
@@ -575,7 +575,7 @@ func HumanFriendly(service string) (string, error) {
 
 func AWSGoV1ClientTypeName(providerPackage string) (string, error) {
 	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV1ClientTypeName, nil
+		return v.goV1ClientTypeName, nil
 	}
 
 	return "", fmt.Errorf("getting AWS SDK Go v1 client type name, %s not found", providerPackage)
