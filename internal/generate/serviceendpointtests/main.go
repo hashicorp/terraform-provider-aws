@@ -70,7 +70,7 @@ func main() {
 			Aliases:           l.Aliases(),
 			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
-		if l.ClientSDKV1() {
+		if l.IsClientSDKV1() {
 			td.GoV1Package = l.GoV1Package()
 
 			switch packageName {
@@ -85,7 +85,7 @@ func main() {
 				td.V1AlternateInputPackage = "waf"
 			}
 		}
-		if l.ClientSDKV2() {
+		if l.IsClientSDKV2() {
 			td.GoV2Package = l.GoV2Package()
 
 			if strings.Contains(td.APICallParams, "awstypes") {

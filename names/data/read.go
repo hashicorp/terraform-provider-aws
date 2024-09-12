@@ -113,12 +113,12 @@ func (sr ServiceRecord) GenerateClient() bool {
 	return !sr.skipClientGenerate()
 }
 
-func (sr ServiceRecord) ClientSDKV1() bool {
-	return sr.service.ServiceSDK != nil && sr.service.ServiceSDK.Version == 1
+func (sr ServiceRecord) IsClientSDKV1() bool {
+	return sr.SDKVersion() == 1
 }
 
-func (sr ServiceRecord) ClientSDKV2() bool {
-	return sr.service.ServiceSDK != nil && sr.service.ServiceSDK.Version == 2 //nolint:mnd
+func (sr ServiceRecord) IsClientSDKV2() bool {
+	return sr.SDKVersion() == 2 //nolint:mnd
 }
 
 func (sr ServiceRecord) SDKVersion() int {

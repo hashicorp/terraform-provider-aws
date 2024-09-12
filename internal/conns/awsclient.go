@@ -250,7 +250,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 	}
 
 	// Only continue if there is an SDK v1 package. SDK v2 supports envvars and config file
-	if names.ClientSDKV1(servicePackageName) {
+	if names.IsClientSDKV1(servicePackageName) {
 		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
 
 		envvar := names.AWSServiceEnvVar(servicePackageName)

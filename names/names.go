@@ -371,7 +371,7 @@ type serviceDatum struct {
 	Aliases            []string
 	AWSServiceEnvVar   string
 	Brand              string
-	ClientSDKV1        bool
+	isClientSDKV1      bool
 	DeprecatedEnvVar   string
 	GoV1ClientTypeName string
 	HumanFriendly      string
@@ -415,7 +415,7 @@ func readHCLIntoServiceData() error {
 		sd := serviceDatum{
 			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
 			Brand:              l.Brand(),
-			ClientSDKV1:        l.ClientSDKV1(),
+			isClientSDKV1:      l.IsClientSDKV1(),
 			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
 			GoV1ClientTypeName: l.GoV1ClientTypeName(),
 			HumanFriendly:      l.HumanFriendly(),
@@ -537,9 +537,9 @@ func SDKID(service string) string {
 	return ""
 }
 
-func ClientSDKV1(service string) bool {
+func IsClientSDKV1(service string) bool {
 	if v, ok := serviceData[service]; ok {
-		return v.ClientSDKV1
+		return v.isClientSDKV1
 	}
 
 	return false
