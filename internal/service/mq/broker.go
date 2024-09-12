@@ -937,22 +937,22 @@ func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
 	}
 
 	autoMinorVersionUpgrade := aws.ToBool(output.AutoMinorVersionUpgrade)
-	engineType := output.EngineType
+	engineType := string(output.EngineType)
 	engineVersion := aws.ToString(output.EngineVersion)
-	majorMinorEngineVersion := semver.MajorMinor("v" + engineVersion)
+	majorMinor := semver.MajorMinor("v" + engineVersion)
 
 	// initial versions where `auto_minor_version_upgrade` triggers automatic
 	// patch updates, and only the major/minor should be supplied to the update API
-	initRabbitVersion := "v3.13"
-	initActiveVersion := "v5.18"
+	minRabbit := "v3.13"
+	minActive := "v5.18"
 
 	if !autoMinorVersionUpgrade {
 		return engineVersion
 	}
 
-	if (strings.EqualFold(string(engineType), string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinorEngineVersion, initRabbitVersion) >= 0) ||
-		(strings.EqualFold(string(engineType), string(types.EngineTypeActivemq)) && semver.Compare(majorMinorEngineVersion, initActiveVersion) >= 0) {
-		return majorMinorEngineVersion[1:]
+	if (strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinor, minRabbit) >= 0) ||
+		(strings.EqualFold(engineType, string(types.EngineTypeActivemq)) && semver.Compare(majorMinor, minActive) >= 0) {
+		return majorMinor[1:]
 	}
 
 	return engineVersion
