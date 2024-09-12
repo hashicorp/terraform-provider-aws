@@ -3321,18 +3321,14 @@ func TestExpandSetOfInt64(t *testing.T) {
 func TestExpandListOfStringEnum(t *testing.T) {
 	t.Parallel()
 
-	type testEnum string
-	var testEnumFoo testEnum = "foo"
-	var testEnumBar testEnum = "bar"
-
 	testCases := autoFlexTestCases{
 		"valid value": {
 			Source: types.ListValueMust(types.StringType, []attr.Value{
-				types.StringValue(string(testEnumFoo)),
-				types.StringValue(string(testEnumBar)),
+				types.StringValue(string(testEnumScalar)),
+				types.StringValue(string(testEnumList)),
 			}),
 			Target:     &[]testEnum{},
-			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+			WantTarget: &[]testEnum{testEnumScalar, testEnumList},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[types.List](), reflect.TypeFor[*[]testEnum]()),
 				infoConverting(reflect.TypeFor[types.List](), reflect.TypeFor[[]testEnum]()),
@@ -3366,18 +3362,14 @@ func TestExpandListOfStringEnum(t *testing.T) {
 func TestExpandSetOfStringEnum(t *testing.T) {
 	t.Parallel()
 
-	type testEnum string
-	var testEnumFoo testEnum = "foo"
-	var testEnumBar testEnum = "bar"
-
 	testCases := autoFlexTestCases{
 		"valid value": {
 			Source: types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue(string(testEnumFoo)),
-				types.StringValue(string(testEnumBar)),
+				types.StringValue(string(testEnumScalar)),
+				types.StringValue(string(testEnumList)),
 			}),
 			Target:     &[]testEnum{},
-			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+			WantTarget: &[]testEnum{testEnumScalar, testEnumList},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]testEnum]()),
 				infoConverting(reflect.TypeFor[types.Set](), reflect.TypeFor[[]testEnum]()),
