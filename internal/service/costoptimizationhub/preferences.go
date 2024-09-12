@@ -126,7 +126,6 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	out, err := findPreferences(ctx, conn)
-
 	if err != nil {
 		//Check if err is of type AccessDeniedException and contains the message "AWS account is not enrolled for recommendations"
 		//If that is the case, the Enrollment Status is inactive and hence this resource needs to be removed from state
