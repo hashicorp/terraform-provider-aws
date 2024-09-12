@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/appmesh v1.27.6
+	github.com/aws/aws-sdk-go-v2/service/appmesh v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.36.0
