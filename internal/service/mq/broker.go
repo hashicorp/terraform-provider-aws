@@ -487,7 +487,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
-	d.Set(names.AttrEngineVersion, normalizeEngineVersion(output))
+	d.Set(names.AttrEngineVersion, normalizeEngineVersion(string(output.EngineType), aws.ToString(output.EngineVersion), aws.ToBool(output.AutoMinorVersionUpgrade)))
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
@@ -557,16 +557,15 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
-		output, errors := findBrokerByID(ctx, conn, d.Id())
-		if errors != nil {
-			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), errors)
-		}
+		engineType := d.Get("engine_type").(string)
+		engineVersion := d.Get("engine_version").(string)
+		autoMinorVersionUpgrade := d.Get("auto_minor_version_upgrade").(bool)
 
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
-			EngineVersion: aws.String(normalizeEngineVersion(output)),
-			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
+			EngineVersion: aws.String(normalizeEngineVersion(engineType, engineVersion, autoMinorVersionUpgrade)),
+			Logs:          expandLogs(engineType, d.Get("logs").([]interface{})),
 		}
 
 		_, err := conn.UpdateBroker(ctx, input)
@@ -931,14 +930,8 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 // version is returned unmodified.
 //
 // Ref: https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/upgrading-brokers.html
-func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
-	if output == nil {
-		return ""
-	}
-
-	autoMinorVersionUpgrade := aws.ToBool(output.AutoMinorVersionUpgrade)
-	engineType := string(output.EngineType)
-	engineVersion := aws.ToString(output.EngineVersion)
+// func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
+func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVersionUpgrade bool) string {
 	majorMinor := semver.MajorMinor("v" + engineVersion)
 
 	// initial versions where `auto_minor_version_upgrade` triggers automatic
