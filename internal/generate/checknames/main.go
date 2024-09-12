@@ -97,7 +97,7 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV2() && l.GoV2Package() == "" {
+		if l.ClientSDKV2() && l.GoV2Package() == "" && l.ProviderPackage() != "meta" {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", i+lineOffset, l.HumanFriendly())
 		}
 

@@ -112,11 +112,11 @@ func (sr ServiceRecord) GenerateClient() bool {
 }
 
 func (sr ServiceRecord) ClientSDKV1() bool {
-	return slices.Contains(sr.service.ServiceSDK.Version, 1)
+	return sr.service.ServiceSDK != nil && sr.service.ServiceSDK.Version == 1
 }
 
 func (sr ServiceRecord) ClientSDKV2() bool {
-	return slices.Contains(sr.service.ServiceSDK.Version, 2) //nolint:mnd
+	return sr.service.ServiceSDK != nil && sr.service.ServiceSDK.Version == 2 //nolint:mnd
 }
 
 // SDKVersion returns:
@@ -208,7 +208,10 @@ func (sr ServiceRecord) TFAWSEnvVar() string {
 }
 
 func (sr ServiceRecord) SDKID() string {
-	return sr.service.ServiceSDK.ID
+	if sr.service.ServiceSDK != nil {
+		return sr.service.ServiceSDK.ID
+	}
+	return ""
 }
 
 func (sr ServiceRecord) AWSServiceEnvVar() string {
@@ -252,13 +255,16 @@ func ReadAllServiceData() (results []ServiceRecord, err error) {
 	parser := hclparse.NewParser()
 	toParse, parseErr := parser.ParseHCL(b, "names_data.hcl")
 	if parseErr.HasErrors() {
-		log.Fatal("Parser error : ", parseErr)
+		log.Fatalf("Parser error: %s", parseErr)
 	}
 	decodeErr := gohcl.DecodeBody(toParse.Body, nil, &decodedServiceList)
 	if decodeErr.HasErrors() {
-		log.Fatal("Decode error", decodeErr)
+		log.Fatalf("Decode error: %s", decodeErr)
 	}
 	for _, curr := range decodedServiceList.ServiceList {
+		if curr.ServiceSDK != nil && curr.ServiceSDK.Version == 0 {
+			curr.ServiceSDK.Version = 2
+		}
 		if len(curr.SubService) > 0 {
 			for _, sub := range curr.SubService {
 				results = append(results, parseService(sub))
@@ -287,7 +293,7 @@ type ResourcePrefix struct {
 
 type SDK struct {
 	ID      string `hcl:"id,optional"`
-	Version []int  `hcl:"client_version,attr"`
+	Version int    `hcl:"client_version,optional"`
 }
 
 type Names struct {
@@ -322,7 +328,7 @@ type Service struct {
 	ProviderPackage       string         `hcl:",label"`
 	ServiceCli            *CLIV2Command  `hcl:"cli_v2_command,block"`
 	ServiceGoPackages     *GoPackages    `hcl:"go_packages,block"`
-	ServiceSDK            SDK            `hcl:"sdk,block"`
+	ServiceSDK            *SDK           `hcl:"sdk,block"`
 	ServiceNames          Names          `hcl:"names,block"`
 	ServiceClient         *Client        `hcl:"client,block"`
 	ServiceEnvVars        *EnvVar        `hcl:"env_var,block"`
@@ -335,7 +341,7 @@ type Service struct {
 	ServiceSplitPackage           string   `hcl:"split_package,optional"`
 	FilePrefix                    string   `hcl:"file_prefix,optional"`
 	DocPrefix                     []string `hcl:"doc_prefix,optional"`
-	Brand                         string   `hcl:"brand,attr"`
+	Brand                         string   `hcl:"brand,optional"`
 	Exclude                       bool     `hcl:"exclude,optional"`
 	NotImplemented                bool     `hcl:"not_implemented,optional"`
 	AllowedSubcategory            bool     `hcl:"allowed_subcategory,optional"`
