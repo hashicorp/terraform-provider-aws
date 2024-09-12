@@ -410,7 +410,7 @@ func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) re
 	}
 }
 
-func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
+func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) { //nolint:unparam
 	const (
 		timeout = 60 * time.Minute
 	)
