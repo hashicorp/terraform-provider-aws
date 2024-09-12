@@ -19,8 +19,8 @@ func TestAccCostOptimizationHub_serial(t *testing.T) {
 			"includeMemberAccounts": testAccEnrollmentStatus_includeMemberAccounts,
 		},
 		"Preferences": {
-			acctest.CtBasic:                            testAccPreferences_basic,
-			acctest.CtDisappears:                       testAccPreferences_disappears,
+			acctest.CtBasic:                    testAccPreferences_basic,
+			acctest.CtDisappears:               testAccPreferences_disappears,
 			"memberAccountsDiscountVisibility": testAccPreferences_memberAccountsDiscountVisibility,
 			"savingsEstimationMode":            testAccPreferences_savingsEstimationMode,
 		},
