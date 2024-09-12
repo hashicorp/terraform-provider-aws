@@ -30,6 +30,8 @@ func testAccPreferences_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,6 +62,8 @@ func testAccPreferences_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -75,6 +79,70 @@ func testAccPreferences_disappears(t *testing.T) {
 			{
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccPreferences_memberAccountsDiscountVisibility(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var out costoptimizationhub.GetPreferencesOutput
+	resourceName := "aws_costoptimizationhub_preferences.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPreferencesDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPreferencesConfig_MemberAccountDiscountVisibility(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPreferencesExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "None"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccPreferences_savingsEstimationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var out costoptimizationhub.GetPreferencesOutput
+	resourceName := "aws_costoptimizationhub_preferences.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPreferencesDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPreferencesConfig_SavingsEstimationMode(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPreferencesExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "AfterDiscounts"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -112,66 +180,6 @@ func testAccCheckPreferencesDestroy(ctx context.Context) resource.TestCheckFunc 
 
 		return nil
 	}
-}
-
-func testAccPreferences_memberAccountsDiscountVisibility(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var out costoptimizationhub.GetPreferencesOutput
-	resourceName := "aws_costoptimizationhub_preferences.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPreferencesDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPreferencesConfig_MemberAccountDiscountVisibility(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPreferencesExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "None"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccPreferences_savingsEstimationMode(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var out costoptimizationhub.GetPreferencesOutput
-	resourceName := "aws_costoptimizationhub_preferences.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPreferencesDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPreferencesConfig_SavingsEstimationMode(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPreferencesExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "AfterDiscounts"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
 }
 
 func testAccCheckPreferencesExists(ctx context.Context, name string, preferences *costoptimizationhub.GetPreferencesOutput) resource.TestCheckFunc {
