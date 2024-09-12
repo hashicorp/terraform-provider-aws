@@ -686,3 +686,11 @@ type awsExpanderStructSlice struct {
 type awsExpanderPtrSlice struct {
 	Field1 []*awsExpander
 }
+
+type tfListOfStringEnum struct {
+	Field1 fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]] `tfsdk:"field1"`
+}
+
+type awsListOfStringEnum struct {
+	Field1 []testEnum
+}
