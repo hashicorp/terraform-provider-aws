@@ -613,6 +613,7 @@ func testAccModelConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
@@ -630,7 +631,7 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "test" {
+resource "aws_iam_role_policy_attachment" "full_access" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
@@ -783,8 +784,6 @@ resource "aws_s3_object" "test" {
 // lintignore:AWSAT003,AWSAT005
 func testAccModelConfig_primaryContainerPackageName(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 locals {
   region_account_map = {
     us-east-1      = "865070037744"
