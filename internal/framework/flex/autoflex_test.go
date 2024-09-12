@@ -691,6 +691,10 @@ type tfListOfStringEnum struct {
 	Field1 fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]] `tfsdk:"field1"`
 }
 
-type awsListOfStringEnum struct {
+type tfSetOfStringEnum struct {
+	Field1 fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]] `tfsdk:"field1"`
+}
+
+type awsSliceOfStringEnum struct {
 	Field1 []testEnum
 }
