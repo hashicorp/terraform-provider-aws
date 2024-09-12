@@ -275,7 +275,7 @@ func TestAccLambdaFunction_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_tags_emptyMap(t *testing.T) {
+func TestAccLambdaFunction_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"

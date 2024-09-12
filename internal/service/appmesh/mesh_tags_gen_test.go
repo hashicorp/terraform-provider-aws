@@ -23,7 +23,7 @@ func testAccAppMeshServiceMesh_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshServiceMesh_tags,
 		"null":                                      testAccAppMeshServiceMesh_tags_null,
-		"emptyMap":                                  testAccAppMeshServiceMesh_tags_emptyMap,
+		"EmptyMap":                                  testAccAppMeshServiceMesh_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppMeshServiceMesh_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppMeshServiceMesh_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppMeshServiceMesh_tags_EmptyTag_OnUpdate_Add,
@@ -287,7 +287,7 @@ func testAccAppMeshServiceMesh_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshServiceMesh_tags_emptyMap(t *testing.T) {
+func testAccAppMeshServiceMesh_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"

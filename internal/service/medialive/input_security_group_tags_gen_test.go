@@ -260,7 +260,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_emptyMap(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"

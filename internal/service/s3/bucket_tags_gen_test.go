@@ -272,7 +272,7 @@ func TestAccS3Bucket_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_tags_emptyMap(t *testing.T) {
+func TestAccS3Bucket_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

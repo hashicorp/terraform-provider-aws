@@ -280,7 +280,7 @@ func TestAccS3Object_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_tags_emptyMap(t *testing.T) {
+func TestAccS3Object_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3.GetObjectOutput
 	resourceName := "aws_s3_object.test"

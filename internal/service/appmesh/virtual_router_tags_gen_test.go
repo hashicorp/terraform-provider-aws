@@ -23,7 +23,7 @@ func testAccAppMeshVirtualRouter_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshVirtualRouter_tags,
 		"null":                                      testAccAppMeshVirtualRouter_tags_null,
-		"emptyMap":                                  testAccAppMeshVirtualRouter_tags_emptyMap,
+		"EmptyMap":                                  testAccAppMeshVirtualRouter_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppMeshVirtualRouter_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppMeshVirtualRouter_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppMeshVirtualRouter_tags_EmptyTag_OnUpdate_Add,
@@ -292,7 +292,7 @@ func testAccAppMeshVirtualRouter_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualRouter_tags_emptyMap(t *testing.T) {
+func testAccAppMeshVirtualRouter_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VirtualRouterData
 	resourceName := "aws_appmesh_virtual_router.test"

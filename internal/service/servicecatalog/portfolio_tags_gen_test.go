@@ -260,7 +260,7 @@ func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogPortfolio_tags_emptyMap(t *testing.T) {
+func TestAccServiceCatalogPortfolio_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"

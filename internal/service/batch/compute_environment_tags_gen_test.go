@@ -260,7 +260,7 @@ func TestAccBatchComputeEnvironment_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccBatchComputeEnvironment_tags_emptyMap(t *testing.T) {
+func TestAccBatchComputeEnvironment_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ComputeEnvironmentDetail
 	resourceName := "aws_batch_compute_environment.test"

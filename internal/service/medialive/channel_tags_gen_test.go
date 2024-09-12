@@ -275,7 +275,7 @@ func TestAccMediaLiveChannel_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveChannel_tags_emptyMap(t *testing.T) {
+func TestAccMediaLiveChannel_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v medialive.DescribeChannelOutput
 	resourceName := "aws_medialive_channel.test"

@@ -306,7 +306,7 @@ func TestAccIAMServerCertificate_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccIAMServerCertificate_tags_emptyMap(t *testing.T) {
+func TestAccIAMServerCertificate_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test"

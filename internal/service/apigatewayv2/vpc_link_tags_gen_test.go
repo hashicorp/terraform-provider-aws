@@ -260,7 +260,7 @@ func TestAccAPIGatewayV2VPCLink_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayV2VPCLink_tags_emptyMap(t *testing.T) {
+func TestAccAPIGatewayV2VPCLink_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetVpcLinkOutput
 	resourceName := "aws_apigatewayv2_vpc_link.test"

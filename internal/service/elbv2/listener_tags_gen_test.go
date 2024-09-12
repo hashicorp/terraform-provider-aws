@@ -275,7 +275,7 @@ func TestAccELBV2Listener_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_tags_emptyMap(t *testing.T) {
+func TestAccELBV2Listener_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Listener
 	resourceName := "aws_lb_listener.test"

@@ -23,7 +23,7 @@ func testAccAPIGatewayStage_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAPIGatewayStage_tags,
 		"null":                                      testAccAPIGatewayStage_tags_null,
-		"emptyMap":                                  testAccAPIGatewayStage_tags_emptyMap,
+		"EmptyMap":                                  testAccAPIGatewayStage_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAPIGatewayStage_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAPIGatewayStage_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Add,
@@ -292,7 +292,7 @@ func testAccAPIGatewayStage_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_emptyMap(t *testing.T) {
+func testAccAPIGatewayStage_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigateway.GetStageOutput
 	resourceName := "aws_api_gateway_stage.test"

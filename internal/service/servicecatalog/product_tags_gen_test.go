@@ -272,7 +272,7 @@ func TestAccServiceCatalogProduct_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProduct_tags_emptyMap(t *testing.T) {
+func TestAccServiceCatalogProduct_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

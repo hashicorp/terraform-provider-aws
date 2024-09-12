@@ -261,7 +261,7 @@ func TestAccAMPScraper_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAMPScraper_tags_emptyMap(t *testing.T) {
+func TestAccAMPScraper_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ScraperDescription
 	resourceName := "aws_prometheus_scraper.test"

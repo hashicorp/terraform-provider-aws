@@ -257,7 +257,7 @@ func TestAccAPIGatewayVPCLink_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayVPCLink_tags_emptyMap(t *testing.T) {
+func TestAccAPIGatewayVPCLink_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_api_gateway_vpc_link.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

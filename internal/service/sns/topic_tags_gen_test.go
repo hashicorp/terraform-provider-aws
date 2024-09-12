@@ -259,7 +259,7 @@ func TestAccSNSTopic_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccSNSTopic_tags_emptyMap(t *testing.T) {
+func TestAccSNSTopic_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v map[string]string
 	resourceName := "aws_sns_topic.test"

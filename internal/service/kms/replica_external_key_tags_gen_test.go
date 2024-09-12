@@ -295,7 +295,7 @@ func TestAccKMSReplicaExternalKey_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaExternalKey_tags_emptyMap(t *testing.T) {
+func TestAccKMSReplicaExternalKey_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.KeyMetadata
 	resourceName := "aws_kms_replica_external_key.test"

@@ -23,7 +23,7 @@ func testAccDRSReplicationConfigurationTemplate_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccDRSReplicationConfigurationTemplate_tags,
 		"null":                                      testAccDRSReplicationConfigurationTemplate_tags_null,
-		"emptyMap":                                  testAccDRSReplicationConfigurationTemplate_tags_emptyMap,
+		"EmptyMap":                                  testAccDRSReplicationConfigurationTemplate_tags_EmptyMap,
 		"AddOnUpdate":                               testAccDRSReplicationConfigurationTemplate_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Add,
@@ -288,7 +288,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_emptyMap(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"

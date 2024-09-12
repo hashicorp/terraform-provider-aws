@@ -261,7 +261,7 @@ func TestAccVPCSecurityGroupEgressRule_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroupEgressRule_tags_emptyMap(t *testing.T) {
+func TestAccVPCSecurityGroupEgressRule_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SecurityGroupRule
 	resourceName := "aws_vpc_security_group_egress_rule.test"

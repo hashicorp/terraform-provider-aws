@@ -22,7 +22,7 @@ func testAccAppFabricAppAuthorization_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppFabricAppAuthorization_tags,
 		"null":                                      testAccAppFabricAppAuthorization_tags_null,
-		"emptyMap":                                  testAccAppFabricAppAuthorization_tags_emptyMap,
+		"EmptyMap":                                  testAccAppFabricAppAuthorization_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppFabricAppAuthorization_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add,
@@ -288,7 +288,7 @@ func testAccAppFabricAppAuthorization_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_emptyMap(t *testing.T) {
+func testAccAppFabricAppAuthorization_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"

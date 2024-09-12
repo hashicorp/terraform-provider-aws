@@ -23,7 +23,7 @@ func testAccFMSResourceSet_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccFMSResourceSet_tags,
 		"null":                                      testAccFMSResourceSet_tags_null,
-		"emptyMap":                                  testAccFMSResourceSet_tags_emptyMap,
+		"EmptyMap":                                  testAccFMSResourceSet_tags_EmptyMap,
 		"AddOnUpdate":                               testAccFMSResourceSet_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccFMSResourceSet_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add,
@@ -288,7 +288,7 @@ func testAccFMSResourceSet_tags_null(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_emptyMap(t *testing.T) {
+func testAccFMSResourceSet_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v fms.GetResourceSetOutput
 	resourceName := "aws_fms_resource_set.test"

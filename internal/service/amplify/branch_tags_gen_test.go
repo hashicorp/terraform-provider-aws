@@ -23,7 +23,7 @@ func testAccAmplifyBranch_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAmplifyBranch_tags,
 		"null":                                      testAccAmplifyBranch_tags_null,
-		"emptyMap":                                  testAccAmplifyBranch_tags_emptyMap,
+		"EmptyMap":                                  testAccAmplifyBranch_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAmplifyBranch_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAmplifyBranch_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAmplifyBranch_tags_EmptyTag_OnUpdate_Add,
@@ -287,7 +287,7 @@ func testAccAmplifyBranch_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAmplifyBranch_tags_emptyMap(t *testing.T) {
+func testAccAmplifyBranch_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Branch
 	resourceName := "aws_amplify_branch.test"

@@ -261,7 +261,7 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_tags_emptyMap(t *testing.T) {
+func TestAccBatchJobQueue_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"

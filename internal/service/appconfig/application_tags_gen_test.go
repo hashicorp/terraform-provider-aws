@@ -257,7 +257,7 @@ func TestAccAppConfigApplication_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAppConfigApplication_tags_emptyMap(t *testing.T) {
+func TestAccAppConfigApplication_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appconfig_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

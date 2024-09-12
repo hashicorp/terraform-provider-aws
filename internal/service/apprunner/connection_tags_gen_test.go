@@ -257,7 +257,7 @@ func TestAccAppRunnerConnection_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerConnection_tags_emptyMap(t *testing.T) {
+func TestAccAppRunnerConnection_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

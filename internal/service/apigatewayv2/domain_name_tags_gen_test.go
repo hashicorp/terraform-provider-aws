@@ -285,7 +285,7 @@ func TestAccAPIGatewayV2DomainName_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayV2DomainName_tags_emptyMap(t *testing.T) {
+func TestAccAPIGatewayV2DomainName_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"

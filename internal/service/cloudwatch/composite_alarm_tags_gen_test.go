@@ -257,7 +257,7 @@ func TestAccCloudWatchCompositeAlarm_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchCompositeAlarm_tags_emptyMap(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

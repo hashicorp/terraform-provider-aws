@@ -22,7 +22,7 @@ func testAccFMSPolicy_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccFMSPolicy_tags,
 		"null":                                      testAccFMSPolicy_tags_null,
-		"emptyMap":                                  testAccFMSPolicy_tags_emptyMap,
+		"EmptyMap":                                  testAccFMSPolicy_tags_EmptyMap,
 		"AddOnUpdate":                               testAccFMSPolicy_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccFMSPolicy_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccFMSPolicy_tags_EmptyTag_OnUpdate_Add,
@@ -299,7 +299,7 @@ func testAccFMSPolicy_tags_null(t *testing.T) {
 	})
 }
 
-func testAccFMSPolicy_tags_emptyMap(t *testing.T) {
+func testAccFMSPolicy_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_fms_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

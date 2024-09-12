@@ -23,7 +23,7 @@ func testAccAmplifyApp_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAmplifyApp_tags,
 		"null":                                      testAccAmplifyApp_tags_null,
-		"emptyMap":                                  testAccAmplifyApp_tags_emptyMap,
+		"EmptyMap":                                  testAccAmplifyApp_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAmplifyApp_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAmplifyApp_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAmplifyApp_tags_EmptyTag_OnUpdate_Add,
@@ -287,7 +287,7 @@ func testAccAmplifyApp_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAmplifyApp_tags_emptyMap(t *testing.T) {
+func testAccAmplifyApp_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.App
 	resourceName := "aws_amplify_app.test"

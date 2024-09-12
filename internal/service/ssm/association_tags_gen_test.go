@@ -257,7 +257,7 @@ func TestAccSSMAssociation_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccSSMAssociation_tags_emptyMap(t *testing.T) {
+func TestAccSSMAssociation_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssm_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

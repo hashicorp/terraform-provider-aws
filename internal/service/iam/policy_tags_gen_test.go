@@ -260,7 +260,7 @@ func TestAccIAMPolicy_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicy_tags_emptyMap(t *testing.T) {
+func TestAccIAMPolicy_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Policy
 	resourceName := "aws_iam_policy.test"

@@ -260,7 +260,7 @@ func TestAccIAMRole_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_tags_emptyMap(t *testing.T) {
+func TestAccIAMRole_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Role
 	resourceName := "aws_iam_role.test"

@@ -257,7 +257,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerAutoScalingConfigurationVersion_tags_emptyMap(t *testing.T) {
+func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

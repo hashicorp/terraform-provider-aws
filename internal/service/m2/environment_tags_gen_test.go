@@ -261,7 +261,7 @@ func TestAccM2Environment_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccM2Environment_tags_emptyMap(t *testing.T) {
+func TestAccM2Environment_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v m2.GetEnvironmentOutput
 	resourceName := "aws_m2_environment.test"

@@ -141,7 +141,7 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             {{ template "testname" . }}_tags,
 		"null":                                      {{ template "testname" . }}_tags_null,
-		"emptyMap":                                   {{ template "testname" . }}_tags_emptyMap,
+		"EmptyMap":                                  {{ template "testname" . }}_tags_EmptyMap,
 		"AddOnUpdate":                               {{ template "testname" . }}_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         {{ template "testname" . }}_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add,
@@ -473,7 +473,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_emptyMap(t *testing.T) {
+func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{

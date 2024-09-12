@@ -23,7 +23,7 @@ func testAccAppMeshVirtualService_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshVirtualService_tags,
 		"null":                                      testAccAppMeshVirtualService_tags_null,
-		"emptyMap":                                  testAccAppMeshVirtualService_tags_emptyMap,
+		"EmptyMap":                                  testAccAppMeshVirtualService_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppMeshVirtualService_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppMeshVirtualService_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppMeshVirtualService_tags_EmptyTag_OnUpdate_Add,
@@ -292,7 +292,7 @@ func testAccAppMeshVirtualService_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_emptyMap(t *testing.T) {
+func testAccAppMeshVirtualService_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"

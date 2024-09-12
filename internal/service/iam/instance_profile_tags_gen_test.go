@@ -260,7 +260,7 @@ func TestAccIAMInstanceProfile_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccIAMInstanceProfile_tags_emptyMap(t *testing.T) {
+func TestAccIAMInstanceProfile_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"

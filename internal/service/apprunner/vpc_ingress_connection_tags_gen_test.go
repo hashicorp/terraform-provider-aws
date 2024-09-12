@@ -257,7 +257,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerVPCIngressConnection_tags_emptyMap(t *testing.T) {
+func TestAccAppRunnerVPCIngressConnection_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

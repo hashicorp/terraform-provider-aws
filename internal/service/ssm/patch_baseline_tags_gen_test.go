@@ -260,7 +260,7 @@ func TestAccSSMPatchBaseline_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccSSMPatchBaseline_tags_emptyMap(t *testing.T) {
+func TestAccSSMPatchBaseline_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ssm.GetPatchBaselineOutput
 	resourceName := "aws_ssm_patch_baseline.test"

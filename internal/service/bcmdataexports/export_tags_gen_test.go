@@ -263,7 +263,7 @@ func TestAccBCMDataExportsExport_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccBCMDataExportsExport_tags_emptyMap(t *testing.T) {
+func TestAccBCMDataExportsExport_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v bcmdataexports.GetExportOutput
 	resourceName := "aws_bcmdataexports_export.test"

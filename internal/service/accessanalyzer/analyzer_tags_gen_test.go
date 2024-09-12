@@ -23,7 +23,7 @@ func testAccAccessAnalyzerAnalyzer_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAccessAnalyzerAnalyzer_tags,
 		"null":                                      testAccAccessAnalyzerAnalyzer_tags_null,
-		"emptyMap":                                  testAccAccessAnalyzerAnalyzer_tags_emptyMap,
+		"EmptyMap":                                  testAccAccessAnalyzerAnalyzer_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAccessAnalyzerAnalyzer_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Add,
@@ -287,7 +287,7 @@ func testAccAccessAnalyzerAnalyzer_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_emptyMap(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"

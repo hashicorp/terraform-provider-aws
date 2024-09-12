@@ -275,7 +275,7 @@ func TestAccRDSDBInstance_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccRDSDBInstance_tags_emptyMap(t *testing.T) {
+func TestAccRDSDBInstance_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"

@@ -260,7 +260,7 @@ func TestAccMediaLiveInput_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInput_tags_emptyMap(t *testing.T) {
+func TestAccMediaLiveInput_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v medialive.DescribeInputOutput
 	resourceName := "aws_medialive_input.test"

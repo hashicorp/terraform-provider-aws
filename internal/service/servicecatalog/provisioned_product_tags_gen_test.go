@@ -279,7 +279,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_emptyMap(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"

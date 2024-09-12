@@ -260,7 +260,7 @@ func TestAccAMPWorkspace_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAMPWorkspace_tags_emptyMap(t *testing.T) {
+func TestAccAMPWorkspace_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"

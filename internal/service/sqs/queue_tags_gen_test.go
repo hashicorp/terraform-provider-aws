@@ -260,7 +260,7 @@ func TestAccSQSQueue_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccSQSQueue_tags_emptyMap(t *testing.T) {
+func TestAccSQSQueue_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v map[awstypes.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"

@@ -258,7 +258,7 @@ func TestAccNetworkMonitorMonitor_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccNetworkMonitorMonitor_tags_emptyMap(t *testing.T) {
+func TestAccNetworkMonitorMonitor_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmonitor_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

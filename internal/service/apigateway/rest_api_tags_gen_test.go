@@ -275,7 +275,7 @@ func TestAccAPIGatewayRESTAPI_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayRESTAPI_tags_emptyMap(t *testing.T) {
+func TestAccAPIGatewayRESTAPI_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigateway.GetRestApiOutput
 	resourceName := "aws_api_gateway_rest_api.test"

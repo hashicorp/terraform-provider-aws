@@ -260,7 +260,7 @@ func TestAccLogsDestination_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccLogsDestination_tags_emptyMap(t *testing.T) {
+func TestAccLogsDestination_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"

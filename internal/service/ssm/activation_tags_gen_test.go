@@ -275,7 +275,7 @@ func TestAccSSMActivation_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccSSMActivation_tags_emptyMap(t *testing.T) {
+func TestAccSSMActivation_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Activation
 	resourceName := "aws_ssm_activation.test"

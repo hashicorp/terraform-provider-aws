@@ -22,7 +22,7 @@ func testAccAppFabricAppBundle_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppFabricAppBundle_tags,
 		"null":                                      testAccAppFabricAppBundle_tags_null,
-		"emptyMap":                                  testAccAppFabricAppBundle_tags_emptyMap,
+		"EmptyMap":                                  testAccAppFabricAppBundle_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppFabricAppBundle_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppFabricAppBundle_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add,
@@ -275,7 +275,7 @@ func testAccAppFabricAppBundle_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_emptyMap(t *testing.T) {
+func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"

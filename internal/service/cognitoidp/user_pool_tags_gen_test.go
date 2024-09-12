@@ -260,7 +260,7 @@ func TestAccCognitoIDPUserPool_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPool_tags_emptyMap(t *testing.T) {
+func TestAccCognitoIDPUserPool_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.UserPoolType
 	resourceName := "aws_cognito_user_pool.test"

@@ -275,7 +275,7 @@ func TestAccELBV2TargetGroup_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_emptyMap(t *testing.T) {
+func TestAccELBV2TargetGroup_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.TargetGroup
 	resourceName := "aws_lb_target_group.test"

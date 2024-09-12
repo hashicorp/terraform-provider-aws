@@ -275,7 +275,7 @@ func TestAccELBV2TrustStore_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TrustStore_tags_emptyMap(t *testing.T) {
+func TestAccELBV2TrustStore_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.TrustStore
 	resourceName := "aws_lb_trust_store.test"

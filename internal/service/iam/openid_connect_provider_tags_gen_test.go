@@ -257,7 +257,7 @@ func TestAccIAMOpenIDConnectProvider_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenIDConnectProvider_tags_emptyMap(t *testing.T) {
+func TestAccIAMOpenIDConnectProvider_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_openid_connect_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

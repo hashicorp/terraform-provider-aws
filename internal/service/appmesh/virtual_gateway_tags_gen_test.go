@@ -23,7 +23,7 @@ func testAccAppMeshVirtualGateway_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshVirtualGateway_tags,
 		"null":                                      testAccAppMeshVirtualGateway_tags_null,
-		"emptyMap":                                  testAccAppMeshVirtualGateway_tags_emptyMap,
+		"EmptyMap":                                  testAccAppMeshVirtualGateway_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppMeshVirtualGateway_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add,
@@ -292,7 +292,7 @@ func testAccAppMeshVirtualGateway_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_emptyMap(t *testing.T) {
+func testAccAppMeshVirtualGateway_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"

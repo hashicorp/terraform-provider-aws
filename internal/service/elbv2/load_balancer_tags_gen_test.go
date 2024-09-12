@@ -260,7 +260,7 @@ func TestAccELBV2LoadBalancer_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_tags_emptyMap(t *testing.T) {
+func TestAccELBV2LoadBalancer_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LoadBalancer
 	resourceName := "aws_lb.test"

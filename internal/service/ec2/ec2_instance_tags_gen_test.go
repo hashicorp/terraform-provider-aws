@@ -275,7 +275,7 @@ func TestAccEC2Instance_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_tags_emptyMap(t *testing.T) {
+func TestAccEC2Instance_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"

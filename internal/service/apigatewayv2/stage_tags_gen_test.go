@@ -265,7 +265,7 @@ func TestAccAPIGatewayV2Stage_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayV2Stage_tags_emptyMap(t *testing.T) {
+func TestAccAPIGatewayV2Stage_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"

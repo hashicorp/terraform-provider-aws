@@ -23,7 +23,7 @@ func testAccMediaLiveMultiplex_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccMediaLiveMultiplex_tags,
 		"null":                                      testAccMediaLiveMultiplex_tags_null,
-		"emptyMap":                                  testAccMediaLiveMultiplex_tags_emptyMap,
+		"EmptyMap":                                  testAccMediaLiveMultiplex_tags_EmptyMap,
 		"AddOnUpdate":                               testAccMediaLiveMultiplex_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccMediaLiveMultiplex_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccMediaLiveMultiplex_tags_EmptyTag_OnUpdate_Add,
@@ -287,7 +287,7 @@ func testAccMediaLiveMultiplex_tags_null(t *testing.T) {
 	})
 }
 
-func testAccMediaLiveMultiplex_tags_emptyMap(t *testing.T) {
+func testAccMediaLiveMultiplex_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"

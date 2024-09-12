@@ -260,7 +260,7 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccXRayGroup_tags_emptyMap(t *testing.T) {
+func TestAccXRayGroup_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Group
 	resourceName := "aws_xray_group.test"

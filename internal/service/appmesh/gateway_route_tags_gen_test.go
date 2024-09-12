@@ -23,7 +23,7 @@ func testAccAppMeshGatewayRoute_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshGatewayRoute_tags,
 		"null":                                      testAccAppMeshGatewayRoute_tags_null,
-		"emptyMap":                                  testAccAppMeshGatewayRoute_tags_emptyMap,
+		"EmptyMap":                                  testAccAppMeshGatewayRoute_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppMeshGatewayRoute_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppMeshGatewayRoute_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppMeshGatewayRoute_tags_EmptyTag_OnUpdate_Add,
@@ -292,7 +292,7 @@ func testAccAppMeshGatewayRoute_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshGatewayRoute_tags_emptyMap(t *testing.T) {
+func testAccAppMeshGatewayRoute_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"

@@ -265,7 +265,7 @@ func TestAccAppAutoScalingTarget_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAppAutoScalingTarget_tags_emptyMap(t *testing.T) {
+func TestAccAppAutoScalingTarget_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ScalableTarget
 	resourceName := "aws_appautoscaling_target.test"

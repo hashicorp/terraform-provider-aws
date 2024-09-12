@@ -260,7 +260,7 @@ func TestAccApplicationInsightsApplication_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccApplicationInsightsApplication_tags_emptyMap(t *testing.T) {
+func TestAccApplicationInsightsApplication_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ApplicationInfo
 	resourceName := "aws_applicationinsights_application.test"
