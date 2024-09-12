@@ -20,6 +20,8 @@ func testAccAppMeshVirtualGatewayDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccAppMeshVirtualGatewayDataSource_tags,
+		"NullMap":       testAccAppMeshVirtualGatewayDataSource_tags_NullMap,
+		"EmptyMap":      testAccAppMeshVirtualGatewayDataSource_tags_EmptyMap,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -53,7 +55,7 @@ func testAccAppMeshVirtualGatewayDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGatewayDataSource_tags_None(t *testing.T) {
+func testAccAppMeshVirtualGatewayDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -68,6 +70,30 @@ func testAccAppMeshVirtualGatewayDataSource_tags_None(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
+
+func testAccAppMeshVirtualGatewayDataSource_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualGateway/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),

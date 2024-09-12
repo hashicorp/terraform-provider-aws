@@ -44,7 +44,7 @@ func TestAccACMCertificateDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificateDataSource_tags_None(t *testing.T) {
+func TestAccACMCertificateDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -59,6 +59,32 @@ func TestAccACMCertificateDataSource_tags_None(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/data.tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtResourceTags:   nil,
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccACMCertificateDataSource_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_acm_certificate.test"
+	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags:   config.MapVariable(map[string]config.Variable{}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
