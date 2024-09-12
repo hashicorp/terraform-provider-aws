@@ -52,7 +52,7 @@ func (r *resourcePreferences) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"member_account_discount_visibility": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -237,7 +237,7 @@ func findPreferences(ctx context.Context, conn *costoptimizationhub.Client) (*co
 }
 
 func (r *resourcePreferences) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourcePreferencesData struct {
