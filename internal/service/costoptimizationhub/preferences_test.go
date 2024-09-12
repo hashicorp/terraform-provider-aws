@@ -221,20 +221,20 @@ resource "aws_costoptimizationhub_enrollment_status" "test_enrollment_status" {
 }
 
 func testAccPreferencesConfig_basic() string {
-	return testAccPreferencesBase() + `
+	return acctest.ConfigCompose(testAccPreferencesBase(), `
 resource "aws_costoptimizationhub_preferences" "test" {
   depends_on = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
 }
-`
+`)
 }
 
 func testAccPreferencesConfig_MemberAccountDiscountVisibility() string {
-	return testAccPreferencesBase() + `
+	return acctest.ConfigCompose(testAccPreferencesBase(), `
 resource "aws_costoptimizationhub_preferences" "test" {
   member_account_discount_visibility = "None"
   depends_on                         = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
 }
-`
+`)
 }
 
 func testAccPreferencesConfig_SavingsEstimationMode(mode string) string {
