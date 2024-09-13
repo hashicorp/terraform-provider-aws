@@ -6,6 +6,9 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_dynamodb_table: Handle eventual consistency of tag creation and removal ([#39326](https://github.com/hashicorp/terraform-provider-aws/issues/39326))
+* resource/aws_dynamodb_table_replica: Handle eventual consistency of tag creation and removal ([#39326](https://github.com/hashicorp/terraform-provider-aws/issues/39326))
+* resource/aws_dynamodb_tag: Handle eventual consistency of tag creation and removal ([#39326](https://github.com/hashicorp/terraform-provider-aws/issues/39326))
 * resource/aws_mq_broker: Fix `engine_version` mismatch with RabbitMQ 3.13 and ActiveMQ 5.18 and above ([#39024](https://github.com/hashicorp/terraform-provider-aws/issues/39024))
 * resource/aws_opensearchserverless_access_policy: Fix incompatible type error when setting `policy` ([#39322](https://github.com/hashicorp/terraform-provider-aws/issues/39322))
 
