@@ -92,7 +92,7 @@ var (
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
-	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS Go SDK to use i.e. 1 or 2")
+	sdkVersion        = flag.Int("AWSSDKVersion", sdkV2, "Version of the AWS Go SDK to use i.e. 1 or 2")
 	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
 	emptyMap          = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
 	skipAWSImp        = flag.Bool("SkipAWSImp", false, "Whether to skip importing the AWS Go SDK aws package") // nosemgrep:ci.aws-in-var-name
