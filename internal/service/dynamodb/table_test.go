@@ -1911,7 +1911,7 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncryptedAmazonOwned(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.TableDescription
+	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1920,7 +1920,7 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncryptedAmazonOwned(t *testin
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1928,16 +1928,16 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncryptedAmazonOwned(t *testin
 				Config: testAccTableConfig_replicaEncryptedDefault(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccTableConfig_replicaEncryptedDefault(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct0),
 				),
 			},
 		},
