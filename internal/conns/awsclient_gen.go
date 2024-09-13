@@ -173,6 +173,7 @@ import (
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pcs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcs"
 	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	pinpointsmsvoicev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -244,7 +245,6 @@ import (
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
-	pinpointsmsvoicev2_sdkv1 "github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -930,8 +930,8 @@ func (c *AWSClient) PinpointClient(ctx context.Context) *pinpoint_sdkv2.Client {
 	return errs.Must(client[*pinpoint_sdkv2.Client](ctx, c, names.Pinpoint, make(map[string]any)))
 }
 
-func (c *AWSClient) PinpointSMSVoiceV2Conn(ctx context.Context) *pinpointsmsvoicev2_sdkv1.PinpointSMSVoiceV2 {
-	return errs.Must(conn[*pinpointsmsvoicev2_sdkv1.PinpointSMSVoiceV2](ctx, c, names.PinpointSMSVoiceV2, make(map[string]any)))
+func (c *AWSClient) PinpointSMSVoiceV2Client(ctx context.Context) *pinpointsmsvoicev2_sdkv2.Client {
+	return errs.Must(client[*pinpointsmsvoicev2_sdkv2.Client](ctx, c, names.PinpointSMSVoiceV2, make(map[string]any)))
 }
 
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
