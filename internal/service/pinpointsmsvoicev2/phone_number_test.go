@@ -12,7 +12,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
@@ -35,7 +38,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPhoneNumberConfigBasic,
+				Config: testAccPhoneNumberConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
 					resource.TestCheckResourceAttr(resourceName, "iso_country_code", "US"),
@@ -72,7 +75,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPhoneNumberConfigFull(phoneNumberName, snsTopicName, optOutListName),
+				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
@@ -111,12 +114,69 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPhoneNumberConfigBasic,
+				Config: testAccPhoneNumberConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourcePhoneNumber(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var phoneNumber awstypes.PhoneNumberInformation
+	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPhoneNumber(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPhoneNumberConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccPhoneNumberConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -185,7 +245,7 @@ func testAccPreCheckPhoneNumber(ctx context.Context, t *testing.T) {
 	}
 }
 
-const testAccPhoneNumberConfigBasic = `
+const testAccPhoneNumberConfig_basic = `
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code = "US"
   message_type     = "TRANSACTIONAL"
@@ -197,7 +257,7 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 }
 `
 
-func testAccPhoneNumberConfigFull(phoneNumberName, snsTopicName, optOutListName string) string {
+func testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   deletion_protection_enabled   = false
@@ -227,4 +287,41 @@ resource "aws_pinpointsmsvoicev2_opt_out_list" "test" {
   name = %[3]q
 }
 `, phoneNumberName, snsTopicName, optOutListName)
+}
+
+func testAccPhoneNumberConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code = "US"
+  message_type     = "TRANSACTIONAL"
+  number_type      = "TOLL_FREE"
+
+  number_capabilities = [
+    "SMS"
+  ]
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccPhoneNumberConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code = "US"
+  message_type     = "TRANSACTIONAL"
+  number_type      = "TOLL_FREE"
+
+  number_capabilities = [
+    "SMS"
+  ]
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
