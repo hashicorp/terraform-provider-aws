@@ -93,7 +93,7 @@ func resourceOptOutListRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrARN, out.OptOutListArn)
 	d.Set(names.AttrName, out.OptOutListName)
 
-	return nil
+	return diags
 }
 
 func resourceOptOutListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
