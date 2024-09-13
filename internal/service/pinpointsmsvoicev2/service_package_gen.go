@@ -27,7 +27,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceOptOutList,
+			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
+			Name:     "Opt-out List",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

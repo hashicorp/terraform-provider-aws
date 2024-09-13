@@ -13,30 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findOptOutListByID(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string) (*pinpointsmsvoicev2.OptOutListInformation, error) {
-	in := &pinpointsmsvoicev2.DescribeOptOutListsInput{
-		OptOutListNames: aws.StringSlice([]string{id}),
-	}
-
-	out, err := conn.DescribeOptOutListsWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, pinpointsmsvoicev2.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || len(out.OptOutLists) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.OptOutLists[0], nil
-}
-
 func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
 	in := &pinpointsmsvoicev2.DescribePhoneNumbersInput{
 		PhoneNumberIds: aws.StringSlice([]string{id}),

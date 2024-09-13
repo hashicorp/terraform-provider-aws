@@ -7,18 +7,23 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceOptOutList() *schema.Resource {
+// @SDKResource("aws_pinpointsmsvoicev2_opt_out_list", name="Opt-out List")
+// @Tags(identifierAttribute="arn")
+func resourceOptOutList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOptOutListCreate,
 		ReadWithoutTimeout:   resourceOptOutListRead,
@@ -48,101 +53,114 @@ func ResourceOptOutList() *schema.Resource {
 }
 
 func resourceOptOutListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
-	in := &pinpointsmsvoicev2.CreateOptOutListInput{
-		OptOutListName: aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &pinpointsmsvoicev2.CreateOptOutListInput{
+		OptOutListName: aws.String(name),
+		Tags:           getTagsIn(ctx),
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	output, err := conn.CreateOptOutList(ctx, input)
 
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	out, err := conn.CreateOptOutListWithContext(ctx, in)
 	if err != nil {
-		return diag.Errorf("creating Amazon Pinpoint SMS and Voice V2 OptOutList (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating End User Messaging Opt-out List (%s): %s", name, err)
 	}
 
-	if out == nil || out.OptOutListArn == nil {
-		return diag.Errorf("creating Amazon Pinpoint SMS and Voice V2 OptOutList (%s): empty output", d.Get("name").(string))
-	}
+	d.SetId(aws.ToString(output.OptOutListName))
 
-	d.SetId(aws.StringValue(out.OptOutListName))
-
-	return resourceOptOutListRead(ctx, d, meta)
+	return append(diags, resourceOptOutListRead(ctx, d, meta)...)
 }
 
 func resourceOptOutListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
 	out, err := findOptOutListByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] PinpointSMSVoiceV2 OptOutList (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging Opt-out List (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading PinpointSMSVoiceV2 OptOutList (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging Opt-out List (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", out.OptOutListArn)
 	d.Set("name", out.OptOutListName)
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return diag.Errorf("listing tags for PinpointSMSVoiceV2 OptOutList (%s): %s", d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceOptOutListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating tags: %s", err)
-		}
-	}
+	// Tags only.
 
-	return resourceOptOutListRead(ctx, d, meta)
+	return append(diags, resourceOptOutListRead(ctx, d, meta)...)
 }
 
 func resourceOptOutListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
-	log.Printf("[INFO] Deleting PinpointSMSVoiceV2 OptOutList %s", d.Id())
-
-	_, err := conn.DeleteOptOutListWithContext(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
+	log.Printf("[INFO] Deleting End User Messaging Opt-out List: %s", d.Id())
+	_, err := conn.DeleteOptOutList(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
 		OptOutListName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, pinpointsmsvoicev2.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting PinpointSMSVoiceV2 OptOutList (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging Opt-out List (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findOptOutListByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.OptOutListInformation, error) {
+	input := &pinpointsmsvoicev2.DescribeOptOutListsInput{
+		OptOutListNames: []string{id},
+	}
+
+	return findOptOutList(ctx, conn, input)
+}
+
+func findOptOutList(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeOptOutListsInput) (*awstypes.OptOutListInformation, error) {
+	output, err := findOptOutLists(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findOptOutLists(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeOptOutListsInput) ([]awstypes.OptOutListInformation, error) {
+	var output []awstypes.OptOutListInformation
+
+	pages := pinpointsmsvoicev2.NewDescribeOptOutListsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.OptOutLists...)
+	}
+
+	return output, nil
 }
