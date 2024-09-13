@@ -111,9 +111,9 @@ func TestAccAppSync_serial(t *testing.T) {
 			acctest.CtDisappears: testAccDomainNameAPIAssociation_disappears,
 		},
 		"SourceApiAssociation": {
-			acctest.CtBasic:      testAccAppSyncSourceApiAssociation_basic,
-			acctest.CtDisappears: testAccAppSyncSourceApiAssociation_disappears,
-			"update":             testAccAppSyncSourceApiAssociation_update,
+			acctest.CtBasic:      testAccAppSyncSourceAPIAssociation_basic,
+			acctest.CtDisappears: testAccAppSyncSourceAPIAssociation_disappears,
+			"update":             testAccAppSyncSourceAPIAssociation_update,
 		},
 	}
 

@@ -31,7 +31,6 @@ The following arguments are optional:
 * `source_api_arn` - (Optional) ARN of the source API. One of `source_api_arn` or `source_api_id` must be specified.
 * `source_api_id` - (Optional) ID of the source API. One of `source_api_arn` or `source_api_id` must be specified.
 
-
 ### `source_api_association_config` Block
 
 The `source_api_association_config` configuration block supports the following arguments:
@@ -42,9 +41,9 @@ The `source_api_association_config` configuration block supports the following a
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Source Api Association. 
+* `arn` - ARN of the Source Api Association.
 * `association_id` - ID of the Source Api Association.
-* `id` - Combined ID of the Source Api Association and Merge Api
+* `id` - Combined ID of the Source Api Association and Merge Api.
 
 ## Timeouts
 

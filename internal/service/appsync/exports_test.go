@@ -14,7 +14,7 @@ var (
 	ResourceGraphQLAPI               = resourceGraphQLAPI
 	ResourceResolver                 = resourceResolver
 	ResourceType                     = resourceType
-	ResourceSourceApiAssociation     = newResourceSourceApiAssociation
+	ResourceSourceAPIAssociation     = newResourceSourceAPIAssociation
 
 	DefaultAuthorizerResultTTLInSeconds  = defaultAuthorizerResultTTLInSeconds
 	FindAPICacheByID                     = findAPICacheByID
@@ -25,6 +25,6 @@ var (
 	FindFunctionByTwoPartKey             = findFunctionByTwoPartKey
 	FindGraphQLAPIByID                   = findGraphQLAPIByID
 	FindResolverByThreePartKey           = findResolverByThreePartKey
-	FindSourceApiAssociationByTwoPartKey = findSourceApiAssociationByTwoPartKey
+	FindSourceAPIAssociationByTwoPartKey = findSourceAPIAssociationByTwoPartKey
 	FindTypeByThreePartKey               = findTypeByThreePartKey
 )

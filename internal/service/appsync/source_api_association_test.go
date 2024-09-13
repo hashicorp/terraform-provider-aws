@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/YakDriver/regexache"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	"github.com/aws/aws-sdk-go-v2/service/appsync/types"
@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccAppSyncSourceApiAssociation_basic(t *testing.T) {
+func testAccAppSyncSourceAPIAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -42,12 +42,12 @@ func testAccAppSyncSourceApiAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSourceApiAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSourceAPIAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceApiAssociationConfig_basic(rName, rName),
+				Config: testAccSourceAPIAssociationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceApiAssociationExists(ctx, resourceName, &sourceapiassociation),
+					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociation),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
 				),
@@ -61,16 +61,17 @@ func testAccAppSyncSourceApiAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccAppSyncSourceApiAssociation_update(t *testing.T) {
+func testAccAppSyncSourceAPIAssociation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var sourceapiassociation types.SourceApiAssociation
+	var sourceapiassociationUpdated types.SourceApiAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_source_api_association.test"
-	updateDesc := rName + "2"
+	updateDesc := rName + "Update"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -80,20 +81,21 @@ func testAccAppSyncSourceApiAssociation_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSourceApiAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSourceAPIAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceApiAssociationConfig_basic(rName, rName),
+				Config: testAccSourceAPIAssociationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceApiAssociationExists(ctx, resourceName, &sourceapiassociation),
+					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociation),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
 				),
 			},
 			{
-				Config: testAccSourceApiAssociationConfig_basic(rName, updateDesc),
+				Config: testAccSourceAPIAssociationConfig_basic(rName, updateDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceApiAssociationExists(ctx, resourceName, &sourceapiassociation),
+					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociationUpdated),
+					testAccCheckSourceAPIAssociationNotRecreated(&sourceapiassociation, &sourceapiassociationUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updateDesc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
 				),
@@ -107,7 +109,7 @@ func testAccAppSyncSourceApiAssociation_update(t *testing.T) {
 	})
 }
 
-func testAccAppSyncSourceApiAssociation_disappears(t *testing.T) {
+func testAccAppSyncSourceAPIAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -125,13 +127,13 @@ func testAccAppSyncSourceApiAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSourceApiAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSourceAPIAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceApiAssociationConfig_basic(rName, rName),
+				Config: testAccSourceAPIAssociationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceApiAssociationExists(ctx, resourceName, &sourceapiassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceSourceApiAssociation, resourceName),
+					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociation),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceSourceAPIAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,7 +141,7 @@ func testAccAppSyncSourceApiAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSourceApiAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSourceAPIAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -148,7 +150,7 @@ func testAccCheckSourceApiAssociationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfappsync.FindSourceApiAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["association_id"], rs.Primary.Attributes["merged_api_id"])
+			_, err := tfappsync.FindSourceAPIAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes["merged_api_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -158,29 +160,29 @@ func testAccCheckSourceApiAssociationDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameSourceApiAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameSourceAPIAssociation, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSourceApiAssociationExists(ctx context.Context, name string, sourceapiassociation *types.SourceApiAssociation) resource.TestCheckFunc {
+func testAccCheckSourceAPIAssociationExists(ctx context.Context, name string, sourceapiassociation *types.SourceApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceApiAssociation, name, errors.New("not found"))
+			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceAPIAssociation, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceApiAssociation, name, errors.New("not set"))
+			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceAPIAssociation, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
-		resp, err := tfappsync.FindSourceApiAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["association_id"], rs.Primary.Attributes["merged_api_id"])
+		resp, err := tfappsync.FindSourceAPIAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes["merged_api_id"])
 
 		if err != nil {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceApiAssociation, rs.Primary.ID, err)
+			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceAPIAssociation, rs.Primary.ID, err)
 		}
 
 		*sourceapiassociation = *resp
@@ -203,17 +205,17 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckSourceApiAssociationNotRecreated(before, after *types.SourceApiAssociation) resource.TestCheckFunc {
+func testAccCheckSourceAPIAssociationNotRecreated(before, after *types.SourceApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.AssociationId), aws.ToString(after.AssociationId); before != after {
-			return create.Error(names.AppSync, create.ErrActionCheckingNotRecreated, tfappsync.ResNameSourceApiAssociation, before, errors.New("recreated"))
+			return create.Error(names.AppSync, create.ErrActionCheckingNotRecreated, tfappsync.ResNameSourceAPIAssociation, before, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccSourceApiAssociationConfig_basic(rName, description string) string {
+func testAccSourceAPIAssociationConfig_basic(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.test.json
@@ -255,9 +257,9 @@ resource "aws_appsync_graphql_api" "merged" {
 }
 
 resource "aws_appsync_graphql_api" "source" {
-  authentication_type           = "API_KEY"
-  name                          = %[1]q
-  schema = <<EOF
+  authentication_type = "API_KEY"
+  name                = %[1]q
+  schema              = <<EOF
 schema {
     query: Query
 }
