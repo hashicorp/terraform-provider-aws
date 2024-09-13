@@ -39,7 +39,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOptOutListDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptOutListConfig(rName),
+				Config: testAccOptOutListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
 				),
@@ -75,12 +75,70 @@ func TestAccPinpointSMSVoiceV2OptOutList_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOptOutListDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptOutListConfig(rName),
+				Config: testAccOptOutListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourceOptOutList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccPinpointSMSVoiceV2OptOutList_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var optOutList awstypes.OptOutListInformation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pinpointsmsvoicev2_opt_out_list.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckOptOutList(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptOutListDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOptOutListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOptOutListConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccOptOutListConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -149,10 +207,35 @@ func testAccPreCheckOptOutList(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccOptOutListConfig(rName string) string {
+func testAccOptOutListConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_opt_out_list" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccOptOutListConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_opt_out_list" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccOptOutListConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_opt_out_list" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
