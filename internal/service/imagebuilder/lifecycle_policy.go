@@ -488,8 +488,8 @@ type lifecyclePolicyResourceModel struct {
 	ResourceSelection  fwtypes.ListNestedObjectValueOf[lifecyclePolicyResourceSelectionModel] `tfsdk:"resource_selection"`
 	ResourceType       fwtypes.StringEnum[awstypes.LifecyclePolicyResourceType]               `tfsdk:"resource_type"`
 	Status             fwtypes.StringEnum[awstypes.LifecyclePolicyStatus]                     `tfsdk:"status"`
-	Tags               types.Map                                                              `tfsdk:"tags"`
-	TagsAll            types.Map                                                              `tfsdk:"tags_all"`
+	Tags               tftags.Map                                                             `tfsdk:"tags"`
+	TagsAll            tftags.Map                                                             `tfsdk:"tags_all"`
 }
 
 func (model *lifecyclePolicyResourceModel) InitFromID() error {
