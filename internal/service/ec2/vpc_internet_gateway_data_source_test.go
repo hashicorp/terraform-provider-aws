@@ -1,16 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCInternetGatewayDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	igwResourceName := "aws_internet_gateway.test"
 	vpcResourceName := "aws_vpc.test"
 	ds1ResourceName := "data.aws_internet_gateway.by_id"
@@ -19,32 +23,32 @@ func TestAccVPCInternetGatewayDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayDataSourceConfig(rName),
+				Config: testAccVPCInternetGatewayDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "internet_gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", igwResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "attachments.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", igwResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "internet_gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, igwResourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "attachments.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, igwResourceName, names.AttrARN),
 
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "internet_gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "owner_id", igwResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "attachments.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "internet_gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, igwResourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "attachments.0.vpc_id", vpcResourceName, names.AttrID),
 
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "internet_gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "owner_id", igwResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "attachments.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "internet_gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOwnerID, igwResourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "attachments.0.vpc_id", vpcResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func testAccInternetGatewayDataSourceConfig(rName string) string {
+func testAccVPCInternetGatewayDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

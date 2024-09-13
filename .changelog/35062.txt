@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_prometheus_workspace: Add `kms_key_arn` argument, enabling encryption at-rest using AWS KMS Customer Managed Keys (CMK)
+```
+
+```release-note:enhancement
+data-source/aws_prometheus_workspace: Add `kms_key_arn` attribute 
+```

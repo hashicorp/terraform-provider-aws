@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `target_health_state` configuration block
+```
+
+```release-note:enhancement
+resource/aws_lb_target_group: Remove default value (`false`) for `connection_termination` argument and mark as Computed, to support new default behavior for UDP/TCP_UDP target groups
+```

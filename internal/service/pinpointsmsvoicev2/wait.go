@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpointsmsvoicev2
 
 import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitPhoneNumberCreated(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string, timeout time.Duration) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{pinpointsmsvoicev2.NumberStatusActive},
 		Refresh:                   statusPhoneNumber(ctx, conn, id),
@@ -30,7 +33,7 @@ func waitPhoneNumberCreated(ctx context.Context, conn *pinpointsmsvoicev2.Pinpoi
 }
 
 func waitPhoneNumberUpdated(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string, timeout time.Duration) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{pinpointsmsvoicev2.NumberStatusActive},
 		Refresh:                   statusPhoneNumber(ctx, conn, id),
@@ -48,7 +51,7 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *pinpointsmsvoicev2.Pinpoi
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string, timeout time.Duration) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{pinpointsmsvoicev2.NumberStatusDisassociating},
 		Target:  []string{},
 		Refresh: statusPhoneNumber(ctx, conn, id),
@@ -63,7 +66,7 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Pinpoi
 	return nil, err
 }
 
-func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string) resource.StateRefreshFunc {
+func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findPhoneNumberByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -74,7 +77,7 @@ func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMS
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, aws.StringValue(out.Status), nil
 	}
 }
 

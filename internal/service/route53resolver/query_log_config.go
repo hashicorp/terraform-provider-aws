@@ -1,182 +1,233 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceQueryLogConfig() *schema.Resource {
+// @SDKResource("aws_route53_resolver_query_log_config", name="Query Log Config")
+// @Tags(identifierAttribute="arn")
+func resourceQueryLogConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceQueryLogConfigCreate,
-		Read:   resourceQueryLogConfigRead,
-		Update: resourceQueryLogConfigUpdate,
-		Delete: resourceQueryLogConfigDelete,
+		CreateWithoutTimeout: resourceQueryLogConfigCreate,
+		ReadWithoutTimeout:   resourceQueryLogConfigRead,
+		UpdateWithoutTimeout: resourceQueryLogConfigUpdate,
+		DeleteWithoutTimeout: resourceQueryLogConfigDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validResolverName,
 			},
-
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"share_status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceQueryLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
+	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
-		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
-		DestinationArn:   aws.String(d.Get("destination_arn").(string)),
-		Name:             aws.String(d.Get("name").(string)),
-	}
-	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
+		DestinationArn:   aws.String(d.Get(names.AttrDestinationARN).(string)),
+		Name:             aws.String(name),
+		Tags:             getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Route53 Resolver Query Log Config: %s", input)
-	output, err := conn.CreateResolverQueryLogConfig(input)
+	output, err := conn.CreateResolverQueryLogConfig(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route53 Resolver Query Log Config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Query Log Config (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ResolverQueryLogConfig.Id))
+	d.SetId(aws.ToString(output.ResolverQueryLogConfig.Id))
 
-	_, err = WaitQueryLogConfigCreated(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config (%s) to become available: %w", d.Id(), err)
+	if _, err := waitQueryLogConfigCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Query Log Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceQueryLogConfigRead(d, meta)
+	return append(diags, resourceQueryLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceQueryLogConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	queryLogConfig, err := FindResolverQueryLogConfigByID(conn, d.Id())
+	queryLogConfig, err := findResolverQueryLogConfigByID(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route53 Resolver Query Log Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Query Log Config (%s): %s", d.Id(), err)
 	}
 
-	if queryLogConfig == nil {
-		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	arn := aws.StringValue(queryLogConfig.Arn)
-	d.Set("arn", arn)
-	d.Set("destination_arn", queryLogConfig.DestinationArn)
-	d.Set("name", queryLogConfig.Name)
-	d.Set("owner_id", queryLogConfig.OwnerId)
+	d.Set(names.AttrARN, queryLogConfig.Arn)
+	d.Set(names.AttrDestinationARN, queryLogConfig.DestinationArn)
+	d.Set(names.AttrName, queryLogConfig.Name)
+	d.Set(names.AttrOwnerID, queryLogConfig.OwnerId)
 	d.Set("share_status", queryLogConfig.ShareStatus)
 
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("error listing tags for Route53 Resolver Query Log Config (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceQueryLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Route53 Resolver Query Log Config (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceQueryLogConfigRead(d, meta)
+func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Tags only.
+	return resourceQueryLogConfigRead(ctx, d, meta)
 }
 
-func resourceQueryLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+func resourceQueryLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config (%s)", d.Id())
-	_, err := conn.DeleteResolverQueryLogConfig(&route53resolver.DeleteResolverQueryLogConfigInput{
+	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config: %s", d.Id())
+	_, err := conn.DeleteResolverQueryLogConfig(ctx, &route53resolver.DeleteResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Resolver Query Log Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Query Log Config (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitQueryLogConfigDeleted(conn, d.Id())
+	if _, err := waitQueryLogConfigDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Query Log Config (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfig, error) {
+	input := &route53resolver.GetResolverQueryLogConfigInput{
+		ResolverQueryLogConfigId: aws.String(id),
+	}
+
+	output, err := conn.GetResolverQueryLogConfig(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config (%s) to be deleted: %w", d.Id(), err)
+		return nil, err
 	}
 
-	return nil
+	if output == nil || output.ResolverQueryLogConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResolverQueryLogConfig, nil
+}
+
+func statusQueryLogConfig(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findResolverQueryLogConfigByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+const (
+	queryLogConfigCreatedTimeout = 5 * time.Minute
+	queryLogConfigDeletedTimeout = 5 * time.Minute
+)
+
+func waitQueryLogConfigCreated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfig, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusCreating),
+		Target:  enum.Slice(awstypes.ResolverQueryLogConfigStatusCreated),
+		Refresh: statusQueryLogConfig(ctx, conn, id),
+		Timeout: queryLogConfigCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitQueryLogConfigDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfig, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusDeleting),
+		Target:  []string{},
+		Refresh: statusQueryLogConfig(ctx, conn, id),
+		Timeout: queryLogConfigDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfig); ok {
+		return output, err
+	}
+
+	return nil, err
 }

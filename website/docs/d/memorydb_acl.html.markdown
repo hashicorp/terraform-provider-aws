@@ -24,12 +24,12 @@ The following arguments are required:
 
 * `name` - (Required) Name of the ACL.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the ACL.
 * `arn` - ARN of the ACL.
 * `minimum_engine_version` - The minimum engine version supported by the ACL.
-* `tags` - A map of tags assigned to the ACL.
+* `tags` - Map of tags assigned to the ACL.
 * `user_names` - Set of MemoryDB user names included in this ACL.

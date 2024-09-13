@@ -1,232 +1,226 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSubnetGroup() *schema.Resource {
+// @SDKResource("aws_neptune_subnet_group", name="Subnet Group")
+// @Tags(identifierAttribute="arn")
+func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSubnetGroupCreate,
-		Read:   resourceSubnetGroupRead,
-		Update: resourceSubnetGroupUpdate,
-		Delete: resourceSubnetGroupDelete,
+		CreateWithoutTimeout: resourceSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceSubnetGroupRead,
+		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceSubnetGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validSubnetGroupName,
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validSubnetGroupNamePrefix,
-			},
-
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-
-			"subnet_ids": {
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+				ValidateFunc:  validSubnetGroupName,
+			},
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validSubnetGroupNamePrefix,
+			},
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
-	subnetIds := make([]*string, subnetIdsSet.Len())
-	for i, subnetId := range subnetIdsSet.List() {
-		subnetIds[i] = aws.String(subnetId.(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := &neptune.CreateDBSubnetGroupInput{
+		DBSubnetGroupName:        aws.String(name),
+		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
+		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		Tags:                     getTagsIn(ctx),
 	}
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
+	output, err := conn.CreateDBSubnetGroup(ctx, input)
 
-	createOpts := neptune.CreateDBSubnetGroupInput{
-		DBSubnetGroupName:        aws.String(groupName),
-		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-		SubnetIds:                subnetIds,
-		Tags:                     Tags(tags.IgnoreAWS()),
-	}
-
-	log.Printf("[DEBUG] Create Neptune Subnet Group: %#v", createOpts)
-	_, err := conn.CreateDBSubnetGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Neptune Subnet Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Subnet Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(createOpts.DBSubnetGroupName))
-	log.Printf("[INFO] Neptune Subnet Group ID: %s", d.Id())
-	return resourceSubnetGroupRead(d, meta)
+	d.SetId(aws.ToString(output.DBSubnetGroup.DBSubnetGroupName))
+
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	describeOpts := neptune.DescribeDBSubnetGroupsInput{
-		DBSubnetGroupName: aws.String(d.Id()),
-	}
+	subnetGroup, err := findSubnetGroupByName(ctx, conn, d.Id())
 
-	var subnetGroups []*neptune.DBSubnetGroup
-	if err := conn.DescribeDBSubnetGroupsPages(&describeOpts, func(resp *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
-		return !lastPage
-	}); err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
-			log.Printf("[WARN] Neptune Subnet Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if len(subnetGroups) == 0 {
-		log.Printf("[WARN] Unable to find Neptune Subnet Group: %#v, removing from state", subnetGroups)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Neptune Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
-	var subnetGroup *neptune.DBSubnetGroup = subnetGroups[0]
-
-	if subnetGroup.DBSubnetGroupName == nil {
-		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", subnetGroups)
-	}
-
-	d.Set("name", subnetGroup.DBSubnetGroupName)
-	d.Set("description", subnetGroup.DBSubnetGroupDescription)
-
-	subnets := make([]string, 0, len(subnetGroup.Subnets))
-	for _, s := range subnetGroup.Subnets {
-		subnets = append(subnets, aws.StringValue(s.SubnetIdentifier))
-	}
-	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %s", err)
-	}
-
-	//Amazon Neptune shares the format of Amazon RDS ARNs. Neptune ARNs contain rds and not neptune.
-	//https://docs.aws.amazon.com/neptune/latest/userguide/tagging.ARN.html
-	d.Set("arn", subnetGroup.DBSubnetGroupArn)
-
-	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Subnet Group (%s): %s", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	arn := aws.ToString(subnetGroup.DBSubnetGroupArn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, subnetGroup.DBSubnetGroupDescription)
+	d.Set(names.AttrName, subnetGroup.DBSubnetGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(subnetGroup.DBSubnetGroupName)))
+	var subnetIDs []string
+	for _, v := range subnetGroup.Subnets {
+		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetIdentifier))
 	}
+	d.Set(names.AttrSubnetIDs, subnetIDs)
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
-	if d.HasChanges("subnet_ids", "description") {
-		_, n := d.GetChange("subnet_ids")
-		if n == nil {
-			n = new(schema.Set)
-		}
-		ns := n.(*schema.Set)
+func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-		var sIds []*string
-		for _, s := range ns.List() {
-			sIds = append(sIds, aws.String(s.(string)))
-		}
-
-		_, err := conn.ModifyDBSubnetGroup(&neptune.ModifyDBSubnetGroupInput{
+	if d.HasChanges(names.AttrDescription, names.AttrSubnetIDs) {
+		input := &neptune.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
-			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                sIds,
-		})
+			DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
+			SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBSubnetGroup(ctx, input)
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceSubnetGroupRead(d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
-
-	input := neptune.DeleteDBSubnetGroupInput{
-		DBSubnetGroupName: aws.String(d.Id()),
-	}
+func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Subnet Group: %s", d.Id())
-	_, err := conn.DeleteDBSubnetGroup(&input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
-			return nil
-		}
-		return fmt.Errorf("error deleting Neptune Subnet Group (%s): %s", d.Id(), err)
+	_, err := conn.DeleteDBSubnetGroup(ctx, &neptune.DeleteDBSubnetGroupInput{
+		DBSubnetGroupName: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Subnet Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findSubnetGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBSubnetGroup, error) {
+	input := &neptune.DescribeDBSubnetGroupsInput{
+		DBSubnetGroupName: aws.String(name),
+	}
+	output, err := findDBSubnetGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.DBSubnetGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBSubnetGroup(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBSubnetGroupsInput) (*awstypes.DBSubnetGroup, error) {
+	output, err := findDBSubnetGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDBSubnetGroups(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBSubnetGroupsInput) ([]awstypes.DBSubnetGroup, error) {
+	var output []awstypes.DBSubnetGroup
+
+	pages := neptune.NewDescribeDBSubnetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DBSubnetGroups...)
+	}
+
+	return output, nil
 }

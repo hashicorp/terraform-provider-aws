@@ -3,7 +3,7 @@ subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_document"
 description: |-
-  Provides a SSM Document datasource
+  Provides a SSM Document data source
 ---
 
 # Data Source: aws_ssm_document
@@ -34,19 +34,18 @@ data "aws_ssm_document" "test" {
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) The name of the Systems Manager document.
-* `document_format` - (Optional) Returns the document in the specified format. The document format can be either `JSON`, `YAML` and `TEXT`. JSON is the default format.
-* `document_version` - (Optional) The document version for which you want information.
+* `name` - (Required) The name of the document.
+* `document_format` - The format of the document. Valid values: `JSON`, `TEXT`, `YAML`.
+* `document_version` - The document version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the document. If the document is an AWS managed document, this value will be set to the name of the document instead.
-* `content` - The contents of the document.
+* `arn` - ARN of the document. If the document is an AWS managed document, this value will be set to the name of the document instead.
+* `content` - The content for the SSM document in JSON or YAML format.
 * `document_type` - The type of the document.

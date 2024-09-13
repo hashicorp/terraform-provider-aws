@@ -1,50 +1,101 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceStateMachine() *schema.Resource {
+// @SDKResource("aws_sfn_state_machine", name="State Machine")
+// @Tags(identifierAttribute="id")
+func resourceStateMachine() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStateMachineCreate,
-		Read:   resourceStateMachineRead,
-		Update: resourceStateMachineUpdate,
-		Delete: resourceStateMachineDelete,
+		CreateWithoutTimeout: resourceStateMachineCreate,
+		ReadWithoutTimeout:   resourceStateMachineRead,
+		UpdateWithoutTimeout: resourceStateMachineUpdate,
+		DeleteWithoutTimeout: resourceStateMachineDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"definition": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024*1024), // 1048576
 			},
-
-			"logging_configuration": {
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrEncryptionConfiguration: {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_data_key_reuse_period_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(60, 900),
+						},
+						names.AttrKMSKeyID: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+						},
+					},
+				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+			},
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -56,9 +107,9 @@ func ResourceStateMachine() *schema.Resource {
 							Optional: true,
 						},
 						"level": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(sfn.LogLevel_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
 						},
 						"log_destination": {
 							Type:     schema.TypeString,
@@ -68,36 +119,52 @@ func ResourceStateMachine() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validStateMachineName,
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 80),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+				),
 			},
-
-			"role_arn": {
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+				),
+			},
+			"publish": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
+			"revision_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"status": {
+			"state_machine_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      sfn.StateMachineTypeStandard,
-				ValidateFunc: validation.StringInSlice(sfn.StateMachineType_Values(), false),
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tracing_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -105,7 +172,7 @@ func ResourceStateMachine() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -113,27 +180,46 @@ func ResourceStateMachine() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.StateMachineTypeStandard,
+				ValidateDiagFunc: enum.Validate[awstypes.StateMachineType](),
+			},
+			"version_description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			stateMachineDefinitionValidate,
+			stateMachineUpdateComputedAttributesOnPublish,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
-func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SFNConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	name := d.Get("name").(string)
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
-		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       Tags(tags.IgnoreAWS()),
-		Type:       aws.String(d.Get("type").(string)),
+		Publish:    d.Get("publish").(bool),
+		RoleArn:    aws.String(d.Get(names.AttrRoleARN).(string)),
+		Tags:       getTagsIn(ctx),
+		Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -141,128 +227,118 @@ func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error 
 		input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	var output *sfn.CreateStateMachineOutput
-
-	log.Printf("[DEBUG] Creating Step Function State Machine: %s", input)
-	err := resource.Retry(stateMachineCreatedTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = conn.CreateStateMachine(input)
-
-		// Note: the instance may be in a deleting mode, hence the retry
-		// when creating the step function. This can happen when we are
-		// updating the resource (since there is no update API call).
-		if tfawserr.ErrCodeEquals(err, sfn.ErrCodeStateMachineDeleting) {
-			return resource.RetryableError(err)
-		}
-
-		// This is done to deal with IAM eventual consistency
-		if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateStateMachine(input)
-	}
+	// This is done to deal with IAM eventual consistency.
+	// Note: the instance may be in a deleting mode, hence the retry
+	// when creating the step function. This can happen when we are
+	// updating the resource (since there is no update API call).
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateStateMachine(ctx, input)
+	}, "StateMachineDeleting", "AccessDeniedException")
 
 	if err != nil {
-		return fmt.Errorf("error creating Step Function State Machine (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Step Functions State Machine (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.StateMachineArn))
+	d.SetId(aws.ToString(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn))
 
-	return resourceStateMachineRead(d, meta)
+	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
-func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SFNConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	output, err := FindStateMachineByARN(conn, d.Id())
+	output, err := findStateMachineByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Step Function State Machine (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Step Functions State Machine (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Step Function State Machine (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.StateMachineArn)
+	d.Set(names.AttrARN, output.StateMachineArn)
 	if output.CreationDate != nil {
-		d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set("creation_date", nil)
+		d.Set(names.AttrCreationDate, nil)
 	}
 	d.Set("definition", output.Definition)
-	d.Set("name", output.Name)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("type", output.Type)
-	d.Set("status", output.Status)
-
-	if output.LoggingConfiguration != nil {
-		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
-			return fmt.Errorf("error setting logging_configuration: %w", err)
+	d.Set(names.AttrDescription, output.Description)
+	if output.EncryptionConfiguration != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 		}
 	} else {
-		d.Set("logging_configuration", nil)
+		d.Set(names.AttrEncryptionConfiguration, nil)
 	}
-
+	if output.LoggingConfiguration != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrLoggingConfiguration, nil)
+	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set("publish", d.Get("publish").(bool))
+	d.Set("revision_id", output.RevisionId)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrStatus, output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
-			return fmt.Errorf("error setting tracing_configuration: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
 		}
 	} else {
 		d.Set("tracing_configuration", nil)
 	}
+	d.Set(names.AttrType, output.Type)
 
-	tags, err := ListTags(conn, d.Id())
+	input := &sfn.ListStateMachineVersionsInput{
+		StateMachineArn: aws.String(d.Id()),
+	}
+	listVersionsOutput, err := conn.ListStateMachineVersions(ctx, input)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-			return nil
-		}
-
-		return fmt.Errorf("error listing tags for Step Function State Machine (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	// The results are sorted in descending order of the version creation time.
+	// https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachineVersions.html
+	if len(listVersionsOutput.StateMachineVersions) > 0 {
+		d.Set("state_machine_version_arn", listVersionsOutput.StateMachineVersions[0].StateMachineVersionArn)
+	} else {
+		d.Set("state_machine_version_arn", nil)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SFNConn
+func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
+		publish := d.Get("publish").(bool)
 		input := &sfn.UpdateStateMachineInput{
-			StateMachineArn: aws.String(d.Id()),
 			Definition:      aws.String(d.Get("definition").(string)),
-			RoleArn:         aws.String(d.Get("role_arn").(string)),
+			Publish:         publish,
+			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
+			StateMachineArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("logging_configuration") {
-			if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrEncryptionConfiguration) {
+			if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange(names.AttrLoggingConfiguration) {
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -273,83 +349,143 @@ func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
-		log.Printf("[DEBUG] Updating Step Function State Machine: %s", input)
-		_, err := conn.UpdateStateMachine(input)
+		if publish {
+			input.VersionDescription = aws.String(d.Get("version_description").(string))
+		}
+
+		_, err := conn.UpdateStateMachine(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Step Function State Machine (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Step Functions State Machine (%s): %s", d.Id(), err)
 		}
 
 		// Handle eventual consistency after update.
-		err = resource.Retry(stateMachineUpdatedTimeout, func() *resource.RetryError {
-			output, err := FindStateMachineByARN(conn, d.Id())
+		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
+			output, err := findStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
-			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
-				d.HasChange("role_arn") && aws.StringValue(output.RoleArn) != d.Get("role_arn").(string) ||
-				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
-				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
-				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
-				return resource.RetryableError(fmt.Errorf("Step Function State Machine (%s) eventual consistency", d.Id()))
+			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.ToString(output.Definition)), []byte(d.Get("definition").(string))) ||
+				d.HasChange(names.AttrRoleARN) && aws.ToString(output.RoleArn) != d.Get(names.AttrRoleARN).(string) ||
+				//d.HasChange("publish") && aws.Bool(output.Publish) != d.Get("publish").(bool) ||
+				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && output.TracingConfiguration.Enabled != d.Get("tracing_configuration.0.enabled").(bool) ||
+				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && output.LoggingConfiguration.IncludeExecutionData != d.Get("logging_configuration.0.include_execution_data").(bool) ||
+				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && string(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) ||
+				d.HasChange("encryption_configuration.0.kms_key_id") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsKeyId != nil && aws.ToString(output.EncryptionConfiguration.KmsKeyId) != d.Get("encryption_configuration.0.kms_key_id") ||
+				d.HasChange("encryption_configuration.0.encryption_type") && output.EncryptionConfiguration != nil && string(output.EncryptionConfiguration.Type) != d.Get("encryption_configuration.0.encryption_type").(string) ||
+				d.HasChange("encryption_configuration.0.kms_data_key_reuse_period_seconds") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds != nil && aws.ToInt32(output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds) != int32(d.Get("encryption_configuration.0.kms_data_key_reuse_period_seconds").(int)) {
+				return retry.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
 			}
 
 			return nil
 		})
 
-		if tfresource.TimedOut(err) {
-			return fmt.Errorf("timed out waiting for Step Function State Machine (%s) update", d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceStateMachineRead(d, meta)
+	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
-func resourceStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SFNConn
+func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	_, err := conn.DeleteStateMachine(&sfn.DeleteStateMachineInput{
+	log.Printf("[DEBUG] Deleting Step Functions State Machine: %s", d.Id())
+	_, err := conn.DeleteStateMachine(ctx, &sfn.DeleteStateMachineInput{
 		StateMachineArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Step Function State Machine (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStateMachineDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Step Function State Machine (%s) deletion: %w", d.Id(), err)
+	if _, err := waitStateMachineDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Step Functions State Machine (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandLoggingConfiguration(tfMap map[string]interface{}) *sfn.LoggingConfiguration {
+func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.DescribeStateMachineOutput, error) {
+	input := &sfn.DescribeStateMachineInput{
+		StateMachineArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeStateMachine(ctx, input)
+
+	if errs.IsA[*awstypes.StateMachineDoesNotExist](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachineArn string, timeout time.Duration) (*sfn.DescribeStateMachineOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateMachineStatusActive, awstypes.StateMachineStatusDeleting),
+		Target:  []string{},
+		Refresh: statusStateMachine(ctx, conn, stateMachineArn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sfn.DescribeStateMachineOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandLoggingConfiguration(tfMap map[string]interface{}) *awstypes.LoggingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &sfn.LoggingConfiguration{}
+	apiObject := &awstypes.LoggingConfiguration{}
 
 	if v, ok := tfMap["include_execution_data"].(bool); ok {
-		apiObject.IncludeExecutionData = aws.Bool(v)
+		apiObject.IncludeExecutionData = v
 	}
 
 	if v, ok := tfMap["level"].(string); ok && v != "" {
-		apiObject.Level = aws.String(v)
+		apiObject.Level = awstypes.LogLevel(v)
 	}
 
 	if v, ok := tfMap["log_destination"].(string); ok && v != "" {
-		apiObject.Destinations = []*sfn.LogDestination{{
-			CloudWatchLogsLogGroup: &sfn.CloudWatchLogsLogGroup{
+		apiObject.Destinations = []awstypes.LogDestination{{
+			CloudWatchLogsLogGroup: &awstypes.CloudWatchLogsLogGroup{
 				LogGroupArn: aws.String(v),
 			},
 		}}
@@ -358,52 +494,101 @@ func expandLoggingConfiguration(tfMap map[string]interface{}) *sfn.LoggingConfig
 	return apiObject
 }
 
-func flattenLoggingConfiguration(apiObject *sfn.LoggingConfiguration) map[string]interface{} {
+func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.IncludeExecutionData; v != nil {
-		tfMap["include_execution_data"] = aws.BoolValue(v)
-	}
-
-	if v := apiObject.Level; v != nil {
-		tfMap["level"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"include_execution_data": apiObject.IncludeExecutionData,
+		"level":                  apiObject.Level,
 	}
 
 	if v := apiObject.Destinations; len(v) > 0 {
-		tfMap["log_destination"] = aws.StringValue(v[0].CloudWatchLogsLogGroup.LogGroupArn)
+		tfMap["log_destination"] = aws.ToString(v[0].CloudWatchLogsLogGroup.LogGroupArn)
 	}
 
 	return tfMap
 }
 
-func expandTracingConfiguration(tfMap map[string]interface{}) *sfn.TracingConfiguration {
+func expandTracingConfiguration(tfMap map[string]interface{}) *awstypes.TracingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &sfn.TracingConfiguration{}
+	apiObject := &awstypes.TracingConfiguration{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
-		apiObject.Enabled = aws.Bool(v)
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = v
 	}
 
 	return apiObject
 }
 
-func flattenTracingConfiguration(apiObject *sfn.TracingConfiguration) map[string]interface{} {
+func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	return tfMap
+}
+
+func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if publish := d.Get("publish").(bool); publish && stateMachineNeedsConfigUpdate(d) {
+		d.SetNewComputed("revision_id")
+		d.SetNewComputed("state_machine_version_arn")
+	}
+	return nil
+}
+
+func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
+	for k, attr := range resourceStateMachine().Schema {
+		if attr.ForceNew {
+			continue
+		}
+		if attr.Computed && !attr.Optional {
+			continue
+		}
+
+		if d.HasChange(k) {
+			return true
+		}
+	}
+	return false
+}
+
+func stateMachineDefinitionValidate(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
+
+	if d.HasChange("definition") {
+		definition := d.Get("definition").(string)
+		if definition == "" {
+			return nil
+		}
+
+		input := &sfn.ValidateStateMachineDefinitionInput{
+			Definition: aws.String(definition),
+			Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
+		}
+
+		output, err := conn.ValidateStateMachineDefinition(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("validating Step Functions State Machine definition: %w", err)
+		}
+
+		if result := output.Result; result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
+			errs := tfslices.ApplyToAll(output.Diagnostics, func(v awstypes.ValidateStateMachineDefinitionDiagnostic) error {
+				return fmt.Errorf("%s (%s): %s", v.Severity, aws.ToString(v.Code), aws.ToString(v.Message))
+			})
+
+			return fmt.Errorf("invalid Step Functions State Machine definition: %w", errors.Join(errs...))
+		}
+	}
+
+	return nil
 }

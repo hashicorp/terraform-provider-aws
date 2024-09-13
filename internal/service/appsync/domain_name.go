@@ -1,29 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDomainName() *schema.Resource {
-
+// @SDKResource("aws_appsync_domain_name", name="Domain Name")
+func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainNameCreate,
-		Read:   resourceDomainNameRead,
-		Update: resourceDomainNameUpdate,
-		Delete: resourceDomainNameDelete,
+		CreateWithoutTimeout: resourceDomainNameCreate,
+		ReadWithoutTimeout:   resourceDomainNameRead,
+		UpdateWithoutTimeout: resourceDomainNameUpdate,
+		DeleteWithoutTimeout: resourceDomainNameDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,22 +39,22 @@ func ResourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,92 +62,116 @@ func ResourceDomainName() *schema.Resource {
 	}
 }
 
-func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	params := &appsync.CreateDomainNameInput{
-		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
-		Description:    aws.String(d.Get("description").(string)),
-		DomainName:     aws.String(d.Get("domain_name").(string)),
+	domainName := d.Get(names.AttrDomainName).(string)
+	input := &appsync.CreateDomainNameInput{
+		CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
+		Description:    aws.String(d.Get(names.AttrDescription).(string)),
+		DomainName:     aws.String(domainName),
 	}
 
-	resp, err := conn.CreateDomainName(params)
+	output, err := conn.CreateDomainName(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Appsync Domain Name: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Appsync Domain Name (%s): %s", domainName, err)
 	}
 
-	d.SetId(aws.StringValue(resp.DomainNameConfig.DomainName))
+	d.SetId(aws.ToString(output.DomainNameConfig.DomainName))
 
-	return resourceDomainNameRead(d, meta)
+	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	domainName, err := FindDomainNameByID(conn, d.Id())
-	if domainName == nil && !d.IsNewResource() {
+	domainName, err := findDomainNameByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync Domain Name (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Appsync Domain Name %q: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Appsync Domain Name (%s): %s", d.Id(), err)
 	}
 
-	d.Set("domain_name", domainName.DomainName)
-	d.Set("description", domainName.Description)
-	d.Set("certificate_arn", domainName.CertificateArn)
-	d.Set("hosted_zone_id", domainName.HostedZoneId)
 	d.Set("appsync_domain_name", domainName.AppsyncDomainName)
+	d.Set(names.AttrCertificateARN, domainName.CertificateArn)
+	d.Set(names.AttrDescription, domainName.Description)
+	d.Set(names.AttrDomainName, domainName.DomainName)
+	d.Set(names.AttrHostedZoneID, domainName.HostedZoneId)
 
-	return nil
+	return diags
 }
 
-func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	params := &appsync.UpdateDomainNameInput{
+	input := &appsync.UpdateDomainNameInput{
 		DomainName: aws.String(d.Id()),
 	}
 
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	_, err := conn.UpdateDomainName(params)
+	_, err := conn.UpdateDomainName(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error updating Appsync Domain Name %q: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Appsync Domain Name (%s): %s", d.Id(), err)
 	}
 
-	return resourceDomainNameRead(d, meta)
-
+	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	input := &appsync.DeleteDomainNameInput{
-		DomainName: aws.String(d.Id()),
-	}
-
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDomainName(input)
-		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeConcurrentModificationException) {
-			return resource.RetryableError(fmt.Errorf("deleting Appsync Domain Name %q: %w", d.Id(), err))
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	log.Printf("[INFO] Deleting Appsync Domain Name: %s", d.Id())
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteDomainName(ctx, &appsync.DeleteDomainNameInput{
+			DomainName: aws.String(d.Id()),
+		})
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDomainName(input)
-	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting Appsync Domain Name %q: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync Domain Name (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findDomainNameByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.DomainNameConfig, error) {
+	input := &appsync.GetDomainNameInput{
+		DomainName: aws.String(id),
+	}
+
+	output, err := conn.GetDomainName(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainNameConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainNameConfig, nil
 }

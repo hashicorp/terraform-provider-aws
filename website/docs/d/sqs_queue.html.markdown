@@ -22,10 +22,12 @@ data "aws_sqs_queue" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the queue to match.
+* `name` - (Required) Name of the queue to match.
 
-## Attributes Reference
+## Attribute Reference
 
-* `arn` - The Amazon Resource Name (ARN) of the queue.
-* `url` - The URL of the queue.
-* `tags` - A map of tags for the resource.
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the queue.
+* `url` - URL of the queue.
+* `tags` - Map of tags for the resource.

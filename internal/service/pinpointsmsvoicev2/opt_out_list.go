@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpointsmsvoicev2
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -45,14 +48,14 @@ func ResourceOptOutList() *schema.Resource {
 }
 
 func resourceOptOutListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	in := &pinpointsmsvoicev2.CreateOptOutListInput{
 		OptOutListName: aws.String(d.Get("name").(string)),
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -67,13 +70,13 @@ func resourceOptOutListCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("creating Amazon Pinpoint SMS and Voice V2 OptOutList (%s): empty output", d.Get("name").(string))
 	}
 
-	d.SetId(aws.ToString(out.OptOutListName))
+	d.SetId(aws.StringValue(out.OptOutListName))
 
 	return resourceOptOutListRead(ctx, d, meta)
 }
 
 func resourceOptOutListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	out, err := findOptOutListByID(ctx, conn, d.Id())
 
@@ -90,7 +93,7 @@ func resourceOptOutListRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("arn", out.OptOutListArn)
 	d.Set("name", out.OptOutListName)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return diag.Errorf("listing tags for PinpointSMSVoiceV2 OptOutList (%s): %s", d.Id(), err)
 	}
@@ -112,11 +115,11 @@ func resourceOptOutListRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceOptOutListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -125,7 +128,7 @@ func resourceOptOutListUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceOptOutListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting PinpointSMSVoiceV2 OptOutList %s", d.Id())
 

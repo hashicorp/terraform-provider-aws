@@ -1,32 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDomainPermissionsPolicy() *schema.Resource {
+// @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
+func resourceDomainPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainPermissionsPolicyPut,
-		Update: resourceDomainPermissionsPolicyPut,
-		Read:   resourceDomainPermissionsPolicyRead,
-		Delete: resourceDomainPermissionsPolicyDelete,
+		CreateWithoutTimeout: resourceDomainPermissionsPolicyPut,
+		UpdateWithoutTimeout: resourceDomainPermissionsPolicyPut,
+		ReadWithoutTimeout:   resourceDomainPermissionsPolicyRead,
+		DeleteWithoutTimeout: resourceDomainPermissionsPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -38,10 +48,11 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy_document": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -52,7 +63,7 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,107 +71,130 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 	}
 }
 
-func resourceDomainPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
-	log.Print("[DEBUG] Creating CodeArtifact Domain Permissions Policy")
+func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	params := &codeartifact.PutDomainPermissionsPolicyInput{
-		Domain:         aws.String(d.Get("domain").(string)),
+	input := &codeartifact.PutDomainPermissionsPolicyInput{
+		Domain:         aws.String(d.Get(names.AttrDomain).(string)),
 		PolicyDocument: aws.String(policy),
 	}
 
 	if v, ok := d.GetOk("domain_owner"); ok {
-		params.DomainOwner = aws.String(v.(string))
+		input.DomainOwner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("policy_revision"); ok {
-		params.PolicyRevision = aws.String(v.(string))
+		input.PolicyRevision = aws.String(v.(string))
 	}
 
-	res, err := conn.PutDomainPermissionsPolicy(params)
+	output, err := conn.PutDomainPermissionsPolicy(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating CodeArtifact Domain Permissions Policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Domain Permissions Policy: %s", err)
 	}
 
-	d.SetId(aws.StringValue(res.Policy.ResourceArn))
+	if d.IsNewResource() {
+		d.SetId(aws.ToString(output.Policy.ResourceArn))
+	}
 
-	return resourceDomainPermissionsPolicyRead(d, meta)
+	return append(diags, resourceDomainPermissionsPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
-	log.Printf("[DEBUG] Reading CodeArtifact Domain Permissions Policy: %s", d.Id())
+func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domainOwner, domainName, err := DecodeDomainID(d.Id())
+	owner, domainName, err := parseDomainARN(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	dm, err := conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
-		Domain:      aws.String(domainName),
-		DomainOwner: aws.String(domainOwner),
-	})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeArtifact, names.ErrActionReading, ResDomainPermissionsPolicy, d.Id())
+	policy, err := findDomainPermissionsPolicyByTwoPartKey(ctx, conn, owner, domainName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CodeArtifact Domain Permissions Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return names.Error(names.CodeArtifact, names.ErrActionReading, ResDomainPermissionsPolicy, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Domain Permissions Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("domain", domainName)
-	d.Set("domain_owner", domainOwner)
-	d.Set("resource_arn", dm.Policy.ResourceArn)
-	d.Set("policy_revision", dm.Policy.Revision)
+	d.Set(names.AttrDomain, domainName)
+	d.Set("domain_owner", owner)
+	d.Set("policy_revision", policy.Revision)
+	d.Set(names.AttrResourceARN, policy.ResourceArn)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.StringValue(dm.Policy.Document))
-
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(policy.Document))
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("policy_document", policyToSet)
 
-	return nil
+	return diags
 }
 
-func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func resourceDomainPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
+
+	owner, domainName, err := parseDomainARN(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
-
-	domainOwner, domainName, err := DecodeDomainID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	input := &codeartifact.DeleteDomainPermissionsPolicyInput{
+	_, err = conn.DeleteDomainPermissionsPolicy(ctx, &codeartifact.DeleteDomainPermissionsPolicyInput{
 		Domain:      aws.String(domainName),
-		DomainOwner: aws.String(domainOwner),
-	}
+		DomainOwner: aws.String(owner),
+	})
 
-	_, err = conn.DeleteDomainPermissionsPolicy(input)
-
-	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeArtifact Domain Permissions Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findDomainPermissionsPolicyByTwoPartKey(ctx context.Context, conn *codeartifact.Client, owner, domainName string) (*types.ResourcePolicy, error) {
+	input := &codeartifact.GetDomainPermissionsPolicyInput{
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(owner),
+	}
+
+	output, err := conn.GetDomainPermissionsPolicy(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Policy, nil
 }

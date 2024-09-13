@@ -1,50 +1,55 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandString(8)
-	resourceName1 := "aws_api_gateway_api_key.example_key"
-	dataSourceName1 := "data.aws_api_gateway_api_key.test_key"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_api_key.test"
+	dataSourceName := "data.aws_api_gateway_api_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyDataSourceConfig(rName),
+				Config: testAccAPIKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
-					resource.TestCheckResourceAttrPair(resourceName1, "name", dataSourceName1, "name"),
-					resource.TestCheckResourceAttrPair(resourceName1, "value", dataSourceName1, "value"),
-					resource.TestCheckResourceAttrPair(resourceName1, "enabled", dataSourceName1, "enabled"),
-					resource.TestCheckResourceAttrPair(resourceName1, "description", dataSourceName1, "description"),
-					resource.TestCheckResourceAttrSet(dataSourceName1, "last_updated_date"),
-					resource.TestCheckResourceAttrSet(dataSourceName1, "created_date"),
-					resource.TestCheckResourceAttr(dataSourceName1, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_id", dataSourceName, "customer_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEnabled, dataSourceName, names.AttrEnabled),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 				),
 			},
 		},
 	})
 }
 
-func testAccAPIKeyDataSourceConfig(r string) string {
+func testAccAPIKeyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "example_key" {
-  name = "%s"
+resource "aws_api_gateway_api_key" "test" {
+  name = %[1]q
 }
 
-data "aws_api_gateway_api_key" "test_key" {
-  id = aws_api_gateway_api_key.example_key.id
+data "aws_api_gateway_api_key" "test" {
+  id = aws_api_gateway_api_key.test.id
 }
-`, r)
+`, rName)
 }

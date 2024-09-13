@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package kinesis
 
@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_kinesis_stream", &resource.Sweeper{
 		Name: "aws_kinesis_stream",
 		F:    sweepStreams,
@@ -23,45 +23,44 @@ func init() {
 }
 
 func sweepStreams(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KinesisConn
+	conn := client.KinesisClient(ctx)
 	input := &kinesis.ListStreamsInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
-		for _, streamName := range page.StreamNames {
-			if streamName == nil {
-				continue
-			}
+	pages := kinesis.NewListStreamsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-			r := ResourceStream()
-			d := r.Data(nil)
-			d.Set("name", streamName)
-			d.Set("enforce_consumer_deletion", true)
-
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Kinesis Stream (%s): %w", aws.StringValue(streamName), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
+			return nil
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return fmt.Errorf("error listing Kinesis Streams (%s): %w", region, err)
+		}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
-		return nil
+		for _, v := range page.StreamSummaries {
+			r := resourceStream()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.StreamARN))
+			d.Set("enforce_consumer_deletion", true)
+			d.Set(names.AttrName, v.StreamName)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("Error listing Kinesis Streams: %s", err)
+		return fmt.Errorf("error sweeping Kinesis Streams (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }

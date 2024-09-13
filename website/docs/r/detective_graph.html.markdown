@@ -24,11 +24,11 @@ resource "aws_detective_graph" "example" {
 
 The following arguments are optional:
 
-* `tags` -  (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` -  (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the Detective Graph.
 * `graph_arn` - ARN of the Detective Graph.
@@ -36,8 +36,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_detective_graph` can be imported using the ARN, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_graph` using the ARN. For example:
 
+```terraform
+import {
+  to = aws_detective_graph.example
+  id = "arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d"
+}
 ```
-$ terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
+
+Using `terraform import`, import `aws_detective_graph` using the ARN. For example:
+
+```console
+% terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```

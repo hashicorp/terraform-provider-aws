@@ -1,22 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceMainRouteTableAssociation() *schema.Resource {
+// @SDKResource("aws_main_route_table_association", name="Main Route Table Association")
+func resourceMainRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMainRouteTableAssociationCreate,
-		Read:   resourceMainRouteTableAssociationRead,
-		Update: resourceMainRouteTableAssociationUpdate,
-		Delete: resourceMainRouteTableAssociationDelete,
+		CreateWithoutTimeout: resourceMainRouteTableAssociationCreate,
+		ReadWithoutTimeout:   resourceMainRouteTableAssociationRead,
+		UpdateWithoutTimeout: resourceMainRouteTableAssociationUpdate,
+		DeleteWithoutTimeout: resourceMainRouteTableAssociationDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			// We use this field to record the main route table that is automatically
@@ -27,13 +41,11 @@ func ResourceMainRouteTableAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -41,15 +53,15 @@ func ResourceMainRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceMainRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcID := d.Get("vpc_id").(string)
-
-	association, err := FindMainRouteTableAssociationByVPCID(conn, vpcID)
+	vpcID := d.Get(names.AttrVPCID).(string)
+	association, err := findMainRouteTableAssociationByVPCID(ctx, conn, vpcID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Main Route Table Association (%s): %w", vpcID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Main Route Table Association (%s): %s", vpcID, err)
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
@@ -58,45 +70,45 @@ func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interf
 		RouteTableId:  aws.String(routeTableID),
 	}
 
-	log.Printf("[DEBUG] Creating Main Route Table Association: %s", input)
-	output, err := conn.ReplaceRouteTableAssociation(input)
+	output, err := conn.ReplaceRouteTableAssociation(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Main Route Table Association (%s): %w", routeTableID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Main Route Table Association (%s): %s", routeTableID, err)
 	}
 
-	d.SetId(aws.StringValue(output.NewAssociationId))
+	d.SetId(aws.ToString(output.NewAssociationId))
 
-	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) creation", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Main Route Table Association (%s) create: %w", d.Id(), err)
+	if _, err := waitRouteTableAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Main Route Table Association (%s) create: %s", d.Id(), err)
 	}
 
 	d.Set("original_route_table_id", association.RouteTableId)
 
-	return resourceMainRouteTableAssociationRead(d, meta)
+	return append(diags, resourceMainRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceMainRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceMainRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := FindMainRouteTableAssociationByID(conn, d.Id())
+	_, err := findMainRouteTableAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Main Route Table Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Main Route Table Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Main Route Table Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceMainRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.ReplaceRouteTableAssociationInput{
@@ -104,44 +116,41 @@ func resourceMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interf
 		RouteTableId:  aws.String(routeTableID),
 	}
 
-	log.Printf("[DEBUG] Updating Main Route Table Association: %s", input)
-	output, err := conn.ReplaceRouteTableAssociation(input)
+	output, err := conn.ReplaceRouteTableAssociation(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Main Route Table Association (%s): %w", routeTableID, err)
+		return sdkdiag.AppendErrorf(diags, "updating Main Route Table Association (%s): %s", routeTableID, err)
 	}
 
 	// This whole thing with the resource ID being changed on update seems unsustainable.
 	// Keeping it here for backwards compatibility...
-	d.SetId(aws.StringValue(output.NewAssociationId))
+	d.SetId(aws.ToString(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) update", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Main Route Table Association (%s) update: %w", d.Id(), err)
+	if _, err := waitRouteTableAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Main Route Table Association (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceMainRouteTableAssociationRead(d, meta)
+	return append(diags, resourceMainRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceMainRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceMainRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.ReplaceRouteTableAssociationInput{
+	log.Printf("[DEBUG] Deleting Main Route Table Association: %s", d.Id())
+	output, err := conn.ReplaceRouteTableAssociation(ctx, &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
 		RouteTableId:  aws.String(d.Get("original_route_table_id").(string)),
-	}
-
-	log.Printf("[DEBUG] Deleting Main Route Table Association: %s", input)
-	output, err := conn.ReplaceRouteTableAssociation(input)
+	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Main Route Table Association (%s): %w", d.Get("route_table_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Main Route Table Association (%s): %s", d.Get("route_table_id").(string), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) deletion", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(conn, aws.StringValue(output.NewAssociationId)); err != nil {
-		return fmt.Errorf("error waiting for Main Route Table Association (%s) delete: %w", d.Id(), err)
+	if _, err := waitRouteTableAssociationUpdated(ctx, conn, aws.ToString(output.NewAssociationId), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Main Route Table Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

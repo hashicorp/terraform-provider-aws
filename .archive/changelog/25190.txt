@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_vpc_endpoint: Add `dns_options` and `ip_address_type` arguments
+```
+
+```release-note:enhancement
+data-source/aws_vpc_endpoint: Add `dns_options` and `ip_address_type` attributes
+```

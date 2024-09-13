@@ -1,4 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
+
+import "time"
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
+)
 
 const (
 	frameworkStatusCompleted          = "COMPLETED"
@@ -28,7 +37,7 @@ func reportDeliveryChannelFormat_Values() []string {
 }
 
 const (
-	reportSettingTemplateBackupJobReport          = "BACKUP_JOB_REPORT"
+	reportSettingTemplateJobReport                = "BACKUP_JOB_REPORT"
 	reportSettingTemplateControlComplianceReport  = "CONTROL_COMPLIANCE_REPORT"
 	reportSettingTemplateCopyJobReport            = "COPY_JOB_REPORT"
 	reportSettingTemplateResourceComplianceReport = "RESOURCE_COMPLIANCE_REPORT"
@@ -37,7 +46,7 @@ const (
 
 func reportSettingTemplate_Values() []string {
 	return []string{
-		reportSettingTemplateBackupJobReport,
+		reportSettingTemplateJobReport,
 		reportSettingTemplateControlComplianceReport,
 		reportSettingTemplateCopyJobReport,
 		reportSettingTemplateResourceComplianceReport,

@@ -1,37 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceLicenseConfiguration() *schema.Resource {
+// @SDKResource("aws_licensemanager_license_configuration", name="License Configuration")
+// @Tags(identifierAttribute="id")
+func resourceLicenseConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLicenseConfigurationCreate,
-		Read:   resourceLicenseConfigurationRead,
-		Update: resourceLicenseConfigurationUpdate,
-		Delete: resourceLicenseConfigurationDelete,
+		CreateWithoutTimeout: resourceLicenseConfigurationCreate,
+		ReadWithoutTimeout:   resourceLicenseConfigurationRead,
+		UpdateWithoutTimeout: resourceLicenseConfigurationUpdate,
+		DeleteWithoutTimeout: resourceLicenseConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -45,15 +58,10 @@ func ResourceLicenseConfiguration() *schema.Resource {
 				Default:  false,
 			},
 			"license_counting_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					licensemanager.LicenseCountingTypeVCpu,
-					licensemanager.LicenseCountingTypeInstance,
-					licensemanager.LicenseCountingTypeCore,
-					licensemanager.LicenseCountingTypeSocket,
-				}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LicenseCountingType](),
 			},
 			"license_rules": {
 				Type:     schema.TypeList,
@@ -61,153 +69,164 @@ func ResourceLicenseConfiguration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile("^#([^=]+)=(.+)$"), "Expected format is #RuleType=RuleValue"),
+					ValidateFunc: validation.StringMatch(regexache.MustCompile("^#([^=]+)=(.+)$"), "Expected format is #RuleType=RuleValue"),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLicenseConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	opts := &licensemanager.CreateLicenseConfigurationInput{
-		LicenseCountingType: aws.String(d.Get("license_counting_type").(string)),
-		Name:                aws.String(d.Get("name").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := &licensemanager.CreateLicenseConfigurationInput{
+		LicenseCountingType: awstypes.LicenseCountingType(d.Get("license_counting_type").(string)),
+		Name:                aws.String(name),
+		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		opts.Description = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("license_count"); ok {
-		opts.LicenseCount = aws.Int64(int64(v.(int)))
+		input.LicenseCount = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("license_count_hard_limit"); ok {
-		opts.LicenseCountHardLimit = aws.Bool(v.(bool))
+		input.LicenseCountHardLimit = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("license_rules"); ok {
-		opts.LicenseRules = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk("license_rules"); ok && len(v.([]interface{})) > 0 {
+		input.LicenseRules = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		opts.Tags = Tags(tags.IgnoreAWS())
-	}
+	output, err := conn.CreateLicenseConfiguration(ctx, input)
 
-	log.Printf("[DEBUG] License Manager license configuration: %s", opts)
-
-	resp, err := conn.CreateLicenseConfiguration(opts)
 	if err != nil {
-		return fmt.Errorf("Error creating License Manager license configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating License Manager License Configuration (%s): %s", name, err)
 	}
-	d.SetId(aws.StringValue(resp.LicenseConfigurationArn))
-	return resourceLicenseConfigurationRead(d, meta)
+
+	d.SetId(aws.ToString(output.LicenseConfigurationArn))
+
+	return append(diags, resourceLicenseConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	resp, err := conn.GetLicenseConfiguration(&licensemanager.GetLicenseConfigurationInput{
+	output, err := findLicenseConfigurationByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] License Manager License Configuration %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading License Manager License Configuration (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, output.LicenseConfigurationArn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("license_count", output.LicenseCount)
+	d.Set("license_count_hard_limit", output.LicenseCountHardLimit)
+	d.Set("license_counting_type", output.LicenseCountingType)
+	d.Set("license_rules", output.LicenseRules)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrOwnerAccountID, output.OwnerAccountId)
+
+	setTagsOut(ctx, output.Tags)
+
+	return diags
+}
+
+func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &licensemanager.UpdateLicenseConfigurationInput{
+			Description:             aws.String(d.Get(names.AttrDescription).(string)),
+			LicenseConfigurationArn: aws.String(d.Id()),
+			LicenseCountHardLimit:   aws.Bool(d.Get("license_count_hard_limit").(bool)),
+			Name:                    aws.String(d.Get(names.AttrName).(string)),
+		}
+
+		if v, ok := d.GetOk("license_count"); ok {
+			input.LicenseCount = aws.Int64(int64(v.(int)))
+		}
+
+		_, err := conn.UpdateLicenseConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating License Manager License Configuration (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceLicenseConfigurationRead(ctx, d, meta)...)
+}
+
+func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
+
+	log.Printf("[DEBUG] Deleting License Manager License Configuration: %s", d.Id())
+	_, err := conn.DeleteLicenseConfiguration(ctx, &licensemanager.DeleteLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
 	})
 
+	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Invalid license configuration ARN") {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
-			log.Printf("[WARN] License Manager license configuration (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading License Manager license configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting License Manager License Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.LicenseConfigurationArn)
-	d.Set("description", resp.Description)
-	d.Set("license_count", resp.LicenseCount)
-	d.Set("license_count_hard_limit", resp.LicenseCountHardLimit)
-	d.Set("license_counting_type", resp.LicenseCountingType)
-	if err := d.Set("license_rules", flex.FlattenStringList(resp.LicenseRules)); err != nil {
-		return fmt.Errorf("error setting license_rules: %s", err)
-	}
-	d.Set("name", resp.Name)
-	d.Set("owner_account_id", resp.OwnerAccountId)
-
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceLicenseConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating License Manager License Configuration (%s) tags: %s", d.Id(), err)
-		}
+func findLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.Client, arn string) (*licensemanager.GetLicenseConfigurationOutput, error) {
+	input := &licensemanager.GetLicenseConfigurationInput{
+		LicenseConfigurationArn: aws.String(arn),
 	}
 
-	opts := &licensemanager.UpdateLicenseConfigurationInput{
-		LicenseConfigurationArn: aws.String(d.Id()),
-		Name:                    aws.String(d.Get("name").(string)),
-		Description:             aws.String(d.Get("description").(string)),
-		LicenseCountHardLimit:   aws.Bool(d.Get("license_count_hard_limit").(bool)),
-	}
-
-	if v, ok := d.GetOk("license_count"); ok {
-		opts.LicenseCount = aws.Int64(int64(v.(int)))
-	}
-
-	log.Printf("[DEBUG] License Manager license configuration: %s", opts)
-
-	_, err := conn.UpdateLicenseConfiguration(opts)
-	if err != nil {
-		return fmt.Errorf("Error updating License Manager license configuration: %s", err)
-	}
-	return resourceLicenseConfigurationRead(d, meta)
+	return findLicenseConfiguration(ctx, conn, input)
 }
 
-func resourceLicenseConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
+func findLicenseConfiguration(ctx context.Context, conn *licensemanager.Client, input *licensemanager.GetLicenseConfigurationInput) (*licensemanager.GetLicenseConfigurationOutput, error) {
+	output, err := conn.GetLicenseConfiguration(ctx, input)
 
-	opts := &licensemanager.DeleteLicenseConfigurationInput{
-		LicenseConfigurationArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteLicenseConfiguration(opts)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
-			return nil
+	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Invalid license configuration ARN") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		return fmt.Errorf("Error deleting License Manager license configuration: %s", err)
 	}
 
-	return nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

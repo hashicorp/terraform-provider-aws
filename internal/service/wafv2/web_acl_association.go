@@ -1,140 +1,167 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	WebACLAssociationCreateTimeout = 5 * time.Minute
+	webACLAssociationResourceIDPartCount = 2
 )
 
-func ResourceWebACLAssociation() *schema.Resource {
+// @SDKResource("aws_wafv2_web_acl_association", name="Web ACL Association")
+func resourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWebACLAssociationCreate,
-		Read:   resourceWebACLAssociationRead,
-		Delete: resourceWebACLAssociationDelete,
+		CreateWithoutTimeout: resourceWebACLAssociationCreate,
+		ReadWithoutTimeout:   resourceWebACLAssociationRead,
+		DeleteWithoutTimeout: resourceWebACLAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				webAclArn, resourceArn, err := resourceACLAssociationDecodeID(d.Id())
-				if err != nil {
-					return nil, fmt.Errorf("Error reading resource ID: %s", err)
-				}
-				d.Set("resource_arn", resourceArn)
-				d.Set("web_acl_arn", webAclArn)
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"resource_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"web_acl_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"web_acl_arn": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
 
-func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
-	resourceArn := d.Get("resource_arn").(string)
-	webAclArn := d.Get("web_acl_arn").(string)
-	params := &wafv2.AssociateWebACLInput{
-		ResourceArn: aws.String(resourceArn),
-		WebACLArn:   aws.String(webAclArn),
+func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
+
+	webACLARN := d.Get("web_acl_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
+	id := errs.Must(flex.FlattenResourceId([]string{webACLARN, resourceARN}, webACLAssociationResourceIDPartCount, true))
+	input := &wafv2.AssociateWebACLInput{
+		ResourceArn: aws.String(resourceARN),
+		WebACLArn:   aws.String(webACLARN),
 	}
 
-	err := resource.Retry(WebACLAssociationCreateTimeout, func() *resource.RetryError {
-		_, err := conn.AssociateWebACL(params)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
+	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.AssociateWebACL(ctx, input)
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateWebACL(params)
-	}
-
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating WAFv2 WebACL Association (%s): %s", id, err)
 	}
-	d.SetId(fmt.Sprintf("%s,%s", webAclArn, resourceArn))
 
-	return resourceWebACLAssociationRead(d, meta)
+	d.SetId(id)
+
+	return append(diags, resourceWebACLAssociationRead(ctx, d, meta)...)
 }
 
-func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
-	resourceArn := d.Get("resource_arn").(string)
-	webAclArn := d.Get("web_acl_arn").(string)
-	params := &wafv2.GetWebACLForResourceInput{
-		ResourceArn: aws.String(resourceArn),
-	}
+func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	resp, err := conn.GetWebACLForResource(params)
+	parts, err := flex.ExpandResourceId(d.Id(), webACLAssociationResourceIDPartCount, true)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-			log.Printf("[WARN] WAFv2 Web ACL (%s) not found, removing from state", webAclArn)
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if resp == nil || resp.WebACL == nil {
-		log.Printf("[WARN] WAFv2 Web ACL associated resource (%s) not found, removing from state", resourceArn)
+	resourceARN := parts[1]
+	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAFv2 WebACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return diags
 	}
 
-	return nil
-}
-
-func resourceWebACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
-
-	log.Printf("[INFO] Deleting WAFv2 Web ACL Association %s", d.Id())
-
-	params := &wafv2.DisassociateWebACLInput{
-		ResourceArn: aws.String(d.Get("resource_arn").(string)),
-	}
-
-	_, err := conn.DisassociateWebACL(params)
 	if err != nil {
-		return fmt.Errorf("Error disassociating WAFv2 Web ACL: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	d.Set(names.AttrResourceARN, resourceARN)
+	d.Set("web_acl_arn", webACL.ARN)
+
+	return diags
 }
 
-func resourceACLAssociationDecodeID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
+func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("Unexpected format of ID (%s), expected WEB-ACL-ARN,RESOURCE-ARN", id)
+	parts, err := flex.ExpandResourceId(d.Id(), webACLAssociationResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return parts[0], parts[1], nil
+	log.Printf("[INFO] Deleting WAFv2 WebACL Association: %s", d.Id())
+	resourceARN := parts[1]
+	_, err = conn.DisassociateWebACL(ctx, &wafv2.DisassociateWebACLInput{
+		ResourceArn: aws.String(resourceARN),
+	})
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAFv2 WebACL Association (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.WebACL, error) {
+	input := &wafv2.GetWebACLForResourceInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetWebACLForResource(ctx, input)
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.WebACL == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.WebACL, nil
 }

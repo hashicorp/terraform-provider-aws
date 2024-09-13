@@ -38,65 +38,69 @@ resource "aws_route" "r" {
 The arguments of this data source act as filters for querying the available VPC peering connection.
 The given filters must match exactly one VPC peering connection whose data will be exported as attributes.
 
-* `id` - (Optional) The ID of the specific VPC Peering Connection to retrieve.
+* `id` - (Optional) ID of the specific VPC Peering Connection to retrieve.
 
-* `status` - (Optional) The status of the specific VPC Peering Connection to retrieve.
+* `status` - (Optional) Status of the specific VPC Peering Connection to retrieve.
 
-* `vpc_id` - (Optional) The ID of the requester VPC of the specific VPC Peering Connection to retrieve.
+* `vpc_id` - (Optional) ID of the requester VPC of the specific VPC Peering Connection to retrieve.
 
-* `owner_id` - (Optional) The AWS account ID of the owner of the requester VPC of the specific VPC Peering Connection to retrieve.
+* `owner_id` - (Optional) AWS account ID of the owner of the requester VPC of the specific VPC Peering Connection to retrieve.
 
-* `cidr_block` - (Optional) The primary CIDR block of the requester VPC of the specific VPC Peering Connection to retrieve.
+* `cidr_block` - (Optional) Primary CIDR block of the requester VPC of the specific VPC Peering Connection to retrieve.
 
-* `region` - (Optional) The region of the requester VPC of the specific VPC Peering Connection to retrieve.
+* `region` - (Optional) Region of the requester VPC of the specific VPC Peering Connection to retrieve.
 
-* `peer_vpc_id` - (Optional) The ID of the accepter VPC of the specific VPC Peering Connection to retrieve.
+* `peer_vpc_id` - (Optional) ID of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
-* `peer_owner_id` - (Optional) The AWS account ID of the owner of the accepter VPC of the specific VPC Peering Connection to retrieve.
+* `peer_owner_id` - (Optional) AWS account ID of the owner of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
-* `peer_cidr_block` - (Optional) The primary CIDR block of the accepter VPC of the specific VPC Peering Connection to retrieve.
+* `peer_cidr_block` - (Optional) Primary CIDR block of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
-* `peer_region` - (Optional) The region of the accepter VPC of the specific VPC Peering Connection to retrieve.
+* `peer_region` - (Optional) Region of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` are also exported as result attributes.
 
-* `accepter` - A configuration block that describes [VPC Peering Connection]
+* `accepter` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
 
-* `cidr_block_set` - List of objects with CIDR blocks of the requester VPC.
+* `cidr_block_set` - List of objects with IPv4 CIDR blocks of the requester VPC.
 
-* `peer_cidr_block_set` - List of objects with CIDR blocks of the accepter VPC.
+* `ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the requester VPC.
 
-* `requester` - A configuration block that describes [VPC Peering Connection]
+* `peer_cidr_block_set` - List of objects with IPv4 CIDR blocks of the accepter VPC.
+
+* `peer_ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the accepter VPC.
+
+* `requester` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
 
-#### Accepter and Requester Attributes Reference
+#### Accepter and Requester Attribute Reference
 
 * `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
 private IP addresses when queried from instances in a peer VPC.
 
-* `allow_classic_link_to_remote_vpc` - Indicates whether a local ClassicLink connection can communicate
-with the peer VPC over the VPC peering connection.
+#### CIDR block set Attribute Reference
 
-* `allow_vpc_to_remote_classic_link` - Indicates whether a local VPC can communicate with a ClassicLink
-connection in the peer VPC over the VPC peering connection.
+* `cidr_block` - CIDR block associated to the VPC of the specific VPC Peering Connection.
 
-#### CIDR block set Attributes Reference
+## Timeouts
 
-* `cidr_block` - A CIDR block associated to the VPC of the specific VPC Peering Connection.
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

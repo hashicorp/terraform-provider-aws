@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPublishingDestination_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_publishing_destination.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	detectorResourceName := "aws_guardduty_detector.test_gd"
@@ -22,18 +28,21 @@ func testAccPublishingDestination_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.gd_key"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublishingDestinationDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublishingDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishingDestinationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublishingDestinationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", bucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKeyResourceName, "arn"),
+					testAccCheckPublishingDestinationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, bucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination_type", "S3")),
 			},
 			{
@@ -46,20 +55,24 @@ func testAccPublishingDestination_basic(t *testing.T) {
 }
 
 func testAccPublishingDestination_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_publishing_destination.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublishingDestinationDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublishingDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishingDestinationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublishingDestinationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfguardduty.ResourcePublishingDestination(), resourceName),
+					testAccCheckPublishingDestinationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfguardduty.ResourcePublishingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -155,11 +168,6 @@ resource "aws_s3_bucket" "gd_bucket" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "gd_bucket_acl" {
-  bucket = aws_s3_bucket.gd_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_policy" "gd_bucket_policy" {
   bucket = aws_s3_bucket.gd_bucket.id
   policy = data.aws_iam_policy_document.bucket_pol.json
@@ -182,7 +190,7 @@ resource "aws_guardduty_publishing_destination" "test" {
 }`, bucketName)
 }
 
-func testAccCheckPublishingDestinationExists(name string) resource.TestCheckFunc {
+func testAccCheckPublishingDestinationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -200,37 +208,38 @@ func testAccCheckPublishingDestinationExists(name string) resource.TestCheckFunc
 			DestinationId: aws.String(destination_id),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
-		_, err := conn.DescribePublishingDestination(input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		_, err := conn.DescribePublishingDestination(ctx, input)
 		return err
 	}
 }
 
-func testAccCheckPublishingDestinationDestroy(s *terraform.State) error {
+func testAccCheckPublishingDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_publishing_destination" {
+				continue
+			}
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_publishing_destination" {
-			continue
+			destination_id, detector_id, err_state_read := tfguardduty.DecodePublishDestinationID(rs.Primary.ID)
+
+			if err_state_read != nil {
+				return err_state_read
+			}
+
+			input := &guardduty.DescribePublishingDestinationInput{
+				DetectorId:    aws.String(detector_id),
+				DestinationId: aws.String(destination_id),
+			}
+
+			_, err := conn.DescribePublishingDestination(ctx, input)
+			// Catch expected error.
+			if err == nil {
+				return fmt.Errorf("Resource still exists.")
+			}
 		}
-
-		destination_id, detector_id, err_state_read := tfguardduty.DecodePublishDestinationID(rs.Primary.ID)
-
-		if err_state_read != nil {
-			return err_state_read
-		}
-
-		input := &guardduty.DescribePublishingDestinationInput{
-			DetectorId:    aws.String(detector_id),
-			DestinationId: aws.String(destination_id),
-		}
-
-		_, err := conn.DescribePublishingDestination(input)
-		// Catch expected error.
-		if err == nil {
-			return fmt.Errorf("Resource still exists.")
-		}
+		return nil
 	}
-	return nil
 }

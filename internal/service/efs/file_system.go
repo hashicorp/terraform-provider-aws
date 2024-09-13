@@ -1,46 +1,57 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceFileSystem() *schema.Resource {
+// @SDKResource("aws_efs_file_system", name="File System")
+// @Tags(identifierAttribute="id")
+func resourceFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFileSystemCreate,
-		Read:   resourceFileSystemRead,
-		Update: resourceFileSystemUpdate,
-		Delete: resourceFileSystemDelete,
+		CreateWithoutTimeout: resourceFileSystemCreate,
+		ReadWithoutTimeout:   resourceFileSystemRead,
+		UpdateWithoutTimeout: resourceFileSystemUpdate,
+		DeleteWithoutTimeout: resourceFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"availability_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"availability_zone_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -48,7 +59,6 @@ func ResourceFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-
 			"creation_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -56,82 +66,95 @@ func ResourceFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
-
-			"performance_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
+			names.AttrDNSName: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"dns_name": {
+			"lifecycle_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 3,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transition_to_archive": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TransitionToArchiveRules](),
+						},
+						"transition_to_ia": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TransitionToIARules](),
+						},
+						"transition_to_primary_storage_class": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TransitionToPrimaryStorageClassRules](),
+						},
+					},
+				},
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"provisioned_throughput_in_mibps": {
-				Type:     schema.TypeFloat,
-				Optional: true,
 			},
 			"number_of_mount_targets": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"throughput_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      efs.ThroughputModeBursting,
-				ValidateFunc: validation.StringInSlice(efs.ThroughputMode_Values(), false),
+			"performance_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PerformanceMode](),
 			},
-
-			"lifecycle_policy": {
+			"protection": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				MaxItems: 2,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"transition_to_ia": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(efs.TransitionToIARules_Values(), false),
-						},
-						"transition_to_primary_storage_class": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(efs.TransitionToPrimaryStorageClassRules_Values(), false),
+						"replication_overwrite": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice(enum.Slice(
+								awstypes.ReplicationOverwriteProtectionEnabled,
+								awstypes.ReplicationOverwriteProtectionDisabled,
+							), false),
 						},
 					},
 				},
+			},
+			"provisioned_throughput_in_mibps": {
+				Type:     schema.TypeFloat,
+				Optional: true,
 			},
 			"size_in_bytes": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -146,245 +169,365 @@ func ResourceFileSystem() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"throughput_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ThroughputModeBursting,
+				ValidateDiagFunc: enum.Validate[awstypes.ThroughputMode](),
+			},
 		},
 	}
 }
 
-func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	creationToken := ""
+	var creationToken string
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		creationToken = resource.UniqueId()
+		creationToken = id.UniqueId()
 	}
-	throughputMode := d.Get("throughput_mode").(string)
-
-	createOpts := &efs.CreateFileSystemInput{
+	throughputMode := awstypes.ThroughputMode(d.Get("throughput_mode").(string))
+	input := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
-		ThroughputMode: aws.String(throughputMode),
-		Tags:           Tags(tags.IgnoreAWS()),
+		Tags:           getTagsIn(ctx),
+		ThroughputMode: throughputMode,
 	}
 
 	if v, ok := d.GetOk("availability_zone_name"); ok {
-		createOpts.AvailabilityZoneName = aws.String(v.(string))
+		input.AvailabilityZoneName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("performance_mode"); ok {
-		createOpts.PerformanceMode = aws.String(v.(string))
+		input.PerformanceMode = awstypes.PerformanceMode(v.(string))
 	}
 
-	if throughputMode == efs.ThroughputModeProvisioned {
-		createOpts.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
+	if throughputMode == awstypes.ThroughputModeProvisioned {
+		input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
 	}
 
-	encrypted, hasEncrypted := d.GetOk("encrypted")
-	kmsKeyId, hasKmsKeyId := d.GetOk("kms_key_id")
-
+	encrypted, hasEncrypted := d.GetOk(names.AttrEncrypted)
 	if hasEncrypted {
-		createOpts.Encrypted = aws.Bool(encrypted.(bool))
+		input.Encrypted = aws.Bool(encrypted.(bool))
 	}
 
-	if hasKmsKeyId {
-		createOpts.KmsKeyId = aws.String(kmsKeyId.(string))
+	kmsKeyID, hasKmsKeyID := d.GetOk(names.AttrKMSKeyID)
+	if hasKmsKeyID {
+		input.KmsKeyId = aws.String(kmsKeyID.(string))
 	}
 
-	if encrypted == false && hasKmsKeyId {
-		return errors.New("encrypted must be set to true when kms_key_id is specified")
+	if encrypted == false && hasKmsKeyID {
+		return sdkdiag.AppendFromErr(diags, errors.New("encrypted must be set to true when kms_key_id is specified"))
 	}
 
-	log.Printf("[DEBUG] Creating EFS file system: %s", createOpts)
-	fs, err := conn.CreateFileSystem(createOpts)
+	output, err := conn.CreateFileSystem(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EFS file system: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EFS File System: %s", err)
 	}
 
-	d.SetId(aws.StringValue(fs.FileSystemId))
+	d.SetId(aws.ToString(output.FileSystemId))
 
-	if _, err := waitFileSystemAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
+	if _, err := waitFileSystemAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EFS File System (%s) create: %s", d.Id(), err)
 	}
 
-	_, hasLifecyclePolicy := d.GetOk("lifecycle_policy")
-	if hasLifecyclePolicy {
-		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
+	if v, ok := d.GetOk("lifecycle_policy"); ok {
+		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
-		})
+			LifecyclePolicies: expandLifecyclePolicies(v.([]interface{})),
+		}
+
+		_, err := conn.PutLifecycleConfiguration(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error creating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "putting EFS File System (%s) lifecycle configuration: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFileSystemRead(d, meta)
+	if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+
+		_, err := conn.UpdateFileSystemProtection(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EFS File System (%s) protection: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
+
+	fs, err := findFileSystemByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EFS File System (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EFS File System (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, fs.FileSystemArn)
+	d.Set("availability_zone_id", fs.AvailabilityZoneId)
+	d.Set("availability_zone_name", fs.AvailabilityZoneName)
+	d.Set("creation_token", fs.CreationToken)
+	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
+	d.Set(names.AttrEncrypted, fs.Encrypted)
+	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
+	d.Set(names.AttrName, fs.Name)
+	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
+	d.Set(names.AttrOwnerID, fs.OwnerId)
+	d.Set("performance_mode", fs.PerformanceMode)
+	if err := d.Set("protection", flattenFileSystemProtectionDescription(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
+	}
+	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
+	if err := d.Set("size_in_bytes", flattenFileSystemSize(fs.SizeInBytes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting size_in_bytes: %s", err)
+	}
+	d.Set("throughput_mode", fs.ThroughputMode)
+
+	setTagsOut(ctx, fs.Tags)
+
+	output, err := conn.DescribeLifecycleConfiguration(ctx, &efs.DescribeLifecycleConfigurationInput{
+		FileSystemId: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EFS File System (%s) lifecycle configuration: %s", d.Id(), err)
+	}
+
+	if err := d.Set("lifecycle_policy", flattenLifecyclePolicies(output.LifecyclePolicies)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
+	}
+
+	return diags
+}
+
+func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
-		throughputMode := d.Get("throughput_mode").(string)
-
+		throughputMode := awstypes.ThroughputMode(d.Get("throughput_mode").(string))
 		input := &efs.UpdateFileSystemInput{
 			FileSystemId:   aws.String(d.Id()),
-			ThroughputMode: aws.String(throughputMode),
+			ThroughputMode: throughputMode,
 		}
 
-		if throughputMode == efs.ThroughputModeProvisioned {
+		if throughputMode == awstypes.ThroughputModeProvisioned {
 			input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
 		}
 
-		_, err := conn.UpdateFileSystem(input)
+		_, err := conn.UpdateFileSystem(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EFS file system (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EFS File System (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemAvailable(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
+		if _, err := waitFileSystemAvailable(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EFS File System (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("lifecycle_policy") {
 		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
+			LifecyclePolicies: expandLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
 		}
 
 		// Prevent the following error during removal:
 		// InvalidParameter: 1 validation error(s) found.
 		// - missing required field, PutLifecycleConfigurationInput.LifecyclePolicies.
 		if input.LifecyclePolicies == nil {
-			input.LifecyclePolicies = []*efs.LifecyclePolicy{}
+			input.LifecyclePolicies = []awstypes.LifecyclePolicy{}
 		}
 
-		_, err := conn.PutLifecycleConfiguration(input)
+		_, err := conn.PutLifecycleConfiguration(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "putting EFS File System (%s) lifecycle configuration: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChanges("protection") {
+		if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
+			_, err := conn.UpdateFileSystemProtection(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EFS File System (%s) protection: %s", d.Id(), err)
+			}
 		}
 	}
 
-	return resourceFileSystemRead(d, meta)
+	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	fs, err := FindFileSystemByID(conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EFS file system (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading EFS file system (%s): %w", d.Id(), err)
-	}
-
-	d.Set("arn", fs.FileSystemArn)
-	d.Set("availability_zone_id", fs.AvailabilityZoneId)
-	d.Set("availability_zone_name", fs.AvailabilityZoneName)
-	d.Set("creation_token", fs.CreationToken)
-	d.Set("encrypted", fs.Encrypted)
-	d.Set("kms_key_id", fs.KmsKeyId)
-	d.Set("performance_mode", fs.PerformanceMode)
-	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
-	d.Set("throughput_mode", fs.ThroughputMode)
-	d.Set("owner_id", fs.OwnerId)
-	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
-
-	tags := KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
-		return fmt.Errorf("error setting size_in_bytes: %w", err)
-	}
-
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
-
-	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+	log.Printf("[DEBUG] Deleting EFS File System: %s", d.Id())
+	_, err := conn.DeleteFileSystem(ctx, &efs.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.FileSystemNotFound](err) {
+		return diags
+	}
+
 	if err != nil {
-		return fmt.Errorf("error reading EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EFS File System (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
-		return fmt.Errorf("error setting lifecycle_policy: %w", err)
+	if _, err := waitFileSystemDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EFS File System (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
-
-	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
-	_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
-		FileSystemId: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil
-	}
+func findFileSystem(ctx context.Context, conn *efs.Client, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystemDescription]) (*awstypes.FileSystemDescription, error) {
+	output, err := findFileSystems(ctx, conn, input, filter)
 
 	if err != nil {
-		return fmt.Errorf("error deleting EFS file system (%s): %w", d.Id(), err)
+		return nil, err
 	}
 
-	if _, err := waitFileSystemDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-			return nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFileSystems(ctx context.Context, conn *efs.Client, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystemDescription]) ([]awstypes.FileSystemDescription, error) {
+	var output []awstypes.FileSystemDescription
+
+	pages := efs.NewDescribeFileSystemsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.FileSystemNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
-		return fmt.Errorf("error waiting for EFS file system (%s) deletion: %w", d.Id(), err)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.FileSystems {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	return nil
+	return output, nil
 }
 
-func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
+func findFileSystemByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.FileSystemDescription, error) {
+	input := &efs.DescribeFileSystemsInput{
+		FileSystemId: aws.String(id),
+	}
+
+	output, err := findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*awstypes.FileSystemDescription]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFileSystemByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.LifeCycleState), nil
+	}
+}
+
+func waitFileSystemAvailable(ctx context.Context, conn *efs.Client, fileSystemID string) (*awstypes.FileSystemDescription, error) { //nolint:unparam
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.LifeCycleStateCreating, awstypes.LifeCycleStateUpdating),
+		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
+		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
+		Timeout:    timeout,
+		Delay:      2 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.FileSystemDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID string) (*awstypes.FileSystemDescription, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
+		Target:     []string{},
+		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
+		Timeout:    timeout,
+		Delay:      2 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.FileSystemDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func flattenLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfMap := make(map[string]interface{})
 
-		if apiObject.TransitionToIA != nil {
-			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
-		}
-
-		if apiObject.TransitionToPrimaryStorageClass != nil {
-			tfMap["transition_to_primary_storage_class"] = aws.StringValue(apiObject.TransitionToPrimaryStorageClass)
-		}
+		tfMap["transition_to_archive"] = apiObject.TransitionToArchive
+		tfMap["transition_to_ia"] = apiObject.TransitionToIA
+		tfMap["transition_to_primary_storage_class"] = apiObject.TransitionToPrimaryStorageClass
 
 		tfList = append(tfList, tfMap)
 	}
@@ -392,24 +535,27 @@ func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []int
 	return tfList
 }
 
-func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePolicy {
-	var apiObjects []*efs.LifecyclePolicy
+func expandLifecyclePolicies(tfList []interface{}) []awstypes.LifecyclePolicy {
+	var apiObjects []awstypes.LifecyclePolicy
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
-		apiObject := &efs.LifecyclePolicy{}
+		apiObject := awstypes.LifecyclePolicy{}
+
+		if v, ok := tfMap["transition_to_archive"].(string); ok && v != "" {
+			apiObject.TransitionToArchive = awstypes.TransitionToArchiveRules(v)
+		}
 
 		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
-			apiObject.TransitionToIA = aws.String(v)
+			apiObject.TransitionToIA = awstypes.TransitionToIARules(v)
 		}
 
 		if v, ok := tfMap["transition_to_primary_storage_class"].(string); ok && v != "" {
-			apiObject.TransitionToPrimaryStorageClass = aws.String(v)
+			apiObject.TransitionToPrimaryStorageClass = awstypes.TransitionToPrimaryStorageClassRules(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -418,22 +564,50 @@ func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePol
 	return apiObjects
 }
 
-func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{} {
-	if sizeInBytes == nil {
+func flattenFileSystemSize(apiObject *awstypes.FileSystemSize) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"value": aws.Int64Value(sizeInBytes.Value),
+		names.AttrValue: apiObject.Value,
 	}
 
-	if sizeInBytes.ValueInIA != nil {
-		m["value_in_ia"] = aws.Int64Value(sizeInBytes.ValueInIA)
+	if apiObject.ValueInIA != nil {
+		m["value_in_ia"] = aws.ToInt64(apiObject.ValueInIA)
 	}
 
-	if sizeInBytes.ValueInStandard != nil {
-		m["value_in_standard"] = aws.Int64Value(sizeInBytes.ValueInStandard)
+	if apiObject.ValueInStandard != nil {
+		m["value_in_standard"] = aws.ToInt64(apiObject.ValueInStandard)
 	}
 
 	return []interface{}{m}
+}
+
+func expandUpdateFileSystemProtectionInput(fileSystemID string, tfMap map[string]interface{}) *efs.UpdateFileSystemProtectionInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &efs.UpdateFileSystemProtectionInput{
+		FileSystemId: aws.String(fileSystemID),
+	}
+
+	if v, ok := tfMap["replication_overwrite"].(string); ok && v != "" {
+		apiObject.ReplicationOverwriteProtection = awstypes.ReplicationOverwriteProtection(v)
+	}
+
+	return apiObject
+}
+
+func flattenFileSystemProtectionDescription(apiObject *awstypes.FileSystemProtectionDescription) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["replication_overwrite"] = apiObject.ReplicationOverwriteProtection
+
+	return []interface{}{tfMap}
 }

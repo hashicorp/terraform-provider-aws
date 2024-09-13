@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_networkmanager_vpc_attachment: Add `options.appliance_mode_support` argument
+```

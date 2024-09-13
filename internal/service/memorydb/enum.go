@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 // WARNING: As of 01/2022, the MemoryDB API does not provide a formal definition

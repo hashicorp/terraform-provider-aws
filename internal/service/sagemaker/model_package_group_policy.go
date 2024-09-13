@@ -1,28 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceModelPackageGroupPolicy() *schema.Resource {
+// @SDKResource("aws_sagemaker_model_package_group_policy", name="Model Package Group Policy")
+func resourceModelPackageGroupPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceModelPackageGroupPolicyPut,
-		Read:   resourceModelPackageGroupPolicyRead,
-		Update: resourceModelPackageGroupPolicyPut,
-		Delete: resourceModelPackageGroupPolicyDelete,
+		CreateWithoutTimeout: resourceModelPackageGroupPolicyPut,
+		ReadWithoutTimeout:   resourceModelPackageGroupPolicyRead,
+		UpdateWithoutTimeout: resourceModelPackageGroupPolicyPut,
+		DeleteWithoutTimeout: resourceModelPackageGroupPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,10 +39,11 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"resource_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -45,13 +53,13 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 	}
 }
 
-func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelPackageGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("resource_policy").(string))
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("resource_policy").(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("resource_policy").(string), err)
 	}
 
 	name := d.Get("model_package_group_name").(string)
@@ -60,57 +68,85 @@ func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}
 		ResourcePolicy:        aws.String(policy),
 	}
 
-	_, err = conn.PutModelPackageGroupPolicy(input)
+	_, err = conn.PutModelPackageGroupPolicy(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Model Package Group Policy %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Model Package Group Policy %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceModelPackageGroupPolicyRead(d, meta)
+	return append(diags, resourceModelPackageGroupPolicyRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelPackageGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	mpg, err := FindModelPackageGroupPolicyByName(conn, d.Id())
+	mpg, err := findModelPackageGroupPolicyByName(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Unable to find SageMaker Model Package Group Policy (%s); removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Model Package Group Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("model_package_group_name", d.Id())
 
-	policyToSet, err := verify.PolicyToSet(d.Get("resource_policy").(string), aws.StringValue(mpg.ResourcePolicy))
-
+	policyToSet, err := verify.PolicyToSet(d.Get("resource_policy").(string), aws.ToString(mpg.ResourcePolicy))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Model Package Group Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("resource_policy", policyToSet)
 
-	return nil
+	return diags
 }
 
-func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelPackageGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	input := &sagemaker.DeleteModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteModelPackageGroupPolicy(input); err != nil {
+	if _, err := conn.DeleteModelPackageGroupPolicy(ctx, input); err != nil {
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find Model Package Group") ||
 			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find resource policy") {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Model Package Group Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findModelPackageGroupPolicyByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.GetModelPackageGroupPolicyOutput, error) {
+	input := &sagemaker.GetModelPackageGroupPolicyInput{
+		ModelPackageGroupName: aws.String(name),
+	}
+
+	output, err := conn.GetModelPackageGroupPolicy(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find Model Package Group") ||
+		tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find resource policy") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

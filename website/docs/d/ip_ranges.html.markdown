@@ -53,12 +53,14 @@ CIDR blocks, Terraform will fail.
 
 * `url` - (Optional) Custom URL for source JSON file. Syntax must match [AWS IP Address Ranges documentation][1]. Defaults to `https://ip-ranges.amazonaws.com/ip-ranges.json`.
 
-## Attributes Reference
+## Attribute Reference
 
-* `cidr_blocks` - The lexically ordered list of CIDR blocks.
-* `ipv6_cidr_blocks` - The lexically ordered list of IPv6 CIDR blocks.
-* `create_date` - The publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
-* `sync_token` - The publication time of the IP ranges, in Unix epoch time format
+This data source exports the following attributes in addition to the arguments above:
+
+* `cidr_blocks` - Lexically ordered list of CIDR blocks.
+* `ipv6_cidr_blocks` - Lexically ordered list of IPv6 CIDR blocks.
+* `create_date` - Publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
+* `sync_token` - Publication time of the IP ranges, in Unix epoch time format
   (e.g., `1470267965`).
 
 [1]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html

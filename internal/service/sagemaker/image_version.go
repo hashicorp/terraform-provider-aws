@@ -1,27 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceImageVersion() *schema.Resource {
+// @SDKResource("aws_sagemaker_image_version", name="Image Version")
+func resourceImageVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceImageVersionCreate,
-		Read:   resourceImageVersionRead,
-		Delete: resourceImageVersionDelete,
+		CreateWithoutTimeout: resourceImageVersionCreate,
+		ReadWithoutTimeout:   resourceImageVersionRead,
+		DeleteWithoutTimeout: resourceImageVersionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +53,7 @@ func ResourceImageVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -51,8 +61,9 @@ func ResourceImageVersion() *schema.Resource {
 	}
 }
 
-func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageVersionInput{
@@ -60,65 +71,90 @@ func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error 
 		BaseImage: aws.String(d.Get("base_image").(string)),
 	}
 
-	_, err := conn.CreateImageVersion(input)
+	_, err := conn.CreateImageVersion(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Image Version %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Image Version %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitImageVersionCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to be created: %w", d.Id(), err)
+	if _, err := waitImageVersionCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image Version (%s) to be created: %s", d.Id(), err)
 	}
 
-	return resourceImageVersionRead(d, meta)
+	return append(diags, resourceImageVersionRead(ctx, d, meta)...)
 }
 
-func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	image, err := FindImageVersionByName(conn, d.Id())
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
-			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker Image Version (%s); removing from state", d.Id())
-			return nil
-		}
-		return fmt.Errorf("error reading SageMaker Image Version (%s): %w", d.Id(), err)
+	image, err := findImageVersionByName(ctx, conn, d.Id())
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		d.SetId("")
+		log.Printf("[WARN] Unable to find SageMaker Image Version (%s); removing from state", d.Id())
+		return diags
 	}
 
-	d.Set("arn", image.ImageVersionArn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Image Version (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, image.ImageVersionArn)
 	d.Set("base_image", image.BaseImage)
 	d.Set("image_arn", image.ImageArn)
 	d.Set("container_image", image.ContainerImage)
-	d.Set("version", image.Version)
+	d.Set(names.AttrVersion, image.Version)
 	d.Set("image_name", d.Id())
 
-	return nil
+	return diags
 }
 
-func resourceImageVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	input := &sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(d.Id()),
-		Version:   aws.Int64(int64(d.Get("version").(int))),
+		Version:   aws.Int32(int32(d.Get(names.AttrVersion).(int))),
 	}
 
-	if _, err := conn.DeleteImageVersion(input); err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
-			return nil
+	if _, err := conn.DeleteImageVersion(ctx, input); err != nil {
+		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
+			return diags
 		}
-		return fmt.Errorf("error deleting SageMaker Image Version (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Image Version (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitImageVersionDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
-			return nil
+	if _, err := waitImageVersionDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image Version (%s) to delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findImageVersionByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+	input := &sagemaker.DescribeImageVersionInput{
+		ImageName: aws.String(name),
+	}
+
+	output, err := conn.DescribeImageVersion(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to delete: %w", d.Id(), err)
 	}
 
-	return nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

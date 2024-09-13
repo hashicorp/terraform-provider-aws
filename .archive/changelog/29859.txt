@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Removed `Compute` flag from `audio_normalization_settings` and `remix_settings` in `audio_descriptions`
+```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_fms_policy: Add `policy_option` attribute for `security_service_policy_data` block
+```

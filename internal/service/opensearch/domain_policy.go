@@ -1,26 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDomainPolicy() *schema.Resource {
+// @SDKResource("aws_opensearch_domain_policy", name="Domain Policy")
+func resourceDomainPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainPolicyUpsert,
-		Read:   resourceDomainPolicyRead,
-		Update: resourceDomainPolicyUpsert,
-		Delete: resourceDomainPolicyDelete,
+		CreateWithoutTimeout: resourceDomainPolicyUpsert,
+		ReadWithoutTimeout:   resourceDomainPolicyRead,
+		UpdateWithoutTimeout: resourceDomainPolicyUpsert,
+		DeleteWithoutTimeout: resourceDomainPolicyDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(180 * time.Minute),
@@ -28,7 +36,7 @@ func ResourceDomainPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -46,77 +54,82 @@ func ResourceDomainPolicy() *schema.Resource {
 	}
 }
 
-func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading OpenSearch Domain Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received OpenSearch domain: %s", ds)
-
-	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
+	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.ToString(ds.AccessPolicies))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_policies", policies)
 
-	return nil
+	return diags
 }
 
-func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
-	domainName := d.Get("domain_name").(string)
+func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
+	domainName := d.Get(names.AttrDomainName).(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = conn.UpdateDomainConfig(&opensearchservice.UpdateDomainConfigInput{
-		DomainName:     aws.String(domainName),
-		AccessPolicies: aws.String(policy),
-	})
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
+				DomainName:     aws.String(domainName),
+				AccessPolicies: aws.String(policy),
+			})
+		}, "A change/update is in progress")
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
 	d.SetId("esd-policy-" + domainName)
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for OpenSearch Domain Policy (%s) to be updated: %w", d.Id(), err)
+	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain Policy (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceDomainPolicyRead(d, meta)
+	return append(diags, resourceDomainPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	_, err := conn.UpdateDomainConfig(&opensearchservice.UpdateDomainConfigInput{
-		DomainName:     aws.String(d.Get("domain_name").(string)),
+	_, err := conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
+		DomainName:     aws.String(d.Get(names.AttrDomainName).(string)),
 		AccessPolicies: aws.String(""),
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for OpenSearch domain policy %q to be deleted", d.Get("domain_name").(string))
+	log.Printf("[DEBUG] Waiting for OpenSearch domain policy %q to be deleted", d.Get(names.AttrDomainName).(string))
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for OpenSearch Domain Policy (%s) to be deleted: %w", d.Id(), err)
+	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain Policy (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

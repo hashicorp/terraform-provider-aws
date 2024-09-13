@@ -1,19 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceExport() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_export", name="Export")
+func dataSourceExport() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceExportRead,
+		ReadWithoutTimeout: dataSourceExportRead,
+
 		Schema: map[string]*schema.Schema{
 			"accepts": {
 				Type:         schema.TypeString,
@@ -24,7 +32,7 @@ func DataSourceExport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +45,7 @@ func DataSourceExport() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"oas30", "swagger"}, false),
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -54,14 +62,14 @@ func DataSourceExport() *schema.Resource {
 	}
 }
 
-func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restApiId := d.Get("rest_api_id").(string)
+	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
-
 	input := &apigateway.GetExportInput{
-		RestApiId:  aws.String(restApiId),
+		RestApiId:  aws.String(apiID),
 		StageName:  aws.String(stageName),
 		ExportType: aws.String(d.Get("export_type").(string)),
 	}
@@ -70,19 +78,22 @@ func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
 		input.Accepts = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	export, err := conn.GetExport(input)
+	id := apiID + ":" + stageName
+
+	export, err := conn.GetExport(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Export (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", restApiId, stageName))
+	d.SetId(id)
 	d.Set("body", string(export.Body))
-	d.Set("content_type", export.ContentType)
 	d.Set("content_disposition", export.ContentDisposition)
+	d.Set(names.AttrContentType, export.ContentType)
 
-	return nil
+	return diags
 }

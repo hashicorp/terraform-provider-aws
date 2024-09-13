@@ -1,41 +1,51 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ses_receipt_filter")
 func ResourceReceiptFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReceiptFilterCreate,
-		Read:   resourceReceiptFilterRead,
-		Delete: resourceReceiptFilterDelete,
+		CreateWithoutTimeout: resourceReceiptFilterCreate,
+		ReadWithoutTimeout:   resourceReceiptFilterRead,
+		DeleteWithoutTimeout: resourceReceiptFilterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z._-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z]`), "must begin with a alphanumeric character"),
-					validation.StringMatch(regexp.MustCompile(`[0-9a-zA-Z]$`), "must end with a alphanumeric character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with a alphanumeric character"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]$`), "must end with a alphanumeric character"),
 				),
 			},
 
@@ -49,72 +59,72 @@ func ResourceReceiptFilter() *schema.Resource {
 				),
 			},
 
-			"policy": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ses.ReceiptFilterPolicyBlock,
-					ses.ReceiptFilterPolicyAllow,
-				}, false),
+			names.AttrPolicy: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ReceiptFilterPolicy](),
 			},
 		},
 	}
 }
 
-func resourceReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	createOpts := &ses.CreateReceiptFilterInput{
-		Filter: &ses.ReceiptFilter{
+		Filter: &awstypes.ReceiptFilter{
 			Name: aws.String(name),
-			IpFilter: &ses.ReceiptIpFilter{
+			IpFilter: &awstypes.ReceiptIpFilter{
 				Cidr:   aws.String(d.Get("cidr").(string)),
-				Policy: aws.String(d.Get("policy").(string)),
+				Policy: awstypes.ReceiptFilterPolicy(d.Get(names.AttrPolicy).(string)),
 			},
 		},
 	}
 
-	_, err := conn.CreateReceiptFilter(createOpts)
+	_, err := conn.CreateReceiptFilter(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating SES receipt filter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SES receipt filter: %s", err)
 	}
 
 	d.SetId(name)
 
-	return resourceReceiptFilterRead(d, meta)
+	return append(diags, resourceReceiptFilterRead(ctx, d, meta)...)
 }
 
-func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	listOpts := &ses.ListReceiptFiltersInput{}
 
-	response, err := conn.ListReceiptFilters(listOpts)
+	response, err := conn.ListReceiptFilters(ctx, listOpts)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SES Receipt Filter (%s): %s", d.Id(), err)
 	}
 
-	var filter *ses.ReceiptFilter
+	var filter *awstypes.ReceiptFilter
 
 	for _, responseFilter := range response.Filters {
-		if aws.StringValue(responseFilter.Name) == d.Id() {
-			filter = responseFilter
+		if aws.ToString(responseFilter.Name) == d.Id() {
+			rf := responseFilter
+			filter = &rf
 			break
 		}
 	}
 
 	if filter == nil {
-		log.Printf("[WARN] SES Receipt Filter (%s) not found", d.Id())
+		log.Printf("[WARN] SES Receipt Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("cidr", filter.IpFilter.Cidr)
-	d.Set("policy", filter.IpFilter.Policy)
-	d.Set("name", filter.Name)
+	d.Set(names.AttrPolicy, filter.IpFilter.Policy)
+	d.Set(names.AttrName, filter.Name)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -123,22 +133,23 @@ func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-filter/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
-	return nil
+	return diags
 }
 
-func resourceReceiptFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	deleteOpts := &ses.DeleteReceiptFilterInput{
 		FilterName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteReceiptFilter(deleteOpts)
+	_, err := conn.DeleteReceiptFilter(ctx, deleteOpts)
 	if err != nil {
-		return fmt.Errorf("Error deleting SES receipt filter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SES receipt filter: %s", err)
 	}
 
-	return nil
+	return diags
 }

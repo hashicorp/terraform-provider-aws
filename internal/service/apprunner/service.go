@@ -1,26 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"regexp"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceService() *schema.Resource {
+// @SDKResource("aws_apprunner_service", name="Service")
+// @Tags(identifierAttribute="arn")
+func resourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
 		ReadWithoutTimeout:   resourceServiceRead,
@@ -32,26 +41,24 @@ func ResourceService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"auto_scaling_configuration_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -60,12 +67,10 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-
 			"health_check_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -73,48 +78,41 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      1,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "/",
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(0, 51200),
 						},
-						"protocol": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      apprunner.HealthCheckProtocolTcp,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(apprunner.HealthCheckProtocol_Values(), false),
+						names.AttrProtocol: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.HealthCheckProtocolTcp,
+							ValidateDiagFunc: enum.Validate[types.HealthCheckProtocol](),
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      2,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
 						"unhealthy_threshold": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
 					},
 				},
 			},
-
 			"instance_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -126,10 +124,10 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "1024",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`1024|2048|(1|2) vCPU`), ""),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`256|512|1024|2048|4096|(0.25|0.5|1|2|4) vCPU`), ""),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// App Runner API always returns the amount in multiples of 1024 units
-								return (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU")
+								return (old == "256" && new == "0.25 vCPU") || (old == "512" && new == "0.5 vCPU") || (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU") || (old == "4096" && new == "4 vCPU")
 							},
 						},
 						"instance_role_arn": {
@@ -141,17 +139,16 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "2048",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`2048|3072|4096|(2|3|4) GB`), ""),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`512|1024|2048|3072|4096|6144|8192|10240|12288|(0.5|1|2|3|4|6|8|10|12) GB`), ""),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// App Runner API always returns the amount in MB
-								return (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB")
+								return (old == "512" && new == "0.5 GB") || (old == "1024" && new == "1 GB") || (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB") || (old == "6144" && new == "6 GB") || (old == "8192" && new == "8 GB") || (old == "10240" && new == "10 GB") || (old == "12288" && new == "12 GB")
 							},
 						},
 					},
 				},
 			},
-
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -161,14 +158,15 @@ func ResourceService() *schema.Resource {
 						"egress_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"egress_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(apprunner.EgressType_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.EgressType](),
 									},
 									"vpc_connector_arn": {
 										Type:         schema.TypeString,
@@ -178,26 +176,60 @@ func ResourceService() *schema.Resource {
 								},
 							},
 						},
+						"ingress_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"is_publicly_accessible": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
+						names.AttrIPAddressType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.IpAddressTypeIpv4,
+							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+						},
 					},
 				},
 			},
-
+			"observability_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"observability_configuration_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"observability_enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"service_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"service_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"source_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -251,16 +283,24 @@ func ResourceService() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 51200),
 															},
-															"port": {
+															names.AttrPort: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																Default:      "8080",
 																ValidateFunc: validation.StringLenBetween(0, 51200),
 															},
 															"runtime": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(apprunner.Runtime_Values(), false),
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[types.Runtime](),
+															},
+															"runtime_environment_secrets": {
+																Type:     schema.TypeMap,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringLenBetween(0, 2048),
+																},
 															},
 															"runtime_environment_variables": {
 																Type:     schema.TypeMap,
@@ -279,9 +319,9 @@ func ResourceService() *schema.Resource {
 													},
 												},
 												"configuration_source": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(apprunner.ConfigurationSource_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.ConfigurationSource](),
 												},
 											},
 										},
@@ -297,18 +337,24 @@ func ResourceService() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(apprunner.SourceCodeVersionType_Values(), false),
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.SourceCodeVersionType](),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(0, 51200),
 												},
 											},
 										},
+									},
+									"source_directory": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringLenBetween(0, 4096),
 									},
 								},
 							},
@@ -326,11 +372,19 @@ func ResourceService() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"port": {
+												names.AttrPort: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Default:      "8080",
 													ValidateFunc: validation.StringLenBetween(0, 51200),
+												},
+												"runtime_environment_secrets": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringLenBetween(0, 2048),
+													},
 												},
 												"runtime_environment_variables": {
 													Type:     schema.TypeMap,
@@ -351,12 +405,12 @@ func ResourceService() *schema.Resource {
 									"image_identifier": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([0-9]{12}.dkr.ecr.[a-z\-]+-[0-9]{1}.amazonaws.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
 									},
 									"image_repository_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(apprunner.ImageRepositoryType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.ImageRepositoryType](),
 									},
 								},
 							},
@@ -365,15 +419,12 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -381,23 +432,22 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
 
-	serviceName := d.Get("service_name").(string)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
+	name := d.Get(names.AttrServiceName).(string)
 	input := &apprunner.CreateServiceInput{
-		ServiceName:         aws.String(serviceName),
+		ServiceName:         aws.String(name),
 		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_configuration_arn"); ok {
 		input.AutoScalingConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EncryptionConfiguration = expandServiceEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -409,145 +459,103 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.InstanceConfiguration = expandServiceInstanceConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
-	var output *apprunner.CreateServiceOutput
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-		output, err = conn.CreateServiceWithContext(ctx, input)
-
-		if tfawserr.ErrMessageContains(err, apprunner.ErrCodeInvalidRequestException, "Error in assuming instance role") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateServiceWithContext(ctx, input)
+	if v, ok := d.GetOk("observability_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(v.([]interface{}))
 	}
+
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateService(ctx, input)
+	}, "Error in assuming instance role")
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Service (%s): %w", serviceName, err))
+		return sdkdiag.AppendErrorf(diags, "creating App Runner Service (%s): %s", name, err)
 	}
 
-	if output == nil || output.Service == nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Service (%s): empty output", serviceName))
+	d.SetId(aws.ToString(outputRaw.(*apprunner.CreateServiceOutput).Service.ServiceArn))
+
+	if _, err := waitServiceCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Service (%s) create: %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(output.Service.ServiceArn))
-
-	if err := WaitServiceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) creation: %w", d.Id(), err))
-	}
-
-	return resourceServiceRead(ctx, d, meta)
+	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
 
-	input := &apprunner.DescribeServiceInput{
-		ServiceArn: aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	output, err := conn.DescribeServiceWithContext(ctx, input)
+	service, err := findServiceByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner Service (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading App Runner Service (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.Service == nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner Service (%s): empty output", d.Id()))
-	}
+	serviceURL := aws.ToString(service.ServiceUrl)
 
-	if aws.StringValue(output.Service.Status) == apprunner.ServiceStatusDeleted {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner Service (%s): %s after creation", d.Id(), aws.StringValue(output.Service.Status)))
+	if serviceURL == "" {
+		// Alternate lookup required for private services.
+		input := &apprunner.DescribeCustomDomainsInput{
+			ServiceArn: aws.String(d.Id()),
 		}
-		log.Printf("[WARN] App Runner Service (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+
+		err := forEachCustomDomainPage(ctx, conn, input, func(page *apprunner.DescribeCustomDomainsOutput) {
+			serviceURL = aws.ToString(page.DNSTarget)
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading App Runner Service (%s) custom domains: %s", d.Id(), err)
+		}
 	}
 
-	service := output.Service
-	arn := aws.StringValue(service.ServiceArn)
-
-	var autoScalingConfigArn string
+	d.Set(names.AttrARN, service.ServiceArn)
 	if service.AutoScalingConfigurationSummary != nil {
-		autoScalingConfigArn = aws.StringValue(service.AutoScalingConfigurationSummary.AutoScalingConfigurationArn)
+		d.Set("auto_scaling_configuration_arn", service.AutoScalingConfigurationSummary.AutoScalingConfigurationArn)
+	} else {
+		d.Set("auto_scaling_configuration_arn", nil)
 	}
-
-	d.Set("arn", arn)
-	d.Set("auto_scaling_configuration_arn", autoScalingConfigArn)
-	d.Set("service_id", service.ServiceId)
-	d.Set("service_name", service.ServiceName)
-	d.Set("service_url", service.ServiceUrl)
-	d.Set("status", service.Status)
-	if err := d.Set("encryption_configuration", flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting encryption_configuration: %w", err))
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
-
 	if err := d.Set("health_check_configuration", flattenServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting health_check_configuration: %w", err))
+		return sdkdiag.AppendErrorf(diags, "setting health_check_configuration: %s", err)
 	}
-
 	if err := d.Set("instance_configuration", flattenServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting instance_configuration: %w", err))
+		return sdkdiag.AppendErrorf(diags, "setting instance_configuration: %s", err)
 	}
-
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting network_configuration: %w", err))
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
-
+	if err := d.Set("observability_configuration", flattenServiceObservabilityConfiguration(service.ObservabilityConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting observability_configuration: %s", err)
+	}
+	d.Set("service_id", service.ServiceId)
+	d.Set(names.AttrServiceName, service.ServiceName)
+	d.Set("service_url", serviceURL)
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
+		return sdkdiag.AppendErrorf(diags, "setting source_configuration: %s", err)
 	}
+	d.Set(names.AttrStatus, service.Status)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	var diags diag.Diagnostics
 
-	if d.HasChanges(
-		"auto_scaling_configuration_arn",
-		"instance_configuration",
-		"network_configuration",
-		"source_configuration",
-	) {
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &apprunner.UpdateServiceInput{
 			ServiceArn: aws.String(d.Id()),
 		}
@@ -556,69 +564,174 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.AutoScalingConfigurationArn = aws.String(d.Get("auto_scaling_configuration_arn").(string))
 		}
 
+		if d.HasChange("health_check_configuration") {
+			input.HealthCheckConfiguration = expandServiceHealthCheckConfiguration(d.Get("health_check_configuration").([]interface{}))
+		}
+
 		if d.HasChange("instance_configuration") {
 			input.InstanceConfiguration = expandServiceInstanceConfiguration(d.Get("instance_configuration").([]interface{}))
 		}
 
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		if d.HasChange(names.AttrNetworkConfiguration) {
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
+		}
+
+		if d.HasChange("observability_configuration") {
+			input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(d.Get("observability_configuration").([]interface{}))
 		}
 
 		if d.HasChange("source_configuration") {
 			input.SourceConfiguration = expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{}))
 		}
 
-		_, err := conn.UpdateServiceWithContext(ctx, input)
+		_, err := conn.UpdateService(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating App Runner Service (%s): %s", d.Id(), err)
 		}
 
-		if err := WaitServiceUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) to update: %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s) tags: %s", d.Get("arn").(string), err))
+		if _, err := waitServiceUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for App Runner Service (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceServiceRead(ctx, d, meta)
+	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	var diags diag.Diagnostics
 
-	input := &apprunner.DeleteServiceInput{
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
+
+	log.Printf("[INFO] Deleting App Runner Service: %s", d.Id())
+	_, err := conn.DeleteService(ctx, &apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteServiceWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting App Runner Service (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner Service (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitServiceDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) deletion: %w", d.Id(), err))
+	if _, err := waitServiceDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Service (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandServiceEncryptionConfiguration(l []interface{}) *apprunner.EncryptionConfiguration {
+func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	input := &apprunner.DescribeServiceInput{
+		ServiceArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeService(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Service == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.Service.Status; status == types.ServiceStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output.Service, nil
+}
+
+func statusService(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findServiceByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitServiceCreated(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
+		Target:  enum.Slice(types.ServiceStatusRunning),
+		Refresh: statusService(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Service); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServiceUpdated(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
+		Target:  enum.Slice(types.ServiceStatusRunning),
+		Refresh: statusService(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Service); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServiceDeleted(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ServiceStatusRunning, types.ServiceStatusOperationInProgress),
+		Target:  []string{},
+		Refresh: statusService(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Service); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandServiceEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -629,16 +742,16 @@ func expandServiceEncryptionConfiguration(l []interface{}) *apprunner.Encryption
 		return nil
 	}
 
-	result := &apprunner.EncryptionConfiguration{}
+	result := &types.EncryptionConfiguration{}
 
-	if v, ok := tfMap["kms_key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKey].(string); ok && v != "" {
 		result.KmsKey = aws.String(v)
 	}
 
 	return result
 }
 
-func expandServiceHealthCheckConfiguration(l []interface{}) *apprunner.HealthCheckConfiguration {
+func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -649,36 +762,36 @@ func expandServiceHealthCheckConfiguration(l []interface{}) *apprunner.HealthChe
 		return nil
 	}
 
-	result := &apprunner.HealthCheckConfiguration{}
+	result := &types.HealthCheckConfiguration{}
 
 	if v, ok := tfMap["healthy_threshold"].(int); ok {
-		result.HealthyThreshold = aws.Int64(int64(v))
+		result.HealthyThreshold = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["interval"].(int); ok {
-		result.Interval = aws.Int64(int64(v))
+	if v, ok := tfMap[names.AttrInterval].(int); ok {
+		result.Interval = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["path"].(string); ok {
+	if v, ok := tfMap[names.AttrPath].(string); ok {
 		result.Path = aws.String(v)
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok {
-		result.Protocol = aws.String(v)
+	if v, ok := tfMap[names.AttrProtocol].(string); ok {
+		result.Protocol = types.HealthCheckProtocol(v)
 	}
 
-	if v, ok := tfMap["timeout"].(int); ok {
-		result.Timeout = aws.Int64(int64(v))
+	if v, ok := tfMap[names.AttrTimeout].(int); ok {
+		result.Timeout = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["unhealthy_threshold"].(int); ok {
-		result.UnhealthyThreshold = aws.Int64(int64(v))
+		result.UnhealthyThreshold = aws.Int32(int32(v))
 	}
 
 	return result
 }
 
-func expandServiceInstanceConfiguration(l []interface{}) *apprunner.InstanceConfiguration {
+func expandServiceInstanceConfiguration(l []interface{}) *types.InstanceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -689,7 +802,7 @@ func expandServiceInstanceConfiguration(l []interface{}) *apprunner.InstanceConf
 		return nil
 	}
 
-	result := &apprunner.InstanceConfiguration{}
+	result := &types.InstanceConfiguration{}
 
 	if v, ok := tfMap["cpu"].(string); ok {
 		result.Cpu = aws.String(v)
@@ -706,7 +819,7 @@ func expandServiceInstanceConfiguration(l []interface{}) *apprunner.InstanceConf
 	return result
 }
 
-func expandNetworkConfiguration(l []interface{}) *apprunner.NetworkConfiguration {
+func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -717,16 +830,24 @@ func expandNetworkConfiguration(l []interface{}) *apprunner.NetworkConfiguration
 		return nil
 	}
 
-	result := &apprunner.NetworkConfiguration{}
+	result := &types.NetworkConfiguration{}
+
+	if v, ok := tfMap["ingress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		result.IngressConfiguration = expandNetworkIngressConfiguration(v)
+	}
 
 	if v, ok := tfMap["egress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
 
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
+		result.IpAddressType = types.IpAddressType(v)
+	}
+
 	return result
 }
 
-func expandServiceSourceConfiguration(l []interface{}) *apprunner.SourceConfiguration {
+func expandServiceObservabilityConfiguration(l []interface{}) *types.ServiceObservabilityConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -737,7 +858,31 @@ func expandServiceSourceConfiguration(l []interface{}) *apprunner.SourceConfigur
 		return nil
 	}
 
-	result := &apprunner.SourceConfiguration{}
+	result := &types.ServiceObservabilityConfiguration{}
+
+	if v, ok := tfMap["observability_configuration_arn"].(string); ok && len(v) > 0 {
+		result.ObservabilityConfigurationArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["observability_enabled"].(bool); ok {
+		result.ObservabilityEnabled = v
+	}
+
+	return result
+}
+
+func expandServiceSourceConfiguration(l []interface{}) *types.SourceConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &types.SourceConfiguration{}
 
 	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.AuthenticationConfiguration = expandServiceAuthenticationConfiguration(v)
@@ -758,7 +903,7 @@ func expandServiceSourceConfiguration(l []interface{}) *apprunner.SourceConfigur
 	return result
 }
 
-func expandServiceAuthenticationConfiguration(l []interface{}) *apprunner.AuthenticationConfiguration {
+func expandServiceAuthenticationConfiguration(l []interface{}) *types.AuthenticationConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -769,7 +914,7 @@ func expandServiceAuthenticationConfiguration(l []interface{}) *apprunner.Authen
 		return nil
 	}
 
-	result := &apprunner.AuthenticationConfiguration{}
+	result := &types.AuthenticationConfiguration{}
 
 	if v, ok := tfMap["access_role_arn"].(string); ok && v != "" {
 		result.AccessRoleArn = aws.String(v)
@@ -782,7 +927,7 @@ func expandServiceAuthenticationConfiguration(l []interface{}) *apprunner.Authen
 	return result
 }
 
-func expandNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfiguration {
+func expandNetworkIngressConfiguration(l []interface{}) *types.IngressConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -793,10 +938,30 @@ func expandNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfigur
 		return nil
 	}
 
-	result := &apprunner.EgressConfiguration{}
+	result := &types.IngressConfiguration{}
+
+	if v, ok := tfMap["is_publicly_accessible"].(bool); ok {
+		result.IsPubliclyAccessible = v
+	}
+
+	return result
+}
+
+func expandNetworkEgressConfiguration(l []interface{}) *types.EgressConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &types.EgressConfiguration{}
 
 	if v, ok := tfMap["egress_type"].(string); ok {
-		result.EgressType = aws.String(v)
+		result.EgressType = types.EgressType(v)
 	}
 
 	if v, ok := tfMap["vpc_connector_arn"].(string); ok && v != "" {
@@ -806,7 +971,7 @@ func expandNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfigur
 	return result
 }
 
-func expandServiceImageConfiguration(l []interface{}) *apprunner.ImageConfiguration {
+func expandServiceImageConfiguration(l []interface{}) *types.ImageConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -817,14 +982,18 @@ func expandServiceImageConfiguration(l []interface{}) *apprunner.ImageConfigurat
 		return nil
 	}
 
-	result := &apprunner.ImageConfiguration{}
+	result := &types.ImageConfiguration{}
 
-	if v, ok := tfMap["port"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPort].(string); ok && v != "" {
 		result.Port = aws.String(v)
 	}
 
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentSecrets = flex.ExpandStringValueMap(v)
+	}
+
 	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
-		result.RuntimeEnvironmentVariables = flex.ExpandStringMap(v)
+		result.RuntimeEnvironmentVariables = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["start_command"].(string); ok && v != "" {
@@ -834,7 +1003,7 @@ func expandServiceImageConfiguration(l []interface{}) *apprunner.ImageConfigurat
 	return result
 }
 
-func expandServiceCodeRepository(l []interface{}) *apprunner.CodeRepository {
+func expandServiceCodeRepository(l []interface{}) *types.CodeRepository {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -845,7 +1014,7 @@ func expandServiceCodeRepository(l []interface{}) *apprunner.CodeRepository {
 		return nil
 	}
 
-	result := &apprunner.CodeRepository{}
+	result := &types.CodeRepository{}
 
 	if v, ok := tfMap["source_code_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.SourceCodeVersion = expandServiceSourceCodeVersion(v)
@@ -859,10 +1028,14 @@ func expandServiceCodeRepository(l []interface{}) *apprunner.CodeRepository {
 		result.RepositoryUrl = aws.String(v)
 	}
 
+	if v, ok := tfMap["source_directory"].(string); ok && v != "" {
+		result.SourceDirectory = aws.String(v)
+	}
+
 	return result
 }
 
-func expandServiceImageRepository(l []interface{}) *apprunner.ImageRepository {
+func expandServiceImageRepository(l []interface{}) *types.ImageRepository {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -873,7 +1046,7 @@ func expandServiceImageRepository(l []interface{}) *apprunner.ImageRepository {
 		return nil
 	}
 
-	result := &apprunner.ImageRepository{}
+	result := &types.ImageRepository{}
 
 	if v, ok := tfMap["image_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.ImageConfiguration = expandServiceImageConfiguration(v)
@@ -884,13 +1057,13 @@ func expandServiceImageRepository(l []interface{}) *apprunner.ImageRepository {
 	}
 
 	if v, ok := tfMap["image_repository_type"].(string); ok && v != "" {
-		result.ImageRepositoryType = aws.String(v)
+		result.ImageRepositoryType = types.ImageRepositoryType(v)
 	}
 
 	return result
 }
 
-func expandServiceCodeConfiguration(l []interface{}) *apprunner.CodeConfiguration {
+func expandServiceCodeConfiguration(l []interface{}) *types.CodeConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -901,10 +1074,10 @@ func expandServiceCodeConfiguration(l []interface{}) *apprunner.CodeConfiguratio
 		return nil
 	}
 
-	result := &apprunner.CodeConfiguration{}
+	result := &types.CodeConfiguration{}
 
 	if v, ok := tfMap["configuration_source"].(string); ok && v != "" {
-		result.ConfigurationSource = aws.String(v)
+		result.ConfigurationSource = types.ConfigurationSource(v)
 	}
 
 	if v, ok := tfMap["code_configuration_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -914,7 +1087,7 @@ func expandServiceCodeConfiguration(l []interface{}) *apprunner.CodeConfiguratio
 	return result
 }
 
-func expandServiceCodeConfigurationValues(l []interface{}) *apprunner.CodeConfigurationValues {
+func expandServiceCodeConfigurationValues(l []interface{}) *types.CodeConfigurationValues {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -925,22 +1098,26 @@ func expandServiceCodeConfigurationValues(l []interface{}) *apprunner.CodeConfig
 		return nil
 	}
 
-	result := &apprunner.CodeConfigurationValues{}
+	result := &types.CodeConfigurationValues{}
 
 	if v, ok := tfMap["build_command"].(string); ok && v != "" {
 		result.BuildCommand = aws.String(v)
 	}
 
-	if v, ok := tfMap["port"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPort].(string); ok && v != "" {
 		result.Port = aws.String(v)
 	}
 
 	if v, ok := tfMap["runtime"].(string); ok && v != "" {
-		result.Runtime = aws.String(v)
+		result.Runtime = types.Runtime(v)
+	}
+
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentSecrets = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
-		result.RuntimeEnvironmentVariables = flex.ExpandStringMap(v)
+		result.RuntimeEnvironmentVariables = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["start_command"].(string); ok && v != "" {
@@ -950,7 +1127,7 @@ func expandServiceCodeConfigurationValues(l []interface{}) *apprunner.CodeConfig
 	return result
 }
 
-func expandServiceSourceCodeVersion(l []interface{}) *apprunner.SourceCodeVersion {
+func expandServiceSourceCodeVersion(l []interface{}) *types.SourceCodeVersion {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -961,151 +1138,180 @@ func expandServiceSourceCodeVersion(l []interface{}) *apprunner.SourceCodeVersio
 		return nil
 	}
 
-	result := &apprunner.SourceCodeVersion{}
+	result := &types.SourceCodeVersion{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		result.Type = aws.String(v)
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		result.Type = types.SourceCodeVersionType(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		result.Value = aws.String(v)
 	}
 
 	return result
 }
 
-func flattenServiceEncryptionConfiguration(config *apprunner.EncryptionConfiguration) []interface{} {
+func flattenServiceEncryptionConfiguration(config *types.EncryptionConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"kms_key": aws.StringValue(config.KmsKey),
+		names.AttrKMSKey: aws.ToString(config.KmsKey),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceHealthCheckConfiguration(config *apprunner.HealthCheckConfiguration) []interface{} {
+func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"healthy_threshold":   aws.Int64Value(config.HealthyThreshold),
-		"interval":            aws.Int64Value(config.Interval),
-		"path":                aws.StringValue(config.Path),
-		"protocol":            aws.StringValue(config.Protocol),
-		"timeout":             aws.Int64Value(config.Timeout),
-		"unhealthy_threshold": aws.Int64Value(config.UnhealthyThreshold),
+		"healthy_threshold":   config.HealthyThreshold,
+		names.AttrInterval:    config.Interval,
+		names.AttrPath:        aws.ToString(config.Path),
+		names.AttrProtocol:    string(config.Protocol),
+		names.AttrTimeout:     config.Timeout,
+		"unhealthy_threshold": config.UnhealthyThreshold,
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceInstanceConfiguration(config *apprunner.InstanceConfiguration) []interface{} {
+func flattenServiceInstanceConfiguration(config *types.InstanceConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"cpu":               aws.StringValue(config.Cpu),
-		"instance_role_arn": aws.StringValue(config.InstanceRoleArn),
-		"memory":            aws.StringValue(config.Memory),
+		"cpu":               aws.ToString(config.Cpu),
+		"instance_role_arn": aws.ToString(config.InstanceRoleArn),
+		"memory":            aws.ToString(config.Memory),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkConfiguration(config *apprunner.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(config *types.NetworkConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"egress_configuration": flattenNetworkEgressConfiguration(config.EgressConfiguration),
+		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
+		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
+		names.AttrIPAddressType: config.IpAddressType,
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkEgressConfiguration(config *apprunner.EgressConfiguration) []interface{} {
+func flattenNetworkIngressConfiguration(config *types.IngressConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"egress_type":       aws.StringValue(config.EgressType),
-		"vpc_connector_arn": aws.StringValue(config.VpcConnectorArn),
+		"is_publicly_accessible": config.IsPubliclyAccessible,
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceCodeRepository(r *apprunner.CodeRepository) []interface{} {
+func flattenNetworkEgressConfiguration(config *types.EgressConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"egress_type":       string(config.EgressType),
+		"vpc_connector_arn": aws.ToString(config.VpcConnectorArn),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenServiceObservabilityConfiguration(config *types.ServiceObservabilityConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"observability_configuration_arn": aws.ToString(config.ObservabilityConfigurationArn),
+		"observability_enabled":           config.ObservabilityEnabled,
+	}
+
+	return []interface{}{m}
+}
+
+func flattenServiceCodeRepository(r *types.CodeRepository) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"code_configuration":  flattenServiceCodeConfiguration(r.CodeConfiguration),
-		"repository_url":      aws.StringValue(r.RepositoryUrl),
+		"repository_url":      aws.ToString(r.RepositoryUrl),
 		"source_code_version": flattenServiceSourceCodeVersion(r.SourceCodeVersion),
+		"source_directory":    aws.ToString(r.SourceDirectory),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceCodeConfiguration(config *apprunner.CodeConfiguration) []interface{} {
+func flattenServiceCodeConfiguration(config *types.CodeConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"code_configuration_values": flattenServiceCodeConfigurationValues(config.CodeConfigurationValues),
-		"configuration_source":      aws.StringValue(config.ConfigurationSource),
+		"configuration_source":      string(config.ConfigurationSource),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceCodeConfigurationValues(values *apprunner.CodeConfigurationValues) []interface{} {
+func flattenServiceCodeConfigurationValues(values *types.CodeConfigurationValues) []interface{} {
 	if values == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"build_command":                 aws.StringValue(values.BuildCommand),
-		"port":                          aws.StringValue(values.Port),
-		"runtime":                       aws.StringValue(values.Runtime),
-		"runtime_environment_variables": aws.StringValueMap(values.RuntimeEnvironmentVariables),
-		"start_command":                 aws.StringValue(values.StartCommand),
+		"build_command":                 aws.ToString(values.BuildCommand),
+		names.AttrPort:                  aws.ToString(values.Port),
+		"runtime":                       string(values.Runtime),
+		"runtime_environment_secrets":   values.RuntimeEnvironmentSecrets,
+		"runtime_environment_variables": values.RuntimeEnvironmentVariables,
+		"start_command":                 aws.ToString(values.StartCommand),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceSourceCodeVersion(v *apprunner.SourceCodeVersion) []interface{} {
+func flattenServiceSourceCodeVersion(v *types.SourceCodeVersion) []interface{} {
 	if v == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"type":  aws.StringValue(v.Type),
-		"value": aws.StringValue(v.Value),
+		names.AttrType:  string(v.Type),
+		names.AttrValue: aws.ToString(v.Value),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceSourceConfiguration(config *apprunner.SourceConfiguration) []interface{} {
+func flattenServiceSourceConfiguration(config *types.SourceConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"authentication_configuration": flattenServiceAuthenticationConfiguration(config.AuthenticationConfiguration),
-		"auto_deployments_enabled":     aws.BoolValue(config.AutoDeploymentsEnabled),
+		"auto_deployments_enabled":     aws.ToBool(config.AutoDeploymentsEnabled),
 		"code_repository":              flattenServiceCodeRepository(config.CodeRepository),
 		"image_repository":             flattenServiceImageRepository(config.ImageRepository),
 	}
@@ -1113,42 +1319,43 @@ func flattenServiceSourceConfiguration(config *apprunner.SourceConfiguration) []
 	return []interface{}{m}
 }
 
-func flattenServiceAuthenticationConfiguration(config *apprunner.AuthenticationConfiguration) []interface{} {
+func flattenServiceAuthenticationConfiguration(config *types.AuthenticationConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"access_role_arn": aws.StringValue(config.AccessRoleArn),
-		"connection_arn":  aws.StringValue(config.ConnectionArn),
+		"access_role_arn": aws.ToString(config.AccessRoleArn),
+		"connection_arn":  aws.ToString(config.ConnectionArn),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceImageConfiguration(config *apprunner.ImageConfiguration) []interface{} {
+func flattenServiceImageConfiguration(config *types.ImageConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"port":                          aws.StringValue(config.Port),
-		"runtime_environment_variables": aws.StringValueMap(config.RuntimeEnvironmentVariables),
-		"start_command":                 aws.StringValue(config.StartCommand),
+		names.AttrPort:                  aws.ToString(config.Port),
+		"runtime_environment_secrets":   config.RuntimeEnvironmentSecrets,
+		"runtime_environment_variables": config.RuntimeEnvironmentVariables,
+		"start_command":                 aws.ToString(config.StartCommand),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenServiceImageRepository(r *apprunner.ImageRepository) []interface{} {
+func flattenServiceImageRepository(r *types.ImageRepository) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"image_configuration":   flattenServiceImageConfiguration(r.ImageConfiguration),
-		"image_identifier":      aws.StringValue(r.ImageIdentifier),
-		"image_repository_type": aws.StringValue(r.ImageRepositoryType),
+		"image_identifier":      aws.ToString(r.ImageIdentifier),
+		"image_repository_type": string(r.ImageRepositoryType),
 	}
 
 	return []interface{}{m}

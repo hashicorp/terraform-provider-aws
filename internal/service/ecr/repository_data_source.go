@@ -1,29 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceRepository() *schema.Resource {
+// @SDKDataSource("aws_ecr_repository", name="Repository")
+// @Tags(identifierAttribute="arn")
+func dataSourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRepositoryRead,
+		ReadWithoutTimeout: dataSourceRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -32,7 +38,7 @@ func DataSourceRepository() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -55,7 +61,12 @@ func DataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			"most_recent_image_tags": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -68,66 +79,68 @@ func DataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	name := d.Get("name").(string)
-	params := &ecr.DescribeRepositoriesInput{
-		RepositoryNames: aws.StringSlice([]string{name}),
+	name := d.Get(names.AttrName).(string)
+	input := &ecr.DescribeRepositoriesInput{
+		RepositoryNames: []string{name},
 	}
 
 	if v, ok := d.GetOk("registry_id"); ok {
-		params.RegistryId = aws.String(v.(string))
+		input.RegistryId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Reading ECR repository: %#v", params)
-	out, err := conn.DescribeRepositories(params)
+	repository, err := findRepository(ctx, conn, input)
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
-			return fmt.Errorf("ECR Repository (%s) not found", name)
-		}
-		return fmt.Errorf("error reading ECR repository: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", name, err)
 	}
 
-	repository := out.Repositories[0]
-	arn := aws.StringValue(repository.RepositoryArn)
-
-	d.SetId(aws.StringValue(repository.RepositoryName))
-	d.Set("arn", arn)
-	d.Set("name", repository.RepositoryName)
+	d.SetId(aws.ToString(repository.RepositoryName))
+	arn := aws.ToString(repository.RepositoryArn)
+	d.Set(names.AttrARN, arn)
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
+	}
+	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
+	}
+	d.Set("image_tag_mutability", repository.ImageTagMutability)
+	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
-	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
-	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
-		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
-	}
-
-	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
-		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
-	}
-
-	tags, err := ListTags(conn, arn)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
-		return nil
-	}
+	imageDetails, err := findImageDetails(ctx, conn, &ecr.DescribeImagesInput{
+		RepositoryName: repository.RepositoryName,
+		RegistryId:     repository.RegistryId,
+	})
 
 	if err != nil {
-		return fmt.Errorf("failed listing tags for ECR Repository (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading images for ECR Repository (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags for ECR Repository (%s): %w", arn, err)
+	if len(imageDetails) >= 1 {
+		slices.SortFunc(imageDetails, func(a, b types.ImageDetail) int {
+			if aws.ToTime(a.ImagePushedAt).After(aws.ToTime(b.ImagePushedAt)) {
+				return -1
+			}
+			if aws.ToTime(a.ImagePushedAt).Before(aws.ToTime(b.ImagePushedAt)) {
+				return 1
+			}
+			return 0
+		})
+
+		d.Set("most_recent_image_tags", imageDetails[0].ImageTags)
+	} else {
+		d.Set("most_recent_image_tags", nil)
 	}
 
-	return nil
+	return diags
 }

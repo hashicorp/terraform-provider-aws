@@ -1,30 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConnectBotAssociationDataSource_basic(t *testing.T) {
+func testAccBotAssociationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
 	datasourceName := "data.aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotAssociationDataSource_ConfigBasic(rName, rName2),
+				Config: testAccBotAssociationDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "lex_bot", resourceName, "lex_bot"),
 				),
 			},
@@ -32,7 +36,7 @@ func TestAccConnectBotAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBotAssociationDataSource_BaseConfig(rName string, rName2 string) string {
+func testAccBotAssociationDataSourceConfig_base(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -87,8 +91,8 @@ resource "aws_connect_bot_association" "test" {
 `, rName, rName2)
 }
 
-func testAccBotAssociationDataSource_ConfigBasic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccBotAssociationDataSource_BaseConfig(rName, rName2) + `
+func testAccBotAssociationDataSourceConfig_basic(rName string, rName2 string) string {
+	return acctest.ConfigCompose(testAccBotAssociationDataSourceConfig_base(rName, rName2), `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {

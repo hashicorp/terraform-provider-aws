@@ -1,61 +1,75 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceEBSVolumes() *schema.Resource {
+// @SDKDataSource("aws_ebs_volumes", name="EBS Volumes")
+func dataSourceEBSVolumes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSVolumesRead,
+		ReadWithoutTimeout: dataSourceEBSVolumesRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
-func dataSourceEBSVolumesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := FindEBSVolumes(conn, input)
+	output, err := findEBSVolumes(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Volumes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
 	}
 
 	var volumeIDs []string
 
 	for _, v := range output {
-		volumeIDs = append(volumeIDs, aws.StringValue(v.VolumeId))
+		volumeIDs = append(volumeIDs, aws.ToString(v.VolumeId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", volumeIDs)
+	d.Set(names.AttrIDs, volumeIDs)
 
-	return nil
+	return diags
 }

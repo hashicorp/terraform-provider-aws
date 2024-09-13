@@ -1,22 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceVPCPeeringConnectionOptions() *schema.Resource {
+// @SDKResource("aws_vpc_peering_connection_options", name="VPC Peering Connection Options")
+func resourceVPCPeeringConnectionOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCPeeringConnectionOptionsCreate,
-		Read:   resourceVPCPeeringConnectionOptionsRead,
-		Update: resourceVPCPeeringConnectionOptionsUpdate,
-		Delete: resourceVPCPeeringConnectionOptionsDelete,
+		CreateWithoutTimeout: resourceVPCPeeringConnectionOptionsCreate,
+		ReadWithoutTimeout:   resourceVPCPeeringConnectionOptionsRead,
+		UpdateWithoutTimeout: resourceVPCPeeringConnectionOptionsUpdate,
+		DeleteWithoutTimeout: resourceVPCPeeringConnectionOptionsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,45 +37,47 @@ func ResourceVPCPeeringConnectionOptions() *schema.Resource {
 	}
 }
 
-func resourceVPCPeeringConnectionOptionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
-	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)
+	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, vpcPeeringConnectionID)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection (%s): %s", vpcPeeringConnectionID, err)
 	}
 
 	d.SetId(vpcPeeringConnectionID)
 
-	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, false); err != nil {
-		return err
+	if err := modifyVPCPeeringConnectionOptions(ctx, conn, d, vpcPeeringConnection, false); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceVPCPeeringConnectionOptionsRead(d, meta)
+	return append(diags, resourceVPCPeeringConnectionOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
+	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Peering Connection Options %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC Peering Connection Options (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection Options (%s): %s", d.Id(), err)
 	}
 
 	d.Set("vpc_peering_connection_id", vpcPeeringConnection.VpcPeeringConnectionId)
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
 		if err := d.Set("accepter", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
-			return fmt.Errorf("error setting accepter: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting accepter: %s", err)
 		}
 	} else {
 		d.Set("accepter", nil)
@@ -77,32 +85,36 @@ func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interf
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
 		if err := d.Set("requester", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
-			return fmt.Errorf("error setting requester: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting requester: %s", err)
 		}
 	} else {
 		d.Set("requester", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVPCPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCPeeringConnectionOptionsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
+	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC Peering Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection (%s): %s", d.Id(), err)
 	}
 
-	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, false); err != nil {
-		return err
+	if err := modifyVPCPeeringConnectionOptions(ctx, conn, d, vpcPeeringConnection, false); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceVPCPeeringConnectionOptionsRead(d, meta)
+	return append(diags, resourceVPCPeeringConnectionOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCPeeringConnectionOptionsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var
 	// Don't do anything with the underlying VPC Peering Connection.
-	return nil
+	diags diag.Diagnostics
+
+	return diags
 }

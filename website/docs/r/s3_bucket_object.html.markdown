@@ -162,32 +162,54 @@ The following arguments are optional:
 * `source_hash` - (Optional) Triggers updates like `etag` but useful to address `etag` encryption limitations. Set using `filemd5("path/to/source")` (Terraform 0.11.12 or later). (The value is only stored in state and not saved by AWS.)
 * `source` - (Optional, conflicts with `content` and `content_base64`) Path to a file that will be read and uploaded as raw bytes for the object content.
 * `storage_class` - (Optional) [Storage Class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#AmazonS3-PutObject-request-header-StorageClass) for the object. Defaults to "`STANDARD`".
-* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `website_redirect` - (Optional) Target URL for [website redirect](http://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html).
 
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
-* `id` - `key` of the resource supplied above
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_id` - Unique version ID value for the object, if bucket versioning is enabled.
 
 ## Import
 
-Objects can be imported using the `id`. The `id` is the bucket name and the key together e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import objects using the `id` or S3 URL. For example:
 
-```
-$ terraform import aws_s3_bucket_object.object some-bucket-name/some/key.txt
+Import using the `id`, which is the bucket name and the key together:
+
+```terraform
+import {
+  to = aws_s3_bucket_object.example
+  id = "some-bucket-name/some/key.txt"
+}
 ```
 
-Additionally, s3 url syntax can be used, e.g.,
+Import using S3 URL syntax:
 
+```terraform
+import {
+  to = aws_s3_bucket_object.example
+  id = "s3://some-bucket-name/some/key.txt"
+}
 ```
-$ terraform import aws_s3_bucket_object.object s3://some-bucket-name/some/key.txt
+
+**Using `terraform import` to import** objects using the `id` or S3 URL. For example:
+
+Import using the `id`, which is the bucket name and the key together:
+
+```console
+% terraform import aws_s3_bucket_object.example some-bucket-name/some/key.txt
+```
+
+Import using S3 URL syntax:
+
+```console
+% terraform import aws_s3_bucket_object.example s3://some-bucket-name/some/key.txt
 ```

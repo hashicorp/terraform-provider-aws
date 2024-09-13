@@ -54,21 +54,20 @@ resource "aws_autoscaling_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `group_names` - (Required) A list of AutoScaling Group Names
-* `notifications` - (Required) A list of Notification Types that trigger
+* `group_names` - (Required) List of AutoScaling Group Names
+* `notifications` - (Required) List of Notification Types that trigger
 notifications. Acceptable values are documented [in the AWS documentation here][1]
-* `topic_arn` - (Required) The Topic ARN for notifications to be sent through
+* `topic_arn` - (Required) Topic ARN for notifications to be sent through
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `group_names`
 * `notifications`
 * `topic_arn`
-
 
 [1]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_NotificationConfiguration.html
 [2]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeNotificationConfigurations.html

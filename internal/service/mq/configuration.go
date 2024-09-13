@@ -1,34 +1,48 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"log"
+	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/aws/aws-sdk-go-v2/service/mq/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceConfiguration() *schema.Resource {
+// @SDKResource("aws_mq_configuration", name="Configuration")
+// @Tags(identifierAttribute="arn")
+func resourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationCreate,
-		Read:   resourceConfigurationRead,
-		Update: resourceConfigurationUpdate,
-		Delete: resourceConfigurationDelete,
+		CreateWithoutTimeout: resourceConfigurationCreate,
+		ReadWithoutTimeout:   resourceConfigurationRead,
+		UpdateWithoutTimeout: resourceConfigurationUpdate,
+		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.HasChange("description") {
+				if diff.HasChange(names.AttrDescription) {
 					return diff.SetNewComputed("latest_revision")
 				}
 				if diff.HasChange("data") {
@@ -45,37 +59,33 @@ func ResourceConfiguration() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"authentication_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
 			},
 			"data": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppressXMLEquivalentConfig,
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      suppressXMLEquivalentConfig,
+				DiffSuppressOnRefresh: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"engine_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), true),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
 			},
-			"engine_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"name": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -84,134 +94,158 @@ func ResourceConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	input := mq.CreateConfigurationRequest{
-		EngineType:    aws.String(d.Get("engine_type").(string)),
-		EngineVersion: aws.String(d.Get("engine_version").(string)),
-		Name:          aws.String(d.Get("name").(string)),
+	conn := meta.(*conns.AWSClient).MQClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
+	input := &mq.CreateConfigurationInput{
+		EngineType:    types.EngineType(d.Get("engine_type").(string)),
+		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
+		Name:          aws.String(name),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authentication_strategy"); ok {
-		input.AuthenticationStrategy = aws.String(v.(string))
-	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		input.AuthenticationStrategy = types.AuthenticationStrategy(v.(string))
 	}
 
-	log.Printf("[INFO] Creating MQ Configuration: %s", input)
-	out, err := conn.CreateConfiguration(&input)
+	output, err := conn.CreateConfiguration(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating MQ Configuration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Id))
-	d.Set("arn", out.Arn)
+	d.SetId(aws.ToString(output.Id))
 
-	return resourceConfigurationUpdate(d, meta)
-}
-
-func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	log.Printf("[INFO] Reading MQ Configuration %s", d.Id())
-	out, err := conn.DescribeConfiguration(&mq.DescribeConfigurationInput{
-		ConfigurationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-			log.Printf("[WARN] MQ Configuration %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	d.Set("arn", out.Arn)
-	d.Set("authentication_strategy", out.AuthenticationStrategy)
-	d.Set("description", out.LatestRevision.Description)
-	d.Set("engine_type", out.EngineType)
-	d.Set("engine_version", out.EngineVersion)
-	d.Set("latest_revision", out.LatestRevision.Revision)
-	d.Set("name", out.Name)
-
-	rOut, err := conn.DescribeConfigurationRevision(&mq.DescribeConfigurationRevisionInput{
-		ConfigurationId:       aws.String(d.Id()),
-		ConfigurationRevision: aws.String(fmt.Sprintf("%d", *out.LatestRevision.Revision)),
-	})
-	if err != nil {
-		return err
-	}
-
-	b, err := base64.StdEncoding.DecodeString(*rOut.Data)
-	if err != nil {
-		return err
-	}
-
-	d.Set("data", string(b))
-
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
-
-	if d.HasChanges("data", "description") {
-		rawData := d.Get("data").(string)
-		data := base64.StdEncoding.EncodeToString([]byte(rawData))
-
-		input := mq.UpdateConfigurationRequest{
+	if v, ok := d.GetOk("data"); ok {
+		input := &mq.UpdateConfigurationInput{
 			ConfigurationId: aws.String(d.Id()),
-			Data:            aws.String(data),
+			Data:            flex.StringValueToBase64String(v.(string)),
 		}
-		if v, ok := d.GetOk("description"); ok {
+
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
-		log.Printf("[INFO] Updating MQ Configuration %s: %s", d.Id(), input)
-		_, err := conn.UpdateConfiguration(&input)
+		_, err := conn.UpdateConfiguration(ctx, input)
+
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating MQ Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceConfigurationRead(d, meta)
+	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	// TODO: Delete is not available in the API
+func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	return nil
+	conn := meta.(*conns.AWSClient).MQClient(ctx)
+
+	configuration, err := findConfigurationByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MQ Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading MQ Configuration (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, configuration.Arn)
+	d.Set("authentication_strategy", configuration.AuthenticationStrategy)
+	d.Set(names.AttrDescription, configuration.LatestRevision.Description)
+	d.Set("engine_type", configuration.EngineType)
+	d.Set(names.AttrEngineVersion, configuration.EngineVersion)
+	d.Set("latest_revision", configuration.LatestRevision.Revision)
+	d.Set(names.AttrName, configuration.Name)
+
+	revision := strconv.FormatInt(int64(aws.ToInt32(configuration.LatestRevision.Revision)), 10)
+	configurationRevision, err := conn.DescribeConfigurationRevision(ctx, &mq.DescribeConfigurationRevisionInput{
+		ConfigurationId:       aws.String(d.Id()),
+		ConfigurationRevision: aws.String(revision),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading MQ Configuration (%s) revision (%s): %s", d.Id(), revision, err)
+	}
+
+	data, err := base64.StdEncoding.DecodeString(aws.ToString(configurationRevision.Data))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "base64 decoding: %s", err)
+	}
+
+	d.Set("data", string(data))
+
+	setTagsOut(ctx, configuration.Tags)
+
+	return diags
+}
+
+func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MQClient(ctx)
+
+	if d.HasChanges("data", names.AttrDescription) {
+		input := &mq.UpdateConfigurationInput{
+			ConfigurationId: aws.String(d.Id()),
+			Data:            aws.String(base64.StdEncoding.EncodeToString([]byte(d.Get("data").(string)))),
+		}
+
+		if v, ok := d.GetOk(names.AttrDescription); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Configuration (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
+}
+
+func findConfigurationByID(ctx context.Context, conn *mq.Client, id string) (*mq.DescribeConfigurationOutput, error) {
+	input := &mq.DescribeConfigurationInput{
+		ConfigurationId: aws.String(id),
+	}
+
+	output, err := conn.DescribeConfiguration(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func suppressXMLEquivalentConfig(k, old, new string, d *schema.ResourceData) bool {

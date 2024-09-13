@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_user: Fix `UserNotFound: ... is not available for tagging` errors on resource Read when there is a concurrent update to the user
+```

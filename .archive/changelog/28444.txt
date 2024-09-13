@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_policy: Fix type of target_value for predictive scaling
+```

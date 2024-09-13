@@ -25,12 +25,13 @@ data "aws_eks_node_group" "example" {
 }
 ```
 
-
 ## Argument Reference
 
-* `cluster_name` - (Required) The name of the cluster.
+* `cluster_name` - (Required) Name of the cluster.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Cluster name.
-* `names` - A set of all node group names in an EKS Cluster.
+* `names` - Set of all node group names in an EKS Cluster.

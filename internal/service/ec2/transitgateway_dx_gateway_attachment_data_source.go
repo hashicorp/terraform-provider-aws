@@ -1,99 +1,94 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_dx_gateway_attachment", name="Transit Gateway Direct Connect Gateway Attachment")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTransitGatewayDxGatewayAttachmentRead,
+		ReadWithoutTimeout: dataSourceTransitGatewayDxGatewayAttachmentRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"dx_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrTags:   tftags.TagsSchemaComputed(),
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"filter": DataSourceFiltersSchema(),
 		},
 	}
 }
 
-func dataSourceTransitGatewayDxGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	filters, filtersOk := d.GetOk("filter")
-	tags, tagsOk := d.GetOk("tags")
-	dxGatewayId, dxGatewayIdOk := d.GetOk("dx_gateway_id")
-	transitGatewayId, transitGatewayIdOk := d.GetOk("transit_gateway_id")
+func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("resource-type"),
-				Values: []*string{aws.String(ec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway)},
-			},
-		},
+		Filters: newAttributeFilterList(map[string]string{
+			"resource-type": string(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
+		}),
 	}
-	if filtersOk {
-		input.Filters = append(input.Filters, BuildFiltersDataSource(filters.(*schema.Set))...)
+
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
+	)...)
+
+	if v, ok := d.GetOk(names.AttrTags); ok {
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
+		)...)
 	}
-	if tagsOk {
-		input.Filters = append(input.Filters, tagFiltersFromMap(tags.(map[string]interface{}))...)
-	}
+
 	// to preserve original functionality
-	if dxGatewayIdOk {
-		input.Filters = append(input.Filters, &ec2.Filter{
-			Name:   aws.String("resource-id"),
-			Values: []*string{aws.String(dxGatewayId.(string))},
-		})
+	if v, ok := d.GetOk("dx_gateway_id"); ok {
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
+			"resource-id": v.(string),
+		})...)
 	}
 
-	if transitGatewayIdOk {
-		input.Filters = append(input.Filters, &ec2.Filter{
-			Name:   aws.String("transit-gateway-id"),
-			Values: []*string{aws.String(transitGatewayId.(string))},
-		})
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
+			"transit-gateway-id": v.(string),
+		})...)
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway Direct Connect Gateway Attachments: %s", input)
-	output, err := conn.DescribeTransitGatewayAttachments(input)
+	transitGatewayAttachment, err := findTransitGatewayAttachment(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Direct Connect Gateway Attachment: %w", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Direct Connect Gateway Attachment", err))
 	}
 
-	if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
-		return errors.New("error reading EC2 Transit Gateway Direct Connect Gateway Attachment: no results found")
-	}
-
-	if len(output.TransitGatewayAttachments) > 1 {
-		return errors.New("error reading EC2 Transit Gateway Direct Connect Gateway Attachment: multiple results found, try adjusting search criteria")
-	}
-
-	transitGatewayAttachment := output.TransitGatewayAttachments[0]
-
-	if err := d.Set("tags", KeyValueTags(transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
+	d.SetId(aws.ToString(transitGatewayAttachment.TransitGatewayAttachmentId))
 	d.Set("dx_gateway_id", transitGatewayAttachment.ResourceId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 
-	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
+	setTagsOut(ctx, transitGatewayAttachment.Tags)
 
-	return nil
+	return diags
 }

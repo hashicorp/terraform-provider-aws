@@ -1,27 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lambda"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function_url.test"
 	resourceName := "aws_lambda_function_url.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionURLBasicDataSourceConfig(rName),
+				Config: testAccFunctionURLDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "authorization_type", resourceName, "authorization_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.#", resourceName, "cors.#"),
@@ -31,10 +35,11 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_origins.#", resourceName, "cors.0.allow_origins.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.expose_headers.#", resourceName, "cors.0.expose_headers.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.max_age", resourceName, "cors.0.max_age"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "function_arn", resourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFunctionARN, resourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_url", resourceName, "function_url"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_mode", resourceName, "invoke_mode"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", resourceName, "qualifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url_id", resourceName, "url_id"),
@@ -44,7 +49,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFunctionURLDataSourceBaseConfig(rName string) string {
+func testAccFunctionURLDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -106,7 +111,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_function_url" "test" {
@@ -126,8 +131,8 @@ resource "aws_lambda_function_url" "test" {
 `, rName)
 }
 
-func testAccFunctionURLBasicDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionURLDataSourceBaseConfig(rName), `
+func testAccFunctionURLDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLDataSourceConfig_base(rName), `
 data "aws_lambda_function_url" "test" {
   function_name = aws_lambda_function_url.test.function_name
 }

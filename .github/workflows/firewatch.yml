@@ -1,4 +1,3 @@
-
 on:
   schedule:
     - cron: '0 * * * *'
@@ -9,18 +8,18 @@ jobs:
     if: github.repository_owner == 'hashicorp'
     runs-on: ubuntu-latest
     steps:
-    - name: Firewatch
-      uses: breathingdust/firewatch@v2
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        alert_threshold: 10
-        issue_age_months: 3
-        slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
-        slack_channel: ${{ secrets.SLACK_CHANNEL }}
-    - name: UploadArtifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: firewatch
-        path: firewatch.data
-        if-no-files-found: error
-        retention-days: 1
+      - name: Firewatch
+        uses: breathingdust/firewatch@7d8033475a379d86f7affd1f6a228f3a6e3f7ffb # v2.0.6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          alert_threshold: 10
+          issue_age_months: 3
+          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack_channel: ${{ secrets.SLACK_CHANNEL }}
+      - name: UploadArtifact
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: firewatch
+          path: firewatch.data
+          if-no-files-found: error
+          retention-days: 1

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_function: Remove `replace_security_group_on_destroy` and `replacement_security_group_ids` deprecations, re-implement with alternate workflow
+```

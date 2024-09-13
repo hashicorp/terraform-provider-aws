@@ -1,38 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceStack() *schema.Resource {
+// @SDKDataSource("aws_cloudformation_stack", name="Stack")
+// @Tags
+func dataSourceStack() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceStackRead,
+		ReadWithoutTimeout: dataSourceStackRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"template_body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"capabilities": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,14 +38,16 @@ func DataSourceStack() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			names.AttrIAMRoleARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"notification_arns": {
 				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"parameters": {
-				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -56,71 +56,67 @@ func DataSourceStack() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			names.AttrParameters: {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			"template_body": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"timeout_in_minutes": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"iam_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	name := d.Get("name").(string)
-	input := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(name),
-	}
+	name := d.Get(names.AttrName).(string)
 
-	log.Printf("[DEBUG] Reading CloudFormation Stack: %s", input)
-	out, err := conn.DescribeStacks(input)
+	stack, err := findStackByName(ctx, conn, name)
+
 	if err != nil {
-		return fmt.Errorf("Failed describing CloudFormation stack (%s): %w", name, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("CloudFormation Stack", err))
 	}
-	if l := len(out.Stacks); l != 1 {
-		return fmt.Errorf("Expected 1 CloudFormation stack (%s), found %d", name, l)
-	}
-	stack := out.Stacks[0]
-	d.SetId(aws.StringValue(stack.StackId))
 
-	d.Set("description", stack.Description)
+	d.SetId(aws.ToString(stack.StackId))
+	if len(stack.Capabilities) > 0 {
+		d.Set("capabilities", stack.Capabilities)
+	}
+	d.Set(names.AttrDescription, stack.Description)
 	d.Set("disable_rollback", stack.DisableRollback)
-	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
-	d.Set("iam_role_arn", stack.RoleARN)
-
+	d.Set(names.AttrIAMRoleARN, stack.RoleARN)
 	if len(stack.NotificationARNs) > 0 {
-		d.Set("notification_arns", flex.FlattenStringSet(stack.NotificationARNs))
-	}
-
-	d.Set("parameters", flattenAllParameters(stack.Parameters))
-	if err := d.Set("tags", KeyValueTags(stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		d.Set("notification_arns", stack.NotificationARNs)
 	}
 	d.Set("outputs", flattenOutputs(stack.Outputs))
+	d.Set(names.AttrParameters, flattenAllParameters(stack.Parameters))
+	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
 
-	if len(stack.Capabilities) > 0 {
-		d.Set("capabilities", flex.FlattenStringSet(stack.Capabilities))
-	}
+	setTagsOut(ctx, stack.Tags)
 
-	tInput := cloudformation.GetTemplateInput{
+	input := &cloudformation.GetTemplateInput{
 		StackName: aws.String(name),
 	}
-	tOut, err := conn.GetTemplate(&tInput)
+
+	output, err := conn.GetTemplate(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s) template: %s", name, err)
 	}
 
-	template, err := verify.NormalizeJSONOrYAMLString(*tOut.TemplateBody)
+	template, err := verify.NormalizeJSONOrYAMLString(*output.TemplateBody)
 	if err != nil {
-		return fmt.Errorf("template body contains an invalid JSON or YAML: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set("template_body", template)
 
-	return nil
+	return diags
 }

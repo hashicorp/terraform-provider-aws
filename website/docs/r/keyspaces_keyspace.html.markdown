@@ -28,27 +28,36 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the keyspace.
 * `arn` - The ARN of the keyspace.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_keyspaces_keyspace` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1 minute`) Used for keyspace creation
-- `delete` - (Default `1 minute`) Used for keyspace deletion
+- `create` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 
-Use the `name` to import a keyspace. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a keyspace using the `name`. For example:
 
+```terraform
+import {
+  to = aws_keyspaces_keyspace.example
+  id = "my_keyspace"
+}
 ```
-$ terraform import aws_keyspaces_keyspace.example my_keyspace
+
+Using `terraform import`, import a keyspace using the `name`. For example:
+
+```console
+% terraform import aws_keyspaces_keyspace.example my_keyspace
 ```

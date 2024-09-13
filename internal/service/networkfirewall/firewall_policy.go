@@ -1,131 +1,208 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceFirewallPolicy() *schema.Resource {
+// @SDKResource("aws_networkfirewall_firewall_policy", name="Firewall Policy")
+// @Tags(identifierAttribute="id")
+func resourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFirewallPolicyCreate,
-		ReadContext:   resourceFirewallPolicyRead,
-		UpdateContext: resourceFirewallPolicyUpdate,
-		DeleteContext: resourceFirewallPolicyDelete,
+		CreateWithoutTimeout: resourceFirewallPolicyCreate,
+		ReadWithoutTimeout:   resourceFirewallPolicyRead,
+		UpdateWithoutTimeout: resourceFirewallPolicyUpdate,
+		DeleteWithoutTimeout: resourceFirewallPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"firewall_policy": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"stateful_default_actions": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"stateful_engine_options": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"rule_order": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(networkfirewall.RuleOrder_Values(), false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
+				"firewall_policy": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"policy_variables": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rule_variables": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ip_set": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"definition": {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 32),
+															validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+															validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric and underscore characters"),
+														),
+													},
+												},
+											},
+										},
 									},
 								},
 							},
-						},
-						"stateful_rule_group_reference": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"priority": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									"resource_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+							"stateful_default_actions": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"stateful_engine_options": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rule_order": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RuleOrder](),
+										},
+										"stream_exception_policy": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.StreamExceptionPolicy](),
+										},
 									},
 								},
 							},
-						},
-						"stateless_custom_action": customActionSchema(),
-						"stateless_default_actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"stateless_fragment_default_actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"stateless_rule_group_reference": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"priority": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									"resource_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+							"stateful_rule_group_reference": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"override": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAction: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.OverrideAction](),
+													},
+												},
+											},
+										},
+										names.AttrPriority: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
+							},
+							"stateless_custom_action": customActionSchema(),
+							"stateless_default_actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"stateless_fragment_default_actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"stateless_rule_group_reference": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrPriority: {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"tls_inspection_configuration_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"update_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"update_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -140,318 +217,442 @@ func ResourceFirewallPolicy() *schema.Resource {
 }
 
 func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
 		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
-		FirewallPolicyName: aws.String(d.Get("name").(string)),
+		FirewallPolicyName: aws.String(d.Get(names.AttrName).(string)),
+		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating NetworkFirewall Firewall Policy %s", name)
+	output, err := conn.CreateFirewallPolicy(ctx, input)
 
-	output, err := conn.CreateFirewallPolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating NetworkFirewall Firewall Policy (%s): %w", name, err))
-	}
-	if output == nil || output.FirewallPolicyResponse == nil {
-		return diag.FromErr(fmt.Errorf("error creating NetworkFirewall Firewall Policy (%s): empty output", name))
+		return sdkdiag.AppendErrorf(diags, "creating NetworkFirewall Firewall Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.FirewallPolicyResponse.FirewallPolicyArn))
+	d.SetId(aws.ToString(output.FirewallPolicyResponse.FirewallPolicyArn))
 
-	return resourceFirewallPolicyRead(ctx, d, meta)
+	return append(diags, resourceFirewallPolicyRead(ctx, d, meta)...)
 }
 
 func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s", d.Id())
+	output, err := findFirewallPolicyByARN(ctx, conn, d.Id())
 
-	output, err := FindFirewallPolicy(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): empty output", d.Id()))
+	response := output.FirewallPolicyResponse
+	d.Set(names.AttrARN, response.FirewallPolicyArn)
+	d.Set(names.AttrDescription, response.Description)
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(response.EncryptionConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
-	if output.FirewallPolicyResponse == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): empty output.FirewallPolicyResponse", d.Id()))
+	if err := d.Set("firewall_policy", flattenFirewallPolicy(output.FirewallPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting firewall_policy: %s", err)
 	}
-
-	resp := output.FirewallPolicyResponse
-	policy := output.FirewallPolicy
-
-	d.Set("arn", resp.FirewallPolicyArn)
-	d.Set("description", resp.Description)
-	d.Set("name", resp.FirewallPolicyName)
+	d.Set(names.AttrName, response.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
-	if err := d.Set("firewall_policy", flattenFirewallPolicy(policy)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting firewall_policy: %w", err))
-	}
+	setTagsOut(ctx, response.Tags)
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	arn := d.Id()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	log.Printf("[DEBUG] Updating NetworkFirewall Firewall Policy %s", arn)
-
-	if d.HasChanges("description", "firewall_policy") {
+	if d.HasChanges(names.AttrDescription, names.AttrEncryptionConfiguration, "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
-			FirewallPolicy:    expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
-			FirewallPolicyArn: aws.String(arn),
-			UpdateToken:       aws.String(d.Get("update_token").(string)),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+			FirewallPolicy:          expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
+			FirewallPolicyArn:       aws.String(d.Id()),
+			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
-		// Only pass non-empty description values, else API request returns an InternalServiceError
-		if v, ok := d.GetOk("description"); ok {
+
+		// Only pass non-empty description values, else API request returns an InternalServiceError.
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
-		_, err := conn.UpdateFirewallPolicyWithContext(ctx, input)
+
+		_, err := conn.UpdateFirewallPolicy(ctx, input)
+
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall Policy (%s) firewall_policy: %w", arn, err))
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall Policy (%s) tags: %w", arn, err))
-		}
-	}
-
-	return resourceFirewallPolicyRead(ctx, d, meta)
+	return append(diags, resourceFirewallPolicyRead(ctx, d, meta)...)
 }
 
 func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy %s", d.Id())
+	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy: %s", d.Id())
+	const (
+		timeout = 10 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidOperationException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
+			FirewallPolicyArn: aws.String(d.Id()),
+		})
+	}, "Unable to delete the object because it is still in use")
 
-	input := &networkfirewall.DeleteFirewallPolicyInput{
-		FirewallPolicyArn: aws.String(d.Id()),
-	}
-
-	err := resource.RetryContext(ctx, firewallPolicyTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteFirewallPolicyWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteFirewallPolicyWithContext(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Firewall Policy (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall Policy (%s) to delete: %w", d.Id(), err))
+	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Policy (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngineOptions {
-	if len(l) == 0 || l[0] == nil {
+func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input *networkfirewall.DescribeFirewallPolicyInput) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+	output, err := conn.DescribeFirewallPolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FirewallPolicyResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+	input := &networkfirewall.DescribeFirewallPolicyInput{
+		FirewallPolicyArn: aws.String(arn),
+	}
+
+	return findFirewallPolicy(ctx, conn, input)
+}
+
+func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFirewallPolicyByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.FirewallPolicyResponse.FirewallPolicyStatus), nil
+	}
+}
+
+func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResourceStatusDeleting),
+		Target:  []string{},
+		Refresh: statusFirewallPolicy(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkfirewall.DescribeFirewallPolicyOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandPolicyVariables(tfMap map[string]interface{}) *awstypes.PolicyVariables {
+	if tfMap == nil {
 		return nil
 	}
 
-	options := &networkfirewall.StatefulEngineOptions{}
+	apiObject := &awstypes.PolicyVariables{}
 
-	m := l[0].(map[string]interface{})
-	if v, ok := m["rule_order"].(string); ok {
-		options.RuleOrder = aws.String(v)
+	if v, ok := tfMap["rule_variables"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.RuleVariables = expandIPSets(v.List())
 	}
 
-	return options
+	return apiObject
 }
 
-func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.StatefulRuleGroupReference {
-	if len(l) == 0 || l[0] == nil {
+func expandStatefulEngineOptions(tfList []interface{}) *awstypes.StatefulEngineOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	references := make([]*networkfirewall.StatefulRuleGroupReference, 0, len(l))
-	for _, tfMapRaw := range l {
+
+	apiObject := &awstypes.StatefulEngineOptions{}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["rule_order"].(string); ok && v != "" {
+		apiObject.RuleOrder = awstypes.RuleOrder(v)
+	}
+	if v, ok := tfMap["stream_exception_policy"].(string); ok && v != "" {
+		apiObject.StreamExceptionPolicy = awstypes.StreamExceptionPolicy(v)
+	}
+
+	return apiObject
+}
+
+func expandStatefulRuleGroupOverride(tfList []interface{}) *awstypes.StatefulRuleGroupOverride {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.StatefulRuleGroupOverride{}
+
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
+		apiObject.Action = awstypes.OverrideAction(v)
+	}
+
+	return apiObject
+}
+
+func expandStatefulRuleGroupReferences(tfList []interface{}) []awstypes.StatefulRuleGroupReference {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.StatefulRuleGroupReference, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
-		reference := &networkfirewall.StatefulRuleGroupReference{}
-		if v, ok := tfMap["priority"].(int); ok && v > 0 {
-			reference.Priority = aws.Int64(int64(v))
+
+		apiObject := awstypes.StatefulRuleGroupReference{}
+
+		if v, ok := tfMap["override"].([]interface{}); ok && len(v) > 0 {
+			apiObject.Override = expandStatefulRuleGroupOverride(v)
 		}
-		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
-			reference.ResourceArn = aws.String(v)
+		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
+			apiObject.Priority = aws.Int32(int32(v))
 		}
-		references = append(references, reference)
+		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
+			apiObject.ResourceArn = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return references
+
+	return apiObjects
 }
 
-func expandStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.StatelessRuleGroupReference {
-	if len(l) == 0 || l[0] == nil {
+func expandStatelessRuleGroupReferences(tfList []interface{}) []awstypes.StatelessRuleGroupReference {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	references := make([]*networkfirewall.StatelessRuleGroupReference, 0, len(l))
-	for _, tfMapRaw := range l {
+
+	apiObjects := make([]awstypes.StatelessRuleGroupReference, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
-		reference := &networkfirewall.StatelessRuleGroupReference{}
-		if v, ok := tfMap["priority"].(int); ok && v > 0 {
-			reference.Priority = aws.Int64(int64(v))
+
+		apiObject := awstypes.StatelessRuleGroupReference{}
+
+		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
+			apiObject.Priority = aws.Int32(int32(v))
 		}
-		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
-			reference.ResourceArn = aws.String(v)
+		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
+			apiObject.ResourceArn = aws.String(v)
 		}
-		references = append(references, reference)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return references
+
+	return apiObjects
 }
 
-func expandFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
-	if len(l) == 0 || l[0] == nil {
+func expandFirewallPolicy(tfList []interface{}) *awstypes.FirewallPolicy {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	lRaw := l[0].(map[string]interface{})
-	policy := &networkfirewall.FirewallPolicy{
-		StatelessDefaultActions:         flex.ExpandStringSet(lRaw["stateless_default_actions"].(*schema.Set)),
-		StatelessFragmentDefaultActions: flex.ExpandStringSet(lRaw["stateless_fragment_default_actions"].(*schema.Set)),
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.FirewallPolicy{
+		StatelessDefaultActions:         flex.ExpandStringValueSet(tfMap["stateless_default_actions"].(*schema.Set)),
+		StatelessFragmentDefaultActions: flex.ExpandStringValueSet(tfMap["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
-	if v, ok := lRaw["stateful_default_actions"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatefulDefaultActions = flex.ExpandStringSet(v)
+	if v, ok := tfMap["policy_variables"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.PolicyVariables = expandPolicyVariables(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := lRaw["stateful_engine_options"].([]interface{}); ok && len(v) > 0 {
-		policy.StatefulEngineOptions = expandStatefulEngineOptions(v)
+	if v, ok := tfMap["stateful_default_actions"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.StatefulDefaultActions = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := lRaw["stateful_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatefulRuleGroupReferences = expandStatefulRuleGroupReferences(v.List())
+	if v, ok := tfMap["stateful_engine_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.StatefulEngineOptions = expandStatefulEngineOptions(v)
 	}
 
-	if v, ok := lRaw["stateless_custom_action"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatelessCustomActions = expandCustomActions(v.List())
+	if v, ok := tfMap["stateful_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.StatefulRuleGroupReferences = expandStatefulRuleGroupReferences(v.List())
 	}
 
-	if v, ok := lRaw["stateless_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatelessRuleGroupReferences = expandStatelessRuleGroupReferences(v.List())
+	if v, ok := tfMap["stateless_custom_action"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.StatelessCustomActions = expandCustomActions(v.List())
 	}
 
-	return policy
+	if v, ok := tfMap["stateless_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.StatelessRuleGroupReferences = expandStatelessRuleGroupReferences(v.List())
+	}
+
+	if v, ok := tfMap["tls_inspection_configuration_arn"].(string); ok && v != "" {
+		apiObject.TLSInspectionConfigurationArn = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{} {
-	if policy == nil {
-		return []interface{}{}
-	}
-	p := map[string]interface{}{}
-	if policy.StatefulDefaultActions != nil {
-		p["stateful_default_actions"] = flex.FlattenStringSet(policy.StatefulDefaultActions)
-	}
-	if policy.StatefulEngineOptions != nil {
-		p["stateful_engine_options"] = flattenStatefulEngineOptions(policy.StatefulEngineOptions)
-	}
-	if policy.StatefulRuleGroupReferences != nil {
-		p["stateful_rule_group_reference"] = flattenPolicyStatefulRuleGroupReference(policy.StatefulRuleGroupReferences)
-	}
-	if policy.StatelessCustomActions != nil {
-		p["stateless_custom_action"] = flattenCustomActions(policy.StatelessCustomActions)
-	}
-	if policy.StatelessDefaultActions != nil {
-		p["stateless_default_actions"] = flex.FlattenStringSet(policy.StatelessDefaultActions)
-	}
-	if policy.StatelessFragmentDefaultActions != nil {
-		p["stateless_fragment_default_actions"] = flex.FlattenStringSet(policy.StatelessFragmentDefaultActions)
-	}
-	if policy.StatelessRuleGroupReferences != nil {
-		p["stateless_rule_group_reference"] = flattenPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
-	}
-
-	return []interface{}{p}
-}
-
-func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions) []interface{} {
-	if options == nil {
+func flattenFirewallPolicy(apiObject *awstypes.FirewallPolicy) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"rule_order": aws.StringValue(options.RuleOrder),
+	tfMap := map[string]interface{}{}
+
+	if apiObject.PolicyVariables != nil {
+		tfMap["policy_variables"] = flattenPolicyVariables(apiObject.PolicyVariables)
+	}
+	if apiObject.StatefulDefaultActions != nil {
+		tfMap["stateful_default_actions"] = apiObject.StatefulDefaultActions
+	}
+	if apiObject.StatefulEngineOptions != nil {
+		tfMap["stateful_engine_options"] = flattenStatefulEngineOptions(apiObject.StatefulEngineOptions)
+	}
+	if apiObject.StatefulRuleGroupReferences != nil {
+		tfMap["stateful_rule_group_reference"] = flattenPolicyStatefulRuleGroupReferences(apiObject.StatefulRuleGroupReferences)
+	}
+	if apiObject.StatelessCustomActions != nil {
+		tfMap["stateless_custom_action"] = flattenCustomActions(apiObject.StatelessCustomActions)
+	}
+	if apiObject.StatelessDefaultActions != nil {
+		tfMap["stateless_default_actions"] = apiObject.StatelessDefaultActions
+	}
+	if apiObject.StatelessFragmentDefaultActions != nil {
+		tfMap["stateless_fragment_default_actions"] = apiObject.StatelessFragmentDefaultActions
+	}
+	if apiObject.StatelessRuleGroupReferences != nil {
+		tfMap["stateless_rule_group_reference"] = flattenPolicyStatelessRuleGroupReferences(apiObject.StatelessRuleGroupReferences)
+	}
+	if apiObject.TLSInspectionConfigurationArn != nil {
+		tfMap["tls_inspection_configuration_arn"] = aws.ToString(apiObject.TLSInspectionConfigurationArn)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGroupReference) []interface{} {
-	references := make([]interface{}, 0, len(l))
-	for _, ref := range l {
-		reference := map[string]interface{}{
-			"resource_arn": aws.StringValue(ref.ResourceArn),
-		}
-		if ref.Priority != nil {
-			reference["priority"] = int(aws.Int64Value(ref.Priority))
-		}
-		references = append(references, reference)
+func flattenPolicyVariables(apiObject *awstypes.PolicyVariables) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	return references
+	tfMap := map[string]interface{}{
+		"rule_variables": flattenIPSets(apiObject.RuleVariables),
+	}
+
+	return []interface{}{tfMap}
 }
 
-func flattenPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRuleGroupReference) []interface{} {
-	references := make([]interface{}, 0, len(l))
-	for _, ref := range l {
-		reference := map[string]interface{}{
-			"priority":     int(aws.Int64Value(ref.Priority)),
-			"resource_arn": aws.StringValue(ref.ResourceArn),
-		}
-		references = append(references, reference)
+func flattenStatefulEngineOptions(apiObject *awstypes.StatefulEngineOptions) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
-	return references
+
+	tfMap := map[string]interface{}{
+		"rule_order":              apiObject.RuleOrder,
+		"stream_exception_policy": apiObject.StreamExceptionPolicy,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenStatefulRuleGroupOverride(apiObject *awstypes.StatefulRuleGroupOverride) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrAction: apiObject.Action,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPolicyStatefulRuleGroupReferences(apiObjects []awstypes.StatefulRuleGroupReference) []interface{} {
+	tfList := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrResourceARN: aws.ToString(apiObject.ResourceArn),
+		}
+
+		if apiObject.Override != nil {
+			tfMap["override"] = flattenStatefulRuleGroupOverride(apiObject.Override)
+		}
+		if apiObject.Priority != nil {
+			tfMap[names.AttrPriority] = aws.ToInt32(apiObject.Priority)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenPolicyStatelessRuleGroupReferences(apiObjects []awstypes.StatelessRuleGroupReference) []interface{} {
+	tfList := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrPriority:    aws.ToInt32(apiObject.Priority),
+			names.AttrResourceARN: aws.ToString(apiObject.ResourceArn),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

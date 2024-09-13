@@ -85,7 +85,7 @@ EOT
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the organization conformance pack. Must begin with a letter and contain from 1 to 128 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Delivery bucket must begin with `awsconfigconforms` prefix. Maximum length of 63.
@@ -102,26 +102,34 @@ The `input_parameter` configuration block supports the following arguments:
 * `parameter_name` - (Required) The input key.
 * `parameter_value` - (Required) The input value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
 * `id` - The name of the organization conformance pack.
 
 ## Timeouts
 
-`aws_config_organization_conformance_pack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating conformance pack
-- `update` - (Default `10 minutes`) Used for conformance pack modifications
-- `delete` - (Default `20 minutes`) Used for destroying conformance pack
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
-Config Organization Conformance Packs can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Conformance Packs using the `name`. For example:
 
+```terraform
+import {
+  to = aws_config_organization_conformance_pack.example
+  id = "example"
+}
 ```
-$ terraform import aws_config_organization_conformance_pack.example example
+
+Using `terraform import`, import Config Organization Conformance Packs using the `name`. For example:
+
+```console
+% terraform import aws_config_organization_conformance_pack.example example
 ```

@@ -19,17 +19,17 @@ data "aws_ecr_authorization_token" "token" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `registry_id` - (Optional) AWS account ID of the ECR Repository. If not specified the default account is assumed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `authorization_token` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
-* `expires_at` - The time in UTC RFC3339 format when the authorization token expires.
+* `expires_at` - Time in UTC RFC3339 format when the authorization token expires.
 * `id` - Region of the authorization token.
 * `password` - Password decoded from the authorization token.
-* `proxy_endpoint` - The registry URL to use in the docker login command.
+* `proxy_endpoint` - Registry URL to use in the docker login command.
 * `user_name` - User name decoded from the authorization token.

@@ -1,32 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceModelPackageGroup() *schema.Resource {
+// @SDKResource("aws_sagemaker_model_package_group", name="Model Package Group")
+// @Tags(identifierAttribute="arn")
+func resourceModelPackageGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceModelPackageGroupCreate,
-		Read:   resourceModelPackageGroupRead,
-		Update: resourceModelPackageGroupUpdate,
-		Delete: resourceModelPackageGroupDelete,
+		CreateWithoutTimeout: resourceModelPackageGroupCreate,
+		ReadWithoutTimeout:   resourceModelPackageGroupRead,
+		UpdateWithoutTimeout: resourceModelPackageGroupUpdate,
+		DeleteWithoutTimeout: resourceModelPackageGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,7 +46,7 @@ func ResourceModelPackageGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`),
 						"Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
@@ -46,121 +56,116 @@ func ResourceModelPackageGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("model_package_group_name").(string)
 	input := &sagemaker.CreateModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(name),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("model_package_group_description"); ok {
 		input.ModelPackageGroupDescription = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	_, err := conn.CreateModelPackageGroup(input)
+	_, err := conn.CreateModelPackageGroup(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Model Package Group %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Model Package Group %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitModelPackageGroupCompleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to be created: %w", d.Id(), err)
+	if _, err := waitModelPackageGroupCompleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Model Package Group (%s) to be created: %s", d.Id(), err)
 	}
 
-	return resourceModelPackageGroupRead(d, meta)
+	return append(diags, resourceModelPackageGroupRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	mpg, err := FindModelPackageGroupByName(conn, d.Id())
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
-			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker Model Package Group (%s); removing from state", d.Id())
-			return nil
-		}
-		return fmt.Errorf("error reading SageMaker Model Package Group (%s): %w", d.Id(), err)
+	mpg, err := findModelPackageGroupByName(ctx, conn, d.Id())
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		d.SetId("")
+		log.Printf("[WARN] Unable to find SageMaker Model Package Group (%s); removing from state", d.Id())
+		return diags
 	}
 
-	arn := aws.StringValue(mpg.ModelPackageGroupArn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Model Package Group (%s): %s", d.Id(), err)
+	}
+
 	d.Set("model_package_group_name", mpg.ModelPackageGroupName)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, mpg.ModelPackageGroupArn)
 	d.Set("model_package_group_description", mpg.ModelPackageGroupDescription)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Model Package Group (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Model Package Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceModelPackageGroupRead(d, meta)
+	return append(diags, resourceModelPackageGroupRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelPackageGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	input := &sagemaker.DeleteModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteModelPackageGroup(input); err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
-			return nil
+	if _, err := conn.DeleteModelPackageGroup(ctx, input); err != nil {
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "does not exist") {
+			return diags
 		}
-		return fmt.Errorf("error deleting SageMaker Model Package Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Model Package Group (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitModelPackageGroupDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
-			return nil
-		}
-		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to delete: %w", d.Id(), err)
+	if _, err := waitModelPackageGroupDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Model Package Group (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findModelPackageGroupByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+	input := &sagemaker.DescribeModelPackageGroupInput{
+		ModelPackageGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeModelPackageGroup(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

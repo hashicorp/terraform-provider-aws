@@ -1,30 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConnectPromptDataSource_name(t *testing.T) {
+func testAccPromptDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	datasourceName := "data.aws_connect_prompt.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPromptDataSourceConfig_Name(rName),
+				Config: testAccPromptDataSourceConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", "aws_connect_instance.test", "id"),
-					resource.TestCheckResourceAttr(datasourceName, "name", "Beep.wav"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "Beep.wav"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prompt_id"),
 				),
 			},
@@ -43,7 +47,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccPromptDataSourceConfig_Name(rName string) string {
+func testAccPromptDataSourceConfig_name(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPromptBaseDataSourceConfig(rName),
 		`

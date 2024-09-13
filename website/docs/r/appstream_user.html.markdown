@@ -30,25 +30,33 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `enabled` - (Optional) Specifies whether the user in the user pool is enabled.
+* `enabled` - (Optional) Whether the user in the user pool is enabled.
 * `first_name` - (Optional) First name, or given name, of the user.
 * `last_name` - (Optional) Last name, or surname, of the user.
 * `send_email_notification` - (Optional) Send an email notification.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the appstream user.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the user was created.
 * `id` - Unique ID of the appstream user.
 * `status` - Status of the user in the user pool.
 
-
 ## Import
 
-`aws_appstream_user` can be imported using the `user_name` and `authentication_type` separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_user` using the `user_name` and `authentication_type` separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_appstream_user.example
+  id = "UserName/AuthenticationType"
+}
 ```
-$ terraform import aws_appstream_user.example UserName/AuthenticationType
+
+Using `terraform import`, import `aws_appstream_user` using the `user_name` and `authentication_type` separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_appstream_user.example UserName/AuthenticationType
 ```

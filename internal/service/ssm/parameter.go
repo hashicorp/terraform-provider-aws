@@ -1,76 +1,53 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
-	parameterCreationValidationTimeout = 2 * time.Minute
-)
-
-func ResourceParameter() *schema.Resource {
+// @SDKResource("aws_ssm_parameter", name="Parameter")
+// @Tags(identifierAttribute="id", resourceType="Parameter")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
+func resourceParameter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceParameterCreate,
-		Read:   resourceParameterRead,
-		Update: resourceParameterUpdate,
-		Delete: resourceParameterDelete,
+		CreateWithoutTimeout: resourceParameterCreate,
+		ReadWithoutTimeout:   resourceParameterRead,
+		UpdateWithoutTimeout: resourceParameterUpdate,
+		DeleteWithoutTimeout: resourceParameterDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"description": {
+			"allowed_pattern": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"tier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ssm.ParameterTierStandard,
-				ValidateFunc: validation.StringInSlice(ssm.ParameterTier_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("tier").(string) == ssm.ParameterTierIntelligentTiering
-				},
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(ssm.ParameterType_Values(), false),
-			},
-			"value": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"key_id": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -81,273 +58,371 @@ func ResourceParameter() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"aws:ec2:image",
+					"aws:ssm:integration",
 					"text",
 				}, false),
+				ForceNew: true,
 			},
-			"overwrite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"allowed_pattern": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"version": {
+			"insecure_value": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
+			},
+			names.AttrKeyID: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 2048),
+			},
+			"overwrite": {
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Deprecated: "this attribute has been deprecated",
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tier": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ParameterTier](),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old != "" {
+						return awstypes.ParameterTier(new) == awstypes.ParameterTierIntelligentTiering
+					}
+					return false
+				},
+			},
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ParameterType](),
+			},
+			names.AttrValue: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				Computed:     true,
+				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
+			},
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
-			// In the case of Advanced to Intelligent-Tiering, a ValidationException is not thrown
-			// but rather no change occurs without resource re-creation
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
-				return old.(string) == ssm.ParameterTierAdvanced && (new.(string) == ssm.ParameterTierStandard || new.(string) == ssm.ParameterTierIntelligentTiering)
+				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
-			customdiff.ComputedIf("version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("value")
+			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange(names.AttrValue)
 			}),
+			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("insecure_value")
+			}),
+			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange(names.AttrValue)
+			}),
+
 			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	name := d.Get("name").(string)
-
-	paramInput := &ssm.PutParameterInput{
-		Name:           aws.String(name),
-		Type:           aws.String(d.Get("type").(string)),
-		Tier:           aws.String(d.Get("tier").(string)),
-		Value:          aws.String(d.Get("value").(string)),
-		Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
+	name := d.Get(names.AttrName).(string)
+	typ := awstypes.ParameterType(d.Get(names.AttrType).(string))
+	value := d.Get(names.AttrValue).(string)
+	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
+		value = v
+	}
+	input := &ssm.PutParameterInput{
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+		Name:           aws.String(name),
+		Overwrite:      aws.Bool(shouldUpdateParameter(d)),
+		Type:           typ,
+		Value:          aws.String(value),
 	}
 
 	if v, ok := d.GetOk("data_type"); ok {
-		paramInput.DataType = aws.String(v.(string))
+		input.DataType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		paramInput.Description = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
-	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {
-		paramInput.SetKeyId(keyID.(string))
+	if v, ok := d.GetOk(names.AttrKeyID); ok && typ == awstypes.ParameterTypeSecureString {
+		input.KeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tier"); ok {
+		input.Tier = awstypes.ParameterTier(v.(string))
 	}
 
 	// AWS SSM Service only supports PutParameter requests with Tags
 	// iff Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
-	if len(tags) > 0 && !aws.BoolValue(paramInput.Overwrite) {
-		paramInput.Tags = Tags(tags.IgnoreAWS())
+	tags := getTagsIn(ctx)
+	if !aws.ToBool(input.Overwrite) {
+		input.Tags = tags
 	}
 
-	_, err := conn.PutParameter(paramInput)
+	_, err := conn.PutParameter(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
-		paramInput.Tier = nil
-		_, err = conn.PutParameter(paramInput)
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "Tier is not supported") {
+		log.Printf("[WARN] Creating SSM Parameter (%s): tier %q not supported, using default", name, d.Get("tier").(string))
+		input.Tier = ""
+		_, err = conn.PutParameter(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SSM parameter (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SSM Parameter (%s): %s", name, err)
 	}
 
 	// Since the AWS SSM Service does not support PutParameter requests with
 	// Tags and Overwrite set to true, we make an additional API call
 	// to Update the resource's tags if necessary
-	if d.HasChange("tags_all") && paramInput.Tags == nil {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", name, err)
+	if len(tags) > 0 && input.Tags == nil {
+		if err := createTags(ctx, conn, name, string(awstypes.ResourceTypeForTaggingParameter), tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting SSM Parameter (%s) tags: %s", name, err)
 		}
 	}
 
 	d.SetId(name)
 
-	return resourceParameterRead(d, meta)
+	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	input := &ssm.GetParameterInput{
-		Name:           aws.String(d.Id()),
-		WithDecryption: aws.Bool(true),
-	}
-
-	var resp *ssm.GetParameterOutput
-	err := resource.Retry(parameterCreationValidationTimeout, func() *resource.RetryError {
-		var err error
-		resp, err = conn.GetParameter(input)
-
-		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
-			return resource.RetryableError(fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.GetParameter(input)
-	}
-
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) && !d.IsNewResource() {
-		log.Printf("[WARN] SSM Parameter (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading SSM Parameter (%s): %w", d.Id(), err)
-	}
-
-	param := resp.Parameter
-	name := aws.StringValue(param.Name)
-	d.Set("name", name)
-	d.Set("type", param.Type)
-	d.Set("value", param.Value)
-	d.Set("version", param.Version)
-
-	describeParamsInput := &ssm.DescribeParametersInput{
-		ParameterFilters: []*ssm.ParameterStringFilter{
-			{
-				Key:    aws.String("Name"),
-				Option: aws.String("Equals"),
-				Values: []*string{aws.String(name)},
-			},
+	const (
+		// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
+		timeout = 2 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
+		func() (interface{}, error) {
+			return findParameterByName(ctx, conn, d.Id(), true)
 		},
-	}
-	describeResp, err := conn.DescribeParameters(describeParamsInput)
-	if err != nil {
-		return fmt.Errorf("error describing SSM parameter (%s): %w", d.Id(), err)
-	}
+		func(err error) (bool, error) {
+			if d.IsNewResource() && tfresource.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
+				return true, err
+			}
 
-	if describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil {
-		log.Printf("[WARN] SSM Parameter %q not found, removing from state", d.Id())
+			return false, err
+		},
+	)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	detail := describeResp.Parameters[0]
-	d.Set("key_id", detail.KeyId)
-	d.Set("description", detail.Description)
-	d.Set("tier", ssm.ParameterTierStandard)
-	if detail.Tier != nil {
-		d.Set("tier", detail.Tier)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter (%s): %s", d.Id(), err)
 	}
+
+	param := outputRaw.(*awstypes.Parameter)
+	d.Set(names.AttrARN, param.ARN)
+	d.Set(names.AttrName, param.Name)
+	d.Set(names.AttrType, param.Type)
+	d.Set(names.AttrVersion, param.Version)
+
+	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
+		d.Set("insecure_value", param.Value)
+	} else {
+		d.Set(names.AttrValue, param.Value)
+	}
+
+	if param.Type == awstypes.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
+		return sdkdiag.AppendErrorf(diags, "invalid configuration, cannot set type = %s and insecure_value", param.Type)
+	}
+
+	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
+	}
+
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
+	d.Set(names.AttrDescription, detail.Description)
+	d.Set(names.AttrKeyID, detail.KeyId)
+	d.Set("tier", detail.Tier)
 
-	tags, err := ListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for SSM Parameter (%s): %w", name, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("arn", param.ARN)
-
-	return nil
+	return diags
 }
 
-func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		paramInput := &ssm.PutParameterInput{
-			Name:           aws.String(d.Get("name").(string)),
-			Type:           aws.String(d.Get("type").(string)),
-			Tier:           aws.String(d.Get("tier").(string)),
-			Value:          aws.String(d.Get("value").(string)),
-			Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
+	if d.HasChangesExcept("overwrite", names.AttrTags, names.AttrTagsAll) {
+		typ := awstypes.ParameterType(d.Get(names.AttrType).(string))
+		value := d.Get(names.AttrValue).(string)
+		if v, ok := d.Get("insecure_value").(string); ok && v != "" {
+			value = v
+		}
+		input := &ssm.PutParameterInput{
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+			Name:           aws.String(d.Id()),
+			Overwrite:      aws.Bool(shouldUpdateParameter(d)),
+			Tier:           awstypes.ParameterTier(d.Get("tier").(string)),
+			Type:           typ,
+			Value:          aws.String(value),
 		}
 
 		if d.HasChange("data_type") {
-			paramInput.DataType = aws.String(d.Get("data_type").(string))
+			input.DataType = aws.String(d.Get("data_type").(string))
 		}
 
-		if d.HasChange("description") {
-			paramInput.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("key_id") && d.Get("type").(string) == ssm.ParameterTypeSecureString {
-			paramInput.SetKeyId(d.Get("key_id").(string))
+		if d.HasChange(names.AttrKeyID) && typ == awstypes.ParameterTypeSecureString {
+			input.KeyId = aws.String(d.Get(names.AttrKeyID).(string))
 		}
 
-		_, err := conn.PutParameter(paramInput)
+		// Retrieve the value set in the config directly to counteract the DiffSuppressFunc above.
+		if v := d.GetRawConfig().GetAttr("tier"); v.IsKnown() && !v.IsNull() {
+			input.Tier = awstypes.ParameterTier(v.AsString())
+		}
 
-		if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
-			paramInput.Tier = nil
-			_, err = conn.PutParameter(paramInput)
+		_, err := conn.PutParameter(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Tier is not supported") {
+			log.Printf("[WARN] Creating SSM Parameter (%s): tier %q not supported, using default", d.Id(), d.Get("tier").(string))
+			input.Tier = ""
+			_, err = conn.PutParameter(ctx, input)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating SSM parameter (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SSM Parameter (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceParameterRead(d, meta)
+	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
-		Name: aws.String(d.Get("name").(string)),
+	log.Printf("[DEBUG] Deleting SSM Parameter: %s", d.Id())
+	_, err := conn.DeleteParameter(ctx, &ssm.DeleteParameterInput{
+		// Use "name" instead of "id" in case the resource was imported by ARN.
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) {
-		return nil
+	if errs.IsA[*awstypes.ParameterNotFound](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SSM Parameter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSM Parameter (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func ShouldUpdateParameter(d *schema.ResourceData) bool {
-	// If the user has specified a preference, return their preference
-	if value, ok := d.GetOkExists("overwrite"); ok {
-		return value.(bool)
+func findParameterByName(ctx context.Context, conn *ssm.Client, name string, withDecryption bool) (*awstypes.Parameter, error) {
+	input := &ssm.GetParameterInput{
+		Name:           aws.String(name),
+		WithDecryption: aws.Bool(withDecryption),
+	}
+
+	output, err := conn.GetParameter(ctx, input)
+
+	if errs.IsA[*awstypes.ParameterNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Parameter == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Parameter, nil
+}
+
+func findParameterMetadataByName(ctx context.Context, conn *ssm.Client, name string) (*awstypes.ParameterMetadata, error) {
+	input := &ssm.DescribeParametersInput{
+		ParameterFilters: []awstypes.ParameterStringFilter{
+			{
+				Key:    aws.String("Name"),
+				Option: aws.String("Equals"),
+				Values: []string{name},
+			},
+		},
+	}
+
+	return findParameterMetadata(ctx, conn, input)
+}
+
+func findParameterMetadata(ctx context.Context, conn *ssm.Client, input *ssm.DescribeParametersInput) (*awstypes.ParameterMetadata, error) {
+	output, err := findParametersMetadata(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findParametersMetadata(ctx context.Context, conn *ssm.Client, input *ssm.DescribeParametersInput) ([]awstypes.ParameterMetadata, error) {
+	var output []awstypes.ParameterMetadata
+
+	pages := ssm.NewDescribeParametersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Parameters...)
+	}
+
+	return output, nil
+}
+
+func shouldUpdateParameter(d *schema.ResourceData) bool {
+	// If the user has specified a preference, return their preference.
+	if v := d.GetRawConfig().GetAttr("overwrite"); v.IsKnown() && !v.IsNull() {
+		return v.True()
 	}
 
 	// Since the user has not specified a preference, obey lifecycle rules

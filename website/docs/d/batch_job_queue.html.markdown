@@ -21,24 +21,29 @@ data "aws_batch_job_queue" "test-queue" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) The name of the job queue.
+* `name` - (Required) Name of the job queue.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the job queue.
+* `arn` - ARN of the job queue.
 * `scheduling_policy_arn` - The ARN of the fair share scheduling policy. If this attribute has a value, the job queue uses a fair share scheduling policy. If this attribute does not have a value, the job queue uses a first in, first out (FIFO) scheduling policy.
-* `status` - The current status of the job queue (for example, `CREATING` or `VALID`).
-* `status_reason` - A short, human-readable string to provide additional details about the current status
+* `status` - Current status of the job queue (for example, `CREATING` or `VALID`).
+* `status_reason` - Short, human-readable string to provide additional details about the current status
     of the job queue.
 * `state` - Describes the ability of the queue to accept new jobs (for example, `ENABLED` or `DISABLED`).
 * `tags` - Key-value map of resource tags
-* `priority` - The priority of the job queue. Job queues with a higher priority are evaluated first when
+* `priority` - Priority of the job queue. Job queues with a higher priority are evaluated first when
     associated with the same compute environment.
 * `compute_environment_order` - The compute environments that are attached to the job queue and the order in
     which job placement is preferred. Compute environments are selected for job placement in ascending order.
     * `compute_environment_order.#.order` - The order of the compute environment.
     * `compute_environment_order.#.compute_environment` - The ARN of the compute environment.
+* `job_state_time_limit_action` - Specifies an action that AWS Batch will take after the job has remained at the head of the queue in the specified state for longer than the specified time.
+    * `job_state_time_limit_action.#.action` - The action to take when a job is at the head of the job queue in the specified state for the specified period of time.
+    * `job_state_time_limit_action.#.max_time_seconds` - The approximate amount of time, in seconds, that must pass with the job in the specified state before the action is taken.
+    * `job_state_time_limit_action.#.reason` - The reason to log for the action being taken.
+    * `job_state_time_limit_action.#.state` - The state of the job needed to trigger the action.

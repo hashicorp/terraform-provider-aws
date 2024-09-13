@@ -1,5 +1,5 @@
 ---
-subcategory: "PinpointSMSVoiceV2"
+subcategory: "Pinpoint SMS and Voice v2"
 layout: "aws"
 page_title: "AWS: aws_pinpointsmsvoicev2_opt_out_list"
 description: |-

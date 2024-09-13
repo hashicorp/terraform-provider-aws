@@ -34,19 +34,19 @@ data "aws_connect_security_profile" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `security_profile_id` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `security_profile_id` - (Optional) Returns information on a specific Security Profile by Security Profile id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Security Profile by name
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Security Profile.
-* `description` - Specifies the description of the Security Profile.
-* `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Security Profile separated by a colon (`:`).
+* `arn` - ARN of the Security Profile.
+* `description` - Description of the Security Profile.
+* `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Security Profile separated by a colon (`:`).
 * `organization_resource_id` - The organization resource identifier for the security profile.
-* `permissions` - Specifies a list of permissions assigned to the security profile.
-* `tags` - A map of tags to assign to the Security Profile.
+* `permissions` - List of permissions assigned to the security profile.
+* `tags` - Map of tags to assign to the Security Profile.

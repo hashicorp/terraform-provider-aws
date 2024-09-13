@@ -51,7 +51,7 @@ resource "aws_fsx_data_repository_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `batch_import_meta_data_on_create` - (Optional) Set to true to run an import data repository task to import metadata from the data repository to the file system after the data repository association is created. Defaults to `false`.
 * `data_repository_path` - (Required) The path to the Amazon S3 data repository that will be linked to the file system. The path must be an S3 bucket s3://myBucket/myPrefix/. This path specifies where in the S3 data repository files will be imported from or exported to. The same S3 bucket cannot be linked more than once to the same file system.
@@ -61,7 +61,7 @@ The following arguments are supported:
 * `s3` - (Optional) See the [`s3` configuration](#s3-arguments) block. Max of 1.
 The configuration for an Amazon S3 data repository linked to an Amazon FSx Lustre file system with a data repository association. The configuration defines which file events (new, changed, or deleted files or directories) are automatically imported from the linked data repository to the file system or automatically exported from the file system to the data repository.
 * `delete_data_in_filesystem` - (Optional) Set to true to delete files from the file system upon deleting this data repository association. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the data repository association. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the data repository association. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### S3 arguments
 
@@ -72,27 +72,35 @@ The configuration for an Amazon S3 data repository linked to an Amazon FSx Lustr
 
 * `events` - (Optional) A list of file event types to automatically export to your linked S3 bucket or import from the linked S3 bucket. Valid values are `NEW`, `CHANGED`, `DELETED`. Max of 3.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `id` - Identifier of the data repository association, e.g., `dra-12345678`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_fsx_data_repository_association` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10m`) How long to wait for the file system to be created.
-* `update` - (Default `10m`) How long to wait for the file system to be updated.
-* `delete` - (Default `10m`) How long to wait for the file system to be deleted.
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
-FSx Data Repository Associations can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx Data Repository Associations using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_data_repository_association.example
+  id = "dra-0b1cfaeca11088b10"
+}
 ```
-$ terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
+
+Using `terraform import`, import FSx Data Repository Associations using the `id`. For example:
+
+```console
+% terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
 ```

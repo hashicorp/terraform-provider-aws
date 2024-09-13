@@ -1,26 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceRouteResponse() *schema.Resource {
+// @SDKResource("aws_apigatewayv2_route_response", name="Route Response")
+func resourceRouteResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRouteResponseCreate,
-		Read:   resourceRouteResponseRead,
-		Update: resourceRouteResponseUpdate,
-		Delete: resourceRouteResponseDelete,
+		CreateWithoutTimeout: resourceRouteResponseCreate,
+		ReadWithoutTimeout:   resourceRouteResponseRead,
+		UpdateWithoutTimeout: resourceRouteResponseUpdate,
+		DeleteWithoutTimeout: resourceRouteResponseDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceRouteResponseImport,
+			StateContext: resourceRouteResponseImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,108 +62,115 @@ func ResourceRouteResponse() *schema.Resource {
 	}
 }
 
-func resourceRouteResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	req := &apigatewayv2.CreateRouteResponseInput{
+	input := &apigatewayv2.CreateRouteResponseInput{
 		ApiId:            aws.String(d.Get("api_id").(string)),
 		RouteId:          aws.String(d.Get("route_id").(string)),
 		RouteResponseKey: aws.String(d.Get("route_response_key").(string)),
 	}
+
 	if v, ok := d.GetOk("model_selection_expression"); ok {
-		req.ModelSelectionExpression = aws.String(v.(string))
+		input.ModelSelectionExpression = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("response_models"); ok {
-		req.ResponseModels = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.ResponseModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 route response: %s", req)
-	resp, err := conn.CreateRouteResponse(req)
+	output, err := conn.CreateRouteResponse(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 route response: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 Route Response: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.RouteResponseId))
+	d.SetId(aws.ToString(output.RouteResponseId))
 
-	return resourceRouteResponseRead(d, meta)
+	return append(diags, resourceRouteResponseRead(ctx, d, meta)...)
 }
 
-func resourceRouteResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetRouteResponse(&apigatewayv2.GetRouteResponseInput{
-		ApiId:           aws.String(d.Get("api_id").(string)),
-		RouteId:         aws.String(d.Get("route_id").(string)),
-		RouteResponseId: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
-		log.Printf("[WARN] API Gateway v2 route response (%s) not found, removing from state", d.Id())
+	output, err := findRouteResponseByThreePartKey(ctx, conn, d.Get("api_id").(string), d.Get("route_id").(string), d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway v2 Route Response (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 route response: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Route Response (%s): %s", d.Id(), err)
 	}
 
-	d.Set("model_selection_expression", resp.ModelSelectionExpression)
-	if err := d.Set("response_models", flex.PointersMapToStringList(resp.ResponseModels)); err != nil {
-		return fmt.Errorf("error setting response_models: %s", err)
-	}
-	d.Set("route_response_key", resp.RouteResponseKey)
+	d.Set("model_selection_expression", output.ModelSelectionExpression)
+	d.Set("response_models", output.ResponseModels)
+	d.Set("route_response_key", output.RouteResponseKey)
 
-	return nil
+	return diags
 }
 
-func resourceRouteResponseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	req := &apigatewayv2.UpdateRouteResponseInput{
+	input := &apigatewayv2.UpdateRouteResponseInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	}
+
 	if d.HasChange("model_selection_expression") {
-		req.ModelSelectionExpression = aws.String(d.Get("model_selection_expression").(string))
+		input.ModelSelectionExpression = aws.String(d.Get("model_selection_expression").(string))
 	}
+
 	if d.HasChange("response_models") {
-		req.ResponseModels = flex.ExpandStringMap(d.Get("response_models").(map[string]interface{}))
+		input.ResponseModels = flex.ExpandStringValueMap(d.Get("response_models").(map[string]interface{}))
 	}
+
 	if d.HasChange("route_response_key") {
-		req.RouteResponseKey = aws.String(d.Get("route_response_key").(string))
+		input.RouteResponseKey = aws.String(d.Get("route_response_key").(string))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 route response: %s", req)
-	_, err := conn.UpdateRouteResponse(req)
+	_, err := conn.UpdateRouteResponse(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 route response: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Route Response (%s): %s", d.Id(), err)
 	}
 
-	return resourceRouteResponseRead(d, meta)
+	return append(diags, resourceRouteResponseRead(ctx, d, meta)...)
 }
 
-func resourceRouteResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceRouteResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 route response (%s)", d.Id())
-	_, err := conn.DeleteRouteResponse(&apigatewayv2.DeleteRouteResponseInput{
+	log.Printf("[DEBUG] Deleting API Gateway v2 Route Response: %s", d.Id())
+	_, err := conn.DeleteRouteResponse(ctx, &apigatewayv2.DeleteRouteResponseInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 route response: %s", err)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 Route Response (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceRouteResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteResponseImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/route-id/route-response-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id/route-response-id'", d.Id())
 	}
 
 	d.SetId(parts[2])
@@ -160,4 +178,35 @@ func resourceRouteResponseImport(d *schema.ResourceData, meta interface{}) ([]*s
 	d.Set("route_id", parts[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findRouteResponseByThreePartKey(ctx context.Context, conn *apigatewayv2.Client, apiID, routeID, routeResponseID string) (*apigatewayv2.GetRouteResponseOutput, error) {
+	input := &apigatewayv2.GetRouteResponseInput{
+		ApiId:           aws.String(apiID),
+		RouteId:         aws.String(routeID),
+		RouteResponseId: aws.String(routeResponseID),
+	}
+
+	return findRouteResponse(ctx, conn, input)
+}
+
+func findRouteResponse(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetRouteResponseInput) (*apigatewayv2.GetRouteResponseOutput, error) {
+	output, err := conn.GetRouteResponse(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

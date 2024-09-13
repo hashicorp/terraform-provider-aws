@@ -1,66 +1,88 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
-	resourceName := "data.aws_ecs_task_definition.mongo"
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ecs_task_definition.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTaskDefinitionDataSourceConfig(rName),
+				Config: testAccTaskDefinitionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ecs_task_definition.mongo", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "family", rName),
-					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
-					resource.TestMatchResourceAttr(resourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
-					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.mongo_role", "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_ecs_task_definition.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrExecutionRoleARN, "aws_iam_role.execution", names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrFamily, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "network_mode", "bridge"),
+					resource.TestMatchResourceAttr(dataSourceName, "revision", regexache.MustCompile("^[1-9][0-9]*$")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTaskDefinitionDataSourceConfig(rName string) string {
+func testAccTaskDefinitionDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "mongo_role" {
-  name = "%[1]s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "ec2.amazonaws.com"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+  }]
 }
 POLICY
 }
 
-resource "aws_ecs_task_definition" "mongo" {
-  family        = "%[1]s"
-  task_role_arn = aws_iam_role.mongo_role.arn
-  network_mode  = "bridge"
+resource "aws_iam_role" "execution" {
+  name = "%[1]s-execution"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "ec2.amazonaws.com"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+  }]
+}
+POLICY
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family             = %[1]q
+  execution_role_arn = aws_iam_role.execution.arn
+  task_role_arn      = aws_iam_role.test.arn
+  network_mode       = "bridge"
 
   container_definitions = <<DEFINITION
 [
@@ -82,8 +104,8 @@ resource "aws_ecs_task_definition" "mongo" {
 DEFINITION
 }
 
-data "aws_ecs_task_definition" "mongo" {
-  task_definition = aws_ecs_task_definition.mongo.family
+data "aws_ecs_task_definition" "test" {
+  task_definition = aws_ecs_task_definition.test.family
 }
 `, rName)
 }

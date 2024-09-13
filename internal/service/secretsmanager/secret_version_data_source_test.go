@@ -1,33 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretVersionDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
+				Config:      testAccSecretVersionDataSourceConfig_nonExistent,
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionStage_Default(rName),
+				Config: testAccSecretVersionDataSourceConfig_stageDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
 				),
@@ -37,17 +41,18 @@ func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretVersionDataSource_versionID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionID(rName),
+				Config: testAccSecretVersionDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
 				),
@@ -57,17 +62,18 @@ func TestAccSecretsManagerSecretVersionDataSource_versionID(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretVersionDataSource_versionStage(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionStage_Custom(rName),
+				Config: testAccSecretVersionDataSourceConfig_stageCustom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
 				),
@@ -78,12 +84,12 @@ func TestAccSecretsManagerSecretVersionDataSource_versionStage(t *testing.T) {
 
 func testAccSecretVersionCheckDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		resource, ok := s.RootModule().Resources[datasourceName]
+		dataSource, ok := s.RootModule().Resources[datasourceName]
 		if !ok {
-			return fmt.Errorf("root module has no resource called %s", datasourceName)
+			return fmt.Errorf("root module has no data source called %s", datasourceName)
 		}
 
-		dataSource, ok := s.RootModule().Resources[resourceName]
+		resource, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("root module has no resource called %s", resourceName)
 		}
@@ -108,13 +114,13 @@ func testAccSecretVersionCheckDataSource(datasourceName, resourceName string) re
 	}
 }
 
-const testAccSecretVersionDataSourceConfig_NonExistent = `
+const testAccSecretVersionDataSourceConfig_nonExistent = `
 data "aws_secretsmanager_secret_version" "test" {
   secret_id = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccSecretVersionDataSourceConfig_VersionID(rName string) string {
+func testAccSecretVersionDataSourceConfig_id(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
@@ -132,7 +138,7 @@ data "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionDataSourceConfig_VersionStage_Custom(rName string) string {
+func testAccSecretVersionDataSourceConfig_stageCustom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
@@ -151,7 +157,7 @@ data "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionDataSourceConfig_VersionStage_Default(rName string) string {
+func testAccSecretVersionDataSourceConfig_stageDefault(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"

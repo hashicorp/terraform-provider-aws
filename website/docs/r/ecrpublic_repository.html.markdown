@@ -10,7 +10,7 @@ description: |-
 
 Provides a Public Elastic Container Registry Repository.
 
-~> **NOTE:** This resource can only be used with `us-east-1` region.
+~> **NOTE:** This resource can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -33,16 +33,20 @@ resource "aws_ecrpublic_repository" "foo" {
     operating_systems = ["Linux"]
     usage_text        = "Usage Text"
   }
+
+  tags = {
+    env = "production"
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository_name` - (Required) Name of the repository.
 * `catalog_data` - (Optional) Catalog data configuration for the repository. See [below for schema](#catalog_data).
-
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### catalog_data
 
@@ -53,26 +57,35 @@ The following arguments are supported:
 * `operating_systems` -  (Optional) The operating systems that the images in the repository are compatible with. On the Amazon ECR Public Gallery, the following supported operating systems will appear as badges on the repository and are used as search filters: `Linux`, `Windows`
 * `usage_text` -  (Optional) Detailed information on how to use the contents of the repository. It is publicly visible in the Amazon ECR Public Gallery. The usage text provides context, support information, and additional usage details for users of the repository. The text must be in markdown format.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Full ARN of the repository.
 * `id` - The repository name.
 * `registry_id` - The registry ID where the repository was created.
 * `repository_uri` - The URI of the repository.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_ecrpublic_repository` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `20 minutes`) How long to wait for a repository to be deleted.
+- `delete` - (Default `20m`)
 
 ## Import
 
-ECR Public Repositories can be imported using the `repository_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Public Repositories using the `repository_name`. For example:
 
+```terraform
+import {
+  to = aws_ecrpublic_repository.example
+  id = "example"
+}
 ```
-$ terraform import aws_ecrpublic_repository.example example
+
+Using `terraform import`, import ECR Public Repositories using the `repository_name`. For example:
+
+```console
+% terraform import aws_ecrpublic_repository.example example
 ```

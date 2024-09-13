@@ -1,141 +1,172 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceBackendServerPolicy() *schema.Resource {
+// @SDKResource("aws_load_balancer_backend_server_policy", name="Backend Server Policy")
+func resourceBackendServerPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBackendServerPolicyCreate,
-		Read:   resourceBackendServerPolicyRead,
-		Update: resourceBackendServerPolicyCreate,
-		Delete: resourceBackendServerPolicyDelete,
+		CreateWithoutTimeout: resourceBackendServerPolicySet,
+		ReadWithoutTimeout:   resourceBackendServerPolicyRead,
+		UpdateWithoutTimeout: resourceBackendServerPolicySet,
+		DeleteWithoutTimeout: resourceBackendServerPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
+			"instance_port": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
 			"load_balancer_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"policy_names": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Set:      schema.HashString,
-			},
-
-			"instance_port": {
-				Type:     schema.TypeInt,
-				Required: true,
 			},
 		},
 	}
 }
 
-func resourceBackendServerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	loadBalancerName := d.Get("load_balancer_name")
-
-	policyNames := []*string{}
-	if v, ok := d.GetOk("policy_names"); ok {
-		policyNames = flex.ExpandStringSet(v.(*schema.Set))
+	instancePort := d.Get("instance_port").(int)
+	lbName := d.Get("load_balancer_name").(string)
+	id := backendServerPolicyCreateResourceID(lbName, instancePort)
+	input := &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+		InstancePort:     aws.Int32(int32(instancePort)),
+		LoadBalancerName: aws.String(lbName),
 	}
 
-	setOpts := &elb.SetLoadBalancerPoliciesForBackendServerInput{
-		LoadBalancerName: aws.String(loadBalancerName.(string)),
-		InstancePort:     aws.Int64(int64(d.Get("instance_port").(int))),
-		PolicyNames:      policyNames,
+	if v, ok := d.GetOk("policy_names"); ok && v.(*schema.Set).Len() > 0 {
+		input.PolicyNames = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if _, err := conn.SetLoadBalancerPoliciesForBackendServer(setOpts); err != nil {
-		return fmt.Errorf("Error setting LoadBalancerPoliciesForBackendServer: %s", err)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", *setOpts.LoadBalancerName, strconv.FormatInt(*setOpts.InstancePort, 10)))
-	return resourceBackendServerPolicyRead(d, meta)
-}
-
-func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
-
-	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
-
-	describeElbOpts := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
-	}
-
-	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
+	_, err := conn.SetLoadBalancerPoliciesForBackendServer(ctx, input)
 
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "LoadBalancerNotFound" {
-				d.SetId("")
-				return fmt.Errorf("LoadBalancerNotFound: %s", err)
-			}
-		}
-		return fmt.Errorf("Error retrieving ELB description: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", id, err)
 	}
 
-	if len(describeResp.LoadBalancerDescriptions) != 1 {
-		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
+	if d.IsNewResource() {
+		d.SetId(id)
 	}
 
-	lb := describeResp.LoadBalancerDescriptions[0]
+	return append(diags, resourceBackendServerPolicyRead(ctx, d, meta)...)
+}
 
-	policyNames := []*string{}
-	for _, backendServer := range lb.BackendServerDescriptions {
-		if instancePort != strconv.Itoa(int(aws.Int64Value(backendServer.InstancePort))) {
+func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
+
+	lbName, instancePort, err := backendServerPolicyParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policyNames, err := findLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELB Classic Backend Server Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Backend Server Policy (%s): %s", d.Id(), err)
+	}
+
+	d.Set("instance_port", instancePort)
+	d.Set("load_balancer_name", lbName)
+	d.Set("policy_names", policyNames)
+
+	return diags
+}
+
+func resourceBackendServerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
+
+	lbName, instancePort, err := backendServerPolicyParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	log.Printf("[DEBUG] Deleting ELB Classic Backend Server Policy: %s", d.Id())
+	_, err = conn.SetLoadBalancerPoliciesForBackendServer(ctx, &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+		InstancePort:     aws.Int32(int32(instancePort)),
+		LoadBalancerName: aws.String(lbName),
+		PolicyNames:      []string{},
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findLoadBalancerBackendServerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, instancePort int) ([]string, error) {
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var policyNames []string
+
+	for _, v := range lb.BackendServerDescriptions {
+		if aws.ToInt32(v.InstancePort) != int32(instancePort) {
 			continue
 		}
 
-		policyNames = append(policyNames, backendServer.PolicyNames...)
+		policyNames = append(policyNames, v.PolicyNames...)
 	}
 
-	d.Set("load_balancer_name", loadBalancerName)
-	instancePortVal, err := strconv.ParseInt(instancePort, 10, 64)
-	if err != nil {
-		return fmt.Errorf("error parsing instance port: %s", err)
-	}
-	d.Set("instance_port", instancePortVal)
-	d.Set("policy_names", flex.FlattenStringList(policyNames))
-
-	return nil
+	return policyNames, nil
 }
 
-func resourceBackendServerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+const backendServerPolicyResourceIDSeparator = ":"
 
-	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
+func backendServerPolicyCreateResourceID(lbName string, instancePort int) string {
+	parts := []string{lbName, strconv.Itoa(instancePort)}
+	id := strings.Join(parts, backendServerPolicyResourceIDSeparator)
 
-	instancePortInt, err := strconv.ParseInt(instancePort, 10, 64)
-	if err != nil {
-		return fmt.Errorf("Error parsing instancePort as integer: %s", err)
-	}
-
-	setOpts := &elb.SetLoadBalancerPoliciesForBackendServerInput{
-		LoadBalancerName: aws.String(loadBalancerName),
-		InstancePort:     aws.Int64(instancePortInt),
-		PolicyNames:      []*string{},
-	}
-
-	if _, err := conn.SetLoadBalancerPoliciesForBackendServer(setOpts); err != nil {
-		return fmt.Errorf("Error setting LoadBalancerPoliciesForBackendServer: %s", err)
-	}
-
-	return nil
+	return id
 }
 
-func BackendServerPoliciesParseID(id string) (string, string) {
-	parts := strings.SplitN(id, ":", 2)
-	return parts[0], parts[1]
+func backendServerPolicyParseResourceID(id string) (string, int, error) {
+	parts := strings.Split(id, backendServerPolicyResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		v, err := strconv.Atoi(parts[1])
+
+		if err != nil {
+			return "", 0, err
+		}
+
+		return parts[0], v, nil
+	}
+
+	return "", 0, fmt.Errorf("unexpected format for ID (%[1]s), expected LBNAME%[2]sINSTANCEPORT", id, backendServerPolicyResourceIDSeparator)
 }

@@ -1,177 +1,247 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery
 
 import (
-	"fmt"
+	"context"
+	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceHTTPNamespace() *schema.Resource {
+// @SDKResource("aws_service_discovery_http_namespace", name="HTTP Namespace")
+// @Tags(identifierAttribute="arn")
+func resourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHTTPNamespaceCreate,
-		Read:   resourceHTTPNamespaceRead,
-		Update: resourceHTTPNamespaceUpdate,
-		Delete: resourceHTTPNamespaceDelete,
+		CreateWithoutTimeout: resourceHTTPNamespaceCreate,
+		ReadWithoutTimeout:   resourceHTTPNamespaceRead,
+		UpdateWithoutTimeout: resourceHTTPNamespaceUpdate,
+		DeleteWithoutTimeout: resourceHTTPNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"http_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validNamespaceName,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceHTTPNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateHttpNamespaceInput{
-		CreatorRequestId: aws.String(resource.UniqueId()),
+		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
+		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	output, err := conn.CreateHttpNamespace(input)
+	output, err := conn.CreateHttpNamespace(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Discovery HTTP Namespace (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
-	if output == nil || output.OperationId == nil {
-		return fmt.Errorf("error creating Service Discovery HTTP Namespace (%s): creation response missing Operation ID", name)
-	}
-
-	operation, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId))
+	operation, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Service Discovery HTTP Namespace (%s) creation: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery HTTP Namespace (%s) create: %s", name, err)
 	}
 
-	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
+	d.SetId(operation.Targets[string(awstypes.OperationTargetTypeNamespace)])
 
-	if !ok {
-		return fmt.Errorf("error creating Service Discovery HTTP Namespace (%s): operation response missing Namespace ID", name)
-	}
-
-	d.SetId(aws.StringValue(namespaceID))
-
-	return resourceHTTPNamespaceRead(d, meta)
+	return append(diags, resourceHTTPNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
+	ns, err := findNamespaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Discovery HTTP Namespace %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
+	}
+
+	arn := aws.ToString(ns.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ns.Description)
+	if ns.Properties != nil && ns.Properties.HttpProperties != nil {
+		d.Set("http_name", ns.Properties.HttpProperties.HttpName)
+	} else {
+		d.Set("http_name", nil)
+	}
+	d.Set(names.AttrName, ns.Name)
+
+	return diags
+}
+
+func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Tags only.
+	return resourceHTTPNamespaceRead(ctx, d, meta)
+}
+
+func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+
+	log.Printf("[INFO] Deleting Service Discovery HTTP Namespace: %s", d.Id())
+	const (
+		timeout = 2 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUse](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteNamespace(ctx, &servicediscovery.DeleteNamespaceInput{
+			Id: aws.String(d.Id()),
+		})
+	})
+
+	if errs.IsA[*awstypes.NamespaceNotFound](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
+	}
+
+	if output := outputRaw.(*servicediscovery.DeleteNamespaceOutput); output != nil && output.OperationId != nil {
+		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery HTTP Namespace (%s) delete: %s", d.Id(), err)
+		}
+	}
+
+	return diags
+}
+
+func findNamespace(ctx context.Context, conn *servicediscovery.Client, input *servicediscovery.ListNamespacesInput, filter tfslices.Predicate[*awstypes.NamespaceSummary]) (*awstypes.NamespaceSummary, error) {
+	output, err := findNamespaces(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNamespaces(ctx context.Context, conn *servicediscovery.Client, input *servicediscovery.ListNamespacesInput, filter tfslices.Predicate[*awstypes.NamespaceSummary]) ([]awstypes.NamespaceSummary, error) {
+	var output []awstypes.NamespaceSummary
+
+	pages := servicediscovery.NewListNamespacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Namespaces {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func namespaceTypeFilter(nsType awstypes.NamespaceType) awstypes.NamespaceFilter {
+	return awstypes.NamespaceFilter{
+		Condition: awstypes.FilterConditionEq,
+		Name:      awstypes.NamespaceFilterNameType,
+		Values:    enum.Slice(nsType),
+	}
+}
+
+func findNamespacesByType(ctx context.Context, conn *servicediscovery.Client, nsType awstypes.NamespaceType) ([]awstypes.NamespaceSummary, error) {
+	input := &servicediscovery.ListNamespacesInput{
+		Filters: []awstypes.NamespaceFilter{namespaceTypeFilter(nsType)},
+	}
+
+	return findNamespaces(ctx, conn, input, tfslices.PredicateTrue[*awstypes.NamespaceSummary]())
+}
+
+func findNamespaceByNameAndType(ctx context.Context, conn *servicediscovery.Client, name string, nsType awstypes.NamespaceType) (*awstypes.NamespaceSummary, error) {
+	input := &servicediscovery.ListNamespacesInput{
+		Filters: []awstypes.NamespaceFilter{namespaceTypeFilter(nsType)},
+	}
+
+	return findNamespace(ctx, conn, input, func(v *awstypes.NamespaceSummary) bool {
+		return aws.ToString(v.Name) == name
+	})
+}
+
+func findNamespaceByID(ctx context.Context, conn *servicediscovery.Client, id string) (*awstypes.Namespace, error) {
 	input := &servicediscovery.GetNamespaceInput{
-		Id: aws.String(d.Id()),
+		Id: aws.String(id),
 	}
 
-	resp, err := conn.GetNamespace(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
-	}
+	output, err := conn.GetNamespace(ctx, input)
 
-	arn := aws.StringValue(resp.Namespace.Arn)
-	d.Set("name", resp.Namespace.Name)
-	d.Set("description", resp.Namespace.Description)
-	d.Set("arn", arn)
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceHTTPNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Service Discovery HTTP Namespace (%s) tags: %s", d.Id(), err)
+	if errs.IsA[*awstypes.NamespaceNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return resourceHTTPNamespaceRead(d, meta)
-}
-
-func resourceHTTPNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
-
-	input := &servicediscovery.DeleteNamespaceInput{
-		Id: aws.String(d.Id()),
-	}
-
-	output, err := conn.DeleteNamespace(input)
-
-	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error deleting Service Discovery HTTP Namespace (%s): %w", d.Id(), err)
+		return nil, err
 	}
 
-	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("error waiting for Service Discovery HTTP Namespace (%s) deletion: %w", d.Id(), err)
-		}
+	if output == nil || output.Namespace == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return nil
+	return output.Namespace, nil
 }

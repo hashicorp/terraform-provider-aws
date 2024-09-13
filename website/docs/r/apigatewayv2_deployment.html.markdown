@@ -13,7 +13,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 -> **Note:** Creating a deployment for an API requires at least one `aws_apigatewayv2_route` resource associated with that API. To avoid race conditions when all resources are being created together, you need to add implicit resource references via the `triggers` argument or explicit resource references using the [resource `depends_on` meta-argument](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html).
 
--> It is recommended to enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/docs/configuration/resources.html#create_before_destroy) in this resource configuration to properly order redeployments in Terraform.
+-> Enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy) in this resource configuration to properly order redeployments in Terraform.
 
 ## Example Usage
 
@@ -21,7 +21,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ```terraform
 resource "aws_apigatewayv2_deployment" "example" {
-  api_id      = aws_apigatewayv2_route.example.api_id
+  api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
 
   lifecycle {
@@ -40,10 +40,10 @@ resource "aws_apigatewayv2_deployment" "example" {
   description = "Example deployment"
 
   triggers = {
-    redeployment = sha1(join(",", list(
+    redeployment = sha1(join(",", tolist([
       jsonencode(aws_apigatewayv2_integration.example),
       jsonencode(aws_apigatewayv2_route.example),
-    )))
+    ])))
   }
 
   lifecycle {
@@ -54,25 +54,34 @@ resource "aws_apigatewayv2_deployment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `api_id` - (Required) The API identifier.
-* `description` - (Optional) The description for the deployment resource. Must be less than or equal to 1024 characters in length.
-* `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
+* `api_id` - (Required) API identifier.
+* `description` - (Optional) Description for the deployment resource. Must be less than or equal to 1024 characters in length.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The deployment identifier.
+* `id` - Deployment identifier.
 * `auto_deployed` - Whether the deployment was automatically released.
 
 ## Import
 
-`aws_apigatewayv2_deployment` can be imported by using the API identifier and deployment identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_deployment.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
 ```
 
 The `triggers` argument cannot be imported.

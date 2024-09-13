@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb_test
 
 import (
@@ -5,39 +8,40 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMemoryDBUser_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
+					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "user/"+rName),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "user/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
@@ -51,21 +55,57 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBUser_disappears(t *testing.T) {
+func TestAccMemoryDBUser_authenticationModeIAM(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(rName),
+				Config: testAccUserConfig_authenticationModeIAM(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceUser(), resourceName),
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "user/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "iam"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"authentication_mode.0.passwords",
+				},
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBUser_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,19 +114,20 @@ func TestAccMemoryDBUser_disappears(t *testing.T) {
 }
 
 func TestAccMemoryDBUser_update_accessString(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_withAccessString(rName, "on ~* &* +@all"),
+				Config: testAccUserConfig_accessString(rName, "on ~* &* +@all"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
+					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
 				),
 			},
@@ -97,9 +138,9 @@ func TestAccMemoryDBUser_update_accessString(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withAccessString(rName, "off ~* &* +@all"),
+				Config: testAccUserConfig_accessString(rName, "off ~* &* +@all"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
+					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "off ~* &* +@all"),
 				),
 			},
@@ -108,20 +149,21 @@ func TestAccMemoryDBUser_update_accessString(t *testing.T) {
 }
 
 func TestAccMemoryDBUser_update_passwords(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_withPasswords2(rName, "aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb"),
+				Config: testAccUserConfig_passwords2(rName, "aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct2),
 				),
 			},
 			{
@@ -131,10 +173,10 @@ func TestAccMemoryDBUser_update_passwords(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withPasswords1(rName, "aaaaaaaaaaaaaaaa"),
+				Config: testAccUserConfig_passwords1(rName, "aaaaaaaaaaaaaaaa"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct1),
 				),
 			},
 			{
@@ -144,10 +186,10 @@ func TestAccMemoryDBUser_update_passwords(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withPasswords2(rName, "cccccccccccccccc", "dddddddddddddddd"),
+				Config: testAccUserConfig_passwords2(rName, "cccccccccccccccc", "dddddddddddddddd"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct2),
 				),
 			},
 			{
@@ -160,22 +202,23 @@ func TestAccMemoryDBUser_update_passwords(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBUser_update_tags(t *testing.T) {
+func TestAccMemoryDBUser_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_withTags0(rName),
+				Config: testAccUserConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -185,82 +228,53 @@ func TestAccMemoryDBUser_update_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccUserConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
-			},
-			{
-				Config: testAccUserConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccUserConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
-			},
-			{
-				Config: testAccUserConfig_withTags0(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 		},
 	})
 }
 
-func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_memorydb_user" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_memorydb_user" {
+				continue
+			}
+
+			_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes[names.AttrUserName])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("MemoryDB User %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfmemorydb.FindUserByName(context.Background(), conn, rs.Primary.Attributes["user_name"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("MemoryDB User %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckUserExists(n string) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -271,19 +285,15 @@ func testAccCheckUserExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MemoryDB User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
-		_, err := tfmemorydb.FindUserByName(context.Background(), conn, rs.Primary.Attributes["user_name"])
+		_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes[names.AttrUserName])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccUserConfig(rName string) string {
+func testAccUserConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -301,7 +311,20 @@ resource "aws_memorydb_user" "test" {
 `, rName)
 }
 
-func testAccUserConfig_withAccessString(rName, accessString string) string {
+func testAccUserConfig_authenticationModeIAM(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_user" "test" {
+  access_string = "on ~* &* +@all"
+  user_name     = %[1]q
+
+  authentication_mode {
+    type = "iam"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_accessString(rName, accessString string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = %[2]q
@@ -315,7 +338,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, accessString)
 }
 
-func testAccUserConfig_withPasswords1(rName, password1 string) string {
+func testAccUserConfig_passwords1(rName, password1 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -329,7 +352,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, password1)
 }
 
-func testAccUserConfig_withPasswords2(rName, password1, password2 string) string {
+func testAccUserConfig_passwords2(rName, password1, password2 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -343,21 +366,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, password1, password2)
 }
 
-func testAccUserConfig_withTags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_memorydb_user" "test" {
-  access_string = "on ~* &* +@all"
-  user_name     = %[1]q
-
-  authentication_mode {
-    type      = "password"
-    passwords = ["aaaaaaaaaaaaaaaa"]
-  }
-}
-`, rName)
-}
-
-func testAccUserConfig_withTags1(rName, tagKey1, tagValue1 string) string {
+func testAccUserConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -375,7 +384,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccUserConfig_withTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccUserConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"

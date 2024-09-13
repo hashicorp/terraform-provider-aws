@@ -25,6 +25,33 @@ resource "aws_elasticache_user" "test" {
 }
 ```
 
+```terraform
+resource "aws_elasticache_user" "test" {
+  user_id       = "testUserId"
+  user_name     = "testUserName"
+  access_string = "on ~* +@all"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type = "iam"
+  }
+}
+```
+
+```terraform
+resource "aws_elasticache_user" "test" {
+  user_id       = "testUserId"
+  user_name     = "testUserName"
+  access_string = "on ~* +@all"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type      = "password"
+    passwords = ["password1", "password2"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -36,20 +63,44 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `authentication_mode` - (Optional) Denotes the user's authentication properties. Detailed below.
 * `no_password_required` - (Optional) Indicates a password is not required for this user.
 * `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.
 * `tags` - (Optional) A list of tags to be added to this resource. A tag is a key-value pair.
 
-## Attributes Reference
+### authentication_mode Configuration Block
 
-In addition to all arguments above, the following attributes are exported:
+* `passwords` - (Optional) Specifies the passwords to use for authentication if `type` is set to `password`.
+* `type` - (Required) Specifies the authentication type. Possible options are: `password`, `no-password-required` or `iam`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the created ElastiCache User.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `read` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
+
 ## Import
 
-ElastiCache users can be imported using the `user_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache users using the `user_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_user.my_user
+  id = "userId1"
+}
 ```
-$ terraform import aws_elasticache_user.my_user userId1
+
+Using `terraform import`, import ElastiCache users using the `user_id`. For example:
+
+```console
+% terraform import aws_elasticache_user.my_user userId1
 ```

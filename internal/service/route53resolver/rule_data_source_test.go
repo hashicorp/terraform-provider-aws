@@ -1,67 +1,71 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(route53resolver.EndpointsID, testAccErrorCheckSkipRoute53)
+	acctest.RegisterServiceErrorCheckFunc(names.Route53ResolverServiceID, testAccErrorCheckSkipRoute53)
 }
 
 func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	domainName := acctest.RandomDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
 	ds2ResourceName := "data.aws_route53_resolver_rule.by_domain_name"
 	ds3ResourceName := "data.aws_route53_resolver_rule.by_name_and_rule_type"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleDataSource_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", resourceName, "owner_id"),
+				Config: testAccRuleDataSourceConfig_basic(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "share_status", resourceName, "share_status"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "domain_name", resourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "owner_id", resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "resolver_rule_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "resolver_rule_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "share_status", resourceName, "share_status"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "domain_name", resourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "owner_id", resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "resolver_rule_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "resolver_rule_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "share_status", resourceName, "share_status"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -69,29 +73,31 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	domainName := acctest.RandomDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleDataSource_resolverEndpointIdWithTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", resourceName, "owner_id"),
+				Config: testAccRuleDataSourceConfig_resolverEndpointIDTags(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "share_status", resourceName, "share_status"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttr(ds1ResourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key1", resourceName, "tags.Key1"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key2", resourceName, "tags.Key2"),
 				),
@@ -101,110 +107,110 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 }
 
 func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
-	var providers []*schema.Provider
+	ctx := acctest.Context(t)
+	domainName := acctest.RandomDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleDataSource_sharedByMe(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", resourceName, "owner_id"),
+				Config: testAccRuleDataSourceConfig_sharedByMe(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "share_status", "SHARED_BY_ME"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttr(ds1ResourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key1", resourceName, "tags.Key1"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key2", resourceName, "tags.Key2"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
 func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
-	var providers []*schema.Provider
+	ctx := acctest.Context(t)
+	domainName := acctest.RandomDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleDataSource_sharedWithMe(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", resourceName, "owner_id"),
+				Config: testAccRuleDataSourceConfig_sharedWithMe(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "share_status", "SHARED_WITH_ME"),
 					// Tags cannot be retrieved for rules shared with us.
-					resource.TestCheckResourceAttr(ds1ResourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func testAccRuleDataSource_basic(rName string) string {
+func testAccRuleDataSourceConfig_basic(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "%[1]s.example.com"
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "SYSTEM"
   name        = %[1]q
 }
 
 data "aws_route53_resolver_rule" "by_resolver_rule_id" {
-  resolver_rule_id = aws_route53_resolver_rule.example.id
+  resolver_rule_id = aws_route53_resolver_rule.test.id
 }
 
 data "aws_route53_resolver_rule" "by_domain_name" {
-  domain_name = aws_route53_resolver_rule.example.domain_name
+  domain_name = aws_route53_resolver_rule.test.domain_name
 }
 
 data "aws_route53_resolver_rule" "by_name_and_rule_type" {
-  name      = aws_route53_resolver_rule.example.name
-  rule_type = aws_route53_resolver_rule.example.rule_type
+  name      = aws_route53_resolver_rule.test.name
+  rule_type = aws_route53_resolver_rule.test.rule_type
 }
-`, rName)
+`, rName, domainName)
 }
 
-func testAccRuleDataSource_resolverEndpointIdWithTags(rName string) string {
-	return testAccRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "%[1]s.example.com"
+func testAccRuleDataSourceConfig_resolverEndpointIDTags(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -217,19 +223,19 @@ resource "aws_route53_resolver_rule" "example" {
 }
 
 data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
-  resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
+  resolver_endpoint_id = aws_route53_resolver_rule.test.resolver_endpoint_id
 }
-`, rName)
+`, rName, domainName))
 }
 
-func testAccRuleDataSource_sharedByMe(rName string) string {
-	return acctest.ConfigAlternateAccountProvider() + testAccRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "%[1]s.example.com"
+func testAccRuleDataSourceConfig_sharedByMe(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -247,7 +253,7 @@ resource "aws_ram_resource_share" "test" {
 }
 
 resource "aws_ram_resource_association" "test" {
-  resource_arn       = aws_route53_resolver_rule.example.arn
+  resource_arn       = aws_route53_resolver_rule.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
@@ -259,21 +265,21 @@ resource "aws_ram_principal_association" "test" {
 }
 
 data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
-  resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
+  resolver_endpoint_id = aws_route53_resolver_rule.test.resolver_endpoint_id
 
   depends_on = [aws_ram_resource_association.test, aws_ram_principal_association.test]
 }
-`, rName)
+`, rName, domainName))
 }
 
-func testAccRuleDataSource_sharedWithMe(rName string) string {
-	return acctest.ConfigAlternateAccountProvider() + testAccRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "%[1]s.example.com"
+func testAccRuleDataSourceConfig_sharedWithMe(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -291,7 +297,7 @@ resource "aws_ram_resource_share" "test" {
 }
 
 resource "aws_ram_resource_association" "test" {
-  resource_arn       = aws_route53_resolver_rule.example.arn
+  resource_arn       = aws_route53_resolver_rule.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
@@ -305,11 +311,11 @@ resource "aws_ram_principal_association" "test" {
 data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
   provider = "awsalternate"
 
-  resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
+  resolver_endpoint_id = aws_route53_resolver_rule.test.resolver_endpoint_id
 
   depends_on = [aws_ram_resource_association.test, aws_ram_principal_association.test]
 }
-`, rName)
+`, rName, domainName))
 }
 
 // testAccErrorCheckSkipRoute53 skips Route53 tests that have error messages indicating unsupported features

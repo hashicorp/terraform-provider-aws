@@ -1,32 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceConfigurationAggregator() *schema.Resource {
+// @SDKResource("aws_config_configuration_aggregator", name="Configuration Aggregator")
+// @Tags(identifierAttribute="arn")
+func resourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationAggregatorPut,
-		Read:   resourceConfigurationAggregatorRead,
-		Update: resourceConfigurationAggregatorPut,
-		Delete: resourceConfigurationAggregatorDelete,
+		CreateWithoutTimeout: resourceConfigurationAggregatorPut,
+		ReadWithoutTimeout:   resourceConfigurationAggregatorRead,
+		UpdateWithoutTimeout: resourceConfigurationAggregatorPut,
+		DeleteWithoutTimeout: resourceConfigurationAggregatorDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -42,16 +51,6 @@ func ResourceConfigurationAggregator() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
 			"account_aggregation_source": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -84,6 +83,16 @@ func ResourceConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"organization_aggregation_source": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -104,7 +113,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -112,128 +121,208 @@ func ResourceConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	req := &configservice.PutConfigurationAggregatorInput{
-		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
-		Tags:                        Tags(tags.IgnoreAWS()),
-	}
+	if d.IsNewResource() || d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		name := d.Get(names.AttrName).(string)
+		input := &configservice.PutConfigurationAggregatorInput{
+			ConfigurationAggregatorName: aws.String(name),
+			Tags:                        getTagsIn(ctx),
+		}
 
-	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-		req.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
+			input.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
+		}
 
-	if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-		req.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
-	}
+		if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
+		}
 
-	resp, err := conn.PutConfigurationAggregator(req)
-	if err != nil {
-		return fmt.Errorf("error creating aggregator: %w", err)
-	}
+		output, err := conn.PutConfigurationAggregator(ctx, input)
 
-	configAgg := resp.ConfigurationAggregator
-	d.SetId(aws.StringValue(configAgg.ConfigurationAggregatorName))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Aggregator (%s): %s", name, err)
+		}
 
-	if !d.IsNewResource() && d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		arn := aws.StringValue(configAgg.ConfigurationAggregatorArn)
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Config Configuration Aggregator (%s) tags: %w", arn, err)
+		if d.IsNewResource() {
+			d.SetId(aws.ToString(output.ConfigurationAggregator.ConfigurationAggregatorName))
 		}
 	}
 
-	return resourceConfigurationAggregatorRead(d, meta)
+	return append(diags, resourceConfigurationAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	req := &configservice.DescribeConfigurationAggregatorsInput{
-		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
-	}
+	aggregator, err := findConfigurationAggregatorByName(ctx, conn, d.Id())
 
-	res, err := conn.DescribeConfigurationAggregators(req)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
-		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Configuration Aggregator", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ConfigService Configuration Aggregator (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Aggregator", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ConfigService Configuration Aggregator (%s): %s", d.Id(), err)
 	}
-
-	if !d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
-		log.Printf("[WARN] No aggregators returned (%s), removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Aggregator", d.Id(), errors.New("not found after creation"))
-	}
-
-	aggregator := res.ConfigurationAggregators[0]
-	arn := aws.StringValue(aggregator.ConfigurationAggregatorArn)
-	d.Set("arn", arn)
-	d.Set("name", aggregator.ConfigurationAggregatorName)
 
 	if err := d.Set("account_aggregation_source", flattenAccountAggregationSources(aggregator.AccountAggregationSources)); err != nil {
-		return fmt.Errorf("error setting account_aggregation_source: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting account_aggregation_source: %s", err)
 	}
-
+	d.Set(names.AttrARN, aggregator.ConfigurationAggregatorArn)
+	d.Set(names.AttrName, aggregator.ConfigurationAggregatorName)
 	if err := d.Set("organization_aggregation_source", flattenOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
-		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting organization_aggregation_source: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Config Configuration Aggregator (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceConfigurationAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	req := &configservice.DeleteConfigurationAggregatorInput{
+	log.Printf("[DEBUG] Deleting ConfigService Configuration Aggregator: %s", d.Id())
+	_, err := conn.DeleteConfigurationAggregator(ctx, &configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteConfigurationAggregator(req)
+	})
 
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
+	if errs.IsA[*types.NoSuchConfigurationAggregatorException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Configuration Aggregator (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findConfigurationAggregatorByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationAggregator, error) {
+	input := &configservice.DescribeConfigurationAggregatorsInput{
+		ConfigurationAggregatorNames: []string{name},
+	}
+
+	return findConfigurationAggregator(ctx, conn, input)
+}
+
+func findConfigurationAggregator(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationAggregatorsInput) (*types.ConfigurationAggregator, error) {
+	output, err := findConfigurationAggregators(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findConfigurationAggregators(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationAggregatorsInput) ([]types.ConfigurationAggregator, error) {
+	var output []types.ConfigurationAggregator
+
+	pages := configservice.NewDescribeConfigurationAggregatorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.NoSuchConfigurationAggregatorException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ConfigurationAggregators...)
+	}
+
+	return output, nil
+}
+
+func expandAccountAggregationSources(tfList []interface{}) []types.AccountAggregationSource {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error deleting Config Configuration Aggregator (%s): %w", d.Id(), err)
+	var apiObjects []types.AccountAggregationSource
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := types.AccountAggregationSource{
+			AllAwsRegions: tfMap["all_regions"].(bool),
+		}
+
+		if v, ok := tfMap["account_ids"].([]interface{}); ok && len(v) > 0 {
+			apiObject.AccountIds = flex.ExpandStringValueList(v)
+		}
+
+		if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
+			apiObject.AwsRegions = flex.ExpandStringValueList(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return nil
+	return apiObjects
+}
+
+func expandOrganizationAggregationSource(tfMap map[string]interface{}) *types.OrganizationAggregationSource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.OrganizationAggregationSource{
+		AllAwsRegions: tfMap["all_regions"].(bool),
+		RoleArn:       aws.String(tfMap[names.AttrRoleARN].(string)),
+	}
+
+	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AwsRegions = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
+func flattenAccountAggregationSources(apiObjects []types.AccountAggregationSource) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	apiObject := apiObjects[0]
+	tfMap := map[string]interface{}{
+		"account_ids": apiObject.AccountIds,
+		"all_regions": apiObject.AllAwsRegions,
+		"regions":     apiObject.AwsRegions,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenOrganizationAggregationSource(apiObject *types.OrganizationAggregationSource) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"all_regions":     apiObject.AllAwsRegions,
+		"regions":         apiObject.AwsRegions,
+		names.AttrRoleARN: aws.ToString(apiObject.RoleArn),
+	}
+
+	return []interface{}{tfMap}
 }

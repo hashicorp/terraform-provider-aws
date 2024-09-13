@@ -1,58 +1,75 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTrafficMirrorSession() *schema.Resource {
+// @SDKResource("aws_ec2_traffic_mirror_session", name="Traffic Mirror Session")
+// @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
+func resourceTrafficMirrorSession() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTrafficMirrorSessionCreate,
-		Update: resourceTrafficMirrorSessionUpdate,
-		Read:   resourceTrafficMirrorSessionRead,
-		Delete: resourceTrafficMirrorSessionDelete,
+		CreateWithoutTimeout: resourceTrafficMirrorSessionCreate,
+		UpdateWithoutTimeout: resourceTrafficMirrorSessionUpdate,
+		ReadWithoutTimeout:   resourceTrafficMirrorSessionRead,
+		DeleteWithoutTimeout: resourceTrafficMirrorSessionDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"packet_length": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"session_number": {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 32766),
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"traffic_mirror_filter_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -67,201 +84,165 @@ func ResourceTrafficMirrorSession() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 16777216),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceTrafficMirrorSessionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
-		NetworkInterfaceId:    aws.String(d.Get("network_interface_id").(string)),
+		ClientToken:           aws.String(id.UniqueId()),
+		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
+		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 		TrafficMirrorTargetId: aws.String(d.Get("traffic_mirror_target_id").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("packet_length"); ok {
-		input.PacketLength = aws.Int64(int64(v.(int)))
+		input.PacketLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("session_number"); ok {
-		input.SessionNumber = aws.Int64(int64(v.(int)))
+		input.SessionNumber = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("virtual_network_id"); ok {
-		input.VirtualNetworkId = aws.Int64(int64(v.(int)))
+		input.VirtualNetworkId = aws.Int32(int32(v.(int)))
 	}
 
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorSession)
+	output, err := conn.CreateTrafficMirrorSession(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Traffic Mirror Session: %s", err)
 	}
 
-	out, err := conn.CreateTrafficMirrorSession(input)
-	if nil != err {
-		return fmt.Errorf("Error creating traffic mirror session %v", err)
-	}
+	d.SetId(aws.ToString(output.TrafficMirrorSession.TrafficMirrorSessionId))
 
-	d.SetId(aws.StringValue(out.TrafficMirrorSession.TrafficMirrorSessionId))
-	return resourceTrafficMirrorSessionRead(d, meta)
+	return append(diags, resourceTrafficMirrorSessionRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	sessionId := d.Id()
-	input := &ec2.ModifyTrafficMirrorSessionInput{
-		TrafficMirrorSessionId: &sessionId,
-	}
+	session, err := findTrafficMirrorSessionByID(ctx, conn, d.Id())
 
-	if d.HasChange("session_number") {
-		n := d.Get("session_number")
-		input.SessionNumber = aws.Int64(int64(n.(int)))
-	}
-
-	if d.HasChange("traffic_mirror_filter_id") {
-		n := d.Get("traffic_mirror_filter_id")
-		input.TrafficMirrorFilterId = aws.String(n.(string))
-	}
-
-	if d.HasChange("traffic_mirror_target_id") {
-		n := d.Get("traffic_mirror_target_id")
-		input.TrafficMirrorTargetId = aws.String(n.(string))
-	}
-
-	var removeFields []*string
-	if d.HasChange("description") {
-		n := d.Get("description")
-		if "" != n {
-			input.Description = aws.String(n.(string))
-		} else {
-			removeFields = append(removeFields, aws.String("description"))
-		}
-	}
-
-	if d.HasChange("packet_length") {
-		n := d.Get("packet_length")
-		if nil != n && n.(int) > 0 {
-			input.PacketLength = aws.Int64(int64(n.(int)))
-		} else {
-			removeFields = append(removeFields, aws.String("packet-length"))
-		}
-	}
-	log.Printf("[DEBUG] removeFields %v", removeFields)
-
-	if d.HasChange("virtual_network_id") {
-		n := d.Get("virtual_network_id")
-		log.Printf("[DEBUG] VNI has change %v", n)
-		if nil != n && n.(int) > 0 {
-			input.VirtualNetworkId = aws.Int64(int64(n.(int)))
-		} else {
-			removeFields = append(removeFields, aws.String("virtual-network-id"))
-		}
-	}
-
-	log.Printf("[DEBUG] removeFields %v", removeFields)
-	if len(removeFields) > 0 {
-		input.SetRemoveFields(removeFields)
-	}
-
-	_, err := conn.ModifyTrafficMirrorSession(input)
-	if nil != err {
-		return fmt.Errorf("Error updating traffic mirror session %v", err)
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Traffic Mirror Session (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceTrafficMirrorSessionRead(d, meta)
-}
-
-func resourceTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	sessionId := d.Id()
-	input := &ec2.DescribeTrafficMirrorSessionsInput{
-		TrafficMirrorSessionIds: []*string{
-			&sessionId,
-		},
-	}
-
-	out, err := conn.DescribeTrafficMirrorSessions(input)
-
-	if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorSessionId.NotFound") {
-		log.Printf("[WARN] EC2 Traffic Mirror Session (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Traffic Mirror Session %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	if nil != err {
-		return fmt.Errorf("error describing EC2 Traffic Mirror Session (%s): %w", sessionId, err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Traffic Mirror Session (%s): %s", d.Id(), err)
 	}
 
-	if 0 == len(out.TrafficMirrorSessions) {
-		log.Printf("[WARN] EC2 Traffic Mirror Session (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	session := out.TrafficMirrorSessions[0]
-	d.Set("network_interface_id", session.NetworkInterfaceId)
+	ownerID := aws.ToString(session.OwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ec2",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: ownerID,
+		Resource:  "traffic-mirror-session/" + d.Id(),
+	}.String()
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, session.Description)
+	d.Set(names.AttrNetworkInterfaceID, session.NetworkInterfaceId)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("packet_length", session.PacketLength)
 	d.Set("session_number", session.SessionNumber)
 	d.Set("traffic_mirror_filter_id", session.TrafficMirrorFilterId)
 	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
-	d.Set("description", session.Description)
-	d.Set("packet_length", session.PacketLength)
 	d.Set("virtual_network_id", session.VirtualNetworkId)
 
-	tags := KeyValueTags(session.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, session.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("owner_id", session.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(session.OwnerId),
-		Resource:  fmt.Sprintf("traffic-mirror-session/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
-
-	return nil
+	return diags
 }
 
-func resourceTrafficMirrorSessionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	sessionId := d.Id()
-	input := &ec2.DeleteTrafficMirrorSessionInput{
-		TrafficMirrorSessionId: &sessionId,
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &ec2.ModifyTrafficMirrorSessionInput{
+			TrafficMirrorSessionId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("session_number") {
+			input.SessionNumber = aws.Int32(int32(d.Get("session_number").(int)))
+		}
+
+		if d.HasChange("traffic_mirror_filter_id") {
+			input.TrafficMirrorFilterId = aws.String(d.Get("traffic_mirror_filter_id").(string))
+		}
+
+		if d.HasChange("traffic_mirror_target_id") {
+			input.TrafficMirrorTargetId = aws.String(d.Get("traffic_mirror_target_id").(string))
+		}
+
+		var removeFields []awstypes.TrafficMirrorSessionField
+
+		if d.HasChange(names.AttrDescription) {
+			if v := d.Get(names.AttrDescription).(string); v != "" {
+				input.Description = aws.String(v)
+			} else {
+				removeFields = append(removeFields, awstypes.TrafficMirrorSessionFieldDescription)
+			}
+		}
+
+		if d.HasChange("packet_length") {
+			if v := d.Get("packet_length").(int); v != 0 {
+				input.PacketLength = aws.Int32(int32(v))
+			} else {
+				removeFields = append(removeFields, awstypes.TrafficMirrorSessionFieldPacketLength)
+			}
+		}
+
+		if d.HasChange("virtual_network_id") {
+			if v := d.Get("virtual_network_id").(int); v != 0 {
+				input.VirtualNetworkId = aws.Int32(int32(v))
+			} else {
+				removeFields = append(removeFields, awstypes.TrafficMirrorSessionFieldVirtualNetworkId)
+			}
+		}
+
+		if len(removeFields) > 0 {
+			input.RemoveFields = removeFields
+		}
+
+		_, err := conn.ModifyTrafficMirrorSession(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Session (%s): %s", d.Id(), err)
+		}
 	}
 
-	_, err := conn.DeleteTrafficMirrorSession(input)
-	if nil != err {
-		return fmt.Errorf("error deleting EC2 Traffic Mirror Session (%s): %w", sessionId, err)
+	return append(diags, resourceTrafficMirrorSessionRead(ctx, d, meta)...)
+}
+
+func resourceTrafficMirrorSessionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Session: %s", d.Id())
+	_, err := conn.DeleteTrafficMirrorSession(ctx, &ec2.DeleteTrafficMirrorSessionInput{
+		TrafficMirrorSessionId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorSessionIdNotFound) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Traffic Mirror Session (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }

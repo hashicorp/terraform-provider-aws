@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
@@ -13,7 +16,7 @@ func resourceCertificateAuthorityMigrateState(v int, is *terraform.InstanceState
 		log.Println("[INFO] Found ACM PCA Certificate Authority state v0; migrating to v1")
 		return migrateCertificateAuthorityStateV0toV1(is)
 	default:
-		return is, fmt.Errorf("Unexpected schema version: %d", v)
+		return is, fmt.Errorf("unexpected schema version: %d", v)
 	}
 }
 

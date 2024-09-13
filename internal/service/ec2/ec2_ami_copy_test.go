@@ -1,40 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2AMICopy_basic(t *testing.T) {
-	var image ec2.Image
+	ctx := acctest.Context(t)
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMICopyConfig(rName),
+				Config: testAccAMICopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					testAccCheckAMICopyAttributes(&image, rName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 				),
 			},
 		},
@@ -42,28 +47,29 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_description(t *testing.T) {
-	var image ec2.Image
+	ctx := acctest.Context(t)
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMICopyDescriptionConfig(rName, "description1"),
+				Config: testAccAMICopyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					testAccCheckAMIExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
-				Config: testAccAMICopyDescriptionConfig(rName, "description2"),
+				Config: testAccAMICopyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					testAccCheckAMIExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -71,21 +77,22 @@ func TestAccEC2AMICopy_description(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_enaSupport(t *testing.T) {
-	var image ec2.Image
+	ctx := acctest.Context(t)
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMICopyENASupportConfig(rName),
+				Config: testAccAMICopyConfig_enaSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
+					testAccCheckAMIExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, "ena_support", acctest.CtTrue),
 				),
 			},
 		},
@@ -93,22 +100,23 @@ func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
-	var image ec2.Image
+	ctx := acctest.Context(t)
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMICopyDestOutpostConfig(rName),
+				Config: testAccAMICopyConfig_destOutpost(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_outpost_arn", outpostDataSourceName, "arn"),
+					testAccCheckAMIExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_outpost_arn", outpostDataSourceName, names.AttrARN),
 				),
 			},
 		},
@@ -116,58 +124,59 @@ func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_tags(t *testing.T) {
-	var ami ec2.Image
+	ctx := acctest.Context(t)
+	var ami awstypes.Image
 	resourceName := "aws_ami_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMICopyTags1Config(rName, "key1", "value1"),
+				Config: testAccAMICopyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccAMICopyTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAMICopyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAMICopyTags1Config(rName, "key2", "value2"),
+				Config: testAccAMICopyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAMICopyAttributes(image *ec2.Image, expectedName string) resource.TestCheckFunc {
+func testAccCheckAMICopyAttributes(image *awstypes.Image, expectedName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if expected := ec2.ImageStateAvailable; aws.StringValue(image.State) != expected {
-			return fmt.Errorf("invalid image state; expected %s, got %s", expected, aws.StringValue(image.State))
+		if expected := awstypes.ImageStateAvailable; image.State != expected {
+			return fmt.Errorf("invalid image state; expected %s, got %s", expected, string(image.State))
 		}
-		if expected := ec2.ImageTypeValuesMachine; aws.StringValue(image.ImageType) != expected {
-			return fmt.Errorf("wrong image type; expected %s, got %s", expected, aws.StringValue(image.ImageType))
+		if expected := awstypes.ImageTypeValuesMachine; image.ImageType != expected {
+			return fmt.Errorf("wrong image type; expected %s, got %s", expected, string(image.ImageType))
 		}
-		if expected := expectedName; aws.StringValue(image.Name) != expected {
-			return fmt.Errorf("wrong name; expected %s, got %s", expected, aws.StringValue(image.Name))
+		if expected := expectedName; aws.ToString(image.Name) != expected {
+			return fmt.Errorf("wrong name; expected %s, got %s", expected, aws.ToString(image.Name))
 		}
 
 		snapshots := []string{}
@@ -176,7 +185,7 @@ func testAccCheckAMICopyAttributes(image *ec2.Image, expectedName string) resour
 			// even for a block device that is an
 			// EBS volume.
 			if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-				snapshots = append(snapshots, aws.StringValue(bdm.Ebs.SnapshotId))
+				snapshots = append(snapshots, aws.ToString(bdm.Ebs.SnapshotId))
 			}
 		}
 
@@ -220,7 +229,7 @@ resource "aws_ebs_snapshot" "test" {
 `, rName)
 }
 
-func testAccAMICopyTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAMICopyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccAMICopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = %[1]q
@@ -245,7 +254,7 @@ resource "aws_ami_copy" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAMICopyTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAMICopyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccAMICopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = %[1]q
@@ -271,7 +280,7 @@ resource "aws_ami_copy" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAMICopyConfig(rName string) string {
+func testAccAMICopyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAMICopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = "%s-source"
@@ -292,7 +301,7 @@ resource "aws_ami_copy" "test" {
 `, rName, rName))
 }
 
-func testAccAMICopyDescriptionConfig(rName, description string) string {
+func testAccAMICopyConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(testAccAMICopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = "%s-source"
@@ -314,7 +323,7 @@ resource "aws_ami_copy" "test" {
 `, rName, description, rName))
 }
 
-func testAccAMICopyENASupportConfig(rName string) string {
+func testAccAMICopyConfig_enaSupport(rName string) string {
 	return acctest.ConfigCompose(testAccAMICopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
@@ -336,7 +345,7 @@ resource "aws_ami_copy" "test" {
 `, rName, rName))
 }
 
-func testAccAMICopyDestOutpostConfig(rName string) string {
+func testAccAMICopyConfig_destOutpost(rName string) string {
 	return acctest.ConfigCompose(testAccAMICopyBaseConfig(rName), fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

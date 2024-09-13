@@ -32,8 +32,7 @@ resource "aws_ebs_snapshot_import" "example" {
 
 ## Argument Reference
 
-
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_data` - (Optional) The client-specific data. Detailed below.
 * `description` - (Optional) The description string for the import snapshot task.
@@ -65,17 +64,16 @@ The following arguments are supported:
 * `s3_bucket` - The name of the Amazon S3 bucket where the disk image is located.
 * `s3_key` - The file name of the disk image.
 
-### Timeouts
+## Timeouts
 
-`aws_ebs_snapshot_import` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `60 minutes`) Used for importing the EBS snapshot
-- `delete` - (Default `10 minutes`) Used for deleting the EBS snapshot
+- `create` - (Default `60m`)
+- `delete` - (Default `10m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
@@ -83,4 +81,4 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `volume_size` - The size of the drive in GiBs.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

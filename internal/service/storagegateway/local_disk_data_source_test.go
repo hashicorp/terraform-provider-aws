@@ -1,38 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccLocalDiskDataSourceConfig_DiskNode_NonExistent(rName),
-				ExpectError: regexp.MustCompile(`no results found`),
+				Config:      testAccLocalDiskDataSourceConfig_nodeNonExistent(rName),
+				ExpectError: regexache.MustCompile(`no matching Storage Gateway Local Disk found`),
 			},
 			{
-				Config: testAccLocalDiskDataSourceConfig_DiskNode(rName),
+				Config: testAccLocalDiskDataSourceConfig_node(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccLocalDiskExistsDataSource(dataSourceName),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexache.MustCompile(`.+`)),
 				),
 			},
 		},
@@ -40,46 +41,34 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 }
 
 func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccLocalDiskDataSourceConfig_DiskPath_NonExistent(rName),
-				ExpectError: regexp.MustCompile(`no results found`),
+				Config:      testAccLocalDiskDataSourceConfig_pathNonExistent(rName),
+				ExpectError: regexache.MustCompile(`no matching Storage Gateway Local Disk found`),
 			},
 			{
-				Config: testAccLocalDiskDataSourceConfig_DiskPath(rName),
+				Config: testAccLocalDiskDataSourceConfig_path(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccLocalDiskExistsDataSource(dataSourceName),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexache.MustCompile(`.+`)),
 				),
 			},
 		},
 	})
 }
 
-func testAccLocalDiskExistsDataSource(dataSourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[dataSourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", dataSourceName)
-		}
-
-		return nil
-	}
-}
-
-func testAccLocalDiskBaseDataSourceConfig(rName string) string {
+func testAccLocalDiskDataSourceConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccGatewayConfig_GatewayType_FileS3(rName),
+		testAccGatewayConfig_typeFileS3(rName),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
@@ -100,9 +89,9 @@ resource "aws_volume_attachment" "test" {
 `, rName))
 }
 
-func testAccLocalDiskDataSourceConfig_DiskNode(rName string) string {
+func testAccLocalDiskDataSourceConfig_node(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLocalDiskBaseDataSourceConfig(rName),
+		testAccLocalDiskDataSourceConfig_base(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
   disk_node   = aws_volume_attachment.test.device_name
@@ -111,9 +100,9 @@ data "aws_storagegateway_local_disk" "test" {
 `)
 }
 
-func testAccLocalDiskDataSourceConfig_DiskNode_NonExistent(rName string) string {
+func testAccLocalDiskDataSourceConfig_nodeNonExistent(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLocalDiskBaseDataSourceConfig(rName),
+		testAccLocalDiskDataSourceConfig_base(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
   disk_node   = replace(aws_volume_attachment.test.device_name, "xvdb", "nonexistent")
@@ -122,9 +111,9 @@ data "aws_storagegateway_local_disk" "test" {
 `)
 }
 
-func testAccLocalDiskDataSourceConfig_DiskPath(rName string) string {
+func testAccLocalDiskDataSourceConfig_path(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLocalDiskBaseDataSourceConfig(rName),
+		testAccLocalDiskDataSourceConfig_base(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
   disk_path   = split(".", aws_instance.test.instance_type)[0] == "m4" ? aws_volume_attachment.test.device_name : replace(aws_volume_attachment.test.device_name, "xvdb", "nvme1n1")
@@ -133,9 +122,9 @@ data "aws_storagegateway_local_disk" "test" {
 `)
 }
 
-func testAccLocalDiskDataSourceConfig_DiskPath_NonExistent(rName string) string {
+func testAccLocalDiskDataSourceConfig_pathNonExistent(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLocalDiskBaseDataSourceConfig(rName),
+		testAccLocalDiskDataSourceConfig_base(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
   disk_path   = replace(aws_volume_attachment.test.device_name, "xvdb", "nonexistent")

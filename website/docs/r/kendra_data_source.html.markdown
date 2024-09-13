@@ -1,0 +1,548 @@
+---
+subcategory: "Kendra"
+layout: "aws"
+page_title: "AWS: aws_kendra_data_source"
+description: |-
+  Terraform resource for managing an AWS Kendra Data Source.
+---
+
+# Resource: aws_kendra_data_source
+
+Terraform resource for managing an AWS Kendra Data Source.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id      = aws_kendra_index.example.id
+  name          = "example"
+  description   = "example"
+  language_code = "en"
+  type          = "CUSTOM"
+
+  tags = {
+    "hello" = "world"
+  }
+}
+```
+
+### S3 Connector
+
+#### With Schedule
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "S3"
+  role_arn = aws_iam_role.example.arn
+  schedule = "cron(9 10 1 * ? *)"
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.example.id
+    }
+  }
+}
+```
+
+#### With Access Control List
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "S3"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.example.id
+
+      access_control_list_configuration {
+        key_path = "s3://${aws_s3_bucket.example.id}/path-1"
+      }
+    }
+  }
+}
+```
+
+#### With Documents Metadata Configuration
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "S3"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name        = aws_s3_bucket.example.id
+      exclusion_patterns = ["example"]
+      inclusion_patterns = ["hello"]
+      inclusion_prefixes = ["world"]
+
+      documents_metadata_configuration {
+        s3_prefix = "example"
+      }
+    }
+  }
+}
+```
+
+### Web Crawler Connector
+
+#### With Seed URLs
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With Site Maps
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      urls {
+        site_maps_configuration {
+          site_maps = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With Web Crawler Mode
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      urls {
+        seed_url_configuration {
+          web_crawler_mode = "SUBDOMAINS"
+
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With Authentication Configuration
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  depends_on = [
+    aws_secretsmanager_secret_version.example
+  ]
+
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      authentication_configuration {
+        basic_authentication {
+          credentials = aws_secretsmanager_secret.example.arn
+          host        = "a.example.com"
+          port        = "443"
+        }
+      }
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With Crawl Depth
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      crawl_depth = 3
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With Max Links Per Page
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      max_links_per_page = 100
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With Max Urls Per Minute Crawl Rate
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      max_urls_per_minute_crawl_rate = 300
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With Proxy Configuration
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  depends_on = [
+    aws_secretsmanager_secret_version.example
+  ]
+
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      proxy_configuration {
+        credentials = aws_secretsmanager_secret.example.arn
+        host        = "a.example.com"
+        port        = "443"
+      }
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### With URL Exclusion and Inclusion Patterns
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    web_crawler_configuration {
+      url_exclusion_patterns = ["example"]
+      url_inclusion_patterns = ["hello"]
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "REPLACE_WITH_YOUR_URL"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `index_id` - (Required, Forces new resource) The identifier of the index for your Amazon Kendra data source.
+* `name` - (Required) A name for your data source connector.
+* `role_arn` - (Required, Optional in one scenario) The Amazon Resource Name (ARN) of a role with permission to access the data source connector. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html). You can't specify the `role_arn` parameter when the `type` parameter is set to `CUSTOM`. The `role_arn` parameter is required for all other data sources.
+* `type` - (Required, Forces new resource) The type of data source repository. For an updated list of values, refer to [Valid Values for Type](https://docs.aws.amazon.com/kendra/latest/dg/API_CreateDataSource.html#Kendra-CreateDataSource-request-Type).
+
+The following arguments are optional:
+
+* `configuration` - (Optional) A block with the configuration information to connect to your Data Source repository. You can't specify the `configuration` block when the `type` parameter is set to `CUSTOM`. [Detailed below](#configuration-block).
+* `custom_document_enrichment_configuration` - (Optional) A block with the configuration information for altering document metadata and content during the document ingestion process. For more information on how to create, modify and delete document metadata, or make other content alterations when you ingest documents into Amazon Kendra, see [Customizing document metadata during the ingestion process](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html). [Detailed below](#custom_document_enrichment_configuration-block).
+* `description` - (Optional) A description for the Data Source connector.
+* `language_code` - (Optional) The code for a language. This allows you to support a language for all documents when creating the Data Source connector. English is supported by default. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
+* `schedule` - (Optional) Sets the frequency for Amazon Kendra to check the documents in your Data Source repository and update the index. If you don't set a schedule Amazon Kendra will not periodically update the index. You can call the `StartDataSourceSyncJob` API to update the index.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### configuration Block
+
+The `configuration` configuration block supports the following arguments:
+
+* `s3_configuration` - (Required if `type` is set to `S3`) A block that provides the configuration information to connect to an Amazon S3 bucket as your data source. [Detailed below](#s3_configuration-block).
+* `web_crawler_configuration` - (Required if `type` is set to `WEBCRAWLER`) A block that provides the configuration information required for Amazon Kendra Web Crawler. [Detailed below](#web_crawler_configuration-block).
+
+### s3_configuration Block
+
+The `s3_configuration` configuration block supports the following arguments:
+
+* `access_control_list_configuration` - (Optional) A block that provides the path to the S3 bucket that contains the user context filtering files for the data source. For the format of the file, see [Access control for S3 data sources](https://docs.aws.amazon.com/kendra/latest/dg/s3-acl.html). [Detailed below](#access_control_list_configuration-block).
+* `bucket_name` - (Required) The name of the bucket that contains the documents.
+* `documents_metadata_configuration` - (Optional) A block that defines the Document metadata files that contain information such as the document access control information, source URI, document author, and custom attributes. Each metadata file contains metadata about a single document. [Detailed below](#documents_metadata_configuration-block).
+* `exclusion_patterns` - (Optional) A list of glob patterns for documents that should not be indexed. If a document that matches an inclusion prefix or inclusion pattern also matches an exclusion pattern, the document is not indexed. Refer to [Exclusion Patterns for more examples](https://docs.aws.amazon.com/kendra/latest/dg/API_S3DataSourceConfiguration.html#Kendra-Type-S3DataSourceConfiguration-ExclusionPatterns).
+* `inclusion_patterns` - (Optional) A list of glob patterns for documents that should be indexed. If a document that matches an inclusion pattern also matches an exclusion pattern, the document is not indexed. Refer to [Inclusion Patterns for more examples](https://docs.aws.amazon.com/kendra/latest/dg/API_S3DataSourceConfiguration.html#Kendra-Type-S3DataSourceConfiguration-InclusionPatterns).
+* `inclusion_prefixes` - (Optional) A list of S3 prefixes for the documents that should be included in the index.
+
+### access_control_list_configuration Block
+
+The `access_control_list_configuration` configuration block supports the following arguments:
+
+* `key_path` - (Optional) Path to the AWS S3 bucket that contains the ACL files.
+
+### documents_metadata_configuration Block
+
+The `documents_metadata_configuration` configuration block supports the following arguments:
+
+* `s3_prefix` - (Optional) A prefix used to filter metadata configuration files in the AWS S3 bucket. The S3 bucket might contain multiple metadata files. Use `s3_prefix` to include only the desired metadata files.
+
+### web_crawler_configuration Block
+
+The `web_crawler_configuration` configuration block supports the following arguments:
+
+* `authentication_configuration` - (Optional) A block with the configuration information required to connect to websites using authentication. You can connect to websites using basic authentication of user name and password. You use a secret in AWS Secrets Manager to store your authentication credentials. You must provide the website host name and port number. For example, the host name of `https://a.example.com/page1.html` is `"a.example.com"` and the port is `443`, the standard port for HTTPS. [Detailed below](#authentication_configuration-block).
+* `crawl_depth` - (Optional) Specifies the number of levels in a website that you want to crawl. The first level begins from the website seed or starting point URL. For example, if a website has 3 levels – index level (i.e. seed in this example), sections level, and subsections level – and you are only interested in crawling information up to the sections level (i.e. levels 0-1), you can set your depth to 1. The default crawl depth is set to `2`. Minimum value of `0`. Maximum value of `10`.
+* `max_content_size_per_page_in_mega_bytes` - (Optional) The maximum size (in MB) of a webpage or attachment to crawl. Files larger than this size (in MB) are skipped/not crawled. The default maximum size of a webpage or attachment is set to `50` MB. Minimum value of `1.0e-06`. Maximum value of `50`.
+* `max_links_per_page` - (Optional) The maximum number of URLs on a webpage to include when crawling a website. This number is per webpage. As a website’s webpages are crawled, any URLs the webpages link to are also crawled. URLs on a webpage are crawled in order of appearance. The default maximum links per page is `100`. Minimum value of `1`. Maximum value of `1000`.
+* `max_urls_per_minute_crawl_rate` - (Optional) The maximum number of URLs crawled per website host per minute. The default maximum number of URLs crawled per website host per minute is `300`. Minimum value of `1`. Maximum value of `300`.
+* `proxy_configuration` - (Optional) Configuration information required to connect to your internal websites via a web proxy. You must provide the website host name and port number. For example, the host name of `https://a.example.com/page1.html` is `"a.example.com"` and the port is `443`, the standard port for HTTPS. Web proxy credentials are optional and you can use them to connect to a web proxy server that requires basic authentication. To store web proxy credentials, you use a secret in [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html). [Detailed below](#proxy_configuration-block).
+* `url_exclusion_patterns` - (Optional) A list of regular expression patterns to exclude certain URLs to crawl. URLs that match the patterns are excluded from the index. URLs that don't match the patterns are included in the index. If a URL matches both an inclusion and exclusion pattern, the exclusion pattern takes precedence and the URL file isn't included in the index. Array Members: Minimum number of `0` items. Maximum number of `100` items. Length Constraints: Minimum length of `1`. Maximum length of `150`.
+* `url_inclusion_patterns` - (Optional) A list of regular expression patterns to include certain URLs to crawl. URLs that match the patterns are included in the index. URLs that don't match the patterns are excluded from the index. If a URL matches both an inclusion and exclusion pattern, the exclusion pattern takes precedence and the URL file isn't included in the index. Array Members: Minimum number of `0` items. Maximum number of `100` items. Length Constraints: Minimum length of `1`. Maximum length of `150`.
+* `urls` - (Required) A block that specifies the seed or starting point URLs of the websites or the sitemap URLs of the websites you want to crawl. You can include website subdomains. You can list up to `100` seed URLs and up to `3` sitemap URLs. You can only crawl websites that use the secure communication protocol, Hypertext Transfer Protocol Secure (HTTPS). If you receive an error when crawling a website, it could be that the website is blocked from crawling. When selecting websites to index, you must adhere to the [Amazon Acceptable Use Policy](https://aws.amazon.com/aup/) and all other Amazon terms. Remember that you must only use Amazon Kendra Web Crawler to index your own webpages, or webpages that you have authorization to index. [Detailed below](#urls-block).
+
+### authentication_configuration Block
+
+The `authentication_configuration` configuration block supports the following arguments:
+
+* `basic_authentication` - (Optional) The list of configuration information that's required to connect to and crawl a website host using basic authentication credentials. The list includes the name and port number of the website host. [Detailed below](#basic_authentication-block).
+
+### basic_authentication Block
+
+The `basic_authentication` configuration block supports the following arguments:
+
+* `credentials` - (Required) Your secret ARN, which you can create in AWS Secrets Manager. You use a secret if basic authentication credentials are required to connect to a website. The secret stores your credentials of user name and password.
+* `host` - (Required) The name of the website host you want to connect to using authentication credentials. For example, the host name of `https://a.example.com/page1.html` is `"a.example.com"`.
+* `port` - (Required) The port number of the website host you want to connect to using authentication credentials. For example, the port for `https://a.example.com/page1.html` is `443`, the standard port for HTTPS.
+
+### proxy_configuration Block
+
+The `proxy_configuration` configuration block supports the following arguments:
+
+* `credentials` - (Optional) Your secret ARN, which you can create in AWS Secrets Manager. The credentials are optional. You use a secret if web proxy credentials are required to connect to a website host. Amazon Kendra currently support basic authentication to connect to a web proxy server. The secret stores your credentials.
+* `host` - (Required) The name of the website host you want to connect to via a web proxy server. For example, the host name of `https://a.example.com/page1.html` is `"a.example.com"`.
+* `port` - (Required) The port number of the website host you want to connect to via a web proxy server. For example, the port for `https://a.example.com/page1.html` is `443`, the standard port for HTTPS.
+
+### urls Block
+
+The `urls` configuration block supports the following arguments:
+
+* `seed_url_configuration` - (Optional) A block that specifies the configuration of the seed or starting point URLs of the websites you want to crawl. You can choose to crawl only the website host names, or the website host names with subdomains, or the website host names with subdomains and other domains that the webpages link to. You can list up to `100` seed URLs. [Detailed below](#seed_url_configuration-block).
+* `site_maps_configuration` - (Optional) A block that specifies the configuration of the sitemap URLs of the websites you want to crawl. Only URLs belonging to the same website host names are crawled. You can list up to `3` sitemap URLs. [Detailed below](#site_maps_configuration-block).
+
+### seed_url_configuration Block
+
+The `seed_url_configuration` configuration block supports the following arguments:
+
+* `seed_urls` - (Required) The list of seed or starting point URLs of the websites you want to crawl. The list can include a maximum of `100` seed URLs. Array Members: Minimum number of `0` items. Maximum number of `100` items. Length Constraints: Minimum length of `1`. Maximum length of `2048`.
+* `web_crawler_mode` - (Optional) The default mode is set to `HOST_ONLY`. You can choose one of the following modes:
+    * `HOST_ONLY` – crawl only the website host names. For example, if the seed URL is `"abc.example.com"`, then only URLs with host name `"abc.example.com"` are crawled.
+    * `SUBDOMAINS` – crawl the website host names with subdomains. For example, if the seed URL is `"abc.example.com"`, then `"a.abc.example.com"` and `"b.abc.example.com"` are also crawled.
+    * `EVERYTHING` – crawl the website host names with subdomains and other domains that the webpages link to.
+
+### site_maps_configuration Block
+
+The `site_maps_configuration` configuration block supports the following arguments:
+
+* `site_maps` - (Required) The list of sitemap URLs of the websites you want to crawl. The list can include a maximum of `3` sitemap URLs.
+
+### custom_document_enrichment_configuration Block
+
+The `custom_document_enrichment_configuration` configuration block supports the following arguments:
+
+* `inline_configurations` - (Optional) Configuration information to alter document attributes or metadata fields and content when ingesting documents into Amazon Kendra. Minimum number of `0` items. Maximum number of `100` items. [Detailed below](#inline_configurations-block).
+* `post_extraction_hook_configuration` - (Optional) A block that specifies the configuration information for invoking a Lambda function in AWS Lambda on the structured documents with their metadata and text extracted. You can use a Lambda function to apply advanced logic for creating, modifying, or deleting document metadata and content. For more information, see [Advanced data manipulation](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#advanced-data-manipulation). [Detailed below](#pre_extraction_hook_configuration-and-post_extraction_hook_configuration-blocks).
+* `pre_extraction_hook_configuration` - (Optional) Configuration information for invoking a Lambda function in AWS Lambda on the original or raw documents before extracting their metadata and text. You can use a Lambda function to apply advanced logic for creating, modifying, or deleting document metadata and content. For more information, see [Advanced data manipulation](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#advanced-data-manipulation). [Detailed below](#pre_extraction_hook_configuration-and-post_extraction_hook_configuration-blocks).
+* `role_arn` - (Optional) The Amazon Resource Name (ARN) of a role with permission to run `pre_extraction_hook_configuration` and `post_extraction_hook_configuration` for altering document metadata and content during the document ingestion process. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
+
+### inline_configurations Block
+
+The `inline_configurations` configuration block supports the following arguments:
+
+* `condition` - (Optional) Configuration of the condition used for the target document attribute or metadata field when ingesting documents into Amazon Kendra. See [condition](#condition-block).
+* `document_content_deletion` - (Optional) `TRUE` to delete content if the condition used for the target attribute is met.
+* `target` - (Optional) Configuration of the target document attribute or metadata field when ingesting documents into Amazon Kendra. You can also include a value. [Detailed below](#target-block).
+
+### condition Block
+
+The `condition` configuration blocks supports the following arguments:
+
+* `condition_document_attribute_key` - (Required) The identifier of the document attribute used for the condition. For example, `_source_uri` could be an identifier for the attribute or metadata field that contains source URIs associated with the documents. Amazon Kendra currently does not support `_document_body` as an attribute key used for the condition.
+* `condition_on_value` - (Optional) The value used by the operator. For example, you can specify the value 'financial' for strings in the `_source_uri` field that partially match or contain this value. See [condition_on_value](#condition_on_value-block).
+* `operator` - (Required) The condition operator. For example, you can use `Contains` to partially match a string. Valid Values: `GreaterThan` | `GreaterThanOrEquals` | `LessThan` | `LessThanOrEquals` | `Equals` | `NotEquals` | `Contains` | `NotContains` | `Exists` | `NotExists` | `BeginsWith`.
+
+### target Block
+
+The `target` configuration block supports the following arguments:
+
+* `target_document_attribute_key` - (Optional) The identifier of the target document attribute or metadata field. For example, 'Department' could be an identifier for the target attribute or metadata field that includes the department names associated with the documents.
+* `target_document_attribute_value` - (Optional) The target value you want to create for the target attribute. For example, 'Finance' could be the target value for the target attribute key 'Department'. See [target_document_attribute_value](#target_document_attribute_value-block).
+* `target_document_attribute_value_deletion` - (Optional) `TRUE` to delete the existing target value for your specified target attribute key. You cannot create a target value and set this to `TRUE`. To create a target value (`TargetDocumentAttributeValue`), set this to `FALSE`.
+
+### target_document_attribute_value Block
+
+The `target_document_attribute_value` configuration blocks supports the following arguments:
+
+* `date_value` - (Optional) A date expressed as an ISO 8601 string. It is important for the time zone to be included in the ISO 8601 date-time format. As of this writing only UTC is supported. For example, `2012-03-25T12:30:10+00:00`.
+* `long_value` - (Optional) A long integer value.
+* `string_list_value` - (Optional) A list of strings.
+* `string` - (Optional) A string, such as "department".
+
+### pre_extraction_hook_configuration and post_extraction_hook_configuration Blocks
+
+The `pre_extraction_hook_configuration` and `post_extraction_hook_configuration` configuration blocks each supports the following arguments:
+
+* `invocation_condition` - (Optional) A block that specifies the condition used for when a Lambda function should be invoked. For example, you can specify a condition that if there are empty date-time values, then Amazon Kendra should invoke a function that inserts the current date-time. See [invocation_condition](#invocation_condition-block).
+* `lambda_arn` - (Required) The Amazon Resource Name (ARN) of a Lambda Function that can manipulate your document metadata fields or attributes and content.
+* `s3_bucket` - (Required) Stores the original, raw documents or the structured, parsed documents before and after altering them. For more information, see [Data contracts for Lambda functions](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#cde-data-contracts-lambda).
+
+### invocation_condition Block
+
+The `invocation_condition` configuration blocks supports the following arguments:
+
+* `condition_document_attribute_key` - (Required) The identifier of the document attribute used for the condition. For example, `_source_uri` could be an identifier for the attribute or metadata field that contains source URIs associated with the documents. Amazon Kendra currently does not support `_document_body` as an attribute key used for the condition.
+* `condition_on_value` - (Optional) The value used by the operator. For example, you can specify the value 'financial' for strings in the `_source_uri` field that partially match or contain this value. See [condition_on_value](#condition_on_value-block).
+* `operator` - (Required) The condition operator. For example, you can use `Contains` to partially match a string. Valid Values: `GreaterThan` | `GreaterThanOrEquals` | `LessThan` | `LessThanOrEquals` | `Equals` | `NotEquals` | `Contains` | `NotContains` | `Exists` | `NotExists` | `BeginsWith`.
+
+### condition_on_value Block
+
+The `condition_on_value` configuration blocks supports the following arguments:
+
+* `date_value` - (Optional) A date expressed as an ISO 8601 string. It is important for the time zone to be included in the ISO 8601 date-time format. As of this writing only UTC is supported. For example, `2012-03-25T12:30:10+00:00`.
+* `long_value` - (Optional) A long integer value.
+* `string_list_value` - (Optional) A list of strings.
+* `string` - (Optional) A string, such as "department".
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the Data Source.
+* `created_at` - The Unix timestamp of when the Data Source was created.
+* `data_source_id` - The unique identifiers of the Data Source.
+* `error_message` - When the Status field value is `FAILED`, the ErrorMessage field contains a description of the error that caused the Data Source to fail.
+* `id` - The unique identifiers of the Data Source and index separated by a slash (`/`).
+* `status` - The current status of the Data Source. When the status is `ACTIVE` the Data Source is ready to use. When the status is `FAILED`, the `error_message` field contains the reason that the Data Source failed.
+* `updated_at` - The Unix timestamp of when the Data Source was last updated.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kendra Data Source using the unique identifiers of the data_source and index separated by a slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_kendra_data_source.example
+  id = "1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f"
+}
+```
+
+Using `terraform import`, import Kendra Data Source using the unique identifiers of the data_source and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_data_source.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
+```

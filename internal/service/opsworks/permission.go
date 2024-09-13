@@ -1,25 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourcePermission() *schema.Resource {
+// @SDKResource("aws_opsworks_permission", name="Permission")
+func resourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSetPermission,
-		Update: resourceSetPermission,
-		Delete: resourcePermissionDelete,
-		Read:   resourcePermissionRead,
+		CreateWithoutTimeout: resourceSetPermission,
+		ReadWithoutTimeout:   resourcePermissionRead,
+		UpdateWithoutTimeout: resourceSetPermission,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Schema: map[string]*schema.Schema{
 			"allow_ssh": {
@@ -31,10 +38,6 @@ func ResourcePermission() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 				Optional: true,
-			},
-			"user_arn": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"level": {
 				Type:     schema.TypeString,
@@ -50,97 +53,106 @@ func ResourcePermission() *schema.Resource {
 			},
 			"stack_id": {
 				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Required: true,
+				ForceNew: true,
+			},
+			"user_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
-func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
+func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
-func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-
-	req := &opsworks.DescribePermissionsInput{
-		IamUserArn: aws.String(d.Get("user_arn").(string)),
-		StackId:    aws.String(d.Get("stack_id").(string)),
-	}
-
-	log.Printf("[DEBUG] Reading OpsWorks prermissions for: %s on stack: %s", d.Get("user_arn"), d.Get("stack_id"))
-
-	resp, err := client.DescribePermissions(req)
-	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() == "ResourceNotFoundException" {
-				log.Printf("[INFO] Permission not found")
-				d.SetId("")
-				return nil
-			}
-		}
-		return err
-	}
-
-	found := false
-	id := ""
-	for _, permission := range resp.Permissions {
-		id = *permission.IamUserArn + *permission.StackId
-
-		if d.Get("user_arn").(string)+d.Get("stack_id").(string) == id {
-			found = true
-			d.SetId(id)
-			d.Set("allow_ssh", permission.AllowSsh)
-			d.Set("allow_sudo", permission.AllowSudo)
-			d.Set("user_arn", permission.IamUserArn)
-			d.Set("stack_id", permission.StackId)
-			d.Set("level", permission.Level)
-		}
-
-	}
-
-	if !found {
-		d.SetId("")
-		log.Printf("[INFO] The correct permission could not be found for: %s on stack: %s", d.Get("user_arn"), d.Get("stack_id"))
-	}
-
-	return nil
-}
-
-func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-
-	req := &opsworks.SetPermissionInput{
+	iamUserARN := d.Get("user_arn").(string)
+	stackID := d.Get("stack_id").(string)
+	id := iamUserARN + stackID
+	input := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
 		AllowSsh:   aws.Bool(d.Get("allow_ssh").(bool)),
-		IamUserArn: aws.String(d.Get("user_arn").(string)),
-		StackId:    aws.String(d.Get("stack_id").(string)),
+		IamUserArn: aws.String(iamUserARN),
+		StackId:    aws.String(stackID),
 	}
 
-	if d.HasChange("level") {
-		req.Level = aws.String(d.Get("level").(string))
-	}
-
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := client.SetPermission(req)
-		if err != nil {
-
-			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
+	if d.IsNewResource() {
+		if v, ok := d.GetOk("level"); ok {
+			input.Level = aws.String(v.(string))
 		}
-		return nil
-	})
+	} else if d.HasChange("level") {
+		input.Level = aws.String(d.Get("level").(string))
+	}
 
-	if tfresource.TimedOut(err) {
-		_, err = client.SetPermission(req)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceNotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetPermission(ctx, input)
+	}, "Unable to find user with ARN")
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting OpsWorks Permission (%s): %s", id, err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
+
+	return append(diags, resourcePermissionRead(ctx, d, meta)...)
+}
+
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
+
+	permission, err := findPermissionByTwoPartKey(ctx, conn, d.Get("user_arn").(string), d.Get("stack_id").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpsWorks Permission %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Permission (%s): %s", d.Id(), err)
 	}
 
-	return resourcePermissionRead(d, meta)
+	d.Set("allow_ssh", permission.AllowSsh)
+	d.Set("allow_sudo", permission.AllowSudo)
+	d.Set("level", permission.Level)
+	d.Set("stack_id", permission.StackId)
+	d.Set("user_arn", permission.IamUserArn)
+
+	return diags
+}
+
+func findPermissionByTwoPartKey(ctx context.Context, conn *opsworks.Client, iamUserARN, stackID string) (*awstypes.Permission, error) {
+	input := &opsworks.DescribePermissionsInput{
+		IamUserArn: aws.String(iamUserARN),
+		StackId:    aws.String(stackID),
+	}
+
+	output, err := conn.DescribePermissions(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Permissions) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Permissions); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Permissions)
 }

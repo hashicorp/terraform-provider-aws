@@ -1,38 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective_test
 
 import (
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDetective_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
-			"basic":      testAccGraph_basic,
-			"disappears": testAccGraph_disappears,
-			"tags":       testAccGraph_tags,
+			acctest.CtBasic:      testAccGraph_basic,
+			acctest.CtDisappears: testAccGraph_disappears,
+			"tags":               testAccGraph_tags,
 		},
 		"InvitationAccepter": {
-			"basic": testAccInvitationAccepter_basic,
+			acctest.CtBasic: testAccInvitationAccepter_basic,
 		},
 		"Member": {
-			"basic":     testAccMember_basic,
-			"disappear": testAccMember_disappears,
-			"message":   testAccMember_message,
+			acctest.CtBasic: testAccMember_basic,
+			"disappear":     testAccMember_disappears,
+			"message":       testAccMember_message,
+		},
+		"OrganizationAdminAccount": {
+			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
+			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
+			"MultiRegion":        testAccOrganizationAdminAccount_MultiRegion,
+		},
+		"OrganizationConfiguration": {
+			acctest.CtBasic: testAccOrganizationConfiguration_basic,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccMemberFromEnv(t *testing.T) string {

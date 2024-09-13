@@ -1,40 +1,71 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceEIP() *schema.Resource {
+// @SDKDataSource("aws_eip", name="EIP)
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceEIP() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEIPRead,
+		ReadWithoutTimeout: dataSourceEIPRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"association_id": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"id": {
+			"carrier_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_owned_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDomain: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,6 +78,10 @@ func DataSourceEIP() *schema.Resource {
 				Computed: true,
 			},
 			"private_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ptr_record": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,99 +98,83 @@ func DataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"carrier_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	req := &ec2.DescribeAddressesInput{}
+	input := &ec2.DescribeAddressesInput{}
 
-	if v, ok := d.GetOk("id"); ok {
-		req.AllocationIds = []*string{aws.String(v.(string))}
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.AllocationIds = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk("public_ip"); ok {
-		req.PublicIps = []*string{aws.String(v.(string))}
+		input.PublicIps = []string{v.(string)}
 	}
 
-	req.Filters = []*ec2.Filter{}
-
-	req.Filters = append(req.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
-		)...)
-	}
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
+	)...)
 
-	if len(req.Filters) == 0 {
+	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+		input.Filters = nil
 	}
 
-	resp, err := conn.DescribeAddresses(req)
+	eip, err := findEIP(ctx, conn, input)
+
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Address: %w", err)
-	}
-	if resp == nil || len(resp.Addresses) == 0 {
-		return fmt.Errorf("no matching Elastic IP found")
-	}
-	if len(resp.Addresses) > 1 {
-		return fmt.Errorf("multiple Elastic IPs matched; use additional constraints to reduce matches to a single Elastic IP")
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))
 	}
 
-	eip := resp.Addresses[0]
+	if eip.Domain == types.DomainTypeVpc {
+		allocationID := aws.ToString(eip.AllocationId)
+		d.SetId(allocationID)
+		d.Set(names.AttrARN, eipARN(meta.(*conns.AWSClient), allocationID))
 
-	if aws.StringValue(eip.Domain) == ec2.DomainTypeVpc {
-		d.SetId(aws.StringValue(eip.AllocationId))
+		addressAttr, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, d.Id())
+
+		switch {
+		case err == nil:
+			d.Set("ptr_record", addressAttr.PtrRecord)
+		case tfresource.NotFound(err):
+			d.Set("ptr_record", nil)
+		default:
+			return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
+		}
 	} else {
-		log.Printf("[DEBUG] Reading EIP, has no AllocationId, this means we have a Classic EIP, the id will also be the public ip : %s", req)
-		d.SetId(aws.StringValue(eip.PublicIp))
+		d.SetId(aws.ToString(eip.PublicIp))
+		d.Set(names.AttrARN, nil)
+		d.Set("ptr_record", nil)
 	}
-
-	d.Set("association_id", eip.AssociationId)
-	d.Set("domain", eip.Domain)
-	d.Set("instance_id", eip.InstanceId)
-	d.Set("network_interface_id", eip.NetworkInterfaceId)
-	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
-
-	region := aws.StringValue(conn.Config.Region)
-
-	d.Set("private_ip", eip.PrivateIpAddress)
-	if eip.PrivateIpAddress != nil {
-		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(aws.StringValue(eip.PrivateIpAddress)), RegionalPrivateDNSSuffix(region)))
-	}
-
-	d.Set("public_ip", eip.PublicIp)
-	if eip.PublicIp != nil {
-		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(aws.StringValue(eip.PublicIp)), RegionalPublicDNSSuffix(region))))
-	}
-	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
+	d.Set(names.AttrAssociationID, eip.AssociationId)
 	d.Set("carrier_ip", eip.CarrierIp)
-	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
-
-	if err := d.Set("tags", KeyValueTags(eip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
+	d.Set(names.AttrDomain, eip.Domain)
+	d.Set(names.AttrInstanceID, eip.InstanceId)
+	d.Set(names.AttrNetworkInterfaceID, eip.NetworkInterfaceId)
+	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
+	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
+	d.Set("private_ip", eip.PrivateIpAddress)
+	if v := aws.ToString(eip.PrivateIpAddress); v != "" {
+		d.Set("private_dns", meta.(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, v))
+	}
+	d.Set("public_ip", eip.PublicIp)
+	if v := aws.ToString(eip.PublicIp); v != "" {
+		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
 	}
 
-	return nil
+	setTagsOut(ctx, eip.Tags)
+
+	return diags
 }

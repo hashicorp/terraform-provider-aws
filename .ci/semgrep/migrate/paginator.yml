@@ -1,0 +1,7 @@
+rules:
+  - id: paginator-more-pages
+    languages: [go]
+    message: Use `for pages.HasMorePages()`, not `if pages.HasMorePages()`
+    patterns:
+      - pattern-regex: 'if\s+pages\.HasMorePages\(\)'
+    severity: ERROR

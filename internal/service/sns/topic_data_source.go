@@ -1,74 +1,109 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceTopic() *schema.Resource {
+// @SDKDataSource("aws_sns_topic")
+func dataSourceTopic() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTopicsRead,
+		ReadWithoutTimeout: dataSourceTopicRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceTopicsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resourceArn := ""
-	name := d.Get("name").(string)
-
-	err := conn.ListTopicsPages(&sns.ListTopicsInput{}, func(page *sns.ListTopicsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, topic := range page.Topics {
-			topicArn := aws.StringValue(topic.TopicArn)
-			arn, err := arn.Parse(topicArn)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-
-				continue
-			}
-
-			if arn.Resource == name {
-				resourceArn = topicArn
-
-				break
-			}
-		}
-
-		return !lastPage
-	})
+	name := d.Get(names.AttrName).(string)
+	topic, err := findTopicByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error listing SNS Topics: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", name, err)
 	}
 
-	if resourceArn == "" {
-		return fmt.Errorf("no matching SNS Topic found")
+	topicARN := aws.ToString(topic.TopicArn)
+	d.SetId(topicARN)
+	d.Set(names.AttrARN, topicARN)
+
+	tags, err := listTags(ctx, conn, aws.ToString(topic.TopicArn))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for SNS Topic (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(resourceArn)
-	d.Set("arn", resourceArn)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
-	return nil
+	return diags
+}
+
+func findTopicByName(ctx context.Context, conn *sns.Client, name string) (*types.Topic, error) {
+	input := &sns.ListTopicsInput{}
+
+	return findTopic(ctx, conn, input, func(v types.Topic) bool {
+		arn, err := arn.Parse(aws.ToString(v.TopicArn))
+		return err == nil && arn.Resource == name
+	})
+}
+
+func findTopic(ctx context.Context, conn *sns.Client, input *sns.ListTopicsInput, filter tfslices.Predicate[types.Topic]) (*types.Topic, error) {
+	output, err := findTopics(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTopics(ctx context.Context, conn *sns.Client, input *sns.ListTopicsInput, filter tfslices.Predicate[types.Topic]) ([]types.Topic, error) {
+	var output []types.Topic
+
+	pages := sns.NewListTopicsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Topics {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

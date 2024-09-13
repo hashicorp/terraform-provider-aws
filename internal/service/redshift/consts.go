@@ -1,8 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
-import "time"
+import (
+	"time"
 
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
 const (
 	clusterAvailabilityStatusAvailable   = "Available"
 	clusterAvailabilityStatusFailed      = "Failed"
@@ -12,31 +18,17 @@ const (
 )
 
 // https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-mgmt-cluster-status.
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
+
 const (
-	clusterStatusAvailable              = "available"
-	clusterStatusAvailablePrepForResize = "available, prep-for-resize"
-	clusterStatusAvailableResizeCleanup = "available, resize-cleanup"
-	clusterStatusBackingUp              = "backing-up"
-	clusterStatusCancellingResize       = "cancelling-resize"
-	clusterStatusCreating               = "creating"
-	clusterStatusDeleting               = "deleting"
-	clusterStatusFinalSnapshot          = "final-snapshot"
-	clusterStatusHardwareFailure        = "hardware-failure"
-	clusterStatusIncompatibleHSM        = "incompatible-hsm"
-	clusterStatusIncompatibleNetwork    = "incompatible-network"
-	clusterStatusIncompatibleParameters = "incompatible-parameters"
-	clusterStatusIncompatibleRestore    = "incompatible-restore"
-	clusterStatusModifying              = "modifying"
-	clusterStatusPaused                 = "paused"
-	clusterStatusRebooting              = "rebooting"
-	clusterStatusRecovering             = "recovering"
-	clusterStatusRenaming               = "renaming"
-	clusterStatusResizing               = "resizing"
-	clusterStatusRestoring              = "restoring"
-	clusterStatusRotatingKeys           = "rotating-keys"
-	clusterStatusStorageFull            = "storage-full"
-	clusterStatusUpdatingHSM            = "updating-hsm"
+	clusterStatusAvailable = "available"
+	clusterStatusModifying = "modifying"
+	clusterStatusRebooting = "rebooting"
+)
+
+const (
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusDeleted   = "deleted"
 )
 
 const (
@@ -44,16 +36,8 @@ const (
 	clusterTypeSingleNode = "single-node"
 )
 
-//nolint:deadcode // These constants are missing from the AWS SDK
-func clusterType_Values() []string {
-	return []string{
-		clusterTypeMultiNode,
-		clusterTypeSingleNode,
-	}
-}
-
 const (
-	clusterAvailabilityZoneRelocationStatusEnabled          = "enabled"
+	clusterAvailabilityZoneRelocationStatusEnabled          = names.AttrEnabled
 	clusterAvailabilityZoneRelocationStatusDisabled         = "disabled"
 	clusterAvailabilityZoneRelocationStatusPendingEnabling  = "pending_enabling"
 	clusterAvailabilityZoneRelocationStatusPendingDisabling = "pending_disabling"
@@ -61,7 +45,7 @@ const (
 
 func clusterAvailabilityZoneRelocationStatus_TerminalValues() []string {
 	return []string{
-		clusterAvailabilityZoneRelocationStatusEnabled,
+		names.AttrEnabled,
 		clusterAvailabilityZoneRelocationStatusDisabled,
 	}
 }
@@ -70,8 +54,14 @@ func clusterAvailabilityZoneRelocationStatus_PendingValues() []string {
 		clusterAvailabilityZoneRelocationStatusPendingEnabling,
 		clusterAvailabilityZoneRelocationStatusPendingDisabling,
 	}
-
 }
+
+const (
+	endpointAccessStatusActive    = "active"
+	endpointAccessStatusCreating  = "creating"
+	endpointAccessStatusDeleting  = "deleting"
+	endpointAccessStatusModifying = "modifying"
+)
 
 const (
 	propagationTimeout = 2 * time.Minute

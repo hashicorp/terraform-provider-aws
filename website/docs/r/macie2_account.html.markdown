@@ -21,14 +21,14 @@ resource "aws_macie2_account" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `finding_publishing_frequency` -  (Optional) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `FIFTEEN_MINUTES`, `ONE_HOUR` or `SIX_HOURS`.
 * `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie account.
 * `service_role` - The Amazon Resource Name (ARN) of the service-linked role that allows Macie to monitor and analyze data in AWS resources for the account.
@@ -37,8 +37,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_account` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_account` using the id. For example:
 
+```terraform
+import {
+  to = aws_macie2_account.example
+  id = "abcd1"
+}
 ```
-$ terraform import aws_macie2_account.example abcd1
+
+Using `terraform import`, import `aws_macie2_account` using the id. For example:
+
+```console
+% terraform import aws_macie2_account.example abcd1
 ```

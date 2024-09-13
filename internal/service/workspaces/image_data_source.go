@@ -1,28 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_workspaces_image")
 func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRead,
+		ReadWithoutTimeout: dataSourceImageRead,
 
 		Schema: map[string]*schema.Schema{
 			"image_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,7 +40,7 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,29 +48,30 @@ func DataSourceImage() *schema.Resource {
 	}
 }
 
-func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	imageID := d.Get("image_id").(string)
 	input := &workspaces.DescribeWorkspaceImagesInput{
-		ImageIds: []*string{aws.String(imageID)},
+		ImageIds: []string{imageID},
 	}
 
-	resp, err := conn.DescribeWorkspaceImages(input)
+	resp, err := conn.DescribeWorkspaceImages(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Failed describe workspaces images: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describe workspaces images: %s", err)
 	}
 	if len(resp.Images) == 0 {
-		return fmt.Errorf("Workspace image %s was not found", imageID)
+		return sdkdiag.AppendErrorf(diags, "Workspace image %s was not found", imageID)
 	}
 
 	image := resp.Images[0]
 	d.SetId(imageID)
-	d.Set("name", image.Name)
-	d.Set("description", image.Description)
+	d.Set(names.AttrName, image.Name)
+	d.Set(names.AttrDescription, image.Description)
 	d.Set("operating_system_type", image.OperatingSystem.Type)
 	d.Set("required_tenancy", image.RequiredTenancy)
-	d.Set("state", image.State)
+	d.Set(names.AttrState, image.State)
 
-	return nil
+	return diags
 }

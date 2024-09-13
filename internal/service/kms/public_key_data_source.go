@@ -1,22 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
-	"encoding/base64"
+	"context"
 	"encoding/pem"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourcePublicKey() *schema.Resource {
+// @SDKDataSource("aws_kms_public_key", name="Public Key")
+func dataSourcePublicKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePublicKeyRead,
+		ReadWithoutTimeout: dataSourcePublicKeyRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,16 +42,16 @@ func DataSourcePublicKey() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validKey,
+				ValidateFunc: validateKeyOrAlias,
 			},
 			"key_usage": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,42 +68,36 @@ func DataSourcePublicKey() *schema.Resource {
 	}
 }
 
-func dataSourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
-	keyId := d.Get("key_id").(string)
+func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.GetPublicKeyInput{
-		KeyId: aws.String(keyId),
+		KeyId: aws.String(keyID),
 	}
 
-	if v, ok := d.GetOk("grant_tokens"); ok {
-		input.GrantTokens = aws.StringSlice(v.([]string))
+	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]interface{})) > 0 {
+		input.GrantTokens = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	output, err := conn.GetPublicKey(input)
+	output, err := conn.GetPublicKey(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error while describing KMS public key (%s): %w", keyId, err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Public Key (%s): %s", keyID, err)
 	}
 
-	d.SetId(aws.StringValue(output.KeyId))
-
-	d.Set("arn", output.KeyId)
+	d.SetId(aws.ToString(output.KeyId))
+	d.Set(names.AttrARN, output.KeyId)
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
+	d.Set("encryption_algorithms", output.EncryptionAlgorithms)
 	d.Set("key_usage", output.KeyUsage)
-	d.Set("public_key", base64.StdEncoding.EncodeToString(output.PublicKey))
+	d.Set(names.AttrPublicKey, itypes.Base64Encode(output.PublicKey))
 	d.Set("public_key_pem", string(pem.EncodeToMemory(&pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: output.PublicKey,
 	})))
+	d.Set("signing_algorithms", output.SigningAlgorithms)
 
-	if err := d.Set("encryption_algorithms", flex.FlattenStringList(output.EncryptionAlgorithms)); err != nil {
-		return fmt.Errorf("error setting encryption_algorithms: %w", err)
-	}
-
-	if err := d.Set("signing_algorithms", flex.FlattenStringList(output.SigningAlgorithms)); err != nil {
-		return fmt.Errorf("error setting signing_algorithms: %w", err)
-	}
-
-	return nil
+	return diags
 }

@@ -1,285 +1,298 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueTrigger_basic(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_OnDemand(rName),
+				Config: testAccTriggerConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "0"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("trigger/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ON_DEMAND"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("trigger/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, "workflow_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_crawler(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test_trigger"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_Crawler(rName, "SUCCEEDED"),
+				Config: testAccTriggerConfig_crawler(rName, "SUCCEEDED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.crawler_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawler_name", fmt.Sprintf("%scrawl2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawl_state", "SUCCEEDED"),
-					resource.TestCheckResourceAttr(resourceName, "type", "CONDITIONAL"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
 				),
 			},
 			{
-				Config: testAccTriggerConfig_Crawler(rName, "FAILED"),
+				Config: testAccTriggerConfig_crawler(rName, "FAILED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.crawler_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawler_name", fmt.Sprintf("%scrawl2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawl_state", "FAILED"),
-					resource.TestCheckResourceAttr(resourceName, "type", "CONDITIONAL"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_description(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_Description(rName, "description1"),
+				Config: testAccTriggerConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
-				Config: testAccTriggerConfig_Description(rName, "description2"),
+				Config: testAccTriggerConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_enabled(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_Enabled(rName, true),
+				Config: testAccTriggerConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccTriggerConfig_Enabled(rName, false),
+				Config: testAccTriggerConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccTriggerConfig_Enabled(rName, true),
+				Config: testAccTriggerConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled, names.AttrState}, // adding state to igonre list because trigger state changes faster before test can verify what is in TF state
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_predicate(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_Predicate(rName, "SUCCEEDED"),
+				Config: testAccTriggerConfig_predicate(rName, "SUCCEEDED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.state", "SUCCEEDED"),
-					resource.TestCheckResourceAttr(resourceName, "type", "CONDITIONAL"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
 				),
 			},
 			{
-				Config: testAccTriggerConfig_Predicate(rName, "FAILED"),
+				Config: testAccTriggerConfig_predicate(rName, "FAILED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.state", "FAILED"),
-					resource.TestCheckResourceAttr(resourceName, "type", "CONDITIONAL"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_schedule(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_Schedule(rName, "cron(1 2 * * ? *)"),
+				Config: testAccTriggerConfig_schedule(rName, "cron(1 2 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(1 2 * * ? *)"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(1 2 * * ? *)"),
 				),
 			},
 			{
-				Config: testAccTriggerConfig_Schedule(rName, "cron(2 3 * * ? *)"),
+				Config: testAccTriggerConfig_schedule(rName, "cron(2 3 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(2 3 * * ? *)"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(2 3 * * ? *)"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_startOnCreate(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_ScheduleStart(rName, "cron(1 2 * * ? *)"),
+				Config: testAccTriggerConfig_scheduleStart(rName, "cron(1 2 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(1 2 * * ? *)"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(1 2 * * ? *)"),
 				),
 			},
 			{
@@ -293,46 +306,47 @@ func TestAccGlueTrigger_startOnCreate(t *testing.T) {
 }
 
 func TestAccGlueTrigger_tags(t *testing.T) {
-	var trigger1, trigger2, trigger3 glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger1, trigger2, trigger3 awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerTags1Config(rName, "key1", "value1"),
+				Config: testAccTriggerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 			{
-				Config: testAccTriggerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTriggerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTriggerTags1Config(rName, "key2", "value2"),
+				Config: testAccTriggerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -340,21 +354,22 @@ func TestAccGlueTrigger_tags(t *testing.T) {
 }
 
 func TestAccGlueTrigger_workflowName(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_WorkflowName(rName),
+				Config: testAccTriggerConfig_workflowName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
 					resource.TestCheckResourceAttr(resourceName, "workflow_name", rName),
 				),
 			},
@@ -362,58 +377,59 @@ func TestAccGlueTrigger_workflowName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_Actions_notify(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerActionsNotificationConfig(rName, 1),
+				Config: testAccTriggerConfig_actionsNotification(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", acctest.Ct1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 			{
-				Config: testAccTriggerActionsNotificationConfig(rName, 2),
+				Config: testAccTriggerConfig_actionsNotification(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "2"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", acctest.Ct2),
 				),
 			},
 			{
-				Config: testAccTriggerActionsNotificationConfig(rName, 1),
+				Config: testAccTriggerConfig_actionsNotification(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", acctest.Ct1),
 				),
 			},
 		},
@@ -421,22 +437,23 @@ func TestAccGlueTrigger_Actions_notify(t *testing.T) {
 }
 
 func TestAccGlueTrigger_Actions_security(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerActionsSecurityConfigurationConfig(rName),
+				Config: testAccTriggerConfig_actionsSecurityConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.security_configuration", rName),
 				),
@@ -445,52 +462,74 @@ func TestAccGlueTrigger_Actions_security(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
+			},
+		},
+	})
+}
+
+// Ensure a null action does not trigger a panic
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/31213
+func TestAccGlueTrigger_Actions_null(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTriggerConfig_actionsNull(rName),
+				ExpectError: regexache.MustCompile(`InvalidInputException: Actions cannot be null or empty`),
 			},
 		},
 	})
 }
 
 func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_OnDemand(rName),
+				Config: testAccTriggerConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ON_DEMAND"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 				),
 			},
 			{
-				Config: testAccTriggerConfig_OnDemandEnabled(rName, false),
+				Config: testAccTriggerConfig_onDemandEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ON_DEMAND"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled},
 			},
 			{
-				Config: testAccTriggerConfig_OnDemandEnabled(rName, true),
+				Config: testAccTriggerConfig_onDemandEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ON_DEMAND"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 				),
 			},
 		},
@@ -498,41 +537,42 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 }
 
 func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfigEvent(rName),
+				Config: testAccTriggerConfig_event(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", "900"),
-					resource.TestCheckResourceAttr(resourceName, "type", "EVENT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled", "start_on_creation"},
+				ImportStateVerifyIgnore: []string{names.AttrEnabled, "start_on_creation"},
 			},
 			{
-				Config: testAccTriggerConfigEventUpdated(rName),
+				Config: testAccTriggerConfig_eventUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", "1"),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", "50"),
-					resource.TestCheckResourceAttr(resourceName, "type", "EVENT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
 				),
 			},
 		},
@@ -540,22 +580,23 @@ func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 }
 
 func TestAccGlueTrigger_disappears(t *testing.T) {
-	var trigger glue.Trigger
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTriggerConfig_OnDemand(rName),
+				Config: testAccTriggerConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName, &trigger),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceTrigger(), resourceName),
+					testAccCheckTriggerExists(ctx, resourceName, &trigger),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -563,7 +604,7 @@ func TestAccGlueTrigger_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTriggerExists(resourceName string, trigger *glue.Trigger) resource.TestCheckFunc {
+func testAccCheckTriggerExists(ctx context.Context, resourceName string, trigger *awstypes.Trigger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -574,9 +615,9 @@ func testAccCheckTriggerExists(resourceName string, trigger *glue.Trigger) resou
 			return fmt.Errorf("No Glue Trigger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		output, err := tfglue.FindTriggerByName(conn, rs.Primary.ID)
+		output, err := tfglue.FindTriggerByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -585,7 +626,7 @@ func testAccCheckTriggerExists(resourceName string, trigger *glue.Trigger) resou
 			return fmt.Errorf("Glue Trigger (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.Trigger.Name) == rs.Primary.ID {
+		if aws.ToString(output.Trigger.Name) == rs.Primary.ID {
 			*trigger = *output.Trigger
 			return nil
 		}
@@ -594,36 +635,37 @@ func testAccCheckTriggerExists(resourceName string, trigger *glue.Trigger) resou
 	}
 }
 
-func testAccCheckTriggerDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_trigger" {
-			continue
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-
-		output, err := tfglue.FindTriggerByName(conn, rs.Primary.ID)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil
+func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_trigger" {
+				continue
 			}
 
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+
+			output, err := tfglue.FindTriggerByName(ctx, conn, rs.Primary.ID)
+
+			if err != nil {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
+					return nil
+				}
+			}
+
+			trigger := output.Trigger
+			if trigger != nil && aws.ToString(trigger.Name) == rs.Primary.ID {
+				return fmt.Errorf("Glue Trigger %s still exists", rs.Primary.ID)
+			}
+
+			return err
 		}
 
-		trigger := output.Trigger
-		if trigger != nil && aws.StringValue(trigger.Name) == rs.Primary.ID {
-			return fmt.Errorf("Glue Trigger %s still exists", rs.Primary.ID)
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccTriggerConfig_Description(rName, description string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   description = %[1]q
   name        = %[2]q
@@ -636,8 +678,8 @@ resource "aws_glue_trigger" "test" {
 `, description, rName))
 }
 
-func testAccTriggerConfig_Enabled(rName string, enabled bool) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_enabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   enabled  = %[1]t
   name     = %[2]q
@@ -651,8 +693,8 @@ resource "aws_glue_trigger" "test" {
 `, enabled, rName))
 }
 
-func testAccTriggerConfig_OnDemand(rName string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_onDemand(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -664,8 +706,8 @@ resource "aws_glue_trigger" "test" {
 `, rName))
 }
 
-func testAccTriggerConfig_OnDemandEnabled(rName string, enabled bool) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_onDemandEnabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name    = %[1]q
   type    = "ON_DEMAND"
@@ -678,8 +720,8 @@ resource "aws_glue_trigger" "test" {
 `, rName, enabled))
 }
 
-func testAccTriggerConfig_Predicate(rName, state string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_predicate(rName, state string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test2" {
   name     = "%[1]s2"
   role_arn = aws_iam_role.test.arn
@@ -709,8 +751,12 @@ resource "aws_glue_trigger" "test" {
 `, rName, state))
 }
 
-func testAccTriggerConfig_Crawler(rName, state string) string {
-	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
+func testAccTriggerConfig_crawler(rName, state string) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "bucket1"), fmt.Sprintf(`
+resource "aws_s3_bucket" "test2" {
+  bucket = %[1]q
+}
+
 resource "aws_glue_crawler" "test2" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
@@ -719,7 +765,7 @@ resource "aws_glue_crawler" "test2" {
   role          = aws_iam_role.test.name
 
   s3_target {
-    path = "s3://test_bucket"
+    path = "s3://${aws_s3_bucket.test2.bucket}"
   }
 }
 
@@ -741,8 +787,8 @@ resource "aws_glue_trigger" "test_trigger" {
 `, rName, state))
 }
 
-func testAccTriggerConfig_Schedule(rName, schedule string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_schedule(rName, schedule string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name     = %[1]q
   schedule = %[2]q
@@ -755,8 +801,8 @@ resource "aws_glue_trigger" "test" {
 `, rName, schedule))
 }
 
-func testAccTriggerConfig_ScheduleStart(rName, schedule string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_scheduleStart(rName, schedule string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name              = %[1]q
   schedule          = %[2]q
@@ -770,8 +816,8 @@ resource "aws_glue_trigger" "test" {
 `, rName, schedule))
 }
 
-func testAccTriggerTags1Config(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -787,8 +833,8 @@ resource "aws_glue_trigger" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccTriggerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -805,8 +851,8 @@ resource "aws_glue_trigger" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccTriggerConfig_WorkflowName(rName string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_workflowName(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_workflow" test {
   name = %[1]q
 }
@@ -823,8 +869,8 @@ resource "aws_glue_trigger" "test" {
 `, rName))
 }
 
-func testAccTriggerActionsNotificationConfig(rName string, delay int) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_actionsNotification(rName string, delay int) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -840,8 +886,8 @@ resource "aws_glue_trigger" "test" {
 `, rName, delay))
 }
 
-func testAccTriggerActionsSecurityConfigurationConfig(rName string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_actionsSecurityConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_security_configuration" "test" {
   name = %[1]q
 
@@ -872,8 +918,8 @@ resource "aws_glue_trigger" "test" {
 `, rName))
 }
 
-func testAccTriggerConfigEvent(rName string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_event(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_workflow" test {
   name = %[1]q
 }
@@ -895,8 +941,8 @@ resource "aws_glue_trigger" "test" {
 `, rName))
 }
 
-func testAccTriggerConfigEventUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+func testAccTriggerConfig_eventUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_workflow" test {
   name = %[1]q
 }
@@ -915,6 +961,17 @@ resource "aws_glue_trigger" "test" {
     batch_size   = 1
     batch_window = 50
   }
+}
+`, rName))
+}
+
+func testAccTriggerConfig_actionsNull(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
+resource "aws_glue_trigger" "test" {
+  name = %[1]q
+  type = "ON_DEMAND"
+
+  actions {}
 }
 `, rName))
 }

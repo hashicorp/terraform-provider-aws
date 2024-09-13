@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3control_access_grants_instance: Add `identity_center_arn` argument and `identity_center_application_arn` attribute
+```

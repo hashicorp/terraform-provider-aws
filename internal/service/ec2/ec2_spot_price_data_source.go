@@ -1,26 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSpotPrice() *schema.Resource {
+// @SDKDataSource("aws_ec2_spot_price", name="Spot Price")
+func dataSourceSpotPrice() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSpotPriceRead,
+		ReadWithoutTimeout: dataSourceSpotPriceRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
-			"instance_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrInstanceType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.InstanceType](),
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -36,53 +52,36 @@ func DataSourceSpotPrice() *schema.Resource {
 	}
 }
 
-func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	now := time.Now()
 	input := &ec2.DescribeSpotPriceHistoryInput{
 		StartTime: &now,
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
-		instanceType := v.(string)
-		input.InstanceTypes = []*string{
-			aws.String(instanceType),
-		}
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
+		input.InstanceTypes = flex.ExpandStringyValueList[awstypes.InstanceType]([]any{v.(string)})
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
-		availabilityZone := v.(string)
-		input.AvailabilityZone = aws.String(availabilityZone)
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
+		input.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	var foundSpotPrice []*ec2.SpotPrice
+	resultSpotPrice, err := findSpotPrice(ctx, conn, input)
 
-	err := conn.DescribeSpotPriceHistoryPages(input, func(output *ec2.DescribeSpotPriceHistoryOutput, lastPage bool) bool {
-		foundSpotPrice = append(foundSpotPrice, output.SpotPriceHistory...)
-		return true
-	})
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Spot Price History: %w", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Spot Price", err))
 	}
-
-	if len(foundSpotPrice) == 0 {
-		return fmt.Errorf("no EC2 Spot Price History found matching criteria; try different search")
-	}
-
-	if len(foundSpotPrice) > 1 {
-		return fmt.Errorf("multiple EC2 Spot Price History results found matching criteria; try different search")
-	}
-
-	resultSpotPrice := foundSpotPrice[0]
 
 	d.Set("spot_price", resultSpotPrice.SpotPrice)
 	d.Set("spot_price_timestamp", (*resultSpotPrice.Timestamp).Format(time.RFC3339))
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return nil
+	return diags
 }

@@ -20,26 +20,35 @@ resource "aws_api_gateway_client_certificate" "demo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `description` - (Optional) The description of the client certificate.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `description` - (Optional) Description of the client certificate.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The identifier of the client certificate.
-* `created_date` - The date when the client certificate was created.
-* `expiration_date` - The date when the client certificate will expire.
+* `id` - Identifier of the client certificate.
+* `created_date` - Date when the client certificate was created.
+* `expiration_date` - Date when the client certificate will expire.
 * `pem_encoded_certificate` - The PEM-encoded public key of the client certificate.
-* `arn` - Amazon Resource Name (ARN)
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `arn` - ARN
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-API Gateway Client Certificates can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway Client Certificates using the id. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_client_certificate.demo
+  id = "ab1cqe"
+}
 ```
-$ terraform import aws_api_gateway_client_certificate.demo ab1cqe
+
+Using `terraform import`, import API Gateway Client Certificates using the id. For example:
+
+```console
+% terraform import aws_api_gateway_client_certificate.demo ab1cqe
 ```

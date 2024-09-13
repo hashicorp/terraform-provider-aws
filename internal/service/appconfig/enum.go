@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 const (
-	ConfigurationProfileTypeAWSAppConfigFeatureFlags = "AWS.AppConfig.FeatureFlags"
-	ConfigurationProfileTypeAWSFreeform              = "AWS.Freeform"
+	configurationProfileTypeFeatureFlags = "AWS.AppConfig.FeatureFlags"
+	configurationProfileTypeFreeform     = "AWS.Freeform"
 )
 
 func ConfigurationProfileType_Values() []string {
 	return []string{
-		ConfigurationProfileTypeAWSAppConfigFeatureFlags,
-		ConfigurationProfileTypeAWSFreeform,
+		configurationProfileTypeFeatureFlags,
+		configurationProfileTypeFreeform,
 	}
 }

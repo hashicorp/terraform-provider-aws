@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_function: Add `key_value_store_associations` argument
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_function: Add `key_value_store_associations` attribute
+```

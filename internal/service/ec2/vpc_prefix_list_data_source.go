@@ -1,72 +1,80 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourcePrefixList() *schema.Resource {
+// @SDKDataSource("aws_prefix_list", name="Prefix List")
+func dataSourcePrefixList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePrefixListRead,
+		ReadWithoutTimeout: dataSourcePrefixListRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"prefix_list_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"prefix_list_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
 
-func dataSourcePrefixListRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	filters, filtersOk := d.GetOk("filter")
+	input := &ec2.DescribePrefixListsInput{}
 
-	req := &ec2.DescribePrefixListsInput{}
-	if filtersOk {
-		req.Filters = BuildFiltersDataSource(filters.(*schema.Set))
-	}
-	if prefixListID := d.Get("prefix_list_id"); prefixListID != "" {
-		req.PrefixListIds = aws.StringSlice([]string{prefixListID.(string)})
-	}
-	if prefixListName := d.Get("name"); prefixListName.(string) != "" {
-		req.Filters = append(req.Filters, &ec2.Filter{
-			Name:   aws.String("prefix-list-name"),
-			Values: aws.StringSlice([]string{prefixListName.(string)}),
-		})
+	if v, ok := d.GetOk(names.AttrName); ok {
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
+			"prefix-list-name": v.(string),
+		})...)
 	}
 
-	log.Printf("[DEBUG] Reading Prefix List: %s", req)
-	resp, err := conn.DescribePrefixLists(req)
+	if v, ok := d.GetOk("prefix_list_id"); ok {
+		input.PrefixListIds = []string{v.(string)}
+	}
+
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
+	)...)
+
+	pl, err := findPrefixList(ctx, conn, input)
+
 	if err != nil {
-		return err
-	}
-	if resp == nil || len(resp.PrefixLists) == 0 {
-		return fmt.Errorf("no matching prefix list found; the prefix list ID or name may be invalid or not exist in the current region")
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Prefix List", err))
 	}
 
-	pl := resp.PrefixLists[0]
+	d.SetId(aws.ToString(pl.PrefixListId))
+	d.Set("cidr_blocks", pl.Cidrs)
+	d.Set(names.AttrName, pl.PrefixListName)
 
-	d.SetId(aws.StringValue(pl.PrefixListId))
-	d.Set("name", pl.PrefixListName)
-	d.Set("cidr_blocks", aws.StringValueSlice(pl.Cidrs))
-
-	return nil
+	return diags
 }

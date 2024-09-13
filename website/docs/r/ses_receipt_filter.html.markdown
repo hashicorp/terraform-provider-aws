@@ -22,23 +22,32 @@ resource "aws_ses_receipt_filter" "filter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the filter
 * `cidr` - (Required) The IP address or address range to filter, in CIDR notation
 * `policy` - (Required) Block or Allow
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SES receipt filter name.
 * `arn` - The SES receipt filter ARN.
 
 ## Import
 
-SES Receipt Filter can be imported using their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES Receipt Filter using their `name`. For example:
 
+```terraform
+import {
+  to = aws_ses_receipt_filter.test
+  id = "some-filter"
+}
 ```
-$ terraform import aws_ses_receipt_filter.test some-filter
+
+Using `terraform import`, import SES Receipt Filter using their `name`. For example:
+
+```console
+% terraform import aws_ses_receipt_filter.test some-filter
 ```

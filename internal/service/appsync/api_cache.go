@@ -1,46 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceAPICache() *schema.Resource {
-
+// @SDKResource("aws_appsync_api_cache", name="API Cache")
+func resourceAPICache() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAPICacheCreate,
-		Read:   resourceAPICacheRead,
-		Update: resourceAPICacheUpdate,
-		Delete: resourceAPICacheDelete,
+		CreateWithoutTimeout: resourceAPICacheCreate,
+		ReadWithoutTimeout:   resourceAPICacheRead,
+		UpdateWithoutTimeout: resourceAPICacheUpdate,
+		DeleteWithoutTimeout: resourceAPICacheDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"api_caching_behavior": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApiCachingBehavior](),
+			},
 			"api_id": {
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"api_caching_behavior": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(appsync.ApiCachingBehavior_Values(), false),
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(appsync.ApiCacheType_Values(), false),
-			},
-			"ttl": {
-				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"at_rest_encryption_enabled": {
@@ -53,117 +54,214 @@ func ResourceAPICache() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"ttl": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApiCacheType](),
+			},
 		},
 	}
 }
 
-func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID := d.Get("api_id").(string)
-
-	params := &appsync.CreateApiCacheInput{
+	input := &appsync.CreateApiCacheInput{
+		ApiCachingBehavior: awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string)),
 		ApiId:              aws.String(apiID),
-		Type:               aws.String(d.Get("type").(string)),
-		ApiCachingBehavior: aws.String(d.Get("api_caching_behavior").(string)),
-		Ttl:                aws.Int64(int64(d.Get("ttl").(int))),
+		Ttl:                int64(d.Get("ttl").(int)),
+		Type:               awstypes.ApiCacheType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("at_rest_encryption_enabled"); ok {
-		params.AtRestEncryptionEnabled = aws.Bool(v.(bool))
+		input.AtRestEncryptionEnabled = v.(bool)
 	}
 
 	if v, ok := d.GetOk("transit_encryption_enabled"); ok {
-		params.TransitEncryptionEnabled = aws.Bool(v.(bool))
+		input.TransitEncryptionEnabled = v.(bool)
 	}
 
-	_, err := conn.CreateApiCache(params)
+	_, err := conn.CreateApiCache(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Appsync API Cache: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Appsync API Cache (%s): %s", apiID, err)
 	}
 
 	d.SetId(apiID)
 
-	if err := waitApiCacheAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
+	if _, err := waitAPICacheAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Appsync API Cache (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceAPICacheRead(d, meta)
+	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	cache, err := FindApiCacheByID(conn, d.Id())
+	cache, err := findAPICacheByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync API Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Appsync API Cache %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Appsync API Cache (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_id", d.Id())
-	d.Set("type", cache.Type)
 	d.Set("api_caching_behavior", cache.ApiCachingBehavior)
-	d.Set("ttl", cache.Ttl)
+	d.Set("api_id", d.Id())
 	d.Set("at_rest_encryption_enabled", cache.AtRestEncryptionEnabled)
 	d.Set("transit_encryption_enabled", cache.TransitEncryptionEnabled)
+	d.Set("ttl", cache.Ttl)
+	d.Set(names.AttrType, cache.Type)
 
-	return nil
+	return diags
 }
 
-func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	params := &appsync.UpdateApiCacheInput{
+	input := &appsync.UpdateApiCacheInput{
 		ApiId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("type") {
-		params.Type = aws.String(d.Get("type").(string))
 	}
 
 	if d.HasChange("api_caching_behavior") {
-		params.ApiCachingBehavior = aws.String(d.Get("api_caching_behavior").(string))
+		input.ApiCachingBehavior = awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string))
 	}
 
 	if d.HasChange("ttl") {
-		params.Ttl = aws.Int64(int64(d.Get("ttl").(int)))
+		input.Ttl = int64(d.Get("ttl").(int))
 	}
 
-	_, err := conn.UpdateApiCache(params)
+	if d.HasChange(names.AttrType) {
+		input.Type = awstypes.ApiCacheType(d.Get(names.AttrType).(string))
+	}
+
+	_, err := conn.UpdateApiCache(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error updating Appsync API Cache %q: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Appsync API Cache %q: %s", d.Id(), err)
 	}
 
-	if err := waitApiCacheAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
+	if _, err := waitAPICacheAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Appsync API Cache (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceAPICacheRead(d, meta)
-
+	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	input := &appsync.DeleteApiCacheInput{
+	log.Printf("[INFO] Deleting Appsync API Cache: %s", d.Id())
+	_, err := conn.DeleteApiCache(ctx, &appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
-	_, err := conn.DeleteApiCache(input)
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-			return nil
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync API Cache (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitAPICacheDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Appsync API Cache (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiCache, error) {
+	input := &appsync.GetApiCacheInput{
+		ApiId: aws.String(id),
+	}
+
+	output, err := conn.GetApiCache(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		return fmt.Errorf("error deleting Appsync API Cache: %w", err)
 	}
 
-	if err := waitApiCacheDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Appsync API Cache (%s) to be deleted: %w", d.Id(), err)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	if output == nil || output.ApiCache == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApiCache, nil
+}
+
+func statusAPICache(ctx context.Context, conn *appsync.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findAPICacheByID(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitAPICacheAvailable(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiCache, error) { //nolint:unparam
+	const (
+		timeout = 60 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ApiCacheStatusCreating, awstypes.ApiCacheStatusModifying),
+		Target:  enum.Slice(awstypes.ApiCacheStatusAvailable),
+		Refresh: statusAPICache(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ApiCache); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAPICacheDeleted(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiCache, error) {
+	const (
+		timeout = 60 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ApiCacheStatusDeleting),
+		Target:  []string{},
+		Refresh: statusAPICache(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ApiCache); ok {
+		return output, err
+	}
+
+	return nil, err
 }

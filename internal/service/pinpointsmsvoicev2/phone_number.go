@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpointsmsvoicev2
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -102,7 +105,7 @@ func ResourcePhoneNumber() *schema.Resource {
 }
 
 func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	in := &pinpointsmsvoicev2.RequestPhoneNumberInput{
 		IsoCountryCode:     aws.String(d.Get("iso_country_code").(string)),
@@ -124,7 +127,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -139,7 +142,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("creating Amazon Pinpoint SMS and Voice V2 PhoneNumber: empty output")
 	}
 
-	d.SetId(aws.ToString(out.PhoneNumberId))
+	d.SetId(aws.StringValue(out.PhoneNumberId))
 
 	if _, err := waitPhoneNumberCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Amazon Pinpoint SMS and Voice V2 PhoneNumber (%s) create: %s", d.Id(), err)
@@ -159,7 +162,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	out, err := findPhoneNumberByID(ctx, conn, d.Id())
 
@@ -189,7 +192,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting complex argument: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return diag.Errorf("listing tags for PinpointSMSVoiceV2 PhoneNumber (%s): %s", d.Id(), err)
 	}
@@ -211,7 +214,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	update := false
 
@@ -257,7 +260,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("updating PinpointSMSVoiceV2 PhoneNumber (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitPhoneNumberUpdated(ctx, conn, aws.ToString(out.PhoneNumberId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitPhoneNumberUpdated(ctx, conn, aws.StringValue(out.PhoneNumberId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.Errorf("waiting for PinpointSMSVoiceV2 PhoneNumber (%s) update: %s", d.Id(), err)
 	}
 
@@ -265,7 +268,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn
+	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting PinpointSMSVoiceV2 PhoneNumber %s", d.Id())
 

@@ -52,7 +52,7 @@ resource "aws_subnet" "cloudhsm_v2_subnets" {
 
 resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
   hsm_type   = "hsm1.medium"
-  subnet_ids = aws_subnet.cloudhsm_v2_subnets.*.id
+  subnet_ids = aws_subnet.cloudhsm_v2_subnets[*].id
 
   tags = {
     Name = "example-aws_cloudhsm_v2_cluster"
@@ -62,16 +62,17 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `source_backup_identifier` - (Optional) The id of Cloud HSM v2 cluster backup to be restored.
-* `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.
+* `source_backup_identifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
+* `hsm_type` - (Required) The type of HSM module in the cluster. Currently, `hsm1.medium` and `hsm2m.medium` are supported.
 * `subnet_ids` - (Required) The IDs of subnets in which cluster will operate.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `mode` - (Optional) The mode to use in the cluster. The allowed values are `FIPS` and `NON_FIPS`. This field is required if `hsm_type` is `hsm2m.medium`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `cluster_id` - The id of the CloudHSM cluster.
 * `cluster_state` - The state of the CloudHSM cluster.
@@ -83,15 +84,24 @@ In addition to all arguments above, the following attributes are exported:
     * `cluster_certificates.0.aws_hardware_certificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
     * `cluster_certificates.0.hsm_certificate` - The HSM certificate issued (signed) by the HSM hardware.
     * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html
 [2]: https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html
 
 ## Import
 
-CloudHSM v2 Clusters can be imported using the `cluster id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudHSM v2 Clusters using the cluster `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudhsm_v2_cluster.test_cluster
+  id = "cluster-aeb282a201"
+}
 ```
-$ terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
+
+Using `terraform import`, import CloudHSM v2 Clusters using the cluster `id`. For example:
+
+```console
+% terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
 ```

@@ -21,7 +21,7 @@ resource "aws_db_instance" "prod" {
   engine               = "mysql"
   engine_version       = "5.6.17"
   instance_class       = "db.t2.micro"
-  name                 = "mydb"
+  db_name              = "mydb"
   username             = "foo"
   password             = "bar"
   db_subnet_group_name = "my_database_subnet_group"
@@ -29,14 +29,14 @@ resource "aws_db_instance" "prod" {
 }
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
-  db_instance_identifier = aws_db_instance.prod.id
+  db_instance_identifier = aws_db_instance.prod.identifier
   most_recent            = true
 }
 
 # Use the latest production snapshot to create a dev instance.
 resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
-  name                = "mydbdev"
+  db_name             = "mydbdev"
   snapshot_identifier = data.aws_db_snapshot.latest_prod_snapshot.id
 
   lifecycle {
@@ -49,45 +49,42 @@ resource "aws_db_instance" "dev" {
 
 ~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
-
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance
-
 * `db_snapshot_identifier` - (Optional) Returns information on a specific snapshot_id.
-
-* `snapshot_type` - (Optional) The type of snapshots to be returned. If you don't specify a SnapshotType
+* `snapshot_type` - (Optional) Type of snapshots to be returned. If you don't specify a SnapshotType
 value, then both automated and manual snapshots are returned. Shared and public DB snapshots are not
 included in the returned results by default. Possible values are, `automated`, `manual`, `shared`, `public` and `awsbackup`.
-
 * `include_shared` - (Optional) Set this value to true to include shared manual DB snapshots from other
 AWS accounts that this AWS account has been given permission to copy or restore, otherwise set this value to false.
 The default is `false`.
-
 * `include_public` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
+  a pair on the desired DB snapshot.
 
+## Attribute Reference
 
-## Attributes Reference
+This data source exports the following attributes in addition to the arguments above:
 
-In addition to all arguments above, the following attributes are exported:
-
-* `id` - The snapshot ID.
-* `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
-* `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
-* `db_snapshot_arn` - The Amazon Resource Name (ARN) for the DB snapshot.
-* `encrypted` - Specifies whether the DB snapshot is encrypted.
-* `engine` - Specifies the name of the database engine.
-* `engine_version` - Specifies the version of the database engine.
-* `iops` - Specifies the Provisioned IOPS (I/O operations per second) value of the DB instance at the time of the snapshot.
-* `kms_key_id` - The ARN for the KMS encryption key.
+* `id` - Snapshot ID.
+* `allocated_storage` - Allocated storage size in gigabytes (GB).
+* `availability_zone` - Name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
+* `db_snapshot_arn` - ARN for the DB snapshot.
+* `encrypted` - Whether the DB snapshot is encrypted.
+* `engine` - Name of the database engine.
+* `engine_version` - Version of the database engine.
+* `iops` - Provisioned IOPS (I/O operations per second) value of the DB instance at the time of the snapshot.
+* `kms_key_id` - ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
 * `option_group_name` - Provides the option group name for the DB snapshot.
-* `source_db_snapshot_identifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
-* `source_region` - The region that the DB snapshot was created in or copied from.
-* `status` - Specifies the status of this DB snapshot.
-* `storage_type` - Specifies the storage type associated with DB snapshot.
-* `vpc_id` - Specifies the ID of the VPC associated with the DB snapshot.
-* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `source_db_snapshot_identifier` - DB snapshot ARN that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `source_region` - Region that the DB snapshot was created in or copied from.
+* `status` - Status of this DB snapshot.
+* `storage_type` - Storage type associated with DB snapshot.
+* `vpc_id` - ID of the VPC associated with the DB snapshot.
+* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
+* `original_snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.

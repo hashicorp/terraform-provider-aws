@@ -1,25 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceManagedPrefixList() *schema.Resource {
+// @SDKDataSource("aws_ec2_managed_prefix_list", name="Managed Prefix List")
+func dataSourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceManagedPrefixListRead,
+		ReadWithoutTimeout: dataSourceManagedPrefixListRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"address_family": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,15 +45,15 @@ func DataSourceManagedPrefixList() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"filter": DataSourceFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -49,17 +62,17 @@ func DataSourceManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -68,79 +81,57 @@ func DataSourceManagedPrefixList() *schema.Resource {
 }
 
 func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := ec2.DescribeManagedPrefixListsInput{}
-
-	if filters, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+	input := &ec2.DescribeManagedPrefixListsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"prefix-list-name": d.Get(names.AttrName).(string),
+		}),
 	}
 
-	if prefixListId, ok := d.GetOk("id"); ok {
-		input.PrefixListIds = aws.StringSlice([]string{prefixListId.(string)})
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.PrefixListIds = []string{v.(string)}
 	}
 
-	if prefixListName, ok := d.GetOk("name"); ok {
-		input.Filters = append(input.Filters, &ec2.Filter{
-			Name:   aws.String("prefix-list-name"),
-			Values: aws.StringSlice([]string{prefixListName.(string)}),
-		})
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
 	}
 
-	out, err := conn.DescribeManagedPrefixListsWithContext(ctx, &input)
+	pl, err := findManagedPrefixList(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error describing EC2 Managed Prefix Lists: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Managed Prefix List", err))
 	}
 
-	if out == nil || len(out.PrefixLists) < 1 || out.PrefixLists[0] == nil {
-		return diag.Errorf("no managed prefix lists matched the given criteria")
+	d.SetId(aws.ToString(pl.PrefixListId))
+
+	prefixListEntries, err := findManagedPrefixListEntriesByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix List (%s) Entries: %s", d.Id(), err)
 	}
 
-	if len(out.PrefixLists) > 1 {
-		return diag.Errorf("more than 1 prefix list matched the given criteria")
-	}
-
-	pl := out.PrefixLists[0]
-
-	d.SetId(aws.StringValue(pl.PrefixListId))
-	d.Set("name", pl.PrefixListName)
-	d.Set("owner_id", pl.OwnerId)
 	d.Set("address_family", pl.AddressFamily)
-	d.Set("arn", pl.PrefixListArn)
+	d.Set(names.AttrARN, pl.PrefixListArn)
+	if err := d.Set("entries", flattenPrefixListEntries(prefixListEntries)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting entries: %s", err)
+	}
 	d.Set("max_entries", pl.MaxEntries)
-	d.Set("version", pl.Version)
+	d.Set(names.AttrName, pl.PrefixListName)
+	d.Set(names.AttrOwnerID, pl.OwnerId)
+	d.Set(names.AttrVersion, pl.Version)
 
-	if err := d.Set("tags", KeyValueTags(pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags attribute: %s", err)
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	var entries []interface{}
-
-	err = conn.GetManagedPrefixListEntriesPages(
-		&ec2.GetManagedPrefixListEntriesInput{
-			PrefixListId: pl.PrefixListId,
-		},
-		func(output *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
-			for _, entry := range output.Entries {
-				entries = append(entries, map[string]interface{}{
-					"cidr":        aws.StringValue(entry.Cidr),
-					"description": aws.StringValue(entry.Description),
-				})
-			}
-
-			return !lastPage
-		},
-	)
-
-	if err != nil {
-		return diag.Errorf("error listing EC2 Managed Prefix List (%s) entries: %s", d.Id(), err)
-	}
-
-	if err := d.Set("entries", entries); err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
+	return diags
 }

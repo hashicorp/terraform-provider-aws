@@ -1,17 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
@@ -19,25 +24,25 @@ func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTypeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTypeARNPrivateDataSourceConfig(rName, zipPath, typeName),
+				Config: testAccTypeDataSourceConfig_arnPrivate(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "deprecated_status", resourceName, "deprecated_status"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "documentation_url", resourceName, "documentation_url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role_arn", resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrExecutionRoleARN, resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "is_default_version", resourceName, "is_default_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.#", resourceName, "logging_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioning_type", resourceName, "provisioning_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "schema", resourceName, "schema"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSchema, resourceName, names.AttrSchema),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_url", resourceName, "source_url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "type_name", resourceName, "type_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "visibility", resourceName, "visibility"),
 				),
@@ -47,29 +52,30 @@ func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
 }
 
 func TestAccCloudFormationTypeDataSource_ARN_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTypeARNPublicDataSourceConfig(),
+				Config: testAccTypeDataSourceConfig_arnPublic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
-					resource.TestCheckResourceAttr(dataSourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
-					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`.*`)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
+					resource.TestCheckResourceAttr(dataSourceName, "deprecated_status", string(awstypes.DeprecatedStatusLive)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, "documentation_url", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "is_default_version", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_type", cloudformation.ProvisioningTypeFullyMutable),
-					resource.TestMatchResourceAttr(dataSourceName, "schema", regexp.MustCompile(`^\{.*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "source_url", regexp.MustCompile(`^https://.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "type", cloudformation.RegistryTypeResource),
+					resource.TestCheckResourceAttr(dataSourceName, "is_default_version", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "source_url", regexache.MustCompile(`^https://.+`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, string(awstypes.RegistryTypeResource)),
 					resource.TestCheckResourceAttr(dataSourceName, "type_name", "AWS::Athena::WorkGroup"),
-					resource.TestCheckResourceAttr(dataSourceName, "visibility", cloudformation.VisibilityPublic),
+					resource.TestCheckResourceAttr(dataSourceName, "visibility", string(awstypes.VisibilityPublic)),
 				),
 			},
 		},
@@ -77,6 +83,7 @@ func TestAccCloudFormationTypeDataSource_ARN_public(t *testing.T) {
 }
 
 func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
@@ -84,25 +91,25 @@ func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTypeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTypeTypeNamePrivateDataSourceConfig(rName, zipPath, typeName),
+				Config: testAccTypeDataSourceConfig_namePrivate(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "deprecated_status", resourceName, "deprecated_status"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "documentation_url", resourceName, "documentation_url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role_arn", resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrExecutionRoleARN, resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "is_default_version", resourceName, "is_default_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.#", resourceName, "logging_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioning_type", resourceName, "provisioning_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "schema", resourceName, "schema"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSchema, resourceName, names.AttrSchema),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_url", resourceName, "source_url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "type_name", resourceName, "type_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "visibility", resourceName, "visibility"),
 				),
@@ -112,36 +119,37 @@ func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
 }
 
 func TestAccCloudFormationTypeDataSource_TypeName_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTypeTypeNamePublicDataSourceConfig(),
+				Config: testAccTypeDataSourceConfig_namePublic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
-					resource.TestCheckResourceAttr(dataSourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
-					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`.*`)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
+					resource.TestCheckResourceAttr(dataSourceName, "deprecated_status", string(awstypes.DeprecatedStatusLive)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, "documentation_url", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "is_default_version", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_type", cloudformation.ProvisioningTypeFullyMutable),
-					resource.TestMatchResourceAttr(dataSourceName, "schema", regexp.MustCompile(`^\{.*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "source_url", regexp.MustCompile(`^https://.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "type", cloudformation.RegistryTypeResource),
+					resource.TestCheckResourceAttr(dataSourceName, "is_default_version", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "source_url", regexache.MustCompile(`^https://.+`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, string(awstypes.RegistryTypeResource)),
 					resource.TestCheckResourceAttr(dataSourceName, "type_name", "AWS::Athena::WorkGroup"),
-					resource.TestCheckResourceAttr(dataSourceName, "visibility", cloudformation.VisibilityPublic),
+					resource.TestCheckResourceAttr(dataSourceName, "visibility", string(awstypes.VisibilityPublic)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCloudformationTypeConfigPrivateBase(rName string, zipPath string, typeName string) string {
+func testAccTypeConfig_privateBase(rName string, zipPath string, typeName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -164,9 +172,9 @@ resource "aws_cloudformation_type" "test" {
 `, rName, zipPath, typeName)
 }
 
-func testAccTypeARNPrivateDataSourceConfig(rName string, zipPath string, typeName string) string {
+func testAccTypeDataSourceConfig_arnPrivate(rName string, zipPath string, typeName string) string {
 	return acctest.ConfigCompose(
-		testAccCloudformationTypeConfigPrivateBase(rName, zipPath, typeName),
+		testAccTypeConfig_privateBase(rName, zipPath, typeName),
 		`
 data "aws_cloudformation_type" "test" {
   arn = aws_cloudformation_type.test.arn
@@ -174,7 +182,7 @@ data "aws_cloudformation_type" "test" {
 `)
 }
 
-func testAccTypeARNPublicDataSourceConfig() string {
+func testAccTypeDataSourceConfig_arnPublic() string {
 	return `
 data "aws_partition" "current" {}
 
@@ -186,9 +194,9 @@ data "aws_cloudformation_type" "test" {
 `
 }
 
-func testAccTypeTypeNamePrivateDataSourceConfig(rName string, zipPath string, typeName string) string {
+func testAccTypeDataSourceConfig_namePrivate(rName string, zipPath string, typeName string) string {
 	return acctest.ConfigCompose(
-		testAccCloudformationTypeConfigPrivateBase(rName, zipPath, typeName),
+		testAccTypeConfig_privateBase(rName, zipPath, typeName),
 		`
 data "aws_cloudformation_type" "test" {
   type      = aws_cloudformation_type.test.type
@@ -197,7 +205,7 @@ data "aws_cloudformation_type" "test" {
 `)
 }
 
-func testAccTypeTypeNamePublicDataSourceConfig() string {
+func testAccTypeDataSourceConfig_namePublic() string {
 	return `
 data "aws_cloudformation_type" "test" {
   type      = "RESOURCE"

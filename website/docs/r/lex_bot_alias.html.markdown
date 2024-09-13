@@ -24,10 +24,10 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bot_name` - (Required) The name of the bot.
-* `bot_version` - (Required) The name of the bot.
+* `bot_version` - (Required) The version of the bot.
 * `conversation_logs` - (Optional) The settings that determine how Amazon Lex uses conversation logs for the alias. Attributes are documented under [conversation_logs](#conversation_logs).
 * `description` - (Optional) A description of the alias. Must be less than or equal to 200 characters in length.
 * `name` - (Required) The name of the alias. The name is not case sensitive. Must be less than or equal to 100 characters in length.
@@ -49,27 +49,36 @@ The settings for conversation logs.
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket where the logs are delivered. Must be less than or equal to 2048 characters in length.
 * `resource_prefix` - (Computed) The prefix of the S3 object key for `AUDIO` logs or the log stream name for `TEXT` logs.
 
-### Timeouts
+## Attribute Reference
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 1 mins) Used when creating the bot alias
-* `update` - (Defaults to 1 mins) Used when updating the bot alias
-* `delete` - (Defaults to 5 mins) Used when deleting the bot alias
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the bot alias.
 * `checksum` - Checksum of the bot alias.
 * `created_date` - The date that the bot alias was created.
 * `last_updated_date` - The date that the bot alias was updated. When you create a resource, the creation date and the last updated date are the same.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
-Bot aliases can be imported using an ID with the format `bot_name:bot_alias_name`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
 
+```terraform
+import {
+  to = aws_lex_bot_alias.order_flowers_prod
+  id = "OrderFlowers:OrderFlowersProd"
+}
 ```
-$ terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
+
+Using `terraform import`, import bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
+
+```console
+% terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
 ```

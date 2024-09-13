@@ -32,7 +32,7 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique name for this Environment. This name is used
   in the application URL
@@ -52,7 +52,7 @@ off of. Example stacks can be found in the [Amazon API documentation][1]
   template to use in deployment
 * `platform_arn` – (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
   to use in deployment
-* `wait_for_ready_timeout` - (Default: `20m`) The maximum
+* `wait_for_ready_timeout` - (Default `20m`) The maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for an Elastic Beanstalk Environment to be in a ready state before timing
   out.
@@ -62,8 +62,7 @@ for any `create` or `update` action. Minimum `10s`, maximum `180s`. Omit this to
 use the default behavior, which is an exponential backoff
 * `version_label` - (Optional) The name of the Elastic Beanstalk Application Version
 to use in deployment.
-* `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
+* `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Option Settings
 
@@ -104,15 +103,15 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Elastic Beanstalk Environment.
 * `name` - Name of the Elastic Beanstalk Environment.
 * `description` - Description of the Elastic Beanstalk Environment.
 * `tier` - The environment tier specified.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `application` – The Elastic Beanstalk Application specified for this environment.
 * `setting` – Settings specifically set for this Environment.
 * `all_settings` – List of all option settings configured in this Environment. These
@@ -127,16 +126,23 @@ In addition to all arguments above, the following attributes are exported:
 * `triggers` - Autoscaling triggers in use by this Environment.
 * `endpoint_url` - The URL to the Load Balancer for this Environment
 
-
-
 [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
 [2]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
 [3]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-beanstalk-environment.html#cfn-beanstalk-environment-platformarn
 
 ## Import
 
-Elastic Beanstalk Environments can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Beanstalk Environments using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastic_beanstalk_environment.prodenv
+  id = "e-rpqsewtp2j"
+}
 ```
-$ terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
+
+Using `terraform import`, import Elastic Beanstalk Environments using the `id`. For example:
+
+```console
+% terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
 ```

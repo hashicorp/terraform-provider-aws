@@ -62,7 +62,7 @@ The following arguments are optional:
 
 * `propagating_vgws` - (Optional) List of virtual gateways for propagation.
 * `route` - (Optional) Configuration block of routes. Detailed below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### route
 
@@ -88,31 +88,38 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the route table.
 * `arn` - The ARN of the route table.
 * `owner_id` - ID of the AWS account that owns the route table.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - ID of the VPC.
 
 ## Timeouts
 
-`aws_default_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `2 minutes`) Used for route creation
-- `update` - (Default `2 minutes`) Used for route creation
+- `create` - (Default `2m`)
+- `update` - (Default `2m`)
 
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Default VPC route tables using the `vpc_id`. For example:
 
-```
-$ terraform import aws_default_route_table.example vpc-33cc44dd
+```terraform
+import {
+  to = aws_default_route_table.example
+  id = "vpc-33cc44dd"
+}
 ```
 
-[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
-[tf-route-tables]: /docs/providers/aws/r/route_table.html
+Using `terraform import`, import Default VPC route tables using the `vpc_id`. For example:
+
+```console
+% terraform import aws_default_route_table.example vpc-33cc44dd
+```
+
 [tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html

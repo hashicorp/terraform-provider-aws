@@ -1,52 +1,63 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccMacie2_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic":                        testAccAccount_basic,
+			acctest.CtBasic:                testAccAccount_basic,
 			"finding_publishing_frequency": testAccAccount_FindingPublishingFrequency,
 			"status":                       testAccAccount_WithStatus,
 			"finding_and_status":           testAccAccount_WithFindingAndStatus,
-			"disappears":                   testAccAccount_disappears,
+			acctest.CtDisappears:           testAccAccount_disappears,
+		},
+		"ClassificationExportConfiguration": {
+			acctest.CtBasic: testAccClassificationExportConfiguration_basic,
 		},
 		"ClassificationJob": {
-			"basic":          testAccClassificationJob_basic,
-			"name_generated": testAccClassificationJob_Name_Generated,
-			"name_prefix":    testAccClassificationJob_NamePrefix,
-			"disappears":     testAccClassificationJob_disappears,
-			"status":         testAccClassificationJob_Status,
-			"complete":       testAccClassificationJob_complete,
-			"tags":           testAccClassificationJob_WithTags,
+			acctest.CtBasic:      testAccClassificationJob_basic,
+			"name_generated":     testAccClassificationJob_Name_Generated,
+			"name_prefix":        testAccClassificationJob_NamePrefix,
+			acctest.CtDisappears: testAccClassificationJob_disappears,
+			"status":             testAccClassificationJob_Status,
+			"complete":           testAccClassificationJob_complete,
+			"tags":               testAccClassificationJob_WithTags,
+			"bucket_criteria":    testAccClassificationJob_BucketCriteria,
 		},
 		"CustomDataIdentifier": {
-			"basic":              testAccCustomDataIdentifier_basic,
+			acctest.CtBasic:      testAccCustomDataIdentifier_basic,
 			"name_generated":     testAccCustomDataIdentifier_Name_Generated,
-			"name_prefix":        testAccCustomDataIdentifier_disappears,
-			"disappears":         testAccCustomDataIdentifier_NamePrefix,
+			acctest.CtDisappears: testAccCustomDataIdentifier_disappears,
+			"name_prefix":        testAccCustomDataIdentifier_NamePrefix,
 			"classification_job": testAccCustomDataIdentifier_WithClassificationJob,
 			"tags":               testAccCustomDataIdentifier_WithTags,
 		},
 		"FindingsFilter": {
-			"basic":          testAccFindingsFilter_basic,
-			"name_generated": testAccFindingsFilter_Name_Generated,
-			"name_prefix":    testAccFindingsFilter_NamePrefix,
-			"disappears":     testAccFindingsFilter_disappears,
-			"complete":       testAccFindingsFilter_complete,
-			"date":           testAccFindingsFilter_WithDate,
-			"number":         testAccFindingsFilter_WithNumber,
-			"tags":           testAccFindingsFilter_withTags,
+			acctest.CtBasic:      testAccFindingsFilter_basic,
+			"name_generated":     testAccFindingsFilter_Name_Generated,
+			"name_prefix":        testAccFindingsFilter_NamePrefix,
+			acctest.CtDisappears: testAccFindingsFilter_disappears,
+			"complete":           testAccFindingsFilter_complete,
+			"date":               testAccFindingsFilter_WithDate,
+			"number":             testAccFindingsFilter_WithNumber,
+			"tags":               testAccFindingsFilter_withTags,
 		},
 		"OrganizationAdminAccount": {
-			"basic":      testAccOrganizationAdminAccount_basic,
-			"disappears": testAccOrganizationAdminAccount_disappears,
+			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
+			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
 		},
 		"Member": {
-			"basic":                                 testAccMember_basic,
-			"disappears":                            testAccMember_disappears,
+			acctest.CtBasic:                         testAccMember_basic,
+			acctest.CtDisappears:                    testAccMember_disappears,
 			"tags":                                  testAccMember_withTags,
 			"invitation_disable_email_notification": testAccMember_invitationDisableEmailNotification,
 			"invite":                                testAccMember_invite,
@@ -54,19 +65,9 @@ func TestAccMacie2_serial(t *testing.T) {
 			"status":                                testAccMember_status,
 		},
 		"InvitationAccepter": {
-			"basic": testAccInvitationAccepter_basic,
+			acctest.CtBasic: testAccInvitationAccepter_basic,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -5,65 +8,94 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func TestValidTypeStringNullableBoolean(t *testing.T) {
-	testCases := []struct {
-		val         interface{}
-		expectedErr *regexp.Regexp
-	}{
-		{
-			val: "",
-		},
-		{
-			val: "0",
-		},
-		{
-			val: "1",
-		},
-		{
-			val: "true",
-		},
-		{
-			val: "false",
-		},
-		{
-			val:         "invalid",
-			expectedErr: regexp.MustCompile(`to be one of \["", false, true\]`),
-		},
+func TestValidAmazonSideASN(t *testing.T) {
+	t.Parallel()
+
+	validAsns := []string{
+		"7224",
+		"9059",
+		"10124",
+		"17493",
+		"64512",
+		"64513",
+		"65533",
+		"65534",
+		"4200000000",
+		"4200000001",
+		"4294967293",
+		"4294967294",
+	}
+	for _, v := range validAsns {
+		_, errors := ValidAmazonSideASN(v, "amazon_side_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
 	}
 
-	matchErr := func(errs []error, r *regexp.Regexp) bool {
-		// err must match one provided
-		for _, err := range errs {
-			if r.MatchString(err.Error()) {
-				return true
-			}
+	invalidAsns := []string{
+		"1",
+		"ABCDEFG",
+		"",
+		"7225",
+		"9058",
+		"10125",
+		"17492",
+		"64511",
+		"65535",
+		"4199999999",
+		"4294967295",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := ValidAmazonSideASN(v, "amazon_side_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
 		}
+	}
+}
 
-		return false
+func TestValid4ByteASNString(t *testing.T) {
+	t.Parallel()
+
+	validAsns := []string{
+		"0",
+		"1",
+		"65534",
+		"65535",
+		"4294967294",
+		"4294967295",
+	}
+	for _, v := range validAsns {
+		_, errors := Valid4ByteASN(v, "bgp_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
 	}
 
-	for i, tc := range testCases {
-		_, errs := ValidTypeStringNullableBoolean(tc.val, "test_property")
-
-		if len(errs) == 0 && tc.expectedErr == nil {
-			continue
-		}
-
-		if len(errs) != 0 && tc.expectedErr == nil {
-			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
-		}
-
-		if !matchErr(errs, tc.expectedErr) {
-			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+	invalidAsns := []string{
+		"-1",
+		"ABCDEFG",
+		"",
+		"4294967296",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := Valid4ByteASN(v, "bgp_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
 		}
 	}
 }
 
 func TestValidTypeStringNullableFloat(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		val         interface{}
 		expectedErr *regexp.Regexp
@@ -82,7 +114,7 @@ func TestValidTypeStringNullableFloat(t *testing.T) {
 		},
 		{
 			val:         "threeve",
-			expectedErr: regexp.MustCompile(`cannot parse`),
+			expectedErr: regexache.MustCompile(`cannot parse`),
 		},
 	}
 
@@ -115,6 +147,8 @@ func TestValidTypeStringNullableFloat(t *testing.T) {
 }
 
 func TestValidAccountID(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"123456789012",
 		"999999999999",
@@ -141,6 +175,8 @@ func TestValidAccountID(t *testing.T) {
 }
 
 func TestValidARN(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := ValidARN(v, "arn")
 	if len(errors) != 0 {
@@ -151,6 +187,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // Beanstalk
 		"arn:aws:iam::123456789012:user/David",                                             // lintignore:AWSAT005          // IAM User
 		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // Managed IAM policy
+		"arn:aws:imagebuilder:us-east-1:third-party:component/my-component",                // lintignore:AWSAT003,AWSAT005 // ImageBuilder Third Party
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // RDS
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // S3 object
 		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule
@@ -164,6 +201,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws-iso-b:s3:::bucket/object",                                                 // lintignore:AWSAT005          // SC2S S3 ARN
 		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // GovCloud EC2 ARN
 		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // GovCloud S3 ARN
+		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                  // lintignore:AWSAT005          // Cloudwatch Alarm
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")
@@ -187,31 +225,9 @@ func TestValidARN(t *testing.T) {
 	}
 }
 
-func TestValidateCIDRBlock(t *testing.T) {
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", true},
-		{"10.2.2.0/1234", false},
-		{"10.2.2.2/24", false},
-		{"::/0", true},
-		{"::0/0", true},
-		{"2000::/15", true},
-		{"2001::/15", false},
-		{"", false},
-	} {
-		err := validateCIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
-		}
-	}
-}
-
 func TestValidCIDRNetworkAddress(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		CIDR              string
 		ExpectedErrSubstr string
@@ -244,6 +260,8 @@ func TestValidCIDRNetworkAddress(t *testing.T) {
 }
 
 func TestValidIPv4CIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -267,6 +285,8 @@ func TestValidIPv4CIDRBlock(t *testing.T) {
 }
 
 func TestValidIPv6CIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -291,6 +311,8 @@ func TestValidIPv6CIDRBlock(t *testing.T) {
 }
 
 func TestIsIPv4CIDRBlockOrIPv6CIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	validator := IsIPv4CIDRBlockOrIPv6CIDRBlock(
 		validation.IsCIDRNetwork(16, 24),
 		validation.IsCIDRNetwork(40, 64),
@@ -334,65 +356,89 @@ func TestIsIPv4CIDRBlockOrIPv6CIDRBlock(t *testing.T) {
 }
 
 func TestValidIAMPolicyJSONString(t *testing.T) {
+	t.Parallel()
+
 	type testCases struct {
-		Value    string
-		ErrCount int
+		Value     string
+		WantError string
 	}
-
-	invalidCases := []testCases{
+	tests := []testCases{
 		{
-			Value:    `{0:"1"}`,
-			ErrCount: 1,
+			Value: `{}`,
+			// Valid
 		},
 		{
-			Value:    `{'abc':1}`,
-			ErrCount: 1,
+			Value: `{"abc":["1","2"]}`,
+			// Valid
 		},
 		{
-			Value:    `{"def":}`,
-			ErrCount: 1,
+			Value:     `{0:"1"}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '0' looking for beginning of object key string, at byte offset 2`,
 		},
 		{
-			Value:    `{"xyz":[}}`,
-			ErrCount: 1,
+			Value:     `{'abc':1}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '\'' looking for beginning of object key string, at byte offset 2`,
 		},
 		{
-			Value:    ``,
-			ErrCount: 1,
+			Value:     `{"def":}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '}' looking for beginning of value, at byte offset 8`,
 		},
 		{
-			Value:    `    {"xyz": "foo"}`,
-			ErrCount: 1,
+			Value:     `{"xyz":[}}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '}' looking for beginning of value, at byte offset 9`,
+		},
+		{
+			Value:     ``,
+			WantError: `"json" is an empty string, which is not a valid JSON value`,
+		},
+		{
+			Value:     `"blub"`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object`,
+		},
+		{
+			Value:     `"../some-filename.json"`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object (have you passed a JSON-encoded filename instead of the content of that file?)`,
+		},
+		{
+			Value:     `"{\"Version\":\"...\"}"`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object (have you double-encoded your JSON data?)`,
+		},
+		{
+			Value:     `[{}]`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON array, not a JSON object`,
+		},
+		{
+			Value:     `{"a":"foo","a":"bar"}`,
+			WantError: `"json" contains duplicate JSON keys: duplicate key "a"`,
 		},
 	}
+	for _, test := range tests {
+		t.Run(test.Value, func(t *testing.T) {
+			t.Parallel()
 
-	for _, tc := range invalidCases {
-		_, errors := ValidIAMPolicyJSON(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
+			_, errs := ValidIAMPolicyJSON(test.Value, "json")
 
-	validCases := []testCases{
-		{
-			Value:    `{}`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `{"abc":["1","2"]}`,
-			ErrCount: 0,
-		},
-	}
+			if test.WantError != "" {
+				if got, want := len(errs), 1; got != want {
+					t.Fatalf("wrong number of errors %d; want %d", got, want)
+				}
+				err := errs[0]
+				if got, want := err.Error(), test.WantError; got != want {
+					t.Fatalf("wrong error message\ngot:  %s\nwant: %s", got, want)
+				}
+				return
+			}
 
-	for _, tc := range validCases {
-		_, errors := ValidIAMPolicyJSON(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
+			for _, err := range errs {
+				t.Errorf("unexpected error: %s", err.Error())
+			}
+		})
 	}
 }
 
 func TestValidStringIsJSONOrYAML(t *testing.T) {
+	t.Parallel()
+
 	type testCases struct {
 		Value    string
 		ErrCount int
@@ -436,6 +482,8 @@ func TestValidStringIsJSONOrYAML(t *testing.T) {
 }
 
 func TestValidOnceAWeekWindowFormat(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -487,6 +535,8 @@ func TestValidOnceAWeekWindowFormat(t *testing.T) {
 }
 
 func TestValidOnceADayWindowFormat(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -528,6 +578,8 @@ func TestValidOnceADayWindowFormat(t *testing.T) {
 }
 
 func TestValidLaunchTemplateName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"fooBAR123",
 		"(./_)",
@@ -569,6 +621,8 @@ func TestValidLaunchTemplateName(t *testing.T) {
 }
 
 func TestValidLaunchTemplateID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"lt-foobar123456",
 	}
@@ -593,6 +647,8 @@ func TestValidLaunchTemplateID(t *testing.T) {
 }
 
 func TestValidUTCTimestamp(t *testing.T) {
+	t.Parallel()
+
 	validT := []string{
 		"2006-01-02T15:04:05Z",
 	}
@@ -619,6 +675,8 @@ func TestValidUTCTimestamp(t *testing.T) {
 }
 
 func TestValidateTypeStringIsDateOrInt(t *testing.T) {
+	t.Parallel()
+
 	validT := []string{
 		"2006-01-02T15:04:05Z",
 		"2006-01-02T15:04:05-07:00",
@@ -648,6 +706,8 @@ func TestValidateTypeStringIsDateOrInt(t *testing.T) {
 }
 
 func TestFloatGreaterThan(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		Value                  interface{}
 		ValidateFunc           schema.SchemaValidateFunc
@@ -676,5 +736,206 @@ func TestFloatGreaterThan(t *testing.T) {
 		} else if len(errors) == 0 && tc.ExpectValidationErrors {
 			t.Errorf("%s: expected errors but got none", tn)
 		}
+	}
+}
+
+func TestValidServicePrincipal(t *testing.T) {
+	t.Parallel()
+
+	v := ""
+	_, errors := ValidServicePrincipal(v, "test.google.com")
+	if len(errors) != 0 {
+		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
+	}
+
+	validNames := []string{
+		"a4b.amazonaws.com",
+		"appstream.application-autoscaling.amazonaws.com",
+		"alexa-appkit.amazon.com",
+		"member.org.stacksets.cloudformation.amazonaws.com",
+		"vpc-flow-logs.amazonaws.com",
+		"logs.eu-central-1.amazonaws.com",
+	}
+	for _, v := range validNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Principal: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"test.google.com",
+		"transfer.amz.com",
+		"test",
+		"testwithwildcard*",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Principal", v)
+		}
+	}
+}
+
+func TestMapKeyNoMatch(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "two invalid keys",
+			value: map[string]interface{}{
+				"Ka": "V1",
+				"K2": "V2",
+				"Kb": "V3",
+				"Kc": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"Ka": "V1",
+				"Kb": "V2",
+			},
+		},
+	}
+	f := MapKeyNoMatch(regexache.MustCompile(`^.*\d$`), "must not end with a digit")
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapSizeAtMost(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "too long",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+				"K3": "V3",
+				"K4": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+	}
+	f := MapSizeAtMost(4)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapSizeBetween(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "too long",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+				"K3": "V3",
+				"K4": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "too short",
+			value: map[string]interface{}{
+				"K1": "V1",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+	}
+	f := MapSizeBetween(2, 4)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapKeysAre(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+		{
+			name: "not ok",
+			value: map[string]interface{}{
+				"K3": "V3",
+			},
+			wantErr: true,
+		},
+	}
+	f := MapKeysAre(validation.ToDiagFunc(validation.StringInSlice([]string{"K1", "K2"}, false)))
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
 	}
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Ignore any `Failed` scaling activities due to IAM eventual consistency
+```

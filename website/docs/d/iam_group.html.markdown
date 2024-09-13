@@ -22,24 +22,21 @@ data "aws_iam_group" "example" {
 
 ## Argument Reference
 
-* `group_name` - (Required) The friendly IAM group name to match.
+* `group_name` - (Required) Friendly IAM group name to match.
 
-## Attributes Reference
+## Attribute Reference
 
-* `arn` - The Amazon Resource Name (ARN) specifying the group.
+This data source exports the following attributes in addition to the arguments above:
 
-* `path` - The path to the group.
-
-* `group_id` - The stable and unique string identifying the group.
-
-* `users` - List of objects containing group member information. See supported fields below.
+* `arn` - Group ARN.
+* `group_id` - Stable and unique string identifying the group.
+* `id` - Stable and unique string identifying the group.
+* `path` - Path to the group.
+* `users` - List of objects containing group member information. See below.
 
 ### `users`
 
-* `arn` - The Amazon Resource Name (ARN) specifying the iam user.
-
-* `user_id` - The stable and unique string identifying the iam user.
-
-* `user_name` - The name of the iam user.
-
-* `path` - The path to the iam user.
+* `arn` - User ARN.
+* `path` - Path to the IAM user.
+* `user_id` - Stable and unique string identifying the IAM user.
+* `user_name` - Name of the IAM user.

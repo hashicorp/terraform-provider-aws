@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package glue
 
@@ -8,16 +8,17 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_glue_catalog_database", &resource.Sweeper{
 		Name: "aws_glue_catalog_database",
 		F:    sweepCatalogDatabases,
@@ -40,7 +41,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_glue_dev_endpoint", &resource.Sweeper{
 		Name: "aws_glue_dev_endpoint",
-		F:    sweepDevEndpoint,
+		F:    sweepDevEndpoints,
 	})
 
 	resource.AddTestSweepers("aws_glue_job", &resource.Sweeper{
@@ -80,70 +81,89 @@ func init() {
 }
 
 func sweepCatalogDatabases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetDatabasesInput{}
-	err = conn.GetDatabasesPages(input, func(page *glue.GetDatabasesOutput, lastPage bool) bool {
-		if len(page.DatabaseList) == 0 {
-			log.Printf("[INFO] No Glue Catalog Databases to sweep")
-			return false
+
+	pages := glue.NewGetDatabasesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if awsv2.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping Glue Catalog Database sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Glue Catalog Databases: %s", err)
 		}
+
 		for _, database := range page.DatabaseList {
-			name := aws.StringValue(database.Name)
+			name := aws.ToString(database.Name)
 
 			log.Printf("[INFO] Deleting Glue Catalog Database: %s", name)
 
 			r := ResourceCatalogDatabase()
 			d := r.Data(nil)
-			d.SetId("???")
-			d.Set("name", name)
-			d.Set("catalog_id", database.CatalogId)
+			d.SetId("unused")
+			d.Set(names.AttrName, name)
+			d.Set(names.AttrCatalogID, database.CatalogId)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Catalog Database %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Catalog Database sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Catalog Databases: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Catalog Databases: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepClassifiers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetClassifiersInput{}
-	err = conn.GetClassifiersPages(input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
-		if len(page.Classifiers) == 0 {
-			log.Printf("[INFO] No Glue Classifiers to sweep")
-			return false
+
+	pages := glue.NewGetClassifiersPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if awsv2.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping Glue Classifier sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Glue Classifiers: %s", err)
 		}
+
 		for _, classifier := range page.Classifiers {
 			var name string
 			if classifier.CsvClassifier != nil {
-				name = aws.StringValue(classifier.CsvClassifier.Name)
+				name = aws.ToString(classifier.CsvClassifier.Name)
 			} else if classifier.GrokClassifier != nil {
-				name = aws.StringValue(classifier.GrokClassifier.Name)
+				name = aws.ToString(classifier.GrokClassifier.Name)
 			} else if classifier.JsonClassifier != nil {
-				name = aws.StringValue(classifier.JsonClassifier.Name)
+				name = aws.ToString(classifier.JsonClassifier.Name)
 			} else if classifier.XMLClassifier != nil {
-				name = aws.StringValue(classifier.XMLClassifier.Name)
+				name = aws.ToString(classifier.XMLClassifier.Name)
 			}
 			if name == "" {
 				log.Printf("[WARN] Unable to determine Glue Classifier name: %#v", classifier)
@@ -151,296 +171,334 @@ func sweepClassifiers(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting Glue Classifier: %s", name)
-			err := DeleteClassifier(conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Classifier %s: %s", name, err)
-			}
+			r := ResourceClassifier()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Classifier sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Classifiers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Classifiers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepConnections(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
-	catalogID := client.(*conns.AWSClient).AccountID
+	conn := client.GlueClient(ctx)
+	catalogID := client.AccountID
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetConnectionsInput{
 		CatalogId: aws.String(catalogID),
 	}
-	err = conn.GetConnectionsPages(input, func(page *glue.GetConnectionsOutput, lastPage bool) bool {
-		if len(page.ConnectionList) == 0 {
-			log.Printf("[INFO] No Glue Connections to sweep")
-			return false
+
+	pages := glue.NewGetConnectionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if awsv2.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping Glue Connection sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Glue Connections: %s", err)
 		}
+
 		for _, connection := range page.ConnectionList {
-			id := fmt.Sprintf("%s:%s", catalogID, aws.StringValue(connection.Name))
+			id := fmt.Sprintf("%s:%s", catalogID, aws.ToString(connection.Name))
 
 			log.Printf("[INFO] Deleting Glue Connection: %s", id)
 			r := ResourceConnection()
 			d := r.Data(nil)
 			d.SetId(id)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Connection sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Connections: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepCrawlers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetCrawlersInput{}
-	err = conn.GetCrawlersPages(input, func(page *glue.GetCrawlersOutput, lastPage bool) bool {
-		if len(page.Crawlers) == 0 {
-			log.Printf("[INFO] No Glue Crawlers to sweep")
-			return false
+
+	pages := glue.NewGetCrawlersPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if awsv2.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping Glue Crawler sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Glue Crawlers: %s", err)
 		}
+
 		for _, crawler := range page.Crawlers {
-			name := aws.StringValue(crawler.Name)
+			name := aws.ToString(crawler.Name)
 
 			r := ResourceCrawler()
 			d := r.Data(nil)
 			d.SetId(name)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Crawler %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Crawler sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Crawlers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepDevEndpoint(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepDevEndpoints(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
-
 	input := &glue.GetDevEndpointsInput{}
-	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
-		if len(page.DevEndpoints) == 0 {
-			log.Printf("[INFO] No Glue Dev Endpoints to sweep")
-			return false
+	conn := client.GlueClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := glue.NewGetDevEndpointsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
+			return nil
 		}
-		for _, endpoint := range page.DevEndpoints {
-			name := aws.StringValue(endpoint.EndpointName)
+
+		if err != nil {
+			return fmt.Errorf("error listing Glue Dev Endpoints (%s): %w", region, err)
+		}
+
+		for _, v := range page.DevEndpoints {
+			name := aws.ToString(v.EndpointName)
 			if !strings.HasPrefix(name, sweep.ResourcePrefix) {
 				log.Printf("[INFO] Skipping Glue Dev Endpoint: %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", name)
-			_, err := conn.DeleteDevEndpoint(&glue.DeleteDevEndpointInput{
-				EndpointName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Dev Endpoint %s: %s", name, err)
-			}
+			r := ResourceDevEndpoint()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Glue Dev Endpoint: %s", err)
+		return fmt.Errorf("error sweeping Glue Dev Endpoints (%s): %w", region, err)
 	}
 
 	return nil
 }
 
 func sweepJobs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
-
 	input := &glue.GetJobsInput{}
-	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
-		if len(page.Jobs) == 0 {
-			log.Printf("[INFO] No Glue Jobs to sweep")
-			return false
-		}
-		for _, job := range page.Jobs {
-			name := aws.StringValue(job.Name)
+	conn := client.GlueClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-			log.Printf("[INFO] Deleting Glue Job: %s", name)
-			err := DeleteJob(conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
+	pages := glue.NewGetJobsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Glue Jobs: %s", err)
+
+		if err != nil {
+			return fmt.Errorf("error listing Glue Jobs (%s): %w", region, err)
+		}
+
+		for _, v := range page.Jobs {
+			r := ResourceJob()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Glue Jobs (%s): %w", region, err)
 	}
 
 	return nil
 }
 
 func sweepMLTransforms(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &glue.GetMLTransformsInput{}
-	err = conn.GetMLTransformsPages(input, func(page *glue.GetMLTransformsOutput, lastPage bool) bool {
-		if len(page.Transforms) == 0 {
-			log.Printf("[INFO] No Glue ML Transforms to sweep")
-			return false
+
+	pages := glue.NewGetMLTransformsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Glue ML Transforms sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glue ML Transforms: %w", err))
+		}
+
 		for _, transforms := range page.Transforms {
-			id := aws.StringValue(transforms.TransformId)
+			id := aws.ToString(transforms.TransformId)
 
 			log.Printf("[INFO] Deleting Glue ML Transform: %s", id)
 			r := ResourceMLTransform()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Glue ML Transforms sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glue ML Transforms: %w", err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue ML Transforms: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepRegistry(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
 
-	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	listOutput, err := conn.ListRegistries(ctx, &glue.ListRegistriesInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Registrys return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Registry sweep for %s: %s", region, err)
 			return nil
 		}
 		return fmt.Errorf("Error retrieving Glue Registry: %s", err)
 	}
 	for _, registry := range listOutput.Registries {
-		arn := aws.StringValue(registry.RegistryArn)
+		arn := aws.ToString(registry.RegistryArn)
 		r := ResourceRegistry()
 		d := r.Data(nil)
 		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Registry %s: %s", arn, err)
-		}
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
-	return nil
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Registry: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepSchema(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
 
-	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	listOutput, err := conn.ListSchemas(ctx, &glue.ListSchemasInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Schemas return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Schema sweep for %s: %s", region, err)
 			return nil
 		}
 		return fmt.Errorf("Error retrieving Glue Schema: %s", err)
 	}
 	for _, schema := range listOutput.Schemas {
-		arn := aws.StringValue(schema.SchemaArn)
+		arn := aws.ToString(schema.SchemaArn)
 		r := ResourceSchema()
 		d := r.Data(nil)
 		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Schema %s: %s", arn, err)
-		}
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
-	return nil
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepSecurityConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
 
 	input := &glue.GetSecurityConfigurationsInput{}
 
 	for {
-		output, err := conn.GetSecurityConfigurations(input)
+		output, err := conn.GetSecurityConfigurations(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Security Configuration sweep for %s: %s", region, err)
 			return nil
 		}
@@ -450,16 +508,16 @@ func sweepSecurityConfigurations(region string) error {
 		}
 
 		for _, securityConfiguration := range output.SecurityConfigurations {
-			name := aws.StringValue(securityConfiguration.Name)
+			name := aws.ToString(securityConfiguration.Name)
 
 			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
-			err := DeleteSecurityConfiguration(conn, name)
+			err := DeleteSecurityConfiguration(ctx, conn, name)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Security Configuration %s: %s", name, err)
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
+		if aws.ToString(output.NextToken) == "" {
 			break
 		}
 
@@ -470,63 +528,71 @@ func sweepSecurityConfigurations(region string) error {
 }
 
 func sweepTriggers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetTriggersInput{}
-	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
-		if page == nil || len(page.Triggers) == 0 {
-			log.Printf("[INFO] No Glue Triggers to sweep")
-			return false
+
+	pages := glue.NewGetTriggersPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if awsv2.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping Glue Trigger sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Glue Triggers: %s", err)
 		}
+
 		for _, trigger := range page.Triggers {
-			name := aws.StringValue(trigger.Name)
+			name := aws.ToString(trigger.Name)
 
 			log.Printf("[INFO] Deleting Glue Trigger: %s", name)
 			r := ResourceTrigger()
 			d := r.Data(nil)
 			d.SetId(name)
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Trigger %s: %s", name, err)
-			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Trigger sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Triggers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Triggers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepWorkflow(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.GlueClient(ctx)
 
-	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
+	listOutput, err := conn.ListWorkflows(ctx, &glue.ListWorkflowsInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Workflows return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Workflow sweep for %s: %s", region, err)
 			return nil
 		}
 		return fmt.Errorf("Error retrieving Glue Workflow: %s", err)
 	}
 	for _, workflowName := range listOutput.Workflows {
-		err := DeleteWorkflow(conn, *workflowName)
+		err := DeleteWorkflow(ctx, conn, workflowName)
 		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Workflow %s: %s", *workflowName, err)
+			log.Printf("[ERROR] Failed to delete Glue Workflow %s: %s", workflowName, err)
 		}
 	}
 	return nil

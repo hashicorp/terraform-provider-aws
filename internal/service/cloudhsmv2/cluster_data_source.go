@@ -1,55 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCluster() *schema.Resource {
+// @SDKDataSource("aws_cloudhsm_v2_cluster", name="Cluster")
+func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"cluster_state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"cluster_certificates": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"aws_hardware_certificate": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"cluster_certificate": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"cluster_csr": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"aws_hardware_certificate": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -64,68 +50,61 @@ func DataSourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"subnet_ids": {
+			"cluster_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"cluster_state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+			},
+			names.AttrVPCID: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
-	clusterId := d.Get("cluster_id").(string)
-	filters := []*string{&clusterId}
-	log.Printf("[DEBUG] Reading CloudHSM v2 Cluster %s", clusterId)
-	result := int64(1)
+	clusterID := d.Get("cluster_id").(string)
 	input := &cloudhsmv2.DescribeClustersInput{
-		Filters: map[string][]*string{
-			"clusterIds": filters,
+		Filters: map[string][]string{
+			"clusterIds": {clusterID},
 		},
-		MaxResults: &result,
+		MaxResults: aws.Int32(1),
 	}
-	state := d.Get("cluster_state").(string)
-	states := []*string{&state}
-	if len(state) > 0 {
-		input.Filters["states"] = states
+	if v, ok := d.GetOk("cluster_state"); ok {
+		input.Filters["states"] = []string{v.(string)}
 	}
-	out, err := conn.DescribeClusters(input)
+
+	cluster, err := findCluster(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudHSM v2 Cluster: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudHSM v2 Cluster (%s): %s", clusterID, err)
 	}
 
-	var cluster *cloudhsmv2.Cluster
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterId) == clusterId {
-			cluster = c
-			break
-		}
+	d.SetId(clusterID)
+	if err := d.Set("cluster_certificates", flattenCertificates(cluster)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cluster_certificates: %s", err)
 	}
-
-	if cluster == nil {
-		return fmt.Errorf("cluster with id %s not found", clusterId)
-	}
-
-	d.SetId(clusterId)
-	d.Set("vpc_id", cluster.VpcId)
-	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("cluster_state", cluster.State)
-	if err := d.Set("cluster_certificates", readClusterCertificates(cluster)); err != nil {
-		return fmt.Errorf("error setting cluster_certificates: %w", err)
-	}
+	d.Set("security_group_id", cluster.SecurityGroup)
+	d.Set(names.AttrSubnetIDs, tfmaps.Values(cluster.SubnetMapping))
+	d.Set(names.AttrVPCID, cluster.VpcId)
 
-	var subnets []string
-	for _, sn := range cluster.SubnetMapping {
-		subnets = append(subnets, *sn)
-	}
-
-	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving Subnet IDs to state for CloudHSM v2 Cluster (%s): %w", d.Id(), err)
-	}
-
-	return nil
+	return diags
 }

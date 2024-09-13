@@ -31,6 +31,8 @@ the separate resource.
 
 ## Example Usage
 
+### Basic example
+
 ```terraform
 resource "aws_route_table" "example" {
   vpc_id = aws_vpc.example.id
@@ -65,14 +67,64 @@ resource "aws_route_table" "example" {
 }
 ```
 
+### Adopting an existing local route
+
+AWS creates certain routes that the AWS provider mostly ignores. You can manage them by importing or adopting them. See [Import](#import) below for information on importing. This example shows adopting a route and then updating its target.
+
+First, adopt an existing AWS-created route:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  # since this is exactly the route AWS will create, the route will be adopted
+  route {
+    cidr_block = "10.1.0.0/16"
+    gateway_id = "local"
+  }
+}
+```
+
+Next, update the target of the route:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block           = aws_vpc.test.cidr_block
+    network_interface_id = aws_network_interface.test.id
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+}
+```
+
+The target could then be updated again back to `local`.
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
 ### route Argument Reference
@@ -90,8 +142,7 @@ One of the following target arguments must be supplied:
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
-* `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
-* `instance_id` - (Optional, **Deprecated** use `network_interface_id` instead) Identifier of an EC2 instance.
+* `gateway_id` - (Optional) Identifier of a VPC internet gateway, virtual private gateway, or `local`. `local` routes cannot be created but can be adopted or imported. See the [example](#adopting-an-existing-local-route) above.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
@@ -101,9 +152,9 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Only the target that is entered is exported as a readable
 attribute once the route resource is created.
@@ -111,21 +162,29 @@ attribute once the route resource is created.
 * `id` - The ID of the routing table.
 * `arn` - The ARN of the route table.
 * `owner_id` - The ID of the AWS account that owns the route table.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5 minutes`) Used for route creation
-- `update` - (Default `2 minutes`) Used for route creation
-- `delete` - (Default `5 minutes`) Used for route deletion
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
-Route Tables can be imported using the route table `id`. For example, to import
-route table `rtb-4e616f6d69`, use this command:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route Tables using the route table `id`. For example:
 
+```terraform
+import {
+  to = aws_route_table.public_rt
+  id = "rtb-4e616f6d69"
+}
 ```
-$ terraform import aws_route_table.public_rt rtb-4e616f6d69
+
+Using `terraform import`, import Route Tables using the route table `id`. For example:
+
+```console
+% terraform import aws_route_table.public_rt rtb-4e616f6d69
 ```

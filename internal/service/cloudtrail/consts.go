@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudtrail
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	ResCloudTrail = "Trail"
-
 	resourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
 	resourceTypeLambdaFunction = "AWS::Lambda::Function"
 	resourceTypeS3Object       = "AWS::S3::Object"
@@ -40,4 +43,8 @@ func field_Values() []string {
 
 const (
 	propagationTimeout = 2 * time.Minute
+)
+
+const (
+	servicePrincipal = "cloudtrail.amazonaws.com"
 )

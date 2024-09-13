@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
+import (
+	"time"
+)
+
 const (
-	ResDomain                      = "Domain"
-	ResDomainPermissionsPolicy     = "Domain Permissions Policy"
-	ResRepository                  = "Repository"
-	ResRepositoryPermissionsPolicy = "Repository Permissions Policy"
+	propagationTimeout = 2 * time.Minute
 )

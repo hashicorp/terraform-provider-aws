@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package logs
 
@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_group",
 		F:    sweepGroups,
@@ -55,146 +54,129 @@ func init() {
 }
 
 func sweepGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LogsConn
-	var sweeperErrs *multierror.Error
-
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
+	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudWatch Logs Log Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing CloudWatch Logs Log Groups (%s): %w", region, err)
+		}
+
+		for _, v := range page.LogGroups {
+			r := resourceGroup()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.LogGroupName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudWatch Logs Log Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweeplogQueryDefinitions(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %s", err)
+	}
+	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, logGroup := range page.LogGroups {
-			if logGroup == nil {
-				continue
-			}
+		for _, v := range page.QueryDefinitions {
+			r := resourceQueryDefinition()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.QueryDefinitionId))
 
-			input := &cloudwatchlogs.DeleteLogGroupInput{
-				LogGroupName: logGroup.LogGroupName,
-			}
-			name := aws.StringValue(logGroup.LogGroupName)
-
-			log.Printf("[INFO] Deleting CloudWatch Log Group: %s", name)
-			_, err := conn.DeleteLogGroup(input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CloudWatch Log Group (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudWatch Log Groups sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudWatch Logs Query Definition sweep for %s: %s", region, err)
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CloudWatch Log Groups: %w", err))
+		return fmt.Errorf("error listing CloudWatch Logs Query Definitions (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudWatch Logs Query Definitions (%s): %w", region, err)
+	}
+
+	return nil
 }
 
-func sweeplogQueryDefinitions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
+func sweepResourcePolicies(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
+	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	conn := client.(*conns.AWSClient).LogsConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
-
-	// AWS SDK Go does not currently provide paginator
-	for {
-		output, err := conn.DescribeQueryDefinitions(input)
-
-		if err != nil {
-			err := fmt.Errorf("error reading CloudWatch Log Query Definition: %w", err)
-			log.Printf("[ERROR] %s", err)
-			errs = multierror.Append(errs, err)
-			break
+	err = describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, queryDefinition := range output.QueryDefinitions {
-			r := ResourceQueryDefinition()
+		for _, v := range page.ResourcePolicies {
+			r := resourceResourcePolicy()
 			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(queryDefinition.QueryDefinitionId))
+			d.SetId(aws.ToString(v.PolicyName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping CloudWatch Log Query Definition for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping CloudWatch Log Query Definition sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudWatch Logs Resource Policy sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
-}
-
-func sweepResourcePolicies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error listing CloudWatch Logs Resource Policies (%s): %w", region, err)
 	}
-	conn := client.(*conns.AWSClient).LogsConn
 
-	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-	for {
-		output, err := conn.DescribeResourcePolicies(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatchLog Resource Policy sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error describing CloudWatchLog Resource Policy: %s", err)
-		}
-
-		for _, resourcePolicy := range output.ResourcePolicies {
-			policyName := aws.StringValue(resourcePolicy.PolicyName)
-			deleteInput := &cloudwatchlogs.DeleteResourcePolicyInput{
-				PolicyName: resourcePolicy.PolicyName,
-			}
-
-			log.Printf("[INFO] Deleting CloudWatch Log Resource Policy: %s", policyName)
-
-			if _, err := conn.DeleteResourcePolicy(deleteInput); err != nil {
-				return fmt.Errorf("error deleting CloudWatch log resource policy (%s): %s", policyName, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudWatch Logs Resource Policies (%s): %w", region, err)
 	}
 
 	return nil

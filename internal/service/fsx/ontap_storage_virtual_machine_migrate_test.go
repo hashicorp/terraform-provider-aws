@@ -1,11 +1,13 @@
-package fsx_test
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package fsx
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	"github.com/google/go-cmp/cmp"
 )
 
 func testOntapStorageVirtualMachineStateDataV0() map[string]interface{} {
@@ -22,14 +24,17 @@ func testOntapStorageVirtualMachineStateDataV1() map[string]interface{} {
 }
 
 func TestOntapStorageVirtualMachineStateUpgradeV0(t *testing.T) {
-	expected := testOntapStorageVirtualMachineStateDataV1()
-	actual, err := tffsx.ResourceOntapStorageVirtualMachineStateUpgradeV0(context.Background(), testOntapStorageVirtualMachineStateDataV0(), nil)
+	ctx := context.Background() // Don't use acctest.Context as it leads to an import cycle.
+	t.Parallel()
+
+	want := testOntapStorageVirtualMachineStateDataV1()
+	got, err := resourceONTAPStorageVirtualMachineStateUpgradeV0(ctx, testOntapStorageVirtualMachineStateDataV0(), nil)
 
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
 
-	if !reflect.DeepEqual(expected, actual) {
-		t.Fatalf("\n\nexpected:\n\n%#v\n\ngot:\n\n%#v\n\n", expected, actual)
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 }

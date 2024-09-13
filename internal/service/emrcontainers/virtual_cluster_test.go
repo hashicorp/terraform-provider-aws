@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrcontainers_test
 
 import (
@@ -5,19 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemrcontainers "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
-	var v emrcontainers.VirtualCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
@@ -28,26 +33,26 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualClusterConfig(rName),
+				Config: testAccVirtualClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "container_provider.#", "1"),
+					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "container_provider.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.id", rName),
-					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.0.namespace", "default"),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.type", "EKS"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			//
@@ -71,8 +76,9 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 }
 
 func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
-	var v emrcontainers.VirtualCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
@@ -83,19 +89,19 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualClusterConfig(rName),
+				Config: testAccVirtualClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualClusterExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
+					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,8 +110,9 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 }
 
 func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
-	var v emrcontainers.VirtualCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
@@ -116,44 +123,44 @@ func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualClusterConfigTags1(rName, "key1", "value1"),
+				Config: testAccVirtualClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccVirtualClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVirtualClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVirtualClusterConfigTags1(rName, "key2", "value2"),
+				Config: testAccVirtualClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster) resource.TestCheckFunc {
+func testAccCheckVirtualClusterExists(ctx context.Context, n string, v *awstypes.VirtualCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -164,9 +171,9 @@ func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster)
 			return fmt.Errorf("No EMR Containers Virtual Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersClient(ctx)
 
-		output, err := tfemrcontainers.FindVirtualClusterByID(context.TODO(), conn, rs.Primary.ID)
+		output, err := tfemrcontainers.FindVirtualClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -178,31 +185,33 @@ func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster)
 	}
 }
 
-func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
+func testAccCheckVirtualClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_emrcontainers_virtual_cluster" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_emrcontainers_virtual_cluster" {
+				continue
+			}
+
+			_, err := tfemrcontainers.FindVirtualClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EMR Containers Virtual Cluster %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfemrcontainers.FindVirtualClusterByID(context.TODO(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EMR Containers Virtual Cluster %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccVirtualClusterBase(rName string) string {
+func testAccVirtualClusterConfig_base(rName string) string {
 	//lintignore:AT004
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -469,8 +478,8 @@ EOF
 `, rName))
 }
 
-func testAccVirtualClusterConfig(rName string) string {
-	return acctest.ConfigCompose(testAccVirtualClusterBase(rName), fmt.Sprintf(`
+func testAccVirtualClusterConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVirtualClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_emrcontainers_virtual_cluster" "test" {
   container_provider {
     id   = aws_eks_cluster.test.name
@@ -490,8 +499,8 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
 `, rName))
 }
 
-func testAccVirtualClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccVirtualClusterBase(rName), fmt.Sprintf(`
+func testAccVirtualClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccVirtualClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_emrcontainers_virtual_cluster" "test" {
   container_provider {
     id   = aws_eks_cluster.test.name
@@ -515,8 +524,8 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccVirtualClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccVirtualClusterBase(rName), fmt.Sprintf(`
+func testAccVirtualClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccVirtualClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_emrcontainers_virtual_cluster" "test" {
   container_provider {
     id   = aws_eks_cluster.test.name

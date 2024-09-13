@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state.
+```

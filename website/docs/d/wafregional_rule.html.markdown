@@ -20,11 +20,12 @@ data "aws_wafregional_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) The name of the WAF Regional rule.
+* `name` - (Required) Name of the WAF Regional rule.
 
-## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
 
-* `id` - The ID of the WAF Regional rule.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - ID of the WAF Regional rule.

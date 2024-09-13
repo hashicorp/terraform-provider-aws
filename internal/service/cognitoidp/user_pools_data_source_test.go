@@ -1,37 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolsDataSourceConfig(rName),
+				Config: testAccUserPoolsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "arns.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "arns.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "ids.#", acctest.Ct0),
 				),
 			},
 		},
 	})
 }
 
-func testAccUserPoolsDataSourceConfig(rName string) string {
+func testAccUserPoolsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   count = 2

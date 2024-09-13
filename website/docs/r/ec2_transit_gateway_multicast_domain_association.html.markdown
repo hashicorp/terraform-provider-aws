@@ -36,21 +36,21 @@ resource "aws_ec2_transit_gateway_multicast_domain_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `subnet_id` - (Required) The ID of the subnet to associate with the transit gateway multicast domain.
 * `transit_gateway_attachment_id` - (Required) The ID of the transit gateway attachment.
 * `transit_gateway_multicast_domain_id` - (Required) The ID of the transit gateway multicast domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Multicast Domain Association identifier.
 
 ## Timeouts
 
-`aws_ec2_transit_gateway_multicast_domain_association` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for multicast domain association creation
-- `delete` - (Default `10 minutes`) Used for multicast domain association deletion
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)

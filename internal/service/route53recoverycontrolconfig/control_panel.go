@@ -1,28 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceControlPanel() *schema.Resource {
+// @SDKResource("aws_route53recoverycontrolconfig_control_panel", name="Control Panel")
+func resourceControlPanel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceControlPanelCreate,
-		Read:   resourceControlPanelRead,
-		Update: resourceControlPanelUpdate,
-		Delete: resourceControlPanelDelete,
+		CreateWithoutTimeout: resourceControlPanelCreate,
+		ReadWithoutTimeout:   resourceControlPanelRead,
+		UpdateWithoutTimeout: resourceControlPanelUpdate,
+		DeleteWithoutTimeout: resourceControlPanelDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +45,7 @@ func ResourceControlPanel() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -43,7 +53,7 @@ func ResourceControlPanel() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,111 +61,129 @@ func ResourceControlPanel() *schema.Resource {
 	}
 }
 
-func resourceControlPanelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.CreateControlPanelInput{
-		ClientToken:      aws.String(resource.UniqueId()),
+		ClientToken:      aws.String(id.UniqueId()),
 		ClusterArn:       aws.String(d.Get("cluster_arn").(string)),
-		ControlPanelName: aws.String(d.Get("name").(string)),
+		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	output, err := conn.CreateControlPanel(input)
+	output, err := conn.CreateControlPanel(ctx, input)
 	result := output.ControlPanel
 
 	if err != nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Control Panel: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
 	if result == nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Control Panel: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: empty response")
 	}
 
-	d.SetId(aws.StringValue(result.ControlPanelArn))
+	d.SetId(aws.ToString(result.ControlPanelArn))
 
-	if _, err := waitControlPanelCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %w", d.Id(), err)
+	if _, err := waitControlPanelCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %s", d.Id(), err)
 	}
 
-	return resourceControlPanelRead(d, meta)
+	return append(diags, resourceControlPanelRead(ctx, d, meta)...)
 }
 
-func resourceControlPanelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
-	input := &r53rcc.DescribeControlPanelInput{
-		ControlPanelArn: aws.String(d.Id()),
-	}
+	output, err := findControlPanelByARN(ctx, conn, d.Id())
 
-	output, err := conn.DescribeControlPanel(input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Recovery Control Config Control Panel (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Control Panel: %s", err)
+		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	if output == nil || output.ControlPanel == nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Control Panel: %s", "empty response")
-	}
+	d.Set(names.AttrARN, output.ControlPanelArn)
+	d.Set("cluster_arn", output.ClusterArn)
+	d.Set("default_control_panel", output.DefaultControlPanel)
+	d.Set(names.AttrName, output.Name)
+	d.Set("routing_control_count", output.RoutingControlCount)
+	d.Set(names.AttrStatus, output.Status)
 
-	result := output.ControlPanel
-	d.Set("arn", result.ControlPanelArn)
-	d.Set("cluster_arn", result.ClusterArn)
-	d.Set("default_control_panel", result.DefaultControlPanel)
-	d.Set("name", result.Name)
-	d.Set("routing_control_count", result.RoutingControlCount)
-	d.Set("status", result.Status)
-
-	return nil
+	return diags
 }
 
-func resourceControlPanelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.UpdateControlPanelInput{
-		ControlPanelName: aws.String(d.Get("name").(string)),
-		ControlPanelArn:  aws.String(d.Get("arn").(string)),
+		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
+		ControlPanelArn:  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	_, err := conn.UpdateControlPanel(input)
+	_, err := conn.UpdateControlPanel(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route53 Recovery Control Config Control Panel: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	return resourceControlPanelRead(d, meta)
+	return append(diags, resourceControlPanelRead(ctx, d, meta)...)
 }
 
-func resourceControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceControlPanelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Control Panel: %s", d.Id())
-	_, err := conn.DeleteControlPanel(&r53rcc.DeleteControlPanelInput{
+	_, err := conn.DeleteControlPanel(ctx, &r53rcc.DeleteControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Recovery Control Config Control Panel: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	_, err = waitControlPanelDeleted(conn, d.Id())
+	_, err = waitControlPanelDeleted(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Control Panel (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Control Panel (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findControlPanelByARN(ctx context.Context, conn *r53rcc.Client, arn string) (*awstypes.ControlPanel, error) {
+	input := &r53rcc.DescribeControlPanelInput{
+		ControlPanelArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeControlPanel(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ControlPanel == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ControlPanel, nil
 }

@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_emr_block_public_access_configuration
+```

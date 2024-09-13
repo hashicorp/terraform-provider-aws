@@ -1,30 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_service_allowed_principal", name="Endpoint Service Allowed Principal")
+func resourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCEndpointServiceAllowedPrincipalCreate,
-		Read:   resourceVPCEndpointServiceAllowedPrincipalRead,
-		Delete: resourceVPCEndpointServiceAllowedPrincipalDelete,
+		CreateWithoutTimeout: resourceVPCEndpointServiceAllowedPrincipalCreate,
+		ReadWithoutTimeout:   resourceVPCEndpointServiceAllowedPrincipalRead,
+		DeleteWithoutTimeout: resourceVPCEndpointServiceAllowedPrincipalDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_endpoint_service_id": {
+			"principal_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"principal_arn": {
+			"vpc_endpoint_service_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -33,93 +39,74 @@ func ResourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCEndpointServiceAllowedPrincipalCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	svcId := d.Get("vpc_endpoint_service_id").(string)
-	arn := d.Get("principal_arn").(string)
+	serviceID := d.Get("vpc_endpoint_service_id").(string)
+	principalARN := d.Get("principal_arn").(string)
 
-	_, err := findResourceVPCEndpointServiceAllowedPrincipals(conn, svcId)
-	if err != nil {
-		return err
-	}
-
-	_, err = conn.ModifyVpcEndpointServicePermissions(&ec2.ModifyVpcEndpointServicePermissionsInput{
-		ServiceId:            aws.String(svcId),
-		AddAllowedPrincipals: aws.StringSlice([]string{arn}),
+	output, err := conn.ModifyVpcEndpointServicePermissions(ctx, &ec2.ModifyVpcEndpointServicePermissionsInput{
+		AddAllowedPrincipals: []string{principalARN},
+		ServiceId:            aws.String(serviceID),
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error creating VPC Endpoint Service allowed principal: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "modifying EC2 VPC Endpoint Service (%s) permissions: %s", serviceID, err)
 	}
 
-	d.SetId(vpcEndpointServiceIdPrincipalARNHash(svcId, arn))
+	for _, v := range output.AddedPrincipals {
+		if aws.ToString(v.Principal) == principalARN {
+			d.SetId(aws.ToString(v.ServicePermissionId))
+		}
+	}
 
-	return resourceVPCEndpointServiceAllowedPrincipalRead(d, meta)
+	return append(diags, resourceVPCEndpointServiceAllowedPrincipalRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	svcId := d.Get("vpc_endpoint_service_id").(string)
-	arn := d.Get("principal_arn").(string)
+	serviceID := d.Get("vpc_endpoint_service_id").(string)
+	principalARN := d.Get("principal_arn").(string)
 
-	principals, err := findResourceVPCEndpointServiceAllowedPrincipals(conn, svcId)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
-			log.Printf("[WARN]VPC Endpoint Service (%s) not found, removing VPC Endpoint Service allowed principal (%s) from state", svcId, d.Id())
-			d.SetId("")
-			return nil
-		}
+	output, err := findVPCEndpointServicePermission(ctx, conn, serviceID, principalARN)
 
-		return err
-	}
-
-	found := false
-	for _, principal := range principals {
-		if aws.StringValue(principal.Principal) == arn {
-			found = true
-			break
-		}
-	}
-	if !found {
-		log.Printf("[WARN] VPC Endpoint Service allowed principal (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPC Endpoint Service Allowed Principal %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	return nil
-}
-
-func resourceVPCEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	svcId := d.Get("vpc_endpoint_service_id").(string)
-	arn := d.Get("principal_arn").(string)
-
-	_, err := conn.ModifyVpcEndpointServicePermissions(&ec2.ModifyVpcEndpointServicePermissionsInput{
-		ServiceId:               aws.String(svcId),
-		RemoveAllowedPrincipals: aws.StringSlice([]string{arn}),
-	})
 	if err != nil {
-		if !tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
-			return fmt.Errorf("Error deleting VPC Endpoint Service allowed principal: %s", err.Error())
-		}
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Service (%s) Allowed Principal (%s): %s", serviceID, principalARN, err)
 	}
 
-	return nil
+	d.SetId(aws.ToString(output.ServicePermissionId))
+
+	return diags
 }
 
-func findResourceVPCEndpointServiceAllowedPrincipals(conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
-	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
-		ServiceId: aws.String(id),
+func resourceVPCEndpointServiceAllowedPrincipalDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	serviceID := d.Get("vpc_endpoint_service_id").(string)
+	principalARN := d.Get("principal_arn").(string)
+
+	_, err := conn.ModifyVpcEndpointServicePermissions(ctx, &ec2.ModifyVpcEndpointServicePermissionsInput{
+		RemoveAllowedPrincipals: []string{principalARN},
+		ServiceId:               aws.String(serviceID),
 	})
-	if err != nil {
-		return nil, err
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
+		return diags
 	}
 
-	return resp.AllowedPrincipals, nil
-}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "modifying EC2 VPC Endpoint Service (%s) permissions: %s", serviceID, err)
+	}
 
-func vpcEndpointServiceIdPrincipalARNHash(svcId, arn string) string {
-	return fmt.Sprintf("a-%s%d", svcId, create.StringHashcode(arn))
+	return diags
 }

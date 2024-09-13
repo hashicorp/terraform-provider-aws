@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -5,35 +8,48 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceQueue() *schema.Resource {
+// @SDKResource("aws_connect_queue", name="Queue")
+// @Tags(identifierAttribute="arn")
+func resourceQueue() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceQueueCreate,
-		ReadContext:   resourceQueueRead,
-		UpdateContext: resourceQueueUpdate,
-		// Queues do not support deletion today. NoOp the Delete method.
-		// Users can rename their queues manually if they want.
-		DeleteContext: schema.NoopContext,
+		CreateWithoutTimeout: resourceQueueCreate,
+		ReadWithoutTimeout:   resourceQueueRead,
+		UpdateWithoutTimeout: resourceQueueUpdate,
+		DeleteWithoutTimeout: resourceQueueDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
@@ -42,7 +58,7 @@ func ResourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -52,7 +68,7 @@ func ResourceQueue() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -91,39 +107,31 @@ func ResourceQueue() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"quick_connect_ids_associated": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+			names.AttrStatus: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.QueueStatus](),
 			},
-			"status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(connect.QueueStatus_Values(), false), // Valid Values: ENABLED | DISABLED
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
-
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateQueueInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
+		Tags:       getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -132,7 +140,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("max_contacts"); ok {
-		input.MaxContacts = aws.Int64(int64(v.(int)))
+		input.MaxContacts = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("outbound_caller_config"); ok {
@@ -140,103 +148,76 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("quick_connect_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.QuickConnectIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Connect Queue %s", input)
-	output, err := conn.CreateQueueWithContext(ctx, input)
+	output, err := conn.CreateQueue(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): %w", name, err))
+		return sdkdiag.AppendErrorf(diags, "creating Connect Queue (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): empty output", name))
-	}
+	id := queueCreateResourceID(instanceID, aws.ToString(output.QueueId))
+	d.SetId(id)
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QueueId)))
-
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID, queueID, err := QueueParseID(d.Id())
-
+	instanceID, queueID, err := queueParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeQueueWithContext(ctx, &connect.DescribeQueueInput{
-		InstanceId: aws.String(instanceID),
-		QueueId:    aws.String(queueID),
-	})
+	queue, err := findQueueByTwoPartKey(ctx, conn, instanceID, queueID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Queue (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.Queue == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue (%s): empty response", d.Id()))
+	d.Set(names.AttrARN, queue.QueueArn)
+	d.Set(names.AttrDescription, queue.Description)
+	d.Set("hours_of_operation_id", queue.HoursOfOperationId)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set("max_contacts", queue.MaxContacts)
+	d.Set(names.AttrName, queue.Name)
+	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(queue.OutboundCallerConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting outbound_caller_config: %s", err)
 	}
+	d.Set("queue_id", queue.QueueId)
+	d.Set(names.AttrStatus, queue.Status)
 
-	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(resp.Queue.OutboundCallerConfig)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.Set("arn", resp.Queue.QueueArn)
-	d.Set("description", resp.Queue.Description)
-	d.Set("hours_of_operation_id", resp.Queue.HoursOfOperationId)
-	d.Set("instance_id", instanceID)
-	d.Set("max_contacts", resp.Queue.MaxContacts)
-	d.Set("name", resp.Queue.Name)
-	d.Set("queue_id", resp.Queue.QueueId)
-	d.Set("status", resp.Queue.Status)
-
-	// reading quick_connect_ids requires a separate API call
-	quickConnectIds, err := getQueueQuickConnectIDs(ctx, conn, instanceID, queueID)
+	quickConnects, err := findQueueQuickConnectSummariesByTwoPartKey(ctx, conn, instanceID, queueID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Queue Quick Connect ID for Queue (%s): %w", queueID, err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Queue (%s) Quick Connect summaries: %s", d.Id(), err)
 	}
 
-	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
-	d.Set("quick_connect_ids_associated", flex.FlattenStringSet(quickConnectIds))
+	d.Set("quick_connect_ids", tfslices.ApplyToAll(quickConnects, func(v awstypes.QuickConnectSummary) string {
+		return aws.ToString(v.Id)
+	}))
 
-	tags := KeyValueTags(resp.Queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, queue.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID, queueID, err := QueueParseID(d.Id())
-
+	instanceID, queueID, err := queueParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Queue has 6 update APIs
@@ -250,14 +231,15 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	// updates to hours_of_operation_id
 	if d.HasChange("hours_of_operation_id") {
 		input := &connect.UpdateQueueHoursOfOperationInput{
+			HoursOfOperationId: aws.String(d.Get("hours_of_operation_id").(string)),
 			InstanceId:         aws.String(instanceID),
 			QueueId:            aws.String(queueID),
-			HoursOfOperationId: aws.String(d.Get("hours_of_operation_id").(string)),
 		}
-		_, err = conn.UpdateQueueHoursOfOperationWithContext(ctx, input)
+
+		_, err = conn.UpdateQueueHoursOfOperation(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Hours of Operation (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating Connect Queue (%s) HoursOfOperation: %s", d.Id(), err)
 		}
 	}
 
@@ -265,28 +247,30 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("max_contacts") {
 		input := &connect.UpdateQueueMaxContactsInput{
 			InstanceId:  aws.String(instanceID),
+			MaxContacts: aws.Int32(int32(d.Get("max_contacts").(int))),
 			QueueId:     aws.String(queueID),
-			MaxContacts: aws.Int64(int64(d.Get("max_contacts").(int))),
 		}
-		_, err = conn.UpdateQueueMaxContactsWithContext(ctx, input)
+
+		_, err = conn.UpdateQueueMaxContacts(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Max Contacts (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating Connect Queue (%s) MaxContacts: %s", d.Id(), err)
 		}
 	}
 
 	// updates to name and/or description
-	if d.HasChanges("name", "description") {
+	if d.HasChanges(names.AttrName, names.AttrDescription) {
 		input := &connect.UpdateQueueNameInput{
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			InstanceId:  aws.String(instanceID),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 			QueueId:     aws.String(queueID),
-			Name:        aws.String(d.Get("name").(string)),
-			Description: aws.String(d.Get("description").(string)),
 		}
-		_, err = conn.UpdateQueueNameWithContext(ctx, input)
+
+		_, err = conn.UpdateQueueName(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Name and/or Description (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating Connect Queue (%s) Name: %s", d.Id(), err)
 		}
 	}
 
@@ -294,159 +278,232 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("outbound_caller_config") {
 		input := &connect.UpdateQueueOutboundCallerConfigInput{
 			InstanceId:           aws.String(instanceID),
-			QueueId:              aws.String(queueID),
 			OutboundCallerConfig: expandOutboundCallerConfig(d.Get("outbound_caller_config").([]interface{})),
+			QueueId:              aws.String(queueID),
 		}
-		_, err = conn.UpdateQueueOutboundCallerConfigWithContext(ctx, input)
+
+		_, err = conn.UpdateQueueOutboundCallerConfig(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Outbound Caller Config (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating Connect Queue (%s) OutboundCallerConfig: %s", d.Id(), err)
 		}
 	}
 
 	// updates to status
-	if d.HasChange("status") {
+	if d.HasChange(names.AttrStatus) {
 		input := &connect.UpdateQueueStatusInput{
 			InstanceId: aws.String(instanceID),
 			QueueId:    aws.String(queueID),
-			Status:     aws.String(d.Get("status").(string)),
+			Status:     awstypes.QueueStatus(d.Get(names.AttrStatus).(string)),
 		}
-		_, err = conn.UpdateQueueStatusWithContext(ctx, input)
+
+		_, err = conn.UpdateQueueStatus(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Status (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating Connect Queue (%s) Status: %s", d.Id(), err)
 		}
 	}
 
 	// updates to quick_connect_ids
 	if d.HasChange("quick_connect_ids") {
-		// first disassociate all existing quick connects
-		if v, ok := d.GetOk("quick_connect_ids_associated"); ok && v.(*schema.Set).Len() > 0 {
-			input := &connect.DisassociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
-			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, input)
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
-			}
-		}
+		o, n := d.GetChange("quick_connect_ids")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		// re-associate the quick connects
-		if v, ok := d.GetOk("quick_connect_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if len(add) > 0 {
 			input := &connect.AssociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: add,
 			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, input)
+
+			_, err = conn.AssociateQueueQuickConnects(ctx, input)
+
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
+				return sdkdiag.AppendErrorf(diags, "associating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+			}
+		}
+
+		if len(del) > 0 {
+			input := &connect.DisassociateQueueQuickConnectsInput{
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: del,
+			}
+
+			_, err = conn.DisassociateQueueQuickConnects(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disassociating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
 			}
 		}
 	}
 
-	// updates to tags
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
-		}
-	}
-
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func expandOutboundCallerConfig(outboundCallerConfig []interface{}) *connect.OutboundCallerConfig {
-	if len(outboundCallerConfig) == 0 || outboundCallerConfig[0] == nil {
-		return nil
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+
+	instanceID, queueID, err := queueParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tfMap, ok := outboundCallerConfig[0].(map[string]interface{})
-	if !ok {
-		return nil
+	log.Printf("[DEBUG] Deleting Connect Queue: %s", d.Id())
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteQueue(ctx, &connect.DeleteQueueInput{
+			InstanceId: aws.String(instanceID),
+			QueueId:    aws.String(queueID),
+		})
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	result := &connect.OutboundCallerConfig{}
-
-	if v, ok := tfMap["outbound_caller_id_name"].(string); ok && v != "" {
-		result.OutboundCallerIdName = aws.String(v)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Queue (%s): %s", d.Id(), err)
 	}
 
-	// passing an empty string leads to an InvalidParameterException
-	if v, ok := tfMap["outbound_caller_id_number_id"].(string); ok && v != "" {
-		result.OutboundCallerIdNumberId = aws.String(v)
-	}
-
-	// passing an empty string leads to an InvalidParameterException
-	if v, ok := tfMap["outbound_flow_id"].(string); ok && v != "" {
-		result.OutboundFlowId = aws.String(v)
-	}
-
-	return result
+	return diags
 }
 
-func flattenOutboundCallerConfig(outboundCallerConfig *connect.OutboundCallerConfig) []interface{} {
-	if outboundCallerConfig == nil {
-		return []interface{}{}
-	}
+const queueResourceIDSeparator = ":"
 
-	values := map[string]interface{}{}
+func queueCreateResourceID(instanceID, queueID string) string {
+	parts := []string{instanceID, queueID}
+	id := strings.Join(parts, queueResourceIDSeparator)
 
-	if v := outboundCallerConfig.OutboundCallerIdName; v != nil {
-		values["outbound_caller_id_name"] = aws.StringValue(v)
-	}
-
-	if v := outboundCallerConfig.OutboundCallerIdNumberId; v != nil {
-		values["outbound_caller_id_number_id"] = aws.StringValue(v)
-	}
-
-	if v := outboundCallerConfig.OutboundFlowId; v != nil {
-		values["outbound_flow_id"] = aws.StringValue(v)
-	}
-
-	return []interface{}{values}
+	return id
 }
 
-func getQueueQuickConnectIDs(ctx context.Context, conn *connect.Connect, instanceID, queueID string) ([]*string, error) {
-	var result []*string
+func queueParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, queueResourceIDSeparator, 2)
 
-	input := &connect.ListQueueQuickConnectsInput{
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected instanceID%[2]squeueID", id, queueResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findQueueByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, queueID string) (*awstypes.Queue, error) {
+	input := &connect.DescribeQueueInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListQueueQuickConnectsMaxResults),
 		QueueId:    aws.String(queueID),
 	}
 
-	err := conn.ListQueueQuickConnectsPagesWithContext(ctx, input, func(page *connect.ListQueueQuickConnectsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	return findQueue(ctx, conn, input)
+}
+
+func findQueue(ctx context.Context, conn *connect.Client, input *connect.DescribeQueueInput) (*awstypes.Queue, error) {
+	output, err := conn.DescribeQueue(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		for _, qc := range page.QuickConnectSummaryList {
-			if qc == nil {
-				continue
-			}
-
-			result = append(result, qc.Id)
-		}
-
-		return !lastPage
-	})
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
-}
-
-func QueueParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:queueID", id)
+	if output == nil || output.Queue == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return parts[0], parts[1], nil
+	return output.Queue, nil
+}
+
+func findQueueQuickConnectSummariesByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, queueID string) ([]awstypes.QuickConnectSummary, error) {
+	const maxResults = 60
+	input := &connect.ListQueueQuickConnectsInput{
+		InstanceId: aws.String(instanceID),
+		MaxResults: aws.Int32(maxResults),
+		QueueId:    aws.String(queueID),
+	}
+
+	return findQueueQuickConnectSummaries(ctx, conn, input)
+}
+
+func findQueueQuickConnectSummaries(ctx context.Context, conn *connect.Client, input *connect.ListQueueQuickConnectsInput) ([]awstypes.QuickConnectSummary, error) {
+	var output []awstypes.QuickConnectSummary
+
+	pages := connect.NewListQueueQuickConnectsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.QuickConnectSummaryList...)
+	}
+
+	return output, nil
+}
+
+func expandOutboundCallerConfig(tfList []interface{}) *awstypes.OutboundCallerConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.OutboundCallerConfig{}
+
+	if v, ok := tfMap["outbound_caller_id_name"].(string); ok && v != "" {
+		apiObject.OutboundCallerIdName = aws.String(v)
+	}
+
+	// passing an empty string leads to an InvalidParameterException
+	if v, ok := tfMap["outbound_caller_id_number_id"].(string); ok && v != "" {
+		apiObject.OutboundCallerIdNumberId = aws.String(v)
+	}
+
+	// passing an empty string leads to an InvalidParameterException
+	if v, ok := tfMap["outbound_flow_id"].(string); ok && v != "" {
+		apiObject.OutboundFlowId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenOutboundCallerConfig(apiObject *awstypes.OutboundCallerConfig) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.OutboundCallerIdName; v != nil {
+		tfMap["outbound_caller_id_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.OutboundCallerIdNumberId; v != nil {
+		tfMap["outbound_caller_id_number_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.OutboundFlowId; v != nil {
+		tfMap["outbound_flow_id"] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
 }

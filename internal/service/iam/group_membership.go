@@ -1,28 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceGroupMembership() *schema.Resource {
+// @SDKResource("aws_iam_group_membership", name="Group Membership")
+func resourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupMembershipCreate,
-		Read:   resourceGroupMembershipRead,
-		Update: resourceGroupMembershipUpdate,
-		Delete: resourceGroupMembershipDelete,
+		CreateWithoutTimeout: resourceGroupMembershipCreate,
+		ReadWithoutTimeout:   resourceGroupMembershipRead,
+		UpdateWithoutTimeout: resourceGroupMembershipUpdate,
+		DeleteWithoutTimeout: resourceGroupMembershipDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -44,22 +53,25 @@ func ResourceGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	group := d.Get("group").(string)
-	userList := flex.ExpandStringSet(d.Get("users").(*schema.Set))
+	userList := flex.ExpandStringValueSet(d.Get("users").(*schema.Set))
 
-	if err := addUsersToGroup(conn, userList, group); err != nil {
-		return err
+	if err := addUsersToGroup(ctx, conn, userList, group); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	d.SetId(d.Get("name").(string))
-	return resourceGroupMembershipRead(d, meta)
+	d.SetId(d.Get(names.AttrName).(string))
+
+	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	group := d.Get("group").(string)
 
 	input := &iam.GetGroupInput{
@@ -68,63 +80,67 @@ func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error
 
 	var ul []string
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		err := conn.GetGroupPages(input, func(page *iam.GetGroupOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		pages := iam.NewGetGroupPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
+				return retry.RetryableError(err)
+			}
+
+			if err != nil {
+				return retry.NonRetryableError(err)
 			}
 
 			for _, user := range page.Users {
-				ul = append(ul, aws.StringValue(user.UserName))
+				ul = append(ul, aws.ToString(user.UserName))
 			}
-
-			return !lastPage
-		})
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.GetGroupPages(input, func(page *iam.GetGroupOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+		pages := iam.NewGetGroupPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 
 			for _, user := range page.Users {
-				ul = append(ul, aws.StringValue(user.UserName))
+				ul = append(ul, aws.ToString(user.UserName))
 			}
-
-			return !lastPage
-		})
+		}
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	var noSuchEntityException *awstypes.NoSuchEntityException
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, noSuchEntityException.ErrorCode()) {
 		log.Printf("[WARN] IAM Group Membership (%s) not found, removing from state", group)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Group Membership (%s): %w", group, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Group Membership (%s): %s", group, err)
 	}
 
 	if err := d.Set("users", ul); err != nil {
-		return fmt.Errorf("Error setting user list from IAM Group Membership (%s), error: %s", group, err)
+		return sdkdiag.AppendErrorf(diags, "setting user list from IAM Group Membership (%s): %s", group, err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("users") {
 		group := d.Get("group").(string)
@@ -139,56 +155,46 @@ func resourceGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) err
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := flex.ExpandStringSet(os.Difference(ns))
-		add := flex.ExpandStringSet(ns.Difference(os))
+		remove := flex.ExpandStringValueSet(os.Difference(ns))
+		add := flex.ExpandStringValueSet(ns.Difference(os))
 
-		if err := removeUsersFromGroup(conn, remove, group); err != nil {
-			return err
+		if err := removeUsersFromGroup(ctx, conn, remove, group); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
 		}
 
-		if err := addUsersToGroup(conn, add, group); err != nil {
-			return err
+		if err := addUsersToGroup(ctx, conn, add, group); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
 		}
 	}
 
-	return resourceGroupMembershipRead(d, meta)
+	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	userList := flex.ExpandStringSet(d.Get("users").(*schema.Set))
+func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+	userList := flex.ExpandStringValueSet(d.Get("users").(*schema.Set))
 	group := d.Get("group").(string)
 
-	err := removeUsersFromGroup(conn, userList, group)
-	return err
+	if err := removeUsersFromGroup(ctx, conn, userList, group); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
+	}
+	return diags
 }
 
-func removeUsersFromGroup(conn *iam.IAM, users []*string, group string) error {
-	for _, u := range users {
-		_, err := conn.RemoveUserFromGroup(&iam.RemoveUserFromGroupInput{
-			UserName:  u,
-			GroupName: aws.String(group),
-		})
-
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return nil
-		}
-
-		if err != nil {
+func removeUsersFromGroup(ctx context.Context, conn *iam.Client, users []string, group string) error {
+	for _, user := range users {
+		if err := removeUserFromGroup(ctx, conn, user, group); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func addUsersToGroup(conn *iam.IAM, users []*string, group string) error {
-	for _, u := range users {
-		_, err := conn.AddUserToGroup(&iam.AddUserToGroupInput{
-			UserName:  u,
-			GroupName: aws.String(group),
-		})
-
-		if err != nil {
+func addUsersToGroup(ctx context.Context, conn *iam.Client, users []string, group string) error {
+	for _, user := range users {
+		if err := addUserToGroup(ctx, conn, user, group); err != nil {
 			return err
 		}
 	}

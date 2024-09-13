@@ -33,20 +33,26 @@ Local Gateway Route Table whose data will be exported as attributes.
 
 * `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired local gateway route table
 
-* `local_gateway_id` - (Optional) The id of the specific local gateway route table to retrieve.
+* `local_gateway_id` - (Optional) ID of the specific local gateway route table to retrieve.
 
-* `outpost_arn` - (Optional) The arn of the Outpost the local gateway route table is associated with.
+* `outpost_arn` - (Optional) ARN of the Outpost the local gateway route table is associated with.
 
-* `state` - (Optional) The state of the local gateway route table.
+* `state` - (Optional) State of the local gateway route table.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired local gateway route table.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLocalGatewayRouteTables.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
   A local gateway route table will be selected if any one of the given values matches.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -10,8 +10,6 @@ description: |-
 
 Provides an ECS cluster.
 
-~> **NOTE on Clusters and Cluster Capacity Providers:** Terraform provides both a standalone [`aws_ecs_cluster_capacity_providers`](/docs/providers/aws/r/ecs_cluster_capacity_providers.html) resource, as well as allowing the capacity providers and default strategies to be managed in-line by the `aws_ecs_cluster` resource. You cannot use a Cluster with in-line capacity providers in conjunction with the Capacity Providers resource, nor use more than one Capacity Providers resource with a single Cluster, as doing so will cause a conflict and will lead to mutual overwrites.
-
 ## Example Usage
 
 ```terraform
@@ -25,7 +23,7 @@ resource "aws_ecs_cluster" "foo" {
 }
 ```
 
-### Example with Log Configuration
+### Execute Command Configuration with Override Logging
 
 ```terraform
 resource "aws_kms_key" "example" {
@@ -54,86 +52,175 @@ resource "aws_ecs_cluster" "test" {
 }
 ```
 
-### Example with Capacity Providers
+### Fargate Ephemeral Storage Encryption with Customer-Managed KMS Key
 
 ```terraform
-resource "aws_ecs_cluster" "example" {
-  name = "example"
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "example" {
+  description             = "example"
+  deletion_window_in_days = 7
 }
 
-resource "aws_ecs_cluster_capacity_providers" "example" {
-  cluster_name = aws_ecs_cluster.example.name
-
-  capacity_providers = [aws_ecs_capacity_provider.example.name]
-
-  default_capacity_provider_strategy {
-    base              = 1
-    weight            = 100
-    capacity_provider = aws_ecs_capacity_provider.example.name
-  }
+resource "aws_kms_key_policy" "example" {
+  key_id = aws_kms_key.example.id
+  policy = jsonencode({
+    Id = "ECSClusterFargatePolicy"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          "AWS" : "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow generate data key access for Fargate tasks."
+        Effect = "Allow"
+        Principal = {
+          Service = "fargate.amazonaws.com"
+        }
+        Action = [
+          "kms:GenerateDataKeyWithoutPlaintext"
+        ]
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:ecs:clusterAccount" = [
+              data.aws_caller_identity.current.account_id
+            ]
+            "kms:EncryptionContext:aws:ecs:clusterName" = [
+              "example"
+            ]
+          }
+        }
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow grant creation permission for Fargate tasks."
+        Effect = "Allow"
+        Principal = {
+          Service = "fargate.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant"
+        ]
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:ecs:clusterAccount" = [
+              data.aws_caller_identity.current.account_id
+            ]
+            "kms:EncryptionContext:aws:ecs:clusterName" = [
+              "example"
+            ]
+          }
+          "ForAllValues:StringEquals" = {
+            "kms:GrantOperations" = [
+              "Decrypt"
+            ]
+          }
+        }
+        Resource = "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
 }
 
-resource "aws_ecs_capacity_provider" "example" {
+resource "aws_ecs_cluster" "test" {
   name = "example"
 
-  auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.example.arn
+  configuration {
+    managed_storage_configuration {
+      fargate_ephemeral_storage_kms_key_id = aws_kms_key.example.id
+    }
   }
+  depends_on = [
+    aws_kms_key_policy.example
+  ]
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `capacity_providers` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) List of short names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
-* `configuration` - (Optional) The execute command configuration for the cluster. Detailed below.
-* `default_capacity_provider_strategy` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) Configuration block for capacity provider strategy to use by default for the cluster. Can be one or more. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
-* `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `configuration`
+The following arguments are optional:
 
-* `execute_command_configuration` - (Optional) The details of the execute command configuration. Detailed below.
+* `configuration` - (Optional) Execute command configuration for the cluster. See [`configuration` Block](#configuration-block) for details.
+* `service_connect_defaults` - (Optional) Default Service Connect namespace. See [`service_connect_defaults` Block](#service_connect_defaults-block) for details.
+* `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. See [`setting` Block](#setting-block) for details.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-#### `execute_command_configuration`
+### `configuration` Block
 
-* `kms_key_id` - (Optional) The AWS Key Management Service key ID to encrypt the data between the local client and the container.
-* `log_configuration` - (Optional) The log configuration for the results of the execute command actions Required when `logging` is `OVERRIDE`. Detailed below.
-* `logging` - (Optional) The log setting to use for redirecting logs for your execute command results. Valid values are `NONE`, `DEFAULT`, and `OVERRIDE`.
+The `configuration` configuration block supports the following arguments:
 
-##### `log_configuration`
+* `execute_command_configuration` - (Optional) Details of the execute command configuration. See [`execute_command_configuration` Block](#execute_command_configuration-block) for details.
+* `managed_storage_configuration` - (Optional) Details of the managed storage configuration. See [`managed_storage_configuration` Block](#managed_storage_configuration-block) for details.
 
-* `cloud_watch_encryption_enabled` - (Optional) Whether or not to enable encryption on the CloudWatch logs. If not specified, encryption will be disabled.
+### `execute_command_configuration` Block
+
+The `execute_command_configuration` configuration block supports the following arguments:
+
+* `kms_key_id` - (Optional) AWS Key Management Service key ID to encrypt the data between the local client and the container.
+* `log_configuration` - (Optional) Log configuration for the results of the execute command actions. Required when `logging` is `OVERRIDE`. See [`log_configuration` Block](#log_configuration-block) for details.
+* `logging` - (Optional) Log setting to use for redirecting logs for your execute command results. Valid values: `NONE`, `DEFAULT`, `OVERRIDE`.
+
+#### `log_configuration` Block
+
+The `log_configuration` configuration block supports the following arguments:
+
+* `cloud_watch_encryption_enabled` - (Optional) Whether to enable encryption on the CloudWatch logs. If not specified, encryption will be disabled.
 * `cloud_watch_log_group_name` - (Optional) The name of the CloudWatch log group to send logs to.
-* `s3_bucket_name` - (Optional) The name of the S3 bucket to send logs to.
-* `s3_bucket_encryption_enabled` - (Optional) Whether or not to enable encryption on the logs sent to S3. If not specified, encryption will be disabled.
-* `s3_key_prefix` - (Optional) An optional folder in the S3 bucket to place logs in.
+* `s3_bucket_name` - (Optional) Name of the S3 bucket to send logs to.
+* `s3_bucket_encryption_enabled` - (Optional) Whether to enable encryption on the logs sent to S3. If not specified, encryption will be disabled.
+* `s3_key_prefix` - (Optional) Optional folder in the S3 bucket to place logs in.
 
-### `default_capacity_provider_strategy`
+### `managed_storage_configuration` Block
 
-* `capacity_provider` - (Required) The short name of the capacity provider.
-* `weight` - (Optional) The relative percentage of the total number of launched tasks that should use the specified capacity provider.
-* `base` - (Optional) The number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
+The `managed_storage_configuration` configuration block supports the following arguments:
 
-### `setting`
+* `fargate_ephemeral_storage_kms_key_id` - (Optional) AWS Key Management Service key ID for the Fargate ephemeral storage.
+* `kms_key_id` - (Optional) AWS Key Management Service key ID to encrypt the managed storage.
+
+### `service_connect_defaults` Block
+
+The `service_connect_defaults` configuration block supports the following arguments:
+
+* `namespace` - (Required) ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) that's used when you create a service and don't specify a Service Connect configuration.
+
+### `setting` Block
+
+The `setting` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
-* `value` -  (Required) The value to assign to the setting. Value values are `enabled` and `disabled`.
+* `value` -  (Required) Value to assign to the setting. Valid values: `enabled`, `disabled`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the cluster.
 * `id` - ARN that identifies the cluster.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-ECS clusters can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS clusters using the cluster name. For example:
 
+```terraform
+import {
+  to = aws_ecs_cluster.stateless
+  id = "stateless-app"
+}
 ```
-$ terraform import aws_ecs_cluster.stateless stateless-app
+
+Using `terraform import`, import ECS clusters using the cluster name. For example:
+
+```console
+% terraform import aws_ecs_cluster.stateless stateless-app
 ```

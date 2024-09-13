@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_security_group" "az" {
   name        = "az-${data.aws_availability_zone.target.name}"
   description = "Open access within the AZ ${data.aws_availability_zone.target.name}"

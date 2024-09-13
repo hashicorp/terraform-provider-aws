@@ -1,105 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestPolicySearchDetails(t *testing.T) {
-	testCases := []struct {
-		Arn        string
-		Name       string
-		PathPrefix string
-		Expected   string
-	}{
-		{
-			Arn:        "",
-			Name:       "",
-			PathPrefix: "",
-			Expected:   "",
-		},
-		{
-			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
-			Name:       "",
-			PathPrefix: "",
-			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
-		},
-		{
-			Arn:        "",
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "",
-			Expected:   "Name: tf-acc-test-policy",
-		},
-		{
-			Arn:        "",
-			Name:       "",
-			PathPrefix: "/test-prefix/",
-			Expected:   "PathPrefix: /test-prefix/",
-		},
-		{
-			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "",
-			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy, Name: tf-acc-test-policy", //lintignore:AWSAT005
-		},
-		{
-			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
-			Name:       "",
-			PathPrefix: "/test-prefix/",
-			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy, PathPrefix: /test-prefix/", //lintignore:AWSAT005
-		},
-		{
-			Arn:        "",
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "/test-prefix/",
-			Expected:   "Name: tf-acc-test-policy, PathPrefix: /test-prefix/",
-		},
-		{
-			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "/test-prefix/",
-			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy, Name: tf-acc-test-policy, PathPrefix: /test-prefix/", //lintignore:AWSAT005
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			got := tfiam.PolicySearchDetails(testCase.Arn, testCase.Name, testCase.PathPrefix)
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAccIAMPolicyDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
-	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDataSourceConfig_ARN(policyName, "/"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+				Config: testAccPolicyDataSourceConfig_arn(policyName, "/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -107,25 +43,27 @@ func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
-	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDataSourceConfig_Name(policyName, "/"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+				Config: testAccPolicyDataSourceConfig_name(policyName, "/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -133,27 +71,29 @@ func TestAccIAMPolicyDataSource_name(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
-	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDataSourceConfig_PathPrefix(policyName, policyPath),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+				Config: testAccPolicyDataSourceConfig_pathPrefix(policyName, policyPath),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -161,17 +101,18 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
-	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
+	ctx := acctest.Context(t)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPolicyDataSourceConfig_NonExistent(policyName, policyPath),
-				ExpectError: regexp.MustCompile(`no IAM policy found matching criteria`),
+				Config:      testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath),
+				ExpectError: regexache.MustCompile(`no matching IAM Policy found`),
 			},
 		},
 	})
@@ -201,27 +142,25 @@ EOF
 }`, policyName, policyPath)
 }
 
-func testAccPolicyDataSourceConfig_ARN(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_arn(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
-		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
-		`
+		testAccPolicyBaseDataSourceConfig(policyName, policyPath), `
 data "aws_iam_policy" "test" {
   arn = aws_iam_policy.test.arn
 }
 `)
 }
 
-func testAccPolicyDataSourceConfig_Name(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_name(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
-		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
-		`
+		testAccPolicyBaseDataSourceConfig(policyName, policyPath), `
 data "aws_iam_policy" "test" {
   name = aws_iam_policy.test.name
 }
 `)
 }
 
-func testAccPolicyDataSourceConfig_PathPrefix(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_pathPrefix(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
 		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
 		fmt.Sprintf(`
@@ -232,7 +171,7 @@ data "aws_iam_policy" "test" {
 `, policyPath))
 }
 
-func testAccPolicyDataSourceConfig_NonExistent(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
 		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
 		fmt.Sprintf(`

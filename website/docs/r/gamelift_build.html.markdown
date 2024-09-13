@@ -18,7 +18,7 @@ resource "aws_gamelift_build" "test" {
   operating_system = "WINDOWS_2012"
 
   storage_location {
-    bucket   = aws_s3_bucket.test.bucket
+    bucket   = aws_s3_bucket.test.id
     key      = aws_s3_object.test.key
     role_arn = aws_iam_role.test.arn
   }
@@ -27,13 +27,13 @@ resource "aws_gamelift_build" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the build
-* `operating_system` - (Required) Operating system that the game server binaries are built to run onE.g., `WINDOWS_2012`, `AMAZON_LINUX` or `AMAZON_LINUX_2`.
+* `operating_system` - (Required) Operating system that the game server binaries are built to run on. Valid values: `WINDOWS_2012`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `WINDOWS_2016`, `AMAZON_LINUX_2023`.
 * `storage_location` - (Required) Information indicating where your game build files are stored. See below.
 * `version` - (Optional) Version that is associated with this build.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
@@ -44,18 +44,27 @@ The following arguments are supported:
 * `role_arn` - (Required) ARN of the access role that allows Amazon GameLift to access your S3 bucket.
 * `object_version` - (Optional) A specific version of the file. If not set, the latest version of the file is retrieved.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - GameLift Build ID.
 * `arn` - GameLift Build ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-GameLift Builds can be imported using the ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Builds using the ID. For example:
 
+```terraform
+import {
+  to = aws_gamelift_build.example
+  id = "<build-id>"
+}
 ```
-$ terraform import aws_gamelift_build.example <build-id>
+
+Using `terraform import`, import GameLift Builds using the ID. For example:
+
+```console
+% terraform import aws_gamelift_build.example <build-id>
 ```

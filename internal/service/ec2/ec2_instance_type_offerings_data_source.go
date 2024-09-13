@@ -1,21 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceInstanceTypeOfferings() *schema.Resource {
+// @SDKDataSource("aws_ec2_instance_type_offerings", name="Instance Type Offering")
+func dataSourceInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceTypeOfferingsRead,
+		ReadWithoutTimeout: dataSourceInstanceTypeOfferingsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"instance_types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -27,9 +40,9 @@ func DataSourceInstanceTypeOfferings() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"location_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ec2.LocationType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LocationType](),
 			},
 			"location_types": {
 				Type:     schema.TypeList,
@@ -40,56 +53,40 @@ func DataSourceInstanceTypeOfferings() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("location_type"); ok {
-		input.LocationType = aws.String(v.(string))
+		input.LocationType = awstypes.LocationType(v.(string))
 	}
 
 	var instanceTypes []string
 	var locations []string
 	var locationTypes []string
 
-	err := conn.DescribeInstanceTypeOfferingsPages(input, func(page *ec2.DescribeInstanceTypeOfferingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, instanceTypeOffering := range page.InstanceTypeOfferings {
-			if instanceTypeOffering == nil {
-				continue
-			}
-
-			instanceTypes = append(instanceTypes, aws.StringValue(instanceTypeOffering.InstanceType))
-			locations = append(locations, aws.StringValue(instanceTypeOffering.Location))
-			locationTypes = append(locationTypes, aws.StringValue(instanceTypeOffering.LocationType))
-		}
-
-		return !lastPage
-	})
+	instanceTypeOfferings, err := findInstanceTypeOfferings(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Instance Type Offerings: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type Offerings: %s", err)
 	}
 
-	if err := d.Set("instance_types", instanceTypes); err != nil {
-		return fmt.Errorf("error setting instance_types: %w", err)
-	}
-	if err := d.Set("locations", locations); err != nil {
-		return fmt.Errorf("error setting locations: %w", err)
-	}
-	if err := d.Set("location_types", locationTypes); err != nil {
-		return fmt.Errorf("error setting location_types: %w", err)
+	for _, instanceTypeOffering := range instanceTypeOfferings {
+		instanceTypes = append(instanceTypes, string(instanceTypeOffering.InstanceType))
+		locations = append(locations, aws.ToString(instanceTypeOffering.Location))
+		locationTypes = append(locationTypes, string(instanceTypeOffering.LocationType))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("instance_types", instanceTypes)
+	d.Set("locations", locations)
+	d.Set("location_types", locationTypes)
 
-	return nil
+	return diags
 }

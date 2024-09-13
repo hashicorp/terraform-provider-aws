@@ -1,30 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSnapshotCopy() *schema.Resource {
+// @SDKResource("aws_db_snapshot_copy", name="DB Snapshot Copy")
+// @Tags(identifierAttribute="db_snapshot_arn")
+// @Testing(tagsTest=false)
+func resourceSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyCreate,
 		ReadWithoutTimeout:   resourceSnapshotCopyRead,
 		UpdateWithoutTimeout: resourceSnapshotCopyUpdate,
 		DeleteWithoutTimeout: resourceSnapshotCopyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -34,11 +44,11 @@ func ResourceSnapshotCopy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,23 +66,23 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -87,7 +97,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -95,6 +105,11 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"shared_accounts": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"source_db_snapshot_identifier": {
 				Type:     schema.TypeString,
@@ -109,12 +124,12 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_custom_availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -126,10 +141,10 @@ func ResourceSnapshotCopy() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9][\w-]+`), "must contain only alphanumeric, and hyphen (-) characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z][\w-]+`), "must contain only alphanumeric, and hyphen (-) characters"),
 				),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,175 +155,161 @@ func ResourceSnapshotCopy() *schema.Resource {
 }
 
 func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	in := &rds.CopyDBSnapshotInput{
+	targetDBSnapshotID := d.Get("target_db_snapshot_identifier").(string)
+	input := &rds.CopyDBSnapshotInput{
 		SourceDBSnapshotIdentifier: aws.String(d.Get("source_db_snapshot_identifier").(string)),
-		TargetDBSnapshotIdentifier: aws.String(d.Get("target_db_snapshot_identifier").(string)),
-		Tags:                       Tags(tags.IgnoreAWS()),
+		Tags:                       getTagsIn(ctx),
+		TargetDBSnapshotIdentifier: aws.String(targetDBSnapshotID),
 	}
 
 	if v, ok := d.GetOk("copy_tags"); ok {
-		in.CopyTags = aws.Bool(v.(bool))
+		input.CopyTags = aws.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		in.KmsKeyId = aws.String(v.(string))
+
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("option_group_name"); ok {
-		in.OptionGroupName = aws.String(v.(string))
+		input.OptionGroupName = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("destination_region"); ok {
-		in.DestinationRegion = aws.String(v.(string))
-	}
+
 	if v, ok := d.GetOk("presigned_url"); ok {
-		in.PreSignedUrl = aws.String(v.(string))
+		input.PreSignedUrl = aws.String(v.(string))
+	} else if v, ok := d.GetOk("destination_region"); ok {
+		output, err := rds.NewPresignClient(conn, func(o *rds.PresignOptions) {
+			o.ClientOptions = append(o.ClientOptions, func(o *rds.Options) {
+				o.Region = v.(string)
+			})
+		}).PresignCopyDBSnapshot(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "presigning RDS DB Snapshot Copy (%s) request: %s", targetDBSnapshotID, err)
+		}
+
+		input.PreSignedUrl = aws.String(output.URL)
 	}
 
-	out, err := conn.CopyDBSnapshotWithContext(ctx, in)
+	output, err := conn.CopyDBSnapshot(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("error creating RDS DB Snapshot Copy %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot Copy (%s): %s", targetDBSnapshotID, err)
 	}
 
-	d.SetId(aws.StringValue(out.DBSnapshot.DBSnapshotIdentifier))
+	d.SetId(aws.ToString(output.DBSnapshot.DBSnapshotIdentifier))
 
-	err = waitSnapshotCopyAvailable(ctx, d, meta)
-	if err != nil {
-		return diag.FromErr(err)
+	if _, err := waitDBSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceSnapshotCopyRead(ctx, d, meta)
+	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
+		input := &rds.ModifyDBSnapshotAttributeInput{
+			AttributeName:        aws.String("restore"),
+			DBSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:          flex.ExpandStringValueSet(v.(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBSnapshotAttribute(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
 }
 
 func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	snapshot, err := FindSnapshot(ctx, conn, d.Id())
+	snapshot, err := findDBSnapshotByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error describing RDS DB snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot Copy (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(snapshot.DBSnapshotArn)
-
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zone", snapshot.AvailabilityZone)
-	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
-	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("iops", snapshot.Iops)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
+	arn := aws.ToString(snapshot.DBSnapshotArn)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
+	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
+	d.Set("db_snapshot_arn", arn)
+	d.Set(names.AttrEncrypted, snapshot.Encrypted)
+	d.Set(names.AttrEngine, snapshot.Engine)
+	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
+	d.Set(names.AttrIOPS, snapshot.Iops)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set("option_group_name", snapshot.OptionGroupName)
-	d.Set("port", snapshot.Port)
+	d.Set(names.AttrPort, snapshot.Port)
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
 	d.Set("source_region", snapshot.SourceRegion)
-	d.Set("storage_type", snapshot.StorageType)
+	d.Set(names.AttrStorageType, snapshot.StorageType)
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
-	d.Set("vpc_id", snapshot.VpcId)
+	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return diag.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
+	attribute, err := findDBSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), dbSnapshotAttributeNameRestore)
+	switch {
+	case err == nil:
+		d.Set("shared_accounts", attribute.AttributeValues)
+	case tfresource.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange("shared_accounts") {
+		o, n := d.GetChange("shared_accounts")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os), os.Difference(ns)
+		input := &rds.ModifyDBSnapshotAttributeInput{
+			AttributeName:        aws.String("restore"),
+			DBSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:          flex.ExpandStringValueSet(add),
+			ValuesToRemove:       flex.ExpandStringValueSet(del),
+		}
 
-		if err := UpdateTags(conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
+		_, err := conn.ModifyDBSnapshotAttribute(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 		}
 	}
 
-	return resourceSnapshotCopyRead(ctx, d, meta)
+	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
 }
 
 func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	log.Printf("[INFO] Deleting RDS DB Snapshot %s", d.Id())
-
-	in := &rds.DeleteDBSnapshotInput{
+	log.Printf("[DEBUG] Deleting RDS DB Snapshot Copy: %s", d.Id())
+	_, err := conn.DeleteDBSnapshot(ctx, &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteDBSnapshotWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil
+	if errs.IsA[*types.DBSnapshotNotFoundFault](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting RDS DB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Snapshot Copy (%s): %s", d.Id(), err)
 	}
 
-	return nil
-}
-
-func FindSnapshot(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
-	in := &rds.DescribeDBSnapshotsInput{
-		DBSnapshotIdentifier: aws.String(id),
-	}
-	out, err := conn.DescribeDBSnapshotsWithContext(ctx, in)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if out == nil || len(out.DBSnapshots) == 0 || out.DBSnapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.DBSnapshots[0], nil
-}
-func waitSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Waiting for Snapshot %s to become available...", d.Id())
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"available"},
-		Refresh:    resourceSnapshotStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return diags
 }

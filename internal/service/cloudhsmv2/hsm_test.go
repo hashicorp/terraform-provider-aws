@@ -1,39 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccHSM_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHSMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMSubnetIDConfig(),
+				Config: testAccHSMConfig_subnetID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHSMExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", "id"),
-					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexp.MustCompile(`^eni-.+`)),
-					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexp.MustCompile(`^hsm-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "hsm_state", cloudhsmv2.HsmStateActive),
-					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test.0", "id"),
+					testAccCheckHSMExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test.0", names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexache.MustCompile(`^eni-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexache.MustCompile(`^hsm-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "hsm_state", string(types.HsmStateActive)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test.0", names.AttrID),
 				),
 			},
 			{
@@ -46,44 +54,21 @@ func testAccHSM_basic(t *testing.T) {
 }
 
 func testAccHSM_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMSubnetIDConfig(),
+				Config: testAccHSMConfig_subnetID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
-					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccHSM_disappears_Cluster(t *testing.T) {
-	clusterResourceName := "aws_cloudhsm_v2_cluster.test"
-	resourceName := "aws_cloudhsm_v2_hsm.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccHSMSubnetIDConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), clusterResourceName),
+					testAccCheckClusterExists(ctx, "aws_cloudhsm_v2_cluster.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,19 +77,21 @@ func testAccHSM_disappears_Cluster(t *testing.T) {
 }
 
 func testAccHSM_AvailabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHSMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMAvailabilityZoneConfig(),
+				Config: testAccHSMConfig_availabilityZone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHSMExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
+					testAccCheckHSMExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test.0", names.AttrAvailabilityZone),
 				),
 			},
 			{
@@ -117,19 +104,21 @@ func testAccHSM_AvailabilityZone(t *testing.T) {
 }
 
 func testAccHSM_IPAddress(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHSMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMIPAddressConfig(),
+				Config: testAccHSMConfig_ipAddress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHSMExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.5"),
+					testAccCheckHSMExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "10.0.0.5"),
 				),
 			},
 			{
@@ -141,40 +130,62 @@ func testAccHSM_IPAddress(t *testing.T) {
 	})
 }
 
-func testAccHSMBaseConfig() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccCheckHSMDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Client(ctx)
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudhsm_v2_hsm" {
+				continue
+			}
+
+			_, err := tfcloudhsmv2.FindHSMByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["hsm_eni_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudHSMv2 HSM %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+func testAccCheckHSMExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Client(ctx)
+
+		_, err := tfcloudhsmv2.FindHSMByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["hsm_eni_id"])
+
+		return err
+	}
 }
 
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccHSMConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName))
 }
 
-func testAccHSMAvailabilityZoneConfig() string {
-	return acctest.ConfigCompose(
-		testAccHSMBaseConfig(),
-		`
+func testAccHSMConfig_availabilityZone(rName string) string {
+	return acctest.ConfigCompose(testAccHSMConfig_base(rName), `
 resource "aws_cloudhsm_v2_hsm" "test" {
   availability_zone = aws_subnet.test[0].availability_zone
   cluster_id        = aws_cloudhsm_v2_cluster.test.cluster_id
@@ -182,10 +193,8 @@ resource "aws_cloudhsm_v2_hsm" "test" {
 `)
 }
 
-func testAccHSMIPAddressConfig() string {
-	return acctest.ConfigCompose(
-		testAccHSMBaseConfig(),
-		`
+func testAccHSMConfig_ipAddress(rName string) string {
+	return acctest.ConfigCompose(testAccHSMConfig_base(rName), `
 resource "aws_cloudhsm_v2_hsm" "test" {
   cluster_id = aws_cloudhsm_v2_cluster.test.cluster_id
   ip_address = cidrhost(aws_subnet.test[0].cidr_block, 5)
@@ -194,53 +203,11 @@ resource "aws_cloudhsm_v2_hsm" "test" {
 `)
 }
 
-func testAccHSMSubnetIDConfig() string {
-	return acctest.ConfigCompose(
-		testAccHSMBaseConfig(),
-		`
+func testAccHSMConfig_subnetID(rName string) string {
+	return acctest.ConfigCompose(testAccHSMConfig_base(rName), `
 resource "aws_cloudhsm_v2_hsm" "test" {
   cluster_id = aws_cloudhsm_v2_cluster.test.cluster_id
   subnet_id  = aws_subnet.test[0].id
 }
 `)
-}
-
-func testAccCheckHSMDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudhsm_v2_hsm" {
-			continue
-		}
-
-		hsm, err := tfcloudhsmv2.FindHSM(conn, rs.Primary.ID, rs.Primary.Attributes["hsm_eni_id"])
-
-		if err != nil {
-			return err
-		}
-
-		if hsm != nil && aws.StringValue(hsm.State) != "DELETED" {
-			return fmt.Errorf("HSM still exists:\n%s", hsm)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckHSMExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
-
-		it, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		_, err := tfcloudhsmv2.FindHSM(conn, it.Primary.ID, it.Primary.Attributes["hsm_eni_id"])
-		if err != nil {
-			return fmt.Errorf("CloudHSM cluster not found: %s", err)
-		}
-
-		return nil
-	}
 }

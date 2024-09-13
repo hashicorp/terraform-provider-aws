@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -7,21 +10,27 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceConnection() *schema.Resource {
+// @SDKResource("aws_networkmanager_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
+func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
 		ReadWithoutTimeout:   resourceConnectionRead,
@@ -33,7 +42,7 @@ func ResourceConnection() *schema.Resource {
 				parsedARN, err := arn.Parse(d.Id())
 
 				if err != nil {
-					return nil, fmt.Errorf("error parsing ARN (%s): %w", d.Id(), err)
+					return nil, fmt.Errorf("parsing ARN (%s): %w", d.Id(), err)
 				}
 
 				// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_networkmanager.html#networkmanager-resources-for-iam-policies.
@@ -59,7 +68,7 @@ func ResourceConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +81,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -91,30 +100,30 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
-
 	input := &networkmanager.CreateConnectionInput{
 		ConnectedDeviceId: aws.String(d.Get("connected_device_id").(string)),
 		DeviceId:          aws.String(d.Get("device_id").(string)),
 		GlobalNetworkId:   aws.String(globalNetworkID),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connected_link_id"); ok {
 		input.ConnectedLinkId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -122,136 +131,119 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.LinkId = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Network Manager Connection: %s", input)
-	output, err := conn.CreateConnectionWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Network Manager Connection: %#v", input)
+	output, err := conn.CreateConnection(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager Connection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Connection: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Connection.ConnectionId))
+	d.SetId(aws.ToString(output.Connection.ConnectionId))
 
 	if _, err := waitConnectionCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Connection (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connection (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConnectionRead(ctx, d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	connection, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
+	connection, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Connection %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", connection.ConnectionArn)
+	d.Set(names.AttrARN, connection.ConnectionArn)
 	d.Set("connected_device_id", connection.ConnectedDeviceId)
 	d.Set("connected_link_id", connection.ConnectedLinkId)
-	d.Set("description", connection.Description)
+	d.Set(names.AttrDescription, connection.Description)
 	d.Set("device_id", connection.DeviceId)
 	d.Set("global_network_id", connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
-	tags := KeyValueTags(connection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, connection.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	var diags diag.Diagnostics
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateConnectionInput{
 			ConnectedLinkId: aws.String(d.Get("connected_link_id").(string)),
 			ConnectionId:    aws.String(d.Id()),
-			Description:     aws.String(d.Get("description").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			LinkId:          aws.String(d.Get("link_id").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating Network Manager Connection: %s", input)
-		_, err := conn.UpdateConnectionWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating Network Manager Connection: %#v", input)
+		_, err := conn.UpdateConnection(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating Network Manager Connection (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager Connection (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitConnectionUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Network Manager Connection (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connection (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Network Manager Connection (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceConnectionRead(ctx, d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connection: %s", d.Id())
-	_, err := conn.DeleteConnectionWithContext(ctx, &networkmanager.DeleteConnectionInput{
+	_, err := conn.DeleteConnection(ctx, &networkmanager.DeleteConnectionInput{
 		ConnectionId:    aws.String(d.Id()),
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
-	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+	if globalNetworkIDNotFoundError(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Network Manager Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Connection (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitConnectionDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Connection (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connection (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindConnection(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetConnectionsInput) (*networkmanager.Connection, error) {
-	output, err := FindConnections(ctx, conn, input)
+func findConnection(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetConnectionsInput) (*awstypes.Connection, error) {
+	output, err := findConnections(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -259,57 +251,49 @@ func FindConnection(ctx context.Context, conn *networkmanager.NetworkManager, in
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindConnections(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetConnectionsInput) ([]*networkmanager.Connection, error) {
-	var output []*networkmanager.Connection
+func findConnections(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetConnectionsInput) ([]awstypes.Connection, error) {
+	var output []awstypes.Connection
 
-	err := conn.GetConnectionsPagesWithContext(ctx, input, func(page *networkmanager.GetConnectionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := networkmanager.NewGetConnectionsPaginator(conn, input)
 
-		for _, v := range page.Connections {
-			if v == nil {
-				continue
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if globalNetworkIDNotFoundError(err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
-
-			output = append(output, v)
 		}
 
-		return !lastPage
-	})
-
-	if globalNetworkIDNotFoundError(err) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.Connections...)
 	}
 
 	return output, nil
 }
 
-func FindConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string) (*networkmanager.Connection, error) {
+func findConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string) (*awstypes.Connection, error) {
 	input := &networkmanager.GetConnectionsInput{
-		ConnectionIds:   aws.StringSlice([]string{connectionID}),
+		ConnectionIds:   []string{connectionID},
 		GlobalNetworkId: aws.String(globalNetworkID),
 	}
 
-	output, err := FindConnection(ctx, conn, input)
+	output, err := findConnection(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.GlobalNetworkId) != globalNetworkID || aws.StringValue(output.ConnectionId) != connectionID {
-		return nil, &resource.NotFoundError{
+	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.ConnectionId) != connectionID {
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -317,9 +301,9 @@ func FindConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Networ
 	return output, nil
 }
 
-func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string) resource.StateRefreshFunc {
+func statusConnectionState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
+		output, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -329,30 +313,30 @@ func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkMana
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, string(output.State), nil
 	}
 }
 
-func waitConnectionCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{networkmanager.ConnectionStatePending},
-		Target:  []string{networkmanager.ConnectionStateAvailable},
+func waitConnectionCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ConnectionStatePending),
+		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
 		Timeout: timeout,
 		Refresh: statusConnectionState(ctx, conn, globalNetworkID, connectionID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.Connection); ok {
+	if output, ok := outputRaw.(*awstypes.Connection); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitConnectionDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{networkmanager.ConnectionStateDeleting},
+func waitConnectionDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ConnectionStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusConnectionState(ctx, conn, globalNetworkID, connectionID),
@@ -360,24 +344,24 @@ func waitConnectionDeleted(ctx context.Context, conn *networkmanager.NetworkMana
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.Connection); ok {
+	if output, ok := outputRaw.(*awstypes.Connection); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitConnectionUpdated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{networkmanager.ConnectionStateUpdating},
-		Target:  []string{networkmanager.ConnectionStateAvailable},
+func waitConnectionUpdated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ConnectionStateUpdating),
+		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
 		Timeout: timeout,
 		Refresh: statusConnectionState(ctx, conn, globalNetworkID, connectionID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.Connection); ok {
+	if output, ok := outputRaw.(*awstypes.Connection); ok {
 		return output, err
 	}
 
