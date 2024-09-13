@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var phoneNumber pinpointsmsvoicev2.DescribePhoneNumbersOutput
+	var phoneNumber awstypes.PhoneNumberInformation
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 
 func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	var phoneNumber pinpointsmsvoicev2.DescribePhoneNumbersOutput
+	var phoneNumber awstypes.PhoneNumberInformation
 	phoneNumberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	snsTopicName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	optOutListName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -98,7 +98,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 
 func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var phoneNumber pinpointsmsvoicev2.DescribePhoneNumbersOutput
+	var phoneNumber awstypes.PhoneNumberInformation
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,61 +124,57 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 
 func testAccCheckPhoneNumberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpointsmsvoicev2_phone_number" {
 				continue
 			}
 
-			input := &pinpointsmsvoicev2.DescribePhoneNumbersInput{
-				PhoneNumberIds: aws.StringSlice([]string{rs.Primary.ID}),
+			_, err := tfpinpointsmsvoicev2.FindPhoneNumberByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.DescribePhoneNumbersWithContext(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, pinpointsmsvoicev2.ErrCodeResourceNotFoundException) {
-					return nil
-				}
 				return err
 			}
 
-			return fmt.Errorf("expected PinpointSMSVoiceV2 PhoneNumber to be destroyed, %s found", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging Phone Number %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckPhoneNumberExists(ctx context.Context, n string, v *pinpointsmsvoicev2.DescribePhoneNumbersOutput) resource.TestCheckFunc {
+func testAccCheckPhoneNumberExists(ctx context.Context, n string, v *awstypes.PhoneNumberInformation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
-		resp, err := conn.DescribePhoneNumbersWithContext(ctx, &pinpointsmsvoicev2.DescribePhoneNumbersInput{
-			PhoneNumberIds: aws.StringSlice([]string{rs.Primary.ID}),
-		})
+		output, err := tfpinpointsmsvoicev2.FindPhoneNumberByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error describing PinpointSMSVoiceV2 PhoneNumber: %s", err.Error())
+			return err
 		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccPreCheckPhoneNumber(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
 	input := &pinpointsmsvoicev2.DescribePhoneNumbersInput{}
 
-	_, err := conn.DescribePhoneNumbersWithContext(ctx, input)
+	_, err := conn.DescribePhoneNumbers(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

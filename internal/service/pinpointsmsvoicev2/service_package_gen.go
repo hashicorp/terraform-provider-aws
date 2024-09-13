@@ -36,6 +36,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  resourcePhoneNumber,
+			TypeName: "aws_pinpointsmsvoicev2_phone_number",
+			Name:     "Phone Number",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
 }
 
