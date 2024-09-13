@@ -67,7 +67,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.8
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.43.4
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.7
@@ -104,10 +104,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.9
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.7
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.25.6
-	github.com/aws/aws-sdk-go-v2/service/emr v1.42.6
+	github.com/aws/aws-sdk-go-v2/service/emr v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.33.7
@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.3
-	github.com/aws/aws-sdk-go-v2/service/glue v1.95.2
+	github.com/aws/aws-sdk-go-v2/service/glue v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.7
@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.41.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.57.6
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.4
@@ -189,7 +189,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.71.2
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.7
-	github.com/aws/aws-sdk-go-v2/service/rds v1.82.4
+	github.com/aws/aws-sdk-go-v2/service/rds v1.82.5
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.8
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.4
@@ -233,10 +233,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.7
-	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.6
+	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/swf v1.25.7
-	github.com/aws/aws-sdk-go-v2/service/synthetics v1.26.8
+	github.com/aws/aws-sdk-go-v2/service/synthetics v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.39.6
