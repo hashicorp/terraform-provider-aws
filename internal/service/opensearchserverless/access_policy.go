@@ -10,8 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -39,7 +39,7 @@ type resourceAccessPolicyData struct {
 	Description   types.String                                  `tfsdk:"description"`
 	ID            types.String                                  `tfsdk:"id"`
 	Name          types.String                                  `tfsdk:"name"`
-	Policy        jsontypes.Normalized                          `tfsdk:"policy"`
+	Policy        fwtypes.SmithyJSON[document.Interface]        `tfsdk:"policy"`
 	PolicyVersion types.String                                  `tfsdk:"policy_version"`
 	Type          fwtypes.StringEnum[awstypes.AccessPolicyType] `tfsdk:"type"`
 }
@@ -76,7 +76,7 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: jsontypes.NormalizedType{},
+				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Required:   true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
