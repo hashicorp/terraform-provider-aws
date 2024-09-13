@@ -59,6 +59,8 @@ func main() {
 		td := TemplateData{
 			HumanFriendly:     l.HumanFriendly(),
 			PackageName:       packageName,
+			SDKVersion:        l.SDKVersion(),
+			GoPackage:         l.GoPackageName(),
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
 			APICall:           l.EndpointAPICall(),
@@ -71,23 +73,12 @@ func main() {
 			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
 		if l.IsClientSDKV1() {
-			td.GoV1Package = l.GoV1Package()
-
 			switch packageName {
-			case "imagebuilder",
-				"globalaccelerator",
-				"route53recoveryreadiness",
-				"worklink":
+			case "imagebuilder":
 				td.V1NameResolverNeedsUnknownService = true
-			}
-			switch packageName {
-			case "wafregional":
-				td.V1AlternateInputPackage = "waf"
 			}
 		}
 		if l.IsClientSDKV2() {
-			td.GoV2Package = l.GoV2Package()
-
 			if strings.Contains(td.APICallParams, "awstypes") {
 				td.ImportAwsTypes = true
 			}
@@ -129,8 +120,8 @@ func main() {
 type TemplateData struct {
 	HumanFriendly                     string
 	PackageName                       string
-	GoV1Package                       string
-	GoV2Package                       string
+	SDKVersion                        int
+	GoPackage                         string
 	ProviderNameUpper                 string
 	Region                            string
 	APICall                           string
@@ -140,7 +131,6 @@ type TemplateData struct {
 	DeprecatedEnvVar                  string
 	TFAWSEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
-	V1AlternateInputPackage           string
 	Aliases                           []string
 	ImportAwsTypes                    bool
 	OverrideRegion                    string
