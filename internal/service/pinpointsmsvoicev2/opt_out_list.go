@@ -19,6 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpointsmsvoicev2_opt_out_list", name="Opt-out List")
@@ -35,17 +36,17 @@ func resourceOptOutList() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -56,7 +57,7 @@ func resourceOptOutListCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &pinpointsmsvoicev2.CreateOptOutListInput{
 		OptOutListName: aws.String(name),
 		Tags:           getTagsIn(ctx),
@@ -89,8 +90,8 @@ func resourceOptOutListRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading End User Messaging Opt-out List (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.OptOutListArn)
-	d.Set("name", out.OptOutListName)
+	d.Set(names.AttrARN, out.OptOutListArn)
+	d.Set(names.AttrName, out.OptOutListName)
 
 	return nil
 }

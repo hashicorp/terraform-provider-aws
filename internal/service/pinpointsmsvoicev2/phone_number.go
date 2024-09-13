@@ -39,7 +39,7 @@ func resourcePhoneNumber() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,8 +109,8 @@ func resourcePhoneNumber() *schema.Resource {
 					"two_way_channel_arn",
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:     tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -180,7 +180,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading End User Messaging Phone Number (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.PhoneNumberArn)
+	d.Set(names.AttrARN, out.PhoneNumberArn)
 	d.Set("deletion_protection_enabled", out.DeletionProtectionEnabled)
 	d.Set("iso_country_code", out.IsoCountryCode)
 	d.Set("message_type", out.MessageType)
