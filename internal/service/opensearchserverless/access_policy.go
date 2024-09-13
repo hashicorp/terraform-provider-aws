@@ -84,9 +84,6 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"policy_version": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AccessPolicyType](),
@@ -166,7 +163,6 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -189,27 +185,26 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 		input := &opensearchserverless.UpdateAccessPolicyInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
-
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		input.ClientToken = aws.String(id.UniqueId())
+		input.PolicyVersion = state.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		out, err := conn.UpdateAccessPolicy(ctx, input)
-
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
 			return
 		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.AccessPolicyDetail, &state)...)
 
+		resp.Diagnostics.Append(flex.Flatten(ctx, out.AccessPolicyDetail, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
