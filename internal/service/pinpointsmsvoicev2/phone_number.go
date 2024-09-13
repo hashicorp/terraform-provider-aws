@@ -109,7 +109,7 @@ func resourcePhoneNumber() *schema.Resource {
 					"two_way_channel_arn",
 				},
 			},
-			names.AttrTags:     tftags.TagsSchema(),
+			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
@@ -177,7 +177,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.Errorf("reading End User Messaging Phone Number (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging Phone Number (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.PhoneNumberArn)
@@ -233,7 +233,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if _, err := waitPhoneNumberActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for End User Messaging Phone Number (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging Phone Number (%s) update: %s", d.Id(), err)
 		}
 	}
 
