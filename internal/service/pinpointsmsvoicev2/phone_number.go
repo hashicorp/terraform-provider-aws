@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -153,12 +154,32 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging Phone Number (%s) create: %s", d.Id(), err)
 	}
 
-	if checkUpdateAfterCreateNeeded(d, []string{
-		"self_managed_opt_outs_enabled",
-		"two_way_channel_arn",
-		"two_way_channel_enabled",
-	}) {
-		return append(diags, resourcePhoneNumberUpdate(ctx, d, meta)...)
+	if sdkv2.HasNonZeroValues(d, "self_managed_opt_outs_enabled", "two_way_channel_arn", "two_way_channel_enabled") {
+		input := &pinpointsmsvoicev2.UpdatePhoneNumberInput{
+			PhoneNumberId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("self_managed_opt_outs_enabled"); ok {
+			input.SelfManagedOptOutsEnabled = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("two_way_channel_arn"); ok {
+			input.TwoWayChannelArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("two_way_channel_enabled"); ok {
+			input.TwoWayEnabled = aws.Bool(v.(bool))
+		}
+
+		_, err := conn.UpdatePhoneNumber(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating End User Messaging Phone Number (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitPhoneNumberActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging Phone Number (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourcePhoneNumberRead(ctx, d, meta)...)
@@ -203,7 +224,6 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &pinpointsmsvoicev2.UpdatePhoneNumberInput{
 			PhoneNumberId: aws.String(d.Id()),
-			TwoWayEnabled: nil,
 		}
 
 		if d.HasChanges("deletion_protection_enabled") {
@@ -367,14 +387,4 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client
 	}
 
 	return nil, err
-}
-
-func checkUpdateAfterCreateNeeded(d *schema.ResourceData, schemaKeys []string) bool {
-	for _, schemaKey := range schemaKeys {
-		if _, ok := d.GetOk(schemaKey); ok {
-			return true
-		}
-	}
-
-	return false
 }
