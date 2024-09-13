@@ -265,8 +265,8 @@ type instanceConnectEndpointResourceModel struct {
 	PreserveClientIp           types.Bool     `tfsdk:"preserve_client_ip"`
 	SecurityGroupIds           types.Set      `tfsdk:"security_group_ids"`
 	SubnetId                   types.String   `tfsdk:"subnet_id"`
-	Tags                       types.Map      `tfsdk:"tags"`
-	TagsAll                    types.Map      `tfsdk:"tags_all"`
+	Tags                       tftags.Map     `tfsdk:"tags"`
+	TagsAll                    tftags.Map     `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
 	VpcId                      types.String   `tfsdk:"vpc_id"`
 }

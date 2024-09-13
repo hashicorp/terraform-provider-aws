@@ -88,13 +88,16 @@ The `serverSideEncryptionConfiguration` configuration block supports the followi
 The `vectorIngestionConfiguration` configuration block supports the following arguments:
 
 * `chunkingConfiguration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunkingConfiguration` block](#chunking_configuration-block) for details.
+* `parsingConfiguration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsingConfiguration` block](#parsing_configuration-block) for details.
 
 ### `chunkingConfiguration` block
 
  The `chunkingConfiguration` configuration block supports the following arguments:
 
-* `chunkingStrategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `NONE`.
-* `fixedSizeChunkingConfiguration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. If you set the chunking_strategy as `NONE`, exclude this field. See [`fixedSizeChunkingConfiguration`](#fixed_size_chunking_configuration-block) for details.
+* `chunkingStrategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
+* `fixedSizeChunkingConfiguration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. Requires chunking_strategy as `FIXED_SIZE`. See [`fixedSizeChunkingConfiguration`](#fixed_size_chunking_configuration-block) for details.
+* `hierarchicalChunkingConfiguration` - (Optional, Forces new resource) Configurations for when you choose hierarchical chunking. Requires chunking_strategy as `HIERARCHICAL`. See [`hierarchicalChunkingConfiguration`](#hierarchical_chunking_configuration-block) for details.
+* `semanticChunkingConfiguration` - (Optional, Forces new resource) Configurations for when you choose semantic chunking. Requires chunking_strategy as `SEMANTIC`. See [`semanticChunkingConfiguration`](#semantic_chunking_configuration-block) for details.
 
 ### `fixedSizeChunkingConfiguration` block
 
@@ -102,6 +105,47 @@ The `fixedSizeChunkingConfiguration` block supports the following arguments:
 
 * `maxTokens` - (Required, Forces new resource) Maximum number of tokens to include in a chunk.
 * `overlapPercentage` - (Optional, Forces new resource) Percentage of overlap between adjacent chunks of a data source.
+
+### `hierarchicalChunkingConfiguration` block
+
+The `hierarchicalChunkingConfiguration` block supports the following arguments:
+
+* `levelConfiguration` - (Required, Forces new resource) Maximum number of tokens to include in a chunk. Must contain two `level_configurations`. See [`level_configurations`](#level_configuration-block) for details.
+* `overlapTokens` - (Required, Forces new resource) The number of tokens to repeat across chunks in the same layer.
+
+### `levelConfiguration` block
+
+The `levelConfiguration` block supports the following arguments:
+
+* `maxTokens` - (Required) The maximum number of tokens that a chunk can contain in this layer.
+
+### `semanticChunkingConfiguration` block
+
+The `semanticChunkingConfiguration` block supports the following arguments:
+
+* `breakpointPercentileThreshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
+* `bufferSize` - (Required, Forces new resource) The buffer size.
+* `maxTokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+
+### `parsingConfiguration` block
+
+The `parsingConfiguration` configuration block supports the following arguments:
+
+* `parsingStrategy` - (Required) Currently only `BEDROCK_FOUNDATION_MODEL` is supported
+* `bedrockFoundationModelConfiguration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrockFoundationModelConfiguration` block](#bedrock_foundation_model_configuration-block) for details.
+
+### `bedrockFoundationModelConfiguration` block
+
+The `bedrockFoundationModelConfiguration` configuration block supports the following arguments:
+
+* `modelArn` - (Required) The ARN of the model used to parse documents
+* `parsingPrompt` - (Optional) Instructions for interpreting the contents of the document. See [`parsingPrompt` block](#parsing_prompt-block) for details.
+
+### `parsingPrompt` block
+
+The `parsingPrompt` configuration block supports the following arguments:
+
+* `parsingPromptString` - (Required) Instructions for interpreting the contents of the document.
 
 ## Attribute Reference
 
@@ -149,4 +193,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f67618ecf6e1d1ae137807f97a96039325a6f9251e8adb1721eca36998dce190 -->
+<!-- cache-key: cdktf-0.20.1 input-d07fd6429de9a5e4533bdf063c450d5cb798061251dc5f4c96fbdbef3bc56fc2 -->

@@ -38,6 +38,7 @@ import (
 // @Tags(identifierAttribute="arn")
 func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcConnectionResource{}
+
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(5 * time.Minute)
@@ -78,10 +79,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.All(
-						stringvalidator.LengthAtMost(1000),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[\\w\\-]+`), ""),
-					),
+					stringvalidator.LengthAtMost(1000),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -548,7 +546,7 @@ type resourceVPCConnectionData struct {
 	SecurityGroupIds   types.Set      `tfsdk:"security_group_ids"`
 	SubnetIds          types.Set      `tfsdk:"subnet_ids"`
 	DnsResolvers       types.Set      `tfsdk:"dns_resolvers"`
-	Tags               types.Map      `tfsdk:"tags"`
-	TagsAll            types.Map      `tfsdk:"tags_all"`
+	Tags               tftags.Map     `tfsdk:"tags"`
+	TagsAll            tftags.Map     `tfsdk:"tags_all"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 }

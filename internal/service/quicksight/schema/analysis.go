@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -110,6 +111,10 @@ func AnalysisDefinitionSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func AnalysisDefinitionDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(AnalysisDefinitionSchema())
 }
 
 func AnalysisSourceEntitySchema() *schema.Schema {

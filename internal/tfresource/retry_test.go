@@ -384,7 +384,7 @@ func TestRetryContext_error(t *testing.T) {
 
 	select {
 	case err := <-errCh:
-		if err != expected { //nolint: errorlint // We are actually comparing equality
+		if err != expected { //nolint:errorlint // We are actually comparing equality
 			t.Fatalf("bad: %#v", err)
 		}
 	case <-time.After(5 * time.Second):

@@ -31,8 +31,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Set")
+// @FrameworkResource("aws_fms_resource_set", name="Resource Set")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/fms;fms.GetResourceSetOutput")
+// @Testing(serialize=true)
 func newResourceResourceSet(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceResourceSet{}
 
@@ -388,8 +390,8 @@ type resourceResourceSetData struct {
 	ARN         types.String                                     `tfsdk:"arn"`
 	ID          types.String                                     `tfsdk:"id"`
 	ResourceSet fwtypes.ListNestedObjectValueOf[resourceSetData] `tfsdk:"resource_set"`
-	Tags        types.Map                                        `tfsdk:"tags"`
-	TagsAll     types.Map                                        `tfsdk:"tags_all"`
+	Tags        tftags.Map                                       `tfsdk:"tags"`
+	TagsAll     tftags.Map                                       `tfsdk:"tags_all"`
 	Timeouts    timeouts.Value                                   `tfsdk:"timeouts"`
 }
 
