@@ -615,7 +615,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		//
 		// JSONStringer -> types.String-ish.
 		//
-		if vFrom.Type() == reflect.TypeFor[smithyjson.JSONStringer]() {
+		if vFrom.Type().Implements(reflect.TypeFor[smithyjson.JSONStringer]()) {
 			tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
 
 			stringValue := types.StringNull()
