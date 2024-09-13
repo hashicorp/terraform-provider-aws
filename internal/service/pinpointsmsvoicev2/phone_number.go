@@ -65,7 +65,7 @@ func resourcePhoneNumber() *schema.Resource {
 				Computed: true,
 			},
 			"number_capabilities": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
@@ -125,7 +125,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &pinpointsmsvoicev2.RequestPhoneNumberInput{
 		IsoCountryCode:     aws.String(d.Get("iso_country_code").(string)),
 		MessageType:        awstypes.MessageType(d.Get("message_type").(string)),
-		NumberCapabilities: flex.ExpandStringyValueList[awstypes.NumberCapability](d.Get("number_capabilities").([]interface{})),
+		NumberCapabilities: flex.ExpandStringyValueSet[awstypes.NumberCapability](d.Get("number_capabilities").(*schema.Set)),
 		NumberType:         awstypes.RequestableNumberType(d.Get("number_type").(string)),
 		Tags:               getTagsIn(ctx),
 	}
