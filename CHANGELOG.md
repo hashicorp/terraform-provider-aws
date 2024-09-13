@@ -1,4 +1,9 @@
 ## 5.68.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_mq_broker: Fix `engine_version` mismatch with RabbitMQ 3.13 and ActiveMQ 5.18 and above ([#39024](https://github.com/hashicorp/terraform-provider-aws/issues/39024))
+
 ## 5.67.0 (September 12, 2024)
 
 BREAKING CHANGES:
