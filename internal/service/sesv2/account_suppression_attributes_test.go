@@ -25,6 +25,7 @@ func TestAccSESV2AccountSuppressionAttributes_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccAccountSuppressionAttributes_basic,
+		"update":        testAccAccountSuppressionAttributes_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -63,6 +64,43 @@ func testAccAccountSuppressionAttributes_basic(t *testing.T) {
 	})
 }
 
+func testAccAccountSuppressionAttributes_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_sesv2_account_suppression_attributes.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSuppressionAttributesConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSuppressionAttributesExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suppressed_reasons"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suppressed_reasons"), knownvalue.SetExact(
+						[]knownvalue.Check{
+							knownvalue.StringExact(string(types.SuppressionListReasonComplaint)),
+						}),
+					),
+				},
+			},
+			{
+				Config: testAccAccountSuppressionAttributesConfig_updated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSuppressionAttributesExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suppressed_reasons"), knownvalue.SetSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAccountSuppressionAttributesExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
@@ -81,5 +119,11 @@ func testAccCheckAccountSuppressionAttributesExists(ctx context.Context, n strin
 const testAccAccountSuppressionAttributesConfig_basic = `
 resource "aws_sesv2_account_suppression_attributes" "test" {
   suppressed_reasons = ["COMPLAINT"]
+}
+`
+
+const testAccAccountSuppressionAttributesConfig_updated = `
+resource "aws_sesv2_account_suppression_attributes" "test" {
+  suppressed_reasons = []
 }
 `
