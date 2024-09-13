@@ -26,7 +26,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-This data source exports no additional attributes.
+This resource exports no additional attributes.
 
 ## Import
 
