@@ -558,8 +558,8 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
 		engineType := d.Get("engine_type").(string)
-		engineVersion := d.Get("engine_version").(string)
-		autoMinorVersionUpgrade := d.Get("auto_minor_version_upgrade").(bool)
+		engineVersion := d.Get(names.AttrEngineVersion).(string)
+		autoMinorVersionUpgrade := d.Get(names.AttrAutoMinorVersionUpgrade).(bool)
 
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
