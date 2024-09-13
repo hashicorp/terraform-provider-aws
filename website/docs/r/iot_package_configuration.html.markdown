@@ -48,3 +48,7 @@ resource "aws_iot_package_configuration" "example" {
 
 * `enabled` - (Required) Whether to enable job's package version reporting.
 * `role_arn` - (Optional) ARN of the IAM role that grants necessary permissions for IoT to update the thing's reserved named shadow.
+
+## Attribute Reference
+
+No additional attributes are exported.

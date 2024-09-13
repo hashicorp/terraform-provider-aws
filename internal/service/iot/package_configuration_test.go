@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccPackageConfiguration_basic(t *testing.T) {
+func TestAccIoTPackageConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -29,7 +29,7 @@ func TestAccPackageConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccPackageConfiguration_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version_update_by_jobs.0."+names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "version_update_by_jobs.0."+names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttrWith(resourceName, "version_update_by_jobs.0."+names.AttrRoleARN, func(value string) error {
 						if len(value) == 0 {
 							return fmt.Errorf("empty role arn")
@@ -64,7 +64,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iot_package_configuration" "test" {
   version_update_by_jobs {
-    enabled = true
+    enabled  = true
     role_arn = aws_iam_role.test.arn
   }
 }
