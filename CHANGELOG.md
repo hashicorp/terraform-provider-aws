@@ -1,5 +1,9 @@
 ## 5.68.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_synthetics_canary: Increase maximum `name` length to 255 characters ([#39315](https://github.com/hashicorp/terraform-provider-aws/issues/39315))
+
 BUG FIXES:
 
 * resource/aws_mq_broker: Fix `engine_version` mismatch with RabbitMQ 3.13 and ActiveMQ 5.18 and above ([#39024](https://github.com/hashicorp/terraform-provider-aws/issues/39024))
