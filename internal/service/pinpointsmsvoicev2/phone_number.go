@@ -355,7 +355,7 @@ func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id 
 	}
 }
 
-func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
+func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusPending, awstypes.NumberStatusAssociating),
 		Target:  enum.Slice(awstypes.NumberStatusActive),
