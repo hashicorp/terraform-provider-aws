@@ -204,7 +204,7 @@ func waitTTLUpdated(ctx context.Context, conn *dynamodb.Client, tableName string
 	return nil, err
 }
 
-func waitSSEUpdated(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) { //nolint:unparam
+func waitSSEUpdated(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.SSEStatusDisabling, awstypes.SSEStatusEnabling, awstypes.SSEStatusUpdating),
 		Target:                    enum.Slice(awstypes.SSEStatusDisabled, awstypes.SSEStatusEnabled),
