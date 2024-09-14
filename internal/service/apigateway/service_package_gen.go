@@ -29,6 +29,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory:  dataSourceAPIKeys,
+			TypeName: "aws_api_gateway_api_keys",
+			Name:     "API Keys",
+		},
+		{
 			Factory:  dataSourceAuthorizer,
 			TypeName: "aws_api_gateway_authorizer",
 			Name:     "Authorizer",
