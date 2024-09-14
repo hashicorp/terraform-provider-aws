@@ -10,7 +10,6 @@ description: |-
 
 Terraform data source for managing an AWS Security Hub Standards Control Associations.
 
-
 ## Example Usage
 
 ### Basic Usage
