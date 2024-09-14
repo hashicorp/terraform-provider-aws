@@ -15,7 +15,13 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceNamespace,
+			TypeName: "aws_redshiftserverless_namespace",
+			Name:     "Namespace",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -24,6 +30,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newCustomDomainAssociationResource,
 			TypeName: "aws_redshiftserverless_custom_domain_association",
 			Name:     "Custom Domain Association",
+		},
+		{
+			Factory:  newResourceNamespace,
+			TypeName: "aws_redshiftserverless_namespace",
+			Name:     "Namespace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
@@ -34,11 +48,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceCredentials,
 			TypeName: "aws_redshiftserverless_credentials",
 			Name:     "Credentials",
-		},
-		{
-			Factory:  dataSourceNamespace,
-			TypeName: "aws_redshiftserverless_namespace",
-			Name:     "Namespace",
 		},
 		{
 			Factory:  dataSourceWorkgroup,
@@ -54,14 +63,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceEndpointAccess,
 			TypeName: "aws_redshiftserverless_endpoint_access",
 			Name:     "Endpoint Access",
-		},
-		{
-			Factory:  resourceNamespace,
-			TypeName: "aws_redshiftserverless_namespace",
-			Name:     "Namespace",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
 		},
 		{
 			Factory:  resourceResourcePolicy,
