@@ -41,7 +41,7 @@ resource "aws_securityhub_account" "test" {
 resource "aws_securityhub_standards_subscription" "test" {
   standards_arn = "arn:${data.aws_partition.current.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
 
-  depends_on    = [aws_securityhub_account.test]
+  depends_on = [aws_securityhub_account.test]
 }
 
 data "aws_securityhub_standards_control_associations" "test" {
