@@ -26,6 +26,7 @@ type setTypeOf[T attr.Value] struct {
 
 var (
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
+	SetOfARNType    = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}}
 )
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
