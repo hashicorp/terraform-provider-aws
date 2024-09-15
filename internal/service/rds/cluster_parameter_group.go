@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -109,14 +110,12 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	tags := getTagsIn(ctx)
-
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(name),
 		DBParameterGroupFamily:      aws.String(d.Get(names.AttrFamily).(string)),
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
-		Tags:                        tags,
+		Tags:                        getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBClusterParameterGroup(ctx, input)
@@ -130,38 +129,22 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	// Set for update.
 	d.Set(names.AttrARN, output.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
-	// IAM eventual consistency handling for ABAC. Check tags are present before update
-	if len(tags) > 0 {
-		tagInput := &rds.ListTagsForResourceInput{
-            ResourceName: aws.String(output.DBClusterParameterGroup.DBClusterParameterGroupArn),
-        }
+	const (
+		timeout := 10 * time.Second
+	)
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, timeout, func() (interface{}, error) {
+		updateDiags := resourceClusterParameterGroupUpdate(ctx, d, meta)
+		if len(updateDiags) > 0 {
+			return nil, errors.New("error in update")
+		}
+		return nil, nil
+	})
 
-        var tagOutput *rds.ListTagsForResourceOutput
-        var retryCount int
-        maxRetries := 10
-        success := false
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "Update failed after retrying due to permission issues: %s", err)
+	}
 
-        for retryCount = 0; retryCount < maxRetries; retryCount++ {
-            tagOutput, err = conn.ListTagsForResource(ctx, tagInput)
-
-            if err != nil {
-                return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Parameter Group (%s): %s", name, err)
-            }
-
-            if len(tagOutput.TagList) > 0 {
-                success = true
-                break
-			}
-
-			time.Sleep(2 * time.Second)
-        }
-
-        if !success {
-            return sdkdiag.AppendErrorf(diags, "tags were not found on RDS Cluster Parameter Group (%s) after %d retries.", name, retryCount)
-        }
-    }
-
-	return append(diags, resourceClusterParameterGroupUpdate(ctx, d, meta)...)
+	return diags
 }
 
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
