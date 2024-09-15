@@ -109,12 +109,14 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	tags := getTagsIn(ctx)
+
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(name),
 		DBParameterGroupFamily:      aws.String(d.Get(names.AttrFamily).(string)),
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
-		Tags:                        getTagsIn(ctx),
+		Tags:                        tags,
 	}
 
 	output, err := conn.CreateDBClusterParameterGroup(ctx, input)
@@ -127,6 +129,37 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 
 	// Set for update.
 	d.Set(names.AttrARN, output.DBClusterParameterGroup.DBClusterParameterGroupArn)
+
+	// IAM eventual consistency handling for ABAC. Check tags are present before update
+	if len(tags) > 0 {
+		tagInput := &rds.ListTagsForResourceInput{
+            ResourceName: aws.String(output.DBClusterParameterGroup.DBClusterParameterGroupArn),
+        }
+
+        var tagOutput *rds.ListTagsForResourceOutput
+        var retryCount int
+        maxRetries := 10
+        success := false
+
+        for retryCount = 0; retryCount < maxRetries; retryCount++ {
+            tagOutput, err = conn.ListTagsForResource(ctx, tagInput)
+
+            if err != nil {
+                return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Parameter Group (%s): %s", name, err)
+            }
+
+            if len(tagOutput.TagList) > 0 {
+                success = true
+                break
+			}
+
+			time.Sleep(2 * time.Second)
+        }
+
+        if !success {
+            return sdkdiag.AppendErrorf(diags, "tags were not found on RDS Cluster Parameter Group (%s) after %d retries.", name, retryCount)
+        }
+    }
 
 	return append(diags, resourceClusterParameterGroupUpdate(ctx, d, meta)...)
 }
