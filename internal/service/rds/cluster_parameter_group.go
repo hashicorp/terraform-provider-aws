@@ -141,7 +141,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Update failed after retrying due to permission issues: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating parameters for RDS Cluster Parameter Group (%s): %s", name, err)
 	}
 
 	return diags
