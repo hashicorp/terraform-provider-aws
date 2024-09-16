@@ -488,17 +488,12 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					continue
 				}
 
-				//metadataResponse := ephemeral.MetadataResponse{}
-				//inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
-				//typeName := metadataResponse.TypeName
-
 				// bootstrapContext is run on all wrapped methods before any interceptors.
 				bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 					ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
 					if meta != nil {
 						ctx = meta.RegisterLogger(ctx)
 					}
-
 					return ctx
 				}
 
