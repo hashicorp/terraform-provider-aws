@@ -78,7 +78,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_disappears(t *testing.T) {
 				Config: testAccOptOutListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourceOptOutList(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourceOptOutList, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
