@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_cognito_user_group", name="User Pool")
+// @FrameworkDataSource("aws_cognito_user_pool", name="User Pool")
+// @Testing(tagsTest=true)
 func newUserPoolDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &userPoolDataSource{}, nil
 }
@@ -120,10 +121,14 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			"sms_verification_message": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 			},
-			"user_pool_tags": tftags.TagsAttributeComputedOnly(),
+			"user_pool_tags": deprecateMapAttribute(
+				tftags.TagsAttributeComputedOnly(),
+				`Use the attribute "tags" instead`,
+			),
 			"username_attributes": schema.ListAttribute{
 				Computed:    true,
 				CustomType:  fwtypes.ListOfStringType,
@@ -156,7 +161,8 @@ func (d *userPoolDataSource) Read(ctx context.Context, request datasource.ReadRe
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, userPoolID)
+	data.ID = data.UserPoolID
+	data.Tags = data.UserPoolTags
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -182,8 +188,9 @@ type userPoolDataSourceModel struct {
 	SMSAuthenticationMessage types.String                                                     `tfsdk:"sms_authentication_message"`
 	SMSConfigurationFailure  types.String                                                     `tfsdk:"sms_configuration_failure"`
 	SMSVerificationMessage   types.String                                                     `tfsdk:"sms_verification_message"`
+	Tags                     tftags.Map                                                       `tfsdk:"tags"`
 	UserPoolID               types.String                                                     `tfsdk:"user_pool_id"`
-	UserPoolTags             types.Map                                                        `tfsdk:"user_pool_tags"`
+	UserPoolTags             tftags.Map                                                       `tfsdk:"user_pool_tags"`
 	UsernameAttributes       fwtypes.ListValueOf[types.String]                                `tfsdk:"username_attributes"`
 }
 
@@ -271,4 +278,9 @@ type numberAttributeConstraintsTypeModel struct {
 type stringAttributeConstraintsTypeModel struct {
 	MaxLength types.String `tfsdk:"max_length"`
 	MinLength types.String `tfsdk:"min_length"`
+}
+
+func deprecateMapAttribute(attr schema.MapAttribute, msg string) schema.MapAttribute {
+	attr.DeprecationMessage = msg
+	return attr
 }

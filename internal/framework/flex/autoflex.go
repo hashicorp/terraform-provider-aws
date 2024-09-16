@@ -30,7 +30,7 @@ const (
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
 type autoFlexer interface {
-	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value) diag.Diagnostics
+	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, fieldOpts) diag.Diagnostics
 	getOptions() AutoFlexOptions
 }
 
@@ -125,9 +125,17 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
+		fromNameOverride, fromOpts := autoflexTags(fromField)
 		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		// TODO: this only applies when Expanding
+		if fromNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
 			continue
@@ -148,7 +156,16 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			continue
 		}
 		toFieldName := toField.Name
+		// TODO: this only applies when Flattening
+		toNameOverride, toOpts := autoflexTags(toField)
 		toFieldVal := valTo.FieldByIndex(toField.Index)
+		if toNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
 			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
@@ -163,7 +180,12 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
+		opts := fieldOpts{
+			legacy:    fromOpts.Legacy() || toOpts.Legacy(),
+			omitempty: toOpts.OmitEmpty(),
+		}
+
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
@@ -249,6 +271,15 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 func fieldExistsInStruct(field string, structType reflect.Type) bool {
 	_, ok := structType.FieldByName(field)
 	return ok
+}
+
+func autoflexTags(field reflect.StructField) (string, tagOptions) {
+	return parseTag(field.Tag.Get("autoflex"))
+}
+
+type fieldOpts struct {
+	legacy    bool
+	omitempty bool
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.

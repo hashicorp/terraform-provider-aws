@@ -646,10 +646,10 @@ type tlsInspectionConfigurationModel struct {
 }
 
 type serverCertificateConfigurationModel struct {
-	CertificateAuthorityARN           fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
-	CheckCertificateRevocationsStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
-	Scopes                            fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
-	ServerCertificates                fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
+	CertificateAuthorityARN          fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
+	CheckCertificateRevocationStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
+	Scopes                           fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
+	ServerCertificates               fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
 }
 
 type checkCertificateRevocationStatusActionsModel struct {

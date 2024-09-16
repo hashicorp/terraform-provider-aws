@@ -262,6 +262,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>outposts</code></li>
   <li><code>paymentcryptography</code></li>
   <li><code>pcaconnectorad</code></li>
+  <li><code>pcs</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
   <li><code>polly</code></li>
@@ -433,4 +434,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-694af91cfede44c08b7bcfc43909d45a468dabcd574457f24471cea30221c722 -->
+<!-- cache-key: cdktf-0.20.1 input-fb32d2e2066ad889d5fcfb9a689f78cbf7eb841052e4b622b21387f9a3c18bae -->

@@ -1072,33 +1072,34 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("server_side_encryption") {
-		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+		if replicas, sseSpecification := d.Get("replica").(*schema.Set), expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})); replicas.Len() > 0 && sseSpecification.KMSMasterKeyId != nil {
 			log.Printf("[DEBUG] Using SSE update on replicas")
 			var replicaInputs []awstypes.ReplicationGroupUpdate
-			var replicaRegions []string
 			for _, replica := range replicas.List() {
 				tfMap, ok := replica.(map[string]interface{})
 				if !ok {
 					continue
 				}
-				var regionName string
-				var KMSMasterKeyId string
-				if v, ok := tfMap["region_name"].(string); ok {
-					regionName = v
-					replicaRegions = append(replicaRegions, v)
+
+				region, ok := tfMap["region_name"].(string)
+				if !ok {
+					continue
 				}
-				if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
-					KMSMasterKeyId = v
+
+				key, ok := tfMap[names.AttrKMSKeyARN].(string)
+				if !ok || key == "" {
+					continue
 				}
+
 				var input = &awstypes.UpdateReplicationGroupMemberAction{
-					RegionName:     aws.String(regionName),
-					KMSMasterKeyId: aws.String(KMSMasterKeyId),
+					RegionName:     aws.String(region),
+					KMSMasterKeyId: aws.String(key),
 				}
 				var update = awstypes.ReplicationGroupUpdate{Update: input}
 				replicaInputs = append(replicaInputs, update)
 			}
 			var input = &awstypes.UpdateReplicationGroupMemberAction{
-				KMSMasterKeyId: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId,
+				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
 				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
 			}
 			var update = awstypes.ReplicationGroupUpdate{Update: input}
@@ -1110,27 +1111,40 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
 			}
+		} else {
+			log.Printf("[DEBUG] Using normal update for SSE")
+			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+				TableName:        aws.String(d.Id()),
+				SSESpecification: sseSpecification,
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
+			}
+		}
+
+		// since we don't update replicas unless there is a KMS key, we need to wait for replica
+		// updates for the scenario where 1) there are replicas, 2) we are updating SSE (such as
+		// disabling), and 3) we have no KMS key
+		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+			var replicaRegions []string
+			for _, replica := range replicas.List() {
+				tfMap, ok := replica.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if v, ok := tfMap["region_name"].(string); ok {
+					replicaRegions = append(replicaRegions, v)
+				}
+			}
 			for _, region := range replicaRegions {
 				if _, err := waitReplicaSSEUpdated(ctx, conn, region, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) replica SSE update in region %q: %s", d.Id(), region, err)
 				}
 			}
-			if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
-			}
-		} else {
-			log.Printf("[DEBUG] Using normal update for SSE")
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
-				TableName:        aws.String(d.Id()),
-				SSESpecification: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
-			})
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
-			}
+		}
 
-			if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
-			}
+		if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
 		}
 	}
 
@@ -1902,7 +1916,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 		return sseList
 	}
 
-	if sse[names.AttrKMSKeyARN].(string) == dk {
+	if v, ok := sse[names.AttrKMSKeyARN].(string); ok && v == dk {
 		sse[names.AttrKMSKeyARN] = ""
 		return []interface{}{sse}
 	}

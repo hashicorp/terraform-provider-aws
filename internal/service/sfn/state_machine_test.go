@@ -593,6 +593,24 @@ func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T)
 	})
 }
 
+func TestAccSFNStateMachine_definitionValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccStateMachineConfig_invalidDefinition(rName),
+				ExpectError: regexache.MustCompile("invalid Step Functions State Machine definition: .+"),
+			},
+		},
+	})
+}
+
 func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1226,4 +1244,37 @@ EOF
   }
 }
 `, rName, rType))
+}
+
+func testAccStateMachineConfig_invalidDefinition(rName string) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A wrongly made stepfunction definition (replaced 'States' by 'Status')",
+  "StartAt": "HelloWorld",
+  "Status": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+}
+`, rName))
 }

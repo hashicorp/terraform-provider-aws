@@ -115,6 +115,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -277,6 +278,7 @@ func registerSweepers() {
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
 	pinpoint.RegisterSweepers()
+	pinpointsmsvoicev2.RegisterSweepers()
 	pipes.RegisterSweepers()
 	qldb.RegisterSweepers()
 	quicksight.RegisterSweepers()

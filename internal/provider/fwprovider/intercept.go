@@ -591,7 +591,8 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		apiTags := tagsInContext.TagsOut.UnwrapOrDefault()
 
 		// AWS APIs often return empty lists of tags when none have been configured.
-		stateTags := tftags.Null
+		var stateTags tftags.Map
+		response.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
 		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, &diags).Map(); len(v) > 0 {

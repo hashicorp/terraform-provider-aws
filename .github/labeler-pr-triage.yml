@@ -1665,6 +1665,12 @@ service/pinpointsmsvoice:
           - any-glob-to-any-file:
               - 'internal/service/pinpointsmsvoice/**/*'
               - 'website/**/pinpointsmsvoice_*'
+service/pinpointsmsvoicev2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pinpointsmsvoicev2/**/*'
+              - 'website/**/pinpointsmsvoicev2_*'
 service/pipes:
   - any:
       - changed-files:

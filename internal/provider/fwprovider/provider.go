@@ -170,9 +170,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 		},
 		Blocks: map[string]schema.Block{
 			"assume_role": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"duration": schema.StringAttribute{
@@ -194,7 +191,7 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 							Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
 						},
 						"role_arn": schema.StringAttribute{
-							Optional:    true,
+							Optional:    true, // For historical reasons, we allow an empty `assume_role` block
 							Description: "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 						},
 						"session_name": schema.StringAttribute{
@@ -239,7 +236,7 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 							Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
 						},
 						"role_arn": schema.StringAttribute{
-							Optional:    true,
+							Optional:    true, // For historical reasons, we allow an empty `assume_role_with_web_identity` block
 							Description: "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 						},
 						"session_name": schema.StringAttribute{

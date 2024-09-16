@@ -529,6 +529,8 @@ service/pinpointemail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointemail_'
 service/pinpointsmsvoice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoice_'
+service/pinpointsmsvoicev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoicev2_'
 service/pipes:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pipes_'
 service/polly:
