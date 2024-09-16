@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.35.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/amp v1.27.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/amplify v1.24.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/amplify v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.22.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.32.2 // indirect
@@ -156,8 +156,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.55.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ivs v1.38.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ivs v1.38.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.19.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.52.6 // indirect
@@ -214,7 +214,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.82.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.28.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.43.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.24.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.12.6 // indirect
