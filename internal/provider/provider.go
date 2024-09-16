@@ -518,11 +518,27 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	if v, ok := d.GetOk("assume_role"); ok {
 		path := cty.GetAttrPath("assume_role")
 		v := v.([]any)
-		if len(v) == 1 && v[0] == nil {
-			diags = append(diags,
-				errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
-			)
-		} else if len(v) > 0 {
+		if len(v) == 1 {
+			if v[0] == nil {
+				diags = append(diags,
+					errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+				)
+			} else {
+				l := v[0].(map[string]any)
+				if s, ok := l["role_arn"]; !ok || s == "" {
+					diags = append(diags,
+						errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+					)
+				} else {
+					ar, dg := expandAssumeRoles(ctx, path, v)
+					diags = append(diags, dg...)
+					if dg.HasError() {
+						return nil, diags
+					}
+					config.AssumeRole = ar
+				}
+			}
+		} else if len(v) > 1 {
 			ar, dg := expandAssumeRoles(ctx, path, v)
 			diags = append(diags, dg...)
 			if dg.HasError() {
