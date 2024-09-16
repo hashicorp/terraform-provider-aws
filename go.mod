@@ -372,8 +372,8 @@ require (
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
 
-replace github.com/hashicorp/terraform-plugin-framework => github.com/hashicorp/terraform-plugin-framework v1.11.1-0.20240904212030-b84bb1ddcd3a
-
-replace github.com/hashicorp/terraform-plugin-go => github.com/hashicorp/terraform-plugin-go v0.23.1-0.20240904211550-7ea64adab752
-
-replace github.com/hashicorp/terraform-plugin-mux => github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20240906123801-c1b0898848bb
+replace (
+	github.com/hashicorp/terraform-plugin-framework => github.com/hashicorp/terraform-plugin-framework v1.11.1-0.20240904212030-b84bb1ddcd3a
+	github.com/hashicorp/terraform-plugin-go => github.com/hashicorp/terraform-plugin-go v0.23.1-0.20240904211550-7ea64adab752
+	github.com/hashicorp/terraform-plugin-mux => github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20240906123801-c1b0898848bb
+)
