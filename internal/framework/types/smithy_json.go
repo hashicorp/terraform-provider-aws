@@ -86,7 +86,7 @@ func (t SmithyJSONType[T]) ValueFromString(ctx context.Context, in basetypes.Str
 		return SmithyJSONUnknown[T](), diags
 	}
 
-	var data map[string]any
+	var data any
 	if err := json.Unmarshal([]byte(in.ValueString()), &data); err != nil {
 		return SmithyJSONUnknown[T](), diags
 	}

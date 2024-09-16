@@ -3321,18 +3321,14 @@ func TestExpandSetOfInt64(t *testing.T) {
 func TestExpandListOfStringEnum(t *testing.T) {
 	t.Parallel()
 
-	type testEnum string
-	var testEnumFoo testEnum = "foo"
-	var testEnumBar testEnum = "bar"
-
 	testCases := autoFlexTestCases{
 		"valid value": {
 			Source: types.ListValueMust(types.StringType, []attr.Value{
-				types.StringValue(string(testEnumFoo)),
-				types.StringValue(string(testEnumBar)),
+				types.StringValue(string(testEnumScalar)),
+				types.StringValue(string(testEnumList)),
 			}),
 			Target:     &[]testEnum{},
-			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+			WantTarget: &[]testEnum{testEnumScalar, testEnumList},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[types.List](), reflect.TypeFor[*[]testEnum]()),
 				infoConverting(reflect.TypeFor[types.List](), reflect.TypeFor[[]testEnum]()),
@@ -3366,18 +3362,14 @@ func TestExpandListOfStringEnum(t *testing.T) {
 func TestExpandSetOfStringEnum(t *testing.T) {
 	t.Parallel()
 
-	type testEnum string
-	var testEnumFoo testEnum = "foo"
-	var testEnumBar testEnum = "bar"
-
 	testCases := autoFlexTestCases{
 		"valid value": {
 			Source: types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue(string(testEnumFoo)),
-				types.StringValue(string(testEnumBar)),
+				types.StringValue(string(testEnumScalar)),
+				types.StringValue(string(testEnumList)),
 			}),
 			Target:     &[]testEnum{},
-			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+			WantTarget: &[]testEnum{testEnumScalar, testEnumList},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]testEnum]()),
 				infoConverting(reflect.TypeFor[types.Set](), reflect.TypeFor[[]testEnum]()),
@@ -3402,6 +3394,124 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 				infoExpanding(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]testEnum]()),
 				infoConverting(reflect.TypeFor[types.Set](), reflect.TypeFor[[]testEnum]()),
 				traceExpandingNullValue("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]testEnum]()),
+			},
+		},
+	}
+	runAutoExpandTestCases(t, testCases)
+}
+
+func TestExpandStructListOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"valid value": {
+			Source: &tfListOfStringEnum{
+				Field1: fwtypes.NewListValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{
+					fwtypes.StringEnumValue(testEnumScalar),
+					fwtypes.StringEnumValue(testEnumList),
+				}),
+			},
+			Target: &awsSliceOfStringEnum{},
+			WantTarget: &awsSliceOfStringEnum{
+				Field1: []testEnum{testEnumScalar, testEnumList},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfListOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConverting(reflect.TypeFor[tfListOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListOfStringEnum](), "Field1", reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
+				traceExpandingWithElementsAs("Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]](), 2, "Field1", reflect.TypeFor[[]testEnum]()),
+			},
+		},
+		"empty value": {
+			Source: &tfListOfStringEnum{
+				Field1: fwtypes.NewListValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{}),
+			},
+			Target: &awsSliceOfStringEnum{},
+			WantTarget: &awsSliceOfStringEnum{
+				Field1: []testEnum{},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfListOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConverting(reflect.TypeFor[tfListOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListOfStringEnum](), "Field1", reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
+				traceExpandingWithElementsAs("Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]](), 0, "Field1", reflect.TypeFor[([]testEnum)]()),
+			},
+		},
+		"null value": {
+			Source: &tfListOfStringEnum{
+				Field1: fwtypes.NewListValueOfNull[fwtypes.StringEnum[testEnum]](ctx),
+			},
+			Target:     &awsSliceOfStringEnum{},
+			WantTarget: &awsSliceOfStringEnum{},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfListOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConverting(reflect.TypeFor[tfListOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListOfStringEnum](), "Field1", reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
+				traceExpandingNullValue("Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
+			},
+		},
+	}
+	runAutoExpandTestCases(t, testCases)
+}
+
+func TestExpandStructSetOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"valid value": {
+			Source: &tfSetOfStringEnum{
+				Field1: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{
+					fwtypes.StringEnumValue(testEnumScalar),
+					fwtypes.StringEnumValue(testEnumList),
+				}),
+			},
+			Target: &awsSliceOfStringEnum{},
+			WantTarget: &awsSliceOfStringEnum{
+				Field1: []testEnum{testEnumScalar, testEnumList},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfSetOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConverting(reflect.TypeFor[tfSetOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetOfStringEnum](), "Field1", reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
+				traceExpandingWithElementsAs("Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]](), 2, "Field1", reflect.TypeFor[[]testEnum]()),
+			},
+		},
+		"empty value": {
+			Source: &tfSetOfStringEnum{
+				Field1: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{}),
+			},
+			Target: &awsSliceOfStringEnum{},
+			WantTarget: &awsSliceOfStringEnum{
+				Field1: []testEnum{},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfSetOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConverting(reflect.TypeFor[tfSetOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetOfStringEnum](), "Field1", reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
+				traceExpandingWithElementsAs("Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]](), 0, "Field1", reflect.TypeFor[([]testEnum)]()),
+			},
+		},
+		"null value": {
+			Source: &tfSetOfStringEnum{
+				Field1: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[testEnum]](ctx),
+			},
+			Target:     &awsSliceOfStringEnum{},
+			WantTarget: &awsSliceOfStringEnum{},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfSetOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConverting(reflect.TypeFor[tfSetOfStringEnum](), reflect.TypeFor[*awsSliceOfStringEnum]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetOfStringEnum](), "Field1", reflect.TypeFor[*awsSliceOfStringEnum]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
+				traceExpandingNullValue("Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]](), "Field1", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 	}

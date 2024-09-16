@@ -54,8 +54,8 @@ github.com/aws/aws-sdk-go-v2/service/acmpca v1.35.4 h1:KihljJ1EQhv7H19B3xqvDmLh0
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.35.4/go.mod h1:1gyhCVvhECL8PQQGA8CFuQmTw6pC83iJPURZ/6ESlt8=
 github.com/aws/aws-sdk-go-v2/service/amp v1.27.6 h1:fdloGlPv85X7xljjEytOgkf2Ooo4X+bRgRwd4VsteIo=
 github.com/aws/aws-sdk-go-v2/service/amp v1.27.6/go.mod h1:9om9+RWkFPh5o/kxJf3oPJGdlExpIFzRh3WeHZR8kZw=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.24.3 h1:Ajo2jZY3KynmYu4LqbUER8sXFUfELBrElB3MPDTEqp0=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.24.3/go.mod h1:AEJHCkEbyY4f8Fh5iLRz9I9FkQzVDIUsc6SWcp3AGzU=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.24.4 h1:AeiaSL/62C5QvhoL9jq/yzdCvGLv1dkzExCdsouRDvc=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.24.4/go.mod h1:AEJHCkEbyY4f8Fh5iLRz9I9FkQzVDIUsc6SWcp3AGzU=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.8 h1:CgEyY7gfTf7lHYcCi7+w6jJ1XQBugjpadtsuN3TGxdQ=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.8/go.mod h1:z99ur4Ha5540t8hb5XtqV/UMOnEoEZK22lhr5ZBS0zw=
 github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.22.8 h1:SWBNBbVbThg5Hdi3hWbVaDFjV/OyPbuqZLu4N+mj/Es=
@@ -298,10 +298,10 @@ github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.6 h1:+1U3WfqLkiXPVqkIh9b
 github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.6/go.mod h1:vxKTn6HxISghOFlulw2RNzt+oGCJrU9yXv1qs3o4BdU=
 github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.6 h1:2sSDmW9rP8BMcRdPYecUm2UTwYn+yEyTqQorwguYw3s=
 github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.6/go.mod h1:GJ/qdiX9bik1A5ZtMBAVe+PrtIOWtV1pJpDIKPHbFX0=
-github.com/aws/aws-sdk-go-v2/service/ivs v1.38.3 h1:FZOt6WsqNcvrMmhV7O5mNI3C2gtB+C4zhDhWFzhuU2Y=
-github.com/aws/aws-sdk-go-v2/service/ivs v1.38.3/go.mod h1:0zbldZ1SfuX7fwhgekjM+1NzQcZFhmrAJMPUNxFt0Io=
-github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.7 h1:Hq2NuyfmSoy6jl4+5BJ4EiDAeGK7K4bTL/wAFQysLO0=
-github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.7/go.mod h1:BfAd5zUwQ9ZLXHkl+jFhUZjFBzWi/CTu8+ohGhYgPLs=
+github.com/aws/aws-sdk-go-v2/service/ivs v1.38.4 h1:kYiu1R7F7r/5okvvaODTeuhR+RY77O4PtxqTtb7cg5I=
+github.com/aws/aws-sdk-go-v2/service/ivs v1.38.4/go.mod h1:0zbldZ1SfuX7fwhgekjM+1NzQcZFhmrAJMPUNxFt0Io=
+github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.8 h1:T5Ty29/5xBlhkUBUcZZTNwaGECLbo7NrIWqqI4xtTKU=
+github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.8/go.mod h1:BfAd5zUwQ9ZLXHkl+jFhUZjFBzWi/CTu8+ohGhYgPLs=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.36.0 h1:fB7srMp2lJOMewS2j3s+2r42Pnzy1SfaQgUfkuxaUjM=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.36.0/go.mod h1:98CTuDLE8H42YdqQf5yrRukrda+y7ff0apdsFoecYNU=
 github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.19.6 h1:zgSH+dEU9dsy0fgodQpGAeNONZrBuUu/Q3C5Eyhj9hE=
@@ -416,8 +416,8 @@ github.com/aws/aws-sdk-go-v2/service/redshift v1.46.8 h1:UBqd0JhsXpCDUf/7ulfzYTx
 github.com/aws/aws-sdk-go-v2/service/redshift v1.46.8/go.mod h1:UdcfC9kA4bn3cdUdFYVCeXZcoPka6WNzbYyRAX/Vpy0=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.28.2 h1:oNarSIarQfMAZHeUhD2JOkdEpPfUFfoPKmb1GBK17Kc=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.28.2/go.mod h1:9HLbgBikxAqW0V3Q8eQMQvoW1XRq0J7TjqYe8Lpiwx4=
-github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.4 h1:RHyWeAgzmY1s3dx7Up+YsfHykKxl/D+7KcTers3AnBY=
-github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.4/go.mod h1:ZXoTEWC4VFDJWtZ/4QuHyNQgWDHQPQGfze+aydxWauQ=
+github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.5 h1:1ZQcTGRd0Vc5Bszy6m7XBn2LqOWv+y3k9dd0bfCiS6o=
+github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.5/go.mod h1:ZXoTEWC4VFDJWtZ/4QuHyNQgWDHQPQGfze+aydxWauQ=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.43.5 h1:GmkF6zB25oCH/hCTF8V0D/s8ITE0K0sPStSFC+jdKpI=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.43.5/go.mod h1:yG6PPqzjojOm+Sn/cnHMTP+j7Kx15cLhREpxqFUYCDU=
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.24.3 h1:w6bYHlrjCeixjigkd2x0upNeuQzhTNTBMa2rVNMmy4I=
