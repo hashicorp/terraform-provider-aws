@@ -8,12 +8,15 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -50,9 +53,10 @@ func resourcePhoneNumber() *schema.Resource {
 				Default:  false,
 			},
 			"iso_country_code": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Z]{2}`), "must be in ISO 3166-1 alpha-2 format"),
 			},
 			"message_type": {
 				Type:             schema.TypeString,
@@ -96,9 +100,12 @@ func resourcePhoneNumber() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"two_way_channel_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 				RequiredWith: []string{
 					"two_way_channel_enabled",
 				},
@@ -110,8 +117,6 @@ func resourcePhoneNumber() *schema.Resource {
 					"two_way_channel_arn",
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -123,6 +128,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
 	input := &pinpointsmsvoicev2.RequestPhoneNumberInput{
+		ClientToken:        aws.String(id.UniqueId()),
 		IsoCountryCode:     aws.String(d.Get("iso_country_code").(string)),
 		MessageType:        awstypes.MessageType(d.Get("message_type").(string)),
 		NumberCapabilities: flex.ExpandStringyValueSet[awstypes.NumberCapability](d.Get("number_capabilities").(*schema.Set)),

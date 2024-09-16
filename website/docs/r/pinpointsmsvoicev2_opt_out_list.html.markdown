@@ -3,16 +3,14 @@ subcategory: "End User Messaging SMS"
 layout: "aws"
 page_title: "AWS: aws_pinpointsmsvoicev2_opt_out_list"
 description: |-
-  Terraform resource for managing an AWS Pinpoint SMS Voice V2 Opt Out List.
+  Manages an AWS End User Messaging SMS opt-out list.
 ---
 
 # Resource: aws_pinpointsmsvoicev2_opt_out_list
 
-Terraform resource for managing an AWS Pinpoint SMS Voice V2 Opt Out List.
+Manages an AWS End User Messaging SMS opt-out list.
 
 ## Example Usage
-
-### Basic Usage
 
 ```terraform
 resource "aws_pinpointsmsvoicev2_opt_out_list" "example" {
@@ -22,20 +20,31 @@ resource "aws_pinpointsmsvoicev2_opt_out_list" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the opt-out list.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the opt-out list.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Pinpoint SMS Voice V2 opt-out list can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import opt-out lists using the `name`. For example:
 
+```terraform
+import {
+  to = aws_pinpointsmsvoicev2_opt_out_list.example
+  id = "example-opt-out-list"
+}
 ```
-$ terraform import aws_pinpointsmsvoicev2_opt_out_list.example example-opt-out-list
+
+Using `terraform import`, import opt-out lists using the `name`. For example:
+
+```console
+% terraform import aws_pinpointsmsvoicev2_opt_out_list.example example-opt-out-list
 ```
