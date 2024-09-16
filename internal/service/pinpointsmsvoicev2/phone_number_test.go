@@ -231,7 +231,7 @@ func testAccCheckPhoneNumberDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			return fmt.Errorf("End User Messaging Phone Number %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging SMS Phone Number %s still exists", rs.Primary.ID)
 		}
 
 		return nil

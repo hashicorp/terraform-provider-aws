@@ -163,7 +163,7 @@ func testAccCheckOptOutListDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("End User Messaging Opt-out List %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging SMS Opt-out List %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -66,7 +66,7 @@ func resourceOptOutListCreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateOptOutList(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating End User Messaging Opt-out List (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating End User Messaging SMS Opt-out List (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.OptOutListName))
@@ -81,13 +81,13 @@ func resourceOptOutListRead(ctx context.Context, d *schema.ResourceData, meta in
 	out, err := findOptOutListByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] End User Messaging Opt-out List (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging SMS Opt-out List (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading End User Messaging Opt-out List (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging SMS Opt-out List (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.OptOutListArn)
@@ -108,7 +108,7 @@ func resourceOptOutListDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
-	log.Printf("[INFO] Deleting End User Messaging Opt-out List: %s", d.Id())
+	log.Printf("[INFO] Deleting End User Messaging SMS Opt-out List: %s", d.Id())
 	_, err := conn.DeleteOptOutList(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
 		OptOutListName: aws.String(d.Id()),
 	})
@@ -118,7 +118,7 @@ func resourceOptOutListDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging Opt-out List (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging SMS Opt-out List (%s): %s", d.Id(), err)
 	}
 
 	return diags

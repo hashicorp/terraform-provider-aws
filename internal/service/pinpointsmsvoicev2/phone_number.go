@@ -145,13 +145,13 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.RequestPhoneNumber(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "requesting End User Messaging Phone Number: %s", err)
+		return sdkdiag.AppendErrorf(diags, "requesting End User Messaging SMS Phone Number: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.PhoneNumberId))
 
 	if _, err := waitPhoneNumberActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging Phone Number (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging SMS Phone Number (%s) create: %s", d.Id(), err)
 	}
 
 	if sdkv2.HasNonZeroValues(d, "self_managed_opt_outs_enabled", "two_way_channel_arn", "two_way_channel_enabled") {
@@ -174,11 +174,11 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdatePhoneNumber(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating End User Messaging Phone Number (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating End User Messaging SMS Phone Number (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitPhoneNumberActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging Phone Number (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging SMS Phone Number (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -192,13 +192,13 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := findPhoneNumberByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] End User Messaging Phone Number (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging SMS Phone Number (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading End User Messaging Phone Number (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging SMS Phone Number (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.PhoneNumberArn)
@@ -249,11 +249,11 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdatePhoneNumber(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating End User Messaging Phone Number (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating End User Messaging SMS Phone Number (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitPhoneNumberActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging Phone Number (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging SMS Phone Number (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -264,7 +264,7 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
 
-	log.Printf("[INFO] Deleting End User Messaging Phone Number: %s", d.Id())
+	log.Printf("[INFO] Deleting End User Messaging SMS Phone Number: %s", d.Id())
 	_, err := conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
 		PhoneNumberId: aws.String(d.Id()),
 	})
@@ -274,11 +274,11 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "releasing End User Messaging Phone Number (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "releasing End User Messaging SMS Phone Number (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitPhoneNumberDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging Phone Number (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for End User Messaging SMS Phone Number (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
