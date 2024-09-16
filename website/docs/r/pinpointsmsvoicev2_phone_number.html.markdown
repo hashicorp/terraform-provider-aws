@@ -1,5 +1,5 @@
 ---
-subcategory: "Pinpoint SMS and Voice v2"
+subcategory: "End User Messaging SMS"
 layout: "aws"
 page_title: "AWS: aws_pinpointsmsvoicev2_phone_number"
 description: |-

@@ -6820,7 +6820,7 @@ service "pinpointsmsvoicev2" {
 
   names {
     provider_name_upper = "PinpointSMSVoiceV2"
-    human_friendly      = "Pinpoint SMS and Voice v2"
+    human_friendly      = "End User Messaging SMS"
   }
 
   client {
@@ -6837,7 +6837,7 @@ service "pinpointsmsvoicev2" {
 
   provider_package_correct = "pinpointsmsvoicev2"
   doc_prefix               = ["pinpointsmsvoicev2_"]
-  brand                    = "Amazon"
+  brand                    = "AWS"
 }
 
 service "pipes" {

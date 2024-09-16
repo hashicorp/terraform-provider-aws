@@ -171,7 +171,7 @@ val services = mapOf(
     "pcaconnectorad" to ServiceSpec("Private CA Connector for Active Directory"),
     "pcs" to ServiceSpec("Parallel Computing Service"),
     "pinpoint" to ServiceSpec("Pinpoint"),
-    "pinpointsmsvoicev2" to ServiceSpec("Pinpoint SMS and Voice v2"),
+    "pinpointsmsvoicev2" to ServiceSpec("End User Messaging SMS"),
     "pipes" to ServiceSpec("EventBridge Pipes"),
     "polly" to ServiceSpec("Polly"),
     "pricing" to ServiceSpec("Pricing Calculator", regionOverride = "us-east-1"),
