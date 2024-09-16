@@ -240,6 +240,7 @@ provider "aws" {
   <li><code>pcaconnectorad</code></li>
   <li><code>pcs</code></li>
   <li><code>pinpoint</code></li>
+  <li><code>pinpointsmsvoicev2</code></li>
   <li><code>pipes</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
