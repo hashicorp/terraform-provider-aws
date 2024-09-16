@@ -32,6 +32,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newFoundationModelsDataSource,
 			Name:    "Foundation Models",
 		},
+		{
+			Factory: newInferenceProfilesDataSource,
+			Name:    "Inference Profiles",
+		},
 	}
 }
 
