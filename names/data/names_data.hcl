@@ -6561,8 +6561,7 @@ service "pinpointsmsvoicev2" {
   }
 
   sdk {
-    id             = "Pinpoint SMS Voice v2"
-    client_version = [2]
+    id = "Pinpoint SMS Voice v2"
   }
 
   names {
