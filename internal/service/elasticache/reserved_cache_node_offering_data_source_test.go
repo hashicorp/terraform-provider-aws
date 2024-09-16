@@ -22,7 +22,7 @@ func TestAccElastiCacheReservedNodeOffering_basic(t *testing.T) {
 				Config: testAccReservedNodeOfferingConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cache_node_type", "cache.t4g.small"),
-					resource.TestCheckResourceAttr(dataSourceName, "duration", "31536000"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDuration, "31536000"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "fixed_price"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "offering_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "offering_type", "No Upfront"),

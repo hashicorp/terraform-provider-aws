@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,9 +38,9 @@ func TestAccElastiCacheReservedCacheNode_basic(t *testing.T) {
 				Config: testAccReservedInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`reserved-instance:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`reserved-instance:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cache_node_type", resourceName, "cache_node_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "duration", resourceName, "duration"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
 					resource.TestCheckResourceAttr(resourceName, "cache_node_count", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "offering_id"),
@@ -48,8 +48,8 @@ func TestAccElastiCacheReservedCacheNode_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_description", resourceName, "product_description"),
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_id", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttrSet(resourceName, "usage_price"),
 				),
 			},

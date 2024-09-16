@@ -27,7 +27,7 @@ func DataSourceReservedCacheNodeOffering() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -66,7 +66,7 @@ func dataSourceReservedCacheNodeOfferingRead(ctx context.Context, d *schema.Reso
 
 	input := elasticache.DescribeReservedCacheNodesOfferingsInput{
 		CacheNodeType:      aws.String(d.Get("cache_node_type").(string)),
-		Duration:           aws.String(fmt.Sprint(d.Get("duration").(int))),
+		Duration:           aws.String(fmt.Sprint(d.Get(names.AttrDuration).(int))),
 		OfferingType:       aws.String(d.Get("offering_type").(string)),
 		ProductDescription: aws.String(d.Get("product_description").(string)),
 	}
@@ -88,7 +88,7 @@ func dataSourceReservedCacheNodeOfferingRead(ctx context.Context, d *schema.Reso
 
 	d.SetId(aws.ToString(offering.ReservedCacheNodesOfferingId))
 	d.Set("cache_node_type", offering.CacheNodeType)
-	d.Set("duration", offering.Duration)
+	d.Set(names.AttrDuration, offering.Duration)
 	d.Set("fixed_price", offering.FixedPrice)
 	d.Set("offering_type", offering.OfferingType)
 	d.Set("product_description", offering.ProductDescription)

@@ -43,7 +43,7 @@ func ResourceReservedCacheNode() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func ResourceReservedCacheNode() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -100,11 +100,11 @@ func ResourceReservedCacheNode() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,8 +112,8 @@ func ResourceReservedCacheNode() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -121,6 +121,8 @@ func ResourceReservedCacheNode() *schema.Resource {
 }
 
 func resourceReservedCacheNodeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	input := elasticache.PurchaseReservedCacheNodesOfferingInput{
@@ -138,19 +140,21 @@ func resourceReservedCacheNodeCreate(ctx context.Context, d *schema.ResourceData
 
 	resp, err := conn.PurchaseReservedCacheNodesOffering(ctx, &input)
 	if err != nil {
-		return create.DiagError(names.ElastiCache, create.ErrActionCreating, ResNameReservedCacheNode, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
+		return create.AppendDiagError(diags, names.ElastiCache, create.ErrActionCreating, ResNameReservedCacheNode, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
 	}
 
 	d.SetId(aws.ToString(resp.ReservedCacheNode.ReservedCacheNodeId))
 
 	if err := waitReservedCacheNodeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.ElastiCache, create.ErrActionWaitingForCreation, ResNameReservedCacheNode, d.Id(), err)
+		return create.AppendDiagError(diags, names.ElastiCache, create.ErrActionWaitingForCreation, ResNameReservedCacheNode, d.Id(), err)
 	}
 
-	return resourceReservedCacheNodeRead(ctx, d, meta)
+	return append(diags, resourceReservedCacheNodeRead(ctx, d, meta)...)
 }
 
 func resourceReservedCacheNodeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	reservation, err := findReservedCacheNodeByID(ctx, conn, d.Id())
@@ -158,16 +162,16 @@ func resourceReservedCacheNodeRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.ElastiCache, create.ErrActionReading, ResNameReservedCacheNode, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ElastiCache, create.ErrActionReading, ResNameReservedCacheNode, d.Id(), err)
+		return create.AppendDiagError(diags, names.ElastiCache, create.ErrActionReading, ResNameReservedCacheNode, d.Id(), err)
 	}
 
-	d.Set("arn", reservation.ReservationARN)
+	d.Set(names.AttrARN, reservation.ReservationARN)
 	d.Set("cache_node_type", reservation.CacheNodeType)
-	d.Set("duration", reservation.Duration)
+	d.Set(names.AttrDuration, reservation.Duration)
 	d.Set("fixed_price", reservation.FixedPrice)
 	d.Set("cache_node_count", reservation.CacheNodeCount)
 	d.Set("offering_id", reservation.ReservedCacheNodesOfferingId)
@@ -175,11 +179,11 @@ func resourceReservedCacheNodeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("product_description", reservation.ProductDescription)
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
 	d.Set("reservation_id", reservation.ReservedCacheNodeId)
-	d.Set("start_time", (reservation.StartTime).Format(time.RFC3339))
-	d.Set("state", reservation.State)
+	d.Set(names.AttrStartTime, (reservation.StartTime).Format(time.RFC3339))
+	d.Set(names.AttrState, reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
-	return nil
+	return diags
 }
 
 func resourceReservedCacheNodeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -191,9 +195,11 @@ func resourceReservedCacheNodeUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceReservedCacheNodeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	log.Printf("[DEBUG] %s %s cannot be deleted. Removing from state.: %s", names.ElastiCache, ResNameReservedCacheNode, d.Id())
 
-	return nil
+	return diags
 }
 
 func flattenRecurringCharges(recurringCharges []awstypes.RecurringCharge) []any {
