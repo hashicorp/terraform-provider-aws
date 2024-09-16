@@ -145,7 +145,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.RequestPhoneNumber(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating End User Messaging Phone Number: %s", err)
+		return sdkdiag.AppendErrorf(diags, "requesting End User Messaging Phone Number: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.PhoneNumberId))
@@ -274,7 +274,7 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging Phone Number (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "releasing End User Messaging Phone Number (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitPhoneNumberDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {

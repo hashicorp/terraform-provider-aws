@@ -45,7 +45,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.StringExact("US")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_type"), knownvalue.StringExact("TRANSACTIONAL")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_type"), knownvalue.StringExact("TOLL_FREE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_type"), knownvalue.StringExact("SIMULATOR")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("SMS"),
@@ -81,15 +81,15 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName),
+				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.StringExact("US")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_type"), knownvalue.StringExact("TRANSACTIONAL")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_type"), knownvalue.StringExact("TOLL_FREE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_type"), knownvalue.StringExact("SIMULATOR")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_out_list_name"), knownvalue.StringExact(optOutListName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("self_managed_opt_outs_enabled"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("two_way_channel_enabled"), knownvalue.Bool(true)),
@@ -104,6 +104,26 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.StringExact("US")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_type"), knownvalue.StringExact("TRANSACTIONAL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_type"), knownvalue.StringExact("SIMULATOR")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_out_list_name"), knownvalue.StringExact(optOutListName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("self_managed_opt_outs_enabled"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("two_way_channel_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("SMS"),
+						knownvalue.StringExact("VOICE"),
+					})),
+				},
 			},
 		},
 	})
@@ -259,7 +279,7 @@ const testAccPhoneNumberConfig_basic = `
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code = "US"
   message_type     = "TRANSACTIONAL"
-  number_type      = "TOLL_FREE"
+  number_type      = "SIMULATOR"
 
   number_capabilities = [
     "SMS"
@@ -267,13 +287,13 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 }
 `
 
-func testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName string) string {
+func testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName string, deletionProtectionEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
-  deletion_protection_enabled   = false
+  deletion_protection_enabled   = %[4]t
   iso_country_code              = "US"
   message_type                  = "TRANSACTIONAL"
-  number_type                   = "TOLL_FREE"
+  number_type                   = "SIMULATOR"
   opt_out_list_name             = aws_pinpointsmsvoicev2_opt_out_list.test.name
   self_managed_opt_outs_enabled = false
   two_way_channel_arn           = aws_sns_topic.test.arn
@@ -283,10 +303,6 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
     "SMS",
     "VOICE",
   ]
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_sns_topic" "test" {
@@ -296,7 +312,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_pinpointsmsvoicev2_opt_out_list" "test" {
   name = %[3]q
 }
-`, phoneNumberName, snsTopicName, optOutListName)
+`, phoneNumberName, snsTopicName, optOutListName, deletionProtectionEnabled)
 }
 
 func testAccPhoneNumberConfig_tags1(tagKey1, tagValue1 string) string {
@@ -304,7 +320,7 @@ func testAccPhoneNumberConfig_tags1(tagKey1, tagValue1 string) string {
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code = "US"
   message_type     = "TRANSACTIONAL"
-  number_type      = "TOLL_FREE"
+  number_type      = "SIMULATOR"
 
   number_capabilities = [
     "SMS"
@@ -322,7 +338,7 @@ func testAccPhoneNumberConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 strin
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code = "US"
   message_type     = "TRANSACTIONAL"
-  number_type      = "TOLL_FREE"
+  number_type      = "SIMULATOR"
 
   number_capabilities = [
     "SMS"
