@@ -132,12 +132,10 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	const (
 		timeout := 10 * time.Second
 	)
+	
+	// Allow for tags to propagate so ABAC isn't blocked
 	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, timeout, func() (interface{}, error) {
-		updateDiags := resourceClusterParameterGroupUpdate(ctx, d, meta)
-		if len(updateDiags) > 0 {
-			return nil, errors.New("error in update")
-		}
-		return nil, nil
+		return resourceClusterParameterGroupUpdate(ctx, d, meta)
 	})
 
 	if err != nil {
