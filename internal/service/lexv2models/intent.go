@@ -257,7 +257,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 	slotValueOverrideLNB := schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotValueOverride](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required: true,
 				},
@@ -577,7 +577,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[PromptAttemptsType](),

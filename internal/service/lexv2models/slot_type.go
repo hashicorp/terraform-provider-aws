@@ -164,14 +164,11 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"slot_type_values": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValues](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"slot_type_value": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValue](ctx),
+						"sample_value": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[SampleValue](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrValue: schema.StringAttribute{
@@ -211,7 +208,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[AdvancedRecognitionSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"audio_recognition_setting": schema.StringAttribute{
+									"audio_recognition_strategy": schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.AudioRecognitionStrategy](),
@@ -481,17 +478,17 @@ type ExternalSourceSetting struct {
 	GrammarSlotTypeSetting fwtypes.ListNestedObjectValueOf[GrammarSlotTypeSetting] `tfsdk:"grammar_slot_type_setting"`
 }
 
-type SlotTypeValue struct {
+type SampleValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
 type SlotTypeValues struct {
-	SlotTypeValues fwtypes.ListNestedObjectValueOf[SlotTypeValue] `tfsdk:"slot_type_values"`
-	Synonyms       fwtypes.ListNestedObjectValueOf[SlotTypeValue] `tfsdk:"synonyms"`
+	SampleValue fwtypes.ListNestedObjectValueOf[SampleValue] `tfsdk:"sample_value"`
+	Synonyms    fwtypes.ListNestedObjectValueOf[SampleValue] `tfsdk:"synonyms"`
 }
 
 type AdvancedRecognitionSetting struct {
-	AudioRecognitionSetting types.String `tfsdk:"audio_recognition_setting"`
+	AudioRecognitionStrategy types.String `tfsdk:"audio_recognition_strategy"`
 }
 
 type RegexFilter struct {

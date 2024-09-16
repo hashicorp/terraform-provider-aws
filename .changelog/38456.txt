@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `dashboard_endpoint_v2`, `domain_endpoint_v2_hosted_zone_id`, and `endpoint_v2` attributes
+```
+
+```release-note:enhancement
+data-source/aws_opensearch_domain: Add `dashboard_endpoint_v2`, `domain_endpoint_v2_hosted_zone_id`, and `endpoint_v2` attributes
+```

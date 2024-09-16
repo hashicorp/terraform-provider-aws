@@ -208,6 +208,95 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 	})
 }
 
+func TestAccAppAutoScalingTarget_suspendedState(t *testing.T) {
+	ctx := acctest.Context(t)
+	var readTarget awstypes.ScalableTarget
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appautoscaling_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_suspendedState(rName, true, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &readTarget),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccTargetConfig_suspendedStateDefault(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &readTarget),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppAutoScalingTarget_suspendedState_maintainsExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	var readTarget awstypes.ScalableTarget
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appautoscaling_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_suspendedState(rName, false, false, true),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+			},
+			{
+				Config: testAccTargetConfig_sansSuspendedState(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &readTarget),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccTargetConfig_suspendedState(rName, false, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &readTarget),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccTargetConfig_sansSuspendedState(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &readTarget),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
@@ -672,6 +761,86 @@ resource "aws_appautoscaling_target" "read" {
 }
 
 func testAccTargetConfig_optionalRoleARN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 5
+  write_capacity = 5
+  hash_key       = "TestKey"
+
+  attribute {
+    name = "TestKey"
+    type = "S"
+  }
+}
+
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  min_capacity       = 2
+  max_capacity       = 15
+}
+`, rName)
+}
+
+func testAccTargetConfig_suspendedState(rName string, dsis, dsos, sss bool) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 5
+  write_capacity = 5
+  hash_key       = "TestKey"
+
+  attribute {
+    name = "TestKey"
+    type = "S"
+  }
+}
+
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  min_capacity       = 2
+  max_capacity       = 15
+
+  suspended_state {
+    dynamic_scaling_in_suspended  = %[2]t
+    dynamic_scaling_out_suspended = %[3]t
+    scheduled_scaling_suspended   = %[4]t
+  }
+}
+`, rName, dsis, dsos, sss)
+}
+
+func testAccTargetConfig_suspendedStateDefault(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 5
+  write_capacity = 5
+  hash_key       = "TestKey"
+
+  attribute {
+    name = "TestKey"
+    type = "S"
+  }
+}
+
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  min_capacity       = 2
+  max_capacity       = 15
+
+  suspended_state {}
+}
+`, rName)
+}
+
+func testAccTargetConfig_sansSuspendedState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q

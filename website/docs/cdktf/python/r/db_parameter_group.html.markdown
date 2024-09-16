@@ -108,6 +108,7 @@ This resource supports the following arguments:
 * `family` - (Required, Forces new resource) The family of the DB parameter group.
 * `description` - (Optional, Forces new resource) The description of the DB parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) The DB parameters to apply. See [`parameter` Block](#parameter-block) below for more details. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-parameters.html) after initial creation of the group.
+* `skip_destroy` - (Optional) Set to true if you do not wish the parameter group to be deleted at destroy time, and instead just remove the parameter group from the Terraform state.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `parameter` Block
@@ -153,4 +154,4 @@ Using `terraform import`, import DB Parameter groups using the `name`. For examp
 % terraform import aws_db_parameter_group.rds_pg rds-pg
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fb0e120dfcbc25ae781481677367f082bb97ab3a124759066626f475a08af882 -->
+<!-- cache-key: cdktf-0.20.1 input-fecd03cf04c04ba35d48bec7a2d626ba3d502bd5ce380d13e68e40e0770236e3 -->

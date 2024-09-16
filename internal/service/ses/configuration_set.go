@@ -127,7 +127,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	if v := d.Get("reputation_metrics_enabled"); v.(bool) {
 		input := &ses.UpdateConfigurationSetReputationMetricsEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			Enabled:              aws.ToBool(v.(*bool)),
+			Enabled:              v.(bool),
 		}
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(ctx, input)

@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_memorydb_snapshot", name="Snapshot")
 // @Tags(identifierAttribute="arn")
-func ResourceSnapshot() *schema.Resource {
+func resourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
 		ReadWithoutTimeout:   resourceSnapshotRead,

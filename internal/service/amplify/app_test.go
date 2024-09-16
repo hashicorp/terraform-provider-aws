@@ -45,6 +45,8 @@ func testAccApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, "default_domain", regexache.MustCompile(`\.amplifyapp\.com$`)),
@@ -278,6 +280,43 @@ func testAccApp_BuildSpec(t *testing.T) {
 					testAccCheckAppExists(ctx, resourceName, &app),
 					// build_spec is Computed.
 					resource.TestCheckResourceAttr(resourceName, "build_spec", "version: 0.2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccApp_CacheConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var app types.App
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_amplify_app.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_cacheConfig(rName, "AMPLIFY_MANAGED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppConfig_cacheConfig(rName, "AMPLIFY_MANAGED_NO_COOKIES"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED_NO_COOKIES"),
 				),
 			},
 		},
@@ -725,6 +764,18 @@ resource "aws_amplify_app" "test" {
   build_spec = %[2]q
 }
 `, rName, buildSpec)
+}
+
+func testAccAppConfig_cacheConfig(rName, cacheConfigType string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  cache_config {
+    type = %[2]q
+  }
+}
+`, rName, cacheConfigType)
 }
 
 func testAccAppConfig_customRules(rName string) string {

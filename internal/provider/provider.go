@@ -273,7 +273,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		servicePackageMap[servicePackageName] = sp
 
 		for _, v := range sp.SDKDataSources(ctx) {
-			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
@@ -338,7 +337,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		}
 
 		for _, v := range sp.SDKResources(ctx) {
-			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {
@@ -517,14 +515,37 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRole = expandAssumeRole(ctx, v.([]interface{})[0].(map[string]interface{}))
-		tflog.Info(ctx, "assume_role configuration set", map[string]any{
-			"tf_aws.assume_role.role_arn":        config.AssumeRole.RoleARN,
-			"tf_aws.assume_role.session_name":    config.AssumeRole.SessionName,
-			"tf_aws.assume_role.external_id":     config.AssumeRole.ExternalID,
-			"tf_aws.assume_role.source_identity": config.AssumeRole.SourceIdentity,
-		})
+	if v, ok := d.GetOk("assume_role"); ok {
+		path := cty.GetAttrPath("assume_role")
+		v := v.([]any)
+		if len(v) == 1 {
+			if v[0] == nil {
+				diags = append(diags,
+					errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+				)
+			} else {
+				l := v[0].(map[string]any)
+				if s, ok := l["role_arn"]; !ok || s == "" {
+					diags = append(diags,
+						errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+					)
+				} else {
+					ar, dg := expandAssumeRoles(ctx, path, v)
+					diags = append(diags, dg...)
+					if dg.HasError() {
+						return nil, diags
+					}
+					config.AssumeRole = ar
+				}
+			}
+		} else if len(v) > 1 {
+			ar, dg := expandAssumeRoles(ctx, path, v)
+			diags = append(diags, dg...)
+			if dg.HasError() {
+				return nil, diags
+			}
+			config.AssumeRole = ar
+		}
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -614,7 +635,6 @@ func assumeRoleSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
-		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration": {
@@ -649,7 +669,7 @@ func assumeRoleSchema() *schema.Schema {
 				},
 				"role_arn": {
 					Type:         schema.TypeString,
-					Optional:     true,
+					Optional:     true, // For historical reasons, we allow an empty `assume_role` block
 					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
@@ -712,7 +732,7 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 				},
 				"role_arn": {
 					Type:         schema.TypeString,
-					Optional:     true,
+					Optional:     true, // For historical reasons, we allow an empty `assume_role_with_web_identity` block
 					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
@@ -759,51 +779,74 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRole {
-	if tfMap == nil {
-		return nil
+func expandAssumeRoles(ctx context.Context, path cty.Path, tfList []any) (result []awsbase.AssumeRole, diags diag.Diagnostics) {
+	result = make([]awsbase.AssumeRole, len(tfList))
+
+	for i, v := range tfList {
+		path := path.IndexInt(i)
+		if ar, ok := v.(map[string]any); ok {
+			x, d := expandAssumeRole(ctx, path, ar)
+			diags = append(diags, d...)
+			if d.HasError() {
+				return result, diags
+			}
+			result[i] = x
+			tflog.Info(ctx, "assume_role configuration set", map[string]any{
+				"tf_aws.assume_role.index":           i,
+				"tf_aws.assume_role.role_arn":        result[i].RoleARN,
+				"tf_aws.assume_role.session_name":    result[i].SessionName,
+				"tf_aws.assume_role.external_id":     result[i].ExternalID,
+				"tf_aws.assume_role.source_identity": result[i].SourceIdentity,
+			})
+		} else {
+			return result, append(diags, errs.NewAttributeRequiredError(path, "role_arn"))
+		}
 	}
 
-	assumeRole := awsbase.AssumeRole{}
+	return result, diags
+}
+
+func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (result awsbase.AssumeRole, diags diag.Diagnostics) {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		result.RoleARN = v
+	} else {
+		return result, append(diags, errs.NewAttributeRequiredError(path, "role_arn"))
+	}
 
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+		result.Duration = duration
 	}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
-		assumeRole.ExternalID = v
+		result.ExternalID = v
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
-		assumeRole.Policy = v
+		result.Policy = v
 	}
 
 	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
-		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
-		assumeRole.RoleARN = v
+		result.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["session_name"].(string); ok && v != "" {
-		assumeRole.SessionName = v
+		result.SessionName = v
 	}
 
 	if v, ok := tfMap["source_identity"].(string); ok && v != "" {
-		assumeRole.SourceIdentity = v
+		result.SourceIdentity = v
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		assumeRole.Tags = flex.ExpandStringValueMap(v)
+		result.Tags = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
-		assumeRole.TransitiveTagKeys = flex.ExpandStringValueSet(v)
+		result.TransitiveTagKeys = flex.ExpandStringValueSet(v)
 	}
 
-	return &assumeRole
+	return result, diags
 }
 
 func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {

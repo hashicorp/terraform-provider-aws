@@ -127,7 +127,7 @@ func TestAccEMRSecurityConfiguration_namePrefix(t *testing.T) {
 
 func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_security_configuration" {
@@ -158,7 +158,7 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		_, err := tfemr.FindSecurityConfigurationByName(ctx, conn, rs.Primary.ID)
 

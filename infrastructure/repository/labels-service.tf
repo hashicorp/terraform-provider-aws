@@ -243,6 +243,7 @@ variable "service_labels" {
     "panorama",
     "paymentcryptography",
     "pcaconnectorad",
+    "pcs",
     "personalize",
     "personalizeevents",
     "personalizeruntime",

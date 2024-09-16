@@ -195,6 +195,7 @@ The following arguments are optional:
 * `desired_count` - (Optional) Number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the `DAEMON` scheduling strategy.
 * `enable_ecs_managed_tags` - (Optional) Whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enable_execute_command` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the service.
+* `force_delete` - (Optional) Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the `REPLICA` scheduling strategy.
 * `force_new_deployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `ordered_placement_strategy` and `placement_constraints` updates.
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
@@ -416,4 +417,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fa13cb8c58f9038901ec9965d988c52dd0b7ec9ac1fd9d8c34d94878526b3a45 -->
+<!-- cache-key: cdktf-0.20.1 input-4c611dc807a8b73ce37d4b5ba031e23b59e21b78ece1b39d22e47123bb09e5e0 -->

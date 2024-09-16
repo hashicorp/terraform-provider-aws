@@ -174,7 +174,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 	input := &rds.CreateCustomDBEngineVersionInput{
 		Engine:        aws.String(d.Get(names.AttrEngine).(string)),
 		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
-		Tags:          getTagsInV2(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("database_installation_files_s3_bucket_name"); ok {
@@ -285,7 +285,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("manifest_computed", out.CustomDBEngineVersionManifest)
 	d.Set(names.AttrStatus, out.Status)
 
-	setTagsOutV2(ctx, out.TagList)
+	setTagsOut(ctx, out.TagList)
 
 	return diags
 }

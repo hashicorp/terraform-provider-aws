@@ -25,28 +25,34 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceACL,
+			Factory:  dataSourceACL,
 			TypeName: "aws_memorydb_acl",
+			Name:     "ACL",
 		},
 		{
-			Factory:  DataSourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_memorydb_cluster",
+			Name:     "Cluster",
 		},
 		{
-			Factory:  DataSourceParameterGroup,
+			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
+			Name:     "Parameter Group",
 		},
 		{
-			Factory:  DataSourceSnapshot,
+			Factory:  dataSourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
+			Name:     "Snapshot",
 		},
 		{
-			Factory:  DataSourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
+			Name:     "Subnet Group",
 		},
 		{
-			Factory:  DataSourceUser,
+			Factory:  dataSourceUser,
 			TypeName: "aws_memorydb_user",
+			Name:     "User",
 		},
 	}
 }
@@ -54,7 +60,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceACL,
+			Factory:  resourceACL,
 			TypeName: "aws_memorydb_acl",
 			Name:     "ACL",
 			Tags: &types.ServicePackageResourceTags{
@@ -62,7 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_memorydb_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceParameterGroup,
+			Factory:  resourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -78,7 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSnapshot,
+			Factory:  resourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
 			Name:     "Snapshot",
 			Tags: &types.ServicePackageResourceTags{
@@ -86,7 +92,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  resourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,7 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_memorydb_user",
 			Name:     "User",
 			Tags: &types.ServicePackageResourceTags{

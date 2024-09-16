@@ -10,6 +10,8 @@ permissions:
 env:
   SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
   SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  PR_HTML_URL: ${{ github.event.pull_request.html_url }}
+  PR_TITLE: ${{ github.event.pull_request.title }}
 
 jobs:
   feed:
@@ -31,7 +33,10 @@ jobs:
 
       - name: Pull Request Merged
         if: github.event.pull_request.merged
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          MERGED_BY_URL: ${{ github.event.pull_request.merged_by.html_url }}
+          MERGED_BY_LOGIN: ${{ github.event.pull_request.merged_by.login }}
         with:
           payload: |
             {
@@ -40,7 +45,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":merged: <${{ github.event.pull_request.merged_by.html_url }}|${{ github.event.pull_request.merged_by.login }}> merged <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                    "text": ${{ toJSON(format(':merged: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.PR_HTML_URL, env.PR_TITLE)) }}
                   }
                 }
               ]
@@ -51,7 +56,10 @@ jobs:
           github.event.action == 'opened'
           && steps.community_check.outputs.maintainer == 'true'
           && github.actor != 'dependabot[bot]'
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          PR_AUTHOR_URL: ${{ github.event.pull_request.user.html_url }}
+          PR_AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
         with:
           payload: |
             {
@@ -60,7 +68,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":open: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}> opened <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                    "text": ${{ toJSON(format(':open: <{0}|{1}> opened <{2}|{3}>', env.PR_AUTHOR_URL, env.PR_AUTHOR_LOGIN, env.PR_HTML_URL, env.PR_TITLE)) }}
                   }
                 }
               ]
@@ -70,7 +78,10 @@ jobs:
         if: |
           github.event.action == 'opened'
           && steps.community_check.outputs.partner == 'true'
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          PR_AUTHOR_URL: ${{ github.event.pull_request.user.html_url }}
+          PR_AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
         with:
           payload: |
             {
@@ -79,7 +90,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":open: :aws: contributor <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}> opened <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                    "text": ${{ toJSON(format(':open: :aws: contributor <{0}|{1}> opened <{2}|{3}>', env.PR_AUTHOR_URL, env.PR_AUTHOR_LOGIN, env.PR_HTML_URL, env.PR_TITLE)) }}
                   }
                 }
               ]

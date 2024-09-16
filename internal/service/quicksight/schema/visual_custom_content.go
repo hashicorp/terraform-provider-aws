@@ -4,10 +4,11 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,9 +32,9 @@ func customContentVisualSchema() *schema.Schema {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrContentType: stringSchema(false, validation.StringInSlice(quicksight.CustomContentType_Values(), false)),
+							names.AttrContentType: stringSchema(false, enum.Validate[awstypes.CustomContentType]()),
 							"content_url":         stringSchema(false, validation.StringLenBetween(1, 2048)),
-							"image_scaling":       stringSchema(false, validation.StringInSlice(quicksight.CustomContentImageScalingConfiguration_Values(), false)),
+							"image_scaling":       stringSchema(false, enum.Validate[awstypes.CustomContentImageScalingConfiguration]()),
 						},
 					},
 				},
@@ -44,7 +45,7 @@ func customContentVisualSchema() *schema.Schema {
 	}
 }
 
-func expandCustomContentVisual(tfList []interface{}) *quicksight.CustomContentVisual {
+func expandCustomContentVisual(tfList []interface{}) *awstypes.CustomContentVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -54,31 +55,31 @@ func expandCustomContentVisual(tfList []interface{}) *quicksight.CustomContentVi
 		return nil
 	}
 
-	visual := &quicksight.CustomContentVisual{}
+	apiObject := &awstypes.CustomContentVisual{}
 
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
-		visual.DataSetIdentifier = aws.String(v)
+		apiObject.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
+		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandCustomContentConfiguration(v)
+		apiObject.ChartConfiguration = expandCustomContentConfiguration(v)
 	}
 	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return visual
+	return apiObject
 }
 
-func expandCustomContentConfiguration(tfList []interface{}) *quicksight.CustomContentConfiguration {
+func expandCustomContentConfiguration(tfList []interface{}) *awstypes.CustomContentConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -88,30 +89,31 @@ func expandCustomContentConfiguration(tfList []interface{}) *quicksight.CustomCo
 		return nil
 	}
 
-	config := &quicksight.CustomContentConfiguration{}
+	apiObject := &awstypes.CustomContentConfiguration{}
 
 	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
-		config.ContentType = aws.String(v)
+		apiObject.ContentType = awstypes.CustomContentType(v)
 	}
 	if v, ok := tfMap["content_url"].(string); ok && v != "" {
-		config.ContentUrl = aws.String(v)
+		apiObject.ContentUrl = aws.String(v)
 	}
 	if v, ok := tfMap["image_scaling"].(string); ok && v != "" {
-		config.ImageScaling = aws.String(v)
+		apiObject.ImageScaling = awstypes.CustomContentImageScalingConfiguration(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func flattenCustomContentVisual(apiObject *quicksight.CustomContentVisual) []interface{} {
+func flattenCustomContentVisual(apiObject *awstypes.CustomContentVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"data_set_identifier": aws.StringValue(apiObject.DataSetIdentifier),
-		"visual_id":           aws.StringValue(apiObject.VisualId),
+		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
+		"visual_id":           aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
@@ -128,21 +130,18 @@ func flattenCustomContentVisual(apiObject *quicksight.CustomContentVisual) []int
 	return []interface{}{tfMap}
 }
 
-func flattenCustomContentConfiguration(apiObject *quicksight.CustomContentConfiguration) []interface{} {
+func flattenCustomContentConfiguration(apiObject *awstypes.CustomContentConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.ContentType != nil {
-		tfMap[names.AttrContentType] = aws.StringValue(apiObject.ContentType)
-	}
+
+	tfMap[names.AttrContentType] = apiObject.ContentType
 	if apiObject.ContentUrl != nil {
-		tfMap["content_url"] = aws.StringValue(apiObject.ContentUrl)
+		tfMap["content_url"] = aws.ToString(apiObject.ContentUrl)
 	}
-	if apiObject.ImageScaling != nil {
-		tfMap["image_scaling"] = aws.StringValue(apiObject.ImageScaling)
-	}
+	tfMap["image_scaling"] = apiObject.ImageScaling
 
 	return []interface{}{tfMap}
 }

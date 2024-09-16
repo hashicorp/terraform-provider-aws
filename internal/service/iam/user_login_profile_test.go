@@ -34,7 +34,7 @@ func TestGeneratePassword(t *testing.T) {
 
 	p, err := tfiam.GeneratePassword(6)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err)
 	}
 	if len(p) != 6 {
 		t.Fatalf("expected a 6 character password, got: %q", p)
@@ -42,7 +42,7 @@ func TestGeneratePassword(t *testing.T) {
 
 	p, err = tfiam.GeneratePassword(128)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err)
 	}
 	if len(p) != 128 {
 		t.Fatalf("expected a 128 character password, got: %q", p)
@@ -66,7 +66,6 @@ func TestPasswordPolicyCheck(t *testing.T) {
 		{pass: "ABCD1#", valid: false},
 		{pass: "abCD11#$", valid: true},
 	} {
-		tc := tc
 		t.Run(tc.pass, func(t *testing.T) {
 			t.Parallel()
 

@@ -591,8 +591,8 @@ type applicationResourceModel struct {
 	KmsKeyID       types.String                                     `tfsdk:"kms_key_id"`
 	Name           types.String                                     `tfsdk:"name"`
 	RoleARN        fwtypes.ARN                                      `tfsdk:"role_arn"`
-	Tags           types.Map                                        `tfsdk:"tags"`
-	TagsAll        types.Map                                        `tfsdk:"tags_all"`
+	Tags           tftags.Map                                       `tfsdk:"tags"`
+	TagsAll        tftags.Map                                       `tfsdk:"tags_all"`
 	Timeouts       timeouts.Value                                   `tfsdk:"timeouts"`
 }
 

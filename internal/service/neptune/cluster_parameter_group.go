@@ -9,15 +9,16 @@ import (
 	"log"
 	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -28,7 +29,7 @@ import (
 
 // @SDKResource("aws_neptune_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterParameterGroup() *schema.Resource {
+func resourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
 		ReadWithoutTimeout:   resourceClusterParameterGroupRead,
@@ -77,10 +78,10 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"apply_method": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      neptune.ApplyMethodPendingReboot,
-							ValidateFunc: validation.StringInSlice(neptune.ApplyMethod_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.ApplyMethodPendingReboot,
+							ValidateDiagFunc: enum.Validate[awstypes.ApplyMethod](),
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -103,7 +104,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 
 func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBClusterParameterGroupInput{
@@ -113,7 +114,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		Tags:                        getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
+	_, err := conn.CreateDBClusterParameterGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Parameter Group (%s): %s", name, err)
@@ -132,9 +133,9 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	dbClusterParameterGroup, err := FindDBClusterParameterGroupByName(ctx, conn, d.Id())
+	dbClusterParameterGroup, err := findDBClusterParameterGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
@@ -146,12 +147,12 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupArn)
+	arn := aws.ToString(dbClusterParameterGroup.DBClusterParameterGroupArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, dbClusterParameterGroup.Description)
 	d.Set(names.AttrFamily, dbClusterParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbClusterParameterGroup.DBClusterParameterGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &neptune.DescribeDBClusterParametersInput{
@@ -159,7 +160,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		Source:                      aws.String("user"),
 	}
 
-	parameters, err := findDBClusterParameters(ctx, conn, input, tfslices.PredicateTrue[*neptune.Parameter]())
+	parameters, err := findDBClusterParameters(ctx, conn, input, tfslices.PredicateTrue[awstypes.Parameter]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s) user parameters: %s", d.Id(), err)
@@ -177,9 +178,9 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		Source:                      aws.String("engine-default"),
 	}
 
-	systemParameters, err := findDBClusterParameters(ctx, conn, input, func(v *neptune.Parameter) bool {
-		return slices.ContainsFunc(configParameters, func(p *neptune.Parameter) bool {
-			return aws.StringValue(v.ParameterName) == aws.StringValue(p.ParameterName)
+	systemParameters, err := findDBClusterParameters(ctx, conn, input, func(v awstypes.Parameter) bool {
+		return slices.ContainsFunc(configParameters, func(p awstypes.Parameter) bool {
+			return aws.ToString(v.ParameterName) == aws.ToString(p.ParameterName)
 		})
 	})
 
@@ -198,7 +199,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	if d.HasChange(names.AttrParameter) {
 		o, n := d.GetChange(names.AttrParameter)
@@ -218,14 +219,14 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 
 func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster Parameter Group: %s", d.Id())
-	_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, &neptune.DeleteDBClusterParameterGroupInput{
+	_, err := conn.DeleteDBClusterParameterGroup(ctx, &neptune.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+	if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -236,7 +237,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
+func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Client, name string, parameters []awstypes.Parameter) error {
 	const (
 		clusterParameterGroupMaxParamsBulkEdit = 20
 	)
@@ -247,7 +248,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Ne
 			Parameters:                  chunk,
 		}
 
-		_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
+		_, err := conn.ModifyDBClusterParameterGroup(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("modifying Neptune Cluster Parameter Group (%s): %w", name, err)
@@ -257,7 +258,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Ne
 	return nil
 }
 
-func FindDBClusterParameterGroupByName(ctx context.Context, conn *neptune.Neptune, name string) (*neptune.DBClusterParameterGroup, error) {
+func findDBClusterParameterGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBClusterParameterGroup, error) {
 	input := &neptune.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(name),
 	}
@@ -268,7 +269,7 @@ func FindDBClusterParameterGroupByName(ctx context.Context, conn *neptune.Neptun
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBClusterParameterGroupName) != name {
+	if aws.ToString(output.DBClusterParameterGroupName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -277,73 +278,64 @@ func FindDBClusterParameterGroupByName(ctx context.Context, conn *neptune.Neptun
 	return output, nil
 }
 
-func findDBClusterParameterGroup(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterParameterGroupsInput) (*neptune.DBClusterParameterGroup, error) {
+func findDBClusterParameterGroup(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClusterParameterGroupsInput) (*awstypes.DBClusterParameterGroup, error) {
 	output, err := findDBClusterParameterGroups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBClusterParameterGroups(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterParameterGroupsInput) ([]*neptune.DBClusterParameterGroup, error) {
-	var output []*neptune.DBClusterParameterGroup
+func findDBClusterParameterGroups(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClusterParameterGroupsInput) ([]awstypes.DBClusterParameterGroup, error) {
+	var output []awstypes.DBClusterParameterGroup
 
-	err := conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBClusterParameterGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DBClusterParameterGroups {
-			if v != nil {
-				output = append(output, v)
+		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.DBClusterParameterGroups...)
 	}
 
 	return output, nil
 }
 
-func findDBClusterParameters(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterParametersInput, filter tfslices.Predicate[*neptune.Parameter]) ([]*neptune.Parameter, error) {
-	var output []*neptune.Parameter
+func findDBClusterParameters(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClusterParametersInput, filter tfslices.Predicate[awstypes.Parameter]) ([]awstypes.Parameter, error) {
+	var output []awstypes.Parameter
 
-	err := conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterParametersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBClusterParametersPaginator(conn, input)
 
-		for _, v := range page.Parameters {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.Parameters {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

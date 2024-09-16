@@ -18,12 +18,15 @@ func SkipSweepError(err error) bool {
 		return dnsErr.IsNotFound
 	}
 
-	// Example (GovCloud): AccessDeniedException: Feature is not accessible
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Feature is not accessible") {
+	// Example: AccessDenied: The operation ListQueryLoggingConfigs is not available for the current AWS account ...
+	if tfawserr.ErrMessageContains(err, "AccessDenied", "is not available for the current AWS account") {
 		return true
 	}
-	// Example (GovCloud): AccessDeniedException: Unable to determine service/operation name to be authorized
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+	// GovCloud has endpoints that respond with (no message provided):
+	// AccessDeniedException:
+	// Since acceptance test sweepers are best effort and this response is very common,
+	// we allow bypassing this error globally instead of individual test sweeper fixes.
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Example (GovCloud): AccessGrantsInstanceNotExistsError: Access Grants Instance does not exist
@@ -105,6 +108,10 @@ func SkipSweepError(err error) bool {
 	}
 	// Example (ssmcontacts): ValidationException: Invalid value provided - Account not found for the request
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account not found for the request") {
+		return true
+	}
+	// Example (redshiftserverless): ValidationException: The ServerlessToServerlessRestore operation isn't supported
+	if tfawserr.ErrMessageContains(err, "ValidationException", "operation isn't supported") {
 		return true
 	}
 	// For example from us-west-2 SageMaker device fleet

@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_memorydb_snapshot")
-func DataSourceSnapshot() *schema.Resource {
+// @SDKDataSource("aws_memorydb_snapshot", name="Snapshot")
+func dataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 

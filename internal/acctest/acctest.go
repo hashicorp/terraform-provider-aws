@@ -35,6 +35,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
@@ -43,8 +44,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -54,6 +55,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -552,16 +554,19 @@ func MatchResourceAttrGlobalHostname(resourceName, attributeName, serviceName st
 	}
 }
 
+func globalARNValue(arnService, arnResource string) string {
+	return arn.ARN{
+		AccountID: AccountID(),
+		Partition: Partition(),
+		Resource:  arnResource,
+		Service:   arnService,
+	}.String()
+}
+
 // CheckResourceAttrGlobalARN ensures the Terraform state exactly matches a formatted ARN without region
 func CheckResourceAttrGlobalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := arn.ARN{
-			AccountID: AccountID(),
-			Partition: Partition(),
-			Resource:  arnResource,
-			Service:   arnService,
-		}.String()
-		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+		return resource.TestCheckResourceAttr(resourceName, attributeName, globalARNValue(arnService, arnResource))(s)
 	}
 }
 
@@ -673,6 +678,16 @@ func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestC
 		if vNormal != expectedNormal {
 			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", n, key, expectedJSON, value)
 		}
+		return nil
+	})
+}
+
+func CheckResourceAttrJSONNoDiff(n, key, expectedJSON string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		if diff := jsoncmp.Diff(expectedJSON, value); diff != "" {
+			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+
 		return nil
 	})
 }
@@ -1353,10 +1368,10 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).OutpostsClient(ctx)
 	input := &outposts.ListOutpostsInput{}
 
-	output, err := conn.ListOutpostsWithContext(ctx, input)
+	output, err := conn.ListOutposts(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1821,31 +1836,31 @@ func PreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "AccessDeniedException") || tfawserr_sdkv2.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Ignore missing API endpoints
-	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "RequestError", "send request failed") || tfawserr_sdkv2.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "UnknownOperationException") || tfawserr_sdkv2.ErrCodeEquals(err, "UnknownOperationException") {
 		return true
 	}
-	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "UnsupportedOperation") || tfawserr_sdkv2.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidInputException", "Unknown operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "is not valid") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "is not valid") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
 	// ignore when not authorized to call API from account
-	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "ForbiddenException") || tfawserr_sdkv2.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
 	// Ignore missing API endpoints
@@ -2718,7 +2733,6 @@ func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d
 	t.Helper()
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tc(t)
 			time.Sleep(d)
@@ -2731,7 +2745,6 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*t
 	t.Helper()
 
 	for group, m := range testCases {
-		m := m
 		t.Run(group, func(t *testing.T) {
 			RunSerialTests1Level(t, m, d)
 		})
@@ -2743,9 +2756,7 @@ func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore,
 	t.Helper()
 
 	for group, m := range testCases {
-		m := m
 		for name, tc := range m {
-			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
 				t.Cleanup(func() {
 					if os.Getenv(resource.EnvTfAcc) != "" {

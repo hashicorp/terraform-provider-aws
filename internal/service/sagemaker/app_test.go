@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +21,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func testAccDecodeAppID(t *testing.T) {
+	t.Parallel()
+
+	appTypes := map[string]awstypes.AppType{
+		"jupyterserver":    awstypes.AppTypeJupyterServer,
+		"kernelgateway":    awstypes.AppTypeKernelGateway,
+		"detailedprofiler": awstypes.AppTypeDetailedProfiler,
+		"tensorboard":      awstypes.AppTypeTensorBoard,
+		"codeeditor":       awstypes.AppTypeCodeEditor,
+		"jupyterlab":       awstypes.AppTypeJupyterLab,
+		"rstudioserverpro": awstypes.AppTypeRStudioServerPro,
+		"rsessiongateway":  awstypes.AppTypeRSessionGateway,
+		"canvas":           awstypes.AppTypeCanvas,
+	}
+
+	arn := arn.ARN{
+		AccountID: "012345678912",
+		Partition: acctest.Partition(),
+		Region:    names.EUWest2RegionID,
+		Resource:  "app/domain-id/user-profile-name/%s/app-name",
+		Service:   names.SageMaker,
+	}.String()
+
+	for key, value := range appTypes {
+		_, _, appType, _, err := tfsagemaker.DecodeAppID(fmt.Sprintf(arn, key))
+
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+
+		if string(value) != appType {
+			t.Errorf("Got: %s, want: %s", appType, string(value))
+		}
+	}
+}
 
 func testAccApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -244,7 +282,7 @@ func testAccApp_disappears(t *testing.T) {
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_app" {
@@ -291,7 +329,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *sagemaker.DescribeA
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		appType := rs.Primary.Attributes["app_type"]

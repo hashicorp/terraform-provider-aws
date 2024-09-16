@@ -63,6 +63,7 @@ This resource supports the following arguments:
 * `space_storage_settings` - (Optional) The storage settings for a private space. See [Space Storage Settings](#space_storage_settings) below.
 * `studio_web_portal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensor_board_app_settings) below.
+* `studio_web_portal_settings` - (Optional) The Studio Web Portal settings. See [`studio_web_portal_settings` Block](#studio_web_portal_settings-block) below.
 
 #### space_storage_settings
 
@@ -124,6 +125,11 @@ This resource supports the following arguments:
 * `access_status` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
 * `user_group` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
 
+#### `studio_web_portal_settings` Block
+
+* `hidden_app_types` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
+* `hidden_ml_tools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
+
 ##### code_repository
 
 * `repository_url` - (Optional) The URL of the Git repository.
@@ -145,7 +151,6 @@ This resource supports the following arguments:
 #### canvas_app_settings
 
 * `direct_deploy_settings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct_deploy_settings) below.
-* `generative_ai_settings` - (Optional) The generative AI settings for the SageMaker Canvas application. See [Generative AI Settings](#generative_ai_settings) below.
 * `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity_provider_oauth_settings) below.
 * `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model_register_settings) below.
@@ -160,11 +165,7 @@ This resource supports the following arguments:
 
 ##### direct_deploy_settings
 
-* `status` - (Optional) Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
-
-##### generative_ai_settings
-
-* `amazon_bedrock_role_arn` - (Optional) The ARN of an Amazon Web Services IAM role that allows fine-tuning of large language models (LLMs) in Amazon Bedrock. The IAM role should have Amazon S3 read and write permissions, as well as a trust relationship that establishes bedrock.amazonaws.com as a service principal.
+* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### kendra_settings
 
@@ -238,4 +239,4 @@ Using `terraform import`, import SageMaker User Profiles using the `arn`. For ex
 % terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-00a7a86b7587affc3ac29231436801eab67a154a7ae71695f9cb70eb4c202be3 -->
+<!-- cache-key: cdktf-0.20.1 input-847c2d3cef453f38a8526977664f849ef17d38a2b9650665885ccf0b4c7b993c -->

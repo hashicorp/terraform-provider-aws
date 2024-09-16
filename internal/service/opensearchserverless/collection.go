@@ -52,8 +52,8 @@ type resourceCollectionData struct {
 	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
 	Name               types.String   `tfsdk:"name"`
 	StandbyReplicas    types.String   `tfsdk:"standby_replicas"`
-	Tags               types.Map      `tfsdk:"tags"`
-	TagsAll            types.Map      `tfsdk:"tags_all"`
+	Tags               tftags.Map     `tfsdk:"tags"`
+	TagsAll            tftags.Map     `tfsdk:"tags_all"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 	Type               types.String   `tfsdk:"type"`
 }

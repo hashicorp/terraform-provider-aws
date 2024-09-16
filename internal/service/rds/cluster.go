@@ -215,7 +215,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(ClusterExportableLogType_Values(), false),
+					ValidateFunc: validation.StringInSlice(clusterExportableLogType_Values(), false),
 				},
 			},
 			names.AttrEndpoint: {
@@ -657,7 +657,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
@@ -788,7 +788,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			S3Prefix:            aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion: aws.String(tfMap["source_engine_version"].(string)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
@@ -911,7 +911,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -1035,7 +1035,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOkExists(names.AttrAllocatedStorage); ok {
@@ -1375,13 +1375,24 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	setTagsOutV2(ctx, dbc.TagList)
+	setTagsOut(ctx, dbc.TagList)
 
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
+	// There are two ways to enable the HTTP endpoint: new way and old way.
+	// This is the new way for provisioned engine mode (covers provisioned and serverlessv2).
+	// The old way is modifying the DB cluster and setting the EnableHttpEndpoint field (below).
+	// Both need a wait for update so when it's provisioned it will do old (not necessary but does the wait) & new ways, otherwise just old way.
+	if d.HasChange("enable_http_endpoint") && d.Get("engine_mode").(string) == engineModeProvisioned {
+		o, n := d.GetChange("enable_http_endpoint")
+		if err := enableHTTPEndpointProvisioned(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling HTTP endpoint for RDS Cluster (%s): %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChangesExcept(
 		names.AttrAllowMajorVersionUpgrade,
@@ -1452,7 +1463,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableGlobalWriteForwarding = aws.Bool(d.Get("enable_global_write_forwarding").(bool))
 		}
 
-		if d.HasChange("enable_http_endpoint") {
+		// for provisioned and serverlessv2 (also "provisioned"), data api must be enabled using conn.EnableHttpEndpoint() as below
+		if d.HasChange("enable_http_endpoint") && d.Get("engine_mode").(string) != engineModeProvisioned {
 			input.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		}
 
@@ -1749,6 +1761,36 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
+}
+
+func enableHTTPEndpointProvisioned(ctx context.Context, conn *rds.Client, arn string, o, n interface{}) error {
+	if o == nil {
+		return nil
+	}
+
+	if n == nil {
+		return nil
+	}
+
+	if !o.(bool) && n.(bool) {
+		_, err := conn.EnableHttpEndpoint(ctx, &rds.EnableHttpEndpointInput{
+			ResourceArn: aws.String(arn),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if o.(bool) && !n.(bool) {
+		_, err := conn.DisableHttpEndpoint(ctx, &rds.DisableHttpEndpointInput{
+			ResourceArn: aws.String(arn),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func addIAMRoleToCluster(ctx context.Context, conn *rds.Client, clusterID, roleARN string) error {

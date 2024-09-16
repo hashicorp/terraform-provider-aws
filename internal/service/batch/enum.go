@@ -14,3 +14,31 @@ func jobDefinitionStatus_Values() []string {
 		jobDefinitionStatusActive,
 	}
 }
+
+const (
+	imagePullPolicyAlways       = "Always"
+	imagePullPolicyIfNotPresent = "IfNotPresent"
+	imagePullPolicyNever        = "Never"
+)
+
+func imagePullPolicy_Values() []string {
+	return []string{
+		imagePullPolicyAlways,
+		imagePullPolicyIfNotPresent,
+		imagePullPolicyNever,
+	}
+}
+
+const (
+	dnsPolicyDefault                 = "Default"
+	dnsPolicyClusterFirst            = "ClusterFirst"
+	dnsPolicyClusterFirstWithHostNet = "ClusterFirstWithHostNet"
+)
+
+func dnsPolicy_Values() []string {
+	return []string{
+		dnsPolicyDefault,
+		dnsPolicyClusterFirst,
+		dnsPolicyClusterFirstWithHostNet,
+	}
+}

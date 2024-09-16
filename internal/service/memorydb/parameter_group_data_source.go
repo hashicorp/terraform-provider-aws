@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_memorydb_parameter_group")
-func DataSourceParameterGroup() *schema.Resource {
+// @SDKDataSource("aws_memorydb_parameter_group", name="Parameter Group")
+func dataSourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParameterGroupRead,
 

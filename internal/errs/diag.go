@@ -115,6 +115,24 @@ func NewAttributeRequiredWhenError(neededPath, otherPath cty.Path, value string)
 	)
 }
 
+// NewAttributeRequiredWhenError should only be used for apply-time validation, as it replicates
+// the functionality of a `Required` attribute
+func NewAttributeRequiredError(parentPath cty.Path, attrname string) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		parentPath,
+		"Missing required argument",
+		fmt.Sprintf("The argument %q is required, but no definition was found.", attrname),
+	)
+}
+
+// NewAttributeRequiredWillBeError returns a warning diagnostic indicating that the attribute at the given path is required.
+// This is intended to be used for situations where the missing attribute will be an error in a future release.
+func NewAttributeRequiredWillBeError(parentPath cty.Path, attrname string) diag.Diagnostic {
+	return willBeError(
+		NewAttributeRequiredError(parentPath, attrname),
+	)
+}
+
 // NewAttributeConflictsWillBeError returns a warning diagnostic indicating that the attribute at the given path cannot be
 // specified when the attribute at otherPath is set.
 // This is intended to be used for situations where the conflict will become an error in a future release.

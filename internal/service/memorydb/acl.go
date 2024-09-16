@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_memorydb_acl", name="ACL")
 // @Tags(identifierAttribute="arn")
-func ResourceACL() *schema.Resource {
+func resourceACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceACLCreate,
 		ReadWithoutTimeout:   resourceACLRead,

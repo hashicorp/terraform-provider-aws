@@ -83,6 +83,110 @@ func TestAccBedrockAgentAgent_full(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentAgent_singlePrompt(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v awstypes.Agent
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_singlePrompt(rName, "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgent_addPrompt(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v awstypes.Agent
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.0.prompt_configurations.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+			{
+				Config: testAccAgentConfig_singlePrompt(rName, "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.0.prompt_configurations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccAgentConfig_full(rName, "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.0.prompt_configurations.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccAgentConfig_singlePrompt(rName, "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.0.prompt_configurations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentAgent_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -397,6 +501,43 @@ resource "aws_bedrockagent_agent" "test" {
         prompt_state         = "ENABLED"
         prompt_type          = "ORCHESTRATION"
       },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            top_k          = 250
+            top_p          = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "DISABLED"
+        prompt_type          = "POST_PROCESSING"
+      },
+    ]
+  }
+
+}
+`, rName, model, desc))
+}
+
+func testAccAgentConfig_singlePrompt(rName, model, desc string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+  skip_resource_in_use_check  = true
+
+  prompt_override_configuration {
+    override_lambda = null
+    prompt_configurations = [
       {
         base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
         inference_configuration = [

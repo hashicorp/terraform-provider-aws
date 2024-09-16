@@ -5,10 +5,8 @@ package networkmanager
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	networkmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,48 +25,59 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConnection,
+			Factory:  dataSourceConnection,
 			TypeName: "aws_networkmanager_connection",
+			Name:     "Connection",
 		},
 		{
-			Factory:  DataSourceConnections,
+			Factory:  dataSourceConnections,
 			TypeName: "aws_networkmanager_connections",
+			Name:     "Connections",
 		},
 		{
-			Factory:  DataSourceCoreNetworkPolicyDocument,
+			Factory:  dataSourceCoreNetworkPolicyDocument,
 			TypeName: "aws_networkmanager_core_network_policy_document",
+			Name:     "Core Network Policy Document",
 		},
 		{
-			Factory:  DataSourceDevice,
+			Factory:  dataSourceDevice,
 			TypeName: "aws_networkmanager_device",
+			Name:     "Device",
 		},
 		{
-			Factory:  DataSourceDevices,
+			Factory:  dataSourceDevices,
 			TypeName: "aws_networkmanager_devices",
+			Name:     "Devices",
 		},
 		{
-			Factory:  DataSourceGlobalNetwork,
+			Factory:  dataSourceGlobalNetwork,
 			TypeName: "aws_networkmanager_global_network",
+			Name:     "Global Network",
 		},
 		{
-			Factory:  DataSourceGlobalNetworks,
+			Factory:  dataSourceGlobalNetworks,
 			TypeName: "aws_networkmanager_global_networks",
+			Name:     "Global Networks",
 		},
 		{
-			Factory:  DataSourceLink,
+			Factory:  dataSourceLink,
 			TypeName: "aws_networkmanager_link",
+			Name:     "Link",
 		},
 		{
-			Factory:  DataSourceLinks,
+			Factory:  dataSourceLinks,
 			TypeName: "aws_networkmanager_links",
+			Name:     "Links",
 		},
 		{
-			Factory:  DataSourceSite,
+			Factory:  dataSourceSite,
 			TypeName: "aws_networkmanager_site",
+			Name:     "Site",
 		},
 		{
-			Factory:  DataSourceSites,
+			Factory:  dataSourceSites,
 			TypeName: "aws_networkmanager_sites",
+			Name:     "Sites",
 		},
 	}
 }
@@ -76,11 +85,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAttachmentAccepter,
+			Factory:  resourceAttachmentAccepter,
 			TypeName: "aws_networkmanager_attachment_accepter",
+			Name:     "Attachment Accepter",
 		},
 		{
-			Factory:  ResourceConnectAttachment,
+			Factory:  resourceConnectAttachment,
 			TypeName: "aws_networkmanager_connect_attachment",
 			Name:     "Connect Attachment",
 			Tags: &types.ServicePackageResourceTags{
@@ -88,7 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConnectPeer,
+			Factory:  resourceConnectPeer,
 			TypeName: "aws_networkmanager_connect_peer",
 			Name:     "Connect Peer",
 			Tags: &types.ServicePackageResourceTags{
@@ -96,7 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_networkmanager_connection",
 			Name:     "Connection",
 			Tags: &types.ServicePackageResourceTags{
@@ -104,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCoreNetwork,
+			Factory:  resourceCoreNetwork,
 			TypeName: "aws_networkmanager_core_network",
 			Name:     "Core Network",
 			Tags: &types.ServicePackageResourceTags{
@@ -112,15 +122,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCoreNetworkPolicyAttachment,
+			Factory:  resourceCoreNetworkPolicyAttachment,
 			TypeName: "aws_networkmanager_core_network_policy_attachment",
+			Name:     "Core Network Policy Attachment",
 		},
 		{
-			Factory:  ResourceCustomerGatewayAssociation,
+			Factory:  resourceCustomerGatewayAssociation,
 			TypeName: "aws_networkmanager_customer_gateway_association",
+			Name:     "Customer Gateway Association",
 		},
 		{
-			Factory:  ResourceDevice,
+			Factory:  resourceDevice,
 			TypeName: "aws_networkmanager_device",
 			Name:     "Device",
 			Tags: &types.ServicePackageResourceTags{
@@ -128,7 +140,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalNetwork,
+			Factory:  resourceGlobalNetwork,
 			TypeName: "aws_networkmanager_global_network",
 			Name:     "Global Network",
 			Tags: &types.ServicePackageResourceTags{
@@ -136,7 +148,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLink,
+			Factory:  resourceLink,
 			TypeName: "aws_networkmanager_link",
 			Name:     "Link",
 			Tags: &types.ServicePackageResourceTags{
@@ -144,11 +156,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLinkAssociation,
+			Factory:  resourceLinkAssociation,
 			TypeName: "aws_networkmanager_link_association",
+			Name:     "Link Association",
 		},
 		{
-			Factory:  ResourceSite,
+			Factory:  resourceSite,
 			TypeName: "aws_networkmanager_site",
 			Name:     "Site",
 			Tags: &types.ServicePackageResourceTags{
@@ -156,7 +169,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSiteToSiteVPNAttachment,
+			Factory:  resourceSiteToSiteVPNAttachment,
 			TypeName: "aws_networkmanager_site_to_site_vpn_attachment",
 			Name:     "Site To Site VPN Attachment",
 			Tags: &types.ServicePackageResourceTags{
@@ -164,11 +177,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayConnectPeerAssociation,
+			Factory:  resourceTransitGatewayConnectPeerAssociation,
 			TypeName: "aws_networkmanager_transit_gateway_connect_peer_association",
+			Name:     "Transit Gateway Connect Peer Association",
 		},
 		{
-			Factory:  ResourceTransitGatewayPeering,
+			Factory:  resourceTransitGatewayPeering,
 			TypeName: "aws_networkmanager_transit_gateway_peering",
 			Name:     "Transit Gateway Peering",
 			Tags: &types.ServicePackageResourceTags{
@@ -176,11 +190,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayRegistration,
+			Factory:  resourceTransitGatewayRegistration,
 			TypeName: "aws_networkmanager_transit_gateway_registration",
+			Name:     "Transit Gateway Registration",
 		},
 		{
-			Factory:  ResourceTransitGatewayRouteTableAttachment,
+			Factory:  resourceTransitGatewayRouteTableAttachment,
 			TypeName: "aws_networkmanager_transit_gateway_route_table_attachment",
 			Name:     "Transit Gateway Route Table Attachment",
 			Tags: &types.ServicePackageResourceTags{
@@ -188,7 +203,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCAttachment,
+			Factory:  resourceVPCAttachment,
 			TypeName: "aws_networkmanager_vpc_attachment",
 			Name:     "VPC Attachment",
 			Tags: &types.ServicePackageResourceTags{
@@ -202,22 +217,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.NetworkManager
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*networkmanager_sdkv1.NetworkManager, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*networkmanager_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return networkmanager_sdkv1.New(sess.Copy(&cfg)), nil
+	return networkmanager_sdkv2.NewFromConfig(cfg,
+		networkmanager_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

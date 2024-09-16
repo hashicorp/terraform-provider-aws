@@ -197,7 +197,7 @@ An `action` block supports the following arguments:
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. Provider names are listed in the [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
 * `version` - (Required) A string that identifies the action type.
-* `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
+* `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation. Note: The `DetectChanges` parameter (optional, default value is true) in the `configuration` section causes CodePipeline to automatically start your pipeline upon new commits. Please refer to AWS Documentation for more details: https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference-CodestarConnectionSource.html#action-reference-CodestarConnectionSource-config.
 * `input_artifacts` - (Optional) A list of artifact names to be worked on.
 * `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline.
 * `role_arn` - (Optional) The ARN of the IAM service role that will perform the declared action. This is assumed through the roleArn for the pipeline.
@@ -284,4 +284,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-071ecf43335ca92ceee0c2e48e1d18ec59e3738c955fe051ce998af580a98cc9 -->
+<!-- cache-key: cdktf-0.20.1 input-33146aeb6f82e395d952df81565ba762b324c46eb51cf7e6935b24becccc0aea -->
