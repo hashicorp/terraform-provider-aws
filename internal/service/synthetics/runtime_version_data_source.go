@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -61,9 +62,7 @@ func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.Sc
 			"latest": schema.BoolAttribute{
 				Optional: true,
 				Validators: []validator.Bool{
-					boolValueEqualsValidator{
-						Value: true,
-					},
+					fwvalidators.BoolEquals(true),
 					boolvalidator.ExactlyOneOf(path.Expressions{
 						path.MatchRoot("latest"),
 						path.MatchRoot(names.AttrVersion),
@@ -143,7 +142,7 @@ func (d *dataSourceRuntimeVersion) Read(ctx context.Context, req datasource.Read
 	}
 
 	data.ID = flex.StringToFramework(ctx, runtimeVersion.VersionName)
-	resp.Diagnostics.Append(flex.Flatten(ctx, runtimeVersion, &data, flex.WithFieldNamePrefix("{{ .Resource }}"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, runtimeVersion, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -160,26 +159,4 @@ type dataSourceRuntimeVersionModel struct {
 	ReleaseDate     timetypes.RFC3339 `tfsdk:"release_date"`
 	Version         types.String      `tfsdk:"version"`
 	VersionName     types.String      `tfsdk:"version_name"`
-}
-
-type boolValueEqualsValidator struct {
-	Value bool
-}
-
-func (v boolValueEqualsValidator) Description(ctx context.Context) string {
-	return fmt.Sprintf("Value must be equal to %t", v.Value)
-}
-
-func (v boolValueEqualsValidator) MarkdownDescription(ctx context.Context) string {
-	return v.Description(ctx)
-}
-
-func (v boolValueEqualsValidator) ValidateBool(ctx context.Context, req validator.BoolRequest, resp *validator.BoolResponse) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
-	}
-
-	if req.ConfigValue.ValueBool() != v.Value {
-		resp.Diagnostics.AddAttributeError(req.Path, "Invalid Bool Value", fmt.Sprintf("Value must be equal to %t", v.Value))
-	}
 }
