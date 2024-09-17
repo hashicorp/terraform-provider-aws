@@ -179,6 +179,81 @@ func TestAccIAMRolePoliciesExclusive_empty(t *testing.T) {
 	})
 }
 
+// An inline policy removed out of band should be recreated
+func TestAccIAMRolePoliciesExclusive_outOfBandRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var role types.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policies_exclusive.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePoliciesExclusiveConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, roleResourceName, &role),
+					testAccCheckRolePoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyRemoveInlinePolicy(ctx, &role, rName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccRolePoliciesExclusiveConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, roleResourceName, &role),
+					testAccCheckRolePoliciesExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+				),
+			},
+		},
+	})
+}
+
+// An inline policy added out of band should be removed
+func TestAccIAMRolePoliciesExclusive_outOfBandAddition(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var role types.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := rName + "-out-of-band"
+	resourceName := "aws_iam_role_policies_exclusive.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePoliciesExclusiveConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, roleResourceName, &role),
+					testAccCheckRolePoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyAddInlinePolicy(ctx, &role, policyName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccRolePoliciesExclusiveConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, roleResourceName, &role),
+					testAccCheckRolePoliciesExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRolePoliciesExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)

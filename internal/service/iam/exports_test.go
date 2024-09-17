@@ -16,7 +16,6 @@ var (
 	ResourceOpenIDConnectProvider     = resourceOpenIDConnectProvider
 	ResourcePolicy                    = resourcePolicy
 	ResourcePolicyAttachment          = resourcePolicyAttachment
-	ResourceRolePoliciesLock          = newResourceRolePoliciesExclusive
 	ResourceRolePolicy                = resourceRolePolicy
 	ResourceRolePolicyAttachment      = resourceRolePolicyAttachment
 	ResourceSAMLProvider              = resourceSAMLProvider
