@@ -60,7 +60,7 @@ func (d *dataSourceRuntimeVersions) Read(ctx context.Context, req datasource.Rea
 	}
 
 	skipDeprecated := data.SkipDeprecated.ValueBool()
-	out, err := FindRuntimeVersions(ctx, conn)
+	out, err := findRuntimeVersions(ctx, conn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Synthetics, create.ErrActionReading, DSNameRuntimeVersions, "", err),

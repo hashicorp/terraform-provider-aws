@@ -105,7 +105,7 @@ func (d *dataSourceRuntimeVersion) Read(ctx context.Context, req datasource.Read
 	prefix := data.Prefix.ValueString()
 	version := data.Version.ValueString()
 
-	out, err := FindRuntimeVersions(ctx, conn)
+	out, err := findRuntimeVersions(ctx, conn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Synthetics, create.ErrActionReading, DSNameRuntimeVersion, "", err),
