@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -6,93 +9,109 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNameReservedCacheNodeOffering = "Reserved Cache Node Offering"
-)
+// @FrameworkDataSource("aws_elasticache_reserved_cache_node_offering")
+func newDataSourceReservedCacheNodeOffering(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceReservedCacheNodeOffering{}, nil
+}
 
-// @SDKDataSource("aws_elasticache_reserved_cache_node_offering")
-func DataSourceReservedCacheNodeOffering() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceReservedCacheNodeOfferingRead,
-		Schema: map[string]*schema.Schema{
-			"cache_node_type": {
-				Type:     schema.TypeString,
+type dataSourceReservedCacheNodeOffering struct {
+	framework.DataSourceWithConfigure
+}
+
+func (d *dataSourceReservedCacheNodeOffering) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_elasticache_reserved_cache_node_offering"
+}
+
+func (d *dataSourceReservedCacheNodeOffering) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"cache_node_type": schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
+			names.AttrDuration: schema.Int32Attribute{
 				Required: true,
 			},
-			"fixed_price": {
-				Type:     schema.TypeFloat,
+			"fixed_price": schema.Float64Attribute{
 				Computed: true,
 			},
-			"offering_id": {
-				Type:     schema.TypeString,
+			"offering_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"offering_type": {
-				Type:     schema.TypeString,
+			"offering_type": schema.StringAttribute{
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"Light Utilization",
-					"Medium Utilization",
-					"Heavy Utilization",
-					"Partial Upfront",
-					"All Upfront",
-					"No Upfront",
-				}, false),
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						"Light Utilization",
+						"Medium Utilization",
+						"Heavy Utilization",
+						"Partial Upfront",
+						"All Upfront",
+						"No Upfront",
+					),
+				},
 			},
-			"product_description": {
-				Type:     schema.TypeString,
+			"product_description": schema.StringAttribute{
 				Required: true,
 			},
 		},
 	}
 }
 
-func dataSourceReservedCacheNodeOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+// Read is called when the provider must read data source values in order to update state.
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSourceReservedCacheNodeOffering) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceReservedCacheNodeOfferingData
 
-	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-
-	input := elasticache.DescribeReservedCacheNodesOfferingsInput{
-		CacheNodeType:      aws.String(d.Get("cache_node_type").(string)),
-		Duration:           aws.String(fmt.Sprint(d.Get(names.AttrDuration).(int))),
-		OfferingType:       aws.String(d.Get("offering_type").(string)),
-		ProductDescription: aws.String(d.Get("product_description").(string)),
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
+
+	conn := d.Meta().ElastiCacheClient(ctx)
+
+	flexOpt := flex.WithFieldNamePrefix("ReservedCacheNodes")
+
+	var input elasticache.DescribeReservedCacheNodesOfferingsInput
+	response.Diagnostics.Append(flex.Expand(ctx, data, &input, flexOpt)...)
+
+	input.Duration = aws.String(fmt.Sprint(data.Duration.ValueInt32()))
 
 	resp, err := conn.DescribeReservedCacheNodesOfferings(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Reserved Cache Node Offering: %s", err)
+		response.Diagnostics.AddError("reading ElastiCache Reserved Cache Node Offering", err.Error())
+		return
 	}
 
-	if len(resp.ReservedCacheNodesOfferings) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no %s %s found matching criteria; try different search", names.ElastiCache, ResNameReservedCacheNodeOffering)
+	offering, err := tfresource.AssertSingleValueResult(resp.ReservedCacheNodesOfferings)
+	if err != nil {
+		response.Diagnostics.AddError("reading ElastiCache Reserved Cache Node Offering", err.Error())
+		return
 	}
 
-	if len(resp.ReservedCacheNodesOfferings) > 1 {
-		return sdkdiag.AppendErrorf(diags, "More than one %s %s found matching criteria; try different search", names.ElastiCache, ResNameReservedCacheNodeOffering)
+	response.Diagnostics.Append(flex.Flatten(ctx, offering, &data, flexOpt)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	offering := resp.ReservedCacheNodesOfferings[0]
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
 
-	d.SetId(aws.ToString(offering.ReservedCacheNodesOfferingId))
-	d.Set("cache_node_type", offering.CacheNodeType)
-	d.Set(names.AttrDuration, offering.Duration)
-	d.Set("fixed_price", offering.FixedPrice)
-	d.Set("offering_type", offering.OfferingType)
-	d.Set("product_description", offering.ProductDescription)
-	d.Set("offering_id", offering.ReservedCacheNodesOfferingId)
-
-	return diags
+type dataSourceReservedCacheNodeOfferingData struct {
+	CacheNodeType      types.String  `tfsdk:"cache_node_type"`
+	Duration           types.Int32   `tfsdk:"duration" autoflex:"-"`
+	FixedPrice         types.Float64 `tfsdk:"fixed_price"`
+	OfferingID         types.String  `tfsdk:"offering_id"`
+	OfferingType       types.String  `tfsdk:"offering_type"`
+	ProductDescription types.String  `tfsdk:"product_description"`
 }
