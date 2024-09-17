@@ -307,7 +307,7 @@ type resourceConnectionAliasData struct {
 	ConnectionString types.String   `tfsdk:"connection_string"`
 	OwnerAccountId   types.String   `tfsdk:"owner_account_id"`
 	State            types.String   `tfsdk:"state"`
-	Tags             types.Map      `tfsdk:"tags"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
+	Tags             tftags.Map     `tfsdk:"tags"`
+	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }

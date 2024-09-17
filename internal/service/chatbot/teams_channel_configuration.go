@@ -410,8 +410,8 @@ type teamsChannelConfigurationResourceModel struct {
 	IAMRoleARN                types.String                     `tfsdk:"iam_role_arn"`
 	LoggingLevel              fwtypes.StringEnum[loggingLevel] `tfsdk:"logging_level"`
 	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
-	Tags                      types.Map                        `tfsdk:"tags"`
-	TagsAll                   types.Map                        `tfsdk:"tags_all"`
+	Tags                      tftags.Map                       `tfsdk:"tags"`
+	TagsAll                   tftags.Map                       `tfsdk:"tags_all"`
 	TeamID                    types.String                     `tfsdk:"team_id"`
 	TeamName                  types.String                     `tfsdk:"team_name"`
 	TenantID                  types.String                     `tfsdk:"tenant_id"`

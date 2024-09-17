@@ -34,6 +34,9 @@ class MyConvertedCode extends TerraformStack {
     new DbInstanceRoleAssociation(this, "example", {
       dbInstanceIdentifier: Token.asString(awsDbInstanceExample.identifier),
       featureName: "S3_INTEGRATION",
+      lifecycle: {
+        replaceTriggeredBy: [awsDbInstanceExample.id],
+      },
       roleArn: Token.asString(awsIamRoleExample.arn),
     });
   }
@@ -87,4 +90,4 @@ Using `terraform import`, import `aws_db_instance_role_association` using the DB
 % terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ea9099caf40d7a4cade1ea4194ea1b75c0145f79cdeb15a2e5c098eb364ca5d9 -->
+<!-- cache-key: cdktf-0.20.1 input-8bcec7e4e7baacc01bda616551c977b2611d1af2d22e935bdf26957aed7f9ff8 -->

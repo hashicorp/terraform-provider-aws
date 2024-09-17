@@ -1617,6 +1617,12 @@ service/pcaconnectorad:
           - any-glob-to-any-file:
               - 'internal/service/pcaconnectorad/**/*'
               - 'website/**/pcaconnectorad_*'
+service/pcs:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pcs/**/*'
+              - 'website/**/pcs_*'
 service/personalize:
   - any:
       - changed-files:
@@ -1659,6 +1665,12 @@ service/pinpointsmsvoice:
           - any-glob-to-any-file:
               - 'internal/service/pinpointsmsvoice/**/*'
               - 'website/**/pinpointsmsvoice_*'
+service/pinpointsmsvoicev2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pinpointsmsvoicev2/**/*'
+              - 'website/**/pinpointsmsvoicev2_*'
 service/pipes:
   - any:
       - changed-files:

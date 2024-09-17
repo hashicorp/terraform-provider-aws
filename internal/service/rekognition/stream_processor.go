@@ -839,8 +839,8 @@ type resourceStreamProcessorDataModel struct {
 	RoleARN               fwtypes.ARN                                                 `tfsdk:"role_arn"`
 	Settings              fwtypes.ListNestedObjectValueOf[settingsModel]              `tfsdk:"settings"`
 	StreamProcessorARN    fwtypes.ARN                                                 `tfsdk:"stream_processor_arn"`
-	Tags                  types.Map                                                   `tfsdk:"tags"`
-	TagsAll               types.Map                                                   `tfsdk:"tags_all"`
+	Tags                  tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll               tftags.Map                                                  `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
