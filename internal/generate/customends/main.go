@@ -15,10 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
-//go:embed custom_endpoints_header.tmpl
+//go:embed custom_endpoints_header.gtpl
 var header string
 
-//go:embed custom_endpoints_footer.tmpl
+//go:embed custom_endpoints_footer.gtpl
 var footer string
 
 type serviceDatum struct {
@@ -87,5 +87,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

@@ -46,5 +46,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string
