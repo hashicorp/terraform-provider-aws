@@ -186,6 +186,7 @@ func TestAccLexV2ModelsSlotType_compositeSlotTypeSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.0.name", "testname"),
+					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.0.slot_type_id", "AMAZON.Date"),
 				),
 			},
 		},
@@ -377,13 +378,13 @@ resource "aws_lexv2models_slot_type" "test" {
   locale_id   = aws_lexv2models_bot_locale.test.locale_id
 
   value_selection_setting {
-    resolution_strategy = "OriginalValue"
+    resolution_strategy = "Concatenation"
   }
 
   composite_slot_type_setting {
     sub_slots {
-      name = "testname"
-      slot_type_id = "AMAZON..Date"
+      name         = "testname"
+      slot_type_id = "AMAZON.Date"
     }
   }
 }
