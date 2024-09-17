@@ -105,7 +105,7 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 	})
 }
 
-func TestAccSESReceiptRule_s3Action_iamRoleArn(t *testing.T) {
+func TestAccSESReceiptRule_s3Action_iamRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -122,7 +122,7 @@ func TestAccSESReceiptRule_s3Action_iamRoleArn(t *testing.T) {
 		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleConfig_s3Action_iamRoleArn(rName),
+				Config: testAccReceiptRuleConfig_s3Action_iamRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -558,7 +558,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, acctest.DefaultEmailAddress))
 }
 
-func testAccReceiptRuleConfig_s3Action_iamRoleArn(rName string) string {
+func testAccReceiptRuleConfig_s3Action_iamRoleARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccReceiptRuleConfig_baseS3Action(rName),
 		fmt.Sprintf(`
