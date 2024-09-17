@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_appsync_source_api_association` ([#39323](https://github.com/hashicorp/terraform-provider-aws/issues/39323))
 * **New Resource:** `aws_pinpointsmsvoicev2_opt_out_list` ([#25036](https://github.com/hashicorp/terraform-provider-aws/issues/25036))
 * **New Resource:** `aws_pinpointsmsvoicev2_phone_number` ([#25036](https://github.com/hashicorp/terraform-provider-aws/issues/25036))
 * **New Resource:** `aws_sesv2_account_suppression_attributes` ([#39325](https://github.com/hashicorp/terraform-provider-aws/issues/39325))
