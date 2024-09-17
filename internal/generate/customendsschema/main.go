@@ -12,11 +12,19 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
+type serviceDatum struct {
+	ProviderPackage  string
+	Aliases          []string
+	TfAwsEnvVar      string
+	DeprecatedEnvVar string
+	AwsEnvVar        string
+}
+
 type TemplateData struct {
-	Services []names.Endpoint
+	Services []serviceDatum
 }
 
 func main() {
@@ -27,8 +35,31 @@ func main() {
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
-	td := TemplateData{
-		Services: names.Endpoints(),
+	data, err := data.ReadAllServiceData()
+	if err != nil {
+		g.Fatalf("error reading service data: %s", err)
+	}
+
+	td := TemplateData{}
+
+	for _, l := range data {
+		if l.Exclude() {
+			continue
+		}
+
+		if l.NotImplemented() && !l.EndpointOnly() {
+			continue
+		}
+
+		sd := serviceDatum{
+			ProviderPackage:  l.ProviderPackage(),
+			Aliases:          l.Aliases(),
+			TfAwsEnvVar:      l.TFAWSEnvVar(),
+			DeprecatedEnvVar: l.DeprecatedEnvVar(),
+			AwsEnvVar:        l.AWSServiceEnvVar(),
+		}
+
+		td.Services = append(td.Services, sd)
 	}
 
 	sort.Slice(td.Services, func(i, j int) bool {

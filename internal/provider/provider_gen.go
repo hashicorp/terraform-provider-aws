@@ -3,7 +3,14 @@
 package provider
 
 import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 func endpointsSchema() *schema.Schema {
@@ -2237,5 +2244,1025 @@ func endpointsSchema() *schema.Schema {
 				},
 			},
 		},
+	}
+}
+
+func expandEndpoints(_ context.Context, tfList []any) (map[string]string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	endpointsPath := cty.GetAttrPath("endpoints")
+
+	if l := len(tfList); l > 1 {
+		diags = append(diags, errs.NewAttributeWarningDiagnostic(
+			endpointsPath,
+			"Invalid Attribute Value",
+			fmt.Sprintf("Attribute %q should have at most 1 element, got %d."+
+				"\n\nThis will be an error in a future release.",
+				errs.PathString(endpointsPath), l),
+		))
+	}
+
+	endpoints := make(map[string]string)
+	seen := make(map[string]bool)
+
+	for i, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		elementPath := endpointsPath.IndexInt(i)
+
+		for k, v := range tfMap {
+			if seen[k] {
+				continue
+			}
+			if v == "" {
+				continue
+			}
+			switch k {
+			case "amp", "prometheus", "prometheusservice":
+				const pkg = "amp"
+				attrs := []string{"amp", "prometheus", "prometheusservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "appautoscaling", "applicationautoscaling":
+				const pkg = "appautoscaling"
+				attrs := []string{"appautoscaling", "applicationautoscaling"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "appintegrations", "appintegrationsservice":
+				const pkg = "appintegrations"
+				attrs := []string{"appintegrations", "appintegrationsservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "ce", "costexplorer":
+				const pkg = "ce"
+				attrs := []string{"ce", "costexplorer"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "cloudcontrol", "cloudcontrolapi":
+				const pkg = "cloudcontrol"
+				attrs := []string{"cloudcontrol", "cloudcontrolapi"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "cloudhsmv2", "cloudhsm":
+				const pkg = "cloudhsmv2"
+				attrs := []string{"cloudhsmv2", "cloudhsm"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "cognitoidp", "cognitoidentityprovider":
+				const pkg = "cognitoidp"
+				attrs := []string{"cognitoidp", "cognitoidentityprovider"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "configservice", "config":
+				const pkg = "configservice"
+				attrs := []string{"configservice", "config"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "cur", "costandusagereportservice":
+				const pkg = "cur"
+				attrs := []string{"cur", "costandusagereportservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "databrew", "gluedatabrew":
+				const pkg = "databrew"
+				attrs := []string{"databrew", "gluedatabrew"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "deploy", "codedeploy":
+				const pkg = "deploy"
+				attrs := []string{"deploy", "codedeploy"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "dms", "databasemigration", "databasemigrationservice":
+				const pkg = "dms"
+				attrs := []string{"dms", "databasemigration", "databasemigrationservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "ds", "directoryservice":
+				const pkg = "ds"
+				attrs := []string{"ds", "directoryservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "elasticbeanstalk", "beanstalk":
+				const pkg = "elasticbeanstalk"
+				attrs := []string{"elasticbeanstalk", "beanstalk"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "elasticsearch", "es", "elasticsearchservice":
+				const pkg = "elasticsearch"
+				attrs := []string{"elasticsearch", "es", "elasticsearchservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "elb", "elasticloadbalancing":
+				const pkg = "elb"
+				attrs := []string{"elb", "elasticloadbalancing"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "elbv2", "elasticloadbalancingv2":
+				const pkg = "elbv2"
+				attrs := []string{"elbv2", "elasticloadbalancingv2"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "events", "eventbridge", "cloudwatchevents":
+				const pkg = "events"
+				attrs := []string{"events", "eventbridge", "cloudwatchevents"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "evidently", "cloudwatchevidently":
+				const pkg = "evidently"
+				attrs := []string{"evidently", "cloudwatchevidently"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "grafana", "managedgrafana", "amg":
+				const pkg = "grafana"
+				attrs := []string{"grafana", "managedgrafana", "amg"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "inspector2", "inspectorv2":
+				const pkg = "inspector2"
+				attrs := []string{"inspector2", "inspectorv2"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "kafka", "msk":
+				const pkg = "kafka"
+				attrs := []string{"kafka", "msk"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "lexmodels", "lexmodelbuilding", "lexmodelbuildingservice", "lex":
+				const pkg = "lexmodels"
+				attrs := []string{"lexmodels", "lexmodelbuilding", "lexmodelbuildingservice", "lex"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "lexv2models", "lexmodelsv2":
+				const pkg = "lexv2models"
+				attrs := []string{"lexv2models", "lexmodelsv2"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "location", "locationservice":
+				const pkg = "location"
+				attrs := []string{"location", "locationservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "logs", "cloudwatchlog", "cloudwatchlogs":
+				const pkg = "logs"
+				attrs := []string{"logs", "cloudwatchlog", "cloudwatchlogs"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "oam", "cloudwatchobservabilityaccessmanager":
+				const pkg = "oam"
+				attrs := []string{"oam", "cloudwatchobservabilityaccessmanager"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "opensearch", "opensearchservice":
+				const pkg = "opensearch"
+				attrs := []string{"opensearch", "opensearchservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "osis", "opensearchingestion":
+				const pkg = "osis"
+				attrs := []string{"osis", "opensearchingestion"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "rbin", "recyclebin":
+				const pkg = "rbin"
+				attrs := []string{"rbin", "recyclebin"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "redshiftdata", "redshiftdataapiservice":
+				const pkg = "redshiftdata"
+				attrs := []string{"redshiftdata", "redshiftdataapiservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "resourcegroupstaggingapi", "resourcegroupstagging":
+				const pkg = "resourcegroupstaggingapi"
+				attrs := []string{"resourcegroupstaggingapi", "resourcegroupstagging"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "rum", "cloudwatchrum":
+				const pkg = "rum"
+				attrs := []string{"rum", "cloudwatchrum"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "s3", "s3api":
+				const pkg = "s3"
+				attrs := []string{"s3", "s3api"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "serverlessrepo", "serverlessapprepo", "serverlessapplicationrepository":
+				const pkg = "serverlessrepo"
+				attrs := []string{"serverlessrepo", "serverlessapprepo", "serverlessapplicationrepository"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "servicecatalogappregistry", "appregistry":
+				const pkg = "servicecatalogappregistry"
+				attrs := []string{"servicecatalogappregistry", "appregistry"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "sfn", "stepfunctions":
+				const pkg = "sfn"
+				attrs := []string{"sfn", "stepfunctions"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "simpledb", "sdb":
+				const pkg = "simpledb"
+				attrs := []string{"simpledb", "sdb"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "transcribe", "transcribeservice":
+				const pkg = "transcribe"
+				attrs := []string{"transcribe", "transcribeservice"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			default:
+				seen[k] = true
+				if endpoints[k] == "" {
+					endpoints[k] = v.(string)
+				}
+			}
+		}
+	}
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	expandEndpointsCustomEnvVars(endpoints, &diags)
+
+	return endpoints, diags
+}
+
+func expandEndpointsCustomEnvVars(endpoints map[string]string, diags *diag.Diagnostics) {
+	expandEndpointCustomEnvVars("dynamodb", "AWS_ENDPOINT_URL_DYNAMODB", "TF_AWS_DYNAMODB_ENDPOINT", "AWS_DYNAMODB_ENDPOINT", endpoints, diags)
+
+	expandEndpointCustomEnvVars("iam", "AWS_ENDPOINT_URL_IAM", "TF_AWS_IAM_ENDPOINT", "AWS_IAM_ENDPOINT", endpoints, diags)
+
+	expandEndpointCustomEnvVars("s3", "AWS_ENDPOINT_URL_S3", "TF_AWS_S3_ENDPOINT", "AWS_S3_ENDPOINT", endpoints, diags)
+
+	expandEndpointCustomEnvVars("sts", "AWS_ENDPOINT_URL_STS", "TF_AWS_STS_ENDPOINT", "AWS_STS_ENDPOINT", endpoints, diags)
+}
+
+func expandEndpointCustomEnvVars(pkg, awsEnvVar, tfAwsEnvVar, deprecatedEnvVar string, endpoints map[string]string, diags *diag.Diagnostics) {
+	if endpoints[pkg] == "" {
+		if v := os.Getenv(awsEnvVar); v != "" {
+			endpoints[pkg] = v
+			return
+		}
+
+		if v := os.Getenv(tfAwsEnvVar); v != "" {
+			*diags = append(*diags, DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar))
+			endpoints[pkg] = v
+			return
+		}
+
+		if v := os.Getenv(deprecatedEnvVar); v != "" {
+			*diags = append(*diags, DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar))
+			endpoints[pkg] = v
+			return
+		}
+
 	}
 }
