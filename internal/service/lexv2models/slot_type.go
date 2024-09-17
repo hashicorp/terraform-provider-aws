@@ -114,13 +114,13 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		},
 		Blocks: map[string]schema.Block{
 			"composite_slot_type_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
+				// Validators: []validator.List{
+				// 	listvalidator.SizeAtMost(1),
+				// },
 				CustomType: fwtypes.NewListNestedObjectTypeOf[CompositeSlotTypeSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"subslots": subSlotTypeCompositionLNB,
+						"sub_slots": subSlotTypeCompositionLNB,
 					},
 				},
 			},
