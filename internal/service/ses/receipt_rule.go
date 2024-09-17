@@ -310,6 +310,10 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 		return nil
 	})
 
+	if tfresource.TimedOut(err) {
+		_, err = conn.CreateReceiptRule(ctx, input)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Receipt Rule (%s): %s", name, err)
 	}
@@ -527,6 +531,10 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.UpdateReceiptRule(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SES Receipt Rule (%s): %s", d.Id(), err)
