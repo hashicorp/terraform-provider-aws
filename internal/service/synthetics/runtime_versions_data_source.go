@@ -6,7 +6,7 @@ package synthetics
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -38,13 +38,28 @@ func (d *dataSourceRuntimeVersions) Schema(ctx context.Context, req datasource.S
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"skip_deprecated": schema.BoolAttribute{
-				Optional: true,
-			},
-			"version_names": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Computed:    true,
+		},
+		Blocks: map[string]schema.Block{
+			"runtime_versions": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[runtimeVersionModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"deprecation_date": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Computed:   true,
+						},
+						names.AttrDescription: schema.StringAttribute{
+							Computed: true,
+						},
+						"release_date": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Computed:   true,
+						},
+						"version_name": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -59,7 +74,6 @@ func (d *dataSourceRuntimeVersions) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	skipDeprecated := data.SkipDeprecated.ValueBool()
 	out, err := findRuntimeVersions(ctx, conn)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -69,22 +83,19 @@ func (d *dataSourceRuntimeVersions) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	var versionNames []string
-
-	for _, v := range out {
-		if !skipDeprecated || v.DeprecationDate == nil {
-			versionNames = append(versionNames, aws.ToString(v.VersionName))
-		}
-	}
-
-	data.ID = flex.StringToFramework(ctx, &d.Meta().Region)
-	data.VersionNames = flex.FlattenFrameworkStringValueListOfString(ctx, versionNames)
-
+	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data.RuntimeVersions)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceRuntimeVersionsModel struct {
-	ID             types.String                      `tfsdk:"id"`
-	SkipDeprecated types.Bool                        `tfsdk:"skip_deprecated"`
-	VersionNames   fwtypes.ListValueOf[types.String] `tfsdk:"version_names"`
+	ID              types.String                                         `tfsdk:"id"`
+	RuntimeVersions fwtypes.ListNestedObjectValueOf[runtimeVersionModel] `tfsdk:"runtime_versions"`
+}
+
+type runtimeVersionModel struct {
+	DeprecationDate timetypes.RFC3339 `tfsdk:"deprecation_date"`
+	Description     types.String      `tfsdk:"description"`
+	ReleaseDate     timetypes.RFC3339 `tfsdk:"release_date"`
+	VersionName     types.String      `tfsdk:"version_name"`
 }
