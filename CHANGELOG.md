@@ -1,5 +1,9 @@
 ## 5.68.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_lexv2models_slot_type: Within the `composite_slot_type_setting` block, the `subslots` argument has been renamed `sub_slots`. See the [linked pull request](https://github.com/hashicorp/terraform-provider-aws/pull/39353) for additional justification on this change. The previous misnaming effectively made this argument unusable, therefore a breaking change in a minor version was deemed acceptable. ([#39353](https://github.com/hashicorp/terraform-provider-aws/issues/39353))
+
 FEATURES:
 
 * **New Resource:** `aws_appsync_source_api_association` ([#39323](https://github.com/hashicorp/terraform-provider-aws/issues/39323))
