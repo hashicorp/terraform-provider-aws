@@ -554,16 +554,19 @@ func MatchResourceAttrGlobalHostname(resourceName, attributeName, serviceName st
 	}
 }
 
+func globalARNValue(arnService, arnResource string) string {
+	return arn.ARN{
+		AccountID: AccountID(),
+		Partition: Partition(),
+		Resource:  arnResource,
+		Service:   arnService,
+	}.String()
+}
+
 // CheckResourceAttrGlobalARN ensures the Terraform state exactly matches a formatted ARN without region
 func CheckResourceAttrGlobalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := arn.ARN{
-			AccountID: AccountID(),
-			Partition: Partition(),
-			Resource:  arnResource,
-			Service:   arnService,
-		}.String()
-		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+		return resource.TestCheckResourceAttr(resourceName, attributeName, globalARNValue(arnService, arnResource))(s)
 	}
 }
 

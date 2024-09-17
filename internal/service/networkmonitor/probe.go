@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Probe")
+// @FrameworkResource("aws_networkmonitor_probe", name="Probe")
 // @Tags(identifierAttribute="arn")
 func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &probeResource{}, nil

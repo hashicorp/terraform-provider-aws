@@ -114,34 +114,22 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		},
 		Blocks: map[string]schema.Block{
 			"composite_slot_type_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[CompositeSlotTypeSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"subslots": subSlotTypeCompositionLNB,
+						"sub_slots": subSlotTypeCompositionLNB,
 					},
 				},
 			},
 			"external_source_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ExternalSourceSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"grammar_slot_type_setting": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
 							CustomType: fwtypes.NewListNestedObjectTypeOf[GrammarSlotTypeSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									names.AttrSource: schema.ListNestedBlock{
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
 										CustomType: fwtypes.NewListNestedObjectTypeOf[Source](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -208,7 +196,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[AdvancedRecognitionSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"audio_recognition_setting": schema.StringAttribute{
+									"audio_recognition_strategy": schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.AudioRecognitionStrategy](),
@@ -456,8 +444,8 @@ type resourceSlotTypeData struct {
 }
 
 type SubSlotTypeComposition struct {
-	Name      types.String `tfsdk:"name"`
-	SubSlotID types.String `tfsdk:"sub_slot_id"`
+	Name       types.String `tfsdk:"name"`
+	SlotTypeID types.String `tfsdk:"slot_type_id"`
 }
 
 type CompositeSlotTypeSetting struct {
@@ -488,7 +476,7 @@ type SlotTypeValues struct {
 }
 
 type AdvancedRecognitionSetting struct {
-	AudioRecognitionSetting types.String `tfsdk:"audio_recognition_setting"`
+	AudioRecognitionStrategy types.String `tfsdk:"audio_recognition_strategy"`
 }
 
 type RegexFilter struct {

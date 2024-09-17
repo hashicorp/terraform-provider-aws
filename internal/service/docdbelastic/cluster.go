@@ -282,51 +282,22 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	if clusterHasChanges(ctx, plan, state) {
-		input := &docdbelastic.UpdateClusterInput{
-			ClientToken: aws.String(id.UniqueId()),
-			ClusterArn:  state.ID.ValueStringPointer(),
-		}
+	diff, d := fwflex.Calculate(ctx, plan, state)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-		// expanding manually because AWS validation throws an error when more than one
-		// updatable field is included in the request
-		if !plan.AdminUserPassword.Equal(state.AdminUserPassword) {
-			input.AdminUserPassword = plan.AdminUserPassword.ValueStringPointer()
+	if diff.HasChanges() {
+		input := docdbelastic.UpdateClusterInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
+		input.ClientToken = aws.String(id.UniqueId())
+		input.ClusterArn = plan.ID.ValueStringPointer()
 
-		if !plan.AuthType.Equal(state.AuthType) {
-			input.AuthType = plan.AuthType.ValueEnum()
-		}
-
-		if !plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) {
-			input.BackupRetentionPeriod = plan.BackupRetentionPeriod.ValueInt32Pointer()
-		}
-
-		if !plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) {
-			input.PreferredBackupWindow = plan.PreferredBackupWindow.ValueStringPointer()
-		}
-
-		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
-			input.PreferredMaintenanceWindow = plan.PreferredMaintenanceWindow.ValueStringPointer()
-		}
-
-		if !plan.ShardCapacity.Equal(state.ShardCapacity) {
-			input.ShardCapacity = fwflex.Int32FromFramework(ctx, plan.ShardCapacity)
-		}
-
-		if !plan.ShardCount.Equal(state.ShardCount) {
-			input.ShardCount = fwflex.Int32FromFramework(ctx, plan.ShardCount)
-		}
-
-		if !plan.SubnetIds.Equal(state.SubnetIds) {
-			input.SubnetIds = fwflex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds)
-		}
-
-		if !plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds) {
-			input.VpcSecurityGroupIds = fwflex.ExpandFrameworkStringValueSet(ctx, plan.VpcSecurityGroupIds)
-		}
-
-		_, err := conn.UpdateCluster(ctx, input)
+		_, err := conn.UpdateCluster(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -517,17 +488,4 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	}
 
 	return out.Cluster, nil
-}
-
-func clusterHasChanges(_ context.Context, plan, state resourceClusterData) bool {
-	return !plan.Name.Equal(state.Name) ||
-		!plan.AdminUserPassword.Equal(state.AdminUserPassword) ||
-		!plan.AuthType.Equal(state.AuthType) ||
-		!plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) ||
-		!plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) ||
-		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) ||
-		!plan.ShardCapacity.Equal(state.ShardCapacity) ||
-		!plan.ShardCount.Equal(state.ShardCount) ||
-		!plan.SubnetIds.Equal(state.SubnetIds) ||
-		!plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds)
 }

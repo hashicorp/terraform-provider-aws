@@ -240,10 +240,90 @@ func TestDiffUsers(t *testing.T) {
 	}
 }
 
+func TestNormalizeEngineVersion(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                    string
+		engineType              string
+		engineVersion           string
+		autoMinorVersionUpgrade bool
+		want                    string
+	}{
+		{
+			name:                    "RabbitMQ, no auto, pre 3.13",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "3.12.0",
+			autoMinorVersionUpgrade: false,
+			want:                    "3.12.0",
+		},
+		{
+			name:                    "RabbitMQ, auto, pre 3.13",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "3.12.0",
+			autoMinorVersionUpgrade: true,
+			want:                    "3.12.0",
+		},
+		{
+			name:                    "RabbitMQ, no auto, post 3.13",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "3.13.2",
+			autoMinorVersionUpgrade: false,
+			want:                    "3.13.2",
+		},
+		{
+			name:                    "RabbitMQ, auto, post 3.13",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "3.13.2",
+			autoMinorVersionUpgrade: true,
+			want:                    "3.13",
+		},
+		{
+			name:                    "ActiveMQ, no auto, pre 5.18",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.17.0",
+			autoMinorVersionUpgrade: false,
+			want:                    "5.17.0",
+		},
+		{
+			name:                    "ActiveMQ, auto, pre 5.18",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.17.0",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.17.0",
+		},
+		{
+			name:                    "ActiveMQ, no auto, post 5.18",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.18.2",
+			autoMinorVersionUpgrade: false,
+			want:                    "5.18.2",
+		},
+		{
+			name:                    "ActiveMQ, auto, post 5.18",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.18.2",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.18",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfmq.NormalizeEngineVersion(tt.engineType, tt.engineVersion, tt.autoMinorVersionUpgrade); got != tt.want {
+				t.Errorf("NormalizeEngineVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 const (
 	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
 	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
 	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
+
+	testAccActiveVersionNormalized5_18 = "5.18"
+	testAccRabbitVersionNormalized3_13 = "3.13"
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
@@ -313,6 +393,48 @@ func TestAccMQBroker_basic(t *testing.T) {
 						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_normalizedEngineVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_autoMinorVersionUpgrade(rName, testAccActiveVersionNormalized5_18, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
+					// Starting in v5.18, the engine version should be normalized to remove
+					// the patch version as AWS automatically handles patch updates when
+					// `auto_minor_version_upgrade` is enabled.
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccActiveVersionNormalized5_18),
 				),
 			},
 			{
@@ -1126,6 +1248,95 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_RabbitMQ_autoMinorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitAutoMinorVersionUpgrade(rName, testAccRabbitVersion, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersion),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct1),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_RabbitMQ_normalizedEngineVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitAutoMinorVersionUpgrade(rName, testAccRabbitVersionNormalized3_13, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					// Starting in v3.13, the engine version should be normalized to remove
+					// the patch version as AWS automatically handles patch updates when
+					// `auto_minor_version_upgrade` is enabled.
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersionNormalized3_13),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
 func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1600,6 +1811,38 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version)
+}
+
+func testAccBrokerConfig_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t2.micro"
+  security_groups            = [aws_security_group.test.id]
+  authentication_strategy    = "simple"
+  storage_type               = "efs"
+  auto_minor_version_upgrade = %[3]t
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version, autoMinorVersionUpgrade)
 }
 
 func testAccBrokerConfig_ebs(rName, version string) string {
@@ -2144,6 +2387,32 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version)
+}
+
+func testAccBrokerConfig_rabbitAutoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]t
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version, autoMinorVersionUpgrade)
 }
 
 func testAccBrokerConfig_rabbitConfig(rName, version string) string {

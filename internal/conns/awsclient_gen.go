@@ -173,6 +173,7 @@ import (
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pcs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcs"
 	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	pinpointsmsvoicev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -927,6 +928,10 @@ func (c *AWSClient) PaymentCryptographyClient(ctx context.Context) *paymentcrypt
 
 func (c *AWSClient) PinpointClient(ctx context.Context) *pinpoint_sdkv2.Client {
 	return errs.Must(client[*pinpoint_sdkv2.Client](ctx, c, names.Pinpoint, make(map[string]any)))
+}
+
+func (c *AWSClient) PinpointSMSVoiceV2Client(ctx context.Context) *pinpointsmsvoicev2_sdkv2.Client {
+	return errs.Must(client[*pinpointsmsvoicev2_sdkv2.Client](ctx, c, names.PinpointSMSVoiceV2, make(map[string]any)))
 }
 
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
