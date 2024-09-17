@@ -499,7 +499,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, email)
 }
 
-func testAccReceiptRuleConfig_baseS3Action(rName string) string {
+func testAccReceiptRuleConfig_baseS3Action(rName string) string { // nosempgrep:ses-in-func-name
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
