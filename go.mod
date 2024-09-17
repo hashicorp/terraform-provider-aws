@@ -8,10 +8,10 @@ require (
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/aws/aws-sdk-go-v2 v1.30.5
-	github.com/aws/aws-sdk-go-v2/config v1.27.33
+	github.com/aws/aws-sdk-go-v2/config v1.27.34
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.32
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.13
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.18
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.19
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/account v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.8
@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/batch v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.5.6
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.16.2
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.5.2
@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.45.4
-	github.com/aws/aws-sdk-go-v2/service/efs v1.31.6
+	github.com/aws/aws-sdk-go-v2/service/efs v1.31.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.48.4
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.9
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.6
@@ -131,7 +131,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.17.2
-	github.com/aws/aws-sdk-go-v2/service/iot v1.55.6
+	github.com/aws/aws-sdk-go-v2/service/iot v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.38.4
@@ -158,7 +158,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.41.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.58.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.6
@@ -174,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.24.6
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.31.2
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/osis v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.6
@@ -190,7 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.71.2
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.7
-	github.com/aws/aws-sdk-go-v2/service/rds v1.82.5
+	github.com/aws/aws-sdk-go-v2/service/rds v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.8
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.5
@@ -231,7 +231,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.8
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.32.6
-	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.16.2
+	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.32.0
