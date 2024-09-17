@@ -105,6 +105,40 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 	})
 }
 
+func TestAccSESReceiptRule_s3Action_iamRoleArn(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule awstypes.ReceiptRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ses_receipt_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReceiptRuleConfig_s3Action_iamRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "s3_action.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "s3_action.*.iam_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccReceiptRuleImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccSESReceiptRule_snsAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.ReceiptRule
@@ -465,7 +499,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, email)
 }
 
-func testAccReceiptRuleConfig_s3Action(rName string) string {
+func testAccReceiptRuleConfig_baseS3Action(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -501,7 +535,13 @@ resource "aws_s3_bucket_acl" "test" {
   bucket = aws_s3_bucket.test.id
   acl    = "public-read-write"
 }
+`, rName)
+}
 
+func testAccReceiptRuleConfig_s3Action(rName string) string {
+	return acctest.ConfigCompose(
+		testAccReceiptRuleConfig_baseS3Action(rName),
+		fmt.Sprintf(`
 resource "aws_ses_receipt_rule" "test" {
   name          = %[1]q
   rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
@@ -515,7 +555,47 @@ resource "aws_ses_receipt_rule" "test" {
     position    = 1
   }
 }
-`, rName, acctest.DefaultEmailAddress)
+`, rName, acctest.DefaultEmailAddress))
+}
+
+func testAccReceiptRuleConfig_s3Action_iamRoleArn(rName string) string {
+	return acctest.ConfigCompose(
+		testAccReceiptRuleConfig_baseS3Action(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ses.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_ses_receipt_rule" "test" {
+  name          = %[1]q
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+  recipients    = [%[2]q]
+  enabled       = true
+  scan_enabled  = true
+  tls_policy    = "Require"
+
+  s3_action {
+    bucket_name  = aws_s3_bucket_acl.test.bucket
+    position     = 1
+    iam_role_arn = aws_iam_role.test.arn
+  }
+}
+`, rName, acctest.DefaultEmailAddress))
 }
 
 func testAccReceiptRuleConfig_snsAction(rName string) string {

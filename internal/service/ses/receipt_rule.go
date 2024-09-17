@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -171,6 +172,11 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						names.AttrIAMRoleARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -289,7 +295,20 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.After = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateReceiptRule(ctx, input)
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		_, err := conn.CreateReceiptRule(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
+			tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Receipt Rule (%s): %s", name, err)
@@ -380,6 +399,10 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			s3Action := map[string]interface{}{
 				names.AttrBucketName: aws.ToString(element.S3Action.BucketName),
 				"position":           i + 1,
+			}
+
+			if element.S3Action.IamRoleArn != nil {
+				s3Action[names.AttrIAMRoleARN] = aws.ToString(element.S3Action.IamRoleArn)
 			}
 
 			if element.S3Action.KmsKeyArn != nil {
@@ -490,7 +513,20 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
-	_, err := conn.UpdateReceiptRule(ctx, input)
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		_, err := conn.UpdateReceiptRule(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
+			tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SES Receipt Rule (%s): %s", d.Id(), err)
@@ -659,6 +695,10 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 			s3Action := &awstypes.S3Action{
 				BucketName: aws.String(elem[names.AttrBucketName].(string)),
+			}
+
+			if elem[names.AttrIAMRoleARN] != "" {
+				s3Action.IamRoleArn = aws.String(elem[names.AttrIAMRoleARN].(string))
 			}
 
 			if elem[names.AttrKMSKeyARN] != "" {
