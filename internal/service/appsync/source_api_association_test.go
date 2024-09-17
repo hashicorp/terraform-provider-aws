@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -160,32 +159,29 @@ func testAccCheckSourceAPIAssociationDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameSourceAPIAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Appsync Source API Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSourceAPIAssociationExists(ctx context.Context, name string, sourceapiassociation *types.SourceApiAssociation) resource.TestCheckFunc {
+func testAccCheckSourceAPIAssociationExists(ctx context.Context, n string, v *types.SourceApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceAPIAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceAPIAssociation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
-		resp, err := tfappsync.FindSourceAPIAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes["merged_api_id"])
+
+		output, err := tfappsync.FindSourceAPIAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes["merged_api_id"])
 
 		if err != nil {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameSourceAPIAssociation, rs.Primary.ID, err)
+			return err
 		}
 
-		*sourceapiassociation = *resp
+		*v = *output
 
 		return nil
 	}
@@ -208,7 +204,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccCheckSourceAPIAssociationNotRecreated(before, after *types.SourceApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.AssociationId), aws.ToString(after.AssociationId); before != after {
-			return create.Error(names.AppSync, create.ErrActionCheckingNotRecreated, tfappsync.ResNameSourceAPIAssociation, before, errors.New("recreated"))
+			return errors.New("recreated")
 		}
 
 		return nil

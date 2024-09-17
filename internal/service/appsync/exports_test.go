@@ -14,7 +14,7 @@ var (
 	ResourceGraphQLAPI               = resourceGraphQLAPI
 	ResourceResolver                 = resourceResolver
 	ResourceType                     = resourceType
-	ResourceSourceAPIAssociation     = newResourceSourceAPIAssociation
+	ResourceSourceAPIAssociation     = newSourceAPIAssociationResource
 
 	DefaultAuthorizerResultTTLInSeconds  = defaultAuthorizerResultTTLInSeconds
 	FindAPICacheByID                     = findAPICacheByID

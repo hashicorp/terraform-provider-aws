@@ -38,10 +38,9 @@ const (
 	sourceAPIAssociationIDPartCount = 2
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_appsync_source_api_association", name="Source API Association")
-func newResourceSourceAPIAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceSourceAPIAssociation{}
+func newSourceAPIAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &sourceAPIAssociationResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -51,20 +50,20 @@ func newResourceSourceAPIAssociation(_ context.Context) (resource.ResourceWithCo
 }
 
 const (
-	ResNameSourceAPIAssociation = "Source API Association"
+	resNameSourceAPIAssociation = "Source API Association"
 )
 
-type resourceSourceAPIAssociation struct {
+type sourceAPIAssociationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceSourceAPIAssociation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*sourceAPIAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_appsync_source_api_association"
 }
 
-func (r *resourceSourceAPIAssociation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *sourceAPIAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -143,10 +142,10 @@ func (r *resourceSourceAPIAssociation) Schema(ctx context.Context, request resou
 	}
 }
 
-func (r *resourceSourceAPIAssociation) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *sourceAPIAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var plan resourceSourceAPIAssociationModel
+	var plan sourceAPIAssociationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -178,14 +177,14 @@ func (r *resourceSourceAPIAssociation) Create(ctx context.Context, request resou
 	out, err := conn.AssociateSourceGraphqlApi(ctx, in)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, resNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.SourceApiAssociation == nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameSourceAPIAssociation, plan.MergedAPIId.String(), nil),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, resNameSourceAPIAssociation, plan.MergedAPIId.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -199,7 +198,7 @@ func (r *resourceSourceAPIAssociation) Create(ctx context.Context, request resou
 	_, err = waitSourceAPIAssociationCreated(ctx, conn, plan.AssociationId.ValueString(), aws.ToString(out.SourceApiAssociation.MergedApiArn), createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, ResNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, resNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
 			err.Error(),
 		)
 		return
@@ -213,10 +212,10 @@ func (r *resourceSourceAPIAssociation) Create(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourceSourceAPIAssociation) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *sourceAPIAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var state resourceSourceAPIAssociationModel
+	var state sourceAPIAssociationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -235,7 +234,7 @@ func (r *resourceSourceAPIAssociation) Read(ctx context.Context, request resourc
 	}
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionSetting, ResNameSourceAPIAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionSetting, resNameSourceAPIAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -249,10 +248,10 @@ func (r *resourceSourceAPIAssociation) Read(ctx context.Context, request resourc
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSourceAPIAssociation) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *sourceAPIAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var plan, state resourceSourceAPIAssociationModel
+	var plan, state sourceAPIAssociationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -286,14 +285,14 @@ func (r *resourceSourceAPIAssociation) Update(ctx context.Context, request resou
 		out, err := conn.UpdateSourceApiAssociation(ctx, in)
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameSourceAPIAssociation, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, resNameSourceAPIAssociation, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.SourceApiAssociation == nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameSourceAPIAssociation, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, resNameSourceAPIAssociation, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -304,7 +303,7 @@ func (r *resourceSourceAPIAssociation) Update(ctx context.Context, request resou
 	_, err := waitSourceAPIAssociationUpdated(ctx, conn, plan.AssociationId.ValueString(), plan.MergedAPIArn.ValueString(), updateTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForUpdate, ResNameSourceAPIAssociation, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForUpdate, resNameSourceAPIAssociation, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -313,10 +312,10 @@ func (r *resourceSourceAPIAssociation) Update(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSourceAPIAssociation) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *sourceAPIAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var state resourceSourceAPIAssociationModel
+	var state sourceAPIAssociationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -328,12 +327,14 @@ func (r *resourceSourceAPIAssociation) Delete(ctx context.Context, request resou
 	}
 
 	_, err := conn.DisassociateSourceGraphqlApi(ctx, in)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionDeleting, ResNameSourceAPIAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionDeleting, resNameSourceAPIAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -344,72 +345,47 @@ func (r *resourceSourceAPIAssociation) Delete(ctx context.Context, request resou
 	_, err = waitSourceAPIAssociationDeleted(ctx, conn, state.AssociationId.ValueString(), state.MergedAPIArn.ValueString(), deleteTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForDeletion, ResNameSourceAPIAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForDeletion, resNameSourceAPIAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceSourceAPIAssociation) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+func findSourceAPIAssociationByTwoPartKey(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string) (*awstypes.SourceApiAssociation, error) {
+	input := &appsync.GetSourceApiAssociationInput{
+		AssociationId:       aws.String(associationID),
+		MergedApiIdentifier: aws.String(mergedAPIID),
+	}
+
+	return findSourceAPIAssociation(ctx, conn, input)
 }
 
-func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, associationId, mergedAPIIdentifier string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
-		Target:                    enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
-		Refresh:                   statusSourceAPIAssociation(ctx, conn, associationId, mergedAPIIdentifier),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *appsync.GetSourceApiAssociationInput) (*awstypes.SourceApiAssociation, error) {
+	output, err := conn.GetSourceApiAssociation(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		return out, err
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	if output == nil || output.SourceApiAssociation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SourceApiAssociation, nil
 }
 
-func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, associationId, mergedAPIIdentifier string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
-		Target:                    enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
-		Refresh:                   statusSourceAPIAssociation(ctx, conn, associationId, mergedAPIIdentifier),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitSourceAPIAssociationDeleted(ctx context.Context, conn *appsync.Client, associationId, mergedAPIIdentifier string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess, awstypes.SourceApiAssociationStatusDeletionInProgress, awstypes.SourceApiAssociationStatusDeletionScheduled),
-		Target:  []string{},
-		Refresh: statusSourceAPIAssociation(ctx, conn, associationId, mergedAPIIdentifier),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, associationId, mergedAPIIdentifier string) retry.StateRefreshFunc {
+func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, associationId, mergedAPIIdentifier)
+		output, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, associationID, mergedAPIID)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -418,36 +394,68 @@ func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, assoc
 			return nil, "", err
 		}
 
-		return out.SourceApiAssociationStatusDetail, string(out.SourceApiAssociationStatus), nil
+		return output, string(output.SourceApiAssociationStatus), nil
 	}
 }
 
-func findSourceAPIAssociationByTwoPartKey(ctx context.Context, conn *appsync.Client, associationId, mergedAPIIdentifier string) (*awstypes.SourceApiAssociation, error) {
-	in := &appsync.GetSourceApiAssociationInput{
-		AssociationId:       aws.String(associationId),
-		MergedApiIdentifier: aws.String(mergedAPIIdentifier),
+func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
+		Target:  enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
+		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
+		Timeout: timeout,
 	}
 
-	out, err := conn.GetSourceApiAssociation(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-		return nil, err
+	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+
+		return output, err
 	}
 
-	if out == nil || out.SourceApiAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.SourceApiAssociation, nil
+	return nil, err
 }
 
-type resourceSourceAPIAssociationModel struct {
+func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
+		Target:  enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
+		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSourceAPIAssociationDeleted(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess, awstypes.SourceApiAssociationStatusDeletionInProgress, awstypes.SourceApiAssociationStatusDeletionScheduled),
+		Target:  []string{},
+		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+type sourceAPIAssociationResourceModel struct {
 	AssociationArn             types.String                                                     `tfsdk:"arn"`
 	AssociationId              types.String                                                     `tfsdk:"association_id"`
 	ID                         types.String                                                     `tfsdk:"id"`
@@ -464,7 +472,7 @@ type sourceAPIAssociationConfigModel struct {
 	MergeType fwtypes.StringEnum[awstypes.MergeType] `tfsdk:"merge_type"`
 }
 
-func (m *resourceSourceAPIAssociationModel) InitFromID() error {
+func (m *sourceAPIAssociationResourceModel) InitFromID() error {
 	id := m.ID.ValueString()
 	parts, err := autoflex.ExpandResourceId(id, sourceAPIAssociationIDPartCount, false)
 
@@ -477,6 +485,6 @@ func (m *resourceSourceAPIAssociationModel) InitFromID() error {
 	return nil
 }
 
-func (m *resourceSourceAPIAssociationModel) setID() {
+func (m *sourceAPIAssociationResourceModel) setID() {
 	m.ID = types.StringValue(errs.Must(autoflex.FlattenResourceId([]string{m.MergedAPIId.ValueString(), m.AssociationId.ValueString()}, sourceAPIAssociationIDPartCount, false)))
 }
