@@ -456,8 +456,8 @@ type resourceSlotTypeData struct {
 }
 
 type SubSlotTypeComposition struct {
-	Name      types.String `tfsdk:"name"`
-	SubSlotID types.String `tfsdk:"sub_slot_id"`
+	Name       types.String `tfsdk:"name"`
+	SlotTypeID types.String `tfsdk:"slot_type_id"`
 }
 
 type CompositeSlotTypeSetting struct {
