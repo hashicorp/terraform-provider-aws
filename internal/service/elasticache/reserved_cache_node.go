@@ -6,221 +6,235 @@ package elasticache
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNameReservedCacheNode = "Reserved Cache Node"
-)
-
-// @SDKResource("aws_elasticache_reserved_cache_node")
+// @FrameworkResource("aws_elasticache_reserved_cache_node")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTests=false)
-func ResourceReservedCacheNode() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceReservedCacheNodeCreate,
-		ReadWithoutTimeout:   resourceReservedCacheNodeRead,
-		UpdateWithoutTimeout: resourceReservedCacheNodeUpdate,
-		DeleteWithoutTimeout: resourceReservedCacheNodeDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(1 * time.Minute),
-		},
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
+func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceReservedCacheNode{}
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(1 * time.Minute)
+
+	return r, nil
+}
+
+type resourceReservedCacheNode struct {
+	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[resourceReservedCacheNodeModel]
+	framework.WithNoOpDelete
+	framework.WithTimeouts
+}
+
+func (r *resourceReservedCacheNode) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_elasticache_reserved_cache_node"
+}
+
+func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"cache_node_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"fixed_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"cache_node_count": {
-				Type:     schema.TypeInt,
+			"cache_node_count": schema.Int32Attribute{
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
-			},
-			"offering_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"offering_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"product_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"recurring_charges": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recurring_charge_amount": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"recurring_charge_frequency": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.RequiresReplace(),
 				},
 			},
-			"reservation_id": {
-				Type:     schema.TypeString,
+			"cache_node_type": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDuration: schema.Int32Attribute{
+				Computed: true,
+			},
+			"fixed_price": schema.Float64Attribute{
+				Computed: true,
+			},
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			names.AttrStartTime: {
-				Type:     schema.TypeString,
+			"reserved_cache_nodes_offering_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"offering_type": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrState: {
-				Type:     schema.TypeString,
+			"product_description": schema.StringAttribute{
 				Computed: true,
 			},
-			"usage_price": {
-				Type:     schema.TypeFloat,
+			"recurring_charges": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[recurringChargeModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[recurringChargeModel](ctx),
+				},
+			},
+			names.AttrStartTime: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrState: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"usage_price": schema.Float64Attribute{
+				Computed: true,
+			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
 	}
 }
 
-func resourceReservedCacheNodeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
+// Create is called when the provider must create a new resource.
+// Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
+func (r *resourceReservedCacheNode) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceReservedCacheNodeModel
 
-	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-
-	input := elasticache.PurchaseReservedCacheNodesOfferingInput{
-		ReservedCacheNodesOfferingId: aws.String(d.Get("offering_id").(string)),
-		Tags:                         getTagsIn(ctx),
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.Get("cache_node_count").(int); ok && v > 0 {
-		input.CacheNodeCount = aws.Int32(int32(d.Get("cache_node_count").(int)))
-	}
+	conn := r.Meta().ElastiCacheClient(ctx)
 
-	if v, ok := d.Get("reservation_id").(string); ok && v != "" {
-		input.ReservedCacheNodeId = aws.String(v)
-	}
+	var input elasticache.PurchaseReservedCacheNodesOfferingInput
+	response.Diagnostics.Append(flex.Expand(ctx, data, &input, r.flexOpts()...)...)
+
+	input.Tags = getTagsIn(ctx)
 
 	resp, err := conn.PurchaseReservedCacheNodesOffering(ctx, &input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.ElastiCache, create.ErrActionCreating, ResNameReservedCacheNode, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
+		response.Diagnostics.AddError(
+			"Creating ElastiCache Reserved Cache Node",
+			fmt.Sprintf("Could not create ElastiCache Reserved Cache Node with Offering ID %q\nError: %s", data.ReservedCacheNodesOfferingID.ValueString(), err.Error()),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(resp.ReservedCacheNode.ReservedCacheNodeId))
-
-	if err := waitReservedCacheNodeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.ElastiCache, create.ErrActionWaitingForCreation, ResNameReservedCacheNode, d.Id(), err)
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	if err := waitReservedCacheNodeCreated(ctx, conn, aws.ToString(resp.ReservedCacheNode.ReservedCacheNodeId), createTimeout); err != nil {
+		response.Diagnostics.AddError(
+			"Creating ElastiCache Reserved Cache Node",
+			fmt.Sprintf("Creating ElastiCache Reserved Cache Node with Offering ID %q failed while waiting for completion.\nError: %s", data.ReservedCacheNodesOfferingID.ValueString(), err.Error()),
+		)
+		return
 	}
 
-	return append(diags, resourceReservedCacheNodeRead(ctx, d, meta)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, resp.ReservedCacheNode, &data, r.flexOpts()...)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceReservedCacheNodeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceReservedCacheNodeModel
 
-	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	reservation, err := findReservedCacheNodeByID(ctx, conn, d.Id())
+	conn := r.Meta().ElastiCacheClient(ctx)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.ElastiCache, create.ErrActionReading, ResNameReservedCacheNode, d.Id())
-		d.SetId("")
-		return diags
+	reservation, err := findReservedCacheNodeByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.ElastiCache, create.ErrActionReading, ResNameReservedCacheNode, d.Id(), err)
+		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Reserved Cache Node (%s)", data.ID.ValueString()), err.Error())
+		return
 	}
 
-	d.Set(names.AttrARN, reservation.ReservationARN)
-	d.Set("cache_node_type", reservation.CacheNodeType)
-	d.Set(names.AttrDuration, reservation.Duration)
-	d.Set("fixed_price", reservation.FixedPrice)
-	d.Set("cache_node_count", reservation.CacheNodeCount)
-	d.Set("offering_id", reservation.ReservedCacheNodesOfferingId)
-	d.Set("offering_type", reservation.OfferingType)
-	d.Set("product_description", reservation.ProductDescription)
-	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
-	d.Set("reservation_id", reservation.ReservedCacheNodeId)
-	d.Set(names.AttrStartTime, (reservation.StartTime).Format(time.RFC3339))
-	d.Set(names.AttrState, reservation.State)
-	d.Set("usage_price", reservation.UsagePrice)
-
-	return diags
-}
-
-func resourceReservedCacheNodeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Tags only.
-
-	return append(diags, resourceReservedCacheNodeRead(ctx, d, meta)...)
-}
-
-func resourceReservedCacheNodeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	log.Printf("[DEBUG] %s %s cannot be deleted. Removing from state.: %s", names.ElastiCache, ResNameReservedCacheNode, d.Id())
-
-	return diags
-}
-
-func flattenRecurringCharges(recurringCharges []awstypes.RecurringCharge) []any {
-	if len(recurringCharges) == 0 {
-		return []any{}
+	response.Diagnostics.Append(flex.Flatten(ctx, reservation, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	var rawRecurringCharges []any
-	for _, recurringCharge := range recurringCharges {
-		rawRecurringCharge := map[string]any{
-			"recurring_charge_amount":    recurringCharge.RecurringChargeAmount,
-			"recurring_charge_frequency": aws.ToString(recurringCharge.RecurringChargeFrequency),
-		}
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
 
-		rawRecurringCharges = append(rawRecurringCharges, rawRecurringCharge)
+func (r *resourceReservedCacheNode) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+}
+
+func (r *resourceReservedCacheNode) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
+	return []flex.AutoFlexOptionsFunc{
+		flex.WithFieldNamePrefix("ReservedCacheNode"),
 	}
+}
 
-	return rawRecurringCharges
+type resourceReservedCacheNodeModel struct {
+	ARN                          types.String                                          `tfsdk:"arn"`
+	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
+	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
+	Duration                     types.Int32                                           `tfsdk:"duration"`
+	FixedPrice                   types.Float64                                         `tfsdk:"fixed_price"`
+	ID                           types.String                                          `tfsdk:"id"`
+	ReservedCacheNodesOfferingID types.String                                          `tfsdk:"reserved_cache_nodes_offering_id"`
+	OfferingType                 types.String                                          `tfsdk:"offering_type"`
+	ProductDescription           types.String                                          `tfsdk:"product_description"`
+	RecurringCharges             fwtypes.ListNestedObjectValueOf[recurringChargeModel] `tfsdk:"recurring_charges"`
+	StartTime                    types.String                                          `tfsdk:"start_time"`
+	State                        types.String                                          `tfsdk:"state"`
+	Tags                         tftags.Map                                            `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                            `tfsdk:"tags_all"`
+	UsagePrice                   types.Float64                                         `tfsdk:"usage_price"`
+
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
+}
+
+type recurringChargeModel struct {
+	RecurringChargeAmount    types.Float64 `tfsdk:"recurring_charge_amount"`
+	RecurringChargeFrequency types.String  `tfsdk:"recurring_charge_frequency"`
 }
 
 func findReservedCacheNodeByID(ctx context.Context, conn *elasticache.Client, id string) (result awstypes.ReservedCacheNode, err error) {

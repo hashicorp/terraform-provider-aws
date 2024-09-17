@@ -25,6 +25,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceReservedCacheNode,
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory: newServerlessCacheResource,
 			Name:    "Serverless Cache",
 			Tags: &types.ServicePackageResourceTags{
@@ -86,13 +92,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceReplicationGroup,
 			TypeName: "aws_elasticache_replication_group",
 			Name:     "Replication Group",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory:  ResourceReservedCacheNode,
-			TypeName: "aws_elasticache_reserved_cache_node",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
