@@ -9,11 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // @FrameworkDataSource(name="Inference Profile")
@@ -52,12 +53,8 @@ func (d *inferenceProfileDataSource) Schema(ctx context.Context, request datasou
 				Computed: true,
 			},
 			"models": schema.ListAttribute{
-				Computed: true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"model_arn": types.StringType,
-					},
-				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileModelModel](ctx),
+				Computed:   true,
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
@@ -90,63 +87,29 @@ func (d *inferenceProfileDataSource) Read(ctx context.Context, request datasourc
 		response.Diagnostics.AddError(fmt.Sprintf("error reading inference profile: %s", data.InferenceProfileID.ValueString()), err.Error())
 		return
 	}
-
-	data.CreatedAt = timetypes.NewRFC3339TimeValue(*output.CreatedAt)
-
-	if output.Description != nil {
-		data.Description = types.StringValue(*output.Description)
-	} else {
-		data.Description = types.StringNull()
-	}
-
-	data.ID = types.StringValue(*output.InferenceProfileId)
-	data.InferenceProfileARN = types.StringValue(*output.InferenceProfileArn)
-	data.InferenceProfileName = types.StringValue(*output.InferenceProfileName)
-
-	var modelsList []attr.Value
-	for _, model := range output.Models {
-		modelObj, diags := types.ObjectValue(
-			map[string]attr.Type{
-				"model_arn": types.StringType,
-			},
-			map[string]attr.Value{
-				"model_arn": types.StringValue(*model.ModelArn),
-			},
-		)
-		response.Diagnostics.Append(diags...)
-		modelsList = append(modelsList, modelObj)
-	}
-
-	modelsValue, diags := types.ListValue(
-		types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"model_arn": types.StringType,
-			},
-		},
-		modelsList,
-	)
-
-	response.Diagnostics.Append(diags...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.Models = modelsValue
-	data.Status = types.StringValue(string(output.Status))
-	data.Type = types.StringValue(string(output.Type))
-	data.UpdatedAt = timetypes.NewRFC3339TimeValue(*output.UpdatedAt)
+
+	data.ID = types.StringValue(*output.InferenceProfileId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type inferenceProfileDataSourceModel struct {
-	ID                   types.String      `tfsdk:"id"`
-	InferenceProfileARN  types.String      `tfsdk:"inference_profile_arn"`
-	InferenceProfileID   types.String      `tfsdk:"inference_profile_id"`
-	InferenceProfileName types.String      `tfsdk:"inference_profile_name"`
-	Models               types.List        `tfsdk:"models"`
-	Status               types.String      `tfsdk:"status"`
-	Type                 types.String      `tfsdk:"type"`
-	CreatedAt            timetypes.RFC3339 `tfsdk:"created_at"`
-	Description          types.String      `tfsdk:"description"`
-	UpdatedAt            timetypes.RFC3339 `tfsdk:"updated_at"`
+	ID                   types.String                                                `tfsdk:"id"`
+	InferenceProfileARN  types.String                                                `tfsdk:"inference_profile_arn"`
+	InferenceProfileID   types.String                                                `tfsdk:"inference_profile_id"`
+	InferenceProfileName types.String                                                `tfsdk:"inference_profile_name"`
+	Models               fwtypes.ListNestedObjectValueOf[inferenceProfileModelModel] `tfsdk:"models"`
+	Status               types.String                                                `tfsdk:"status"`
+	Type                 types.String                                                `tfsdk:"type"`
+	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
+	Description          types.String                                                `tfsdk:"description"`
+	UpdatedAt            timetypes.RFC3339                                           `tfsdk:"updated_at"`
+}
+
+type inferenceProfileModelModel struct {
+	ModelArn types.String `tfsdk:"model_arn"`
 }

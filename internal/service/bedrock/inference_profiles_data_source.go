@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -35,19 +34,6 @@ func (d *inferenceProfilesDataSource) Schema(ctx context.Context, request dataso
 			"inference_profile_summaries": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileSummaryModel](ctx),
 				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"created_at":             timetypes.RFC3339Type{},
-						"description":            types.StringType,
-						"inference_profile_arn":  types.StringType,
-						"inference_profile_id":   types.StringType,
-						"inference_profile_name": types.StringType,
-						"models":                 fwtypes.NewListNestedObjectTypeOf[modelModel](ctx),
-						"status":                 types.StringType,
-						"type":                   types.StringType,
-						"updated_at":             timetypes.RFC3339Type{},
-					},
-				},
 			},
 		},
 	}
@@ -91,17 +77,13 @@ type inferenceProfilesDataSourceModel struct {
 }
 
 type inferenceProfileSummaryModel struct {
-	CreatedAt            timetypes.RFC3339                           `tfsdk:"created_at"`
-	Description          types.String                                `tfsdk:"description"`
-	InferenceProfileArn  types.String                                `tfsdk:"inference_profile_arn"`
-	InferenceProfileId   types.String                                `tfsdk:"inference_profile_id"`
-	InferenceProfileName types.String                                `tfsdk:"inference_profile_name"`
-	Models               fwtypes.ListNestedObjectValueOf[modelModel] `tfsdk:"models"`
-	Status               types.String                                `tfsdk:"status"`
-	Type                 types.String                                `tfsdk:"type"`
-	UpdatedAt            timetypes.RFC3339                           `tfsdk:"updated_at"`
-}
-
-type modelModel struct {
-	ModelArn types.String `tfsdk:"model_arn"`
+	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
+	Description          types.String                                                `tfsdk:"description"`
+	InferenceProfileArn  types.String                                                `tfsdk:"inference_profile_arn"`
+	InferenceProfileId   types.String                                                `tfsdk:"inference_profile_id"`
+	InferenceProfileName types.String                                                `tfsdk:"inference_profile_name"`
+	Models               fwtypes.ListNestedObjectValueOf[inferenceProfileModelModel] `tfsdk:"models"`
+	Status               types.String                                                `tfsdk:"status"`
+	Type                 types.String                                                `tfsdk:"type"`
+	UpdatedAt            timetypes.RFC3339                                           `tfsdk:"updated_at"`
 }
