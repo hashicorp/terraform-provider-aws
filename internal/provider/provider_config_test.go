@@ -439,10 +439,76 @@ func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 			},
 		},
 
+		// For historical reasons, this is valid
+		"config null string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": nil,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredWillBeError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		// For historical reasons, this is valid
+		"config empty string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": "",
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredWillBeError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
 		"config multiple first empty": {
 			Config: map[string]any{
 				"assume_role": []any{
 					map[string]any{},
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn2,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName2,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		"config multiple first null string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": nil,
+					},
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn2,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName2,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		"config multiple first empty string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": nil,
+					},
 					map[string]any{
 						"role_arn":     servicemocks.MockStsAssumeRoleArn2,
 						"session_name": servicemocks.MockStsAssumeRoleSessionName2,
@@ -463,6 +529,48 @@ func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 						"session_name": servicemocks.MockStsAssumeRoleSessionName,
 					},
 					map[string]any{},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(1), "role_arn"),
+			},
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+			},
+		},
+
+		"config multiple last null string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+					map[string]any{
+						"role_arn": nil,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(1), "role_arn"),
+			},
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+			},
+		},
+
+		"config multiple last empty string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+					map[string]any{
+						"role_arn": "",
+					},
 				},
 			},
 			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,

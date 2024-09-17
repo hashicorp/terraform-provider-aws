@@ -243,35 +243,6 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 	return m
 }
 
-func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
-	endpoint := c.endpoints[servicePackageName]
-	if endpoint != "" {
-		return endpoint
-	}
-
-	// Only continue if there is an SDK v1 package. SDK v2 supports envvars and config file
-	if names.IsClientSDKV1(servicePackageName) {
-		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
-
-		envvar := names.AWSServiceEnvVar(servicePackageName)
-		svc := os.Getenv(envvar)
-		if svc != "" {
-			return svc
-		}
-
-		if base := os.Getenv("AWS_ENDPOINT_URL"); base != "" {
-			return base
-		}
-
-		sdkId := names.SDKID(servicePackageName)
-		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
-		if found && err == nil {
-			return endpoint
-		}
-	}
-	return endpoint
-}
-
 // serviceBaseEndpointProvider is needed to search for all providers
 // that provide a configured service endpoint
 type serviceBaseEndpointProvider interface {

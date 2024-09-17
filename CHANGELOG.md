@@ -1,11 +1,19 @@
 ## 5.68.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_pinpointsmsvoicev2_opt_out_list` ([#25036](https://github.com/hashicorp/terraform-provider-aws/issues/25036))
+* **New Resource:** `aws_pinpointsmsvoicev2_phone_number` ([#25036](https://github.com/hashicorp/terraform-provider-aws/issues/25036))
+* **New Resource:** `aws_sesv2_account_suppression_attributes` ([#39325](https://github.com/hashicorp/terraform-provider-aws/issues/39325))
+
 ENHANCEMENTS:
 
 * resource/aws_synthetics_canary: Increase maximum `name` length to 255 characters ([#39315](https://github.com/hashicorp/terraform-provider-aws/issues/39315))
 
 BUG FIXES:
 
+* provider: Allows `assume_role.role_arn` to be an empty string when there is a single `assume_role` entry. ([#39328](https://github.com/hashicorp/terraform-provider-aws/issues/39328))
+* resource/aws_dynamodb_table: Fix changing replicas to the default `Managed by DynamoDB` encryption setting ([#31284](https://github.com/hashicorp/terraform-provider-aws/issues/31284))
 * resource/aws_dynamodb_table: Handle eventual consistency of tag creation and removal ([#39326](https://github.com/hashicorp/terraform-provider-aws/issues/39326))
 * resource/aws_dynamodb_table_replica: Handle eventual consistency of tag creation and removal ([#39326](https://github.com/hashicorp/terraform-provider-aws/issues/39326))
 * resource/aws_dynamodb_tag: Handle eventual consistency of tag creation and removal ([#39326](https://github.com/hashicorp/terraform-provider-aws/issues/39326))
