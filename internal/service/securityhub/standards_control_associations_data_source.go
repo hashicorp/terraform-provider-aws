@@ -10,55 +10,86 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_securityhub_standards_control_associations", name="Standards Control Associations")
-func dataSourceStandardsControlAssociations() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceStandardsControlAssociationsRead,
-		Schema: map[string]*schema.Schema{
-			"security_control_id": {
-				Type:     schema.TypeString,
+// @FrameworkDataSource(name=StandardsControlAssociations)
+func newDataSourceStandardsControlAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSourceStandardsControlAssociations{}
+
+	return d, nil
+}
+
+const (
+	DSNameStandardsControlAssociations = "Standards Control Associations Data Source"
+)
+
+type dataSourceStandardsControlAssociations struct {
+	framework.DataSourceWithConfigure
+}
+
+func (d *dataSourceStandardsControlAssociations) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_securityhub_standards_control_associations"
+}
+
+func (d *dataSourceStandardsControlAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrID: framework.IDAttribute(),
+			"security_control_id": schema.StringAttribute{
 				Required: true,
 			},
-			"standards_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"standards_arns": schema.ListAttribute{
+				ElementType: fwtypes.StringType,
+				Computed:    true,
 			},
 		},
 	}
 }
 
-func dataSourceStandardsControlAssociationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+func (d *dataSourceStandardsControlAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data dataSourceStandardsControlAssociationsData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := d.Meta().SecurityHubClient(ctx)
 
 	input := &securityhub.ListStandardsControlAssociationsInput{
-		SecurityControlId: aws.String(d.Get("security_control_id").(string)),
+		SecurityControlId: data.SecurityControlID.ValueStringPointer(),
 	}
 
 	standardsControlAssociations, err := findStandardsControlAssociations(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Control Associations (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DevOpsGuru, create.ErrActionReading, DSNameStandardsControlAssociations, data.SecurityControlID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	var standardsArns []string
+	data.ID = fwtypes.StringValue(d.Meta().Region)
+	data.StandardsARNs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(standardsControlAssociations, func(v types.StandardsControlAssociationSummary) string {
+		return aws.ToString(v.StandardsArn)
+	}))
 
-	for _, v := range standardsControlAssociations {
-		standardsArns = append(standardsArns, aws.ToString(v.StandardsArn))
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("standards_arns", standardsArns)
-
-	return diags
+type dataSourceStandardsControlAssociationsData struct {
+	ID                fwtypes.String `tfsdk:"id"`
+	SecurityControlID fwtypes.String `tfsdk:"security_control_id"`
+	StandardsARNs     fwtypes.List   `tfsdk:"standards_arns"`
 }
 
 func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput) ([]types.StandardsControlAssociationSummary, error) {
