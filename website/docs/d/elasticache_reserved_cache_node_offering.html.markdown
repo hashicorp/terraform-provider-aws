@@ -13,9 +13,9 @@ Information about a single ElastiCache Reserved Cache Node Offering.
 ## Example Usage
 
 ```terraform
-data "aws_elasticache_reserved_cache_node_offering" "test" {
+data "aws_elasticache_reserved_cache_node_offering" "example" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "redis"
 }
@@ -26,7 +26,8 @@ data "aws_elasticache_reserved_cache_node_offering" "test" {
 The following arguments are supported:
 
 * `cache_node_type` - (Required) Node type for the reserved cache node.
-* `duration` - (Required) Duration of the reservation in seconds.
+* `duration` - (Required) Duration of the reservation in RFC3339 duration format.
+  Valid values are `P1Y` (one year) and `P3Y` (three years).
 * `offering_type` - (Required) Offering type of this reserved cache node.
 * `product_description` - (Required) Description of the reserved cache node.
 

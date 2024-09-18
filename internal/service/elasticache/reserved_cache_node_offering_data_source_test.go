@@ -25,7 +25,7 @@ func TestAccElastiCacheReservedNodeOffering_basic(t *testing.T) {
 				Config: testAccReservedNodeOfferingConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cache_node_type", "cache.t4g.small"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrDuration, "31536000"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDuration, "P1Y"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "fixed_price"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "offering_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "offering_type", "No Upfront"),
@@ -40,7 +40,7 @@ func testAccReservedNodeOfferingConfig_basic() string {
 	return `
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "redis"
 }

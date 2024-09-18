@@ -5,9 +5,7 @@ package elasticache
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -16,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,8 +38,12 @@ func (d *dataSourceReservedCacheNodeOffering) Schema(ctx context.Context, reques
 			"cache_node_type": schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrDuration: schema.Int32Attribute{
-				Required: true,
+			names.AttrDuration: schema.StringAttribute{
+				CustomType: fwtypes.RFC3339DurationType,
+				Required:   true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("P1Y", "P3Y"),
+				},
 			},
 			"fixed_price": schema.Float64Attribute{
 				Computed: true,
@@ -71,7 +74,7 @@ func (d *dataSourceReservedCacheNodeOffering) Schema(ctx context.Context, reques
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceReservedCacheNodeOffering) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceReservedCacheNodeOfferingData
+	var data dataSourceReservedCacheNodeOfferingModel
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -84,8 +87,9 @@ func (d *dataSourceReservedCacheNodeOffering) Read(ctx context.Context, request 
 
 	var input elasticache.DescribeReservedCacheNodesOfferingsInput
 	response.Diagnostics.Append(flex.Expand(ctx, data, &input, flexOpt)...)
-
-	input.Duration = aws.String(fmt.Sprint(data.Duration.ValueInt32()))
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	resp, err := conn.DescribeReservedCacheNodesOfferings(ctx, &input)
 	if err != nil {
@@ -107,11 +111,11 @@ func (d *dataSourceReservedCacheNodeOffering) Read(ctx context.Context, request 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceReservedCacheNodeOfferingData struct {
-	CacheNodeType      types.String  `tfsdk:"cache_node_type"`
-	Duration           types.Int32   `tfsdk:"duration" autoflex:"-"`
-	FixedPrice         types.Float64 `tfsdk:"fixed_price"`
-	OfferingID         types.String  `tfsdk:"offering_id"`
-	OfferingType       types.String  `tfsdk:"offering_type"`
-	ProductDescription types.String  `tfsdk:"product_description"`
+type dataSourceReservedCacheNodeOfferingModel struct {
+	CacheNodeType      types.String            `tfsdk:"cache_node_type"`
+	Duration           fwtypes.RFC3339Duration `tfsdk:"duration" autoflex:",noflatten"`
+	FixedPrice         types.Float64           `tfsdk:"fixed_price"`
+	OfferingID         types.String            `tfsdk:"offering_id"`
+	OfferingType       types.String            `tfsdk:"offering_type"`
+	ProductDescription types.String            `tfsdk:"product_description"`
 }
