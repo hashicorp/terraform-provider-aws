@@ -74,8 +74,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ses_event_destination",
 		},
 		{
-			Factory:  ResourceIdentityNotificationTopic,
+			Factory:  resourceIdentityNotificationTopic,
 			TypeName: "aws_ses_identity_notification_topic",
+			Name:     "Identity Notification Topic",
 		},
 		{
 			Factory:  resourceIdentityPolicy,

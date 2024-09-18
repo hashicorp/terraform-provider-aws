@@ -210,12 +210,12 @@ func findIdentityPolicyByTwoPartKey(ctx context.Context, conn *ses.Client, ident
 		return "", err
 	}
 
-	policy, ok := output[policyName]
+	v, ok := output[policyName]
 	if !ok {
 		return "", &retry.NotFoundError{}
 	}
 
-	return policy, nil
+	return v, nil
 }
 
 func findIdentityPolicies(ctx context.Context, conn *ses.Client, input *ses.GetIdentityPoliciesInput) (map[string]string, error) {
