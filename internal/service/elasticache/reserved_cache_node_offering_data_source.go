@@ -66,6 +66,9 @@ func (d *dataSourceReservedCacheNodeOffering) Schema(ctx context.Context, reques
 			},
 			"product_description": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(engine_Values()...),
+				},
 			},
 		},
 	}
