@@ -462,7 +462,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_directoryBucket(t *testing
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtTrue),
 				),
 			},
 			{
