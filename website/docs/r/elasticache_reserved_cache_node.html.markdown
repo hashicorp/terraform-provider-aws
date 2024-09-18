@@ -48,7 +48,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the reserved cache node.
 * `duration` - Duration of the reservation as an RFC3339 duration.
@@ -72,8 +72,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RDS DB Instance Reservations can be imported using the `instance_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Reserved Cache Nodes using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_reserved_cache_node.example
+  id = "CustomReservationID"
+}
 ```
-$ terraform import aws_elasticache_reserved_cache_node.reservation_node CustomReservationID
+
+Using `terraform import`, import ElastiCache Reserved Cache Node using the `id`. For example:
+
+```console
+% terraform import aws_elasticache_reserved_cache_node.example CustomReservationID
 ```
