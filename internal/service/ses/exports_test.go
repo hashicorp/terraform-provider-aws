@@ -7,7 +7,9 @@ package ses
 var (
 	ResourceReceiptRule    = resourceReceiptRule
 	ResourceReceiptRuleSet = resourceReceiptRuleSet
+	ResourceTemplate       = resourceTemplate
 
 	FindReceiptRuleByTwoPartKey = findReceiptRuleByTwoPartKey
 	FindReceiptRuleSetByName    = findReceiptRuleSetByName
+	FindTemplateByName          = findTemplateByName
 )
