@@ -296,8 +296,8 @@ github.com/aws/aws-sdk-go-v2/service/iot v1.56.1 h1:DeFA4wZtADcath1u9LzqAX8aLsMW
 github.com/aws/aws-sdk-go-v2/service/iot v1.56.1/go.mod h1:mgVTUjayo8w9tYzOINbrSFGRwHGv6r6a8yY+I3REtqE=
 github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.7 h1:iKE4lUn8/WMm7yMFq2brCugSHYeJUJHQ+14Xmbvly30=
 github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.7/go.mod h1:vxKTn6HxISghOFlulw2RNzt+oGCJrU9yXv1qs3o4BdU=
-github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.6 h1:2sSDmW9rP8BMcRdPYecUm2UTwYn+yEyTqQorwguYw3s=
-github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.6/go.mod h1:GJ/qdiX9bik1A5ZtMBAVe+PrtIOWtV1pJpDIKPHbFX0=
+github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.7 h1:ZgWGceINYoyjbgFATHImdYGDWS/8IYlTVFBEalp4ZAg=
+github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.7/go.mod h1:GJ/qdiX9bik1A5ZtMBAVe+PrtIOWtV1pJpDIKPHbFX0=
 github.com/aws/aws-sdk-go-v2/service/ivs v1.38.4 h1:kYiu1R7F7r/5okvvaODTeuhR+RY77O4PtxqTtb7cg5I=
 github.com/aws/aws-sdk-go-v2/service/ivs v1.38.4/go.mod h1:0zbldZ1SfuX7fwhgekjM+1NzQcZFhmrAJMPUNxFt0Io=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.8 h1:T5Ty29/5xBlhkUBUcZZTNwaGECLbo7NrIWqqI4xtTKU=
