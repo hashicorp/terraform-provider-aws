@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package bedrock
 
 import (
@@ -77,13 +80,17 @@ type inferenceProfilesDataSourceModel struct {
 }
 
 type inferenceProfileSummaryModel struct {
-	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
-	Description          types.String                                                `tfsdk:"description"`
-	InferenceProfileArn  types.String                                                `tfsdk:"inference_profile_arn"`
-	InferenceProfileId   types.String                                                `tfsdk:"inference_profile_id"`
-	InferenceProfileName types.String                                                `tfsdk:"inference_profile_name"`
-	Models               fwtypes.ListNestedObjectValueOf[inferenceProfileModelModel] `tfsdk:"models"`
-	Status               types.String                                                `tfsdk:"status"`
-	Type                 types.String                                                `tfsdk:"type"`
-	UpdatedAt            timetypes.RFC3339                                           `tfsdk:"updated_at"`
+	CreatedAt            timetypes.RFC3339                                            `tfsdk:"created_at"`
+	Description          types.String                                                 `tfsdk:"description"`
+	InferenceProfileArn  types.String                                                 `tfsdk:"inference_profile_arn"`
+	InferenceProfileId   types.String                                                 `tfsdk:"inference_profile_id"`
+	InferenceProfileName types.String                                                 `tfsdk:"inference_profile_name"`
+	Models               fwtypes.ListNestedObjectValueOf[inferenceProfilesModelModel] `tfsdk:"models"`
+	Status               types.String                                                 `tfsdk:"status"`
+	Type                 types.String                                                 `tfsdk:"type"`
+	UpdatedAt            timetypes.RFC3339                                            `tfsdk:"updated_at"`
+}
+
+type inferenceProfilesModelModel struct {
+	ModelArn types.String `tfsdk:"model_arn"`
 }
