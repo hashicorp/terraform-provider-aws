@@ -17,7 +17,7 @@ Manages an ElastiCache Reserved Cache Node.
 ## Example Usage
 
 ```terraform
-data "aws_elasticache_reserved_cache_node_offering" "test" {
+data "aws_elasticache_reserved_cache_node_offering" "example" {
   cache_node_type     = "cache.t4g.small"
   duration            = "P1Y"
   offering_type       = "No Upfront"
@@ -25,9 +25,9 @@ data "aws_elasticache_reserved_cache_node_offering" "test" {
 }
 
 resource "aws_elasticache_reserved_cache_node" "example" {
-  offering_id      = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
-  reservation_id   = "optionalCustomReservationID"
-  cache_node_count = 3
+  reserved_cache_nodes_offering_id = data.aws_elasticache_reserved_cache_node_offering.example.offering_id
+  id                               = "optionalCustomReservationID"
+  cache_node_count                 = 3
 }
 ```
 
@@ -35,12 +35,15 @@ resource "aws_elasticache_reserved_cache_node" "example" {
 
 The following arguments are required:
 
-* `offering_id` - (Required) ID of the reserved cache node offering to purchase. To determine an `offering_id`, see the `aws_elasticache_reserved_cache_node_offering` data source.
+* `reserved_cache_nodes_offering_id` - (Required) ID of the reserved cache node offering to purchase.
+  To determine an `reserved_cache_nodes_offering_id`, see the `aws_elasticache_reserved_cache_node_offering` data source.
 
 The following arguments are optional:
 
-* `instance_count` - (Optional) Number of cache node instances to reserve. Default value is `1`.
-* `reservation_id` - (Optional) Customer-specified identifier to track this reservation.
+* `instance_count` - (Optional) Number of cache node instances to reserve.
+  Default value is `1`.
+* `id` - (Optional) Customer-specified identifier to track this reservation.
+  If not specified, AWS will assign a random ID.
 * `tags` - (Optional) Map of tags to assign to the reservation. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
@@ -48,12 +51,11 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN for the reserved cache node.
-* `id` - Unique identifier for the reservation. same as `reservation_id`.
 * `duration` - Duration of the reservation as an RFC3339 duration.
 * `fixed_price` – Fixed price charged for this reserved cache node.
-* `cache_node_type` - Cache node type for the reserved cache nodes.
+* `cache_node_type` - Node type for the reserved cache nodes.
 * `offering_type` - Offering type of this reserved cache node.
-* `product_description` - Description of the reserved cache node.
+* `product_description` - Engine type for the reserved cache node.
 * `recurring_charges` - Recurring price charged to run this reserved cache node.
 * `start_time` - Time the reservation started.
 * `state` - State of the reserved cache node.
