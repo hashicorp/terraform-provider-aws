@@ -89,7 +89,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"DisabledControlStatus":                 testAccStandardsControl_disabledControlStatus,
 			"EnabledControlStatusAndDisabledReason": testAccStandardsControl_enabledControlStatusAndDisabledReason,
 		},
-		"StandardsAssociationsDataSource": {
+		"StandardsControlAssociationsDataSource": {
 			acctest.CtBasic: testAccStandardsControlAssociationsDataSource_basic,
 		},
 		"StandardsSubscription": {
