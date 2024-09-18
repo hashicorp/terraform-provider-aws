@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,14 +15,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESEventDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
-	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
@@ -78,8 +77,8 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 func TestAccSESEventDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
-	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
@@ -115,25 +114,21 @@ func testAccCheckEventDestinationDestroy(ctx context.Context) resource.TestCheck
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_ses_configuration_set" {
+			if rs.Type != "aws_ses_event_destination" {
 				continue
 			}
 
-			response, err := conn.ListConfigurationSets(ctx, &ses.ListConfigurationSetsInput{})
+			_, err := tfses.FindEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			found := false
-			for _, element := range response.ConfigurationSets {
-				if aws.ToString(element.Name) == rs.Primary.ID {
-					found = true
-				}
-			}
-
-			if found {
-				return fmt.Errorf("The configuration set still exists")
-			}
+			return fmt.Errorf("SES Configuration Set Event Destination %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -144,31 +139,20 @@ func testAccCheckEventDestinationExists(ctx context.Context, n string, v *awstyp
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES event destination not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES event destination ID not set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		response, err := conn.DescribeConfigurationSet(ctx, &ses.DescribeConfigurationSetInput{
-			ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{awstypes.ConfigurationSetAttributeEventDestinations},
-			ConfigurationSetName:           aws.String(rs.Primary.Attributes["configuration_set_name"]),
-		})
+		output, err := tfses.FindEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		for _, eventDestination := range response.EventDestinations {
-			if aws.ToString(eventDestination.Name) == rs.Primary.ID {
-				*v = eventDestination
-				return nil
-			}
-		}
+		*v = *output
 
-		return fmt.Errorf("The SES Configuration Set Event Destination was not found")
+		return nil
 	}
 }
 
