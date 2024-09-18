@@ -19,7 +19,7 @@ Manages an ElastiCache Reserved Cache Node.
 ```terraform
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "redis"
 }
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN for the reserved cache node.
 * `id` - Unique identifier for the reservation. same as `reservation_id`.
-* `duration` - Duration of the reservation in seconds.
+* `duration` - Duration of the reservation as an RFC3339 duration.
 * `fixed_price` – Fixed price charged for this reserved cache node.
 * `cache_node_type` - Cache node type for the reserved cache nodes.
 * `offering_type` - Offering type of this reserved cache node.

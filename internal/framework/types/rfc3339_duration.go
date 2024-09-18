@@ -6,6 +6,7 @@ package types
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
@@ -113,6 +114,15 @@ func RFC3339DurationValue(value string) RFC3339Duration {
 
 	return RFC3339Duration{
 		StringValue: basetypes.NewStringValue(value),
+		value:       v,
+	}
+}
+
+func RFC3339DurationTimeDurationValue(value time.Duration) RFC3339Duration {
+	v := duration.NewFromTimeDuration(value)
+
+	return RFC3339Duration{
+		StringValue: basetypes.NewStringValue(v.String()),
 		value:       v,
 	}
 }

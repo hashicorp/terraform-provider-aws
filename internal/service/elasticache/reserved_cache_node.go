@@ -64,12 +64,14 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				Computed: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			"cache_node_type": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.RFC3339DurationType,
+				Computed:   true,
 			},
-			names.AttrDuration: schema.Int32Attribute{
+			names.AttrDuration: schema.StringAttribute{
 				Computed: true,
 			},
 			"fixed_price": schema.Float64Attribute{
@@ -80,6 +82,7 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"reserved_cache_nodes_offering_id": schema.StringAttribute{
@@ -164,6 +167,9 @@ func (r *resourceReservedCacheNode) Create(ctx context.Context, request resource
 		return
 	}
 
+	duration := time.Duration(aws.ToInt32(resp.ReservedCacheNode.Duration)) * time.Second
+	data.Duration = fwtypes.RFC3339DurationTimeDurationValue(duration)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -195,6 +201,9 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 		return
 	}
 
+	duration := time.Duration(aws.ToInt32(reservation.Duration)) * time.Second
+	data.Duration = fwtypes.RFC3339DurationTimeDurationValue(duration)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -216,7 +225,7 @@ type resourceReservedCacheNodeModel struct {
 	ARN                          types.String                                          `tfsdk:"arn"`
 	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
-	Duration                     types.Int32                                           `tfsdk:"duration"`
+	Duration                     fwtypes.RFC3339Duration                               `tfsdk:"duration" autoflex:",noflatten"`
 	FixedPrice                   types.Float64                                         `tfsdk:"fixed_price"`
 	ID                           types.String                                          `tfsdk:"id"`
 	ReservedCacheNodesOfferingID types.String                                          `tfsdk:"reserved_cache_nodes_offering_id"`
