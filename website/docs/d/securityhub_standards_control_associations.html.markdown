@@ -37,7 +37,7 @@ See [`standards_control_associations`](#standards_control_associations-attribute
 
 ### `standards_control_associations` Attribute Reference
 
-* `assocation_status` - Enablement status of a control in a specific standard.
+* `association_status` - Enablement status of a control in a specific standard.
 * `related_requirements` - List of underlying requirements in the compliance framework related to the standard.
 * `security_control_arn` - ARN of the security control.
 * `security_control_id` - ID of the security control.
