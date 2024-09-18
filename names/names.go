@@ -368,16 +368,13 @@ func ReverseDNS(hostname string) string {
 // Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are
 // described in detail in README.md.
 type serviceDatum struct {
-	aliases            []string
-	awsServiceEnvVar   string
-	brand              string
-	isClientSDKV1      bool
-	deprecatedEnvVar   string
-	goV1ClientTypeName string
-	humanFriendly      string
-	providerNameUpper  string
-	sdkID              string
-	tfAWSEnvVar        string
+	aliases           []string
+	awsServiceEnvVar  string
+	brand             string
+	deprecatedEnvVar  string
+	humanFriendly     string
+	providerNameUpper string
+	tfAWSEnvVar       string
 }
 
 // serviceData key is the AWS provider service package
@@ -413,15 +410,12 @@ func readHCLIntoServiceData() error {
 		p := l.ProviderPackage()
 
 		sd := serviceDatum{
-			awsServiceEnvVar:   l.AWSServiceEnvVar(),
-			brand:              l.Brand(),
-			isClientSDKV1:      l.IsClientSDKV1(),
-			deprecatedEnvVar:   l.DeprecatedEnvVar(),
-			goV1ClientTypeName: l.GoV1ClientTypeName(),
-			humanFriendly:      l.HumanFriendly(),
-			providerNameUpper:  l.ProviderNameUpper(),
-			sdkID:              l.SDKID(),
-			tfAWSEnvVar:        l.TFAWSEnvVar(),
+			awsServiceEnvVar:  l.AWSServiceEnvVar(),
+			brand:             l.Brand(),
+			deprecatedEnvVar:  l.DeprecatedEnvVar(),
+			humanFriendly:     l.HumanFriendly(),
+			providerNameUpper: l.ProviderNameUpper(),
+			tfAWSEnvVar:       l.TFAWSEnvVar(),
 		}
 
 		a := []string{p}
@@ -528,23 +522,6 @@ func AWSServiceEnvVar(service string) string {
 	return ""
 }
 
-// Service SDK ID from AWS SDK for Go v2
-func SDKID(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.sdkID
-	}
-
-	return ""
-}
-
-func IsClientSDKV1(service string) bool {
-	if v, ok := serviceData[service]; ok {
-		return v.isClientSDKV1
-	}
-
-	return false
-}
-
 func FullHumanFriendly(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
 		if v.brand == "" {
@@ -571,12 +548,4 @@ func HumanFriendly(service string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
-}
-
-func AWSGoV1ClientTypeName(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.goV1ClientTypeName, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v1 client type name, %s not found", providerPackage)
 }
