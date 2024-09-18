@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.7
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.7
-	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.12.8
+	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.6
