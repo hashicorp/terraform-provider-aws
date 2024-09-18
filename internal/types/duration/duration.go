@@ -71,7 +71,7 @@ func NewFromTimeDuration(t time.Duration) (result Duration) {
 
 	const (
 		day  = uint64(24 * time.Hour)
-		year = uint64(365 * day)
+		year = 365 * day
 	)
 
 	if u >= year {
