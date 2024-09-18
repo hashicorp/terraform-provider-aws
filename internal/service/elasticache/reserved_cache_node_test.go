@@ -122,7 +122,7 @@ func testAccReservedInstanceExists(ctx context.Context, n string, reservation *a
 func testAccReservedInstanceConfig_basic() string {
 	return `
 resource "aws_elasticache_reserved_cache_node" "test" {
-  offering_id      = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
+  offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
