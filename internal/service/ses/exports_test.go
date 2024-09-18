@@ -5,7 +5,9 @@ package ses
 
 // Exports for use in tests only.
 var (
-	ResourceReceiptRule = resourceReceiptRule
+	ResourceReceiptRule    = resourceReceiptRule
+	ResourceReceiptRuleSet = resourceReceiptRuleSet
 
 	FindReceiptRuleByTwoPartKey = findReceiptRuleByTwoPartKey
+	FindReceiptRuleSetByName    = findReceiptRuleSetByName
 )

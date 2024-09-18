@@ -91,8 +91,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Receipt Rule",
 		},
 		{
-			Factory:  ResourceReceiptRuleSet,
+			Factory:  resourceReceiptRuleSet,
 			TypeName: "aws_ses_receipt_rule_set",
+			Name:     "Receipt Rule Set",
 		},
 		{
 			Factory:  ResourceTemplate,
