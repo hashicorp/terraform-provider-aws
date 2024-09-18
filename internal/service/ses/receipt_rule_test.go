@@ -365,6 +365,34 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSESReceiptRule_Disappears_receiptRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule awstypes.ReceiptRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ses_receipt_rule.test"
 	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
