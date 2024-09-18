@@ -245,7 +245,7 @@ func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData,
 		EventDestinationName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.EventDestinationDoesNotExistException](err) {
+	if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) || errs.IsA[*awstypes.EventDestinationDoesNotExistException](err) {
 		return diags
 	}
 
