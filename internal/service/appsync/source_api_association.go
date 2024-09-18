@@ -321,12 +321,12 @@ func (r *sourceAPIAssociationResource) Delete(ctx context.Context, request resou
 		return
 	}
 
-	in := &appsync.DisassociateSourceGraphqlApiInput{
-		AssociationId:       aws.String(state.AssociationId.ValueString()),
-		MergedApiIdentifier: aws.String(state.MergedAPIArn.ValueString()),
+	in := appsync.DisassociateSourceGraphqlApiInput{
+		AssociationId:       state.AssociationId.ValueStringPointer(),
+		MergedApiIdentifier: state.MergedAPIArn.ValueStringPointer(),
 	}
 
-	_, err := conn.DisassociateSourceGraphqlApi(ctx, in)
+	_, err := conn.DisassociateSourceGraphqlApi(ctx, &in)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return

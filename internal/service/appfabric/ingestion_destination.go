@@ -259,9 +259,9 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 	}
 
 	// Additional fields.
-	input.AppBundleIdentifier = aws.String(data.AppBundleARN.ValueString())
+	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
 	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
-	input.IngestionIdentifier = aws.String(data.IngestionARN.ValueString())
+	input.IngestionIdentifier = data.IngestionARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIngestionDestination(ctx, input)
@@ -384,9 +384,9 @@ func (r *ingestionDestinationResource) Update(ctx context.Context, request resou
 		}
 
 		// Additional fields.
-		input.AppBundleIdentifier = aws.String(new.AppBundleARN.ValueString())
-		input.IngestionDestinationIdentifier = aws.String(new.ARN.ValueString())
-		input.IngestionIdentifier = aws.String(new.IngestionARN.ValueString())
+		input.AppBundleIdentifier = new.AppBundleARN.ValueStringPointer()
+		input.IngestionDestinationIdentifier = new.ARN.ValueStringPointer()
+		input.IngestionIdentifier = new.IngestionARN.ValueStringPointer()
 
 		_, err := conn.UpdateIngestionDestination(ctx, input)
 
@@ -416,9 +416,9 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, request resou
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteIngestionDestination(ctx, &appfabric.DeleteIngestionDestinationInput{
-		AppBundleIdentifier:            aws.String(data.AppBundleARN.ValueString()),
-		IngestionDestinationIdentifier: aws.String(data.ARN.ValueString()),
-		IngestionIdentifier:            aws.String(data.IngestionARN.ValueString()),
+		AppBundleIdentifier:            data.AppBundleARN.ValueStringPointer(),
+		IngestionDestinationIdentifier: data.ARN.ValueStringPointer(),
+		IngestionIdentifier:            data.IngestionARN.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

@@ -147,7 +147,7 @@ func (r *optOutListResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	_, err := conn.DeleteOptOutList(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
-		OptOutListName: aws.String(data.ID.ValueString()),
+		OptOutListName: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
