@@ -78,8 +78,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ses_identity_notification_topic",
 		},
 		{
-			Factory:  ResourceIdentityPolicy,
+			Factory:  resourceIdentityPolicy,
 			TypeName: "aws_ses_identity_policy",
+			Name:     "Identity Policy",
 		},
 		{
 			Factory:  resourceReceiptFilter,

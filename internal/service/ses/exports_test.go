@@ -5,13 +5,15 @@ package ses
 
 // Exports for use in tests only.
 var (
+	ResourceIdentityPolicy = resourceIdentityPolicy
 	ResourceReceiptFilter  = resourceReceiptFilter
 	ResourceReceiptRule    = resourceReceiptRule
 	ResourceReceiptRuleSet = resourceReceiptRuleSet
 	ResourceTemplate       = resourceTemplate
 
-	FindReceiptFilterByName     = findReceiptFilterByName
-	FindReceiptRuleByTwoPartKey = findReceiptRuleByTwoPartKey
-	FindReceiptRuleSetByName    = findReceiptRuleSetByName
-	FindTemplateByName          = findTemplateByName
+	FindIdentityPolicyByTwoPartKey = findIdentityPolicyByTwoPartKey
+	FindReceiptFilterByName        = findReceiptFilterByName
+	FindReceiptRuleByTwoPartKey    = findReceiptRuleByTwoPartKey
+	FindReceiptRuleSetByName       = findReceiptRuleSetByName
+	FindTemplateByName             = findTemplateByName
 )
