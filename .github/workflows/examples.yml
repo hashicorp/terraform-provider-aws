@@ -56,8 +56,6 @@ jobs:
               --enable-rule=terraform_comment_syntax \
               --enable-rule=terraform_deprecated_index \
               --enable-rule=terraform_deprecated_interpolation \
-              --enable-rule=terraform_required_version \
-              --disable-rule=terraform_required_providers \
               --disable-rule=terraform_typed_variables \
               || exit_code=1
             popd

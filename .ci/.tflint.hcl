@@ -4,6 +4,14 @@ plugin "aws" {
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
+rule "terraform_required_providers" {
+  enabled = false
+}
+
+rule "terraform_required_version" {
+  enabled = false
+}
+
 rule "aws_acm_certificate_lifecycle" {
   enabled = false
 }

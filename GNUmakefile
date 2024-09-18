@@ -252,7 +252,6 @@ examples-tflint: ## [CI] Examples Checks / tflint
 			--enable-rule=terraform_deprecated_index \
 			--enable-rule=terraform_deprecated_interpolation \
 			--enable-rule=terraform_required_version \
-			--disable-rule=terraform_required_providers \
 			--disable-rule=terraform_typed_variables \
 			|| exit_code=1 ; \
 		popd ; \
@@ -794,7 +793,6 @@ website-tflint: ## [CI] Website Checks / tflint
 		"--disable-rule=aws_servicecatalog_portfolio_share_invalid_type" \
 		"--disable-rule=aws_transfer_ssh_key_invalid_body" \
 		"--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate" \
-		"--disable-rule=terraform_required_providers" \
 		"--disable-rule=terraform_unused_declarations" \
 		"--disable-rule=terraform_typed_variables" \
 	) ; \
