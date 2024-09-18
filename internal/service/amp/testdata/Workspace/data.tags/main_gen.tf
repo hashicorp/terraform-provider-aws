@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_prometheus_workspace" "test" {
   workspace_id = aws_prometheus_workspace.test.id
 }
