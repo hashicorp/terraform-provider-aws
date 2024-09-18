@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.7
-	github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.27.6
