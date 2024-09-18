@@ -6,18 +6,18 @@ package securityhub
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
-	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,9 +47,45 @@ func (d *dataSourceStandardsControlAssociations) Schema(ctx context.Context, req
 			"security_control_id": schema.StringAttribute{
 				Required: true,
 			},
-			"standards_arns": schema.ListAttribute{
-				ElementType: fwtypes.StringType,
-				Computed:    true,
+		},
+		Blocks: map[string]schema.Block{
+			"standards_control_associations": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[standardsControlAssociationData](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"association_status": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.AssociationStatus](),
+							Computed:   true,
+						},
+						"related_requirements": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Computed:    true,
+						},
+						"security_control_arn": schema.StringAttribute{
+							Computed: true,
+						},
+						"security_control_id": schema.StringAttribute{
+							Computed: true,
+						},
+						"standards_arn": schema.StringAttribute{
+							Computed: true,
+						},
+						"standards_control_description": schema.StringAttribute{
+							Computed: true,
+						},
+						"standards_control_title": schema.StringAttribute{
+							Computed: true,
+						},
+						"updated_at": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Computed:   true,
+						},
+						"updated_reason": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -68,7 +104,7 @@ func (d *dataSourceStandardsControlAssociations) Read(ctx context.Context, req d
 		SecurityControlId: data.SecurityControlID.ValueStringPointer(),
 	}
 
-	standardsControlAssociations, err := findStandardsControlAssociations(ctx, conn, input)
+	out, err := findStandardsControlAssociations(ctx, conn, input)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -78,22 +114,31 @@ func (d *dataSourceStandardsControlAssociations) Read(ctx context.Context, req d
 		return
 	}
 
-	data.ID = fwtypes.StringValue(d.Meta().Region)
-	data.StandardsARNs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(standardsControlAssociations, func(v types.StandardsControlAssociationSummary) string {
-		return aws.ToString(v.StandardsArn)
-	}))
-
+	data.ID = types.StringValue(d.Meta().Region)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data.StandardsControlAssociations)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceStandardsControlAssociationsData struct {
-	ID                fwtypes.String `tfsdk:"id"`
-	SecurityControlID fwtypes.String `tfsdk:"security_control_id"`
-	StandardsARNs     fwtypes.List   `tfsdk:"standards_arns"`
+	ID                           types.String                                                     `tfsdk:"id"`
+	SecurityControlID            types.String                                                     `tfsdk:"security_control_id"`
+	StandardsControlAssociations fwtypes.ListNestedObjectValueOf[standardsControlAssociationData] `tfsdk:"standards_control_associations"`
 }
 
-func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput) ([]types.StandardsControlAssociationSummary, error) {
-	var output []types.StandardsControlAssociationSummary
+type standardsControlAssociationData struct {
+	AssociationStatus           fwtypes.StringEnum[awstypes.AssociationStatus] `tfsdk:"association_status"`
+	RelatedRequirements         fwtypes.ListValueOf[types.String]              `tfsdk:"related_requirements"`
+	SecurityControlARN          types.String                                   `tfsdk:"security_control_arn"`
+	SecurityControlID           types.String                                   `tfsdk:"security_control_id"`
+	StandardsARN                types.String                                   `tfsdk:"standards_arn"`
+	StandardsControlDescription types.String                                   `tfsdk:"standards_control_description"`
+	StandardsControlTitle       types.String                                   `tfsdk:"standards_control_title"`
+	UpdatedAt                   timetypes.RFC3339                              `tfsdk:"updated_at"`
+	UpdatedReason               types.String                                   `tfsdk:"updated_reason"`
+}
+
+func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput) ([]awstypes.StandardsControlAssociationSummary, error) {
+	var output []awstypes.StandardsControlAssociationSummary
 
 	pages := securityhub.NewListStandardsControlAssociationsPaginator(conn, input)
 	for pages.HasMorePages() {

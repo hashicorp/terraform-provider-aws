@@ -32,4 +32,17 @@ data "aws_securityhub_standards_control_associations" "test" {
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `standards_arns` - Set of ARNs of the standards that the security control is associated with.
+* `standards_control_associations` - A list that provides the status and other details for each security control that applies to each enabled standard.
+See [`standards_control_associations`](#standards_control_associations-attribute-reference) below.
+
+### `standards_control_associations` Attribute Reference
+
+* `assocation_status` - Enablement status of a control in a specific standard.
+* `related_requirements` - List of underlying requirements in the compliance framework related to the standard.
+* `security_control_arn` - ARN of the security control.
+* `security_control_id` - ID of the security control.
+* `standards_arn` - ARN of the standard.
+* `standards_control_description` - Description of the standard.
+* `standards_control_title` - Title of the standard.
+* `updated_at` - Last time that a control's enablement status in a specified standard was updated.
+* `updated_reason` - Reason for updating a control's enablement status in a specified standard.
