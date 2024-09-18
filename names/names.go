@@ -369,12 +369,9 @@ func ReverseDNS(hostname string) string {
 // described in detail in README.md.
 type serviceDatum struct {
 	aliases           []string
-	awsServiceEnvVar  string
 	brand             string
-	deprecatedEnvVar  string
 	humanFriendly     string
 	providerNameUpper string
-	tfAWSEnvVar       string
 }
 
 // serviceData key is the AWS provider service package
@@ -410,12 +407,9 @@ func readHCLIntoServiceData() error {
 		p := l.ProviderPackage()
 
 		sd := serviceDatum{
-			awsServiceEnvVar:  l.AWSServiceEnvVar(),
 			brand:             l.Brand(),
-			deprecatedEnvVar:  l.DeprecatedEnvVar(),
 			humanFriendly:     l.HumanFriendly(),
 			providerNameUpper: l.ProviderNameUpper(),
-			tfAWSEnvVar:       l.TFAWSEnvVar(),
 		}
 
 		a := []string{p}
@@ -466,60 +460,12 @@ func Aliases() []string {
 	return keys
 }
 
-type Endpoint struct {
-	ProviderPackage string
-	Aliases         []string
-}
-
-func Endpoints() []Endpoint {
-	endpoints := make([]Endpoint, 0, len(serviceData))
-
-	for k, v := range serviceData {
-		ep := Endpoint{
-			ProviderPackage: k,
-		}
-		if len(v.aliases) > 1 {
-			ep.Aliases = v.aliases[1:]
-		}
-		endpoints = append(endpoints, ep)
-	}
-
-	return endpoints
-}
-
 func ProviderNameUpper(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
 		return v.providerNameUpper, nil
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
-}
-
-// Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
-func DeprecatedEnvVar(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.deprecatedEnvVar
-	}
-
-	return ""
-}
-
-// Deprecated `TF_AWS_<service>_ENDPOINT` envvar defined for some services
-func TFAWSEnvVar(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.tfAWSEnvVar
-	}
-
-	return ""
-}
-
-// Standard service endpoint envvar defined by AWS
-func AWSServiceEnvVar(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.awsServiceEnvVar
-	}
-
-	return ""
 }
 
 func FullHumanFriendly(service string) (string, error) {

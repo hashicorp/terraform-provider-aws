@@ -15,20 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
-//go:embed custom_endpoints_header.gtpl
-var header string
-
-//go:embed custom_endpoints_footer.gtpl
-var footer string
-
 type serviceDatum struct {
-	HumanFriendly    string
 	ProviderPackage  string
 	Aliases          []string
 	TfAwsEnvVar      string
 	DeprecatedEnvVar string
 	AwsEnvVar        string
-	SharedConfigKey  string
 }
 
 type TemplateData struct {
@@ -37,7 +29,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename = `../../../website/docs/guides/custom-service-endpoints.html.markdown`
+		filename = `../../../internal/provider/provider_gen.go`
 	)
 	g := common.NewGenerator()
 
@@ -60,13 +52,11 @@ func main() {
 		}
 
 		sd := serviceDatum{
-			HumanFriendly:    l.HumanFriendly(),
 			ProviderPackage:  l.ProviderPackage(),
 			Aliases:          l.Aliases(),
 			TfAwsEnvVar:      l.TFAWSEnvVar(),
 			DeprecatedEnvVar: l.DeprecatedEnvVar(),
 			AwsEnvVar:        l.AWSServiceEnvVar(),
-			SharedConfigKey:  l.AWSConfigParameter(),
 		}
 
 		td.Services = append(td.Services, sd)
@@ -76,9 +66,9 @@ func main() {
 		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
 	})
 
-	d := g.NewUnformattedFileDestination(filename)
+	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("website", header+tmpl+footer, td); err != nil {
+	if err := d.WriteTemplate("endpoints-schema", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
