@@ -385,14 +385,6 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
-			{
-				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
 		},
 	})
 }
@@ -428,10 +420,6 @@ func testAccCheckReceiptRuleExists(ctx context.Context, n string, v *awstypes.Re
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SES Receipt Rule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
