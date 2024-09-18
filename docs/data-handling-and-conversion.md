@@ -259,6 +259,21 @@ type scheduleModel struct {
 }
 ```
 
+To ignore a field when flattening, but include it when expanding, use the option `noflatten`.
+
+For example, from the struct `dataSourceReservedCacheNodeOfferingModel` for the ElastiCache Reserved Cache Node Offering:
+
+```go
+type dataSourceReservedCacheNodeOfferingModel struct {
+	CacheNodeType      types.String            `tfsdk:"cache_node_type"`
+	Duration           fwtypes.RFC3339Duration `tfsdk:"duration" autoflex:",noflatten"`
+	FixedPrice         types.Float64           `tfsdk:"fixed_price"`
+	OfferingID         types.String            `tfsdk:"offering_id"`
+	OfferingType       types.String            `tfsdk:"offering_type"`
+	ProductDescription types.String            `tfsdk:"product_description"`
+}
+```
+
 #### Overriding Default Behavior
 
 In some cases, flattening and expanding need conditional handling.
