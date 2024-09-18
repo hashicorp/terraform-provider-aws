@@ -247,7 +247,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/waf v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.52.3
-	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.6
+	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.7
