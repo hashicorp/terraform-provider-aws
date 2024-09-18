@@ -43,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `models`
 
-- `modelArn` - The Amazon Resource Name (ARN) of the model.
+- `model_arn` - The Amazon Resource Name (ARN) of the model.
