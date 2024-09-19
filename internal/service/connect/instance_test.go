@@ -162,6 +162,23 @@ func testAccInstance_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccInstanceConfig_tags_update(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
 		},
 	})
 }
@@ -237,6 +254,22 @@ resource "aws_connect_instance" "test" {
   }
 }
 `, rName, tag, value)
+}
+
+func testAccInstanceConfig_tags_update(rName string, tag1, value1, tag2, value2 string) string {
+	return fmt.Sprintf(`
+resource "aws_connect_instance" "test" {
+  identity_management_type = "CONNECT_MANAGED"
+  inbound_calls_enabled    = true
+  instance_alias           = %[1]q
+  outbound_calls_enabled   = true
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1, value1, tag2, value2)
 }
 
 func testAccInstanceConfig_basicFlipped(rName string) string {
