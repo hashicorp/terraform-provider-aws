@@ -10,21 +10,20 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource quicksight.DataSource
+	var dataSource awstypes.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -37,17 +36,37 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rId, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.amazon_elasticsearch.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.aurora.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.aurora_postgresql.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.aws_iot_analytics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.databricks.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.jira.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.maria_db.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.mysql.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.oracle.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.postgresql.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.presto.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.rds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.redshift.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, quicksight.DataSourceTypeS3),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.service_now.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.snowflake.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.spark.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.sql_server.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.teradata.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.twitter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -62,7 +81,7 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 
 func TestAccQuickSightDataSource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource quicksight.DataSource
+	var dataSource awstypes.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,7 +106,7 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 
 func TestAccQuickSightDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource quicksight.DataSource
+	var dataSource awstypes.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -134,7 +153,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 
 func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource quicksight.DataSource
+	var dataSource awstypes.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -197,7 +216,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 
 func TestAccQuickSightDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource quicksight.DataSource
+	var dataSource awstypes.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -230,7 +249,7 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, quicksight.DataSourceTypeS3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -238,68 +257,22 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSource_secretArn(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dataSource quicksight.DataSource
-	resourceName := "aws_quicksight_data_source.test"
-	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceConfig_secret_arn(rId, "SNOWFLAKE"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, "SNOWFLAKE"),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccCheckDataSourceExists(ctx context.Context, resourceName string, dataSource *quicksight.DataSource) resource.TestCheckFunc {
+func testAccCheckDataSourceExists(ctx context.Context, n string, v *awstypes.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		awsAccountID, dataSourceId, err := tfquicksight.ParseDataSourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-
-		input := &quicksight.DescribeDataSourceInput{
-			AwsAccountId: aws.String(awsAccountID),
-			DataSourceId: aws.String(dataSourceId),
-		}
-
-		output, err := conn.DescribeDataSourceWithContext(ctx, input)
+		output, err := tfquicksight.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_source_id"])
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.DataSource == nil {
-			return fmt.Errorf("QuickSight Data Source (%s) not found", rs.Primary.ID)
-		}
-
-		*dataSource = *output.DataSource
+		*v = *output
 
 		return nil
 	}
@@ -307,23 +280,16 @@ func testAccCheckDataSourceExists(ctx context.Context, resourceName string, data
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_data_source" {
 				continue
 			}
 
-			awsAccountID, dataSourceId, err := tfquicksight.ParseDataSourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			_, err := tfquicksight.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_source_id"])
 
-			output, err := conn.DescribeDataSourceWithContext(ctx, &quicksight.DescribeDataSourceInput{
-				AwsAccountId: aws.String(awsAccountID),
-				DataSourceId: aws.String(dataSourceId),
-			})
-
-			if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -331,16 +297,14 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if output != nil && output.DataSource != nil {
-				return fmt.Errorf("QuickSight Data Source (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("QuickSight Data Source (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccBaseDataSourceConfig(rName string) string {
+func testAccDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -422,7 +386,7 @@ EOF
 
 func testAccDataSourceConfig_basic(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -444,7 +408,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_tags1(rId, rName, key, value string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -470,7 +434,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -534,7 +498,7 @@ resource "aws_quicksight_user" "test" {
 
 func testAccDataSourceConfig_permissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
@@ -567,7 +531,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_updatePermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
@@ -603,7 +567,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_updateName(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {

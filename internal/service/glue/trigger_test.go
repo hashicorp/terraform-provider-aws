@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -462,6 +463,27 @@ func TestAccGlueTrigger_Actions_security(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrEnabled},
+			},
+		},
+	})
+}
+
+// Ensure a null action does not trigger a panic
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/31213
+func TestAccGlueTrigger_Actions_null(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTriggerConfig_actionsNull(rName),
+				ExpectError: regexache.MustCompile(`InvalidInputException: Actions cannot be null or empty`),
 			},
 		},
 	})
@@ -939,6 +961,17 @@ resource "aws_glue_trigger" "test" {
     batch_size   = 1
     batch_window = 50
   }
+}
+`, rName))
+}
+
+func testAccTriggerConfig_actionsNull(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
+resource "aws_glue_trigger" "test" {
+  name = %[1]q
+  type = "ON_DEMAND"
+
+  actions {}
 }
 `, rName))
 }

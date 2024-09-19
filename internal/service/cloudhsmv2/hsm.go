@@ -194,8 +194,6 @@ func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, en
 
 	for _, v := range output {
 		for _, v := range v.Hsms {
-			v := v
-
 			// CloudHSMv2 HSM instances can be recreated, but the ENI ID will
 			// remain consistent. Without this ENI matching, HSM instances
 			// instances can become orphaned.

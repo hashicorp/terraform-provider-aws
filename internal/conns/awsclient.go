@@ -16,9 +16,7 @@ import (
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -59,16 +57,6 @@ func (c *AWSClient) CredentialsProvider(context.Context) aws_sdkv2.CredentialsPr
 
 func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name
 	return c.awsConfig.Copy()
-}
-
-// OpsWorksConnForRegion returns an AWS SDK For Go v1 OpsWorks API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) OpsWorksConnForRegion(ctx context.Context, region string) *opsworks_sdkv1.OpsWorks {
-	if region == c.Region {
-		return c.OpsWorksConn(ctx)
-	}
-	return opsworks_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -253,35 +241,6 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 	}
 
 	return m
-}
-
-func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
-	endpoint := c.endpoints[servicePackageName]
-	if endpoint != "" {
-		return endpoint
-	}
-
-	// Only continue if there is an SDK v1 package. SDK v2 supports envvars and config file
-	if names.ClientSDKV1(servicePackageName) {
-		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
-
-		envvar := names.AWSServiceEnvVar(servicePackageName)
-		svc := os.Getenv(envvar)
-		if svc != "" {
-			return svc
-		}
-
-		if base := os.Getenv("AWS_ENDPOINT_URL"); base != "" {
-			return base
-		}
-
-		sdkId := names.SDKID(servicePackageName)
-		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
-		if found && err == nil {
-			return endpoint
-		}
-	}
-	return endpoint
 }
 
 // serviceBaseEndpointProvider is needed to search for all providers

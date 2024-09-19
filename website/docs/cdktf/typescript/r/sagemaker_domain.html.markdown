@@ -161,6 +161,10 @@ The following arguments are optional:
 * `jupyterServerAppSettings` - (Optional) The Jupyter server's app settings. See [`jupyterServerAppSettings` Block](#jupyter_server_app_settings-block) below.
 * `kernelGatewayAppSettings` - (Optional) The kernel gateway app settings. See [`kernelGatewayAppSettings` Block](#kernel_gateway_app_settings-block) below.
 * `securityGroups` - (Optional) The security groups for the Amazon Virtual Private Cloud that the space uses for communication.
+* `jupyterLabAppSettings` - (Optional) The settings for the JupyterLab application. See [`jupyterLabAppSettings` Block](#jupyter_lab_app_settings-block) below.
+* `spaceStorageSettings` - (Optional) The storage settings for a private space. See [`spaceStorageSettings` Block](#space_storage_settings-block) below.
+* `customPosixUserConfig` - (Optional) Details about the POSIX identity that is used for file system operations. See [`customPosixUserConfig` Block](#custom_posix_user_config-block) below.
+* `customFileSystemConfig` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. See [`customFileSystemConfig` Block](#custom_file_system_config-block) below.
 
 ### `defaultUserSettings` Block
 
@@ -180,6 +184,7 @@ The following arguments are optional:
 * `spaceStorageSettings` - (Optional) The storage settings for a private space. See [`spaceStorageSettings` Block](#space_storage_settings-block) below.
 * `studioWebPortal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensorBoardAppSettings` - (Optional) The TensorBoard app settings. See [`tensorBoardAppSettings` Block](#tensor_board_app_settings-block) below.
+* `studioWebPortalSettings` - (Optional) The Studio Web Portal settings. See [`studioWebPortalSettings` Block](#studio_web_portal_settings-block) below.
 
 #### `spaceStorageSettings` Block
 
@@ -272,6 +277,11 @@ The following arguments are optional:
 * `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 * `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [`customImage` Block](#custom_image-block) below.
 
+#### `studioWebPortalSettings` Block
+
+* `hiddenAppTypes` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
+* `hiddenMlTools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
+
 ##### `codeRepository` Block
 
 * `repositoryUrl` - (Optional) The URL of the Git repository.
@@ -307,9 +317,15 @@ The following arguments are optional:
 
 ### `domainSettings` Block
 
+* `dockerSettings` - (Optional) A collection of settings that configure the domain’s Docker interaction. see [`dockerSettings` Block](#docker_settings-block) below.
 * `executionRoleIdentityConfig` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
 * `rStudioServerProDomainSettings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [`rStudioServerProDomainSettings` Block](#r_studio_server_pro_domain_settings-block) below.
 * `securityGroupIds` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
+
+#### `dockerSettings` Block
+
+* `enableDockerAccess` - (Optional) Indicates whether the domain can access Docker. Valid values are `ENABLED` and `DISABLED`.
+* `vpcOnlyTrustedAccounts` - (Optional) The list of Amazon Web Services accounts that are trusted when the domain is created in VPC-only mode.
 
 #### `rStudioServerProDomainSettings` Block
 
@@ -367,4 +383,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-888b29765c78136a5dfabf8748cce1605dbe6705ed2be06764d7f9fb568fcfae -->
+<!-- cache-key: cdktf-0.20.1 input-a391c557b44e35eab3a9ff9d883168c7a69f825a68d65476363ebdae427cb3e8 -->

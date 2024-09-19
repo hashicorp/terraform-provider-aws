@@ -58,7 +58,6 @@ func Test_StripRevision(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tfecs.TaskDefinitionARNStripRevision(tc.s); got != tc.want {

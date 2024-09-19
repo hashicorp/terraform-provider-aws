@@ -388,6 +388,43 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 	})
 }
 
+func TestAccGlueJob_jobRunQueuingEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_jobRunQueuingEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "job_run_queuing_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobConfig_jobRunQueuingEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "job_run_queuing_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueJob_maintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
@@ -1156,6 +1193,23 @@ resource "aws_glue_job" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
+}
+
+func testAccJobConfig_jobRunQueuingEnabled(rName string, jobRunQueuingEnabled bool) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  max_capacity            = 10
+  name                    = %[1]q
+  role_arn                = aws_iam_role.test.arn
+  job_run_queuing_enabled = %[2]t
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, jobRunQueuingEnabled))
 }
 
 func testAccJobConfig_tags1(rName, tagKey1, tagValue1 string) string {

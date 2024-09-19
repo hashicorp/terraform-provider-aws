@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectPeer
+	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
@@ -67,7 +67,7 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 
 func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectPeer
+	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
@@ -112,7 +112,7 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 
 func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectPeer
+	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
 	subnetResourceName := "aws_subnet.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,7 +155,7 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 
 func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectPeer
+	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
@@ -203,7 +203,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmanager.ConnectPeer) resource.TestCheckFunc {
+func testAccCheckConnectPeerExists(ctx context.Context, n string, v *awstypes.ConnectPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -213,7 +213,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Network Manager Connect Peer ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -229,7 +229,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 
 func testAccCheckConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_peer" {

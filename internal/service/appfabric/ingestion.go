@@ -30,8 +30,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Ingestion")
+// @FrameworkResource("aws_appfabric_ingestion", name="Ingestion")
 // @Tags(identifierAttribute="arn")
+// TODO: Tests need additional setup
+// @Testing(tagsTest=false)
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.Ingestion")
 func newIngestionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingestionResource{}
 
@@ -178,8 +182,8 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteIngestion(ctx, &appfabric.DeleteIngestionInput{
-		AppBundleIdentifier: aws.String(data.AppBundleARN.ValueString()),
-		IngestionIdentifier: aws.String(data.ARN.ValueString()),
+		AppBundleIdentifier: data.AppBundleARN.ValueStringPointer(),
+		IngestionIdentifier: data.ARN.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -229,8 +233,8 @@ type ingestionResourceModel struct {
 	ARN           types.String                               `tfsdk:"arn"`
 	ID            types.String                               `tfsdk:"id"`
 	IngestionType fwtypes.StringEnum[awstypes.IngestionType] `tfsdk:"ingestion_type"`
-	Tags          types.Map                                  `tfsdk:"tags"`
-	TagsAll       types.Map                                  `tfsdk:"tags_all"`
+	Tags          tftags.Map                                 `tfsdk:"tags"`
+	TagsAll       tftags.Map                                 `tfsdk:"tags_all"`
 	TenantId      types.String                               `tfsdk:"tenant_id"`
 }
 

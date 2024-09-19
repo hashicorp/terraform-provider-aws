@@ -107,7 +107,6 @@ func RegisterSweepers() {
 			"aws_iam_service_specific_credential",
 			"aws_iam_virtual_mfa_device",
 			"aws_iam_signing_certificate",
-			"aws_opsworks_user_profile",
 		},
 	})
 
@@ -194,14 +193,14 @@ func sweepGroups(region string) error {
 				GroupName: group.GroupName,
 			}
 
-			if err := DeleteGroupPolicyAttachments(ctx, conn, name); err != nil {
+			if err := deleteGroupPolicyAttachments(ctx, conn, name); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policy attachments: %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
 			}
 
-			if err := DeleteGroupPolicies(ctx, conn, name); err != nil {
+			if err := deleteGroupPolicies(ctx, conn, name); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policies: %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)

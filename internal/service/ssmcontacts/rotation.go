@@ -451,8 +451,8 @@ type resourceRotationData struct {
 	Recurrence fwtypes.ListNestedObjectValueOf[recurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                    `tfsdk:"name"`
 	StartTime  timetypes.RFC3339                               `tfsdk:"start_time"`
-	Tags       types.Map                                       `tfsdk:"tags"`
-	TagsAll    types.Map                                       `tfsdk:"tags_all"`
+	Tags       tftags.Map                                      `tfsdk:"tags"`
+	TagsAll    tftags.Map                                      `tfsdk:"tags_all"`
 	TimeZoneID types.String                                    `tfsdk:"time_zone_id"`
 }
 

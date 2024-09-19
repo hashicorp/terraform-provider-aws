@@ -266,8 +266,9 @@ The following arguments are available:
 * `via` (Optional) - The network function groups and any edge overrides associated with the action.
     * `network_function_groups` (Optional) - A list of strings. The network function group to use for the service insertion action.
     * `with_edge_override` (Optional) - Any edge overrides and the preferred edge to use.
-        * `edge_sets` (Optional) - A list of strings. The list of edges associated with the network function group.
-        * `use_edge` (Optional) - The preferred edge to use.
+        * `edge_sets` (Optional) - A list of a list of strings. The list of edges associated with the network function group.
+        * `use_edge_location` (Optional) - The preferred edge to use.
+        * `use_edge` (**Deprecated** use `use_edge_location` instead) - The preferred edge to use.
 
 ### `network_function_groups`
 
@@ -281,4 +282,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.20.1 input-ba954b047e545ebd2507fdb2c0200fcca5b8603fa381f18f79ca92a3f5876fca -->
+<!-- cache-key: cdktf-0.20.1 input-a2e47b27cd0f34515d6ff9e64919da142c3a0f9864d63577b9ebaa20c8610392 -->

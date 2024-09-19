@@ -76,8 +76,7 @@ func sweepAddons(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListAddonsInput{
 				ClusterName: aws.String(clusterName),
 			}
@@ -187,8 +186,7 @@ func sweepFargateProfiles(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListFargateProfilesInput{
 				ClusterName: aws.String(clusterName),
 			}
@@ -257,8 +255,7 @@ func sweepIdentityProvidersConfig(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListIdentityProviderConfigsInput{
 				ClusterName: aws.String(clusterName),
 			}
@@ -327,8 +324,7 @@ func sweepNodeGroups(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListNodegroupsInput{
 				ClusterName: aws.String(clusterName),
 			}

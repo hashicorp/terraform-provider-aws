@@ -1550,8 +1550,6 @@ func TestAccELBV2Listener_EmptyDefaultAction(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(string(name), func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

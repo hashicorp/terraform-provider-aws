@@ -1383,6 +1383,17 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	// There are two ways to enable the HTTP endpoint: new way and old way.
+	// This is the new way for provisioned engine mode (covers provisioned and serverlessv2).
+	// The old way is modifying the DB cluster and setting the EnableHttpEndpoint field (below).
+	// Both need a wait for update so when it's provisioned it will do old (not necessary but does the wait) & new ways, otherwise just old way.
+	if d.HasChange("enable_http_endpoint") && d.Get("engine_mode").(string) == engineModeProvisioned {
+		o, n := d.GetChange("enable_http_endpoint")
+		if err := enableHTTPEndpointProvisioned(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling HTTP endpoint for RDS Cluster (%s): %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChangesExcept(
 		names.AttrAllowMajorVersionUpgrade,
 		"delete_automated_backups",
@@ -1452,7 +1463,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableGlobalWriteForwarding = aws.Bool(d.Get("enable_global_write_forwarding").(bool))
 		}
 
-		if d.HasChange("enable_http_endpoint") {
+		// for provisioned and serverlessv2 (also "provisioned"), data api must be enabled using conn.EnableHttpEndpoint() as below
+		if d.HasChange("enable_http_endpoint") && d.Get("engine_mode").(string) != engineModeProvisioned {
 			input.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		}
 
@@ -1749,6 +1761,36 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
+}
+
+func enableHTTPEndpointProvisioned(ctx context.Context, conn *rds.Client, arn string, o, n interface{}) error {
+	if o == nil {
+		return nil
+	}
+
+	if n == nil {
+		return nil
+	}
+
+	if !o.(bool) && n.(bool) {
+		_, err := conn.EnableHttpEndpoint(ctx, &rds.EnableHttpEndpointInput{
+			ResourceArn: aws.String(arn),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if o.(bool) && !n.(bool) {
+		_, err := conn.DisableHttpEndpoint(ctx, &rds.DisableHttpEndpointInput{
+			ResourceArn: aws.String(arn),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func addIAMRoleToCluster(ctx context.Context, conn *rds.Client, clusterID, roleARN string) error {

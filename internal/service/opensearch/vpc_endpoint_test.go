@@ -86,7 +86,6 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 

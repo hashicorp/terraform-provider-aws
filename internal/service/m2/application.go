@@ -314,7 +314,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().M2Client(ctx)
 
 	_, err := conn.DeleteApplication(ctx, &m2.DeleteApplicationInput{
-		ApplicationId: aws.String(data.ID.ValueString()),
+		ApplicationId: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -591,8 +591,8 @@ type applicationResourceModel struct {
 	KmsKeyID       types.String                                     `tfsdk:"kms_key_id"`
 	Name           types.String                                     `tfsdk:"name"`
 	RoleARN        fwtypes.ARN                                      `tfsdk:"role_arn"`
-	Tags           types.Map                                        `tfsdk:"tags"`
-	TagsAll        types.Map                                        `tfsdk:"tags_all"`
+	Tags           tftags.Map                                       `tfsdk:"tags"`
+	TagsAll        tftags.Map                                       `tfsdk:"tags_all"`
 	Timeouts       timeouts.Value                                   `tfsdk:"timeouts"`
 }
 

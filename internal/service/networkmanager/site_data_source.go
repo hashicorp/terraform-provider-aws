@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_site")
-func DataSourceSite() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_site", name="Site")
+func dataSourceSite() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSiteRead,
 
@@ -64,12 +64,12 @@ func DataSourceSite() *schema.Resource {
 func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	siteID := d.Get("site_id").(string)
-	site, err := FindSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
+	site, err := findSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site (%s): %s", siteID, err)
