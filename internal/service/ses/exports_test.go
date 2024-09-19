@@ -5,6 +5,7 @@ package ses
 
 // Exports for use in tests only.
 var (
+	ResourceConfigurationSet           = resourceConfigurationSet
 	ResourceDomainDKIM                 = resourceDomainDKIM
 	ResourceDomainIdentity             = resourceDomainIdentity
 	ResourceDomainIdentityVerification = resourceDomainIdentityVerification
@@ -18,6 +19,7 @@ var (
 	ResourceReceiptRuleSet             = resourceReceiptRuleSet
 	ResourceTemplate                   = resourceTemplate
 
+	FindConfigurationSetByName                     = findConfigurationSetByName
 	FindEventDestinationByTwoPartKey               = findEventDestinationByTwoPartKey
 	FindIdentityDKIMAttributesByIdentity           = findIdentityDKIMAttributesByIdentity
 	FindIdentityMailFromDomainAttributesByIdentity = findIdentityMailFromDomainAttributesByIdentity

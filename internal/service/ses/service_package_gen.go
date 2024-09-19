@@ -48,8 +48,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ses_active_receipt_rule_set",
 		},
 		{
-			Factory:  ResourceConfigurationSet,
+			Factory:  resourceConfigurationSet,
 			TypeName: "aws_ses_configuration_set",
+			Name:     "Configuration Set",
 		},
 		{
 			Factory:  resourceDomainDKIM,
