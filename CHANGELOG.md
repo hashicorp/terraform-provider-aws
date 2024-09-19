@@ -1,4 +1,5 @@
-## 5.68.0 (Unreleased)
+## 5.69.0 (Unreleased)
+## 5.68.0 (September 19, 2024)
 
 NOTES:
 
