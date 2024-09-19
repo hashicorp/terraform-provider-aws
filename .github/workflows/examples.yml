@@ -49,11 +49,7 @@ jobs:
       - name: tflint
         run: |
           TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
-          cd ./examples
-          tflint --config="$TFLINT_CONFIG" --recursive \
-            --enable-rule=terraform_deprecated_index \
-            --enable-rule=terraform_deprecated_interpolation \
-            --enable-rule=terraform_required_version \
+          tflint --config="${TFLINT_CONFIG}" --chdir=./examples --recursive \
             --disable-rule=terraform_typed_variables
 
   validate-terraform:
