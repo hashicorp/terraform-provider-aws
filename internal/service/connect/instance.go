@@ -45,6 +45,7 @@ var (
 )
 
 // @SDKResource("aws_connect_instance", name="Instance")
+// @Tags(identifierAttribute="arn")
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -215,11 +216,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrServiceRole, instance.ServiceRole)
 	d.Set(names.AttrStatus, instance.InstanceStatus)
 
-	setTagsOut(ctx, instance.Tags)
-
 	if err := readInstanceAttributes(ctx, conn, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	setTagsOut(ctx, instance.Tags)
 
 	return diags
 }
