@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ses_active_receipt_rule_set",
 		},
 		{
-			Factory:  DataSourceDomainIdentity,
+			Factory:  dataSourceDomainIdentity,
 			TypeName: "aws_ses_domain_identity",
+			Name:     "Domain Identity",
 		},
 		{
 			Factory:  dataSourceEmailIdentity,
