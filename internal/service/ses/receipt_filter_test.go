@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,16 +80,17 @@ func testAccCheckReceiptFilterDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			response, err := conn.ListReceiptFilters(ctx, &ses.ListReceiptFiltersInput{})
+			_, err := tfses.FindReceiptFilterByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			for _, element := range response.Filters {
-				if aws.ToString(element.Name) == rs.Primary.ID {
-					return fmt.Errorf("SES Receipt Filter (%s) still exists", rs.Primary.ID)
-				}
-			}
+			return fmt.Errorf("SES Receipt Filter %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -101,27 +101,14 @@ func testAccCheckReceiptFilterExists(ctx context.Context, n string) resource.Tes
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES receipt filter not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES receipt filter ID not set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		response, err := conn.ListReceiptFilters(ctx, &ses.ListReceiptFiltersInput{})
-		if err != nil {
-			return err
-		}
+		_, err := tfses.FindReceiptFilterByName(ctx, conn, rs.Primary.ID)
 
-		for _, element := range response.Filters {
-			if aws.ToString(element.Name) == rs.Primary.ID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("The receipt filter was not created")
+		return err
 	}
 }
 
@@ -129,7 +116,7 @@ func testAccReceiptFilterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_filter" "test" {
   cidr   = "10.10.10.10"
-  name   = %q
+  name   = %[1]q
   policy = "Block"
 }
 `, rName)
