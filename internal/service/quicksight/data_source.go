@@ -160,10 +160,28 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, dataSource.Arn)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
+	d.Set("data_source_id", dataSource.DataSourceId)
+	d.Set(names.AttrName, dataSource.Name)
+	if err := d.Set(names.AttrParameters, quicksightschema.FlattenDataSourceParameters(dataSource.DataSourceParameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
+	}
+	if err := d.Set("ssl_properties", quicksightschema.FlattenSSLProperties(dataSource.SslProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ssl_properties: %s", err)
+	}
+	d.Set(names.AttrType, dataSource.Type)
+	if err := d.Set("vpc_connection_properties", quicksightschema.FlattenVPCConnectionProperties(dataSource.VpcConnectionProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_connection_properties: %s", err)
+	}
+
+	permissions, err := findDataSourcePermissionsByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Source (%s) permissions: %s", d.Id(), err)
 	}
 
+	if err := d.Set("permission", quicksightschema.FlattenPermissions(permissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permission: %s", err)
 	}
 
