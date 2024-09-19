@@ -49,6 +49,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", acctest.CtTrue),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrServiceRole, "iam", regexache.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.InstanceStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -150,7 +151,7 @@ func testAccInstance_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -163,7 +164,7 @@ func testAccInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceConfig_tags_update(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
@@ -172,11 +173,11 @@ func testAccInstance_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -241,7 +242,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceConfig_tags(rName string, tag, value string) string {
+func testAccInstanceConfig_tags1(rName string, tag, value string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -256,7 +257,7 @@ resource "aws_connect_instance" "test" {
 `, rName, tag, value)
 }
 
-func testAccInstanceConfig_tags_update(rName string, tag1, value1, tag2, value2 string) string {
+func testAccInstanceConfig_tags2(rName string, tag1, value1, tag2, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
