@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.35
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.33
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.13
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.20
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.21
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/account v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.9
@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.16.8
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.7
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.7
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.7
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.8
@@ -89,7 +89,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.10
-	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.7
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.26.8
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.7
@@ -124,7 +124,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.8
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/iam v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.25.7
@@ -176,7 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.12.7
-	github.com/aws/aws-sdk-go-v2/service/outposts v1.42.3
+	github.com/aws/aws-sdk-go-v2/service/outposts v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.7
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.7
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.0.3
@@ -190,7 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.71.3
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.8
-	github.com/aws/aws-sdk-go-v2/service/rds v1.83.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.83.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.9
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.6
@@ -207,7 +207,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.30.9
 	github.com/aws/aws-sdk-go-v2/service/rum v1.19.7
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.3
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.157.1
