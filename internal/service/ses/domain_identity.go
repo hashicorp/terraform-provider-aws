@@ -62,7 +62,7 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.VerifyDomainIdentity(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "requesting SES Dmail Identity (%s) verification: %s", domainName, err)
+		return sdkdiag.AppendErrorf(diags, "requesting SES Domain Identity (%s) verification: %s", domainName, err)
 	}
 
 	d.SetId(domainName)
