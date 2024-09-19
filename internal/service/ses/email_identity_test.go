@@ -20,12 +20,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSESEmailIdentity_basic(t *testing.T) {
+func TestAccSESEmailIdentity_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccEmailIdentity_basic,
+		acctest.CtDisappears: testAccEmailIdentity_disappears,
+		"trailingPeriod":     testAccEmailIdentity_trailingPeriod,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccEmailIdentity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	email := acctest.DefaultEmailAddress
 	resourceName := "aws_ses_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,12 +59,12 @@ func TestAccSESEmailIdentity_basic(t *testing.T) {
 	})
 }
 
-func TestAccSESEmailIdentity_disappears(t *testing.T) {
+func testAccEmailIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	email := acctest.DefaultEmailAddress
 	resourceName := "aws_ses_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -70,12 +82,12 @@ func TestAccSESEmailIdentity_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
+func testAccEmailIdentity_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
 	resourceName := "aws_ses_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -141,7 +153,7 @@ func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.Tes
 func testAccEmailIdentityConfig_basic(email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
-  email = %q
+  email = %[1]q
 }
 `, email)
 }
