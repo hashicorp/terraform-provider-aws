@@ -1,0 +1,3 @@
+```release-note:bug
+data/aws_region: Fix lookups for the `ap-southeast-5` region
+```
