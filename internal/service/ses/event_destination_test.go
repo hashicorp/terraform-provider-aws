@@ -48,14 +48,14 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_destination"), knownvalue.SetSizeExact(2)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_destination"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrDefaultValue:  knownvalue.StringExact("default"),
-							"dimension_name": knownvalue.StringExact("dimension"),
-							"value_source":   knownvalue.StringExact("emailHeader"),
+							names.AttrDefaultValue: knownvalue.StringExact("default"),
+							"dimension_name":       knownvalue.StringExact("dimension"),
+							"value_source":         knownvalue.StringExact("emailHeader"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrDefaultValue:  knownvalue.StringExact("default"),
-							"dimension_name": knownvalue.StringExact("ses:source-ip"),
-							"value_source":   knownvalue.StringExact("messageTag"),
+							names.AttrDefaultValue: knownvalue.StringExact("default"),
+							"dimension_name":       knownvalue.StringExact("ses:source-ip"),
+							"value_source":         knownvalue.StringExact("messageTag"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("configuration_set_name"), knownvalue.StringExact(rName1)),
