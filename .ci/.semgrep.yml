@@ -659,3 +659,14 @@ rules:
             $DIAGS = sdkdiag.AppendErrorf($DIAGS, ...)
           }
     severity: ERROR
+
+  - id: avoid-errs-Must
+    languages: [go]
+    message: Avoid use of `errs.Must()` in service packages, handle errors explicitly instead.
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern-either:
+          - pattern: errs.Must(...)
+    severity: WARNING
