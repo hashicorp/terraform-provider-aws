@@ -167,7 +167,7 @@ func resourceIdentityNotificationTopicDelete(ctx context.Context, d *schema.Reso
 const identityNotificationTopicResourceIDSeparator = "|"
 
 func identityNotificationTopicCreateResourceID(identity string, notificationType awstypes.NotificationType) string {
-	parts := []string{identity, string(notificationType)}
+	parts := []string{identity, string(notificationType)} // nosemgrep:ci.typed-enum-conversion
 	id := strings.Join(parts, identityNotificationTopicResourceIDSeparator)
 
 	return id
