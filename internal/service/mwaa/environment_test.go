@@ -364,7 +364,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	})
 }
 
-func TestAccMWAAEnvironment_customer_vpce(t *testing.T) {
+func TestAccMWAAEnvironment_customerVPCE(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environment awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -377,7 +377,7 @@ func TestAccMWAAEnvironment_customer_vpce(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_customer_vpce(rName),
+				Config: testAccEnvironmentConfig_customerVPCE(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttrSet(resourceName, "airflow_version"),
@@ -751,13 +751,13 @@ resource "aws_mwaa_environment" "test" {
 `, rName))
 }
 
-func testAccEnvironmentConfig_customer_vpce(rName string) string {
+func testAccEnvironmentConfig_customerVPCE(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_object.dags.key
-  execution_role_arn = aws_iam_role.test.arn
-  name               = %[1]q
-  endpoint_management = "CUSTOMER"
+  dag_s3_path           = aws_s3_object.dags.key
+  execution_role_arn    = aws_iam_role.test.arn
+  name                  = %[1]q
+  endpoint_management   = "CUSTOMER"
   webserver_access_mode = "PRIVATE_ONLY"
 
   network_configuration {
