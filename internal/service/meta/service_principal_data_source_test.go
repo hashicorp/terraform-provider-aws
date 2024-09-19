@@ -63,7 +63,7 @@ func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
 		t.Run(region, func(t *testing.T) {
 			t.Parallel()
 			resource.Test(t, resource.TestCase{
-				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, names.PartitionForRegion(region)) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
@@ -135,7 +135,10 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 		t.Run(fmt.Sprintf("%s/%s", testCase.Region, testCase.Service), func(t *testing.T) {
 			t.Parallel()
 			resource.Test(t, resource.TestCase{
-				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				PreCheck: func() {
+					acctest.PreCheck(ctx, t)
+					acctest.PreCheckPartition(t, names.PartitionForRegion(testCase.Region))
+				},
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
