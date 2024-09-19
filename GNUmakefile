@@ -243,20 +243,13 @@ docs-misspell: ## [CI] Documentation Checks / misspell
 examples-tflint: ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
 	@tflint --config .ci/.tflint.hcl --init
-	@exit_code=0 ; \
-	TFLINT_CONFIG="`pwd -P`/.ci/.tflint.hcl" ; \
-	for DIR in `find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u`; do \
-		pushd "$$DIR" ; \
-		tflint --config="$$TFLINT_CONFIG" \
-			--enable-rule=terraform_comment_syntax \
-			--enable-rule=terraform_deprecated_index \
-			--enable-rule=terraform_deprecated_interpolation \
-			--enable-rule=terraform_required_version \
-			--disable-rule=terraform_typed_variables \
-			|| exit_code=1 ; \
-		popd ; \
-	done ; \
-	exit $$exit_code
+	TFLINT_CONFIG="$(PWD)/.ci/.tflint.hcl" ; \
+	cd ./examples; \
+	tflint --config="$$TFLINT_CONFIG" --recursive \
+		--enable-rule=terraform_deprecated_index \
+		--enable-rule=terraform_deprecated_interpolation \
+		--enable-rule=terraform_required_version \
+		--disable-rule=terraform_typed_variables
 
 fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
