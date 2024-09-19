@@ -63,8 +63,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ses_domain_identity_verification",
 		},
 		{
-			Factory:  ResourceDomainMailFrom,
+			Factory:  resourceDomainMailFrom,
 			TypeName: "aws_ses_domain_mail_from",
+			Name:     "MAIL FROM Domain",
 		},
 		{
 			Factory:  resourceEmailIdentity,
