@@ -5,6 +5,7 @@ package ses
 
 // Exports for use in tests only.
 var (
+	ResourceEmailIdentity             = resourceEmailIdentity
 	ResourceEventDestination          = resourceEventDestination
 	ResourceIdentityNotificationTopic = resourceIdentityNotificationTopic
 	ResourceIdentityPolicy            = resourceIdentityPolicy
@@ -15,6 +16,7 @@ var (
 
 	FindEventDestinationByTwoPartKey             = findEventDestinationByTwoPartKey
 	FindIdentityNotificationAttributesByIdentity = findIdentityNotificationAttributesByIdentity
+	FindIdentityVerificationAttributesByIdentity = findIdentityVerificationAttributesByIdentity
 	FindIdentityPolicyByTwoPartKey               = findIdentityPolicyByTwoPartKey
 	FindReceiptFilterByName                      = findReceiptFilterByName
 	FindReceiptRuleByTwoPartKey                  = findReceiptRuleByTwoPartKey

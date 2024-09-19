@@ -66,8 +66,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ses_domain_mail_from",
 		},
 		{
-			Factory:  ResourceEmailIdentity,
+			Factory:  resourceEmailIdentity,
 			TypeName: "aws_ses_email_identity",
+			Name:     "Email Identity",
 		},
 		{
 			Factory:  resourceEventDestination,

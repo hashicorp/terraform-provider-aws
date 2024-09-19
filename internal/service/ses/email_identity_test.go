@@ -11,11 +11,12 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +42,29 @@ func TestAccSESEmailIdentity_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSESEmailIdentity_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	email := acctest.DefaultEmailAddress
+	resourceName := "aws_ses_email_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityConfig_basic(email),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceEmailIdentity(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -82,22 +106,17 @@ func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			email := rs.Primary.ID
-			params := &ses.GetIdentityVerificationAttributesInput{
-				Identities: []string{
-					email,
-				},
+			_, err := tfses.FindIdentityVerificationAttributesByIdentity(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			response, err := conn.GetIdentityVerificationAttributes(ctx, params)
 			if err != nil {
 				return err
 			}
 
-			_, exists := response.VerificationAttributes[email]
-			if exists {
-				return fmt.Errorf("SES Email Identity %s still exists. Failing!", email)
-			}
+			return fmt.Errorf("SES Email Identity %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -108,33 +127,14 @@ func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.Tes
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Email Identity not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Email Identity name not set")
-		}
-
-		email := rs.Primary.ID
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []string{
-				email,
-			},
-		}
+		_, err := tfses.FindIdentityVerificationAttributesByIdentity(ctx, conn, rs.Primary.ID)
 
-		response, err := conn.GetIdentityVerificationAttributes(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		_, exists := response.VerificationAttributes[email]
-		if !exists {
-			return fmt.Errorf("SES Email Identity %s not found in AWS", email)
-		}
-
-		return nil
+		return err
 	}
 }
 
