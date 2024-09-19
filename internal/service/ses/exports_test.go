@@ -5,6 +5,7 @@ package ses
 
 // Exports for use in tests only.
 var (
+	ResourceDomainIdentity            = resourceDomainIdentity
 	ResourceDomainMailFrom            = resourceDomainMailFrom
 	ResourceEmailIdentity             = resourceEmailIdentity
 	ResourceEventDestination          = resourceEventDestination
