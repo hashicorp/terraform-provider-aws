@@ -257,6 +257,38 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSource_secretArn(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource awstypes.DataSource
+	resourceName := "aws_quicksight_data_source.test"
+	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_secret_arn(rId, "SNOWFLAKE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "SNOWFLAKE"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceExists(ctx context.Context, n string, v *awstypes.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
