@@ -5,16 +5,17 @@ package ses
 
 // Exports for use in tests only.
 var (
-	ResourceDomainIdentity            = resourceDomainIdentity
-	ResourceDomainMailFrom            = resourceDomainMailFrom
-	ResourceEmailIdentity             = resourceEmailIdentity
-	ResourceEventDestination          = resourceEventDestination
-	ResourceIdentityNotificationTopic = resourceIdentityNotificationTopic
-	ResourceIdentityPolicy            = resourceIdentityPolicy
-	ResourceReceiptFilter             = resourceReceiptFilter
-	ResourceReceiptRule               = resourceReceiptRule
-	ResourceReceiptRuleSet            = resourceReceiptRuleSet
-	ResourceTemplate                  = resourceTemplate
+	ResourceDomainIdentity             = resourceDomainIdentity
+	ResourceDomainIdentityVerification = resourceDomainIdentityVerification
+	ResourceDomainMailFrom             = resourceDomainMailFrom
+	ResourceEmailIdentity              = resourceEmailIdentity
+	ResourceEventDestination           = resourceEventDestination
+	ResourceIdentityNotificationTopic  = resourceIdentityNotificationTopic
+	ResourceIdentityPolicy             = resourceIdentityPolicy
+	ResourceReceiptFilter              = resourceReceiptFilter
+	ResourceReceiptRule                = resourceReceiptRule
+	ResourceReceiptRuleSet             = resourceReceiptRuleSet
+	ResourceTemplate                   = resourceTemplate
 
 	FindEventDestinationByTwoPartKey               = findEventDestinationByTwoPartKey
 	FindIdentityMailFromDomainAttributesByIdentity = findIdentityMailFromDomainAttributesByIdentity
