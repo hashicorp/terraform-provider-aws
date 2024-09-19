@@ -48,12 +48,12 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_destination"), knownvalue.SetSizeExact(2)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_destination"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"default_value":  knownvalue.StringExact("default"),
+							names.AttrDefaultValue:  knownvalue.StringExact("default"),
 							"dimension_name": knownvalue.StringExact("dimension"),
 							"value_source":   knownvalue.StringExact("emailHeader"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"default_value":  knownvalue.StringExact("default"),
+							names.AttrDefaultValue:  knownvalue.StringExact("default"),
 							"dimension_name": knownvalue.StringExact("ses:source-ip"),
 							"value_source":   knownvalue.StringExact("messageTag"),
 						}),
@@ -165,8 +165,8 @@ func TestAccSESEventDestination_firehose(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kinesis_destination"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kinesis_destination"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"role_arn":   knownvalue.NotNull(),
-							"stream_arn": knownvalue.NotNull(),
+							names.AttrRoleARN:   knownvalue.NotNull(),
+							names.AttrStreamARN: knownvalue.NotNull(),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
@@ -221,7 +221,7 @@ func TestAccSESEventDestination_sns(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sns_destination"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sns_destination"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"topic_arn": knownvalue.NotNull(),
+							names.AttrTopicARN: knownvalue.NotNull(),
 						}),
 					})),
 				},
