@@ -15,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestFindRegionByEC2Endpoint(t *testing.T) {
+func TestAccFindRegionByEC2Endpoint(t *testing.T) {
 	t.Parallel()
 
 	ctx := acctest.Context(t)
+	acctest.PreCheck(ctx, t)
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	var testCases = []struct {
@@ -54,10 +55,11 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 	}
 }
 
-func TestFindRegionByName(t *testing.T) {
+func TestAccFindRegionByName(t *testing.T) {
 	t.Parallel()
 
 	ctx := acctest.Context(t)
+	acctest.PreCheck(ctx, t)
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	var testCases = []struct {
@@ -74,6 +76,10 @@ func TestFindRegionByName(t *testing.T) {
 		},
 		{
 			Value:    "us-east-1", // lintignore:AWSAT003
+			ErrCount: 0,
+		},
+		{
+			Value:    "ap-southeast-5", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
 	}

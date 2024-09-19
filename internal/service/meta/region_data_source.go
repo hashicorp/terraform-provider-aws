@@ -75,7 +75,8 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	if !data.Endpoint.IsNull() {
 		matchingRegion, err := FindRegionByEndpoint(ctx, conn, data.Endpoint.ValueString())
 		if err != nil {
-			response.Diagnostics.AddError("finding region by endpoint", err.Error())
+			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
+
 			return
 		}
 		region = matchingRegion
@@ -84,19 +85,30 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	if !data.Name.IsNull() {
 		matchingRegion, err := FindRegionByName(ctx, conn, data.Name.ValueString())
 		if err != nil {
-			response.Diagnostics.AddError("finding region by name", err.Error())
+			response.Diagnostics.AddError("finding Region by name", err.Error())
+
 			return
 		}
+
+		if region != nil && region.RegionName != matchingRegion.RegionName {
+			response.Diagnostics.AddError("multiple Regions matched", "use additional constraints to reduce matches to a single Region")
+
+			return
+		}
+
 		region = matchingRegion
 	}
 
 	// Default to provider current region if no other filters matched
 	if region == nil {
 		matchingRegion, err := FindRegionByName(ctx, conn, d.Meta().Region)
+
 		if err != nil {
-			response.Diagnostics.AddError("finding region by name", err.Error())
+			response.Diagnostics.AddError("finding Region by name", err.Error())
+
 			return
 		}
+
 		region = matchingRegion
 	}
 
