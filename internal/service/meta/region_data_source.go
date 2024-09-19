@@ -74,16 +74,19 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 
 	if !data.Endpoint.IsNull() {
 		matchingRegion, err := FindRegionByEndpoint(ctx, conn, data.Endpoint.ValueString())
+
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
 
 			return
 		}
+
 		region = matchingRegion
 	}
 
 	if !data.Name.IsNull() {
 		matchingRegion, err := FindRegionByName(ctx, conn, data.Name.ValueString())
+
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by name", err.Error())
 
