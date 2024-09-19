@@ -6,9 +6,10 @@ package meta
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -67,63 +68,42 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	var region *endpoints.Region
+	var region *awstypes.Region
+
+	conn := d.Meta().EC2Client(ctx)
 
 	if !data.Endpoint.IsNull() {
-		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.ValueString())
-
+		matchingRegion, err := FindRegionByEndpoint(ctx, conn, data.Endpoint.ValueString())
 		if err != nil {
-			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
-
+			response.Diagnostics.AddError("finding region by endpoint", err.Error())
 			return
 		}
-
 		region = matchingRegion
 	}
 
 	if !data.Name.IsNull() {
-		matchingRegion, err := FindRegionByName(data.Name.ValueString())
-
+		matchingRegion, err := FindRegionByName(ctx, conn, data.Name.ValueString())
 		if err != nil {
-			response.Diagnostics.AddError("finding Region by name", err.Error())
-
+			response.Diagnostics.AddError("finding region by name", err.Error())
 			return
 		}
-
-		if region != nil && region.ID() != matchingRegion.ID() {
-			response.Diagnostics.AddError("multiple Regions matched", "use additional constraints to reduce matches to a single Region")
-
-			return
-		}
-
 		region = matchingRegion
 	}
 
 	// Default to provider current region if no other filters matched
 	if region == nil {
-		matchingRegion, err := FindRegionByName(d.Meta().Region)
-
+		matchingRegion, err := FindRegionByName(ctx, conn, d.Meta().Region)
 		if err != nil {
-			response.Diagnostics.AddError("finding Region by name", err.Error())
-
+			response.Diagnostics.AddError("finding region by name", err.Error())
 			return
 		}
-
 		region = matchingRegion
 	}
 
-	regionEndpointEC2, err := region.ResolveEndpoint(names.EC2)
-
-	if err != nil {
-		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
-
-		return
-	}
-
-	data.Description = types.StringValue(region.Description())
-	data.Endpoint = types.StringValue(strings.TrimPrefix(regionEndpointEC2.URL, "https://"))
-	data.ID = types.StringValue(region.ID())
-	data.Name = types.StringValue(region.ID())
+	data.Description = types.StringValue(aws.ToString(region.RegionName))
+	data.Endpoint = types.StringValue(aws.ToString(region.Endpoint))
+	data.ID = types.StringValue(aws.ToString(region.RegionName))
+	data.Name = types.StringValue(aws.ToString(region.RegionName))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -135,32 +115,39 @@ type dataSourceRegionData struct {
 	Name        types.String `tfsdk:"name"`
 }
 
-func FindRegionByEndpoint(endpoint string) (*endpoints.Region, error) {
-	for _, partition := range endpoints.DefaultPartitions() {
-		for _, region := range partition.Regions() {
-			regionEndpointEC2, err := region.ResolveEndpoint(names.EC2)
+func FindRegionByEndpoint(ctx context.Context, conn *ec2.Client, endpoint string) (*awstypes.Region, error) {
+	input := &ec2.DescribeRegionsInput{
+		AllRegions: aws.Bool(true),
+	}
 
-			if err != nil {
-				return nil, err
-			}
+	output, err := conn.DescribeRegions(ctx, input)
+	if err != nil {
+		return nil, err
+	}
 
-			if strings.TrimPrefix(regionEndpointEC2.URL, "https://") == endpoint {
-				return &region, nil
-			}
+	for _, region := range output.Regions {
+		if aws.ToString(region.Endpoint) == endpoint {
+			return &region, nil
 		}
 	}
 
 	return nil, fmt.Errorf("region not found for endpoint %q", endpoint)
 }
 
-func FindRegionByName(name string) (*endpoints.Region, error) {
-	for _, partition := range endpoints.DefaultPartitions() {
-		for _, region := range partition.Regions() {
-			if region.ID() == name {
-				return &region, nil
-			}
-		}
+func FindRegionByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.Region, error) {
+	input := &ec2.DescribeRegionsInput{
+		RegionNames: []string{name},
+		AllRegions:  aws.Bool(true),
 	}
 
-	return nil, fmt.Errorf("region not found for name %q", name)
+	output, err := conn.DescribeRegions(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.Regions) == 0 {
+		return nil, fmt.Errorf("region not found for name %q", name)
+	}
+
+	return &output.Regions[0], nil
 }

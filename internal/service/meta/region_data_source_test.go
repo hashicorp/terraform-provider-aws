@@ -10,12 +10,16 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestFindRegionByEC2Endpoint(t *testing.T) {
 	t.Parallel()
+
+	ctx := acctest.Context(t)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	var testCases = []struct {
 		Value    string
@@ -40,7 +44,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByEndpoint(tc.Value)
+		_, err := tfmeta.FindRegionByEndpoint(ctx, conn, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -52,6 +56,9 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 
 func TestFindRegionByName(t *testing.T) {
 	t.Parallel()
+
+	ctx := acctest.Context(t)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	var testCases = []struct {
 		Value    string
@@ -72,7 +79,7 @@ func TestFindRegionByName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByName(tc.Value)
+		_, err := tfmeta.FindRegionByName(ctx, conn, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
