@@ -24,9 +24,11 @@ func TestAccSESEmailIdentity_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccEmailIdentity_basic,
-		acctest.CtDisappears: testAccEmailIdentity_disappears,
-		"trailingPeriod":     testAccEmailIdentity_trailingPeriod,
+		acctest.CtBasic:             testAccEmailIdentity_basic,
+		acctest.CtDisappears:        testAccEmailIdentity_disappears,
+		"trailingPeriod":            testAccEmailIdentity_trailingPeriod,
+		"dataSource_basic":          testAccEmailIdentityDataSource_basic,
+		"dataSource_trailingPeriod": testAccEmailIdentityDataSource_trailingPeriod,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

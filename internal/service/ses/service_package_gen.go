@@ -33,8 +33,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ses_domain_identity",
 		},
 		{
-			Factory:  DataSourceEmailIdentity,
+			Factory:  dataSourceEmailIdentity,
 			TypeName: "aws_ses_email_identity",
+			Name:     "Email Identity",
 		},
 	}
 }
