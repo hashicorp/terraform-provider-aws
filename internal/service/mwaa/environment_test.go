@@ -364,6 +364,74 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	})
 }
 
+func TestAccMWAAEnvironment_customer_vpce(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environment awstypes.Environment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mwaa_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_customer_vpce(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttrSet(resourceName, "airflow_version"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "airflow", "environment/"+rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "database_vpc_endpoint_service"),
+					resource.TestCheckResourceAttrSet(resourceName, "webserver_vpc_endpoint_service"),
+					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
+					resource.TestCheckResourceAttr(resourceName, "environment_class", "mw1.small"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrExecutionRoleARN, "iam", "role/service-role/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.task_logs.0.cloud_watch_log_group_arn"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "max_workers", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "min_workers", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "max_webservers", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "min_webservers", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", acctest.Ct2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceRoleARN),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", string(awstypes.WebserverAccessModePrivateOnly)),
+					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
+					resource.TestCheckResourceAttrSet(resourceName, "weekly_maintenance_window_start"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_management", "CUSTOMER"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -680,6 +748,26 @@ resource "aws_mwaa_environment" "test" {
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
+`, rName))
+}
+
+func testAccEnvironmentConfig_customer_vpce(rName string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_mwaa_environment" "test" {
+  dag_s3_path        = aws_s3_object.dags.key
+  execution_role_arn = aws_iam_role.test.arn
+  name               = %[1]q
+  endpoint_management = "CUSTOMER"
+  webserver_access_mode = "PRIVATE_ONLY"
+
+  network_configuration {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.private[*].id
+  }
+
+  source_bucket_arn = aws_s3_bucket.test.arn
+}
+
 `, rName))
 }
 
