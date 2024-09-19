@@ -82,7 +82,7 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set: %s", err)
 	}
 
 	arn := arn.ARN{
