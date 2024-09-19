@@ -137,6 +137,35 @@ func testAccInstance_saml(t *testing.T) {
 	})
 }
 
+func testAccInstance_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -193,6 +222,21 @@ resource "aws_connect_instance" "test" {
   outbound_calls_enabled   = true
 }
 `, rName)
+}
+
+func testAccInstanceConfig_tags(rName string, tag, value string) string {
+	return fmt.Sprintf(`
+resource "aws_connect_instance" "test" {
+  identity_management_type = "CONNECT_MANAGED"
+  inbound_calls_enabled    = true
+  instance_alias           = %[1]q
+  outbound_calls_enabled   = true
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag, value)
 }
 
 func testAccInstanceConfig_basicFlipped(rName string) string {
