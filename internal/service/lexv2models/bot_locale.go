@@ -144,14 +144,14 @@ func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	in := &lexmodelsv2.CreateBotLocaleInput{
-		BotId:                        aws.String(plan.BotID.ValueString()),
-		BotVersion:                   aws.String(plan.BotVersion.ValueString()),
-		LocaleId:                     aws.String(plan.LocaleID.ValueString()),
-		NluIntentConfidenceThreshold: aws.Float64(plan.NluIntentCOnfidenceThreshold.ValueFloat64()),
+		BotId:                        plan.BotID.ValueStringPointer(),
+		BotVersion:                   plan.BotVersion.ValueStringPointer(),
+		LocaleId:                     plan.LocaleID.ValueStringPointer(),
+		NluIntentConfidenceThreshold: plan.NluIntentCOnfidenceThreshold.ValueFloat64Pointer(),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 	if !plan.VoiceSettings.IsNull() {
 		var tfList []voiceSettingsData
@@ -276,14 +276,14 @@ func (r *resourceBotLocale) Update(ctx context.Context, req resource.UpdateReque
 		!plan.VoiceSettings.Equal(state.VoiceSettings) ||
 		!plan.NluIntentCOnfidenceThreshold.Equal(state.NluIntentCOnfidenceThreshold) {
 		in := &lexmodelsv2.UpdateBotLocaleInput{
-			BotId:                        aws.String(plan.BotID.ValueString()),
-			BotVersion:                   aws.String(plan.BotVersion.ValueString()),
-			LocaleId:                     aws.String(plan.LocaleID.ValueString()),
-			NluIntentConfidenceThreshold: aws.Float64(plan.NluIntentCOnfidenceThreshold.ValueFloat64()),
+			BotId:                        plan.BotID.ValueStringPointer(),
+			BotVersion:                   plan.BotVersion.ValueStringPointer(),
+			LocaleId:                     plan.LocaleID.ValueStringPointer(),
+			NluIntentConfidenceThreshold: plan.NluIntentCOnfidenceThreshold.ValueFloat64Pointer(),
 		}
 
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 		if !plan.VoiceSettings.IsNull() {
 			var tfList []voiceSettingsData
@@ -336,9 +336,9 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	in := &lexmodelsv2.DeleteBotLocaleInput{
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteBotLocale(ctx, in)

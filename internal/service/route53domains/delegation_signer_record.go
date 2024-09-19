@@ -206,8 +206,8 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 	conn := r.Meta().Route53DomainsClient(ctx)
 
 	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &route53domains.DisassociateDelegationSignerFromDomainInput{
-		DomainName: aws.String(data.DomainName.ValueString()),
-		Id:         aws.String(data.DNSSECKeyID.ValueString()),
+		DomainName: data.DomainName.ValueStringPointer(),
+		Id:         data.DNSSECKeyID.ValueStringPointer(),
 	})
 
 	if err != nil {

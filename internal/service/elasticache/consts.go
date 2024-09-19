@@ -15,3 +15,9 @@ func engine_Values() []string {
 		engineRedis,
 	}
 }
+
+const (
+	reservedCacheNodeStateActive         = "active"
+	reservedCacheNodeStateRetired        = "retired"
+	reservedCacheNodeStatePaymentPending = "payment-pending"
+)

@@ -110,6 +110,11 @@ func TestAccAppSync_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDomainNameAPIAssociation_basic,
 			acctest.CtDisappears: testAccDomainNameAPIAssociation_disappears,
 		},
+		"SourceApiAssociation": {
+			acctest.CtBasic:      testAccAppSyncSourceAPIAssociation_basic,
+			acctest.CtDisappears: testAccAppSyncSourceAPIAssociation_disappears,
+			"update":             testAccAppSyncSourceAPIAssociation_update,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

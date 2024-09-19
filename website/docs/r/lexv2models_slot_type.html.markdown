@@ -49,7 +49,7 @@ resource "aws_lexv2models_slot_type" "example" {
 }
 ```
 
-### `value_selection_setting` Usage
+### value_selection_setting Usage
 
 ```terraform
 resource "aws_lexv2models_slot_type" "example" {

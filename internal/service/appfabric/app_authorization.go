@@ -217,7 +217,7 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	input.AppBundleIdentifier = aws.String(data.AppBundleARN.ValueString())
+	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
 	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
 	input.Tags = getTagsIn(ctx)
 

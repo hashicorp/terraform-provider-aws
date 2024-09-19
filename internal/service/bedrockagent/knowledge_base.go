@@ -461,7 +461,7 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	_, err := conn.DeleteKnowledgeBase(ctx, &bedrockagent.DeleteKnowledgeBaseInput{
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
+		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

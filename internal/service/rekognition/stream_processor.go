@@ -685,7 +685,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 	}
 
 	in := &rekognition.DeleteStreamProcessorInput{
-		Name: aws.String(state.Name.ValueString()),
+		Name: state.Name.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteStreamProcessor(ctx, in)

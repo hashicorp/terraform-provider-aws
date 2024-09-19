@@ -219,7 +219,7 @@ func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.Delete
 
 	_, err := conn.DeleteSecurityPolicy(ctx, &opensearchserverless.DeleteSecurityPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(state.Name.ValueString()),
+		Name:        state.Name.ValueStringPointer(),
 		Type:        awstypes.SecurityPolicyType(state.Type.ValueString()),
 	})
 	if err != nil {

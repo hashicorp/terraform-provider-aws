@@ -25,6 +25,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 	var conf1, conf2 awstypes.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
+	runtimeVersionDataSourceName := "data.aws_synthetics_runtime_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -38,7 +39,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-9.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -70,7 +71,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-9.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -313,6 +314,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 	var conf awstypes.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
+	runtimeVersionDataSourceName := "data.aws_synthetics_runtime_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -326,7 +328,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-9.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -782,6 +784,11 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
+
+data "aws_synthetics_runtime_version" "test" {
+  prefix = "syn-nodejs-puppeteer"
+  latest = true
+}
 `, rName)
 }
 
@@ -793,7 +800,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -817,7 +824,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -842,7 +849,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -867,7 +874,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -886,14 +893,15 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_runEnvVariables2(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -913,7 +921,9 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.test, aws_iam_role.test, aws_iam_role_policy.test]
@@ -923,7 +933,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -934,7 +944,9 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_rate(rName string, rate string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.test, aws_iam_role.test, aws_iam_role_policy.test]
@@ -944,7 +956,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   run_config {
@@ -960,14 +972,16 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_artifactEncryption(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   artifact_config {
@@ -986,7 +1000,9 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_artifactEncryptionKMS(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -998,7 +1014,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   artifact_config {
@@ -1018,7 +1034,9 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_runtimeVersion(rName, version string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1038,14 +1056,16 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_zipUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/test/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1058,7 +1078,9 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_start(rName string, state bool) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1066,7 +1088,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1079,7 +1101,9 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_startZipUpdated(rName string, state bool) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1087,7 +1111,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1100,7 +1124,9 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_basicS3Code(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1109,7 +1135,7 @@ resource "aws_synthetics_canary" "test" {
   s3_bucket            = aws_s3_object.test.bucket
   s3_key               = aws_s3_object.test.key
   s3_version           = aws_s3_object.test.version_id
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1128,12 +1154,11 @@ resource "aws_s3_object" "test" {
   source = "test-fixtures/lambdatest.zip"
   etag   = filemd5("test-fixtures/lambdatest.zip")
 }
-
 `, rName))
 }
 
 func testAccCanarySecurityGroupBaseConfig(rName string, count int) string {
-	return acctest.ConfigCompose(fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count  = %[2]d
   vpc_id = aws_vpc.test.id
@@ -1147,7 +1172,7 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   role       = aws_iam_role.test.name
 }
-`, rName, count))
+`, rName, count)
 }
 
 func testAccCanaryConfig_vpc1(rName string) string {
@@ -1162,7 +1187,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1191,7 +1216,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1220,7 +1245,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1238,14 +1263,16 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {
@@ -1260,14 +1287,16 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
 
   schedule {

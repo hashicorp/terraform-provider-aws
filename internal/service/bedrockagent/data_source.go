@@ -497,8 +497,8 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	_, err := conn.DeleteDataSource(ctx, &bedrockagent.DeleteDataSourceInput{
-		DataSourceId:    aws.String(data.DataSourceID.ValueString()),
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
+		DataSourceId:    data.DataSourceID.ValueStringPointer(),
+		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

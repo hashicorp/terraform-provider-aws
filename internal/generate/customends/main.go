@@ -12,17 +12,27 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
-//go:embed custom_endpoints_header.tmpl
+//go:embed custom_endpoints_header.gtpl
 var header string
 
-//go:embed custom_endpoints_footer.tmpl
+//go:embed custom_endpoints_footer.gtpl
 var footer string
 
+type serviceDatum struct {
+	HumanFriendly    string
+	ProviderPackage  string
+	Aliases          []string
+	TfAwsEnvVar      string
+	DeprecatedEnvVar string
+	AwsEnvVar        string
+	SharedConfigKey  string
+}
+
 type TemplateData struct {
-	Services []names.Endpoint
+	Services []serviceDatum
 }
 
 func main() {
@@ -33,8 +43,33 @@ func main() {
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
-	td := TemplateData{
-		Services: names.Endpoints(),
+	data, err := data.ReadAllServiceData()
+	if err != nil {
+		g.Fatalf("error reading service data: %s", err)
+	}
+
+	td := TemplateData{}
+
+	for _, l := range data {
+		if l.Exclude() {
+			continue
+		}
+
+		if l.NotImplemented() && !l.EndpointOnly() {
+			continue
+		}
+
+		sd := serviceDatum{
+			HumanFriendly:    l.HumanFriendly(),
+			ProviderPackage:  l.ProviderPackage(),
+			Aliases:          l.Aliases(),
+			TfAwsEnvVar:      l.TFAWSEnvVar(),
+			DeprecatedEnvVar: l.DeprecatedEnvVar(),
+			AwsEnvVar:        l.AWSServiceEnvVar(),
+			SharedConfigKey:  l.AWSConfigParameter(),
+		}
+
+		td.Services = append(td.Services, sd)
 	}
 
 	sort.Slice(td.Services, func(i, j int) bool {
@@ -52,5 +87,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

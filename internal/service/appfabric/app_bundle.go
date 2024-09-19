@@ -143,7 +143,7 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteAppBundle(ctx, &appfabric.DeleteAppBundleInput{
-		AppBundleIdentifier: aws.String(data.ID.ValueString()),
+		AppBundleIdentifier: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

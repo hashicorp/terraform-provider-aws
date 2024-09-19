@@ -193,10 +193,10 @@ func (r *cidrLocationResource) Update(ctx context.Context, request resource.Upda
 			Changes: []awstypes.CidrCollectionChange{{
 				Action:       awstypes.CidrCollectionChangeActionPut,
 				CidrList:     add,
-				LocationName: aws.String(new.Name.ValueString()),
+				LocationName: new.Name.ValueStringPointer(),
 			}},
 			CollectionVersion: collectionVersion,
-			Id:                aws.String(new.CIDRCollectionID.ValueString()),
+			Id:                new.CIDRCollectionID.ValueStringPointer(),
 		}
 
 		_, err = conn.ChangeCidrCollection(ctx, input)
@@ -215,10 +215,10 @@ func (r *cidrLocationResource) Update(ctx context.Context, request resource.Upda
 			Changes: []awstypes.CidrCollectionChange{{
 				Action:       awstypes.CidrCollectionChangeActionDeleteIfExists,
 				CidrList:     del,
-				LocationName: aws.String(new.Name.ValueString()),
+				LocationName: new.Name.ValueStringPointer(),
 			}},
 			CollectionVersion: collectionVersion,
-			Id:                aws.String(new.CIDRCollectionID.ValueString()),
+			Id:                new.CIDRCollectionID.ValueStringPointer(),
 		}
 
 		_, err = conn.ChangeCidrCollection(ctx, input)
@@ -258,10 +258,10 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 		Changes: []awstypes.CidrCollectionChange{{
 			Action:       awstypes.CidrCollectionChangeActionDeleteIfExists,
 			CidrList:     fwflex.ExpandFrameworkStringValueSet(ctx, data.CIDRBlocks),
-			LocationName: aws.String(data.Name.ValueString()),
+			LocationName: data.Name.ValueStringPointer(),
 		}},
 		CollectionVersion: collection.Version,
-		Id:                aws.String(data.CIDRCollectionID.ValueString()),
+		Id:                data.CIDRCollectionID.ValueStringPointer(),
 	}
 
 	_, err = conn.ChangeCidrCollection(ctx, input)

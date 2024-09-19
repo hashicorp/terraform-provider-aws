@@ -484,7 +484,7 @@ encrypted. Note that if you are creating a cross-region read replica this field
 is ignored and you should instead declare `kms_key_id` with a valid ARN. The
 default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
-purpose SSD), "gp3" (general purpose SSD that needs `iops` independently),
+purpose SSD), "gp3" (general purpose SSD that needs `iops` independently)
 "io1" (provisioned IOPS SSD) or "io2" (block express storage provisioned IOPS
 SSD). The default is "io1" if `iops` is specified, "gp2" if not.
 * `storage_throughput` - (Optional) The storage throughput value for the DB instance. Can only be set when `storage_type` is `"gp3"`. Cannot be specified if the `allocated_storage` value is below a per-`engine` threshold. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
@@ -655,4 +655,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d9ab3c6ab96aec0cb8fc8a3ec3a6e2d68ad7952111ee0fbfcd59c9fef3e2baa7 -->
+<!-- cache-key: cdktf-0.20.1 input-4580e974a5e4576dfe92805deffe381a3f8e065605c18948d5b6feb61c2f3c35 -->

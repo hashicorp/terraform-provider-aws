@@ -272,7 +272,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 	})
 
 	input := &chatbot.DeleteMicrosoftTeamsChannelConfigurationInput{
-		ChatConfigurationArn: aws.String(data.ChatConfigurationARN.ValueString()),
+		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {

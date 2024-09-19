@@ -1061,7 +1061,7 @@ func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketLifecycleConfigurationConfig_directoryBucket(rName),
-				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+				ExpectError: regexache.MustCompile(`MethodNotAllowed: The specified method is not allowed against this resource`),
 			},
 		},
 	})

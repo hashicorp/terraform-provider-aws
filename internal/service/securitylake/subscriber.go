@@ -378,7 +378,7 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	in := &securitylake.DeleteSubscriberInput{
-		SubscriberId: aws.String(data.ID.ValueString()),
+		SubscriberId: data.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSubscriber(ctx, in)

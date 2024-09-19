@@ -469,20 +469,3 @@ func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
 		tffunction.NewTrimIAMRolePathFunction,
 	}
 }
-
-func endpointsBlock() schema.SetNestedBlock {
-	endpointsAttributes := make(map[string]schema.Attribute)
-
-	for _, serviceKey := range names.Aliases() {
-		endpointsAttributes[serviceKey] = schema.StringAttribute{
-			Optional:    true,
-			Description: "Use this to override the default service endpoint URL",
-		}
-	}
-
-	return schema.SetNestedBlock{
-		NestedObject: schema.NestedBlockObject{
-			Attributes: endpointsAttributes,
-		},
-	}
-}

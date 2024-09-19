@@ -202,19 +202,3 @@ func statusMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, name 
 		return output, string(output.MonitoringScheduleStatus), nil
 	}
 }
-
-func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findEndpointByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.EndpointStatus), nil
-	}
-}

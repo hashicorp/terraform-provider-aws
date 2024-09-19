@@ -21,6 +21,7 @@ var (
 	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
 	FindGlobalReplicationGroupByID       = findGlobalReplicationGroupByID
 	FindReplicationGroupByID             = findReplicationGroupByID
+	FindReservedCacheNodeByID            = findReservedCacheNodeByID
 	FindServerlessCacheByID              = findServerlessCacheByID
 	FindUserByID                         = findUserByID
 	FindUserGroupByID                    = findUserGroupByID

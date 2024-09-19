@@ -166,8 +166,8 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	awsAccountID, vpcConnectionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.VPCConnectionID)
 	in := &quicksight.CreateVPCConnectionInput{
 		AwsAccountId:     aws.String(awsAccountID),
-		Name:             aws.String(plan.Name.ValueString()),
-		RoleArn:          aws.String(plan.RoleArn.ValueString()),
+		Name:             plan.Name.ValueStringPointer(),
+		RoleArn:          plan.RoleArn.ValueStringPointer(),
 		SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
 		SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
 		Tags:             getTagsIn(ctx),
@@ -287,8 +287,8 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 		!plan.SubnetIds.Equal(state.SubnetIds) {
 		in := quicksight.UpdateVPCConnectionInput{
 			AwsAccountId:     aws.String(awsAccountID),
-			Name:             aws.String(plan.Name.ValueString()),
-			RoleArn:          aws.String(plan.RoleArn.ValueString()),
+			Name:             plan.Name.ValueStringPointer(),
+			RoleArn:          plan.RoleArn.ValueStringPointer(),
 			SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
 			SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
 			VPCConnectionId:  aws.String(vpcConnectionID),

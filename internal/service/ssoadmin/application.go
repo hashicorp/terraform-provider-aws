@@ -158,14 +158,14 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	in := &ssoadmin.CreateApplicationInput{
-		ApplicationProviderArn: aws.String(plan.ApplicationProviderARN.ValueString()),
-		InstanceArn:            aws.String(plan.InstanceARN.ValueString()),
-		Name:                   aws.String(plan.Name.ValueString()),
+		ApplicationProviderArn: plan.ApplicationProviderARN.ValueStringPointer(),
+		InstanceArn:            plan.InstanceARN.ValueStringPointer(),
+		Name:                   plan.Name.ValueStringPointer(),
 		Tags:                   getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 	if !plan.PortalOptions.IsNull() {
 		var tfList []portalOptionsData
@@ -287,14 +287,14 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		!plan.PortalOptions.Equal(state.PortalOptions) ||
 		!plan.Status.Equal(state.Status) {
 		in := &ssoadmin.UpdateApplicationInput{
-			ApplicationArn: aws.String(plan.ApplicationARN.ValueString()),
+			ApplicationArn: plan.ApplicationARN.ValueStringPointer(),
 		}
 
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 		if !plan.Name.IsNull() {
-			in.Name = aws.String(plan.Name.ValueString())
+			in.Name = plan.Name.ValueStringPointer()
 		}
 		if !plan.PortalOptions.IsNull() {
 			var tfList []portalOptionsData
@@ -356,7 +356,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	in := &ssoadmin.DeleteApplicationInput{
-		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
+		ApplicationArn: state.ApplicationARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteApplication(ctx, in)
@@ -504,7 +504,7 @@ func expandSignInOptions(tfList []signInOptionsData) *awstypes.SignInOptions {
 	}
 
 	if !tfObj.ApplicationURL.IsNull() {
-		apiObject.ApplicationUrl = aws.String(tfObj.ApplicationURL.ValueString())
+		apiObject.ApplicationUrl = tfObj.ApplicationURL.ValueStringPointer()
 	}
 
 	return apiObject

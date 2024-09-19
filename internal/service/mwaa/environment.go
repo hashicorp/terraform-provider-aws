@@ -705,7 +705,7 @@ func statusEnvironment(ctx context.Context, conn *mwaa.Client, name string) retr
 func waitEnvironmentCreated(ctx context.Context, conn *mwaa.Client, name string, timeout time.Duration) (*awstypes.Environment, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentStatusCreating),
-		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable),
+		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable, awstypes.EnvironmentStatusPending),
 		Refresh: statusEnvironment(ctx, conn, name),
 		Timeout: timeout,
 	}

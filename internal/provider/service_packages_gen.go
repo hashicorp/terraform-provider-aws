@@ -178,6 +178,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pcaconnectorad"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pcs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
@@ -424,6 +425,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		pcaconnectorad.ServicePackage(ctx),
 		pcs.ServicePackage(ctx),
 		pinpoint.ServicePackage(ctx),
+		pinpointsmsvoicev2.ServicePackage(ctx),
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),

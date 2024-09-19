@@ -319,7 +319,7 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		in.ExportArn = aws.String(plan.ID.ValueString())
+		in.ExportArn = plan.ID.ValueStringPointer()
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {
@@ -363,7 +363,7 @@ func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &bcmdataexports.DeleteExportInput{
-		ExportArn: aws.String(state.ID.ValueString()),
+		ExportArn: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteExport(ctx, in)

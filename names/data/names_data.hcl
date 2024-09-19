@@ -3,8 +3,7 @@
 
 service "accessanalyzer" {
   sdk {
-    id             = "AccessAnalyzer"
-    client_version = [2]
+    id = "AccessAnalyzer"
   }
 
   names {
@@ -27,8 +26,7 @@ service "accessanalyzer" {
 
 service "account" {
   sdk {
-    id             = "Account"
-    client_version = [2]
+    id = "Account"
   }
 
   names {
@@ -51,8 +49,7 @@ service "account" {
 
 service "acm" {
   sdk {
-    id             = "ACM"
-    client_version = [2]
+    id = "ACM"
   }
 
   names {
@@ -80,8 +77,7 @@ service "acmpca" {
   }
 
   sdk {
-    id             = "ACM PCA"
-    client_version = [2]
+    id = "ACM PCA"
   }
 
   names {
@@ -104,8 +100,7 @@ service "acmpca" {
 
 service "alexaforbusiness" {
   sdk {
-    id             = "Alexa For Business"
-    client_version = [1]
+    id = "Alexa For Business"
   }
 
   names {
@@ -123,7 +118,6 @@ service "alexaforbusiness" {
 
   provider_package_correct = "alexaforbusiness"
   doc_prefix               = ["alexaforbusiness_"]
-  brand                    = ""
   not_implemented          = true
 }
 
@@ -134,8 +128,7 @@ service "amp" {
   }
 
   sdk {
-    id             = "amp"
-    client_version = [2]
+    id = "amp"
   }
 
   names {
@@ -160,8 +153,7 @@ service "amp" {
 
 service "amplify" {
   sdk {
-    id             = "Amplify"
-    client_version = [2]
+    id = "Amplify"
   }
 
   names {
@@ -184,8 +176,7 @@ service "amplify" {
 
 service "amplifybackend" {
   sdk {
-    id             = "AmplifyBackend"
-    client_version = [1]
+    id = "AmplifyBackend"
   }
 
   names {
@@ -209,8 +200,7 @@ service "amplifybackend" {
 
 service "amplifyuibuilder" {
   sdk {
-    id             = "AmplifyUIBuilder"
-    client_version = [1]
+    id = "AmplifyUIBuilder"
   }
 
   names {
@@ -234,8 +224,7 @@ service "amplifyuibuilder" {
 
 service "apigateway" {
   sdk {
-    id             = "API Gateway"
-    client_version = [2]
+    id = "API Gateway"
   }
 
   names {
@@ -263,8 +252,7 @@ service "apigateway" {
 
 service "apigatewaymanagementapi" {
   sdk {
-    id             = "ApiGatewayManagementApi"
-    client_version = [1]
+    id = "ApiGatewayManagementApi"
   }
 
   names {
@@ -288,8 +276,7 @@ service "apigatewaymanagementapi" {
 
 service "apigatewayv2" {
   sdk {
-    id             = "ApiGatewayV2"
-    client_version = [2]
+    id = "ApiGatewayV2"
   }
 
   names {
@@ -316,8 +303,7 @@ service "apigatewayv2" {
 
 service "appfabric" {
   sdk {
-    id             = "AppFabric"
-    client_version = [2]
+    id = "AppFabric"
   }
 
   names {
@@ -340,8 +326,7 @@ service "appfabric" {
 
 service "appmesh" {
   sdk {
-    id             = "App Mesh"
-    client_version = [2]
+    id = "App Mesh"
   }
 
   names {
@@ -368,8 +353,7 @@ service "appmesh" {
 
 service "apprunner" {
   sdk {
-    id             = "AppRunner"
-    client_version = [2]
+    id = "AppRunner"
   }
 
   names {
@@ -392,8 +376,7 @@ service "apprunner" {
 
 service "appconfig" {
   sdk {
-    id             = "AppConfig"
-    client_version = [2]
+    id = "AppConfig"
   }
 
   names {
@@ -420,8 +403,7 @@ service "appconfig" {
 
 service "appconfigdata" {
   sdk {
-    id             = "AppConfigData"
-    client_version = [1]
+    id = "AppConfigData"
   }
 
   names {
@@ -445,8 +427,7 @@ service "appconfigdata" {
 
 service "appflow" {
   sdk {
-    id             = "Appflow"
-    client_version = [2]
+    id = "Appflow"
   }
 
   names {
@@ -474,8 +455,7 @@ service "appintegrations" {
   }
 
   sdk {
-    id             = "AppIntegrations"
-    client_version = [2]
+    id = "AppIntegrations"
   }
 
   names {
@@ -509,8 +489,7 @@ service "appautoscaling" {
   }
 
   sdk {
-    id             = "Application Auto Scaling"
-    client_version = [2]
+    id = "Application Auto Scaling"
   }
 
   names {
@@ -531,12 +510,11 @@ service "appautoscaling" {
 
   provider_package_correct = "applicationautoscaling"
   doc_prefix               = ["appautoscaling_"]
-  brand                    = ""
 }
+
 service "applicationcostprofiler" {
   sdk {
-    id             = "ApplicationCostProfiler"
-    client_version = [1]
+    id = "ApplicationCostProfiler"
   }
 
   names {
@@ -565,8 +543,7 @@ service "applicationsignals" {
   }
 
   sdk {
-    id             = "Application Signals"
-    client_version = [2]
+    id = "Application Signals"
   }
 
   names {
@@ -594,8 +571,7 @@ service "discovery" {
   }
 
   sdk {
-    id             = "Application Discovery Service"
-    client_version = [1]
+    id = "Application Discovery Service"
   }
 
   names {
@@ -620,8 +596,7 @@ service "discovery" {
 
 service "mgn" {
   sdk {
-    id             = "mgn"
-    client_version = [1]
+    id = "mgn"
   }
 
   names {
@@ -645,8 +620,7 @@ service "mgn" {
 
 service "appstream" {
   sdk {
-    id             = "AppStream"
-    client_version = [2]
+    id = "AppStream"
   }
 
   names {
@@ -670,8 +644,7 @@ service "appstream" {
 
 service "appsync" {
   sdk {
-    id             = "AppSync"
-    client_version = [2]
+    id = "AppSync"
   }
 
   names {
@@ -699,8 +672,7 @@ service "appsync" {
 
 service "athena" {
   sdk {
-    id             = "Athena"
-    client_version = [2]
+    id = "Athena"
   }
 
   names {
@@ -723,8 +695,7 @@ service "athena" {
 
 service "auditmanager" {
   sdk {
-    id             = "AuditManager"
-    client_version = [2]
+    id = "AuditManager"
   }
 
   names {
@@ -747,8 +718,7 @@ service "auditmanager" {
 
 service "autoscaling" {
   sdk {
-    id             = "Auto Scaling"
-    client_version = [2]
+    id = "Auto Scaling"
   }
 
   names {
@@ -767,8 +737,8 @@ service "autoscaling" {
 
   provider_package_correct = "autoscaling"
   doc_prefix               = ["autoscaling_", "launch_configuration"]
-  brand                    = ""
 }
+
 service "autoscalingplans" {
   cli_v2_command {
     aws_cli_v2_command           = "autoscaling-plans"
@@ -776,8 +746,7 @@ service "autoscalingplans" {
   }
 
   sdk {
-    id             = "Auto Scaling Plans"
-    client_version = [2]
+    id = "Auto Scaling Plans"
   }
 
   names {
@@ -795,12 +764,11 @@ service "autoscalingplans" {
 
   provider_package_correct = "autoscalingplans"
   doc_prefix               = ["autoscalingplans_"]
-  brand                    = ""
 }
+
 service "backup" {
   sdk {
-    id             = "Backup"
-    client_version = [2]
+    id = "Backup"
   }
 
   names {
@@ -832,8 +800,7 @@ service "backupgateway" {
   }
 
   sdk {
-    id             = "Backup Gateway"
-    client_version = [1]
+    id = "Backup Gateway"
   }
 
   names {
@@ -857,8 +824,7 @@ service "backupgateway" {
 
 service "batch" {
   sdk {
-    id             = "Batch"
-    client_version = [2]
+    id = "Batch"
   }
 
   names {
@@ -885,8 +851,7 @@ service "batch" {
 
 service "bedrock" {
   sdk {
-    id             = "Bedrock"
-    client_version = [2]
+    id = "Bedrock"
   }
 
   names {
@@ -914,8 +879,7 @@ service "bedrockagent" {
   }
 
   sdk {
-    id             = "Bedrock Agent"
-    client_version = [2]
+    id = "Bedrock Agent"
   }
 
   names {
@@ -938,8 +902,7 @@ service "bedrockagent" {
 
 service "bcmdataexports" {
   sdk {
-    id             = "BCM Data Exports"
-    client_version = [2]
+    id = "BCM Data Exports"
   }
 
   names {
@@ -963,12 +926,11 @@ service "bcmdataexports" {
 service "billingconductor" {
   go_packages {
     v1_package = "billingconductor"
-    v2_package = ""
+    v2_package = "billingconductor"
   }
 
   sdk {
-    id             = "billingconductor"
-    client_version = [1]
+    id = "billingconductor"
   }
 
   names {
@@ -992,8 +954,7 @@ service "billingconductor" {
 
 service "braket" {
   sdk {
-    id             = "Braket"
-    client_version = [1]
+    id = "Braket"
   }
 
   names {
@@ -1022,8 +983,7 @@ service "ce" {
   }
 
   sdk {
-    id             = "Cost Explorer"
-    client_version = [2]
+    id = "Cost Explorer"
   }
 
   names {
@@ -1047,8 +1007,7 @@ service "ce" {
 
 service "chatbot" {
   sdk {
-    id             = "Chatbot"
-    client_version = [2]
+    id = "Chatbot"
   }
 
   names {
@@ -1075,8 +1034,7 @@ service "chatbot" {
 
 service "chime" {
   sdk {
-    id             = "Chime"
-    client_version = [2]
+    id = "Chime"
   }
 
   names {
@@ -1108,8 +1066,7 @@ service "chimesdkidentity" {
   }
 
   sdk {
-    id             = "Chime SDK Identity"
-    client_version = [1]
+    id = "Chime SDK Identity"
   }
 
   names {
@@ -1138,8 +1095,7 @@ service "chimesdkmediapipelines" {
   }
 
   sdk {
-    id             = "Chime SDK Media Pipelines"
-    client_version = [2]
+    id = "Chime SDK Media Pipelines"
   }
 
   names {
@@ -1167,8 +1123,7 @@ service "chimesdkmeetings" {
   }
 
   sdk {
-    id             = "Chime SDK Meetings"
-    client_version = [1]
+    id = "Chime SDK Meetings"
   }
 
   names {
@@ -1197,8 +1152,7 @@ service "chimesdkmessaging" {
   }
 
   sdk {
-    id             = "Chime SDK Messaging"
-    client_version = [1]
+    id = "Chime SDK Messaging"
   }
 
   names {
@@ -1227,8 +1181,7 @@ service "chimesdkvoice" {
   }
 
   sdk {
-    id             = "Chime SDK Voice"
-    client_version = [2]
+    id = "Chime SDK Voice"
   }
 
   names {
@@ -1251,8 +1204,7 @@ service "chimesdkvoice" {
 
 service "cleanrooms" {
   sdk {
-    id             = "CleanRooms"
-    client_version = [2]
+    id = "CleanRooms"
   }
 
   names {
@@ -1280,8 +1232,7 @@ service "cloudcontrol" {
   }
 
   sdk {
-    id             = "CloudControl"
-    client_version = [2]
+    id = "CloudControl"
   }
 
   names {
@@ -1310,8 +1261,7 @@ service "cloudcontrol" {
 
 service "clouddirectory" {
   sdk {
-    id             = "CloudDirectory"
-    client_version = [1]
+    id = "CloudDirectory"
   }
 
   names {
@@ -1335,8 +1285,7 @@ service "clouddirectory" {
 
 service "servicediscovery" {
   sdk {
-    id             = "ServiceDiscovery"
-    client_version = [2]
+    id = "ServiceDiscovery"
   }
 
   names {
@@ -1360,8 +1309,7 @@ service "servicediscovery" {
 
 service "cloud9" {
   sdk {
-    id             = "Cloud9"
-    client_version = [2]
+    id = "Cloud9"
   }
 
   names {
@@ -1384,8 +1332,7 @@ service "cloud9" {
 
 service "cloudformation" {
   sdk {
-    id             = "CloudFormation"
-    client_version = [2]
+    id = "CloudFormation"
   }
 
   names {
@@ -1413,8 +1360,7 @@ service "cloudformation" {
 
 service "cloudfront" {
   sdk {
-    id             = "CloudFront"
-    client_version = [2]
+    id = "CloudFront"
   }
 
   names {
@@ -1447,8 +1393,7 @@ service "cloudfrontkeyvaluestore" {
   }
 
   sdk {
-    id             = "CloudFront KeyValueStore"
-    client_version = [2]
+    id = "CloudFront KeyValueStore"
   }
 
   names {
@@ -1472,8 +1417,7 @@ service "cloudfrontkeyvaluestore" {
 
 service "cloudhsmv2" {
   sdk {
-    id             = "CloudHSM V2"
-    client_version = [2]
+    id = "CloudHSM V2"
   }
 
   names {
@@ -1502,8 +1446,7 @@ service "cloudhsmv2" {
 
 service "cloudsearch" {
   sdk {
-    id             = "CloudSearch"
-    client_version = [2]
+    id = "CloudSearch"
   }
 
   names {
@@ -1526,8 +1469,7 @@ service "cloudsearch" {
 
 service "cloudsearchdomain" {
   sdk {
-    id             = "CloudSearch Domain"
-    client_version = [1]
+    id = "CloudSearch Domain"
   }
 
   names {
@@ -1551,8 +1493,7 @@ service "cloudsearchdomain" {
 
 service "cloudtrail" {
   sdk {
-    id             = "CloudTrail"
-    client_version = [2]
+    id = "CloudTrail"
   }
 
   names {
@@ -1576,8 +1517,7 @@ service "cloudtrail" {
 
 service "cloudwatch" {
   sdk {
-    id             = "CloudWatch"
-    client_version = [2]
+    id = "CloudWatch"
   }
 
   names {
@@ -1606,8 +1546,7 @@ service "applicationinsights" {
   }
 
   sdk {
-    id             = "Application Insights"
-    client_version = [2]
+    id = "Application Insights"
   }
 
   names {
@@ -1635,8 +1574,7 @@ service "evidently" {
   }
 
   sdk {
-    id             = "Evidently"
-    client_version = [2]
+    id = "Evidently"
   }
 
   names {
@@ -1660,8 +1598,7 @@ service "evidently" {
 
 service "internetmonitor" {
   sdk {
-    id             = "InternetMonitor"
-    client_version = [2]
+    id = "InternetMonitor"
   }
 
   names {
@@ -1689,8 +1626,7 @@ service "logs" {
   }
 
   sdk {
-    id             = "CloudWatch Logs"
-    client_version = [2]
+    id = "CloudWatch Logs"
   }
 
   names {
@@ -1719,8 +1655,7 @@ service "logs" {
 
 service "networkmonitor" {
   sdk {
-    id             = "NetworkMonitor"
-    client_version = [2]
+    id = "NetworkMonitor"
   }
 
   names {
@@ -1748,8 +1683,7 @@ service "rum" {
   }
 
   sdk {
-    id             = "RUM"
-    client_version = [2]
+    id = "RUM"
   }
 
   names {
@@ -1777,8 +1711,7 @@ service "rum" {
 
 service "synthetics" {
   sdk {
-    id             = "synthetics"
-    client_version = [2]
+    id = "synthetics"
   }
 
   names {
@@ -1801,8 +1734,7 @@ service "synthetics" {
 
 service "codeartifact" {
   sdk {
-    id             = "codeartifact"
-    client_version = [2]
+    id = "codeartifact"
   }
 
   names {
@@ -1825,8 +1757,7 @@ service "codeartifact" {
 
 service "codebuild" {
   sdk {
-    id             = "CodeBuild"
-    client_version = [2]
+    id = "CodeBuild"
   }
 
   names {
@@ -1849,8 +1780,7 @@ service "codebuild" {
 
 service "codecommit" {
   sdk {
-    id             = "CodeCommit"
-    client_version = [2]
+    id = "CodeCommit"
   }
 
   names {
@@ -1878,8 +1808,7 @@ service "deploy" {
   }
 
   sdk {
-    id             = "CodeDeploy"
-    client_version = [2]
+    id = "CodeDeploy"
   }
 
   names {
@@ -1908,8 +1837,7 @@ service "deploy" {
 
 service "codeguruprofiler" {
   sdk {
-    id             = "CodeGuruProfiler"
-    client_version = [2]
+    id = "CodeGuruProfiler"
   }
 
   names {
@@ -1937,8 +1865,7 @@ service "codegurureviewer" {
   }
 
   sdk {
-    id             = "CodeGuru Reviewer"
-    client_version = [2]
+    id = "CodeGuru Reviewer"
   }
 
   names {
@@ -1962,8 +1889,7 @@ service "codegurureviewer" {
 
 service "codepipeline" {
   sdk {
-    id             = "CodePipeline"
-    client_version = [2]
+    id = "CodePipeline"
   }
 
   names {
@@ -1987,8 +1913,7 @@ service "codepipeline" {
 
 service "codestar" {
   sdk {
-    id             = "CodeStar"
-    client_version = [1]
+    id = "CodeStar"
   }
 
   names {
@@ -2017,8 +1942,7 @@ service "codestarconnections" {
   }
 
   sdk {
-    id             = "CodeStar connections"
-    client_version = [2]
+    id = "CodeStar connections"
   }
 
   names {
@@ -2046,8 +1970,7 @@ service "codestarnotifications" {
   }
 
   sdk {
-    id             = "codestar notifications"
-    client_version = [2]
+    id = "codestar notifications"
   }
 
   names {
@@ -2075,8 +1998,7 @@ service "cognitoidentity" {
   }
 
   sdk {
-    id             = "Cognito Identity"
-    client_version = [2]
+    id = "Cognito Identity"
   }
 
   names {
@@ -2111,8 +2033,7 @@ service "cognitoidp" {
   }
 
   sdk {
-    id             = "Cognito Identity Provider"
-    client_version = [2]
+    id = "Cognito Identity Provider"
   }
 
   names {
@@ -2147,8 +2068,7 @@ service "cognitosync" {
   }
 
   sdk {
-    id             = "Cognito Sync"
-    client_version = [1]
+    id = "Cognito Sync"
   }
 
   names {
@@ -2172,8 +2092,7 @@ service "cognitosync" {
 
 service "comprehend" {
   sdk {
-    id             = "Comprehend"
-    client_version = [2]
+    id = "Comprehend"
   }
 
   names {
@@ -2196,8 +2115,7 @@ service "comprehend" {
 
 service "comprehendmedical" {
   sdk {
-    id             = "ComprehendMedical"
-    client_version = [1]
+    id = "ComprehendMedical"
   }
 
   names {
@@ -2226,8 +2144,7 @@ service "computeoptimizer" {
   }
 
   sdk {
-    id             = "Compute Optimizer"
-    client_version = [2]
+    id = "Compute Optimizer"
   }
 
   names {
@@ -2250,8 +2167,7 @@ service "computeoptimizer" {
 
 service "configservice" {
   sdk {
-    id             = "Config Service"
-    client_version = [2]
+    id = "Config Service"
   }
 
   names {
@@ -2276,8 +2192,7 @@ service "configservice" {
 
 service "connect" {
   sdk {
-    id             = "Connect"
-    client_version = [2]
+    id = "Connect"
   }
 
   names {
@@ -2304,8 +2219,7 @@ service "connect" {
 
 service "connectcases" {
   sdk {
-    id             = "ConnectCases"
-    client_version = [2]
+    id = "ConnectCases"
   }
 
   names {
@@ -2337,8 +2251,7 @@ service "connectcontactlens" {
   }
 
   sdk {
-    id             = "Connect Contact Lens"
-    client_version = [1]
+    id = "Connect Contact Lens"
   }
 
   names {
@@ -2367,8 +2280,7 @@ service "customerprofiles" {
   }
 
   sdk {
-    id             = "Customer Profiles"
-    client_version = [2]
+    id = "Customer Profiles"
   }
 
   names {
@@ -2391,8 +2303,7 @@ service "customerprofiles" {
 
 service "connectparticipant" {
   sdk {
-    id             = "ConnectParticipant"
-    client_version = [1]
+    id = "ConnectParticipant"
   }
 
   names {
@@ -2421,8 +2332,7 @@ service "voiceid" {
   }
 
   sdk {
-    id             = "Voice ID"
-    client_version = [1]
+    id = "Voice ID"
   }
 
   names {
@@ -2451,8 +2361,7 @@ service "wisdom" {
   }
 
   sdk {
-    id             = "Wisdom"
-    client_version = [1]
+    id = "Wisdom"
   }
 
   names {
@@ -2477,8 +2386,7 @@ service "wisdom" {
 
 service "controltower" {
   sdk {
-    id             = "ControlTower"
-    client_version = [2]
+    id = "ControlTower"
   }
 
   names {
@@ -2506,8 +2414,7 @@ service "costoptimizationhub" {
   }
 
   sdk {
-    id             = "Cost Optimization Hub"
-    client_version = [2]
+    id = "Cost Optimization Hub"
   }
 
   names {
@@ -2540,8 +2447,7 @@ service "cur" {
   }
 
   sdk {
-    id             = "Cost and Usage Report Service"
-    client_version = [2]
+    id = "Cost and Usage Report Service"
   }
 
   names {
@@ -2570,8 +2476,7 @@ service "cur" {
 
 service "dataexchange" {
   sdk {
-    id             = "DataExchange"
-    client_version = [2]
+    id = "DataExchange"
   }
 
   names {
@@ -2598,8 +2503,7 @@ service "dataexchange" {
 
 service "datapipeline" {
   sdk {
-    id             = "Data Pipeline"
-    client_version = [2]
+    id = "Data Pipeline"
   }
 
   names {
@@ -2626,8 +2530,7 @@ service "datapipeline" {
 
 service "datasync" {
   sdk {
-    id             = "DataSync"
-    client_version = [2]
+    id = "DataSync"
   }
 
   names {
@@ -2650,8 +2553,7 @@ service "datasync" {
 
 service "datazone" {
   sdk {
-    id             = "DataZone"
-    client_version = [2]
+    id = "DataZone"
   }
 
   names {
@@ -2674,8 +2576,7 @@ service "datazone" {
 
 service "detective" {
   sdk {
-    id             = "Detective"
-    client_version = [2]
+    id = "Detective"
   }
 
   names {
@@ -2702,8 +2603,7 @@ service "detective" {
 
 service "devicefarm" {
   sdk {
-    id             = "Device Farm"
-    client_version = [2]
+    id = "Device Farm"
   }
 
   names {
@@ -2731,8 +2631,7 @@ service "devopsguru" {
   }
 
   sdk {
-    id             = "DevOps Guru"
-    client_version = [2]
+    id = "DevOps Guru"
   }
 
   names {
@@ -2755,8 +2654,7 @@ service "devopsguru" {
 
 service "directconnect" {
   sdk {
-    id             = "Direct Connect"
-    client_version = [2]
+    id = "Direct Connect"
   }
 
   names {
@@ -2784,8 +2682,7 @@ service "directconnect" {
 
 service "dlm" {
   sdk {
-    id             = "DLM"
-    client_version = [2]
+    id = "DLM"
   }
 
   names {
@@ -2813,8 +2710,7 @@ service "dms" {
   }
 
   sdk {
-    id             = "Database Migration Service"
-    client_version = [2]
+    id = "Database Migration Service"
   }
 
   names {
@@ -2842,8 +2738,7 @@ service "dms" {
 
 service "docdb" {
   sdk {
-    id             = "DocDB"
-    client_version = [2]
+    id = "DocDB"
   }
 
   names {
@@ -2871,8 +2766,7 @@ service "docdbelastic" {
   }
 
   sdk {
-    id             = "DocDB Elastic"
-    client_version = [2]
+    id = "DocDB Elastic"
   }
 
   names {
@@ -2895,8 +2789,7 @@ service "docdbelastic" {
 
 service "drs" {
   sdk {
-    id             = "DRS"
-    client_version = [2]
+    id = "DRS"
   }
 
   names {
@@ -2924,8 +2817,7 @@ service "ds" {
   }
 
   sdk {
-    id             = "Directory Service"
-    client_version = [2]
+    id = "Directory Service"
   }
 
   names {
@@ -2954,8 +2846,7 @@ service "ds" {
 
 service "dax" {
   sdk {
-    id             = "DAX"
-    client_version = [2]
+    id = "DAX"
   }
 
   names {
@@ -2978,8 +2869,7 @@ service "dax" {
 
 service "dynamodbstreams" {
   sdk {
-    id             = "DynamoDB Streams"
-    client_version = [1]
+    id = "DynamoDB Streams"
   }
 
   names {
@@ -3003,8 +2893,7 @@ service "dynamodbstreams" {
 
 service "ebs" {
   sdk {
-    id             = "EBS"
-    client_version = [1]
+    id = "EBS"
   }
 
   names {
@@ -3029,7 +2918,7 @@ service "ebs" {
 service "imagebuilder" {
   sdk {
     id             = "imagebuilder"
-    client_version = [1]
+    client_version = 1
   }
 
   names {
@@ -3061,8 +2950,7 @@ service "ec2instanceconnect" {
   }
 
   sdk {
-    id             = "EC2 Instance Connect"
-    client_version = [1]
+    id = "EC2 Instance Connect"
   }
 
   names {
@@ -3086,8 +2974,7 @@ service "ec2instanceconnect" {
 
 service "ecr" {
   sdk {
-    id             = "ECR"
-    client_version = [2]
+    id = "ECR"
   }
 
   names {
@@ -3115,8 +3002,7 @@ service "ecrpublic" {
   }
 
   sdk {
-    id             = "ECR PUBLIC"
-    client_version = [2]
+    id = "ECR PUBLIC"
   }
 
   names {
@@ -3139,8 +3025,7 @@ service "ecrpublic" {
 
 service "ecs" {
   sdk {
-    id             = "ECS"
-    client_version = [2]
+    id = "ECS"
   }
 
   names {
@@ -3163,8 +3048,7 @@ service "ecs" {
 
 service "efs" {
   sdk {
-    id             = "EFS"
-    client_version = [2]
+    id = "EFS"
   }
 
   names {
@@ -3187,8 +3071,7 @@ service "efs" {
 
 service "eks" {
   sdk {
-    id             = "EKS"
-    client_version = [2]
+    id = "EKS"
   }
 
   names {
@@ -3211,8 +3094,7 @@ service "eks" {
 
 service "elasticbeanstalk" {
   sdk {
-    id             = "Elastic Beanstalk"
-    client_version = [2]
+    id = "Elastic Beanstalk"
   }
 
   names {
@@ -3242,8 +3124,7 @@ service "elasticinference" {
   }
 
   sdk {
-    id             = "Elastic Inference"
-    client_version = [1]
+    id = "Elastic Inference"
   }
 
   names {
@@ -3267,8 +3148,7 @@ service "elasticinference" {
 
 service "elastictranscoder" {
   sdk {
-    id             = "Elastic Transcoder"
-    client_version = [2]
+    id = "Elastic Transcoder"
   }
 
   names {
@@ -3291,8 +3171,7 @@ service "elastictranscoder" {
 
 service "elasticache" {
   sdk {
-    id             = "ElastiCache"
-    client_version = [2]
+    id = "ElastiCache"
   }
 
   names {
@@ -3325,8 +3204,7 @@ service "elasticsearch" {
   }
 
   sdk {
-    id             = "Elasticsearch Service"
-    client_version = [2]
+    id = "Elasticsearch Service"
   }
 
   names {
@@ -3360,8 +3238,7 @@ service "elbv2" {
   }
 
   sdk {
-    id             = "Elastic Load Balancing v2"
-    client_version = [2]
+    id = "Elastic Load Balancing v2"
   }
 
   names {
@@ -3385,8 +3262,8 @@ service "elbv2" {
 
   provider_package_correct = "elbv2"
   doc_prefix               = ["lbs?\\.", "lb_listener", "lb_target_group", "lb_hosted", "lb_trust_store"]
-  brand                    = ""
 }
+
 service "elb" {
   go_packages {
     v1_package = "elb"
@@ -3394,8 +3271,7 @@ service "elb" {
   }
 
   sdk {
-    id             = "Elastic Load Balancing"
-    client_version = [2]
+    id = "Elastic Load Balancing"
   }
 
   names {
@@ -3419,12 +3295,11 @@ service "elb" {
 
   provider_package_correct = "elb"
   doc_prefix               = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
-  brand                    = ""
 }
+
 service "mediaconnect" {
   sdk {
-    id             = "MediaConnect"
-    client_version = [2]
+    id = "MediaConnect"
   }
 
   names {
@@ -3447,8 +3322,7 @@ service "mediaconnect" {
 
 service "mediaconvert" {
   sdk {
-    id             = "MediaConvert"
-    client_version = [2]
+    id = "MediaConvert"
   }
 
   names {
@@ -3471,8 +3345,7 @@ service "mediaconvert" {
 
 service "medialive" {
   sdk {
-    id             = "MediaLive"
-    client_version = [2]
+    id = "MediaLive"
   }
 
   names {
@@ -3495,8 +3368,7 @@ service "medialive" {
 
 service "mediapackage" {
   sdk {
-    id             = "MediaPackage"
-    client_version = [2]
+    id = "MediaPackage"
   }
 
   names {
@@ -3525,8 +3397,7 @@ service "mediapackagevod" {
   }
 
   sdk {
-    id             = "MediaPackage Vod"
-    client_version = [1]
+    id = "MediaPackage Vod"
   }
 
   names {
@@ -3550,8 +3421,7 @@ service "mediapackagevod" {
 
 service "mediastore" {
   sdk {
-    id             = "MediaStore"
-    client_version = [2]
+    id = "MediaStore"
   }
 
   names {
@@ -3580,8 +3450,7 @@ service "mediastoredata" {
   }
 
   sdk {
-    id             = "MediaStore Data"
-    client_version = [1]
+    id = "MediaStore Data"
   }
 
   names {
@@ -3605,8 +3474,7 @@ service "mediastoredata" {
 
 service "mediatailor" {
   sdk {
-    id             = "MediaTailor"
-    client_version = [1]
+    id = "MediaTailor"
   }
 
   names {
@@ -3630,8 +3498,7 @@ service "mediatailor" {
 
 service "emr" {
   sdk {
-    id             = "EMR"
-    client_version = [2]
+    id = "EMR"
   }
 
   names {
@@ -3663,8 +3530,7 @@ service "emrcontainers" {
   }
 
   sdk {
-    id             = "EMR containers"
-    client_version = [2]
+    id = "EMR containers"
   }
 
   names {
@@ -3696,8 +3562,7 @@ service "emrserverless" {
   }
 
   sdk {
-    id             = "EMR Serverless"
-    client_version = [2]
+    id = "EMR Serverless"
   }
 
   names {
@@ -3725,8 +3590,7 @@ service "events" {
   }
 
   sdk {
-    id             = "EventBridge"
-    client_version = [2]
+    id = "EventBridge"
   }
 
   names {
@@ -3751,8 +3615,7 @@ service "events" {
 
 service "schemas" {
   sdk {
-    id             = "schemas"
-    client_version = [2]
+    id = "schemas"
   }
 
   names {
@@ -3779,8 +3642,7 @@ service "schemas" {
 
 service "fis" {
   sdk {
-    id             = "fis"
-    client_version = [2]
+    id = "fis"
   }
 
   names {
@@ -3803,8 +3665,7 @@ service "fis" {
 
 service "finspace" {
   sdk {
-    id             = "finspace"
-    client_version = [2]
+    id = "finspace"
   }
 
   names {
@@ -3832,8 +3693,7 @@ service "finspacedata" {
   }
 
   sdk {
-    id             = "finspace data"
-    client_version = [1]
+    id = "finspace data"
   }
 
   names {
@@ -3857,8 +3717,7 @@ service "finspacedata" {
 
 service "fms" {
   sdk {
-    id             = "FMS"
-    client_version = [2]
+    id = "FMS"
   }
 
   names {
@@ -3891,8 +3750,7 @@ service "forecast" {
   }
 
   sdk {
-    id             = "forecast"
-    client_version = [1]
+    id = "forecast"
   }
 
   names {
@@ -3922,8 +3780,7 @@ service "forecastquery" {
   }
 
   sdk {
-    id             = "forecastquery"
-    client_version = [1]
+    id = "forecastquery"
   }
 
   names {
@@ -3948,8 +3805,7 @@ service "forecastquery" {
 
 service "frauddetector" {
   sdk {
-    id             = "FraudDetector"
-    client_version = [1]
+    id = "FraudDetector"
   }
 
   names {
@@ -3973,8 +3829,7 @@ service "frauddetector" {
 
 service "fsx" {
   sdk {
-    id             = "FSx"
-    client_version = [2]
+    id = "FSx"
   }
 
   names {
@@ -4001,8 +3856,7 @@ service "fsx" {
 
 service "gamelift" {
   sdk {
-    id             = "GameLift"
-    client_version = [2]
+    id = "GameLift"
   }
 
   names {
@@ -4029,8 +3883,7 @@ service "gamelift" {
 
 service "globalaccelerator" {
   sdk {
-    id             = "Global Accelerator"
-    client_version = [2]
+    id = "Global Accelerator"
   }
 
   names {
@@ -4058,8 +3911,7 @@ service "globalaccelerator" {
 
 service "glue" {
   sdk {
-    id             = "Glue"
-    client_version = [2]
+    id = "Glue"
   }
 
   names {
@@ -4086,8 +3938,7 @@ service "glue" {
 
 service "databrew" {
   sdk {
-    id             = "DataBrew"
-    client_version = [2]
+    id = "DataBrew"
   }
 
   names {
@@ -4111,8 +3962,7 @@ service "databrew" {
 
 service "groundstation" {
   sdk {
-    id             = "GroundStation"
-    client_version = [2]
+    id = "GroundStation"
   }
 
   names {
@@ -4135,8 +3985,7 @@ service "groundstation" {
 
 service "guardduty" {
   sdk {
-    id             = "GuardDuty"
-    client_version = [2]
+    id = "GuardDuty"
   }
 
   names {
@@ -4163,8 +4012,7 @@ service "guardduty" {
 
 service "health" {
   sdk {
-    id             = "Health"
-    client_version = [1]
+    id = "Health"
   }
 
   names {
@@ -4188,8 +4036,7 @@ service "health" {
 
 service "healthlake" {
   sdk {
-    id             = "HealthLake"
-    client_version = [2]
+    id = "HealthLake"
   }
 
   names {
@@ -4212,8 +4059,7 @@ service "healthlake" {
 
 service "honeycode" {
   sdk {
-    id             = "Honeycode"
-    client_version = [1]
+    id = "Honeycode"
   }
 
   names {
@@ -4237,8 +4083,7 @@ service "honeycode" {
 
 service "iam" {
   sdk {
-    id             = "IAM"
-    client_version = [2]
+    id = "IAM"
   }
 
   names {
@@ -4269,8 +4114,7 @@ service "iam" {
 
 service "inspector" {
   sdk {
-    id             = "Inspector"
-    client_version = [2]
+    id = "Inspector"
   }
 
   names {
@@ -4297,8 +4141,7 @@ service "inspector" {
 
 service "inspector2" {
   sdk {
-    id             = "Inspector2"
-    client_version = [2]
+    id = "Inspector2"
   }
 
   names {
@@ -4331,8 +4174,7 @@ service "iot1clickdevices" {
   }
 
   sdk {
-    id             = "IoT 1Click Devices Service"
-    client_version = [1]
+    id = "IoT 1Click Devices Service"
   }
 
   names {
@@ -4362,8 +4204,7 @@ service "iot1clickprojects" {
   }
 
   sdk {
-    id             = "IoT 1Click Projects"
-    client_version = [1]
+    id = "IoT 1Click Projects"
   }
 
   names {
@@ -4387,8 +4228,7 @@ service "iot1clickprojects" {
 
 service "iotanalytics" {
   sdk {
-    id             = "IoTAnalytics"
-    client_version = [2]
+    id = "IoTAnalytics"
   }
 
   names {
@@ -4425,8 +4265,7 @@ service "iotdata" {
   }
 
   sdk {
-    id             = "IoT Data Plane"
-    client_version = [1]
+    id = "IoT Data Plane"
   }
 
   names {
@@ -4451,8 +4290,7 @@ service "iotdata" {
 
 service "iotdeviceadvisor" {
   sdk {
-    id             = "IotDeviceAdvisor"
-    client_version = [1]
+    id = "IotDeviceAdvisor"
   }
 
   names {
@@ -4476,8 +4314,7 @@ service "iotdeviceadvisor" {
 
 service "iotevents" {
   sdk {
-    id             = "IoT Events"
-    client_version = [2]
+    id = "IoT Events"
   }
 
   names {
@@ -4509,8 +4346,7 @@ service "ioteventsdata" {
   }
 
   sdk {
-    id             = "IoT Events Data"
-    client_version = [1]
+    id = "IoT Events Data"
   }
 
   names {
@@ -4534,8 +4370,7 @@ service "ioteventsdata" {
 
 service "iotfleethub" {
   sdk {
-    id             = "IoTFleetHub"
-    client_version = [1]
+    id = "IoTFleetHub"
   }
 
   names {
@@ -4559,8 +4394,7 @@ service "iotfleethub" {
 
 service "greengrass" {
   sdk {
-    id             = "Greengrass"
-    client_version = [2]
+    id = "Greengrass"
   }
 
   names {
@@ -4587,8 +4421,7 @@ service "greengrass" {
 
 service "greengrassv2" {
   sdk {
-    id             = "GreengrassV2"
-    client_version = [1]
+    id = "GreengrassV2"
   }
 
   names {
@@ -4622,8 +4455,7 @@ service "iotjobsdata" {
   }
 
   sdk {
-    id             = "IoT Jobs Data Plane"
-    client_version = [1]
+    id = "IoT Jobs Data Plane"
   }
 
   names {
@@ -4648,8 +4480,7 @@ service "iotjobsdata" {
 
 service "iotsecuretunneling" {
   sdk {
-    id             = "IoTSecureTunneling"
-    client_version = [1]
+    id = "IoTSecureTunneling"
   }
 
   names {
@@ -4673,8 +4504,7 @@ service "iotsecuretunneling" {
 
 service "iotsitewise" {
   sdk {
-    id             = "IoTSiteWise"
-    client_version = [1]
+    id = "IoTSiteWise"
   }
 
   names {
@@ -4698,8 +4528,7 @@ service "iotsitewise" {
 
 service "iotthingsgraph" {
   sdk {
-    id             = "IoTThingsGraph"
-    client_version = [1]
+    id = "IoTThingsGraph"
   }
 
   names {
@@ -4723,8 +4552,7 @@ service "iotthingsgraph" {
 
 service "iottwinmaker" {
   sdk {
-    id             = "IoTTwinMaker"
-    client_version = [1]
+    id = "IoTTwinMaker"
   }
 
   names {
@@ -4748,8 +4576,7 @@ service "iottwinmaker" {
 
 service "iotwireless" {
   sdk {
-    id             = "IoT Wireless"
-    client_version = [1]
+    id = "IoT Wireless"
   }
 
   names {
@@ -4773,8 +4600,7 @@ service "iotwireless" {
 
 service "ivs" {
   sdk {
-    id             = "ivs"
-    client_version = [2]
+    id = "ivs"
   }
 
   names {
@@ -4801,8 +4627,7 @@ service "ivs" {
 
 service "ivschat" {
   sdk {
-    id             = "ivschat"
-    client_version = [2]
+    id = "ivschat"
   }
 
   names {
@@ -4825,8 +4650,7 @@ service "ivschat" {
 
 service "kendra" {
   sdk {
-    id             = "kendra"
-    client_version = [2]
+    id = "kendra"
   }
 
   names {
@@ -4853,8 +4677,7 @@ service "kendra" {
 
 service "keyspaces" {
   sdk {
-    id             = "Keyspaces"
-    client_version = [2]
+    id = "Keyspaces"
   }
 
   names {
@@ -4877,8 +4700,7 @@ service "keyspaces" {
 
 service "kinesis" {
   sdk {
-    id             = "Kinesis"
-    client_version = [2]
+    id = "Kinesis"
   }
 
   names {
@@ -4906,8 +4728,7 @@ service "kinesis" {
 
 service "kinesisanalytics" {
   sdk {
-    id             = "Kinesis Analytics"
-    client_version = [2]
+    id = "Kinesis Analytics"
   }
 
   names {
@@ -4935,8 +4756,7 @@ service "kinesisanalytics" {
 
 service "kinesisanalyticsv2" {
   sdk {
-    id             = "Kinesis Analytics V2"
-    client_version = [2]
+    id = "Kinesis Analytics V2"
   }
 
   names {
@@ -4963,8 +4783,7 @@ service "kinesisanalyticsv2" {
 
 service "firehose" {
   sdk {
-    id             = "Firehose"
-    client_version = [2]
+    id = "Firehose"
   }
 
   names {
@@ -4988,8 +4807,7 @@ service "firehose" {
 
 service "kinesisvideo" {
   sdk {
-    id             = "Kinesis Video"
-    client_version = [2]
+    id = "Kinesis Video"
   }
 
   names {
@@ -5021,8 +4839,7 @@ service "kinesisvideoarchivedmedia" {
   }
 
   sdk {
-    id             = "Kinesis Video Archived Media"
-    client_version = [1]
+    id = "Kinesis Video Archived Media"
   }
 
   names {
@@ -5051,8 +4868,7 @@ service "kinesisvideomedia" {
   }
 
   sdk {
-    id             = "Kinesis Video Media"
-    client_version = [1]
+    id = "Kinesis Video Media"
   }
 
   names {
@@ -5086,8 +4902,7 @@ service "kinesisvideosignaling" {
   }
 
   sdk {
-    id             = "Kinesis Video Signaling"
-    client_version = [1]
+    id = "Kinesis Video Signaling"
   }
 
   names {
@@ -5112,8 +4927,7 @@ service "kinesisvideosignaling" {
 
 service "kms" {
   sdk {
-    id             = "KMS"
-    client_version = [2]
+    id = "KMS"
   }
 
   names {
@@ -5136,8 +4950,7 @@ service "kms" {
 
 service "lakeformation" {
   sdk {
-    id             = "LakeFormation"
-    client_version = [2]
+    id = "LakeFormation"
   }
 
   names {
@@ -5160,8 +4973,7 @@ service "lakeformation" {
 
 service "lambda" {
   sdk {
-    id             = "Lambda"
-    client_version = [2]
+    id = "Lambda"
   }
 
   names {
@@ -5189,8 +5001,7 @@ service "launchwizard" {
   }
 
   sdk {
-    id             = "Launch Wizard"
-    client_version = [2]
+    id = "Launch Wizard"
   }
 
   names {
@@ -5223,8 +5034,7 @@ service "lexmodels" {
   }
 
   sdk {
-    id             = "Lex Model Building Service"
-    client_version = [2]
+    id = "Lex Model Building Service"
   }
 
   names {
@@ -5263,8 +5073,7 @@ service "lexv2models" {
   }
 
   sdk {
-    id             = "Lex Models V2"
-    client_version = [2]
+    id = "Lex Models V2"
   }
 
   names {
@@ -5298,8 +5107,7 @@ service "lexruntime" {
   }
 
   sdk {
-    id             = "Lex Runtime Service"
-    client_version = [1]
+    id = "Lex Runtime Service"
   }
 
   names {
@@ -5329,8 +5137,7 @@ service "lexruntimev2" {
   }
 
   sdk {
-    id             = "Lex Runtime V2"
-    client_version = [1]
+    id = "Lex Runtime V2"
   }
 
   names {
@@ -5360,8 +5167,7 @@ service "licensemanager" {
   }
 
   sdk {
-    id             = "License Manager"
-    client_version = [2]
+    id = "License Manager"
   }
 
   names {
@@ -5388,8 +5194,7 @@ service "licensemanager" {
 
 service "lightsail" {
   sdk {
-    id             = "Lightsail"
-    client_version = [2]
+    id = "Lightsail"
   }
 
   names {
@@ -5421,8 +5226,7 @@ service "location" {
   }
 
   sdk {
-    id             = "Location"
-    client_version = [2]
+    id = "Location"
   }
 
   names {
@@ -5450,8 +5254,7 @@ service "location" {
 
 service "lookoutequipment" {
   sdk {
-    id             = "LookoutEquipment"
-    client_version = [1]
+    id = "LookoutEquipment"
   }
 
   names {
@@ -5475,8 +5278,7 @@ service "lookoutequipment" {
 
 service "lookoutmetrics" {
   sdk {
-    id             = "LookoutMetrics"
-    client_version = [2]
+    id = "LookoutMetrics"
   }
 
   names {
@@ -5504,8 +5306,7 @@ service "lookoutvision" {
   }
 
   sdk {
-    id             = "LookoutVision"
-    client_version = [1]
+    id = "LookoutVision"
   }
 
   names {
@@ -5530,8 +5331,7 @@ service "lookoutvision" {
 
 service "machinelearning" {
   sdk {
-    id             = "Machine Learning"
-    client_version = [1]
+    id = "Machine Learning"
   }
 
   names {
@@ -5555,8 +5355,7 @@ service "machinelearning" {
 
 service "macie2" {
   sdk {
-    id             = "Macie2"
-    client_version = [2]
+    id = "Macie2"
   }
 
   names {
@@ -5583,8 +5382,7 @@ service "macie2" {
 
 service "macie" {
   sdk {
-    id             = "Macie"
-    client_version = [1]
+    id = "Macie"
   }
 
   names {
@@ -5608,8 +5406,7 @@ service "macie" {
 
 service "m2" {
   sdk {
-    id             = "m2"
-    client_version = [2]
+    id = "m2"
   }
 
   names {
@@ -5632,8 +5429,7 @@ service "m2" {
 
 service "managedblockchain" {
   sdk {
-    id             = "ManagedBlockchain"
-    client_version = [1]
+    id = "ManagedBlockchain"
   }
 
   names {
@@ -5662,8 +5458,7 @@ service "grafana" {
   }
 
   sdk {
-    id             = "grafana"
-    client_version = [2]
+    id = "grafana"
   }
 
   names {
@@ -5691,8 +5486,7 @@ service "grafana" {
 
 service "kafka" {
   sdk {
-    id             = "Kafka"
-    client_version = [2]
+    id = "Kafka"
   }
 
   names {
@@ -5721,8 +5515,7 @@ service "kafka" {
 
 service "kafkaconnect" {
   sdk {
-    id             = "KafkaConnect"
-    client_version = [2]
+    id = "KafkaConnect"
   }
 
   names {
@@ -5755,8 +5548,7 @@ service "marketplacecatalog" {
   }
 
   sdk {
-    id             = "Marketplace Catalog"
-    client_version = [1]
+    id = "Marketplace Catalog"
   }
 
   names {
@@ -5780,8 +5572,7 @@ service "marketplacecatalog" {
 
 service "marketplacecommerceanalytics" {
   sdk {
-    id             = "Marketplace Commerce Analytics"
-    client_version = [1]
+    id = "Marketplace Commerce Analytics"
   }
 
   names {
@@ -5815,8 +5606,7 @@ service "marketplaceentitlement" {
   }
 
   sdk {
-    id             = "Marketplace Entitlement Service"
-    client_version = [1]
+    id = "Marketplace Entitlement Service"
   }
 
   names {
@@ -5846,8 +5636,7 @@ service "marketplacemetering" {
   }
 
   sdk {
-    id             = "Marketplace Metering"
-    client_version = [1]
+    id = "Marketplace Metering"
   }
 
   names {
@@ -5872,8 +5661,7 @@ service "marketplacemetering" {
 
 service "memorydb" {
   sdk {
-    id             = "MemoryDB"
-    client_version = [2]
+    id = "MemoryDB"
   }
 
   names {
@@ -5899,16 +5687,6 @@ service "memorydb" {
 }
 
 service "meta" {
-  go_packages {
-    v1_package = ""
-    v2_package = ""
-  }
-
-  sdk {
-    id             = ""
-    client_version = null
-  }
-
   names {
     provider_name_upper = "Meta"
     human_friendly      = "Meta Data Sources"
@@ -5925,11 +5703,11 @@ service "meta" {
 
   provider_package_correct = "meta"
   doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\.", "service_principal"]
-  brand                    = ""
   exclude                  = true
   allowed_subcategory      = true
   note                     = "Not an AWS service (metadata)"
 }
+
 service "mgh" {
   go_packages {
     v1_package = "migrationhub"
@@ -5937,8 +5715,7 @@ service "mgh" {
   }
 
   sdk {
-    id             = "Migration Hub"
-    client_version = [1]
+    id = "Migration Hub"
   }
 
   names {
@@ -5968,8 +5745,7 @@ service "migrationhubconfig" {
   }
 
   sdk {
-    id             = "MigrationHub Config"
-    client_version = [1]
+    id = "MigrationHub Config"
   }
 
   names {
@@ -5998,8 +5774,7 @@ service "migrationhubrefactorspaces" {
   }
 
   sdk {
-    id             = "Migration Hub Refactor Spaces"
-    client_version = [1]
+    id = "Migration Hub Refactor Spaces"
   }
 
   names {
@@ -6028,8 +5803,7 @@ service "migrationhubstrategy" {
   }
 
   sdk {
-    id             = "MigrationHubStrategy"
-    client_version = [1]
+    id = "MigrationHubStrategy"
   }
 
   names {
@@ -6054,8 +5828,7 @@ service "migrationhubstrategy" {
 
 service "mobile" {
   sdk {
-    id             = "Mobile"
-    client_version = [1]
+    id = "Mobile"
   }
 
   names {
@@ -6079,8 +5852,7 @@ service "mobile" {
 
 service "mq" {
   sdk {
-    id             = "mq"
-    client_version = [2]
+    id = "mq"
   }
 
   names {
@@ -6103,8 +5875,7 @@ service "mq" {
 
 service "mturk" {
   sdk {
-    id             = "MTurk"
-    client_version = [1]
+    id = "MTurk"
   }
 
   names {
@@ -6128,8 +5899,7 @@ service "mturk" {
 
 service "mwaa" {
   sdk {
-    id             = "MWAA"
-    client_version = [2]
+    id = "MWAA"
   }
 
   names {
@@ -6152,8 +5922,7 @@ service "mwaa" {
 
 service "neptune" {
   sdk {
-    id             = "Neptune"
-    client_version = [2]
+    id = "Neptune"
   }
 
   names {
@@ -6190,8 +5959,7 @@ service "neptunegraph" {
   }
 
   sdk {
-    id             = "Neptune Graph"
-    client_version = [2]
+    id = "Neptune Graph"
   }
 
   names {
@@ -6219,8 +5987,7 @@ service "networkfirewall" {
   }
 
   sdk {
-    id             = "Network Firewall"
-    client_version = [2]
+    id = "Network Firewall"
   }
 
   names {
@@ -6247,8 +6014,7 @@ service "networkfirewall" {
 
 service "networkmanager" {
   sdk {
-    id             = "NetworkManager"
-    client_version = [2]
+    id = "NetworkManager"
   }
 
   names {
@@ -6280,8 +6046,7 @@ service "nimble" {
   }
 
   sdk {
-    id             = "nimble"
-    client_version = [1]
+    id = "nimble"
   }
 
   names {
@@ -6306,8 +6071,7 @@ service "nimble" {
 
 service "oam" {
   sdk {
-    id             = "OAM"
-    client_version = [2]
+    id = "OAM"
   }
 
   names {
@@ -6336,8 +6100,7 @@ service "opensearch" {
   }
 
   sdk {
-    id             = "OpenSearch"
-    client_version = [2]
+    id = "OpenSearch"
   }
 
   names {
@@ -6365,8 +6128,7 @@ service "opensearch" {
 
 service "opensearchserverless" {
   sdk {
-    id             = "OpenSearchServerless"
-    client_version = [2]
+    id = "OpenSearchServerless"
   }
 
   names {
@@ -6389,8 +6151,7 @@ service "opensearchserverless" {
 
 service "osis" {
   sdk {
-    id             = "OSIS"
-    client_version = [2]
+    id = "OSIS"
   }
 
   names {
@@ -6414,8 +6175,7 @@ service "osis" {
 
 service "opsworks" {
   sdk {
-    id             = "OpsWorks"
-    client_version = [2]
+    id = "OpsWorks"
   }
 
   names {
@@ -6447,8 +6207,7 @@ service "opsworkscm" {
   }
 
   sdk {
-    id             = "OpsWorksCM"
-    client_version = [1]
+    id = "OpsWorksCM"
   }
 
   names {
@@ -6472,8 +6231,7 @@ service "opsworkscm" {
 
 service "organizations" {
   sdk {
-    id             = "Organizations"
-    client_version = [2]
+    id = "Organizations"
   }
 
   names {
@@ -6500,8 +6258,7 @@ service "organizations" {
 
 service "outposts" {
   sdk {
-    id             = "Outposts"
-    client_version = [2]
+    id = "Outposts"
   }
 
   names {
@@ -6528,8 +6285,7 @@ service "outposts" {
 
 service "panorama" {
   sdk {
-    id             = "Panorama"
-    client_version = [1]
+    id = "Panorama"
   }
 
   names {
@@ -6558,8 +6314,7 @@ service "paymentcryptography" {
   }
 
   sdk {
-    id             = "PaymentCryptography"
-    client_version = [2]
+    id = "PaymentCryptography"
   }
 
   names {
@@ -6587,8 +6342,7 @@ service "pcaconnectorad" {
   }
 
   sdk {
-    id             = "Pca Connector Ad"
-    client_version = [2]
+    id = "Pca Connector Ad"
   }
 
   names {
@@ -6612,8 +6366,7 @@ service "pcaconnectorad" {
 service "pcs" {
 
   sdk {
-    id             = "PCS"
-    client_version = [2]
+    id = "PCS"
   }
 
   names {
@@ -6622,7 +6375,7 @@ service "pcs" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
   }
 
   resource_prefix {
@@ -6636,8 +6389,7 @@ service "pcs" {
 
 service "personalize" {
   sdk {
-    id             = "Personalize"
-    client_version = [1]
+    id = "Personalize"
   }
 
   names {
@@ -6666,8 +6418,7 @@ service "personalizeevents" {
   }
 
   sdk {
-    id             = "Personalize Events"
-    client_version = [1]
+    id = "Personalize Events"
   }
 
   names {
@@ -6696,8 +6447,7 @@ service "personalizeruntime" {
   }
 
   sdk {
-    id             = "Personalize Runtime"
-    client_version = [1]
+    id = "Personalize Runtime"
   }
 
   names {
@@ -6721,8 +6471,7 @@ service "personalizeruntime" {
 
 service "pinpoint" {
   sdk {
-    id             = "Pinpoint"
-    client_version = [2]
+    id = "Pinpoint"
   }
 
   names {
@@ -6754,8 +6503,7 @@ service "pinpointemail" {
   }
 
   sdk {
-    id             = "Pinpoint Email"
-    client_version = [1]
+    id = "Pinpoint Email"
   }
 
   names {
@@ -6784,8 +6532,7 @@ service "pinpointsmsvoice" {
   }
 
   sdk {
-    id             = "Pinpoint SMS Voice"
-    client_version = [1]
+    id = "Pinpoint SMS Voice"
   }
 
   names {
@@ -6807,10 +6554,41 @@ service "pinpointsmsvoice" {
   not_implemented          = true
 }
 
+service "pinpointsmsvoicev2" {
+  cli_v2_command {
+    aws_cli_v2_command           = "pinpoint-sms-voice-v2"
+    aws_cli_v2_command_no_dashes = "pinpointsmsvoicev2"
+  }
+
+  sdk {
+    id = "Pinpoint SMS Voice v2"
+  }
+
+  names {
+    provider_name_upper = "PinpointSMSVoiceV2"
+    human_friendly      = "End User Messaging SMS"
+  }
+
+  client {
+    go_v1_client_typename = "PinpointSMSVoiceV2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "DescribePhoneNumbers"
+  }
+
+  resource_prefix {
+    correct = "aws_pinpointsmsvoicev2_"
+  }
+
+  provider_package_correct = "pinpointsmsvoicev2"
+  doc_prefix               = ["pinpointsmsvoicev2_"]
+  brand                    = "AWS"
+}
+
 service "pipes" {
   sdk {
-    id             = "Pipes"
-    client_version = [2]
+    id = "Pipes"
   }
 
   names {
@@ -6833,8 +6611,7 @@ service "pipes" {
 
 service "polly" {
   sdk {
-    id             = "Polly"
-    client_version = [2]
+    id = "Polly"
   }
 
   names {
@@ -6857,8 +6634,7 @@ service "polly" {
 
 service "pricing" {
   sdk {
-    id             = "Pricing"
-    client_version = [2]
+    id = "Pricing"
   }
 
   names {
@@ -6881,8 +6657,7 @@ service "pricing" {
 
 service "proton" {
   sdk {
-    id             = "Proton"
-    client_version = [1]
+    id = "Proton"
   }
 
   names {
@@ -6906,8 +6681,7 @@ service "proton" {
 
 service "qbusiness" {
   sdk {
-    id             = "QBusiness"
-    client_version = [2]
+    id = "QBusiness"
   }
 
   names {
@@ -6930,8 +6704,7 @@ service "qbusiness" {
 
 service "qldb" {
   sdk {
-    id             = "QLDB"
-    client_version = [2]
+    id = "QLDB"
   }
 
   names {
@@ -6959,8 +6732,7 @@ service "qldbsession" {
   }
 
   sdk {
-    id             = "QLDB Session"
-    client_version = [1]
+    id = "QLDB Session"
   }
 
   names {
@@ -6984,8 +6756,7 @@ service "qldbsession" {
 
 service "quicksight" {
   sdk {
-    id             = "QuickSight"
-    client_version = [2]
+    id = "QuickSight"
   }
 
   names {
@@ -7013,8 +6784,7 @@ service "quicksight" {
 
 service "ram" {
   sdk {
-    id             = "RAM"
-    client_version = [2]
+    id = "RAM"
   }
 
   names {
@@ -7037,8 +6807,7 @@ service "ram" {
 
 service "rds" {
   sdk {
-    id             = "RDS"
-    client_version = [2]
+    id = "RDS"
   }
 
   names {
@@ -7076,8 +6845,7 @@ service "rdsdata" {
   }
 
   sdk {
-    id             = "RDS Data"
-    client_version = [1]
+    id = "RDS Data"
   }
 
   names {
@@ -7102,8 +6870,7 @@ service "rdsdata" {
 
 service "pi" {
   sdk {
-    id             = "PI"
-    client_version = [1]
+    id = "PI"
   }
 
   names {
@@ -7132,8 +6899,7 @@ service "rbin" {
   }
 
   sdk {
-    id             = "rbin"
-    client_version = [2]
+    id = "rbin"
   }
 
   names {
@@ -7158,8 +6924,7 @@ service "rbin" {
 
 service "redshift" {
   sdk {
-    id             = "Redshift"
-    client_version = [2]
+    id = "Redshift"
   }
 
   names {
@@ -7196,8 +6961,7 @@ service "redshiftdata" {
   }
 
   sdk {
-    id             = "Redshift Data"
-    client_version = [2]
+    id = "Redshift Data"
   }
 
   names {
@@ -7227,8 +6991,7 @@ service "redshiftserverless" {
   }
 
   sdk {
-    id             = "Redshift Serverless"
-    client_version = [2]
+    id = "Redshift Serverless"
   }
 
   names {
@@ -7255,8 +7018,7 @@ service "redshiftserverless" {
 
 service "rekognition" {
   sdk {
-    id             = "Rekognition"
-    client_version = [2]
+    id = "Rekognition"
   }
 
   names {
@@ -7279,8 +7041,7 @@ service "rekognition" {
 
 service "resiliencehub" {
   sdk {
-    id             = "resiliencehub"
-    client_version = [2]
+    id = "resiliencehub"
   }
 
   names {
@@ -7308,8 +7069,7 @@ service "resourceexplorer2" {
   }
 
   sdk {
-    id             = "Resource Explorer 2"
-    client_version = [2]
+    id = "Resource Explorer 2"
   }
 
   names {
@@ -7338,8 +7098,7 @@ service "resourcegroups" {
   }
 
   sdk {
-    id             = "Resource Groups"
-    client_version = [2]
+    id = "Resource Groups"
   }
 
   names {
@@ -7362,8 +7121,7 @@ service "resourcegroups" {
 
 service "resourcegroupstaggingapi" {
   sdk {
-    id             = "Resource Groups Tagging API"
-    client_version = [2]
+    id = "Resource Groups Tagging API"
   }
 
   names {
@@ -7387,8 +7145,7 @@ service "resourcegroupstaggingapi" {
 
 service "robomaker" {
   sdk {
-    id             = "RoboMaker"
-    client_version = [1]
+    id = "RoboMaker"
   }
 
   names {
@@ -7412,8 +7169,7 @@ service "robomaker" {
 
 service "rolesanywhere" {
   sdk {
-    id             = "RolesAnywhere"
-    client_version = [2]
+    id = "RolesAnywhere"
   }
 
   names {
@@ -7436,8 +7192,7 @@ service "rolesanywhere" {
 
 service "route53" {
   sdk {
-    id             = "Route 53"
-    client_version = [2]
+    id = "Route 53"
   }
 
   names {
@@ -7466,8 +7221,7 @@ service "route53" {
 
 service "route53domains" {
   sdk {
-    id             = "Route 53 Domains"
-    client_version = [2]
+    id = "Route 53 Domains"
   }
 
   names {
@@ -7495,8 +7249,7 @@ service "route53domains" {
 
 service "route53profiles" {
   sdk {
-    id             = "Route 53 Profiles"
-    client_version = [2]
+    id = "Route 53 Profiles"
   }
 
   names {
@@ -7524,8 +7277,7 @@ service "route53recoverycluster" {
   }
 
   sdk {
-    id             = "Route53 Recovery Cluster"
-    client_version = [1]
+    id = "Route53 Recovery Cluster"
   }
 
   names {
@@ -7554,8 +7306,7 @@ service "route53recoverycontrolconfig" {
   }
 
   sdk {
-    id             = "Route53 Recovery Control Config"
-    client_version = [2]
+    id = "Route53 Recovery Control Config"
   }
 
   names {
@@ -7588,8 +7339,7 @@ service "route53recoveryreadiness" {
   }
 
   sdk {
-    id             = "Route53 Recovery Readiness"
-    client_version = [2]
+    id = "Route53 Recovery Readiness"
   }
 
   names {
@@ -7617,8 +7367,7 @@ service "route53recoveryreadiness" {
 
 service "route53resolver" {
   sdk {
-    id             = "Route53Resolver"
-    client_version = [2]
+    id = "Route53Resolver"
   }
 
   names {
@@ -7651,8 +7400,7 @@ service "s3" {
   }
 
   sdk {
-    id             = "S3"
-    client_version = [2]
+    id = "S3"
   }
 
   names {
@@ -7685,8 +7433,7 @@ service "s3" {
 
 service "s3control" {
   sdk {
-    id             = "S3 Control"
-    client_version = [2]
+    id = "S3 Control"
   }
 
   names {
@@ -7710,8 +7457,7 @@ service "s3control" {
 
 service "glacier" {
   sdk {
-    id             = "Glacier"
-    client_version = [2]
+    id = "Glacier"
   }
 
   names {
@@ -7734,8 +7480,7 @@ service "glacier" {
 
 service "s3outposts" {
   sdk {
-    id             = "S3Outposts"
-    client_version = [2]
+    id = "S3Outposts"
   }
 
   names {
@@ -7762,8 +7507,7 @@ service "s3outposts" {
 
 service "sagemaker" {
   sdk {
-    id             = "SageMaker"
-    client_version = [2]
+    id = "SageMaker"
   }
 
   names {
@@ -7800,8 +7544,7 @@ service "sagemakera2iruntime" {
   }
 
   sdk {
-    id             = "SageMaker A2I Runtime"
-    client_version = [1]
+    id = "SageMaker A2I Runtime"
   }
 
   names {
@@ -7836,8 +7579,7 @@ service "sagemakeredge" {
   }
 
   sdk {
-    id             = "Sagemaker Edge"
-    client_version = [1]
+    id = "Sagemaker Edge"
   }
 
   names {
@@ -7867,8 +7609,7 @@ service "sagemakerfeaturestoreruntime" {
   }
 
   sdk {
-    id             = "SageMaker FeatureStore Runtime"
-    client_version = [1]
+    id = "SageMaker FeatureStore Runtime"
   }
 
   names {
@@ -7897,8 +7638,7 @@ service "sagemakerruntime" {
   }
 
   sdk {
-    id             = "SageMaker Runtime"
-    client_version = [1]
+    id = "SageMaker Runtime"
   }
 
   names {
@@ -7922,8 +7662,7 @@ service "sagemakerruntime" {
 
 service "savingsplans" {
   sdk {
-    id             = "savingsplans"
-    client_version = [1]
+    id = "savingsplans"
   }
 
   names {
@@ -7958,7 +7697,7 @@ service "simpledb" {
 
   sdk {
     id             = "SimpleDB"
-    client_version = [1]
+    client_version = 1
   }
 
   names {
@@ -7987,8 +7726,7 @@ service "simpledb" {
 
 service "scheduler" {
   sdk {
-    id             = "Scheduler"
-    client_version = [2]
+    id = "Scheduler"
   }
 
   names {
@@ -8011,8 +7749,7 @@ service "scheduler" {
 
 service "secretsmanager" {
   sdk {
-    id             = "Secrets Manager"
-    client_version = [2]
+    id = "Secrets Manager"
   }
 
   names {
@@ -8035,8 +7772,7 @@ service "secretsmanager" {
 
 service "securityhub" {
   sdk {
-    id             = "SecurityHub"
-    client_version = [2]
+    id = "SecurityHub"
   }
 
   names {
@@ -8059,8 +7795,7 @@ service "securityhub" {
 
 service "securitylake" {
   sdk {
-    id             = "SecurityLake"
-    client_version = [2]
+    id = "SecurityLake"
   }
 
   names {
@@ -8088,8 +7823,7 @@ service "serverlessrepo" {
   }
 
   sdk {
-    id             = "ServerlessApplicationRepository"
-    client_version = [2]
+    id = "ServerlessApplicationRepository"
   }
 
   names {
@@ -8118,8 +7852,7 @@ service "serverlessrepo" {
 
 service "servicecatalog" {
   sdk {
-    id             = "Service Catalog"
-    client_version = [2]
+    id = "Service Catalog"
   }
 
   names {
@@ -8156,8 +7889,7 @@ service "servicecatalogappregistry" {
   }
 
   sdk {
-    id             = "Service Catalog AppRegistry"
-    client_version = [2]
+    id = "Service Catalog AppRegistry"
   }
 
   names {
@@ -8186,8 +7918,7 @@ service "servicequotas" {
   }
 
   sdk {
-    id             = "Service Quotas"
-    client_version = [2]
+    id = "Service Quotas"
   }
 
   names {
@@ -8205,12 +7936,11 @@ service "servicequotas" {
 
   provider_package_correct = "servicequotas"
   doc_prefix               = ["servicequotas_"]
-  brand                    = ""
 }
+
 service "ses" {
   sdk {
-    id             = "SES"
-    client_version = [2]
+    id = "SES"
   }
 
   names {
@@ -8237,8 +7967,7 @@ service "ses" {
 
 service "sesv2" {
   sdk {
-    id             = "SESv2"
-    client_version = [2]
+    id = "SESv2"
   }
 
   names {
@@ -8266,8 +7995,7 @@ service "sfn" {
   }
 
   sdk {
-    id             = "SFN"
-    client_version = [2]
+    id = "SFN"
   }
 
   names {
@@ -8295,8 +8023,7 @@ service "sfn" {
 
 service "shield" {
   sdk {
-    id             = "Shield"
-    client_version = [2]
+    id = "Shield"
   }
 
   names {
@@ -8324,8 +8051,7 @@ service "shield" {
 
 service "signer" {
   sdk {
-    id             = "signer"
-    client_version = [2]
+    id = "signer"
   }
 
   names {
@@ -8348,8 +8074,7 @@ service "signer" {
 
 service "sms" {
   sdk {
-    id             = "SMS"
-    client_version = [1]
+    id = "SMS"
   }
 
   names {
@@ -8378,8 +8103,7 @@ service "snowdevicemanagement" {
   }
 
   sdk {
-    id             = "Snow Device Management"
-    client_version = [1]
+    id = "Snow Device Management"
   }
 
   names {
@@ -8403,8 +8127,7 @@ service "snowdevicemanagement" {
 
 service "snowball" {
   sdk {
-    id             = "Snowball"
-    client_version = [1]
+    id = "Snowball"
   }
 
   names {
@@ -8428,8 +8151,7 @@ service "snowball" {
 
 service "sns" {
   sdk {
-    id             = "SNS"
-    client_version = [2]
+    id = "SNS"
   }
 
   names {
@@ -8452,8 +8174,7 @@ service "sns" {
 
 service "sqs" {
   sdk {
-    id             = "SQS"
-    client_version = [2]
+    id = "SQS"
   }
 
   names {
@@ -8476,8 +8197,7 @@ service "sqs" {
 
 service "ssm" {
   sdk {
-    id             = "SSM"
-    client_version = [2]
+    id = "SSM"
   }
 
   names {
@@ -8505,8 +8225,7 @@ service "ssmcontacts" {
   }
 
   sdk {
-    id             = "SSM Contacts"
-    client_version = [2]
+    id = "SSM Contacts"
   }
 
   names {
@@ -8534,8 +8253,7 @@ service "ssmincidents" {
   }
 
   sdk {
-    id             = "SSM Incidents"
-    client_version = [2]
+    id = "SSM Incidents"
   }
 
   names {
@@ -8563,8 +8281,7 @@ service "ssmsap" {
   }
 
   sdk {
-    id             = "Ssm Sap"
-    client_version = [2]
+    id = "Ssm Sap"
   }
 
   names {
@@ -8587,8 +8304,7 @@ service "ssmsap" {
 
 service "sso" {
   sdk {
-    id             = "SSO"
-    client_version = [2]
+    id = "SSO"
   }
 
   names {
@@ -8619,8 +8335,7 @@ service "ssoadmin" {
   }
 
   sdk {
-    id             = "SSO Admin"
-    client_version = [2]
+    id = "SSO Admin"
   }
 
   names {
@@ -8647,8 +8362,7 @@ service "ssoadmin" {
 
 service "identitystore" {
   sdk {
-    id             = "identitystore"
-    client_version = [2]
+    id = "identitystore"
   }
 
   names {
@@ -8677,8 +8391,7 @@ service "ssooidc" {
   }
 
   sdk {
-    id             = "SSO OIDC"
-    client_version = [1]
+    id = "SSO OIDC"
   }
 
   names {
@@ -8702,8 +8415,7 @@ service "ssooidc" {
 
 service "storagegateway" {
   sdk {
-    id             = "Storage Gateway"
-    client_version = [2]
+    id = "Storage Gateway"
   }
 
   names {
@@ -8730,8 +8442,7 @@ service "storagegateway" {
 
 service "sts" {
   sdk {
-    id             = "STS"
-    client_version = [2]
+    id = "STS"
   }
 
   names {
@@ -8764,8 +8475,7 @@ service "sts" {
 
 service "support" {
   sdk {
-    id             = "Support"
-    client_version = [1]
+    id = "Support"
   }
 
   names {
@@ -8789,8 +8499,7 @@ service "support" {
 
 service "swf" {
   sdk {
-    id             = "SWF"
-    client_version = [2]
+    id = "SWF"
   }
 
   names {
@@ -8814,8 +8523,7 @@ service "swf" {
 
 service "textract" {
   sdk {
-    id             = "Textract"
-    client_version = [1]
+    id = "Textract"
   }
 
   names {
@@ -8844,8 +8552,7 @@ service "timestreaminfluxdb" {
   }
 
   sdk {
-    id             = "Timestream InfluxDB"
-    client_version = [2]
+    id = "Timestream InfluxDB"
   }
 
   names {
@@ -8873,8 +8580,7 @@ service "timestreamquery" {
   }
 
   sdk {
-    id             = "Timestream Query"
-    client_version = [1]
+    id = "Timestream Query"
   }
 
   names {
@@ -8903,8 +8609,7 @@ service "timestreamwrite" {
   }
 
   sdk {
-    id             = "Timestream Write"
-    client_version = [2]
+    id = "Timestream Write"
   }
 
   names {
@@ -8932,8 +8637,7 @@ service "transcribe" {
   }
 
   sdk {
-    id             = "Transcribe"
-    client_version = [2]
+    id = "Transcribe"
   }
 
   names {
@@ -8962,8 +8666,7 @@ service "transcribestreaming" {
   }
 
   sdk {
-    id             = "Transcribe Streaming"
-    client_version = [1]
+    id = "Transcribe Streaming"
   }
 
   names {
@@ -8988,8 +8691,7 @@ service "transcribestreaming" {
 
 service "transfer" {
   sdk {
-    id             = "Transfer"
-    client_version = [2]
+    id = "Transfer"
   }
 
   names {
@@ -9013,8 +8715,7 @@ service "transfer" {
 
 service "translate" {
   sdk {
-    id             = "Translate"
-    client_version = [1]
+    id = "Translate"
   }
 
   names {
@@ -9043,8 +8744,7 @@ service "vpclattice" {
   }
 
   sdk {
-    id             = "VPC Lattice"
-    client_version = [2]
+    id = "VPC Lattice"
   }
 
   names {
@@ -9067,8 +8767,7 @@ service "vpclattice" {
 
 service "wafv2" {
   sdk {
-    id             = "WAFV2"
-    client_version = [2]
+    id = "WAFV2"
   }
 
   names {
@@ -9092,8 +8791,7 @@ service "wafv2" {
 
 service "waf" {
   sdk {
-    id             = "WAF"
-    client_version = [2]
+    id = "WAF"
   }
 
   names {
@@ -9121,8 +8819,7 @@ service "wafregional" {
   }
 
   sdk {
-    id             = "WAF Regional"
-    client_version = [2]
+    id = "WAF Regional"
   }
 
   names {
@@ -9145,8 +8842,7 @@ service "wafregional" {
 
 service "budgets" {
   sdk {
-    id             = "Budgets"
-    client_version = [2]
+    id = "Budgets"
   }
 
   names {
@@ -9170,8 +8866,7 @@ service "budgets" {
 
 service "wellarchitected" {
   sdk {
-    id             = "WellArchitected"
-    client_version = [2]
+    id = "WellArchitected"
   }
 
   names {
@@ -9194,8 +8889,7 @@ service "wellarchitected" {
 
 service "workdocs" {
   sdk {
-    id             = "WorkDocs"
-    client_version = [1]
+    id = "WorkDocs"
   }
 
   names {
@@ -9219,8 +8913,7 @@ service "workdocs" {
 
 service "worklink" {
   sdk {
-    id             = "WorkLink"
-    client_version = [2]
+    id = "WorkLink"
   }
 
   names {
@@ -9247,8 +8940,7 @@ service "worklink" {
 
 service "workmail" {
   sdk {
-    id             = "WorkMail"
-    client_version = [1]
+    id = "WorkMail"
   }
 
   names {
@@ -9272,8 +8964,7 @@ service "workmail" {
 
 service "workmailmessageflow" {
   sdk {
-    id             = "WorkMailMessageFlow"
-    client_version = [1]
+    id = "WorkMailMessageFlow"
   }
 
   names {
@@ -9297,8 +8988,7 @@ service "workmailmessageflow" {
 
 service "workspaces" {
   sdk {
-    id             = "WorkSpaces"
-    client_version = [2]
+    id = "WorkSpaces"
   }
 
   names {
@@ -9326,8 +9016,7 @@ service "workspacesweb" {
   }
 
   sdk {
-    id             = "WorkSpaces Web"
-    client_version = [2]
+    id = "WorkSpaces Web"
   }
 
   names {
@@ -9350,8 +9039,7 @@ service "workspacesweb" {
 
 service "xray" {
   sdk {
-    id             = "XRay"
-    client_version = [2]
+    id = "XRay"
   }
 
   names {
@@ -9374,8 +9062,7 @@ service "xray" {
 
 service "verifiedpermissions" {
   sdk {
-    id             = "VerifiedPermissions"
-    client_version = [2]
+    id = "VerifiedPermissions"
   }
 
   names {
@@ -9398,8 +9085,7 @@ service "verifiedpermissions" {
 
 service "codecatalyst" {
   sdk {
-    id             = "CodeCatalyst"
-    client_version = [2]
+    id = "CodeCatalyst"
   }
 
   names {
@@ -9422,8 +9108,7 @@ service "codecatalyst" {
 
 service "mediapackagev2" {
   sdk {
-    id             = "MediaPackageV2"
-    client_version = [2]
+    id = "MediaPackageV2"
   }
 
   names {
@@ -9447,8 +9132,7 @@ service "mediapackagev2" {
 
 service "iot" {
   sdk {
-    id             = "IoT"
-    client_version = [2]
+    id = "IoT"
   }
 
   names {
@@ -9475,8 +9159,7 @@ service "iot" {
 
 service "dynamodb" {
   sdk {
-    id             = "DynamoDB"
-    client_version = [2]
+    id = "DynamoDB"
   }
 
   names {
@@ -9507,8 +9190,7 @@ service "dynamodb" {
 
 service "ec2" {
   sdk {
-    id             = "EC2"
-    client_version = [2]
+    id = "EC2"
   }
 
   names {
@@ -9542,8 +9224,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9577,8 +9258,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9612,8 +9292,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9647,8 +9326,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9682,8 +9360,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9717,8 +9394,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9751,8 +9427,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9785,8 +9460,7 @@ service "ec2" {
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
@@ -9819,8 +9493,7 @@ service "ec2" {
       v2_package = ""
     }
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {

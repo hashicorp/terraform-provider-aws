@@ -152,17 +152,17 @@ func (r *resourceDomain) Create(ctx context.Context, req resource.CreateRequest,
 
 	in := &datazone.CreateDomainInput{
 		ClientToken:         aws.String(sdkid.UniqueId()),
-		DomainExecutionRole: aws.String(plan.DomainExecutionRole.ValueString()),
-		Name:                aws.String(plan.Name.ValueString()),
+		DomainExecutionRole: plan.DomainExecutionRole.ValueStringPointer(),
+		Name:                plan.Name.ValueStringPointer(),
 		Tags:                getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	if !plan.KmsKeyIdentifier.IsNull() {
-		in.KmsKeyIdentifier = aws.String(plan.KmsKeyIdentifier.ValueString())
+		in.KmsKeyIdentifier = plan.KmsKeyIdentifier.ValueStringPointer()
 	}
 
 	if !plan.SingleSignOn.IsNull() {
@@ -272,19 +272,19 @@ func (r *resourceDomain) Update(ctx context.Context, req resource.UpdateRequest,
 		!plan.SingleSignOn.Equal(state.SingleSignOn) {
 		in := &datazone.UpdateDomainInput{
 			ClientToken: aws.String(sdkid.UniqueId()),
-			Identifier:  aws.String(plan.ID.ValueString()),
+			Identifier:  plan.ID.ValueStringPointer(),
 		}
 
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 
 		if !plan.DomainExecutionRole.IsNull() {
-			in.DomainExecutionRole = aws.String(plan.DomainExecutionRole.ValueString())
+			in.DomainExecutionRole = plan.DomainExecutionRole.ValueStringPointer()
 		}
 
 		if !plan.Name.IsNull() {
-			in.Name = aws.String(plan.Name.ValueString())
+			in.Name = plan.Name.ValueStringPointer()
 		}
 
 		if !plan.SingleSignOn.IsNull() {
@@ -330,7 +330,7 @@ func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	in := &datazone.DeleteDomainInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		Identifier:  aws.String(state.ID.ValueString()),
+		Identifier:  state.ID.ValueStringPointer(),
 	}
 
 	if !state.SkipDeletionCheck.IsNull() {

@@ -501,8 +501,119 @@ func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFu
 	}
 }
 
+func TestAccSageMakerModel_primaryContainerModelS3DataSourceAcceptEula(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerModelS3DataSourceAcceptEula(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.model_access_config.0.accept_eula", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerModel_primaryContainerInferenceSpecificationName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerInferenceSpecificationName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.inference_specification_name", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerModel_primaryContainerMultiModelConfigModelCacheSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerMultiModelConfigModelCacheSetting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.multi_model_config.0.model_cache_setting", "Disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerModel_containersMultiModelConfigModelCacheSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_containersMultiModelConfigModelCacheSetting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "container.0.multi_model_config.0.model_cache_setting", "Disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccModelConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
@@ -515,9 +626,14 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "full_access" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
@@ -668,8 +784,6 @@ resource "aws_s3_object" "test" {
 // lintignore:AWSAT003,AWSAT005
 func testAccModelConfig_primaryContainerPackageName(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 locals {
   region_account_map = {
     us-east-1      = "865070037744"
@@ -945,6 +1059,140 @@ resource "aws_security_group" "test" {
 
   tags = {
     Name = %[1]q
+  }
+}
+`, rName))
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/huggingface-llm.json
+
+func testAccModelConfig_primaryContainerModelS3DataSourceAcceptEula(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+data "aws_sagemaker_prebuilt_ecr_image" "accept_eula_test" {
+  repository_name = "huggingface-pytorch-tgi-inference"
+  image_tag       = "2.3.0-tgi2.2.0-gpu-py310-cu121-ubuntu22.04-v2.0"
+}
+
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  enable_network_isolation = true
+  execution_role_arn       = aws_iam_role.test.arn
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.accept_eula_test.registry_path
+    mode  = "SingleModel"
+    environment = {
+      ENDPOINT_SERVER_TIMEOUT        = 3600
+      HF_MODEL_ID                    = "/opt/ml/model"
+      MAX_INPUT_LENGTH               = 4095
+      MAX_TOTAL_TOKENS               = 4096
+      MODEL_CACHE_ROOT               = "/opt/ml/model"
+      SAGEMAKER_ENV                  = 1
+      SAGEMAKER_MODEL_SERVER_WORKERS = 1
+      SAGEMAKER_PROGRAM              = "inference.py"
+      SM_NUM_GPUS                    = 4
+    }
+
+    model_data_source {
+      s3_data_source {
+        compression_type = "None"
+        s3_data_type     = "S3Prefix"
+        s3_uri           = format("s3://jumpstart-private-cache-prod-%%s/meta-textgeneration/meta-textgeneration-llama-2-13b-f/artifacts/inference-prepack/v1.0.0/", data.aws_region.current.name)
+        model_access_config {
+          accept_eula = true
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerInferenceSpecificationName(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image                        = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    inference_specification_name = "test"
+  }
+}
+`, rName))
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-tritonserver.json
+
+func testAccModelConfig_primaryContainerMultiModelConfigModelCacheSetting(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+data "aws_sagemaker_prebuilt_ecr_image" "model_cache_setting_test" {
+  repository_name = "sagemaker-tritonserver"
+  image_tag       = "24.03-py3"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "resnet50-mme-gpu/model.tar.gz"
+  content = "some-data"
+}
+
+resource "aws_sagemaker_model" "test" {
+  depends_on = [aws_s3_object.test]
+
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image          = data.aws_sagemaker_prebuilt_ecr_image.model_cache_setting_test.registry_path
+    mode           = "MultiModel"
+    model_data_url = "s3://${aws_s3_bucket.test.id}/resnet50-mme-gpu/"
+    multi_model_config {
+      model_cache_setting = "Disabled"
+    }
+  }
+}
+`, rName))
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-tritonserver.json
+
+func testAccModelConfig_containersMultiModelConfigModelCacheSetting(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+data "aws_sagemaker_prebuilt_ecr_image" "model_cache_setting_test" {
+  repository_name = "sagemaker-tritonserver"
+  image_tag       = "24.03-py3"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "resnet50-mme-gpu/model.tar.gz"
+  content = "some-data"
+}
+
+resource "aws_sagemaker_model" "test" {
+  depends_on = [aws_s3_object.test]
+
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  container {
+    image          = data.aws_sagemaker_prebuilt_ecr_image.model_cache_setting_test.registry_path
+    mode           = "MultiModel"
+    model_data_url = "s3://${aws_s3_bucket.test.id}/resnet50-mme-gpu/"
+    multi_model_config {
+      model_cache_setting = "Disabled"
+    }
   }
 }
 `, rName))

@@ -180,11 +180,11 @@ func (r *resourceRuntimeManagementConfig) Delete(ctx context.Context, req resour
 	}
 
 	in := &lambda.PutRuntimeManagementConfigInput{
-		FunctionName:    aws.String(state.FunctionName.ValueString()),
+		FunctionName:    state.FunctionName.ValueStringPointer(),
 		UpdateRuntimeOn: awstypes.UpdateRuntimeOnAuto,
 	}
 	if !state.Qualifier.IsNull() && state.Qualifier.ValueString() != "" {
-		in.Qualifier = aws.String(state.Qualifier.ValueString())
+		in.Qualifier = state.Qualifier.ValueStringPointer()
 	}
 
 	_, err := conn.PutRuntimeManagementConfig(ctx, in)

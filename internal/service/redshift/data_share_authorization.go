@@ -119,7 +119,7 @@ func (r *resourceDataShareAuthorization) Create(ctx context.Context, req resourc
 	}
 
 	if !plan.AllowWrites.IsNull() {
-		in.AllowWrites = aws.Bool(plan.AllowWrites.ValueBool())
+		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
 	}
 
 	out, err := conn.AuthorizeDataShare(ctx, in)
@@ -198,8 +198,8 @@ func (r *resourceDataShareAuthorization) Delete(ctx context.Context, req resourc
 	}
 
 	in := &redshift.DeauthorizeDataShareInput{
-		DataShareArn:       aws.String(state.DataShareARN.ValueString()),
-		ConsumerIdentifier: aws.String(state.ConsumerIdentifier.ValueString()),
+		DataShareArn:       state.DataShareARN.ValueStringPointer(),
+		ConsumerIdentifier: state.ConsumerIdentifier.ValueStringPointer(),
 	}
 
 	_, err := conn.DeauthorizeDataShare(ctx, in)

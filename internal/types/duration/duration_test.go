@@ -96,6 +96,53 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestNewFromTimeDuration(t *testing.T) {
+	t.Parallel()
+
+	const (
+		day  = 24 * time.Hour
+		year = 365 * day
+	)
+
+	testcases := map[string]struct {
+		input    time.Duration
+		expected Duration
+	}{
+		// Single
+		"years only": {
+			input:    2 * year,
+			expected: Duration{years: 2},
+		},
+		"days only": {
+			input:    21 * day,
+			expected: Duration{days: 21},
+		},
+
+		// Multiple
+		"years days": {
+			input:    1*year + 15*day,
+			expected: Duration{years: 1, days: 15},
+		},
+
+		"zero": {
+			input:    0,
+			expected: Duration{},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			duration := NewFromTimeDuration(tc.input)
+
+			if !duration.equal(tc.expected) {
+				t.Errorf("expected %q, got %q", tc.expected, duration)
+			}
+		})
+	}
+}
+
 func TestSub(t *testing.T) {
 	t.Parallel()
 

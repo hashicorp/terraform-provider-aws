@@ -456,7 +456,7 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
 		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
 		in := timestreaminfluxdb.UpdateDbInstanceInput{
-			Identifier: aws.String(plan.ID.ValueString()),
+			Identifier: plan.ID.ValueStringPointer(),
 		}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
@@ -507,7 +507,7 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &timestreaminfluxdb.DeleteDbInstanceInput{
-		Identifier: aws.String(state.ID.ValueString()),
+		Identifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteDbInstance(ctx, in)
