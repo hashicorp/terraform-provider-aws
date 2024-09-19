@@ -252,7 +252,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.8
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.8
-	github.com/aws/smithy-go v1.20.4
+	github.com/aws/smithy-go v1.21.0
 	github.com/beevik/etree v1.4.1
 	github.com/cedar-policy/cedar-go v0.1.0
 	github.com/davecgh/go-spew v1.1.1
