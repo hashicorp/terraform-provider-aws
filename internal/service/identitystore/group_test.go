@@ -117,6 +117,41 @@ func TestAccIdentityStoreGroup_descriptionChange(t *testing.T) {
 	})
 }
 
+func TestAccIdentityStoreGroup_displayNameChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group identitystore.DescribeGroupOutput
+	displayName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	displayName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_identitystore_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_displayName(displayName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName1),
+				),
+			},
+			{
+				Config: testAccGroupConfig_displayName(displayName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
@@ -186,4 +221,15 @@ resource "aws_identitystore_group" "test" {
   description       = %[1]q
 }
 `, description)
+}
+
+func testAccGroupConfig_displayName(displayName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+resource "aws_identitystore_group" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  display_name      = %[1]q
+  description       = "Test description"
+}
+`, displayName)
 }
