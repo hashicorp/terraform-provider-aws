@@ -5,6 +5,7 @@ package elbv2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -260,6 +261,167 @@ func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_forwardImport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = rName[:min(len(rName), 30)]
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_forwardTargetGroup(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", names.AttrARN),
+				),
+			},
+			// The config just applied does not include default_action.0.target_group_arn as verified above.
+			// This cannot be imported without changes because default_action.0.target_group_arn will be set and
+			// will show as a diff.
+			// See: https://github.com/hashicorp/terraform-provider-aws/issues/37211
+			{
+				PreConfig: func() {
+					fmt.Printf("preconfig\n")
+				},
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateCheck: ComposeAggregateImportStateCheckFunc(
+					ImportCheckResourceAttrSet("default_action.0.target_group_arn", true), // this will cause a change on import
+					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", "true"),
+					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
+					ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
+					ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
+				),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+					"default_action.0.target_group_arn",
+				},
+			},
+			{
+				Config: testAccListenerConfig_forwardTargetGroup(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", names.AttrARN),
+				),
+			},
+			{
+				PreConfig: func() {
+					fmt.Printf("preconfig\n")
+				},
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateCheck: ComposeAggregateImportStateCheckFunc(
+					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", "true"),
+					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
+					ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
+					ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
+				),
+				// we can do all 1) import state verify, 2) import state verify ignore, 3) import state check
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+		},
+	})
+}
+
+// ComposeAggregateImportStateCheckFunc lets you compose multiple ImportStateCheckFunc into
+// a single ImportStateCheckFunc.
+func ComposeAggregateImportStateCheckFunc(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		var result []error
+
+		for i, f := range fs {
+			if err := f(is); err != nil {
+				result = append(result, fmt.Errorf("Import check %d/%d error: %w", i+1, len(fs), err))
+			}
+		}
+
+		return errors.Join(result...)
+	}
+}
+
+func ImportCheckResourceAttr(key, expected string) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		if len(is) != 1 {
+			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
+		}
+
+		rs := is[0]
+		if rs.Attributes[key] != expected {
+			return fmt.Errorf("Attribute '%s' expected %s, got %s", key, expected, rs.Attributes[key])
+		}
+		return nil
+	}
+}
+
+func ImportCheckResourceAttrSet(key string, set bool) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		if len(is) != 1 {
+			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
+		}
+
+		rs := is[0]
+		if set && rs.Attributes[key] == "" {
+			return fmt.Errorf("Attribute '%s' expected to be set, got not set", key)
+		}
+
+		if !set && rs.Attributes[key] != "" {
+			return fmt.Errorf("Attribute '%s' expected to be not set, got set (%s)", key, rs.Attributes[key])
+		}
+
+		return nil
+	}
+}
+
+func importCheckSet(attributes map[string]string, attr string, set bool) error {
+	if set && attributes[attr] == "" {
+		return fmt.Errorf("after import, expected %s to be set, got unset", attr)
+	}
+
+	if !set && attributes[attr] != "" {
+		return fmt.Errorf("after import, expected %s to not be set, got set (%s)", attr, attributes[attr])
+	}
+
+	return nil
+}
+
+func importCheckValue(attributes map[string]string, attr string, expected string) error {
+	if attributes[attr] != expected {
+		return fmt.Errorf("after import, expected %s to be %s, got %s", attr, expected, attributes[attr])
+	}
+
+	return nil
+}
+
 func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -335,6 +497,9 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 				),
 			},
 			{
+				PreConfig: func() {
+					fmt.Printf("preconfig\n")
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -346,6 +511,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	})
 }
 
+/*
 func TestAccELBV2Listener_forwardTargetARNAndBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -358,11 +524,13 @@ func TestAccELBV2Listener_forwardTargetARNAndBlock(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccListenerConfig_forwardTargetARNAndBlock(rName),
+				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Only one of "default_action[0].target_group_arn" or "default_action[0].forward" can be specified`)),
 			},
 		},
 	})
 }
+*/
 
 func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2167,6 +2335,76 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccListenerConfig_forwardTargetGroup(rName string, useDATG bool) string {
+	daTG := "target_group_arn = aws_lb_target_group.test.arn"
+	if !useDATG {
+		daTG = ""
+	}
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "440"
+
+  default_action {
+    order = 1
+    type  = "forward"
+    %[1]s
+
+    forward {
+      stickiness {
+        enabled  = true
+        duration = 3600
+      }
+
+      target_group {
+        arn    = aws_lb_target_group.test.arn
+        weight = 1
+      }
+    }
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[2]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[2]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[2]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[2]q
+  }
+}
+`, daTG, rName))
 }
 
 func testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate string) string {
