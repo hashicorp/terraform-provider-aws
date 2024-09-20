@@ -18,7 +18,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "ARN",
 		},
 		{
-			Factory: newDataSourceBillingServiceAccount,
+			Factory: newBillingServiceAccountDataSource,
+			Name:    "Billing Service Account",
 		},
 		{
 			Factory: newDataSourceDefaultTags,
