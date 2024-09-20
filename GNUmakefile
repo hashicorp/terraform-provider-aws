@@ -648,6 +648,12 @@ testacc-tflint-dir: tflint-init ## Run tflint on Terraform directories
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
 	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
 
+testacc-tflint-dir-fix: tflint-init ## fix Terraform directory linter findings
+	@echo "make: Acceptance Test Linting (standalone) / tflint..."
+	@# tflint always resolves config flies relative to the working directory when using --recursive
+	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
+	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
+
 testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
 	@echo "make: Acceptance Test Linting (embedded) / tflint..."
 	@find $(SVC_DIR) -type f -name '*_test.go' \
