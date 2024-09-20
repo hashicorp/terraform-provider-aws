@@ -1408,7 +1408,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 				tgSetIt := tgSet.ElementIterator()
 				for tgSetIt.Next() {
 					_, ftg := tgSetIt.Element()
-					ftgARN := ftg.GetAttr("arn")
+					ftgARN := ftg.GetAttr(names.AttrARN)
 					if ftgARN.IsKnown() && !ftgARN.IsNull() && ftgARN.AsString() != "" && tgArn != ftgARN.AsString() {
 						*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
 							"Invalid Attribute Combination",
