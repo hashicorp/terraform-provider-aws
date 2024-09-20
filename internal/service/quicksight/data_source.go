@@ -28,8 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const secretPropagationTimeout = 2 * time.Minute
-
 // @SDKResource("aws_quicksight_data_source", name="Data Source")
 // @Tags(identifierAttribute="arn")
 func resourceDataSource() *schema.Resource {
