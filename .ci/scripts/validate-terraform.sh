@@ -12,12 +12,17 @@ if [[ -z "${TFLINT_CMD}" ]]; then TFLINT_CMD="tflint"; fi
 
 exit_code=0
 
+# tflint always resolves config flies relative to the working directory when using --recursive
+TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+
 # Configure the rules for tflint.
 rules=(
     # Syntax checks
     "--only=terraform_comment_syntax"
     "--only=terraform_deprecated_index"
     "--only=terraform_deprecated_interpolation"
+    "--only=terraform_deprecated_lookup"
+    "--only=terraform_empty_list_equality"
     # Ensure valid instance types
     "--only=aws_db_instance_invalid_type"
     # Ensure modern instance types
@@ -43,7 +48,7 @@ while read -r filename ; do
 
         # We need to capture the output and error code here. We don't want to exit on the first error
         set +e
-        tflint_output=$(${TFLINT_CMD} --config .ci/.tflint.hcl --filter="${tf}" "${rules[@]}" 2>&1)
+        tflint_output=$(${TFLINT_CMD} --config "${TFLINT_CONFIG}" --chdir="${td}" "${rules[@]}" 2>&1)
         tflint_exitcode=$?
         set -e
 

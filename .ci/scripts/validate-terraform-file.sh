@@ -16,6 +16,9 @@ rules=( "$@" )
 
 exit_code=0
 
+# tflint always resolves config flies relative to the working directory when using --recursive
+TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+
 block_number=0
 
 while IFS= read -r block ; do
@@ -31,7 +34,7 @@ while IFS= read -r block ; do
 
     # We need to capture the output and error code here. We don't want to exit on the first error
     set +e
-    tflint_output=$(tflint --config .ci/.tflint.hcl --filter="${tf}" "${rules[@]}" 2>&1)
+    tflint_output=$(tflint --config "${TFLINT_CONFIG}" --chdir="${td}" "${rules[@]}" 2>&1)
     tflint_exitcode=$?
     set -e
 
