@@ -638,32 +638,32 @@ resource "aws_iam_policy" "allec2" {
   name = "testec2policy"
   description = "Add AmazonEC2FullAccess"
   policy = jsonencode({
-    Version: "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
-        Action =[ "ec2:*", ]
-        Effect = "Allow"
+        Action   = [ "ec2:*", ]
+        Effect   = "Allow"
         Resource = "*"
       },
       {
-        Effect = "Allow",
-        Action = ["elasticloadbalancing:*",]
+        Effect   = "Allow",
+        Action   = ["elasticloadbalancing:*",]
         Resource = "*"
       },
       {
-        Effect = "Allow",
-        Action = ["cloudwatch:*",]
+        Effect   = "Allow",
+        Action   = ["cloudwatch:*",]
         Resource = "*"
       },
       {
-        Effect = "Allow",
-        Action = ["autoscaling:*",]
+        Effect   = "Allow",
+        Action   = ["autoscaling:*",]
         Resource = "*"
       },
       {
-        Effect = "Allow",
-        Action = ["iam:CreateServiceLinkedRole",]
-        Resource = "*",
+        Effect    = "Allow",
+        Action    = ["iam:CreateServiceLinkedRole",]
+        Resource  = "*",
         Condition = {
           StringEquals = {
             "iam:AWSServiceName" = [
@@ -696,7 +696,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "rds-quicksight-tf-vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                           = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block     = false
   enable_dns_hostnames                 = true
   enable_dns_support                   = true
@@ -791,18 +791,18 @@ resource "aws_rds_cluster" "qs-rds-tf-test-cluster" {
   master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
-  vpc_security_group_ids = [ aws_security_group.rds-sg-test.id ]
-  skip_final_snapshot = true
-  db_subnet_group_name = aws_db_subnet_group.test.name
+  vpc_security_group_ids  = [ aws_security_group.rds-sg-test.id ]
+  skip_final_snapshot     = true
+  db_subnet_group_name    = aws_db_subnet_group.test.name
 }
 
 resource "aws_rds_cluster_instance" "qs-rds-tf-test-cluster-instance" {
-  identifier         = "aurora-cluster-snam"
-  cluster_identifier = aws_rds_cluster.qs-rds-tf-test-cluster.id
-  instance_class     = "db.r5.large"
-  engine             = aws_rds_cluster.qs-rds-tf-test-cluster.engine
-  engine_version     = aws_rds_cluster.qs-rds-tf-test-cluster.engine_version
-  performance_insights_enabled          = false
+  identifier                   = "aurora-cluster-snam"
+  cluster_identifier           = aws_rds_cluster.qs-rds-tf-test-cluster.id
+  instance_class               = "db.r5.large"
+  engine                       = aws_rds_cluster.qs-rds-tf-test-cluster.engine
+  engine_version               = aws_rds_cluster.qs-rds-tf-test-cluster.engine_version
+  performance_insights_enabled = false
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -851,7 +851,7 @@ resource "aws_quicksight_data_source" "test" {
   }
   parameters {
     rds {
-      database = aws_rds_cluster.qs-rds-tf-test-cluster.database_name
+      database    = aws_rds_cluster.qs-rds-tf-test-cluster.database_name
       instance_id = aws_rds_cluster_instance.qs-rds-tf-test-cluster-instance.identifier
     }
   }
