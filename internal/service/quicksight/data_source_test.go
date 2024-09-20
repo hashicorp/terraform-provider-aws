@@ -622,28 +622,243 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_secret_arn(rId, rName string) string {
 	return fmt.Sprintf(`
-	data "aws_partition" "current" {}
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
+resource "aws_iam_role" "test" {
+  name = "snam-qs-vpc-connnection-tf-test"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "quicksight.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "allec2" {
+  name = "testec2policy"
+  description = "Add AmazonEC2FullAccess"
+  policy = jsonencode({
+    Version: "2012-10-17",
+    Statement = [
+      {
+        Action =[ "ec2:*", ]
+        Effect = "Allow"
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = ["elasticloadbalancing:*",]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = ["cloudwatch:*",]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = ["autoscaling:*",]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = ["iam:CreateServiceLinkedRole",]
+        Resource = "*",
+        Condition = {
+          StringEquals = {
+            "iam:AWSServiceName" = [
+              "autoscaling.amazonaws.com",
+              "ec2scheduled.amazonaws.com",
+              "elasticloadbalancing.amazonaws.com",
+              "spot.amazonaws.com",
+              "spotfleet.amazonaws.com",
+              "transitgateway.amazonaws.com"
+            ]
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "allec2" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.allec2.arn
+}
+
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+  state            = "available"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "rds-quicksight-tf-vpc" {
+  cidr_block = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block     = false
+  enable_dns_hostnames                 = true
+  enable_dns_support                   = true
+  instance_tenancy                     = "default"
+  enable_network_address_usage_metrics = false
+  tags = {
+    Name = "rds-quicksight-tf-vpc"
+  }
+}
+
+resource "aws_subnet" "rds-quicksight-tf-subnet" {
+  depends_on = [ aws_security_group.qs-sg-test ]
+  count = 2
+  vpc_id            = aws_vpc.rds-quicksight-tf-vpc.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.rds-quicksight-tf-vpc.cidr_block, 8, count.index)
+  tags = {
+    Name = "rds-quicksight-tf-vpc"
+  }
+}
+
+resource "aws_route_table" "rds-quicksight-tf-private1-rtb" {
+  vpc_id = aws_vpc.rds-quicksight-tf-vpc.id
+  tags = {
+  name = "rds-quicksight-tf-rtb"
+  }
+}
+resource "aws_route_table_association" "rds-quicksight-tf-private1-rtb-asso" {
+  subnet_id = aws_subnet.rds-quicksight-tf-subnet[0].id
+  route_table_id = aws_route_table.rds-quicksight-tf-private1-rtb.id
+}
+
+resource "aws_route_table" "rds-quicksight-tf-private2-rtb" {
+  vpc_id = aws_vpc.rds-quicksight-tf-vpc.id
+  tags = {
+    name = "rds-quicksight-tf-rtb"
+  }
+}
+resource "aws_route_table_association" "rds-quicksight-tf-private2-rtb-asso" {
+  subnet_id = aws_subnet.rds-quicksight-tf-subnet[1].id
+  route_table_id = aws_route_table.rds-quicksight-tf-private2-rtb.id
+}
+
+
+resource "aws_security_group" "rds-sg-test" {
+  depends_on = [ aws_security_group.qs-sg-test ]
+  name   = "Amazon-QuickSight-RDS-VPC"
+  vpc_id = aws_vpc.rds-quicksight-tf-vpc.id
+}
+resource "aws_security_group" "qs-sg-test" {
+  depends_on = [ aws_security_group.qs-sg-test ]
+  name   = "Amazon-QuickSight-QS-VPC"
+  vpc_id = aws_vpc.rds-quicksight-tf-vpc.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "rds-sg-test-ingress" {
+  security_group_id = aws_security_group.rds-sg-test.id
+  from_port         = 5432
+  to_port           = 5432
+  ip_protocol       = "TCP"
+  referenced_security_group_id = aws_security_group.qs-sg-test.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "rds-sg-test-egress" {
+  security_group_id = aws_security_group.rds-sg-test.id
+  from_port         = 0
+  to_port           = 65535
+  ip_protocol       = "TCP"
+  referenced_security_group_id = aws_security_group.qs-sg-test.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "qs-sg-test-ingress" {
+  security_group_id = aws_security_group.qs-sg-test.id
+  from_port         = 0
+  to_port           = 65535
+  ip_protocol       = "TCP"
+  referenced_security_group_id = aws_security_group.rds-sg-test.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "qs-sg-test-egress" {
+  security_group_id = aws_security_group.qs-sg-test.id
+  from_port         = 5432
+  to_port           = 5432
+  ip_protocol       = "TCP"
+  referenced_security_group_id = aws_security_group.rds-sg-test.id
+}
+
+resource "aws_rds_cluster" "qs-rds-tf-test-cluster" {
+  cluster_identifier      = "snam-quicksight-vpc-tf-test"
+  engine                  = "aurora-postgresql"
+  engine_version          = 13.12
+  database_name           = "qsrdstftestcluster"
+  master_username         = "foo"
+  master_password         = "must_be_eight_characters"
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+  vpc_security_group_ids = [ aws_security_group.rds-sg-test.id ]
+  skip_final_snapshot = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
+}
+
+resource "aws_rds_cluster_instance" "qs-rds-tf-test-cluster-instance" {
+  identifier         = "aurora-cluster-snam"
+  cluster_identifier = aws_rds_cluster.qs-rds-tf-test-cluster.id
+  instance_class     = "db.r5.large"
+  engine             = aws_rds_cluster.qs-rds-tf-test-cluster.engine
+  engine_version     = aws_rds_cluster.qs-rds-tf-test-cluster.engine_version
+  performance_insights_enabled          = false
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = "snam-quicksight-vpc-connnection-test"
+  subnet_ids = aws_subnet.rds-quicksight-tf-subnet[*].id
+  tags = {
+    Name = "snam-quicksight-vpc-connnection-test"
+  }
+}
+
+resource "aws_quicksight_vpc_connection" "qs-vpc-connection-test-1" {
+  depends_on = [ aws_security_group.qs-sg-test ]
+  vpc_connection_id = "qs-vpc-connection-test-1"
+  name              = "qs-vpc-connection-test-1"
+  role_arn          = aws_iam_role.test.arn
+  subnet_ids = aws_subnet.rds-quicksight-tf-subnet[*].id
+  security_group_ids = [
+    aws_security_group.qs-sg-test.id,
+  ]
+}
+
+resource "aws_secretsmanager_secret" "qs-secret-test-2" {
+  name = "qs-secret-test-2"
+}
+
+resource "aws_secretsmanager_secret_version" "example" {
+  secret_id     = aws_secretsmanager_secret.qs-secret-test-2.id
+  secret_string = jsonencode({
+    username = "foo",
+    password = "must_be_eight_characters"
+  })
 }
 
 resource "aws_quicksight_data_source" "test" {
-  data_source_id = %[1]q
-  name           = %[2]q
-
-  credentials {
-    secret_arn = aws_secretsmanager_secret.test.arn
+  data_source_id = "qs-testing-data-source"
+  name           = "qs-testing-data-source"
+  vpc_connection_properties {
+    vpc_connection_arn = aws_quicksight_vpc_connection.qs-vpc-connection-test-1.arn
   }
-
+  credentials {
+    secret_arn = aws_secretsmanager_secret.qs-secret-test-2.arn
+  }
   parameters {
-    snowflake {
-      database = "SNOWFLAKE"
-      host = "%[1]s.snowflakecomputing.com"
-      warehouse = "SNOWFLAKE_WH"
+    rds {
+      database = aws_rds_cluster.qs-rds-tf-test-cluster.database_name
+      instance_id = aws_rds_cluster_instance.qs-rds-tf-test-cluster-instance.identifier
     }
   }
-
-  type = "SNOWFLAKE"
+  type = "AURORA_POSTGRESQL"
 }
 `, rId, rName)
 }
