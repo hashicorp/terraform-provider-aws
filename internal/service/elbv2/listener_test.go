@@ -260,7 +260,7 @@ func TestAccELBV2Listener_Forward_update(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_Forward_import(t *testing.T) {
+func TestAccELBV2Listener_Forward_import(t *testing.T) { // lintignore:AT002
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
