@@ -240,15 +240,10 @@ docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
 	@misspell -error -source text docs/
 
-examples-tflint: ## [CI] Examples Checks / tflint
+examples-tflint: tflint-init ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
-	@tflint --config .ci/.tflint.hcl --init
 	TFLINT_CONFIG="$(PWD)/.ci/.tflint.hcl" ; \
-	cd ./examples; \
-	tflint --config="$$TFLINT_CONFIG" --recursive \
-		--enable-rule=terraform_deprecated_index \
-		--enable-rule=terraform_deprecated_interpolation \
-		--enable-rule=terraform_required_version \
+	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
 fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
@@ -645,11 +640,21 @@ testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-testacc-tflint: ## [CI] Acceptance Test Linting / tflint
-	@echo "make: Acceptance Test Linting / tflint..."
-	@tflint --config .ci/.tflint.hcl --init
+testacc-tflint: testacc-tflint-dir testacc-tflint-embedded ## [CI] Acceptance Test Linting / tflint
+
+testacc-tflint-dir: tflint-init ## Run tflint on Terraform directories
+	@echo "make: Acceptance Test Linting (standalone) / tflint..."
+	@# tflint always resolves config flies relative to the working directory when using --recursive
+	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
+	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
+
+testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
+	@echo "make: Acceptance Test Linting (embedded) / tflint..."
 	@find $(SVC_DIR) -type f -name '*_test.go' \
 		| .ci/scripts/validate-terraform.sh
+
+tflint-init: ## Initialize tflint
+	@tflint --config .ci/.tflint.hcl --init
 
 tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 	@echo "make: Provider Checks / tfproviderdocs..."
@@ -764,9 +769,8 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
 	@terrafmt diff ./website --check --pattern '*.markdown'
 
-website-tflint: ## [CI] Website Checks / tflint
+website-tflint: tflint-init ## [CI] Website Checks / tflint
 	@echo "make: Website Checks / tflint..."
-	@tflint --config .ci/.tflint.hcl --init
 	@exit_code=0 ; \
 	shared_rules=( \
 		"--disable-rule=aws_cloudwatch_event_target_invalid_arn" \
@@ -891,7 +895,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-lint \
 	testacc-short \
 	testacc-tflint \
+	testacc-tflint-dir \
+	testacc-tflint-embedded \
 	testacc \
+	tflint-init \
 	tfproviderdocs \
 	tfsdk2fw \
 	tools \
