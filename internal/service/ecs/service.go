@@ -2377,32 +2377,6 @@ func expandTagSpecifications(ctx context.Context, ts []interface{}) []awstypes.E
 	return s
 }
 
-func expandTags(tfList []interface{}) []awstypes.Tag {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var ecsTags []awstypes.Tag
-
-	for _, tfMapRaw := range tfList {
-		tfMap, _ := tfMapRaw.(map[string]interface{})
-
-		ecsTag := awstypes.Tag{}
-
-		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
-			ecsTag.Key = aws.String(v)
-		}
-
-		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
-			ecsTag.Value = aws.String(v)
-		}
-
-		ecsTags = append(ecsTags, ecsTag)
-	}
-
-	return ecsTags
-}
-
 func expandServices(srv []interface{}) []awstypes.ServiceConnectService {
 	if len(srv) == 0 {
 		return nil
