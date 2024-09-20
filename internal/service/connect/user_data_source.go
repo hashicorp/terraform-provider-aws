@@ -5,21 +5,25 @@ package connect
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_user")
+// @SDKDataSource("aws_connect_user", name="User")
+// @Tags
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
@@ -116,12 +120,9 @@ func DataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
-
 	input := &connect.DescribeUserInput{
 		InstanceId: aws.String(instanceID),
 	}
@@ -130,87 +131,90 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.UserId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		userSummary, err := dataSourceGetUserSummaryByName(ctx, conn, instanceID, name)
+		userSummary, err := findUserSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "finding Connect User Summary by name (%s): %s", name, err)
-		}
-
-		if userSummary == nil {
-			return sdkdiag.AppendErrorf(diags, "finding Connect User Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "reading Connect User (%s) summary: %s", name, err)
 		}
 
 		input.UserId = userSummary.Id
 	}
 
-	resp, err := conn.DescribeUserWithContext(ctx, input)
+	user, err := findUser(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect User: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect User: %s", err)
 	}
 
-	if resp == nil || resp.User == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect User: empty response")
-	}
-
-	user := resp.User
-
+	userID := aws.ToString(user.Id)
+	id := userCreateResourceID(instanceID, userID)
+	d.SetId(id)
 	d.Set(names.AttrARN, user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
 	d.Set("hierarchy_group_id", user.HierarchyGroupId)
-	d.Set(names.AttrInstanceID, instanceID)
-	d.Set(names.AttrName, user.Username)
-	d.Set("routing_profile_id", user.RoutingProfileId)
-	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))
-	d.Set("user_id", user.Id)
-
-	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
+	if err := d.Set("identity_info", flattenUserIdentityInfo(user.IdentityInfo)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity_info: %s", err)
 	}
-
-	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, user.Username)
+	if err := d.Set("phone_config", flattenUserPhoneConfig(user.PhoneConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
+	d.Set("routing_profile_id", user.RoutingProfileId)
+	d.Set("security_profile_ids", user.SecurityProfileIds)
+	d.Set("user_id", userID)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(user.Id)))
+	setTagsOut(ctx, user.Tags)
 
 	return diags
 }
 
-func dataSourceGetUserSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.UserSummary, error) {
-	var result *connect.UserSummary
-
+func findUserSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.UserSummary, error) {
+	const maxResults = 60
 	input := &connect.ListUsersInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListUsersMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListUsersPagesWithContext(ctx, input, func(page *connect.ListUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, qs := range page.UserSummaryList {
-			if qs == nil {
-				continue
-			}
-
-			if aws.StringValue(qs.Username) == name {
-				result = qs
-				return false
-			}
-		}
-
-		return !lastPage
+	return findUserSummary(ctx, conn, input, func(v *awstypes.UserSummary) bool {
+		return aws.ToString(v.Username) == name
 	})
+}
+
+func findUserSummary(ctx context.Context, conn *connect.Client, input *connect.ListUsersInput, filter tfslices.Predicate[*awstypes.UserSummary]) (*awstypes.UserSummary, error) {
+	output, err := findUserSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findUserSummaries(ctx context.Context, conn *connect.Client, input *connect.ListUsersInput, filter tfslices.Predicate[*awstypes.UserSummary]) ([]awstypes.UserSummary, error) {
+	var output []awstypes.UserSummary
+
+	pages := connect.NewListUsersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.UserSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

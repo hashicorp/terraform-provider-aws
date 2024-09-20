@@ -168,6 +168,26 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 	})
 }
 
+func TestAccECRRepositoryCreationTemplate_root(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecr_repository_creation_template.root"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryCreationTemplateConfig_root(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRepositoryCreationTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
@@ -393,4 +413,16 @@ resource "aws_ecr_repository_creation_template" "test" {
   })
 }
 `, repositoryPrefix)
+}
+
+func testAccRepositoryCreationTemplateConfig_root() string {
+	return `
+resource "aws_ecr_repository_creation_template" "root" {
+  prefix = "ROOT"
+
+  applied_for = [
+    "PULL_THROUGH_CACHE",
+  ]
+}
+`
 }

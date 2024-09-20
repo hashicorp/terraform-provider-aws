@@ -154,9 +154,9 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	f := tfslices.PredicateTrue[*types.DBSnapshot]()
-	if tags := getTagsInV2(ctx); len(tags) > 0 {
+	if tags := getTagsIn(ctx); len(tags) > 0 {
 		f = func(v *types.DBSnapshot) bool {
-			return keyValueTagsV2(ctx, v.TagList).ContainsAll(keyValueTagsV2(ctx, tags))
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
 		}
 	}
 
@@ -208,7 +208,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrStorageType, snapshot.StorageType)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	setTagsOutV2(ctx, snapshot.TagList)
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }

@@ -150,7 +150,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `configuration` - (Optional) Execute command configuration for the cluster. See [`configueration` Block](#configuration-block) for details.
+* `configuration` - (Optional) Execute command configuration for the cluster. See [`configuration` Block](#configuration-block) for details.
 * `service_connect_defaults` - (Optional) Default Service Connect namespace. See [`service_connect_defaults` Block](#service_connect_defaults-block) for details.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. See [`setting` Block](#setting-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

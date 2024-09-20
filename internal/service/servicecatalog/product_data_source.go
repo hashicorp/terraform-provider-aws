@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_product")
+// @SDKDataSource("aws_servicecatalog_product", name="Product")
 // @Tags
-func DataSourceProduct() *schema.Resource {
+func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
 
@@ -35,8 +35,8 @@ func DataSourceProduct() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
@@ -93,7 +93,7 @@ func DataSourceProduct() *schema.Resource {
 
 func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	output, err := waitProductReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
 
@@ -122,7 +122,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set(names.AttrType, pvs.Type)
 
-	d.SetId(aws.StringValue(pvs.ProductId))
+	d.SetId(aws.ToString(pvs.ProductId))
 
 	setTagsOut(ctx, output.Tags)
 

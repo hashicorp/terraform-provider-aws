@@ -26,10 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -95,6 +93,7 @@ func resourceTaskDefinition() *schema.Resource {
 					containerDefinitions(orderedCDs).orderContainers()
 					containerDefinitions(orderedCDs).orderEnvironmentVariables()
 					containerDefinitions(orderedCDs).orderSecrets()
+					containerDefinitions(orderedCDs).compactArrays()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
@@ -105,7 +104,8 @@ func resourceTaskDefinition() *schema.Resource {
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: validTaskDefinitionContainerDefinitions,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
 				Type:     schema.TypeString,
@@ -1209,35 +1209,6 @@ func flattenFSxWinVolumeAuthorizationConfig(config *awstypes.FSxWindowsFileServe
 
 	items = append(items, m)
 	return items
-}
-
-func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
-	json, err := tfjson.EncodeToBytes(apiObjects)
-	if err != nil {
-		return "", err
-	}
-
-	// Remove empty fields and convert first character of keys to lowercase.
-	json = tfjson.RemoveEmptyFields(json)
-	json = tfjson.KeyFirstLower(json)
-
-	return string(json), nil
-}
-
-func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {
-	var apiObjects []awstypes.ContainerDefinition
-
-	if err := tfjson.DecodeFromString(tfString, &apiObjects); err != nil {
-		return nil, err
-	}
-
-	for i, apiObject := range apiObjects {
-		if itypes.IsZero(&apiObject) {
-			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
-		}
-	}
-
-	return apiObjects, nil
 }
 
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *awstypes.EphemeralStorage {

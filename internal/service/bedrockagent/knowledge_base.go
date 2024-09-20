@@ -461,7 +461,7 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	_, err := conn.DeleteKnowledgeBase(ctx, &bedrockagent.DeleteKnowledgeBaseInput{
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
+		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -595,8 +595,8 @@ type knowledgeBaseResourceModel struct {
 	Name                       types.String                                                     `tfsdk:"name"`
 	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
 	StorageConfiguration       fwtypes.ListNestedObjectValueOf[storageConfigurationModel]       `tfsdk:"storage_configuration"`
-	Tags                       types.Map                                                        `tfsdk:"tags"`
-	TagsAll                    types.Map                                                        `tfsdk:"tags_all"`
+	Tags                       tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 	UpdatedAt                  timetypes.RFC3339                                                `tfsdk:"updated_at"`
 }

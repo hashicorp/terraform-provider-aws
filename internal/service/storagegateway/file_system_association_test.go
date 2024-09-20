@@ -325,7 +325,7 @@ func testAccCheckFileSystemAssociationExists(ctx context.Context, n string, v *a
 	}
 }
 
-func testAccFileSystemAssociationBase(rName, domainName, username string) string {
+func testAccFileSystemAssociationConfig_base(rName, domainName, username string) string {
 	return acctest.ConfigCompose(
 		testAccGatewaySMBActiveDirectorySettingsBaseConfig(rName),
 		testAccGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName),
@@ -364,18 +364,18 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccFileSystemAssociationConfig_required(rName, domainName, username string) string {
-	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFileSystemAssociationConfig_base(rName, domainName, username), fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
   username     = %[1]q
   password     = aws_directory_service_directory.test.password
 }
-`, username)
+`, username))
 }
 
 func testAccFileSystemAssociationConfig_tags1(rName, domainName, username, tagKey1, tagValue1 string) string {
-	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFileSystemAssociationConfig_base(rName, domainName, username), fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
@@ -386,11 +386,11 @@ resource "aws_storagegateway_file_system_association" "test" {
     %[2]q = %[3]q
   }
 }
-`, username, tagKey1, tagValue1)
+`, username, tagKey1, tagValue1))
 }
 
 func testAccFileSystemAssociationConfig_tags2(rName, domainName, username, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFileSystemAssociationConfig_base(rName, domainName, username), fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
@@ -402,11 +402,11 @@ resource "aws_storagegateway_file_system_association" "test" {
     %[4]q = %[5]q
   }
 }
-`, username, tagKey1, tagValue1, tagKey2, tagValue2)
+`, username, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccFileSystemAssociationConfig_audit(rName, domainName, username string, loggingDestination string) string {
-	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFileSystemAssociationConfig_base(rName, domainName, username), fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_fsx_windows_file_system.test.arn
@@ -417,10 +417,11 @@ resource "aws_storagegateway_file_system_association" "test" {
 
 resource "aws_cloudwatch_log_group" "test" {}
 resource "aws_cloudwatch_log_group" "test2" {}
-`, username, loggingDestination)
+`, username, loggingDestination))
 }
+
 func testAccFileSystemAssociationConfig_auditDisabled(rName, domainName, username string) string {
-	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFileSystemAssociationConfig_base(rName, domainName, username), fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_fsx_windows_file_system.test.arn
@@ -431,11 +432,11 @@ resource "aws_storagegateway_file_system_association" "test" {
 
 resource "aws_cloudwatch_log_group" "test" {}
 resource "aws_cloudwatch_log_group" "test2" {}
-`, username)
+`, username))
 }
 
 func testAccFileSystemAssociationConfig_cache(rName, domainName, username string, cache int) string {
-	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFileSystemAssociationConfig_base(rName, domainName, username), fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
@@ -446,5 +447,5 @@ resource "aws_storagegateway_file_system_association" "test" {
     cache_stale_timeout_in_seconds = %[2]d
   }
 }
-`, username, cache)
+`, username, cache))
 }

@@ -6,7 +6,7 @@ package servicecatalog
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_constraint")
-func DataSourceConstraint() *schema.Resource {
+// @SDKDataSource("aws_servicecatalog_constraint", name="Constraint")
+func dataSourceConstraint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConstraintRead,
 
@@ -28,8 +28,8 @@ func DataSourceConstraint() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
@@ -70,9 +70,9 @@ func DataSourceConstraint() *schema.Resource {
 
 func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Constraint: %s", err)
@@ -85,7 +85,7 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = AcceptLanguageEnglish
+		acceptLanguage = acceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)
@@ -101,7 +101,7 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("product_id", detail.ProductId)
 	d.Set(names.AttrType, detail.Type)
 
-	d.SetId(aws.StringValue(detail.ConstraintId))
+	d.SetId(aws.ToString(detail.ConstraintId))
 
 	return diags
 }

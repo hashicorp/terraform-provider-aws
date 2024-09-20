@@ -296,6 +296,7 @@ The following arguments are optional:
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. Detailed below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `upgrade_policy` - (Optional) Configuration block for the support policy to use for the cluster.  See [upgrade_policy](#upgrade_policy) for details.
 * `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
 
 ### access_config
@@ -359,6 +360,12 @@ The `control_plane_placement` configuration block supports the following argumen
     * `group_name` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
 
 * `outpost_arns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
+
+### upgrade_policy
+
+The `upgrade_policy` configuration block supports the following arguments:
+
+* `support_type` - (Optional) Support type to use for the cluster. If the cluster is set to `EXTENDED`, it will enter extended support at the end of standard support. If the cluster is set to `STANDARD`, it will be automatically upgraded at the end of standard support. Valid values are `EXTENDED`, `STANDARD`
 
 ## Attribute Reference
 
@@ -428,4 +435,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-091a9ecd199ec26631d7e08430475555014a23132b7c68fa242b7265647650b7 -->
+<!-- cache-key: cdktf-0.20.1 input-0d3ea3cd08b942b060e39daa273d0ddd12c41df3c085af8f1880d7ecfdab2666 -->

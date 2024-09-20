@@ -68,6 +68,7 @@ This resource supports the following arguments:
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `skip_destroy` - (Optional) Set to true if you do not wish the option group to be deleted at destroy time, and instead just remove the option group from the Terraform state.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `option` Block
@@ -85,8 +86,8 @@ The `option` blocks support the following arguments:
 
 The `option_settings` blocks support the following arguments:
 
-* `name` - (Optional) Name of the setting.
-* `value` - (Optional) Value of the setting.
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
 ## Attribute Reference
 

@@ -290,7 +290,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
@@ -388,7 +388,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
-		sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)

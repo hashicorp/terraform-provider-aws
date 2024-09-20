@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,8 +27,8 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -65,8 +63,8 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -95,8 +93,8 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -148,8 +146,8 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -179,21 +177,24 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 
 func testAccCheckReadinessCheckDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoveryreadiness_readiness_check" {
 				continue
 			}
 
-			input := &route53recoveryreadiness.GetReadinessCheckInput{
-				ReadinessCheckName: aws.String(rs.Primary.ID),
+			_, err := tfroute53recoveryreadiness.FindReadinessCheckByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetReadinessCheckWithContext(ctx, input)
-			if err == nil {
-				return fmt.Errorf("Route53RecoveryReadiness Readiness Check (%s) not deleted", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Route53 Recovery Readiness Readiness Check %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -207,13 +208,9 @@ func testAccCheckReadinessCheckExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
-		input := &route53recoveryreadiness.GetReadinessCheckInput{
-			ReadinessCheckName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetReadinessCheckWithContext(ctx, input)
+		_, err := tfroute53recoveryreadiness.FindReadinessCheckByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

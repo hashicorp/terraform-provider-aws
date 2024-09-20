@@ -7,10 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,11 +15,23 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newClusterParameterGroupDataSource,
+			Name:    "Cluster Parameter Group",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newIntegrationResource,
+			Name:    "Integration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 		{
 			Factory: newResourceExportTask,
 		},
@@ -44,18 +52,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Event Categories",
 		},
 		{
-			Factory:  DataSourceInstance,
+			Factory:  dataSourceInstance,
 			TypeName: "aws_db_instance",
 			Name:     "DB Instance",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceInstances,
+			Factory:  dataSourceInstances,
 			TypeName: "aws_db_instances",
+			Name:     "DB Instances",
 		},
 		{
-			Factory:  DataSourceParameterGroup,
+			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_db_parameter_group",
+			Name:     "DB Parameter Group",
 		},
 		{
 			Factory:  dataSourceProxy,
@@ -74,24 +84,30 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "DB Subnet Group",
 		},
 		{
-			Factory:  DataSourceCertificate,
+			Factory:  dataSourceCertificate,
 			TypeName: "aws_rds_certificate",
+			Name:     "Certificate",
 		},
 		{
-			Factory:  DataSourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_rds_cluster",
+			Name:     "Cluster",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceClusters,
+			Factory:  dataSourceClusters,
 			TypeName: "aws_rds_clusters",
+			Name:     "Clusters",
 		},
 		{
-			Factory:  DataSourceEngineVersion,
+			Factory:  dataSourceEngineVersion,
 			TypeName: "aws_rds_engine_version",
+			Name:     "Engine Version",
 		},
 		{
-			Factory:  DataSourceOrderableInstance,
+			Factory:  dataSourceOrderableInstance,
 			TypeName: "aws_rds_orderable_db_instance",
+			Name:     "Orderable DB Instance",
 		},
 		{
 			Factory:  dataSourceReservedOffering,
@@ -120,7 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstance,
+			Factory:  resourceInstance,
 			TypeName: "aws_db_instance",
 			Name:     "DB Instance",
 			Tags: &types.ServicePackageResourceTags{
@@ -217,8 +233,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterActivityStream,
+			Factory:  resourceClusterActivityStream,
 			TypeName: "aws_rds_cluster_activity_stream",
+			Name:     "Cluster Activity Stream",
 		},
 		{
 			Factory:  resourceClusterEndpoint,
@@ -229,7 +246,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterInstance,
+			Factory:  resourceClusterInstance,
 			TypeName: "aws_rds_cluster_instance",
 			Name:     "Cluster Instance",
 			Tags: &types.ServicePackageResourceTags{
@@ -258,11 +275,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalCluster,
+			Factory:  resourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
+			Name:     "Global Cluster",
 		},
 		{
-			Factory:  ResourceReservedInstance,
+			Factory:  resourceReservedInstance,
 			TypeName: "aws_rds_reserved_instance",
 			Name:     "Reserved Instance",
 			Tags: &types.ServicePackageResourceTags{
@@ -274,24 +292,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.RDS
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*rds_sdkv1.RDS, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return rds_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

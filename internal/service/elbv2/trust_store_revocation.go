@@ -98,7 +98,7 @@ func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceD
 	output, err := conn.AddTrustStoreRevocations(ctx, input)
 
 	if err != nil {
-		sdkdiag.AppendErrorf(diags, "creating ELBv2 Trust Store (%s) Revocation (s3://%s/%s): %s", trustStoreARN, s3Bucket, s3Key, err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Trust Store (%s) Revocation (s3://%s/%s): %s", trustStoreARN, s3Bucket, s3Key, err)
 	}
 
 	revocationID := aws.ToInt64(output.TrustStoreRevocations[0].RevocationId)

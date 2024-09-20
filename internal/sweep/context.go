@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/internal/log"
 )
 
 func Context(region string) context.Context {
@@ -14,7 +15,7 @@ func Context(region string) context.Context {
 
 	ctx = tfsdklog.RegisterStdlogSink(ctx)
 
-	ctx = logger(ctx, "sweeper", region)
+	ctx = log.Logger(ctx, "sweeper", region)
 
 	return ctx
 }

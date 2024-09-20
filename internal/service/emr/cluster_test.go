@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +26,7 @@ import (
 
 func TestAccEMRCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -83,12 +82,12 @@ func TestAccEMRCluster_basic(t *testing.T) {
 
 func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -140,7 +139,7 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 
 func TestAccEMRCluster_additionalInfo(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 	expectedJSON := `
 {
   "instanceAwsClientConfiguration": {
@@ -183,7 +182,7 @@ func TestAccEMRCluster_additionalInfo(t *testing.T) {
 
 func TestAccEMRCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -208,7 +207,7 @@ func TestAccEMRCluster_disappears(t *testing.T) {
 
 func TestAccEMRCluster_sJSON(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -242,7 +241,7 @@ func TestAccEMRCluster_sJSON(t *testing.T) {
 
 func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 emr.Cluster
+	var cluster1, cluster2, cluster3 awstypes.Cluster
 	autoscalingPolicy1 := `
 {
   "Constraints": {
@@ -360,7 +359,7 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 
 func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -403,7 +402,7 @@ func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 
 func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 emr.Cluster
+	var cluster1, cluster2, cluster3 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -455,7 +454,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 
 func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -498,7 +497,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 
 func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -541,7 +540,7 @@ func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 
 func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 	var vpc ec2types.Vpc
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -585,7 +584,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 
 func TestAccEMRCluster_Kerberos_clusterDedicatedKdc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -622,7 +621,7 @@ func TestAccEMRCluster_Kerberos_clusterDedicatedKdc(t *testing.T) {
 
 func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -665,7 +664,7 @@ func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 
 func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -708,7 +707,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 
 func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -751,7 +750,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 
 func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
@@ -794,7 +793,7 @@ func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 
 func TestAccEMRCluster_security(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -827,7 +826,7 @@ func TestAccEMRCluster_security(t *testing.T) {
 
 func TestAccEMRCluster_Step_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -839,7 +838,7 @@ func TestAccEMRCluster_Step_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepSingle(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
@@ -866,7 +865,7 @@ func TestAccEMRCluster_Step_basic(t *testing.T) {
 
 func TestAccEMRCluster_Step_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 emr.Cluster
+	var cluster1, cluster2, cluster3 awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -933,7 +932,7 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 
 func TestAccEMRCluster_Step_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -945,7 +944,7 @@ func TestAccEMRCluster_Step_multiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepMultiple(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
@@ -976,7 +975,7 @@ func TestAccEMRCluster_Step_multiple(t *testing.T) {
 
 func TestAccEMRCluster_Step_multiple_listStates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -988,7 +987,7 @@ func TestAccEMRCluster_Step_multiple_listStates(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepMultipleListStates(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
@@ -1020,7 +1019,7 @@ func TestAccEMRCluster_Step_multiple_listStates(t *testing.T) {
 
 func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1154,7 +1153,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 
 func TestAccEMRCluster_PlacementGroupConfigs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1198,7 +1197,7 @@ func TestAccEMRCluster_PlacementGroupConfigs(t *testing.T) {
 
 func TestAccEMRCluster_terminationProtected(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1256,7 +1255,7 @@ func TestAccEMRCluster_terminationProtected(t *testing.T) {
 
 func TestAccEMRCluster_keepJob(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1289,7 +1288,7 @@ func TestAccEMRCluster_keepJob(t *testing.T) {
 
 func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1339,7 +1338,7 @@ func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
 
 func TestAccEMRCluster_s3Logging(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1373,7 +1372,7 @@ func TestAccEMRCluster_s3Logging(t *testing.T) {
 
 func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1408,7 +1407,7 @@ func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 
 func TestAccEMRCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1454,7 +1453,7 @@ func TestAccEMRCluster_tags(t *testing.T) {
 
 func TestAccEMRCluster_RootVolume_size(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1494,7 +1493,7 @@ func TestAccEMRCluster_RootVolume_size(t *testing.T) {
 
 func TestAccEMRCluster_StepConcurrency_level(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -1533,7 +1532,7 @@ func TestAccEMRCluster_StepConcurrency_level(t *testing.T) {
 
 func TestAccEMRCluster_ebs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -1566,7 +1565,7 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 
 func TestAccEMRCluster_CustomAMI_id(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1599,7 +1598,7 @@ func TestAccEMRCluster_CustomAMI_id(t *testing.T) {
 
 func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 emr.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	subnetResourceName := "aws_subnet.test"
@@ -1671,7 +1670,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 
 func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1705,7 +1704,7 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 
 func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
+	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1755,7 +1754,7 @@ func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_cluster" {
@@ -1779,18 +1778,14 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *emr.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EMR Cluster ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		output, err := tfemr.FindClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -1804,20 +1799,20 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *emr.Cluster) re
 	}
 }
 
-func testAccCheckClusterNotRecreated(i, j *emr.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterNotRecreated(i, j *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Id) != aws.StringValue(j.Id) {
-			return fmt.Errorf("EMR Cluster recreated: %s -> %s", aws.StringValue(i.Id), aws.StringValue(j.Id))
+		if aws.ToString(i.Id) != aws.ToString(j.Id) {
+			return fmt.Errorf("EMR Cluster recreated: %s -> %s", aws.ToString(i.Id), aws.ToString(j.Id))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *emr.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Id) == aws.StringValue(j.Id) {
-			return fmt.Errorf("EMR Cluster not recreated: %s", aws.StringValue(i.Id))
+		if aws.ToString(i.Id) == aws.ToString(j.Id) {
+			return fmt.Errorf("EMR Cluster not recreated: %s", aws.ToString(i.Id))
 		}
 
 		return nil
@@ -1832,7 +1827,7 @@ func testAccDeleteManagedSecurityGroups(ctx context.Context, conn *ec2.Client, v
 	}
 
 	for groupName := range managedSecurityGroups {
-		securityGroup, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, groupName, aws.StringValue(vpc.VpcId), aws.StringValue(vpc.OwnerId))
+		securityGroup, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, groupName, aws.ToString(vpc.VpcId), aws.ToString(vpc.OwnerId))
 
 		if err != nil {
 			return fmt.Errorf("error describing EMR Managed Security Group (%s): %w", groupName, err)
@@ -2071,7 +2066,6 @@ resource "aws_iam_role_policy_attachment" "emr_service" {
   role       = aws_iam_role.emr_service.id
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceRole"
 }
-
 `, rName)
 }
 

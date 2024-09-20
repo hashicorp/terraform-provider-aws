@@ -60,17 +60,6 @@ const (
 	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
-func StorageType_Values() []string {
-	return []string{
-		storageTypeStandard,
-		storageTypeGP2,
-		storageTypeGP3,
-		storageTypeIO1,
-		storageTypeIO2,
-		storageTypeAuroraIOPT1,
-	}
-}
-
 const (
 	InstanceEngineAuroraMySQL         = "aurora-mysql"
 	InstanceEngineAuroraPostgreSQL    = "aurora-postgresql"
@@ -92,45 +81,45 @@ const (
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 const (
-	InstanceStatusAvailable                                    = "available"
-	InstanceStatusBackingUp                                    = "backing-up"
-	InstanceStatusConfiguringEnhancedMonitoring                = "configuring-enhanced-monitoring"
-	InstanceStatusConfiguringIAMDatabaseAuth                   = "configuring-iam-database-auth"
-	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
-	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
-	InstanceStatusCreating                                     = "creating"
-	InstanceStatusDeletePreCheck                               = "delete-precheck"
-	InstanceStatusDeleting                                     = "deleting"
-	InstanceStatusFailed                                       = "failed"
-	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
-	InstanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
-	InstanceStatusIncompatiblCreate                            = "incompatible-create"
-	InstanceStatusIncompatibleNetwork                          = "incompatible-network"
-	InstanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
-	InstanceStatusIncompatibleParameters                       = "incompatible-parameters"
-	InstanceStatusIncompatibleRestore                          = "incompatible-restore"
-	InstanceStatusInsufficentCapacity                          = "insufficient-capacity"
-	InstanceStatusMaintenance                                  = "maintenance"
-	InstanceStatusModifying                                    = "modifying"
-	InstanceStatusMovingToVPC                                  = "moving-to-vpc"
-	InstanceStatusRebooting                                    = "rebooting"
-	InstanceStatusResettingMasterCredentials                   = "resetting-master-credentials"
-	InstanceStatusRenaming                                     = "renaming"
-	InstanceStatusRestoreError                                 = "restore-error"
-	InstanceStatusStarting                                     = "starting"
-	InstanceStatusStopped                                      = "stopped"
-	InstanceStatusStopping                                     = "stopping"
-	InstanceStatusStorageFull                                  = "storage-full"
-	InstanceStatusStorageOptimization                          = "storage-optimization"
-	InstanceStatusUpgrading                                    = "upgrading"
+	instanceStatusAvailable                                    = "available"
+	instanceStatusBackingUp                                    = "backing-up"
+	instanceStatusConfiguringEnhancedMonitoring                = "configuring-enhanced-monitoring"
+	instanceStatusConfiguringIAMDatabaseAuth                   = "configuring-iam-database-auth"
+	instanceStatusConfiguringLogExports                        = "configuring-log-exports"
+	instanceStatusConvertingToVPC                              = "converting-to-vpc"
+	instanceStatusCreating                                     = "creating"
+	instanceStatusDeletePreCheck                               = "delete-precheck"
+	instanceStatusDeleting                                     = "deleting"
+	instanceStatusFailed                                       = "failed"
+	instanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
+	instanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
+	instanceStatusIncompatiblCreate                            = "incompatible-create"
+	instanceStatusIncompatibleNetwork                          = "incompatible-network"
+	instanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
+	instanceStatusIncompatibleParameters                       = "incompatible-parameters"
+	instanceStatusIncompatibleRestore                          = "incompatible-restore"
+	instanceStatusInsufficentCapacity                          = "insufficient-capacity"
+	instanceStatusMaintenance                                  = "maintenance"
+	instanceStatusModifying                                    = "modifying"
+	instanceStatusMovingToVPC                                  = "moving-to-vpc"
+	instanceStatusRebooting                                    = "rebooting"
+	instanceStatusResettingMasterCredentials                   = "resetting-master-credentials"
+	instanceStatusRenaming                                     = "renaming"
+	instanceStatusRestoreError                                 = "restore-error"
+	instanceStatusStarting                                     = "starting"
+	instanceStatusStopped                                      = "stopped"
+	instanceStatusStopping                                     = "stopping"
+	instanceStatusStorageFull                                  = "storage-full"
+	instanceStatusStorageOptimization                          = "storage-optimization"
+	instanceStatusUpgrading                                    = "upgrading"
 )
 
 const (
-	GlobalClusterStatusAvailable = "available"
-	GlobalClusterStatusCreating  = "creating"
-	GlobalClusterStatusDeleting  = "deleting"
-	GlobalClusterStatusModifying = "modifying"
-	GlobalClusterStatusUpgrading = "upgrading"
+	globalClusterStatusAvailable = "available"
+	globalClusterStatusCreating  = "creating"
+	globalClusterStatusDeleting  = "deleting"
+	globalClusterStatusModifying = "modifying"
+	globalClusterStatusUpgrading = "upgrading"
 )
 
 const (
@@ -157,7 +146,7 @@ const (
 	ClusterEngineCustomPrefix     = "custom-"
 )
 
-func ClusterEngine_Values() []string {
+func clusterEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
@@ -166,7 +155,7 @@ func ClusterEngine_Values() []string {
 	}
 }
 
-func ClusterInstanceEngine_Values() []string {
+func clusterInstanceEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
@@ -220,83 +209,83 @@ func engineLifecycleSupport_Values() []string {
 }
 
 const (
-	ExportableLogTypeAgent      = "agent"
-	ExportableLogTypeAlert      = "alert"
-	ExportableLogTypeAudit      = "audit"
-	ExportableLogTypeDiagLog    = "diag.log"
-	ExportableLogTypeError      = "error"
-	ExportableLogTypeGeneral    = "general"
-	ExportableLogTypeListener   = "listener"
-	ExportableLogTypeNotifyLog  = "notify.log"
-	ExportableLogTypeOEMAgent   = "oemagent"
-	ExportableLogTypePostgreSQL = "postgresql"
-	ExportableLogTypeSlowQuery  = "slowquery"
-	ExportableLogTypeTrace      = "trace"
-	ExportableLogTypeUpgrade    = "upgrade"
+	exportableLogTypeAgent      = "agent"
+	exportableLogTypeAlert      = "alert"
+	exportableLogTypeAudit      = "audit"
+	exportableLogTypeDiagLog    = "diag.log"
+	exportableLogTypeError      = "error"
+	exportableLogTypeGeneral    = "general"
+	exportableLogTypeListener   = "listener"
+	exportableLogTypeNotifyLog  = "notify.log"
+	exportableLogTypeOEMAgent   = "oemagent"
+	exportableLogTypePostgreSQL = "postgresql"
+	exportableLogTypeSlowQuery  = "slowquery"
+	exportableLogTypeTrace      = "trace"
+	exportableLogTypeUpgrade    = "upgrade"
 )
 
-func ClusterExportableLogType_Values() []string {
+func clusterExportableLogType_Values() []string {
 	return []string{
-		ExportableLogTypeAudit,
-		ExportableLogTypeError,
-		ExportableLogTypeGeneral,
-		ExportableLogTypePostgreSQL,
-		ExportableLogTypeSlowQuery,
-		ExportableLogTypeUpgrade,
+		exportableLogTypeAudit,
+		exportableLogTypeError,
+		exportableLogTypeGeneral,
+		exportableLogTypePostgreSQL,
+		exportableLogTypeSlowQuery,
+		exportableLogTypeUpgrade,
 	}
 }
 
-func InstanceExportableLogType_Values() []string {
+func instanceExportableLogType_Values() []string {
 	return []string{
-		ExportableLogTypeAgent,
-		ExportableLogTypeAlert,
-		ExportableLogTypeAudit,
-		ExportableLogTypeDiagLog,
-		ExportableLogTypeError,
-		ExportableLogTypeGeneral,
-		ExportableLogTypeListener,
-		ExportableLogTypeNotifyLog,
-		ExportableLogTypeOEMAgent,
-		ExportableLogTypePostgreSQL,
-		ExportableLogTypeSlowQuery,
-		ExportableLogTypeTrace,
-		ExportableLogTypeUpgrade,
-	}
-}
-
-const (
-	NetworkTypeDual = "DUAL"
-	NetworkTypeIPv4 = "IPV4"
-)
-
-func NetworkType_Values() []string {
-	return []string{
-		NetworkTypeDual,
-		NetworkTypeIPv4,
+		exportableLogTypeAgent,
+		exportableLogTypeAlert,
+		exportableLogTypeAudit,
+		exportableLogTypeDiagLog,
+		exportableLogTypeError,
+		exportableLogTypeGeneral,
+		exportableLogTypeListener,
+		exportableLogTypeNotifyLog,
+		exportableLogTypeOEMAgent,
+		exportableLogTypePostgreSQL,
+		exportableLogTypeSlowQuery,
+		exportableLogTypeTrace,
+		exportableLogTypeUpgrade,
 	}
 }
 
 const (
-	RestoreTypeCopyOnWrite = "copy-on-write"
-	RestoreTypeFullCopy    = "full-copy"
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
 )
 
-func RestoreType_Values() []string {
+func networkType_Values() []string {
 	return []string{
-		RestoreTypeCopyOnWrite,
-		RestoreTypeFullCopy,
+		networkTypeDual,
+		networkTypeIPv4,
 	}
 }
 
 const (
-	TimeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
-	TimeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
+	restoreTypeCopyOnWrite = "copy-on-write"
+	restoreTypeFullCopy    = "full-copy"
 )
 
-func TimeoutAction_Values() []string {
+func restoreType_Values() []string {
 	return []string{
-		TimeoutActionForceApplyCapacityChange,
-		TimeoutActionRollbackCapacityChange,
+		restoreTypeCopyOnWrite,
+		restoreTypeFullCopy,
+	}
+}
+
+const (
+	timeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
+	timeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
+)
+
+func timeoutAction_Values() []string {
+	return []string{
+		timeoutActionForceApplyCapacityChange,
+		timeoutActionRollbackCapacityChange,
 	}
 }
 
@@ -317,13 +306,9 @@ const (
 )
 
 const (
-	ResNameTags = "Tags"
-)
-
-const (
-	ReservedInstanceStateActive         = "active"
-	ReservedInstanceStateRetired        = "retired"
-	ReservedInstanceStatePaymentPending = "payment-pending"
+	reservedInstanceStateActive         = "active"
+	reservedInstanceStateRetired        = "retired"
+	reservedInstanceStatePaymentPending = "payment-pending"
 )
 
 const (

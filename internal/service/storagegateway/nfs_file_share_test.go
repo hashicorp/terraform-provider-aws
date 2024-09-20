@@ -730,8 +730,8 @@ func testAccCheckNFSFileShareExists(ctx context.Context, n string, v *awstypes.N
 	}
 }
 
-func testAcc_S3FileShareBase(rName string) string {
-	return testAcc_FileGatewayBase(rName) + fmt.Sprintf(`
+func testAccNFSFileShareConfig_baseS3(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -796,22 +796,22 @@ resource "aws_storagegateway_gateway" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccNFSFileShareConfig_required(rName string) string {
-	return testAcc_S3FileShareBase(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_s3_bucket.test.arn
   role_arn     = aws_iam_role.test.arn
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_name(rName, fsName string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list     = ["0.0.0.0/0"]
   gateway_arn     = aws_storagegateway_gateway.test.arn
@@ -819,11 +819,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   role_arn        = aws_iam_role.test.arn
   file_share_name = %[1]q
 }
-`, fsName)
+`, fsName))
 }
 
 func testAccNFSFileShareConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
@@ -834,11 +834,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
     %q = %q
   }
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccNFSFileShareConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
@@ -850,33 +850,33 @@ resource "aws_storagegateway_nfs_file_share" "test" {
     %q = %q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccNFSFileShareConfig_clientListSingle(rName, clientList1 string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = [%q]
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_s3_bucket.test.arn
   role_arn     = aws_iam_role.test.arn
 }
-`, clientList1)
+`, clientList1))
 }
 
 func testAccNFSFileShareConfig_clientListMultiple(rName, clientList1, clientList2 string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = [%q, %q]
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_s3_bucket.test.arn
   role_arn     = aws_iam_role.test.arn
 }
-`, clientList1, clientList2)
+`, clientList1, clientList2))
 }
 
 func testAccNFSFileShareConfig_defaultStorageClass(rName, defaultStorageClass string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list           = ["0.0.0.0/0"]
   default_storage_class = %q
@@ -884,11 +884,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   location_arn          = aws_s3_bucket.test.arn
   role_arn              = aws_iam_role.test.arn
 }
-`, defaultStorageClass)
+`, defaultStorageClass))
 }
 
 func testAccNFSFileShareConfig_guessMIMETypeEnabled(rName string, guessMimeTypeEnabled bool) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list             = ["0.0.0.0/0"]
   gateway_arn             = aws_storagegateway_gateway.test.arn
@@ -896,11 +896,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   location_arn            = aws_s3_bucket.test.arn
   role_arn                = aws_iam_role.test.arn
 }
-`, guessMimeTypeEnabled)
+`, guessMimeTypeEnabled))
 }
 
 func testAccNFSFileShareConfig_kmsEncrypted(rName string, kmsEncrypted bool) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list   = ["0.0.0.0/0"]
   gateway_arn   = aws_storagegateway_gateway.test.arn
@@ -908,11 +908,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   location_arn  = aws_s3_bucket.test.arn
   role_arn      = aws_iam_role.test.arn
 }
-`, kmsEncrypted)
+`, kmsEncrypted))
 }
 
 func testAccNFSFileShareConfig_kmsKeyARN(rName string) string {
-	return testAcc_S3FileShareBase(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_kms_key" "test" {
   count = 2
 
@@ -928,11 +928,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   location_arn  = aws_s3_bucket.test.arn
   role_arn      = aws_iam_role.test.arn
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_kmsKeyARNUpdate(rName string) string {
-	return testAcc_S3FileShareBase(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_kms_key" "test" {
   count = 2
 
@@ -948,11 +948,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   location_arn  = aws_s3_bucket.test.arn
   role_arn      = aws_iam_role.test.arn
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_defaults(rName, directoryMode, fileMode string, groupID, ownerID int) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
@@ -966,11 +966,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
     owner_id       = %d
   }
 }
-`, directoryMode, fileMode, groupID, ownerID)
+`, directoryMode, fileMode, groupID, ownerID))
 }
 
 func testAccNFSFileShareConfig_objectACL(rName, objectACL string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
@@ -978,11 +978,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   object_acl   = %q
   role_arn     = aws_iam_role.test.arn
 }
-`, objectACL)
+`, objectACL))
 }
 
 func testAccNFSFileShareConfig_readOnly(rName string, readOnly bool) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
@@ -990,11 +990,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   read_only    = %t
   role_arn     = aws_iam_role.test.arn
 }
-`, readOnly)
+`, readOnly))
 }
 
 func testAccNFSFileShareConfig_requesterPays(rName string, requesterPays bool) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list    = ["0.0.0.0/0"]
   gateway_arn    = aws_storagegateway_gateway.test.arn
@@ -1002,11 +1002,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   requester_pays = %t
   role_arn       = aws_iam_role.test.arn
 }
-`, requesterPays)
+`, requesterPays))
 }
 
 func testAccNFSFileShareConfig_squash(rName, squash string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
@@ -1014,11 +1014,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   role_arn     = aws_iam_role.test.arn
   squash       = %q
 }
-`, squash)
+`, squash))
 }
 
 func testAccNFSFileShareConfig_cacheAttributes(rName string, timeout int) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
@@ -1029,11 +1029,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
     cache_stale_timeout_in_seconds = %[1]d
   }
 }
-`, timeout)
+`, timeout))
 }
 
 func testAccNFSFileShareConfig_notificationPolicy(rName string) string {
-	return testAcc_S3FileShareBase(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list         = ["0.0.0.0/0"]
   gateway_arn         = aws_storagegateway_gateway.test.arn
@@ -1041,11 +1041,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   role_arn            = aws_iam_role.test.arn
   notification_policy = "{\"Upload\": {\"SettlingTimeInSeconds\": 60}}"
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_audit(rName string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -1057,11 +1057,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   role_arn              = aws_iam_role.test.arn
   audit_destination_arn = aws_cloudwatch_log_group.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccNFSFileShareConfig_auditUpdated(rName string) string {
-	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -1077,5 +1077,5 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   role_arn              = aws_iam_role.test.arn
   audit_destination_arn = aws_cloudwatch_log_group.test2.arn
 }
-`, rName)
+`, rName))
 }

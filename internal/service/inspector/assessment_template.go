@@ -221,7 +221,7 @@ func FindAssessmentTemplateByID(ctx context.Context, conn *inspector.Client, arn
 		return nil, err
 	}
 
-	if out.AssessmentTemplates == nil || len(out.AssessmentTemplates) == 0 {
+	if len(out.AssessmentTemplates) == 0 {
 		return nil, &retry.NotFoundError{
 			LastRequest: in,
 		}

@@ -88,7 +88,7 @@ EOT
 
 This resource supports the following arguments:
 
-* `prefix` - (Required, Forces new resource) The repository name prefix to match against.
+* `prefix` - (Required, Forces new resource) The repository name prefix to match against. Use `ROOT` to match any prefix that doesn't explicitly match another template.
 * `applied_for` - (Required) Which features this template applies to. Must contain one or more of `PULL_THROUGH_CACHE` or `REPLICATION`.
 * `custom_role_arn` - (Optional) A custom IAM role to use for repository creation. Required if using repository tags or KMS encryption.
 * `description` - (Optional) The description for this template.

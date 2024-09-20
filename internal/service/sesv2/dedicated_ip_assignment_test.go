@@ -5,19 +5,17 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -102,44 +100,35 @@ func testAccCheckDedicatedIPAssignmentDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfsesv2.FindDedicatedIPAssignmentByID(ctx, conn, rs.Primary.ID)
+			_, err := tfsesv2.FindDedicatedIPByTwoPartKey(ctx, conn, rs.Primary.Attributes["ip"], rs.Primary.Attributes["destination_pool_name"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.NotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
-				if errors.Is(err, tfsesv2.ErrIncorrectPoolAssignment) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameDedicatedIPAssignment, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("SESv2 Dedicated IP Assignment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDedicatedIPAssignmentExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckDedicatedIPAssignmentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPAssignment, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPAssignment, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
-		_, err := tfsesv2.FindDedicatedIPAssignmentByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPAssignment, rs.Primary.ID, err)
-		}
+		_, err := tfsesv2.FindDedicatedIPByTwoPartKey(ctx, conn, rs.Primary.Attributes["ip"], rs.Primary.Attributes["destination_pool_name"])
 
-		return nil
+		return err
 	}
 }
 

@@ -9,12 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,7 +79,7 @@ func resourceEndpointAuthorization() *schema.Resource {
 
 func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	account := d.Get("account").(string)
 	input := redshift.AuthorizeEndpointAccessInput{
@@ -87,15 +88,15 @@ func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("vpc_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.VpcIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.VpcIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.AuthorizeEndpointAccessWithContext(ctx, &input)
+	output, err := conn.AuthorizeEndpointAccess(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Endpoint Authorization: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", account, aws.StringValue(output.ClusterIdentifier)))
+	d.SetId(fmt.Sprintf("%s:%s", account, aws.ToString(output.ClusterIdentifier)))
 	log.Printf("[INFO] Redshift Endpoint Authorization ID: %s", d.Id())
 
 	return append(diags, resourceEndpointAuthorizationRead(ctx, d, meta)...)
@@ -103,7 +104,7 @@ func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	endpoint, err := findEndpointAuthorizationByID(ctx, conn, d.Id())
 
@@ -121,7 +122,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("grantee", endpoint.Grantee)
 	d.Set("grantor", endpoint.Grantor)
 	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
-	d.Set("vpc_ids", flex.FlattenStringSet(endpoint.AllowedVPCs))
+	d.Set("vpc_ids", endpoint.AllowedVPCs)
 	d.Set("allowed_all_vpcs", endpoint.AllowedAllVPCs)
 	d.Set("endpoint_count", endpoint.EndpointCount)
 
@@ -130,7 +131,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	if d.HasChanges("vpc_ids") {
 		account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
@@ -145,10 +146,10 @@ func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.Resource
 		removed := os.Difference(ns)
 
 		if added.Len() > 0 {
-			_, err := conn.AuthorizeEndpointAccessWithContext(ctx, &redshift.AuthorizeEndpointAccessInput{
+			_, err := conn.AuthorizeEndpointAccess(ctx, &redshift.AuthorizeEndpointAccessInput{
 				Account:           aws.String(account),
 				ClusterIdentifier: aws.String(clusterId),
-				VpcIds:            flex.ExpandStringSet(added),
+				VpcIds:            flex.ExpandStringValueSet(added),
 			})
 
 			if err != nil {
@@ -157,10 +158,10 @@ func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if removed.Len() > 0 {
-			_, err := conn.RevokeEndpointAccessWithContext(ctx, &redshift.RevokeEndpointAccessInput{
+			_, err := conn.RevokeEndpointAccess(ctx, &redshift.RevokeEndpointAccessInput{
 				Account:           aws.String(account),
 				ClusterIdentifier: aws.String(clusterId),
-				VpcIds:            flex.ExpandStringSet(removed),
+				VpcIds:            flex.ExpandStringValueSet(removed),
 			})
 
 			if err != nil {
@@ -174,7 +175,7 @@ func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
 	if err != nil {
@@ -187,12 +188,13 @@ func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.Resource
 		Force:             aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	}
 
-	_, err = conn.RevokeEndpointAccessWithContext(ctx, input)
+	_, err = conn.RevokeEndpointAccess(ctx, input)
+
+	if errs.IsA[*awstypes.EndpointAuthorizationNotFoundFault](err) || errs.IsA[*awstypes.ClusterNotFoundFault](err) {
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointAuthorizationNotFoundFault) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Endpoint Authorization (%s): %s", d.Id(), err)
 	}
 

@@ -262,6 +262,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>outposts</code></li>
   <li><code>paymentcryptography</code></li>
   <li><code>pcaconnectorad</code></li>
+  <li><code>pcs</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
   <li><code>polly</code></li>
@@ -276,6 +277,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
+  <li><code>resiliencehub</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
@@ -432,4 +434,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-227dc81e204e7a234b4a0663958241753fb418ed412942f24e32d7208467522e -->
+<!-- cache-key: cdktf-0.20.1 input-fb32d2e2066ad889d5fcfb9a689f78cbf7eb841052e4b622b21387f9a3c18bae -->

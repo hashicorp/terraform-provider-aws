@@ -333,7 +333,7 @@ func flattenReportDeliveryChannel(reportDeliveryChannel *awstypes.ReportDelivery
 		names.AttrS3BucketName: aws.ToString(reportDeliveryChannel.S3BucketName),
 	}
 
-	if reportDeliveryChannel.Formats != nil && len(reportDeliveryChannel.Formats) > 0 {
+	if len(reportDeliveryChannel.Formats) > 0 {
 		values["formats"] = flex.FlattenStringValueSet(reportDeliveryChannel.Formats)
 	}
 
@@ -353,21 +353,21 @@ func flattenReportSetting(reportSetting *awstypes.ReportSetting) []interface{} {
 		"report_template": aws.ToString(reportSetting.ReportTemplate),
 	}
 
-	if reportSetting.Accounts != nil && len(reportSetting.Accounts) > 0 {
+	if len(reportSetting.Accounts) > 0 {
 		values["accounts"] = flex.FlattenStringValueSet(reportSetting.Accounts)
 	}
 
-	if reportSetting.FrameworkArns != nil && len(reportSetting.FrameworkArns) > 0 {
+	if len(reportSetting.FrameworkArns) > 0 {
 		values["framework_arns"] = flex.FlattenStringValueSet(reportSetting.FrameworkArns)
 	}
 
 	values["number_of_frameworks"] = reportSetting.NumberOfFrameworks
 
-	if reportSetting.OrganizationUnits != nil && len(reportSetting.OrganizationUnits) > 0 {
+	if len(reportSetting.OrganizationUnits) > 0 {
 		values["organization_units"] = flex.FlattenStringValueSet(reportSetting.OrganizationUnits)
 	}
 
-	if reportSetting.Regions != nil && len(reportSetting.Regions) > 0 {
+	if len(reportSetting.Regions) > 0 {
 		values["regions"] = flex.FlattenStringValueSet(reportSetting.Regions)
 	}
 

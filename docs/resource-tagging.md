@@ -114,11 +114,11 @@ If the API does not support tagging on creation, pass the `-CreateTags` flag to 
 
 ### Specifying the AWS SDK for Go version
 
-The majority of the Terraform AWS Provider is implemented using [version 1 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go).
-For new services, however, [version 2 of the SDK](https://github.com/aws/aws-sdk-go-v2) is required.
+The majority of the Terraform AWS Provider is implemented using [version 2 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go-v2).
+Some services, however, are only present in [version 1 of the SDK](https://github.com/aws/aws-sdk-go).
 
-By default, the generated code uses the AWS SDK for Go v1.
-To generate code using the AWS SDK for Go v2, pass the flag `-AwsSdkVersion=2`.
+By default, the generated code uses the AWS SDK for Go v2.
+To generate code using the AWS SDK for Go v1, pass the flag `-AwsSdkVersion=1`.
 
 For more information, see the [documentation on AWS SDK versions](./aws-go-sdk-versions.md).
 
@@ -549,6 +549,9 @@ For example, 3 minutes and 30 seconds is `3m30s`.
 
 Some services do not support tags with an empty string value.
 In that case, use the annotation `@Testing(skipEmptyTags=true)`.
+
+Some services do not support tags with an null string value.
+In that case, use the annotation `@Testing(skipNullTags=true)`.
 
 Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
 Use the annotation `@Testing(checkDestroyNoop=true)`.

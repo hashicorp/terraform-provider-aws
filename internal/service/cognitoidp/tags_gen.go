@@ -69,7 +69,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 		}
 	}
 
-	return nil
+	return map[string]string{}
 }
 
 // setTagsOut sets cognitoidp service tags in Context.

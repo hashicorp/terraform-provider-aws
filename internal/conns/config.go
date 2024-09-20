@@ -29,7 +29,7 @@ import (
 type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
-	AssumeRole                     *awsbase.AssumeRole
+	AssumeRole                     []awsbase.AssumeRole
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
@@ -83,6 +83,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 				{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
 			},
 		},
+		AssumeRole:                     c.AssumeRole,
 		AssumeRoleWithWebIdentity:      c.AssumeRoleWithWebIdentity,
 		Backoff:                        &v1CompatibleBackoff{maxRetryDelay: maxBackoff},
 		CallerDocumentationURL:         "https://registry.terraform.io/providers/hashicorp/aws",
@@ -112,10 +113,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		TokenBucketRateLimiterCapacity: c.TokenBucketRateLimiterCapacity,
 		UseDualStackEndpoint:           c.UseDualStackEndpoint,
 		UseFIPSEndpoint:                c.UseFIPSEndpoint,
-	}
-
-	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
-		awsbaseConfig.AssumeRole = c.AssumeRole
 	}
 
 	if c.CustomCABundle != "" {
@@ -201,7 +198,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)
 	if err != nil {
-		return nil, sdkdiag.AppendErrorf(diags, err.Error())
+		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
 	}
 
 	dnsSuffix := "amazonaws.com"

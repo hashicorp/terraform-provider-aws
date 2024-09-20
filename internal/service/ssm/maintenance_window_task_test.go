@@ -545,7 +545,7 @@ func testAccMaintenanceWindowTaskImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testAccMaintenanceWindowTaskBaseConfig(rName string) string {
+func testAccMaintenanceWindowTaskConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -604,7 +604,7 @@ POLICY
 }
 
 func testAccMaintenanceWindowTaskConfig_basic(rName string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccMaintenanceWindowTaskConfig_base(rName), `
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -633,7 +633,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_noTarget(rName string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccMaintenanceWindowTaskConfig_base(rName), `
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -646,7 +646,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_cutoff(rName, cutoff string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+	return fmt.Sprintf(testAccMaintenanceWindowTaskConfig_base(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -660,7 +660,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_basicUpdate(rName, description, taskType, taskArn string, priority, maxConcurrency, maxErrors int) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+	return fmt.Sprintf(testAccMaintenanceWindowTaskConfig_base(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -727,7 +727,7 @@ EOF
 }
 
 func testAccMaintenanceWindowTaskConfig_basicUpdated(rName string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccMaintenanceWindowTaskConfig_base(rName), `
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -759,7 +759,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
 func testAccMaintenanceWindowTaskConfig_description(rName string, description string) string {
 	return acctest.ConfigCompose(
-		testAccMaintenanceWindowTaskBaseConfig(rName),
+		testAccMaintenanceWindowTaskConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssm_maintenance_window_task" "test" {
   description     = %[1]q
@@ -787,7 +787,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_emptyNotifcation(rName string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccMaintenanceWindowTaskConfig_base(rName), `
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -820,7 +820,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_noRole(rName string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccMaintenanceWindowTaskConfig_base(rName), `
 resource "aws_ssm_maintenance_window_task" "test" {
   description     = "This resource is for test purpose only"
   max_concurrency = 2
@@ -849,7 +849,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_automation(rName, version string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+	return fmt.Sprintf(testAccMaintenanceWindowTaskConfig_base(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -885,7 +885,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_automationUpdate(rName, version string) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+	return fmt.Sprintf(testAccMaintenanceWindowTaskConfig_base(rName)+`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -926,7 +926,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
 func testAccMaintenanceWindowTaskConfig_lambda(funcName, policyName, roleName, sgName, rName string, rInt int) string {
 	return fmt.Sprintf(testAccLambdaBasicConfig(funcName, policyName, roleName, sgName)+
-		testAccMaintenanceWindowTaskBaseConfig(rName)+`
+		testAccMaintenanceWindowTaskConfig_base(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -959,7 +959,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_runCommand(rName, comment string, timeoutSeconds int) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+	return fmt.Sprintf(testAccMaintenanceWindowTaskConfig_base(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
@@ -994,7 +994,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_runCommandUpdate(rName, comment string, timeoutSeconds int) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+	return fmt.Sprintf(testAccMaintenanceWindowTaskConfig_base(rName)+`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -1035,7 +1035,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_runCommandCloudWatch(rName string, enabled bool) string {
-	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+	return fmt.Sprintf(testAccMaintenanceWindowTaskConfig_base(rName)+`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -1076,7 +1076,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_stepFunction(rName string) string {
-	return testAccMaintenanceWindowTaskBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccMaintenanceWindowTaskConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = %[1]q
 }
@@ -1106,17 +1106,17 @@ resource "aws_ssm_maintenance_window_task" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccLambdaBasicConfig(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(policyName, roleName, sgName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
-`, funcName)
+`, funcName))
 }

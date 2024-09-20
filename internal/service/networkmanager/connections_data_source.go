@@ -6,8 +6,8 @@ package networkmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_connections")
-func DataSourceConnections() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_connections", name="Connections")
+func dataSourceConnections() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionsRead,
 
@@ -43,7 +43,7 @@ func DataSourceConnections() *schema.Resource {
 func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -55,7 +55,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.DeviceId = aws.String(v.(string))
 	}
 
-	output, err := FindConnections(ctx, conn, input)
+	output, err := findConnections(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Network Manager Connections: %s", err)
@@ -70,7 +70,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		connectionIDs = append(connectionIDs, aws.StringValue(v.ConnectionId))
+		connectionIDs = append(connectionIDs, aws.ToString(v.ConnectionId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

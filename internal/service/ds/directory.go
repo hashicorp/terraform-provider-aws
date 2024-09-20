@@ -727,10 +727,12 @@ func waitDirectoryCreated(ctx context.Context, conn *directoryservice.Client, id
 
 func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.DirectoryDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
-		Target:  []string{},
-		Refresh: statusDirectoryStage(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
+		Target:     []string{},
+		Refresh:    statusDirectoryStage(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      1 * time.Minute,
+		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

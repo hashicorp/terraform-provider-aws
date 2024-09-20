@@ -6,6 +6,7 @@ package ds
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func RegisterSweepers() {
@@ -70,7 +72,7 @@ func sweepDirectories(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithMinPollInterval(10*time.Second)) // Brute-force approach to add some delay due to rate limiting
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Directory Service Directories (%s): %w", region, err)

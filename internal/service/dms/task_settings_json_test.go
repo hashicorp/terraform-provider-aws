@@ -154,12 +154,10 @@ func TestTaskSettingsEqual(t *testing.T) {
 	}
 
 	for name, typeTest := range tests {
-		name, typeTest := name, typeTest
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			for name, test := range typeTest {
-				name, test := name, test
 				t.Run(name, func(t *testing.T) {
 					t.Parallel()
 

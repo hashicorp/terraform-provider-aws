@@ -55,6 +55,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "provisioned_model_arn",
 			},
 		},
+		{
+			Factory: newResourceGuardrail,
+			Name:    "Guardrail",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "guardrail_arn",
+			},
+		},
 	}
 }
 

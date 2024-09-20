@@ -324,12 +324,12 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerCertificateConfig_basic(rName, key, certificate string) string {
-	return testAccListenerCertificateConfig_base(rName, key, certificate) + `
+	return acctest.ConfigCompose(testAccListenerCertificateConfig_base(rName, key, certificate), `
 resource "aws_lb_listener_certificate" "test" {
   certificate_arn = aws_iam_server_certificate.test.arn
   listener_arn    = aws_lb_listener.test.arn
 }
-`
+`)
 }
 
 func testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate string) string {
@@ -402,7 +402,7 @@ resource "aws_lb_listener_certificate" "test" {
 }
 
 func testAccListenerCertificateConfig_multiple(rName string, keys, certificates []string) string {
-	return testAccListenerCertificateConfig_base(rName, keys[0], certificates[0]) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerCertificateConfig_base(rName, keys[0], certificates[0]), fmt.Sprintf(`
 resource "aws_lb_listener_certificate" "default" {
   listener_arn    = aws_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.test.arn
@@ -429,11 +429,11 @@ resource "aws_iam_server_certificate" "additional_2" {
   certificate_body = "%[4]s"
   private_key      = "%[5]s"
 }
-`, rName, acctest.TLSPEMEscapeNewlines(certificates[1]), acctest.TLSPEMEscapeNewlines(keys[1]), acctest.TLSPEMEscapeNewlines(certificates[2]), acctest.TLSPEMEscapeNewlines(keys[2]))
+`, rName, acctest.TLSPEMEscapeNewlines(certificates[1]), acctest.TLSPEMEscapeNewlines(keys[1]), acctest.TLSPEMEscapeNewlines(certificates[2]), acctest.TLSPEMEscapeNewlines(keys[2])))
 }
 
 func testAccListenerCertificateConfig_multipleAddNew(rName string, keys, certificates []string) string {
-	return testAccListenerCertificateConfig_multiple(rName, keys, certificates) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerCertificateConfig_multiple(rName, keys, certificates), fmt.Sprintf(`
 resource "aws_iam_server_certificate" "additional_3" {
   name             = "%[1]s-additional-3"
   certificate_body = "%[2]s"
@@ -444,5 +444,5 @@ resource "aws_lb_listener_certificate" "additional_3" {
   listener_arn    = aws_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.additional_3.arn
 }
-`, rName, acctest.TLSPEMEscapeNewlines(certificates[3]), acctest.TLSPEMEscapeNewlines(keys[3]))
+`, rName, acctest.TLSPEMEscapeNewlines(certificates[3]), acctest.TLSPEMEscapeNewlines(keys[3])))
 }

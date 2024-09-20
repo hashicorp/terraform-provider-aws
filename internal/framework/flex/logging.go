@@ -23,6 +23,8 @@ const (
 	logAttrKeyTargetType      = "autoflex.target.type"
 	logAttrKeyTargetFieldname = "autoflex.target.fieldname"
 	logAttrKeyTargetPath      = "autoflex.target.path"
+
+	logAttrKeyError = "error"
 )
 
 const (

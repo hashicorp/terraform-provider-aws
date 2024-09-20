@@ -1062,7 +1062,7 @@ resource "aws_backup_plan" "test" {
 }
 
 func testAccPlanConfig_ruleCopyActionCrossRegion(rName string) string {
-	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "%[1]s-1"
 }
@@ -1095,7 +1095,7 @@ resource "aws_backup_plan" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccPlanConfig_ruleCopyActionNoLifecycle(rName string) string {

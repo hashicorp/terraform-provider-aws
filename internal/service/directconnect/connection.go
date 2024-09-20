@@ -8,16 +8,21 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,7 +31,7 @@ import (
 
 // @SDKResource("aws_dx_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
-func ResourceConnection() *schema.Resource {
+func resourceConnection() *schema.Resource {
 	// Resource with v0 schema (provider v5.0.1).
 	resourceV0 := &schema.Resource{
 		Schema: map[string]*schema.Schema{
@@ -39,17 +44,14 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			"bandwidth": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validConnectionBandWidth(),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
-			// The MAC Security (MACsec) connection encryption mode.
 			"encryption_mode": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
 			},
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
@@ -64,12 +66,10 @@ func ResourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			// Indicates whether the connection supports MAC Security (MACsec).
 			"macsec_capable": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			// Enable or disable MAC Security (MACsec) on this connection.
 			"request_macsec": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -238,7 +238,7 @@ func ResourceConnection() *schema.Resource {
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &directconnect.CreateConnectionInput{
@@ -253,22 +253,22 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ProviderName = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateConnectionWithContext(ctx, input)
+	output, err := conn.CreateConnection(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Connection (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectionId))
+	d.SetId(aws.ToString(output.ConnectionId))
 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	connection, err := FindConnectionByID(ctx, conn, d.Id())
+	connection, err := findConnectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) not found, removing from state", d.Id())
@@ -282,9 +282,9 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    aws.StringValue(connection.Region),
+		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
-		AccountID: aws.StringValue(connection.OwnerAccount),
+		AccountID: aws.ToString(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -300,20 +300,17 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set(names.AttrProviderName, connection.ProviderName)
-	d.Set("vlan_id", connection.Vlan)
-
-	// d.Set("request_macsec", d.Get("request_macsec").(bool))
-
 	if !d.IsNewResource() && !d.Get("request_macsec").(bool) {
 		d.Set("request_macsec", aws.Bool(false))
 	}
+	d.Set("vlan_id", connection.Vlan)
 
 	return diags
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if d.HasChange("encryption_mode") {
 		input := &directconnect.UpdateConnectionInput{
@@ -321,7 +318,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			EncryptionMode: aws.String(d.Get("encryption_mode").(string)),
 		}
 
-		_, err := conn.UpdateConnectionWithContext(ctx, input)
+		_, err := conn.UpdateConnection(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Connection (%s): %s", d.Id(), err)
@@ -337,7 +334,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
 		return diags
@@ -350,13 +347,13 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func deleteConnection(ctx context.Context, conn *directconnect.DirectConnect, connectionID string, waiter func(context.Context, *directconnect.DirectConnect, string) (*directconnect.Connection, error)) error {
+func deleteConnection(ctx context.Context, conn *directconnect.Client, connectionID string, waiter func(context.Context, *directconnect.Client, string) (*awstypes.Connection, error)) error {
 	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
-	_, err := conn.DeleteConnectionWithContext(ctx, &directconnect.DeleteConnectionInput{
+	_, err := conn.DeleteConnection(ctx, &directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(connectionID),
 	})
 
-	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
+	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
 		return nil
 	}
 
@@ -364,11 +361,96 @@ func deleteConnection(ctx context.Context, conn *directconnect.DirectConnect, co
 		return fmt.Errorf("deleting Direct Connect Connection (%s): %w", connectionID, err)
 	}
 
-	_, err = waiter(ctx, conn, connectionID)
-
-	if err != nil {
+	if _, err := waiter(ctx, conn, connectionID); err != nil {
 		return fmt.Errorf("waiting for Direct Connect Connection (%s): %w", connectionID, err)
 	}
 
 	return nil
+}
+
+func findConnectionByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
+	input := &directconnect.DescribeConnectionsInput{
+		ConnectionId: aws.String(id),
+	}
+	output, err := findConnection(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Connection]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.ConnectionState; state == awstypes.ConnectionStateDeleted || state == awstypes.ConnectionStateRejected {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findConnection(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeConnectionsInput, filter tfslices.Predicate[*awstypes.Connection]) (*awstypes.Connection, error) {
+	output, err := findConnections(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findConnections(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeConnectionsInput, filter tfslices.Predicate[*awstypes.Connection]) ([]awstypes.Connection, error) {
+	output, err := conn.DescribeConnections(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
+}
+
+func statusConnection(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findConnectionByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ConnectionState), nil
+	}
+}
+
+func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStateDeleting),
+		Target:  []string{},
+		Refresh: statusConnection(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Connection); ok {
+		return output, err
+	}
+
+	return nil, err
 }

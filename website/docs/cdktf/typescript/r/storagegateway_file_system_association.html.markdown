@@ -141,6 +141,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the newly created file system association.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_file_system_association` using the FSx file system association Amazon Resource Name (ARN). For example:
@@ -173,4 +181,4 @@ Using `terraform import`, import `aws_storagegateway_file_system_association` us
 % terraform import aws_storagegateway_file_system_association.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-25ffcf0143f211628c624df50a48a4f56f62a6e23545b746731989404c66e06e -->
+<!-- cache-key: cdktf-0.20.1 input-0fc4b46c8cce65d1d599ed8c27a0dd97f0a2254d3ed5f86cfe59f2ad0b4abea6 -->

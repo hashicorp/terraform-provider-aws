@@ -682,7 +682,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("num_node_groups", len(rgp.NodeGroups))
-	d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
+	if len(rgp.NodeGroups) > 0 {
+		d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
+	}
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("cluster_mode", rgp.ClusterMode)

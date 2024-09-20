@@ -70,8 +70,8 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 30),
 					validation.StringMatch(
-						regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`),
-						"must only include alphanumeric, underscore, period, hyphen, or slash characters"),
+						regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
+						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
 				),
 			},
 			"registry_id": {

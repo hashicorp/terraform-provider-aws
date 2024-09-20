@@ -96,7 +96,6 @@ func TestSDKv1CompatibleCleanKey(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1770,6 +1769,40 @@ func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_DirectoryBucket_kmsSSE(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	source := testAccObjectCreateTempFile(t, "{anything will do }")
+	defer os.Remove(source)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_directoryBucketKMSSSE(rName, source),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectSSE(ctx, resourceName, "aws:kms"),
+					testAccCheckObjectBody(&obj, "{anything will do }"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider", names.AttrSource},
+				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/32385.
 func TestAccS3Object_prefix(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2790,7 +2823,7 @@ func testAccObjectConfig_nonVersioned(rName string, source string) string {
   ]
 }`
 
-	return acctest.ConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAssumeRolePolicy(policy), fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
   bucket = %[1]q
 }
@@ -2801,7 +2834,7 @@ resource "aws_s3_object" "object" {
   source = %[2]q
   etag   = filemd5(%[2]q)
 }
-`, rName, source)
+`, rName, source))
 }
 
 func testAccObjectConfig_bucketKeyEnabled(rName string, content string) string {
@@ -2944,6 +2977,22 @@ resource "aws_s3_object" "object" {
   }
 }
 `)
+}
+
+func testAccObjectConfig_directoryBucketKMSSSE(rName, source string) string {
+	return acctest.ConfigCompose(testAccBucketServerSideEncryptionConfigurationConfig_directoryBucket(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  key    = "test-key"
+  source = %[1]q
+
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
+}
+`, source))
 }
 
 func testAccObjectConfig_prefix(rName string) string {

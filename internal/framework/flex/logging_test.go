@@ -36,8 +36,8 @@ func TestFullTypeName_primitive(t *testing.T) {
 func TestFullTypeName_type(t *testing.T) {
 	t.Parallel()
 
-	expected := "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
-	result := fullTypeName(reflect.TypeFor[TestFlex00]())
+	expected := "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct"
+	result := fullTypeName(reflect.TypeFor[emptyStruct]())
 
 	if result != expected {
 		t.Fatalf("expected %q, got %q", expected, result)
@@ -58,8 +58,8 @@ func TestFullTypeName_pointerToPrimitive(t *testing.T) {
 func TestFullTypeName_pointerToType(t *testing.T) {
 	t.Parallel()
 
-	expected := "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
-	result := fullTypeName(reflect.TypeFor[*TestFlex00]())
+	expected := "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct"
+	result := fullTypeName(reflect.TypeFor[*emptyStruct]())
 
 	if result != expected {
 		t.Fatalf("expected %q, got %q", expected, result)
@@ -80,8 +80,8 @@ func TestFullTypeName_sliceOfPrimitive(t *testing.T) {
 func TestFullTypeName_sliceOfType(t *testing.T) {
 	t.Parallel()
 
-	expected := "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
-	result := fullTypeName(reflect.TypeFor[[]TestFlex00]())
+	expected := "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct"
+	result := fullTypeName(reflect.TypeFor[[]emptyStruct]())
 
 	if result != expected {
 		t.Fatalf("expected %q, got %q", expected, result)
@@ -102,8 +102,8 @@ func TestFullTypeName_sliceOfPointerToPrimitive(t *testing.T) {
 func TestFullTypeName_sliceOfPointerToType(t *testing.T) {
 	t.Parallel()
 
-	expected := "[]*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
-	result := fullTypeName(reflect.TypeFor[[]*TestFlex00]())
+	expected := "[]*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct"
+	result := fullTypeName(reflect.TypeFor[[]*emptyStruct]())
 
 	if result != expected {
 		t.Fatalf("expected %q, got %q", expected, result)
@@ -124,8 +124,8 @@ func TestFullTypeName_mapPrimitiveKeyPrimitiveValue(t *testing.T) {
 func TestFullTypeName_mapTypedKeyPrimitiveValue(t *testing.T) {
 	t.Parallel()
 
-	expected := "map[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestEnum]string"
-	result := fullTypeName(reflect.TypeFor[map[TestEnum]string]())
+	expected := "map[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testEnum]string"
+	result := fullTypeName(reflect.TypeFor[map[testEnum]string]())
 
 	if result != expected {
 		t.Fatalf("expected %q, got %q", expected, result)
@@ -135,8 +135,8 @@ func TestFullTypeName_mapTypedKeyPrimitiveValue(t *testing.T) {
 func TestFullTypeName_mapPrimitiveKeyTypedValue(t *testing.T) {
 	t.Parallel()
 
-	expected := "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestEnum"
-	result := fullTypeName(reflect.TypeFor[map[string]TestEnum]())
+	expected := "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testEnum"
+	result := fullTypeName(reflect.TypeFor[map[string]testEnum]())
 
 	if result != expected {
 		t.Fatalf("expected %q, got %q", expected, result)
@@ -181,23 +181,44 @@ func infoConvertingWithPath(sourceFieldPath string, sourceType reflect.Type, tar
 	})
 }
 
-func traceSkipIgnoredField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
-	return traceSkipIgnoredFieldWithPath(
+func traceSkipIgnoredSourceField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
+	return traceSkipIgnoredSourceFieldWithPath(
 		"", sourceType, sourceFieldName,
 		"", targetType,
 	)
 }
 
-func traceSkipIgnoredFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type) map[string]any {
+func traceSkipIgnoredSourceFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Trace.String(),
 		"@module":                 logModule,
-		"@message":                "Skipping ignored field",
+		"@message":                "Skipping ignored source field",
 		logAttrKeySourcePath:      sourcePath,
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: sourceFieldName,
 		logAttrKeyTargetPath:      targetPath,
 		logAttrKeyTargetType:      fullTypeName(targetType),
+	}
+}
+
+func traceSkipIgnoredTargetField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type, targetFieldName string) map[string]any {
+	return traceSkipIgnoredTargetFieldWithPath(
+		"", sourceType, sourceFieldName,
+		"", targetType, targetFieldName,
+	)
+}
+
+func traceSkipIgnoredTargetFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type, targetFieldName string) map[string]any {
+	return map[string]any{
+		"@level":                  hclog.Trace.String(),
+		"@module":                 logModule,
+		"@message":                "Skipping ignored target field",
+		logAttrKeySourcePath:      sourcePath,
+		logAttrKeySourceType:      fullTypeName(sourceType),
+		logAttrKeySourceFieldname: sourceFieldName,
+		logAttrKeyTargetPath:      targetPath,
+		logAttrKeyTargetType:      fullTypeName(targetType),
+		logAttrKeyTargetFieldname: targetFieldName,
 	}
 }
 
@@ -208,7 +229,7 @@ func traceSkipMapBlockKey(sourcePath string, sourceType reflect.Type, targetPath
 		"@message":                "Skipping map block key",
 		logAttrKeySourcePath:      sourcePath,
 		logAttrKeySourceType:      fullTypeName(sourceType),
-		logAttrKeySourceFieldname: MapBlockKey,
+		logAttrKeySourceFieldname: mapBlockKeyFieldName,
 		logAttrKeyTargetPath:      targetPath,
 		logAttrKeyTargetType:      fullTypeName(targetType),
 	}
@@ -336,6 +357,81 @@ func traceFlatteningWithMapValue(sourcePath string, sourceType reflect.Type, sou
 	}
 }
 
+func traceFlatteningWithSetNull(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with SetNull",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func traceFlatteningWithSetValue(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with SetValue",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func traceFlatteningWithListNull(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with ListNull",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func traceFlatteningWithListValue(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with ListValue",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func traceFlatteningWithNullValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with NullValue",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func traceFlatteningNestedObjectCollection(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening nested object collection",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func traceFlatteningWithNewMapValueOf(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Trace.String(),
@@ -373,11 +469,168 @@ func infoSourceImplementsFlexTypedExpander(sourcePath string, sourceType reflect
 	}
 }
 
-func infoSourceImplementsFlexFlattener(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+func infoTargetImplementsFlexFlattener(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Info.String(),
 		"@module":            logModule,
-		"@message":           "Source implements flex.Flattener",
+		"@message":           "Target implements flex.Flattener",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func infoSourceImplementsJSONStringer(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Info.String(),
+		"@module":            logModule,
+		"@message":           "Source implements json.JSONStringer",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorSourceDoesNotImplementAttrValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Source does not implement attr.Value",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorSourceIsNil(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Source is nil",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorSourceHasNoMapBlockKey(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Source has no map block key",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetDoesNotImplementAttrValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target does not implement attr.Value",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetIsNil(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target is nil",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetIsNotPointer(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target is not a pointer",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetHasNoMapBlockKey(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target has no map block key",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorMarshallingJSONDocument(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type, err error) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Marshalling JSON document",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+		logAttrKeyError:      err.Error(),
+	}
+}
+
+func errorExpandingIncompatibleTypes(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Expanding incompatible types",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorFlatteningIncompatibleTypes(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Flattening incompatible types",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func debugUsingLegacyExpander(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Debug.String(),
+		"@module":            logModule,
+		"@message":           "Using legacy expander",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func debugUsingLegacyFlattener(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Debug.String(),
+		"@module":            logModule,
+		"@message":           "Using legacy flattener",
 		logAttrKeySourcePath: sourcePath,
 		logAttrKeySourceType: fullTypeName(sourceType),
 		logAttrKeyTargetPath: targetPath,

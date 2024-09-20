@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -63,11 +63,11 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 }
 
 func testAccCertificatePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeCertificatesInput{}
 
-	_, err := conn.DescribeCertificatesWithContext(ctx, input)
+	_, err := conn.DescribeCertificates(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

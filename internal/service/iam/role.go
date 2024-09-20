@@ -88,9 +88,10 @@ func resourceRole() *schema.Resource {
 				Default:  false,
 			},
 			"inline_policy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_iam_role_policy resource instead. If Terraform should exclusively manage all inline policy associations (the current behavior of this argument), use the aws_iam_role_policies_exclusive resource as well.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrName: {
@@ -517,24 +518,28 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 	if forceDetach || hasManaged {
 		policyARNs, err := findRoleAttachedPolicies(ctx, conn, roleName)
 
-		if err != nil {
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
 			return fmt.Errorf("reading IAM Policies attached to Role (%s): %w", roleName, err)
-		}
-
-		if err := deleteRolePolicyAttachments(ctx, conn, roleName, policyARNs); err != nil {
-			return err
+		default:
+			if err := deleteRolePolicyAttachments(ctx, conn, roleName, policyARNs); err != nil {
+				return err
+			}
 		}
 	}
 
 	if forceDetach || hasInline {
 		inlinePolicies, err := findRolePolicyNames(ctx, conn, roleName)
 
-		if err != nil {
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
 			return fmt.Errorf("reading IAM Role (%s) inline policies: %w", roleName, err)
-		}
-
-		if err := deleteRoleInlinePolicies(ctx, conn, roleName, inlinePolicies); err != nil {
-			return err
+		default:
+			if err := deleteRoleInlinePolicies(ctx, conn, roleName, inlinePolicies); err != nil {
+				return err
+			}
 		}
 	}
 

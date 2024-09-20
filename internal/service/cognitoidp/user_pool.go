@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
 // @Tags
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolType")
 func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolCreate,
@@ -386,6 +387,11 @@ func resourceUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(6, 99),
 						},
+						"password_history_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 24),
+						},
 						"require_lowercase": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -405,6 +411,7 @@ func resourceUserPool() *schema.Resource {
 						"temporary_password_validity_days": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(0, 365),
 						},
 					},
@@ -1589,6 +1596,10 @@ func expandPasswordPolicyType(tfMap map[string]interface{}) *awstypes.PasswordPo
 		apiObject.MinimumLength = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := tfMap["password_history_size"]; ok {
+		apiObject.PasswordHistorySize = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := tfMap["require_lowercase"]; ok {
 		apiObject.RequireLowercase = v.(bool)
 	}
@@ -1884,6 +1895,10 @@ func flattenPasswordPolicyType(apiObject *awstypes.PasswordPolicyType) []interfa
 
 	if apiObject.MinimumLength != nil {
 		tfMap["minimum_length"] = aws.ToInt32(apiObject.MinimumLength)
+	}
+
+	if apiObject.PasswordHistorySize != nil {
+		tfMap["password_history_size"] = aws.ToInt32(apiObject.PasswordHistorySize)
 	}
 
 	if len(tfMap) > 0 {

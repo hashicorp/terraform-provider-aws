@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type ResourcePrefixCtxKey string
+type fieldNamePrefixCtxKey string
 
 const (
-	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
-	resourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
-	MapBlockKey                                = "MapBlockKey"
+	fieldNamePrefixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+	fieldNameSuffixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_SUFFIX_RECURSE"
+
+	mapBlockKeyFieldName = "MapBlockKey"
 )
 
 // Expand  = TF -->  AWS
@@ -29,75 +30,42 @@ const (
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
 type autoFlexer interface {
-	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value) diag.Diagnostics
+	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, fieldOpts) diag.Diagnostics
 	getOptions() AutoFlexOptions
 }
 
-// AutoFlexOptions stores configurable options for an auto-flattener or expander.
-type AutoFlexOptions struct {
-	// ignoredFieldNames stores names which expanders and flatteners will
-	// not read from or write to
-	ignoredFieldNames []string
-}
-
-// IsIgnoredField returns true if s is in the list of ignored field names
-func (o *AutoFlexOptions) IsIgnoredField(s string) bool {
-	for _, name := range o.ignoredFieldNames {
-		if s == name {
-			return true
-		}
-	}
-	return false
-}
-
-// AddIgnoredField appends s to the list of ignored field names
-func (o *AutoFlexOptions) AddIgnoredField(s string) {
-	o.ignoredFieldNames = append(o.ignoredFieldNames, s)
-}
-
-// SetIgnoredFields replaces the list of ignored field names
-//
-// To preseve existing items in the list, use the AddIgnoredField
-// method instead.
-func (o *AutoFlexOptions) SetIgnoredFields(fields []string) {
-	o.ignoredFieldNames = fields
-}
-
-var (
-	DefaultIgnoredFieldNames = []string{
-		"Tags", // Resource tags are handled separately.
-	}
-)
-
-// AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
-type AutoFlexOptionsFunc func(*AutoFlexOptions)
-
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
-func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
+func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
-	if kind := valFrom.Kind(); kind == reflect.Ptr {
+	if kind := valFrom.Kind(); kind == reflect.Pointer {
 		valFrom = valFrom.Elem()
 	}
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(valTo)))
+
 	kind := valTo.Kind()
 	switch kind {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if valTo.IsNil() {
-			diags.AddError("AutoFlEx", "Target cannot be nil")
-			return reflect.Value{}, reflect.Value{}, diags
+			tflog.SubsystemError(ctx, subsystemName, "Target is nil")
+			diags.Append(diagConvertingTargetIsNil(valTo.Type()))
+			return ctx, reflect.Value{}, reflect.Value{}, diags
 		}
 		valTo = valTo.Elem()
-		return valFrom, valTo, diags
+		return ctx, valFrom, valTo, diags
 
 	case reflect.Invalid:
-		diags.AddError("AutoFlEx", "Target cannot be nil")
-		return reflect.Value{}, reflect.Value{}, diags
+		tflog.SubsystemError(ctx, subsystemName, "Target is nil")
+		diags.Append(diagConvertingTargetIsNil(nil))
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 
 	default:
-		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
-		return reflect.Value{}, reflect.Value{}, diags
+		tflog.SubsystemError(ctx, subsystemName, "Target is not a pointer")
+		diags.Append(diagConvertingTargetIsNotPointer(valTo.Type()))
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 	}
 }
 
@@ -110,67 +78,98 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(from)))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(reflect.TypeOf(to)))
 
-	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if valTo.Kind() == reflect.Interface {
-		tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 			"from": valFrom.Type(),
 			"to":   valTo.Kind(),
 		})
 		return diags
 	}
 
+	// TODO: this only applies when Flattening
 	if toFlattener, ok := to.(Flattener); ok {
-		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
+		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener")
 		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
 		return diags
 	}
 
+	typeFrom := valFrom.Type()
+	typeTo := valTo.Type()
+
 	opts := flexer.getOptions()
-	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
-		field := typFrom.Field(i)
-		if field.PkgPath != "" {
+	for i := 0; i < typeFrom.NumField(); i++ {
+		fromField := typeFrom.Field(i)
+		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
-		fieldName := field.Name
-		if opts.IsIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
+		fromNameOverride, fromOpts := autoflexTags(fromField)
+		fieldName := fromField.Name
+		if opts.isIgnoredField(fieldName) {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
 			continue
 		}
-		if fieldName == MapBlockKey {
+		// TODO: this only applies when Expanding
+		if fromNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		if fieldName == mapBlockKeyFieldName {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
-				logAttrKeySourceFieldname: MapBlockKey,
+				logAttrKeySourceFieldname: mapBlockKeyFieldName,
 			})
 			continue
 		}
 
-		toFieldVal, toFieldName := findFieldFuzzy(ctx, fieldName, valTo, valFrom, flexer)
-		if !toFieldVal.IsValid() {
+		toField, ok := findFieldFuzzy(ctx, fieldName, typeFrom, typeTo, flexer)
+		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		toFieldName := toField.Name
+		// TODO: this only applies when Flattening
+		toNameOverride, toOpts := autoflexTags(toField)
+		toFieldVal := valTo.FieldByIndex(toField.Index)
+		if toNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
+		if toOpts.NoFlatten() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noflatten target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
 			})
 			continue
 		}
@@ -188,20 +187,24 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
+		opts := fieldOpts{
+			legacy:    fromOpts.Legacy() || toOpts.Legacy(),
+			omitempty: toOpts.OmitEmpty(),
+		}
+
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
-			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
-			return diags
+			break
 		}
 	}
 
 	return diags
 }
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) (reflect.Value, string) {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
 	// first precedence is exact match (case sensitive)
-	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
-		return v, fieldNameFrom
+	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
+		return fieldTo, true
 	}
 
 	// If a "from" field fuzzy matches a "to" field, we are certain the fuzzy match
@@ -212,56 +215,78 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 
 	// second precedence is exact match (case insensitive)
 	opts := flexer.getOptions()
-	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
-		field := typTo.Field(i)
+	for i := 0; i < typeTo.NumField(); i++ {
+		field := typeTo.Field(i)
 		if field.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
 		fieldNameTo := field.Name
-		if opts.IsIgnoredField(fieldNameTo) {
+		if opts.isIgnoredField(fieldNameTo) {
 			continue
 		}
-		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {
+		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
 			// probably could assume validity here since reflect gave the field name
-			return v, fieldNameTo
+			return fieldTo, true
 		}
 	}
 
 	// third precedence is singular/plural
 	fieldNameTo := plural.Plural(fieldNameFrom)
-	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
-		if v := valTo.FieldByName(fieldNameTo); v.IsValid() {
-			return v, fieldNameTo
+	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
+		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
+			return fieldTo, true
 		}
 	}
 
 	fieldNameTo = plural.Singular(fieldNameFrom)
-	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
-		if v := valTo.FieldByName(fieldNameTo); v.IsValid() {
-			return v, fieldNameTo
+	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
+		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
+			return fieldTo, true
 		}
 	}
 
-	// fourth precedence is using resource prefix
-	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
+	// fourth precedence is using field name prefix
+	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(resourcePrefixRecurse) == nil {
+		if ctx.Value(fieldNamePrefixRecurse) == nil {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, resourcePrefixRecurse, true)
+			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
+				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), typeFrom, typeTo, flexer)
 			}
-			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom, flexer)
+			return findFieldFuzzy(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer)
+		}
+	}
+
+	// fifth precedence is using field name suffix
+	if v := opts.fieldNameSuffix; v != "" {
+		v = strings.ReplaceAll(v, " ", "")
+		if ctx.Value(fieldNameSuffixRecurse) == nil {
+			// so it will only recurse once
+			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
+			if strings.HasSuffix(fieldNameFrom, v) {
+				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+			}
+			return findFieldFuzzy(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
 		}
 	}
 
 	// no finds, fuzzy or otherwise - return zero value
-	return reflect.Value{}, ""
+	return reflect.StructField{}, false
 }
 
-func fieldExistsInStruct(field string, structVal reflect.Value) bool {
-	v := structVal.FieldByName(field)
-	return v.IsValid()
+func fieldExistsInStruct(field string, structType reflect.Type) bool {
+	_, ok := structType.FieldByName(field)
+	return ok
+}
+
+func autoflexTags(field reflect.StructField) (string, tagOptions) {
+	return parseTag(field.Tag.Get("autoflex"))
+}
+
+type fieldOpts struct {
+	legacy    bool
+	omitempty bool
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.
@@ -270,4 +295,31 @@ type valueWithElementsAs interface {
 
 	Elements() []attr.Value
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
+}
+
+func diagConvertingTargetIsNil(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target of type %q is nil", fullTypeName(targetType)),
+	)
+}
+
+func diagConvertingTargetIsNotPointer(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q is not a pointer", fullTypeName(targetType)),
+	)
+}
+
+func valueType(v reflect.Value) reflect.Type {
+	if v.Kind() == reflect.Invalid {
+		return nil
+	}
+	return v.Type()
 }
