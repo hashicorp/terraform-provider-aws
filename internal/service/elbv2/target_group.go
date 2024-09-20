@@ -668,13 +668,20 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
 			input := &elasticloadbalancingv2.ModifyTargetGroupInput{
-				HealthCheckEnabled:         aws.Bool(tfMap[names.AttrEnabled].(bool)),
-				HealthCheckIntervalSeconds: aws.Int32(int32(tfMap[names.AttrInterval].(int))),
-				HealthyThresholdCount:      aws.Int32(int32(tfMap["healthy_threshold"].(int))),
-				TargetGroupArn:             aws.String(d.Id()),
-				UnhealthyThresholdCount:    aws.Int32(int32(tfMap["unhealthy_threshold"].(int))),
+				TargetGroupArn: aws.String(d.Id()),
 			}
-
+			if v, ok := tfMap[names.AttrEnabled]; ok {
+				input.HealthCheckEnabled = aws.Bool(v.(bool))
+			}
+			if v, ok := tfMap[names.AttrInterval]; ok {
+				input.HealthCheckIntervalSeconds = aws.Int32(int32(v.(int)))
+			}
+			if v, ok := tfMap["healthy_threshold"]; ok {
+				input.HealthyThresholdCount = aws.Int32(int32(v.(int)))
+			}
+			if v, ok := tfMap["unhealthy_threshold"]; ok {
+				input.UnhealthyThresholdCount = aws.Int32(int32(v.(int)))
+			}
 			if v, ok := tfMap[names.AttrTimeout].(int); ok && v != 0 {
 				input.HealthCheckTimeoutSeconds = aws.Int32(int32(v))
 			}
@@ -1166,18 +1173,30 @@ func customizeDiffTargetGroupTargetTypeNotLambda(_ context.Context, diff *schema
 }
 
 func flattenTargetGroupHealthCheck(apiObject *awstypes.TargetGroup) []interface{} {
-	tfMap := map[string]interface{}{
-		names.AttrEnabled:     aws.ToBool(apiObject.HealthCheckEnabled),
-		"healthy_threshold":   aws.ToInt32(apiObject.HealthyThresholdCount),
-		names.AttrInterval:    aws.ToInt32(apiObject.HealthCheckIntervalSeconds),
-		names.AttrPort:        aws.ToString(apiObject.HealthCheckPort),
-		names.AttrProtocol:    apiObject.HealthCheckProtocol,
-		names.AttrTimeout:     aws.ToInt32(apiObject.HealthCheckTimeoutSeconds),
-		"unhealthy_threshold": aws.ToInt32(apiObject.UnhealthyThresholdCount),
+	tfMap := map[string]interface{}{}
+	if apiObject.HealthCheckEnabled != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(apiObject.HealthCheckEnabled)
 	}
-
-	if v := apiObject.HealthCheckPath; v != nil {
-		tfMap[names.AttrPath] = aws.ToString(v)
+	if apiObject.HealthyThresholdCount != nil {
+		tfMap["healthy_threshold"] = aws.ToInt32(apiObject.HealthyThresholdCount)
+	}
+	if apiObject.HealthCheckIntervalSeconds != nil {
+		tfMap[names.AttrInterval] = aws.ToInt32(apiObject.HealthCheckIntervalSeconds)
+	}
+	if apiObject.HealthCheckPort != nil {
+		tfMap[names.AttrPort] = aws.ToString(apiObject.HealthCheckPort)
+	}
+	if apiObject.HealthCheckProtocol != "" {
+		tfMap[names.AttrProtocol] = apiObject.HealthCheckProtocol
+	}
+	if apiObject.HealthCheckTimeoutSeconds != nil {
+		tfMap[names.AttrTimeout] = aws.ToInt32(apiObject.HealthCheckTimeoutSeconds)
+	}
+	if apiObject.UnhealthyThresholdCount != nil {
+		tfMap["unhealthy_threshold"] = aws.ToInt32(apiObject.UnhealthyThresholdCount)
+	}
+	if apiObject.HealthCheckPath != nil {
+		tfMap[names.AttrPath] = aws.ToString(apiObject.HealthCheckPath)
 	}
 
 	if apiObject := apiObject.Matcher; apiObject != nil {
