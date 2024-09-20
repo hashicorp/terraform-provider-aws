@@ -1627,12 +1627,12 @@ func deleteLingeringQuickSightENI(ctx context.Context, g *multierror.Group, conn
 
 		if v.Attachment != nil {
 			if err := detachNetworkInterface(ctx, conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), timeout); err != nil {
-				return fmt.Errorf("detaching DMS ENI (%s): %w", networkInterfaceID, err)
+				return fmt.Errorf("detaching QuickSight ENI (%s): %w", networkInterfaceID, err)
 			}
 		}
 
 		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
-			return fmt.Errorf("deleting DMS ENI (%s): %w", networkInterfaceID, err)
+			return fmt.Errorf("deleting QuickSight ENI (%s): %w", networkInterfaceID, err)
 		}
 
 		return nil
