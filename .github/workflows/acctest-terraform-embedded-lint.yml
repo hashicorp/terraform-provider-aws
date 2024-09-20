@@ -1,4 +1,4 @@
-name: Acceptance Test Linting
+name: Acceptance Test Embedded Configuration Linting
 on:
   push:
     branches:

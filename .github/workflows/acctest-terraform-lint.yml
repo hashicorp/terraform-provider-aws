@@ -1,4 +1,4 @@
-name: Acceptance Test Linting
+name: Acceptance Test Directory Linting
 on:
   push:
     branches:
