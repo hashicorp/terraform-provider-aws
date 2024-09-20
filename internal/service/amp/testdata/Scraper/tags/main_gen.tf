@@ -62,7 +62,7 @@ CONFIG
   source {
     eks {
       cluster_arn = aws_eks_cluster.test.arn
-      subnet_ids  = aws_subnet.test[*].id
+      subnet_ids  = aws_subnet.test.*.id
     }
   }
 
