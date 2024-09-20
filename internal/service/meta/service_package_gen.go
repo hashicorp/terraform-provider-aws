@@ -25,10 +25,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceRegion,
 		},
 		{
-			Factory: newDataSourceRegions,
-			Name:    "Regions",
-		},
-		{
 			Factory: newDataSourceService,
 		},
 		{
@@ -42,6 +38,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		{
 			Factory: newPartitionDataSource,
 			Name:    "Partition",
+		},
+		{
+			Factory: newRegionsDataSource,
+			Name:    "Regions",
 		},
 		{
 			Factory: newServicePrincipalDataSource,
