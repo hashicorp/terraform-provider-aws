@@ -325,7 +325,7 @@ func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccECSService_VolumeConfiguration_TagSpecifications(t *testing.T) {
+func TestAccECSService_VolumeConfiguration_tagSpecifications(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -338,7 +338,7 @@ func TestAccECSService_VolumeConfiguration_TagSpecifications(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_volumeConfiguration_TagSpecifications(rName),
+				Config: testAccServiceConfig_volumeConfiguration_tagSpecifications(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
@@ -2320,7 +2320,7 @@ resource "aws_ecs_service" "test" {
 `, rName))
 }
 
-func testAccServiceConfig_volumeConfiguration_TagSpecifications(rName string) string {
+func testAccServiceConfig_volumeConfiguration_tagSpecifications(rName string) string {
 	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
