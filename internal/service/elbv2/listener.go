@@ -1069,27 +1069,6 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 	flattenLbForwardActionBoth(awsAction, actionMap)
 }
 
-func emptyForwardConfig(f *awstypes.ForwardActionConfig) bool {
-	if f == nil {
-		return true
-	}
-	if len(f.TargetGroups) == 0 && f.TargetGroupStickinessConfig == nil {
-		return true
-	}
-	for _, tg := range f.TargetGroups {
-		if tg.TargetGroupArn != nil || tg.Weight != nil {
-			return false
-		}
-	}
-	if f.TargetGroupStickinessConfig == nil {
-		return true
-	}
-	if f.TargetGroupStickinessConfig.Enabled == nil && f.TargetGroupStickinessConfig.DurationSeconds == nil {
-		return true
-	}
-	return false
-}
-
 func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
 	if actions.IsKnown() && !actions.IsNull() {
 		index := cty.NumberIntVal(int64(i))
