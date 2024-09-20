@@ -207,7 +207,7 @@ func TestAccELBV2Listener_disappears(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
+func TestAccELBV2Listener_Forward_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -221,7 +221,7 @@ func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardBasic(rName, "test1"),
+				Config: testAccListenerConfig_Forward_basic(rName, "test1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -239,7 +239,7 @@ func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccListenerConfig_forwardBasic(rName, "test2"),
+				Config: testAccListenerConfig_Forward_basic(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -260,7 +260,7 @@ func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_forwardImport(t *testing.T) {
+func TestAccELBV2Listener_Forward_import(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -274,7 +274,7 @@ func TestAccELBV2Listener_forwardImport(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTargetGroup(rName, false),
+				Config: testAccListenerConfig_Forward_targetGroup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -311,7 +311,7 @@ func TestAccELBV2Listener_forwardImport(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccListenerConfig_forwardTargetGroup(rName, true),
+				Config: testAccListenerConfig_Forward_targetGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -345,7 +345,7 @@ func TestAccELBV2Listener_forwardImport(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
+func TestAccELBV2Listener_Forward_weighted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -359,7 +359,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardWeighted(rName, rName2),
+				Config: testAccListenerConfig_Forward_weighted(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -382,7 +382,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2),
+				Config: testAccListenerConfig_Forward_changeWeightedStickiness(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -405,7 +405,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2),
+				Config: testAccListenerConfig_Forward_changeWeightedToBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -431,7 +431,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_forwardTargetARNAndBlock(t *testing.T) {
+func TestAccELBV2Listener_Forward_tgARNAndForward(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -442,17 +442,17 @@ func TestAccELBV2Listener_forwardTargetARNAndBlock(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTargetARNAndBlock(rName, true), // no errors expected
+				Config: testAccListenerConfig_Forward_tgARNAndForward(rName, true), // no errors expected
 			},
 			{
-				Config:      testAccListenerConfig_forwardTargetARNAndBlock(rName, false),
+				Config:      testAccListenerConfig_Forward_tgARNAndForward(rName, false),
 				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`You can specify both a top-level target group ARN ("default_action[0].target_group_arn") and, with "default_action[0].forward", a target group list with ARNs, only if the ARNs match.`)),
 			},
 		},
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t *testing.T) {
+func TestAccELBV2Listener_Forward_TGARNToForward_noChanges(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -467,7 +467,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_tgARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -485,7 +485,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_cert(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -512,7 +512,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_ForwardBlock_AddStickiness(t *testing.T) {
+func TestAccELBV2Listener_Forward_addStickiness(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -527,7 +527,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddStickiness(t *testing.T)
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_cert(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -551,7 +551,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddStickiness(t *testing.T)
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockStickiness(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_stickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -578,7 +578,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddStickiness(t *testing.T)
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveStickiness(t *testing.T) {
+func TestAccELBV2Listener_Forward_removeStickiness(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -593,7 +593,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveStickiness(t *testing
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockStickiness(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_stickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -617,7 +617,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveStickiness(t *testing
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_cert(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -644,7 +644,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveStickiness(t *testing
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_WeightAndStickiness(t *testing.T) {
+func TestAccELBV2Listener_Forward_TGARNToForward_weightAndStickiness(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -659,7 +659,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_WeightAndSt
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_tgARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -677,7 +677,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_WeightAndSt
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_weightAndStickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -704,7 +704,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_WeightAndSt
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_NoChanges(t *testing.T) {
+func TestAccELBV2Listener_Forward_ToTGARN_noChanges(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -719,7 +719,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_NoChanges(t
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_cert(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -743,7 +743,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_NoChanges(t
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_tgARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -764,7 +764,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_NoChanges(t
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_WeightAndStickiness(t *testing.T) {
+func TestAccELBV2Listener_Forward_ToTGARN_weightStickiness(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -779,7 +779,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_WeightAndSt
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_weightAndStickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -803,7 +803,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_WeightAndSt
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_tgARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -824,7 +824,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_WeightAndSt
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_ForwardBlock_AddAction(t *testing.T) {
+func TestAccELBV2Listener_Forward_addAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -839,7 +839,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddAction(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_cert(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -863,7 +863,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddAction(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_addAction(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct2),
@@ -892,7 +892,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddAction(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveAction(t *testing.T) {
+func TestAccELBV2Listener_Forward_removeAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -907,7 +907,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveAction(t *testing.T) 
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_addAction(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct2),
@@ -933,7 +933,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveAction(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_cert(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
@@ -960,7 +960,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveAction(t *testing.T) 
 	})
 }
 
-func TestAccELBV2Listener_ActionForward_IgnoreFields(t *testing.T) {
+func TestAccELBV2Listener_Forward_ignoreFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -976,7 +976,7 @@ func TestAccELBV2Listener_ActionForward_IgnoreFields(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_actionForward_ForwardBlockMultiTargetWithIgnore(rName, key, certificate),
+				Config: testAccListenerConfig_Forward_multiTargetWithIgnore(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -1226,7 +1226,7 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
+func TestAccELBV2Listener_Gateway_lbARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1490,7 +1490,7 @@ func TestAccELBV2Listener_DefaultAction_defaultOrder(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_defaultAction_defaultOrder(rName, key, certificate),
+				Config: testAccListenerConfig_DefaultAction_defaultOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct2),
@@ -1526,7 +1526,7 @@ func TestAccELBV2Listener_DefaultAction_specifyOrder(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_defaultAction_specifyOrder(rName, key, certificate),
+				Config: testAccListenerConfig_DefaultAction_specifyOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct2),
@@ -1563,7 +1563,7 @@ func TestAccELBV2Listener_DefaultAction_actionDisappears(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_defaultAction_defaultOrder(rName, key, certificate),
+				Config: testAccListenerConfig_DefaultAction_defaultOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct2),
@@ -1584,7 +1584,7 @@ func TestAccELBV2Listener_DefaultAction_actionDisappears(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_EmptyDefaultAction(t *testing.T) {
+func TestAccELBV2Listener_DefaultAction_empty(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[awstypes.ActionTypeEnum]struct {
@@ -1649,7 +1649,7 @@ func TestAccELBV2Listener_EmptyDefaultAction(t *testing.T) {
 				CheckDestroy:             testAccCheckListenerDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
-						Config:      testAccListenerConfig_EmptyDefaultAction(rName, testcase.actionType),
+						Config:      testAccListenerConfig_DefaultAction_empty(rName, testcase.actionType),
 						ExpectError: testcase.expectedError,
 					},
 				},
@@ -1957,7 +1957,7 @@ resource "aws_lb_target_group" "test" {
 `, rName))
 }
 
-func testAccListenerConfig_forwardBasic(rName, targetName string) string {
+func testAccListenerConfig_Forward_basic(rName, targetName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -2018,7 +2018,7 @@ resource "aws_lb_target_group" "test2" {
 `, rName, targetName))
 }
 
-func testAccListenerConfig_forwardWeighted(rName, rName2 string) string {
+func testAccListenerConfig_Forward_weighted(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -2102,7 +2102,7 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2 string) string {
+func testAccListenerConfig_Forward_changeWeightedStickiness(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -2191,7 +2191,7 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccListenerConfig_forwardTargetARNAndBlock(rName string, sameTG bool) string {
+func testAccListenerConfig_Forward_tgARNAndForward(rName string, sameTG bool) string {
 	tg := "test"
 	if !sameTG {
 		tg = "test2"
@@ -2282,7 +2282,7 @@ resource "aws_lb_target_group" "test2" {
 `, rName, tg))
 }
 
-func testAccListenerConfig_forwardTargetGroup(rName string, useDATG bool) string {
+func testAccListenerConfig_Forward_targetGroup(rName string, useDATG bool) string {
 	daTG := "target_group_arn = aws_lb_target_group.test.arn"
 	if !useDATG {
 		daTG = ""
@@ -2352,7 +2352,7 @@ resource "aws_lb_target_group" "test" {
 `, daTG, rName))
 }
 
-func testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate string) string {
+func testAccListenerConfig_Forward_tgARN(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2414,7 +2414,7 @@ resource "aws_iam_server_certificate" "test" {
   `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate string) string {
+func testAccListenerConfig_Forward_cert(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2480,7 +2480,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_actionForward_ForwardBlockStickiness(rName, key, certificate string) string {
+func testAccListenerConfig_Forward_stickiness(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2551,7 +2551,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate string) string {
+func testAccListenerConfig_Forward_weightAndStickiness(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2623,7 +2623,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate string) string {
+func testAccListenerConfig_Forward_addAction(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2706,7 +2706,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_actionForward_ForwardBlockMultiTargetWithIgnore(rName, key, certificate string) string {
+func testAccListenerConfig_Forward_multiTargetWithIgnore(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2807,7 +2807,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
+func testAccListenerConfig_Forward_changeWeightedToBasic(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -3561,7 +3561,7 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_defaultAction_defaultOrder(rName, key, certificate string) string {
+func testAccListenerConfig_DefaultAction_defaultOrder(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
@@ -3635,7 +3635,7 @@ resource "aws_lb_target_group" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_defaultAction_specifyOrder(rName, key, certificate string) string {
+func testAccListenerConfig_DefaultAction_specifyOrder(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
@@ -3711,7 +3711,7 @@ resource "aws_lb_target_group" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_EmptyDefaultAction(rName string, action awstypes.ActionTypeEnum) string {
+func testAccListenerConfig_DefaultAction_empty(rName string, action awstypes.ActionTypeEnum) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
