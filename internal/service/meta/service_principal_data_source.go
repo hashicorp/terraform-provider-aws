@@ -5,16 +5,18 @@ package meta
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource(name="Service Principal")
 func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &servicePrincipalDataSource{}
 
@@ -63,10 +65,11 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 
 	// find the region given by the user
 	if !data.Region.IsNull() {
-		matchingRegion, err := FindRegionByName(data.Region.ValueString())
+		name := data.Region.ValueString()
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
-			response.Diagnostics.AddError("finding Region by name", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
 			return
 		}
@@ -74,12 +77,13 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		region = matchingRegion
 	}
 
-	// Default to provider current region if no other filters matched
+	// Default to provider current Region if no other filters matched.
 	if region == nil {
-		matchingRegion, err := FindRegionByName(d.Meta().Region)
+		name := d.Meta().Region
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
-			response.Diagnostics.AddError("finding Region using the provider", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
 			return
 		}
@@ -95,12 +99,13 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		serviceName = data.ServiceName.ValueString()
 	}
 
-	SourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, partition)
+	sourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, partition)
 
-	data.ID = types.StringValue(serviceName + "." + region.ID() + "." + SourceServicePrincipal)
-	data.Name = types.StringValue(serviceName + "." + SourceServicePrincipal)
-	data.Suffix = types.StringValue(SourceServicePrincipal)
-	data.Region = types.StringValue(region.ID())
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+region.ID()+"."+sourceServicePrincipal)
+	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+sourceServicePrincipal)
+	data.Suffix = fwflex.StringValueToFrameworkLegacy(ctx, sourceServicePrincipal)
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
