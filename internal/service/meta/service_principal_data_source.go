@@ -6,8 +6,7 @@ package meta
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -60,11 +59,11 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	var region *awstypes.Region
+	var region *endpoints.Region
 
 	// find the region given by the user
 	if !data.Region.IsNull() {
-		matchingRegion, err := FindRegionByName(ctx, d.Meta().EC2Client(ctx), data.Region.ValueString())
+		matchingRegion, err := FindRegionByName(data.Region.ValueString())
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by name", err.Error())
@@ -77,7 +76,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 
 	// Default to provider current region if no other filters matched
 	if region == nil {
-		matchingRegion, err := FindRegionByName(ctx, d.Meta().EC2Client(ctx), d.Meta().Region)
+		matchingRegion, err := FindRegionByName(d.Meta().Region)
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region using the provider", err.Error())
@@ -88,7 +87,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		region = matchingRegion
 	}
 
-	partition := names.PartitionForRegion(*region.RegionName)
+	partition := names.PartitionForRegion(region.ID())
 
 	serviceName := ""
 
@@ -98,10 +97,10 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 
 	SourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, partition)
 
-	data.ID = types.StringValue(serviceName + "." + aws.ToString(region.RegionName) + "." + SourceServicePrincipal)
+	data.ID = types.StringValue(serviceName + "." + region.ID() + "." + SourceServicePrincipal)
 	data.Name = types.StringValue(serviceName + "." + SourceServicePrincipal)
 	data.Suffix = types.StringValue(SourceServicePrincipal)
-	data.Region = types.StringValue(*region.RegionName)
+	data.Region = types.StringValue(region.ID())
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
