@@ -65,7 +65,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 
 	// find the region given by the user
 	if !data.Region.IsNull() {
-		name := data.Name.ValueString()
+		name := data.Region.ValueString()
 		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
