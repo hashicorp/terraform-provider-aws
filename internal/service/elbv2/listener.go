@@ -513,10 +513,6 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	listener, err := findListenerByARN(ctx, conn, d.Id())
 
-	//rawConfig := d.GetRawConfig()
-	//rawState := d.GetRawState()
-	//fmt.Printf("READ: RawConfig, IsKnown: %t, IsNull: %t\tRawState, IsKnown: %t, IsNull: %t\n", rawConfig.IsKnown(), rawConfig.IsNull(), rawState.IsKnown(), rawState.IsNull())
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -722,13 +718,10 @@ func expandLbListenerAction(actionPath cty.Path, i int, tfMap map[string]any, di
 
 	switch awstypes.ActionTypeEnum(tfMap[names.AttrType].(string)) {
 	case awstypes.ActionTypeEnumForward:
-		//fmt.Printf("type forward\n")
 		if v, ok := tfMap["forward"].([]interface{}); ok && len(v) > 0 {
-			//fmt.Printf("forward action found\n")
 			action.ForwardConfig = expandLbListenerActionForwardConfig(v)
 		}
 		if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
-			//fmt.Printf("target_group_arn found\n")
 			action.TargetGroupArn = aws.String(v)
 		}
 
@@ -895,7 +888,6 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 }
 
 func expandLbListenerActionForwardConfig(l []interface{}) *awstypes.ForwardActionConfig {
-	//fmt.Printf("expandLbListenerActionForwardConfig: %v\n", l)
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1043,27 +1035,17 @@ func flattenLbListenerActions(d *schema.ResourceData, attrName string, apiObject
 func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsAction awstypes.Action, actionMap map[string]any) {
 	// On create and update, we have a Config
 	// On refresh, we have a populated State
-	// On import, we have known null Config and known + not null but empty state
+	// On import, we have nothing:
+	//  - Config is known but null.
+	//  - State is known, not null, but empty.
+	//  - Plan is known but null.
 
-	//fmt.Printf("flattenLbForwardAction,awsAction.TargetGroupArn: %s\n", *awsAction.TargetGroupArn)
+	// During import, it's impossible to determine from AWS's response, the config, the state, or the plan
+	// whether the target group ARN was defined at the top level or within a forward action. AWS returns
+	// ARNs in both the default action (top-level) and in at least one forward action, regardless of
+	// whether a forward is actually defined.
 
-	if !emptyForwardConfig(awsAction.ForwardConfig) {
-		//fmt.Printf("flattenLbForwardAction,NOT EMPTY FORWARD CONFIG,awsAction.ForwardConfig.TargetGroups[0].TargetGroupArn: %s\n", *awsAction.ForwardConfig.TargetGroups[0].TargetGroupArn)
-	} else {
-		//fmt.Printf("flattenLbForwardAction,EMPTY FORWARD CONFIG,awsAction.ForwardConfig is nil (or zero TargetGroups)\n")
-	}
-
-	//fmt.Printf("actionMap: %+v\n", actionMap)
-
-	//fmt.Printf("flattenForward: RawConfig, IsKnown: %t, IsNull: %t\tRawState, IsKnown: %t, IsNull: %t\n", d.GetRawConfig().IsKnown(), d.GetRawConfig().IsNull(), d.GetRawState().IsKnown(), d.GetRawState().IsNull())
-	//fmt.Printf("flattenForward: RawPlan, IsKnown: %t, IsNull: %t\n", d.GetRawPlan().IsKnown(), d.GetRawPlan().IsNull())
-
-	if v, ok := d.GetOk("default_action.0.forward"); ok && len(v.([]interface{})) > 0 {
-		//fmt.Printf("----------flattenForward: default_action.0.forward is set\n")
-	}
-	//flattenLbForwardActionBoth(awsAction, actionMap)
-	// check to see if API allows in both places
-	//
+	// You can specify both a target group list and a top-level target group ARN only if the ARNs match
 	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
 		if v, ok := d.GetOk("default_action.0.target_group_arn"); ok && v.(string) != "" {
 			actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
@@ -1075,7 +1057,6 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 	}
 
 	if rawState := d.GetRawState(); rawState.IsKnown() && !rawState.IsNull() {
-		//fmt.Printf("defaultActions.IsKnown: %t, defaultActions.IsNull: %t, defaultActions.LengthInt: %d\n", rawState.GetAttr(attrName).IsKnown(), rawState.GetAttr(attrName).IsNull(), rawState.GetAttr(attrName).LengthInt())
 		if v, ok := d.GetOk("default_action.0.target_group_arn"); ok && v.(string) != "" {
 			actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
 		}
@@ -1084,24 +1065,6 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 			return
 		}
 	}
-
-	//fmt.Printf("<<<<<<<<<<<<<awsAction.ForwardConfig: %+v\n", awsAction.ForwardConfig)
-	if rawState := d.GetRawState(); rawState.IsKnown() && !rawState.IsNull() {
-		//fmt.Printf(">>>>>>>>>>>>>defaultActions.IsKnown: %t, defaultActions.IsNull: %t, defaultActions.LengthInt: %d\n", rawState.GetAttr(attrName).IsKnown(), rawState.GetAttr(attrName).IsNull(), rawState.GetAttr(attrName).LengthInt())
-	}
-
-	// if we have a forward config from the API, we can use it instead of relying on config and state
-	/*
-		if v, ok := d.GetOk("default_action.0.forward"); ok && len(v.([]interface{})) > 0 && !emptyForwardConfig(awsAction.ForwardConfig) {
-			actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
-			//delete(actionMap, "target_group_arn")
-			return
-		} else {
-			actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
-			//delete(actionMap, "forward")
-			return
-		}
-	*/
 
 	flattenLbForwardActionBoth(awsAction, actionMap)
 }
@@ -1145,7 +1108,6 @@ func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Ac
 }
 
 func flattenLbForwardActionBoth(awsAction awstypes.Action, actionMap map[string]any) {
-	//fmt.Printf("flatten both\n")
 	actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
 	actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
 }
@@ -1430,17 +1392,35 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 		f := action.GetAttr("forward")
 
 		// If `ignore_changes` is set, even if there is no value in the configuration, the value in RawConfig is "" on refresh.
-		/*
-			if (tga.IsKnown() && !tga.IsNull() && tga.AsString() != "") && (f.IsKnown() && !f.IsNull() && f.LengthInt() > 0) {
-				*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
-					"Invalid Attribute Combination",
-					fmt.Sprintf("Only one of %q or %q can be specified.",
-						errs.PathString(actionPath.GetAttr("target_group_arn")),
-						errs.PathString(actionPath.GetAttr("forward")),
-					),
-				))
+
+		tgKnown := tga.IsKnown() && !tga.IsNull() && tga.AsString() != ""
+		fKnown := f.IsKnown() && !f.IsNull() && f.LengthInt() > 0
+
+		var tgArn string
+		if tgKnown && tga.AsString() != "" {
+			tgArn = tga.AsString()
+		}
+
+		if fKnown && tgArn != "" {
+			firstForward := f.Index(cty.NumberIntVal(0))
+			tgSet := firstForward.GetAttr("target_group")
+			if tgSet.IsKnown() && !tgSet.IsNull() && tgSet.LengthInt() > 0 {
+				tgSetIt := tgSet.ElementIterator()
+				for tgSetIt.Next() {
+					_, ftg := tgSetIt.Element()
+					ftgARN := ftg.GetAttr("arn")
+					if ftgARN.IsKnown() && !ftgARN.IsNull() && ftgARN.AsString() != "" && tgArn != ftgARN.AsString() {
+						*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
+							"Invalid Attribute Combination",
+							fmt.Sprintf("You can specify both a top-level target group ARN (%q) and, with %q, a target group list with ARNs, only if the ARNs match.",
+								errs.PathString(actionPath.GetAttr("target_group_arn")),
+								errs.PathString(actionPath.GetAttr("forward")),
+							),
+						))
+					}
+				}
 			}
-		*/
+		}
 
 		switch actionType := awstypes.ActionTypeEnum(actionType.AsString()); actionType {
 		case awstypes.ActionTypeEnumForward:

@@ -5,7 +5,6 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -296,17 +295,14 @@ func TestAccELBV2Listener_forwardImport(t *testing.T) {
 			// will show as a diff.
 			// See: https://github.com/hashicorp/terraform-provider-aws/issues/37211
 			{
-				PreConfig: func() {
-					fmt.Printf("preconfig\n")
-				},
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateCheck: ComposeAggregateImportStateCheckFunc(
-					ImportCheckResourceAttrSet("default_action.0.target_group_arn", true), // this will cause a change on import
-					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", "true"),
-					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
-					ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
-					ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttrSet("default_action.0.target_group_arn", true), // this will cause a change on import
+					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", "true"),
+					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
+					acctest.ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
+					acctest.ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
 				),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -332,18 +328,14 @@ func TestAccELBV2Listener_forwardImport(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {
-					fmt.Printf("preconfig\n")
-				},
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateCheck: ComposeAggregateImportStateCheckFunc(
-					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", "true"),
-					ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
-					ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
-					ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", "true"),
+					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
+					acctest.ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
+					acctest.ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
 				),
-				// we can do all 1) import state verify, 2) import state verify ignore, 3) import state check
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
@@ -351,75 +343,6 @@ func TestAccELBV2Listener_forwardImport(t *testing.T) {
 			},
 		},
 	})
-}
-
-// ComposeAggregateImportStateCheckFunc lets you compose multiple ImportStateCheckFunc into
-// a single ImportStateCheckFunc.
-func ComposeAggregateImportStateCheckFunc(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
-	return func(is []*terraform.InstanceState) error {
-		var result []error
-
-		for i, f := range fs {
-			if err := f(is); err != nil {
-				result = append(result, fmt.Errorf("Import check %d/%d error: %w", i+1, len(fs), err))
-			}
-		}
-
-		return errors.Join(result...)
-	}
-}
-
-func ImportCheckResourceAttr(key, expected string) resource.ImportStateCheckFunc {
-	return func(is []*terraform.InstanceState) error {
-		if len(is) != 1 {
-			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
-		}
-
-		rs := is[0]
-		if rs.Attributes[key] != expected {
-			return fmt.Errorf("Attribute '%s' expected %s, got %s", key, expected, rs.Attributes[key])
-		}
-		return nil
-	}
-}
-
-func ImportCheckResourceAttrSet(key string, set bool) resource.ImportStateCheckFunc {
-	return func(is []*terraform.InstanceState) error {
-		if len(is) != 1 {
-			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
-		}
-
-		rs := is[0]
-		if set && rs.Attributes[key] == "" {
-			return fmt.Errorf("Attribute '%s' expected to be set, got not set", key)
-		}
-
-		if !set && rs.Attributes[key] != "" {
-			return fmt.Errorf("Attribute '%s' expected to be not set, got set (%s)", key, rs.Attributes[key])
-		}
-
-		return nil
-	}
-}
-
-func importCheckSet(attributes map[string]string, attr string, set bool) error {
-	if set && attributes[attr] == "" {
-		return fmt.Errorf("after import, expected %s to be set, got unset", attr)
-	}
-
-	if !set && attributes[attr] != "" {
-		return fmt.Errorf("after import, expected %s to not be set, got set (%s)", attr, attributes[attr])
-	}
-
-	return nil
-}
-
-func importCheckValue(attributes map[string]string, attr string, expected string) error {
-	if attributes[attr] != expected {
-		return fmt.Errorf("after import, expected %s to be %s, got %s", attr, expected, attributes[attr])
-	}
-
-	return nil
 }
 
 func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
@@ -497,9 +420,6 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {
-					fmt.Printf("preconfig\n")
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -511,7 +431,6 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	})
 }
 
-/*
 func TestAccELBV2Listener_forwardTargetARNAndBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -523,14 +442,15 @@ func TestAccELBV2Listener_forwardTargetARNAndBlock(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccListenerConfig_forwardTargetARNAndBlock(rName),
-				PlanOnly:    true,
-				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Only one of "default_action[0].target_group_arn" or "default_action[0].forward" can be specified`)),
+				Config: testAccListenerConfig_forwardTargetARNAndBlock(rName, true), // no errors expected
+			},
+			{
+				Config:      testAccListenerConfig_forwardTargetARNAndBlock(rName, false),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`You can specify both a top-level target group ARN ("default_action[0].target_group_arn") and, with "default_action[0].forward", a target group list with ARNs, only if the ARNs match.`)),
 			},
 		},
 	})
 }
-*/
 
 func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2271,7 +2191,11 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccListenerConfig_forwardTargetARNAndBlock(rName string) string {
+func testAccListenerConfig_forwardTargetARNAndBlock(rName string, sameTG bool) string {
+	tg := "test"
+	if !sameTG {
+		tg = "test2"
+	}
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2281,13 +2205,12 @@ resource "aws_lb_listener" "test" {
   port              = "440"
 
   default_action {
-    type = "forward"
-
+    type             = "forward"
     target_group_arn = aws_lb_target_group.test.arn
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test.arn
+        arn    = aws_lb_target_group.%[2]s.arn
         weight = 1
       }
 
@@ -2334,7 +2257,29 @@ resource "aws_lb_target_group" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%[1]s2"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8082
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = "%[1]s2"
+  }
+}
+`, rName, tg))
 }
 
 func testAccListenerConfig_forwardTargetGroup(rName string, useDATG bool) string {
