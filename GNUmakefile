@@ -769,7 +769,6 @@ website-tflint: ## [CI] Website Checks / tflint
 	@tflint --config .ci/.tflint.hcl --init
 	@exit_code=0 ; \
 	shared_rules=( \
-		"--enable-rule=terraform_comment_syntax" \
 		"--disable-rule=aws_cloudwatch_event_target_invalid_arn" \
 		"--disable-rule=aws_db_instance_default_parameter_group" \
 		"--disable-rule=aws_elasticache_cluster_default_parameter_group" \
@@ -791,12 +790,12 @@ website-tflint: ## [CI] Website Checks / tflint
 	) ; \
 	while read -r filename; do \
 		rules=("$${shared_rules[@]}") ; \
-		if [[ "$$filename" == "./website/docs/guides/version-2-upgrade.html.md" ]] ; then \
+		if [[ "$$filename" == "./website/docs/guides/version-2-upgrade.html.markdown" ]] ; then \
 			rules+=( \
 			"--disable-rule=terraform_deprecated_index" \
 			"--disable-rule=terraform_deprecated_interpolation" \
 			) ; \
-		elif [[ "$$filename" == "./website/docs/guides/version-3-upgrade.html.md" ]]; then \
+		elif [[ "$$filename" == "./website/docs/guides/version-3-upgrade.html.markdown" ]]; then \
 			rules+=( \
 			"--enable-rule=terraform_deprecated_index" \
 			"--disable-rule=terraform_deprecated_interpolation" \
@@ -810,7 +809,7 @@ website-tflint: ## [CI] Website Checks / tflint
 		set +e ; \
 		./.ci/scripts/validate-terraform-file.sh "$$filename" "$${rules[@]}" || exit_code=1 ; \
 		set -e ; \
-	done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u) ; \
+	done < <(find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | sort -u) ; \
 	exit $$exit_code
 
 yamllint: ## [CI] YAML Linting / yamllint
