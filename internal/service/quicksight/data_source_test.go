@@ -274,7 +274,7 @@ func TestAccQuickSightDataSource_secretARN(t *testing.T) {
 				Config: testAccDataSourceConfig_secret_arn(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "data_source_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AURORA_POSTGRESQL"),
 					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "credentials.0.secret_arn"),
@@ -618,7 +618,7 @@ resource "aws_quicksight_data_source" "test" {
 func testAccDataSourceConfig_secret_arn(rId, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "snam-qs-vpc-connnection-tf-test"
+  name = "qs-vpc-connnection-tf-test"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -783,7 +783,7 @@ resource "aws_vpc_security_group_egress_rule" "qs-sg-test-egress" {
 }
 
 resource "aws_rds_cluster" "qs-rds-tf-test-cluster" {
-  cluster_identifier      = "snam-quicksight-vpc-tf-test"
+  cluster_identifier      = "quicksight-vpc-tf-test"
   engine                  = "aurora-postgresql"
   engine_version          = 13.12
   database_name           = "qsrdstftestcluster"
@@ -797,7 +797,7 @@ resource "aws_rds_cluster" "qs-rds-tf-test-cluster" {
 }
 
 resource "aws_rds_cluster_instance" "qs-rds-tf-test-cluster-instance" {
-  identifier                   = "aurora-cluster-snam"
+  identifier                   = "aurora-cluster"
   cluster_identifier           = aws_rds_cluster.qs-rds-tf-test-cluster.id
   instance_class               = "db.r5.large"
   engine                       = aws_rds_cluster.qs-rds-tf-test-cluster.engine
@@ -807,17 +807,17 @@ resource "aws_rds_cluster_instance" "qs-rds-tf-test-cluster-instance" {
 
 resource "aws_db_subnet_group" "test" {
   depends_on = [aws_security_group.qs-sg-test]
-  name       = "snam-quicksight-vpc-connnection-test"
+  name       = "quicksight-vpc-connnection-test"
   subnet_ids = aws_subnet.rds-quicksight-tf-subnet[*].id
   tags = {
-    Name = "snam-quicksight-vpc-connnection-test"
+    Name = "quicksight-vpc-connnection-test"
   }
 }
 
 resource "aws_quicksight_vpc_connection" "qs-rds-vpc-conn-test" {
   depends_on        = [aws_security_group.qs-sg-test, aws_iam_role_policy_attachment.allec2, aws_iam_policy.allec2]
-  vpc_connection_id = "qs-rds-vpc-conn-test"
-  name              = "qs-rds-vpc-conn-test"
+  vpc_connection_id = %[2]q
+  name              = %[2]q
   role_arn          = aws_iam_role.test.arn
   subnet_ids        = aws_subnet.rds-quicksight-tf-subnet[*].id
   security_group_ids = [
@@ -838,7 +838,7 @@ resource "aws_secretsmanager_secret_version" "example" {
 }
 
 resource "aws_quicksight_data_source" "test" {
-  data_source_id = %[2]q
+  data_source_id = %[1]q
   name           = %[2]q
   vpc_connection_properties {
     vpc_connection_arn = aws_quicksight_vpc_connection.qs-rds-vpc-conn-test.arn
