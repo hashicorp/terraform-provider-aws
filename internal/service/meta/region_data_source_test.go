@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMetaRegionDataSource_FindRegionByEndpoint(t *testing.T) {
+func TestAccFindRegionByEC2Endpoint(t *testing.T) {
 	t.Parallel()
 
 	ctx := acctest.Context(t)
@@ -55,7 +55,7 @@ func TestAccMetaRegionDataSource_FindRegionByEndpoint(t *testing.T) {
 	}
 }
 
-func TestAccMetaRegionDataSource_FindRegionByName(t *testing.T) {
+func TestAccFindRegionByName(t *testing.T) {
 	t.Parallel()
 
 	ctx := acctest.Context(t)
