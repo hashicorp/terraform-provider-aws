@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -132,10 +132,9 @@ func (d *serviceDataSource) Read(ctx context.Context, request datasource.ReadReq
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.ValueString()); ok {
 		data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, partition.ID())
 
-		// TODO
-		// if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
-		// 	data.Supported = types.BoolValue(false)
-		// }
+		if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
+			data.Supported = types.BoolValue(false)
+		}
 	} else {
 		data.Partition = types.StringNull()
 	}
