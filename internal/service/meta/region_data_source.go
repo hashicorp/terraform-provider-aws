@@ -93,7 +93,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 			return
 		}
 
-		if region != nil && aws.ToString(region.RegionName) != aws.ToString(matchingRegion.RegionName) {
+		if region != nil && region.RegionName != matchingRegion.RegionName {
 			response.Diagnostics.AddError("multiple Regions matched", "use additional constraints to reduce matches to a single Region")
 
 			return
