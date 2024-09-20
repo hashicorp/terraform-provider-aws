@@ -850,10 +850,10 @@ func expandLbListenerFixedResponseConfig(l []interface{}) *awstypes.FixedRespons
 		StatusCode: aws.String(tfMap[names.AttrStatusCode].(string)),
 	}
 
-	if v, ok := tfMap[names.AttrContentType]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrContentType]; ok {
 		fr.ContentType = aws.String(v.(string))
 	}
-	if v, ok := tfMap["message_body"]; ok && v.(string) != "" {
+	if v, ok := tfMap["message_body"]; ok {
 		fr.MessageBody = aws.String(v.(string))
 	}
 
@@ -875,19 +875,19 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 		StatusCode: awstypes.RedirectActionStatusCodeEnum(tfMap[names.AttrStatusCode].(string)),
 	}
 
-	if v, ok := tfMap["host"]; ok && v.(string) != "" {
+	if v, ok := tfMap["host"]; ok {
 		rac.Host = aws.String(v.(string))
 	}
-	if v, ok := tfMap[names.AttrPath]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrPath]; ok {
 		rac.Path = aws.String(v.(string))
 	}
-	if v, ok := tfMap[names.AttrPort]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrPort]; ok {
 		rac.Port = aws.String(v.(string))
 	}
-	if v, ok := tfMap[names.AttrProtocol]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrProtocol]; ok {
 		rac.Protocol = aws.String(v.(string))
 	}
-	if v, ok := tfMap["query"]; ok && v.(string) != "" {
+	if v, ok := tfMap["query"]; ok {
 		rac.Query = aws.String(v.(string))
 	}
 
