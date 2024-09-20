@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-go 1.22.7
+go 1.23.1
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.96.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.97.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.8 // indirect
@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.35.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.59.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.60.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.26.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.47.1 // indirect
@@ -179,8 +179,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.15.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.41.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.33.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.58.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.59.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.59.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.60.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.32.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.7 // indirect
@@ -209,7 +209,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.11.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.71.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.72.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.83.2 // indirect
@@ -232,7 +232,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.62.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.47.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.157.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.158.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.9 // indirect
@@ -273,7 +273,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.46.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.8 // indirect
 	github.com/aws/smithy-go v1.20.4 // indirect
 	github.com/beevik/etree v1.4.1 // indirect
@@ -308,12 +308,12 @@ require (
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.21.0 // indirect
 	github.com/hashicorp/terraform-json v0.22.1 // indirect
-	github.com/hashicorp/terraform-plugin-framework v1.11.0 // indirect
+	github.com/hashicorp/terraform-plugin-framework v1.12.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-validators v0.13.0 // indirect
-	github.com/hashicorp/terraform-plugin-go v0.23.0 // indirect
+	github.com/hashicorp/terraform-plugin-go v0.24.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
 	github.com/hashicorp/terraform-plugin-mux v0.16.0 // indirect
 	github.com/hashicorp/terraform-plugin-testing v1.10.0 // indirect
@@ -357,7 +357,7 @@ require (
 	golang.org/x/tools v0.25.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
-	google.golang.org/grpc v1.66.0 // indirect
+	google.golang.org/grpc v1.66.2 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
