@@ -641,7 +641,7 @@ resource "aws_iam_policy" "allec2" {
     Version = "2012-10-17",
     Statement = [
       {
-        Action   = [ "ec2:*", ]
+        Action   = ["ec2:*",]
         Effect   = "Allow"
         Resource = "*"
       },
@@ -751,34 +751,34 @@ resource "aws_security_group" "qs-sg-test" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "rds-sg-test-ingress" {
-  security_group_id = aws_security_group.rds-sg-test.id
-  from_port         = 5432
-  to_port           = 5432
-  ip_protocol       = "TCP"
+  security_group_id            = aws_security_group.rds-sg-test.id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "TCP"
   referenced_security_group_id = aws_security_group.qs-sg-test.id
 }
 
 resource "aws_vpc_security_group_egress_rule" "rds-sg-test-egress" {
-  security_group_id = aws_security_group.rds-sg-test.id
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "TCP"
+  security_group_id            = aws_security_group.rds-sg-test.id
+  from_port                    = 0
+  to_port                      = 65535
+  ip_protocol                  = "TCP"
   referenced_security_group_id = aws_security_group.qs-sg-test.id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "qs-sg-test-ingress" {
-  security_group_id = aws_security_group.qs-sg-test.id
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "TCP"
+  security_group_id            = aws_security_group.qs-sg-test.id
+  from_port                    = 0
+  to_port                      = 65535
+  ip_protocol                  = "TCP"
   referenced_security_group_id = aws_security_group.rds-sg-test.id
 }
 
 resource "aws_vpc_security_group_egress_rule" "qs-sg-test-egress" {
-  security_group_id = aws_security_group.qs-sg-test.id
-  from_port         = 5432
-  to_port           = 5432
-  ip_protocol       = "TCP"
+  security_group_id            = aws_security_group.qs-sg-test.id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "TCP"
   referenced_security_group_id = aws_security_group.rds-sg-test.id
 }
 
@@ -791,7 +791,7 @@ resource "aws_rds_cluster" "qs-rds-tf-test-cluster" {
   master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
-  vpc_security_group_ids  = [ aws_security_group.rds-sg-test.id ]
+  vpc_security_group_ids  = [aws_security_group.rds-sg-test.id]
   skip_final_snapshot     = true
   db_subnet_group_name    = aws_db_subnet_group.test.name
 }
@@ -806,7 +806,7 @@ resource "aws_rds_cluster_instance" "qs-rds-tf-test-cluster-instance" {
 }
 
 resource "aws_db_subnet_group" "test" {
-  depends_on = [ aws_security_group.qs-sg-test ]
+  depends_on = [aws_security_group.qs-sg-test]
   name       = "snam-quicksight-vpc-connnection-test"
   subnet_ids = aws_subnet.rds-quicksight-tf-subnet[*].id
   tags = {
@@ -815,11 +815,11 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_quicksight_vpc_connection" "qs-vpc-conn-test" {
-  depends_on = [ aws_security_group.qs-sg-test ]
+  depends_on        = [aws_security_group.qs-sg-test]
   vpc_connection_id = "qs-vpc-conn-test"
   name              = "qs-vpc-conn-test"
   role_arn          = aws_iam_role.test.arn
-  subnet_ids = aws_subnet.rds-quicksight-tf-subnet[*].id
+  subnet_ids        = aws_subnet.rds-quicksight-tf-subnet[*].id
   security_group_ids = [
     aws_security_group.qs-sg-test.id,
   ]
