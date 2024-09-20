@@ -58,7 +58,7 @@ while read -r filename ; do
             echo
             exit_code=1
         fi
-    done < <( ${TERRAFMT_CMD} blocks --fmtcompat --json "${filename}" | jq --compact-output '.blocks[]?' )
+    done < <( "${TERRAFMT_CMD}" blocks --fmtcompat --json "${filename}" | jq --compact-output '.blocks[]?' )
 done
 
 exit "${exit_code}"
