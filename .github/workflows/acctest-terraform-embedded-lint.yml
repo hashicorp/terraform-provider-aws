@@ -6,11 +6,12 @@ on:
       - "release/**"
   pull_request:
     paths:
-      - .github/workflows/acctest-terraform-lint.yml
+      - .github/workflows/acctest-terraform-embedded-lint.yml
       - .ci/.tflint.hcl
+      - .ci/scripts/validate-terraform.sh
       - .ci/tools/go.mod
       - go.sum
-      - 'internal/service/**/*.tf'
+      - 'internal/service/**/*_test.go'
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -32,13 +33,22 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 
-      - run: terraform fmt -recursive -check
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
+
+      - run: |
+          find ./internal/service -type f -name '*_test.go' \
+            | sort -u \
+            | xargs -I {} terrafmt diff --check --fmtcompat {}
 
   tflint:
     name: Validate Acceptance Test Terraform
-    runs-on: ubuntu-latest
+    runs-on: custom-linux-xl
+    strategy:
+      matrix:
+        path: ['[a-f]', '[g-z]']
+    env:
+      TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
 
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -59,11 +69,12 @@ jobs:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
       - run: tflint --config .ci/.tflint.hcl --init
 
+      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} | wc -l | xargs )"
       - run: |
-          # tflint always resolves config flies relative to the working directory when using --recursive
-          TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
-          tflint --config  "${TFLINT_CONFIG}" --chdir=./internal/service --recursive
+          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
+            | .ci/scripts/validate-terraform.sh
