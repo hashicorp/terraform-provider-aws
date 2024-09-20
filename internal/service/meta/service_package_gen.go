@@ -22,9 +22,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Billing Service Account",
 		},
 		{
-			Factory: newDataSourceIPRanges,
-		},
-		{
 			Factory: newDataSourcePartition,
 		},
 		{
@@ -40,6 +37,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		{
 			Factory: newDefaultTagsDataSource,
 			Name:    "Default Tags",
+		},
+		{
+			Factory: newIPRangesDataSource,
+			Name:    "IP Ranges",
 		},
 		{
 			Factory: newServicePrincipalDataSource,
