@@ -41,8 +41,40 @@ jobs:
             | sort -u \
             | xargs -I {} terrafmt diff --check --fmtcompat {}
 
-  tflint:
-    name: Validate Acceptance Tests
+  tflint-dir:
+    name: Validate Acceptance Test Terraform Directories
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: go.mod
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        name: Cache plugin dir
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+
+      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - run: |
+          # tflint always resolves config flies relative to the working directory when using --recursive
+          TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+          tflint --config  "${TFLINT_CONFIG}" --chdir=./internal/service --recursive
+
+  tflint-embedded:
+    name: Validate Embedded Acceptance Test Terraform
     runs-on: custom-linux-xl
     strategy:
       matrix:
