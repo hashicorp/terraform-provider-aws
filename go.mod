@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.4
-	github.com/aws/aws-sdk-go-v2/service/glue v1.96.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.97.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.8
@@ -146,7 +146,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/kms v1.35.8
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.7
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.7
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.47.1
@@ -157,8 +157,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.15.7
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.58.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.59.1
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.7
@@ -187,7 +187,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.7
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.71.3
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.8
 	github.com/aws/aws-sdk-go-v2/service/rds v1.83.2
@@ -210,7 +210,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.7
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.157.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.158.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.9
@@ -250,7 +250,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.46.4
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.8
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.8
 	github.com/aws/smithy-go v1.20.4
 	github.com/beevik/etree v1.4.1
