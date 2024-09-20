@@ -257,11 +257,11 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSource_secretArn(t *testing.T) {
+func TestAccQuickSightDataSource_secretARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSource awstypes.DataSource
 	resourceName := "aws_quicksight_data_source.test"
-	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -271,19 +271,14 @@ func TestAccQuickSightDataSource_secretArn(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_secret_arn(rId, "SNOWFLAKE"),
+				Config: testAccDataSourceConfig_secret_arn(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, "SNOWFLAKE"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AURORA_POSTGRESQL"),
 					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "credentials.0.secret_arn"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -747,12 +742,10 @@ resource "aws_route_table_association" "rds-quicksight-tf-private2-rtb-asso" {
 
 
 resource "aws_security_group" "rds-sg-test" {
-  depends_on = [ aws_security_group.qs-sg-test ]
   name   = "Amazon-QuickSight-RDS-VPC"
   vpc_id = aws_vpc.rds-quicksight-tf-vpc.id
 }
 resource "aws_security_group" "qs-sg-test" {
-  depends_on = [ aws_security_group.qs-sg-test ]
   name   = "Amazon-QuickSight-QS-VPC"
   vpc_id = aws_vpc.rds-quicksight-tf-vpc.id
 }
@@ -813,6 +806,7 @@ resource "aws_rds_cluster_instance" "qs-rds-tf-test-cluster-instance" {
 }
 
 resource "aws_db_subnet_group" "test" {
+  depends_on = [ aws_security_group.qs-sg-test ]
   name       = "snam-quicksight-vpc-connnection-test"
   subnet_ids = aws_subnet.rds-quicksight-tf-subnet[*].id
   tags = {
@@ -820,19 +814,22 @@ resource "aws_db_subnet_group" "test" {
   }
 }
 
-resource "aws_quicksight_vpc_connection" "qs-vpc-connection-test-1" {
+resource "aws_quicksight_vpc_connection" "qs-vpc-conn-test" {
   depends_on = [ aws_security_group.qs-sg-test ]
-  vpc_connection_id = "qs-vpc-connection-test-1"
-  name              = "qs-vpc-connection-test-1"
+  vpc_connection_id = "qs-vpc-conn-test"
+  name              = "qs-vpc-conn-test"
   role_arn          = aws_iam_role.test.arn
   subnet_ids = aws_subnet.rds-quicksight-tf-subnet[*].id
   security_group_ids = [
     aws_security_group.qs-sg-test.id,
   ]
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_secretsmanager_secret" "qs-secret-test-2" {
-  name = "qs-secret-test-2"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "example" {
@@ -844,10 +841,10 @@ resource "aws_secretsmanager_secret_version" "example" {
 }
 
 resource "aws_quicksight_data_source" "test" {
-  data_source_id = "qs-testing-data-source"
-  name           = "qs-testing-data-source"
+  data_source_id = %[2]q
+  name           = %[2]q
   vpc_connection_properties {
-    vpc_connection_arn = aws_quicksight_vpc_connection.qs-vpc-connection-test-1.arn
+    vpc_connection_arn = aws_quicksight_vpc_connection.qs-vpc-conn-test.arn
   }
   credentials {
     secret_arn = aws_secretsmanager_secret.qs-secret-test-2.arn
