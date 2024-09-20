@@ -1047,7 +1047,7 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 
 	// You can specify both a target group list and a top-level target group ARN only if the ARNs match
 	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
-		if v, ok := d.GetOk("default_action.0.target_group_arn"); ok && v.(string) != "" {
+		if _, ok := d.GetOk("default_action.0.target_group_arn"); ok {
 			actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
 		}
 		if actions := rawConfig.GetAttr(attrName); actions.IsKnown() && !actions.IsNull() {
@@ -1057,7 +1057,7 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 	}
 
 	if rawState := d.GetRawState(); rawState.IsKnown() && !rawState.IsNull() {
-		if v, ok := d.GetOk("default_action.0.target_group_arn"); ok && v.(string) != "" {
+		if _, ok := d.GetOk("default_action.0.target_group_arn"); ok {
 			actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
 		}
 		if actions := rawState.GetAttr(attrName); actions.IsKnown() && !actions.IsNull() && actions.LengthInt() > 0 {
