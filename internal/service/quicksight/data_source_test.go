@@ -635,35 +635,35 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_policy" "allec2" {
-  name = "testec2policy"
+  name        = "testec2policy"
   description = "Add AmazonEC2FullAccess"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action   = ["ec2:*",]
+        Action   = ["ec2:*"]
         Effect   = "Allow"
         Resource = "*"
       },
       {
         Effect   = "Allow",
-        Action   = ["elasticloadbalancing:*",]
+        Action   = ["elasticloadbalancing:*"]
         Resource = "*"
       },
       {
         Effect   = "Allow",
-        Action   = ["cloudwatch:*",]
+        Action   = ["cloudwatch:*"]
         Resource = "*"
       },
       {
         Effect   = "Allow",
-        Action   = ["autoscaling:*",]
+        Action   = ["autoscaling:*"]
         Resource = "*"
       },
       {
-        Effect    = "Allow",
-        Action    = ["iam:CreateServiceLinkedRole",]
-        Resource  = "*",
+        Effect   = "Allow",
+        Action   = ["iam:CreateServiceLinkedRole"]
+        Resource = "*",
         Condition = {
           StringEquals = {
             "iam:AWSServiceName" = [
@@ -708,8 +708,8 @@ resource "aws_vpc" "rds-quicksight-tf-vpc" {
 }
 
 resource "aws_subnet" "rds-quicksight-tf-subnet" {
-  depends_on = [ aws_security_group.qs-sg-test ]
-  count = 2
+  depends_on        = [aws_security_group.qs-sg-test]
+  count             = 2
   vpc_id            = aws_vpc.rds-quicksight-tf-vpc.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.rds-quicksight-tf-vpc.cidr_block, 8, count.index)
@@ -721,11 +721,11 @@ resource "aws_subnet" "rds-quicksight-tf-subnet" {
 resource "aws_route_table" "rds-quicksight-tf-private1-rtb" {
   vpc_id = aws_vpc.rds-quicksight-tf-vpc.id
   tags = {
-  name = "rds-quicksight-tf-rtb"
+    name = "rds-quicksight-tf-rtb"
   }
 }
 resource "aws_route_table_association" "rds-quicksight-tf-private1-rtb-asso" {
-  subnet_id = aws_subnet.rds-quicksight-tf-subnet[0].id
+  subnet_id      = aws_subnet.rds-quicksight-tf-subnet[0].id
   route_table_id = aws_route_table.rds-quicksight-tf-private1-rtb.id
 }
 
@@ -736,7 +736,7 @@ resource "aws_route_table" "rds-quicksight-tf-private2-rtb" {
   }
 }
 resource "aws_route_table_association" "rds-quicksight-tf-private2-rtb-asso" {
-  subnet_id = aws_subnet.rds-quicksight-tf-subnet[1].id
+  subnet_id      = aws_subnet.rds-quicksight-tf-subnet[1].id
   route_table_id = aws_route_table.rds-quicksight-tf-private2-rtb.id
 }
 
@@ -814,26 +814,23 @@ resource "aws_db_subnet_group" "test" {
   }
 }
 
-resource "aws_quicksight_vpc_connection" "qs-vpc-conn-test" {
-  depends_on        = [aws_security_group.qs-sg-test]
-  vpc_connection_id = "qs-vpc-conn-test"
-  name              = "qs-vpc-conn-test"
+resource "aws_quicksight_vpc_connection" "qs-rds-vpc-conn-test" {
+  depends_on        = [aws_security_group.qs-sg-test, aws_iam_role_policy_attachment.allec2, aws_iam_policy.allec2]
+  vpc_connection_id = "qs-rds-vpc-conn-test"
+  name              = "qs-rds-vpc-conn-test"
   role_arn          = aws_iam_role.test.arn
   subnet_ids        = aws_subnet.rds-quicksight-tf-subnet[*].id
   security_group_ids = [
     aws_security_group.qs-sg-test.id,
   ]
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
-resource "aws_secretsmanager_secret" "qs-secret-test-2" {
+resource "aws_secretsmanager_secret" "qs-secret-test" {
   name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "example" {
-  secret_id     = aws_secretsmanager_secret.qs-secret-test-2.id
+  secret_id = aws_secretsmanager_secret.qs-secret-test.id
   secret_string = jsonencode({
     username = "foo",
     password = "must_be_eight_characters"
@@ -844,10 +841,10 @@ resource "aws_quicksight_data_source" "test" {
   data_source_id = %[2]q
   name           = %[2]q
   vpc_connection_properties {
-    vpc_connection_arn = aws_quicksight_vpc_connection.qs-vpc-conn-test.arn
+    vpc_connection_arn = aws_quicksight_vpc_connection.qs-rds-vpc-conn-test.arn
   }
   credentials {
-    secret_arn = aws_secretsmanager_secret.qs-secret-test-2.arn
+    secret_arn = aws_secretsmanager_secret.qs-secret-test.arn
   }
   parameters {
     rds {
