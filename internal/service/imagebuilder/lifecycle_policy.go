@@ -439,7 +439,7 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().ImageBuilderClient(ctx)
 
 	_, err := conn.DeleteLifecyclePolicy(ctx, &imagebuilder.DeleteLifecyclePolicyInput{
-		LifecyclePolicyArn: aws.String(data.ID.ValueString()),
+		LifecyclePolicyArn: data.ID.ValueStringPointer(),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
