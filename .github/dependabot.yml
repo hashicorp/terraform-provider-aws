@@ -5,27 +5,28 @@ updates:
     schedule:
       interval: "daily"
 
-  # Split the top-level Go dependency check into 4 to avoid timeouts.
-  #  1) Everything but the AWS SDK for Go v2 service modules
-  #  2-4) The AWS SDK for Go v2 service modules, roughly divided into 3 based on the first letter of the service name
   - package-ecosystem: "gomod"
     directories:
       - "/"
     groups:
-      aws-sdk-go-v1:
+      aws-sdk-go:
         patterns:
           - "github.com/aws/aws-sdk-go"
+          - "github.com/aws/aws-sdk-go-v2"
+          - "github.com/aws/aws-sdk-go-v2/*"
       aws-sdk-go-base:
         patterns:
           - "github.com/hashicorp/aws-sdk-go-base/v2"
           - "github.com/hashicorp/aws-sdk-go-base/v2/*"
       terraform-devex:
         patterns:
-          - "github.com/hashicorp/terraform-plugin-*"
+          - "github.com/hashicorp/terraform-plugin-framework"
+          - "github.com/hashicorp/terraform-plugin-framework-timeouts"
+          - "github.com/hashicorp/terraform-plugin-framework-validators"
+          - "github.com/hashicorp/terraform-plugin-mux"
+          - "github.com/hashicorp/terraform-plugin-sdk/v2"
+          - "github.com/hashicorp/terraform-plugin-testing"
     ignore:
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/*"
-      # aws/smithy-go should only be updated via aws/aws-sdk-go-v2
-      - dependency-name: "github.com/aws/smithy-go"
       # hcl/v2 should only be updated via terraform-plugin-sdk
       - dependency-name: "github.com/hashicorp/hcl/v2"
       # terraform-plugin-go should only be updated via terraform-plugin-framework
@@ -42,72 +43,6 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 30
 
-  # AWS SDK for Go v2 services a-d.
-  - package-ecosystem: "gomod"
-    directories:
-      - "/"
-    groups:
-      aws-sdk-go-v2-a-d:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2/service/*"
-    allow:
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/a*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/b*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/c*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/d*"
-    schedule:
-      interval: "daily"
-    open-pull-requests-limit: 30
-
-  # AWS SDK for Go v2 services e-o.
-  - package-ecosystem: "gomod"
-    directories:
-      - "/"
-    groups:
-      aws-sdk-go-v2-e-o:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2/service/*"
-    allow:
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/e*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/f*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/g*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/h*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/i*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/j*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/k*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/l*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/m*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/n*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/o*"
-    schedule:
-      interval: "daily"
-    open-pull-requests-limit: 30
-
-  # AWS SDK for Go v2 services p-z.
-  - package-ecosystem: "gomod"
-    directories:
-      - "/"
-    groups:
-      aws-sdk-go-v2-p-z:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2/service/*"
-    allow:
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/p*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/q*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/r*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/s*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/t*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/u*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/v*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/w*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/x*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/y*"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/z*"
-    schedule:
-      interval: "daily"
-    open-pull-requests-limit: 30
-
-  # Split out everything but the top-level Go dependency check to avoid timeouts.
   - package-ecosystem: "gomod"
     directories:
       - "/.ci/providerlint"
@@ -115,6 +50,19 @@ updates:
       - "/skaff"
       - "/tools/awssdkpatch"
       - "/tools/tfsdk2fw"
+    ignore:
+      # hcl/v2 should only be updated via terraform-plugin-sdk
+      - dependency-name: "github.com/hashicorp/hcl/v2"
+      # terraform-plugin-go should only be updated via terraform-plugin-framework
+      - dependency-name: "github.com/hashicorp/terraform-plugin-go"
+      # terraform-plugin-log should only be updated via terraform-plugin-framework
+      - dependency-name: "github.com/hashicorp/terraform-plugin-log"
+      # go-hclog should only be updated via terraform-plugin-log
+      - dependency-name: "github.com/hashicorp/go-hclog"
+      # grpc should only be updated via terraform-plugin-go/terraform-plugin-framework
+      - dependency-name: "google.golang.org/grpc"
+      # protobuf should only be updated via terraform-plugin-go/terraform-plugin-framework
+      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30
