@@ -40,7 +40,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByEndpoint(tc.Value)
+		_, err := tfmeta.FindRegionByEC2Endpoint(tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -67,6 +67,10 @@ func TestFindRegionByName(t *testing.T) {
 		},
 		{
 			Value:    "us-east-1", // lintignore:AWSAT003
+			ErrCount: 0,
+		},
+		{
+			Value:    "ap-southeast-5", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
 	}
