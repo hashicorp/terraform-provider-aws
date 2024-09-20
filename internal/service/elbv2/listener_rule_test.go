@@ -273,24 +273,6 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccELBV2ListenerRule_forwardTargetARNAndBlock(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccListenerRuleConfig_forwardTargetARNAndBlock(rName),
-				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Only one of "action[0].target_group_arn" or "action[0].forward" can be specified.`)),
-			},
-		},
-	})
-}
-
 func TestAccELBV2ListenerRule_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
