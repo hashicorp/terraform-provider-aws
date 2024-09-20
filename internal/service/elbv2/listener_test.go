@@ -260,7 +260,9 @@ func TestAccELBV2Listener_Forward_update(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_Forward_import(t *testing.T) { // lintignore:AT002
+// providerlint doesn't allow 'import' in the name of the test although that's
+// exactly the point of this test.
+func TestAccELBV2Listener_Forward_ingest(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
