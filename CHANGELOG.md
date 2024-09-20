@@ -1,4 +1,10 @@
 ## 5.69.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_connect_instance: Add `tags` attribute ([#39402](https://github.com/hashicorp/terraform-provider-aws/issues/39402))
+* resource/aws_connect_instance: Add `tags` argument and `tags_all` attribute ([#39402](https://github.com/hashicorp/terraform-provider-aws/issues/39402))
+
 ## 5.68.0 (September 19, 2024)
 
 NOTES:
