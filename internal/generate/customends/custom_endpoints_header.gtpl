@@ -28,7 +28,9 @@ This guide outlines how to get started with customizing endpoints, the available
 
 ## Getting Started with Custom Endpoints
 
-To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.,
+Custom endpoints can be configured for the Terraform AWS Provider by configuring them directly on the provider, using environment variables, or by using an [AWS shared configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+
+To configure endpoints on the provider, set the values in the `endpoints` block in the  `provider` declarations, e.g.,
 
 ```terraform
 provider "aws" {
@@ -40,6 +42,25 @@ provider "aws" {
   }
 }
 ```
+
+Environment variables can be used to set all endpoints to one value, using `AWS_ENDPOINT_URL`.
+Individual services can be configured using an environment variable of the form `AWS_ENDPOINT_URL_<SERVICE>`, where `<SERVICE>` is the `serviceID` of the service defined in the AWS SDK for Go v2, with spaces replaced by underscores (`_`) and all uppercase. For example, the environment variable for DynamoDB is `AWS_ENDPOINT_URL_DYNAMODB`.
+
+Shared configuration files can be used to set all endpoints to one value, using the parameter `endpoint_url` in a named profile.
+Individual services can be configured using the shared configuration file by creating a [`services` section](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-format-services) and setting the corresponding service identifier.
+Service identifiers are the `serviceID` of the service defined in the AWS SDK for Go v2, with spaces replaced by underscores (`_`) and all lowercase. For example, the identifier for DynamoDB is `dynamodb`.
+
+The environment variable `AWS_IGNORE_CONFIGURED_ENDPOINT_URLS` or the shared configuration file parameter `ignore_configure_endpoint_urls` will cause endpoints configured using environment variables or the shared configuration file to be ignored.
+
+Endpoints are evaluated in the following order:
+
+1. Endpoints defined on the provider.
+1. Setting the environment variable `AWS_IGNORE_CONFIGURED_ENDPOINT_URLS` or the shared configuration file parameter `ignore_configure_endpoint_urls` ignores custom endpoints.
+1. Service-specific endpoints defined using environment variables of the form `AWS_ENDPOINT_URL_<SERVICE>`.
+1. Base endpoint defined using the environment variable `AWS_ENDPOINT_URL`.
+1. Service-specific endpoints defined in the shared configuration file.
+1. Base endpoint defined in the shared configuration file.
+1. Default service endpoint.
 
 If multiple, different Terraform AWS Provider configurations are required, see the [Terraform documentation on multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-instances) for additional information about the `alias` provider configuration and its usage.
 

@@ -265,7 +265,7 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	awsPkg := service.GoPackageName(*sdkVersion)
+	awsPkg := service.GoPackageName()
 
 	var awsIntfPkg string
 	if *sdkVersion == sdkV1 && (*getTag || *listTags || *updateTags) {

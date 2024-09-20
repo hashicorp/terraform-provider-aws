@@ -1,11 +1,11 @@
 
 As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
-the following service endpoints can be configured using environment variables:
-
-* DynamoDB: `TF_AWS_DYNAMODB_ENDPOINT` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
-* IAM: `TF_AWS_IAM_ENDPOINT` (or **Deprecated** `AWS_IAM_ENDPOINT`)
-* S3: `TF_AWS_S3_ENDPOINT` (or **Deprecated** `AWS_S3_ENDPOINT`)
-* STS: `TF_AWS_STS_ENDPOINT` (or **Deprecated** `AWS_STS_ENDPOINT`)
+the following service endpoints can also be configured using the **deprecated** environment variables:
+{{ range .Services -}}
+  {{- if or .TfAwsEnvVar .DeprecatedEnvVar }}
+* {{ .HumanFriendly }}: `{{ .TfAwsEnvVar }}` or `{{ .DeprecatedEnvVar }}`
+  {{- end }}
+{{- end }}
 
 ## Connecting to Local AWS Compatible Solutions
 

@@ -182,8 +182,8 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteIngestion(ctx, &appfabric.DeleteIngestionInput{
-		AppBundleIdentifier: aws.String(data.AppBundleARN.ValueString()),
-		IngestionIdentifier: aws.String(data.ARN.ValueString()),
+		AppBundleIdentifier: data.AppBundleARN.ValueStringPointer(),
+		IngestionIdentifier: data.ARN.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

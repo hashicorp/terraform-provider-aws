@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -284,7 +283,7 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 	})
 
 	input := &drs.DeleteReplicationConfigurationTemplateInput{
-		ReplicationConfigurationTemplateID: aws.String(data.ID.ValueString()),
+		ReplicationConfigurationTemplateID: data.ID.ValueStringPointer(),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {

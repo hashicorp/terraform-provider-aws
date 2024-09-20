@@ -518,11 +518,27 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	if v, ok := d.GetOk("assume_role"); ok {
 		path := cty.GetAttrPath("assume_role")
 		v := v.([]any)
-		if len(v) == 1 && v[0] == nil {
-			diags = append(diags,
-				errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
-			)
-		} else if len(v) > 0 {
+		if len(v) == 1 {
+			if v[0] == nil {
+				diags = append(diags,
+					errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+				)
+			} else {
+				l := v[0].(map[string]any)
+				if s, ok := l["role_arn"]; !ok || s == "" {
+					diags = append(diags,
+						errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+					)
+				} else {
+					ar, dg := expandAssumeRoles(ctx, path, v)
+					diags = append(diags, dg...)
+					if dg.HasError() {
+						return nil, diags
+					}
+					config.AssumeRole = ar
+				}
+			}
+		} else if len(v) > 1 {
 			ar, dg := expandAssumeRoles(ctx, path, v)
 			diags = append(diags, dg...)
 			if dg.HasError() {
@@ -742,27 +758,6 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 	}
 }
 
-func endpointsSchema() *schema.Schema {
-	endpointsAttributes := make(map[string]*schema.Schema)
-
-	for _, serviceKey := range names.Aliases() {
-		endpointsAttributes[serviceKey] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Use this to override the default service endpoint URL",
-		}
-	}
-
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: endpointsAttributes,
-		},
-	}
-}
-
 func expandAssumeRoles(ctx context.Context, path cty.Path, tfList []any) (result []awsbase.AssumeRole, diags diag.Diagnostics) {
 	result = make([]awsbase.AssumeRole, len(tfList))
 
@@ -942,111 +937,6 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 	}
 
 	return ignoreConfig
-}
-
-func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	endpointsPath := cty.GetAttrPath("endpoints")
-
-	if l := len(tfList); l > 1 {
-		diags = append(diags, errs.NewAttributeWarningDiagnostic(
-			endpointsPath,
-			"Invalid Attribute Value",
-			fmt.Sprintf("Attribute %q should have at most 1 element, got %d."+
-				"\n\nThis will be an error in a future release.",
-				errs.PathString(endpointsPath), l),
-		))
-	}
-
-	endpoints := make(map[string]string)
-
-	for i, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		elementPath := endpointsPath.IndexInt(i)
-
-		for _, endpoint := range names.Endpoints() {
-			pkg := endpoint.ProviderPackage
-
-			if len(endpoint.Aliases) > 0 {
-				count := 0
-				attrs := []string{pkg}
-				if tfMap[pkg] != "" {
-					count++
-				}
-				for _, alias := range endpoint.Aliases {
-					attrs = append(attrs, alias)
-					if tfMap[alias] != "" {
-						count++
-					}
-				}
-
-				if count > 1 {
-					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
-				}
-			}
-
-			if endpoints[pkg] == "" {
-				if v := tfMap[pkg].(string); v != "" {
-					endpoints[pkg] = v
-				} else {
-					for _, alias := range endpoint.Aliases {
-						if v := tfMap[alias].(string); v != "" {
-							endpoints[pkg] = v
-							break
-						}
-					}
-				}
-			}
-		}
-	}
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	for _, pkg := range names.ProviderPackages() {
-		if endpoints[pkg] != "" {
-			continue
-		}
-
-		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
-		tfAwsEnvVar := names.TFAWSEnvVar(pkg)
-		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
-		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
-			continue
-		}
-
-		awsEnvVar := names.AWSServiceEnvVar(pkg)
-		if awsEnvVar != "" {
-			if v := os.Getenv(awsEnvVar); v != "" {
-				endpoints[pkg] = v
-				continue
-			}
-		}
-
-		if tfAwsEnvVar != "" {
-			if v := os.Getenv(tfAwsEnvVar); v != "" {
-				diags = append(diags, DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar))
-				endpoints[pkg] = v
-				continue
-			}
-		}
-
-		if deprecatedEnvVar != "" {
-			if v := os.Getenv(deprecatedEnvVar); v != "" {
-				diags = append(diags, DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar))
-				endpoints[pkg] = v
-				continue
-			}
-		}
-	}
-
-	return endpoints, diags
 }
 
 func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {

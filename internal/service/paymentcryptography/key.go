@@ -385,7 +385,7 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 	}
 
 	in := &paymentcryptography.DeleteKeyInput{
-		KeyIdentifier: aws.String(state.ID.ValueString()),
+		KeyIdentifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteKey(ctx, in)
