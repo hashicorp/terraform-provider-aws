@@ -66,7 +66,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 	// find the region given by the user
 	if !data.Region.IsNull() {
 		name := data.Name.ValueString()
-		matchingRegion, err := findRegionByName(data.Region.ValueString())
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
@@ -80,7 +80,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 	// Default to provider current Region if no other filters matched.
 	if region == nil {
 		name := d.Meta().Region
-		matchingRegion, err := findRegionByName(name)
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())

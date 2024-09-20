@@ -17,6 +17,7 @@ import (
 func TestFindRegionByEC2Endpoint(t *testing.T) {
 	t.Parallel()
 
+	ctx := acctest.Context(t)
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -40,7 +41,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByEC2Endpoint(tc.Value)
+		_, err := tfmeta.FindRegionByEC2Endpoint(ctx, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -53,6 +54,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 func TestFindRegionByName(t *testing.T) {
 	t.Parallel()
 
+	ctx := acctest.Context(t)
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -76,7 +78,7 @@ func TestFindRegionByName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByName(tc.Value)
+		_, err := tfmeta.FindRegionByName(ctx, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}

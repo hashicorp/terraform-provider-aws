@@ -132,9 +132,10 @@ func (d *serviceDataSource) Read(ctx context.Context, request datasource.ReadReq
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.ValueString()); ok {
 		data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, partition.ID())
 
-		if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
-			data.Supported = types.BoolValue(false)
-		}
+		// TODO
+		// if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
+		// 	data.Supported = types.BoolValue(false)
+		// }
 	} else {
 		data.Partition = types.StringNull()
 	}

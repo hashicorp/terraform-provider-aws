@@ -6,8 +6,9 @@ package meta
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -67,7 +68,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 
 	if !data.Endpoint.IsNull() {
 		endpoint := data.Endpoint.ValueString()
-		matchingRegion, err := findRegionByEC2Endpoint(endpoint)
+		matchingRegion, err := findRegionByEC2Endpoint(ctx, endpoint)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("finding Region by endpoint (%s)", endpoint), err.Error())
@@ -80,7 +81,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 
 	if !data.Name.IsNull() {
 		name := data.Name.ValueString()
-		matchingRegion, err := findRegionByName(name)
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
@@ -100,7 +101,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 	// Default to provider current Region if no other filters matched.
 	if region == nil {
 		name := d.Meta().Region
-		matchingRegion, err := findRegionByName(name)
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
@@ -111,7 +112,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	regionEndpointEC2, err := ec2Endpoint(region)
+	regionEndpointEC2, err := ec2Endpoint(ctx, region)
 
 	if err != nil {
 		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
@@ -120,7 +121,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 	}
 
 	data.Description = fwflex.StringValueToFrameworkLegacy(ctx, region.Description())
-	data.Endpoint = fwflex.StringValueToFrameworkLegacy(ctx, strings.TrimPrefix(regionEndpointEC2, "https://"))
+	data.Endpoint = fwflex.StringValueToFrameworkLegacy(ctx, regionEndpointEC2.Host)
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
 	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
 
@@ -134,16 +135,16 @@ type regionDataSourceModel struct {
 	Name        types.String `tfsdk:"name"`
 }
 
-func findRegionByEC2Endpoint(endpoint string) (*endpoints.Region, error) {
+func findRegionByEC2Endpoint(ctx context.Context, endpoint string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
-			regionEndpointEC2, err := ec2Endpoint(&region)
+			regionEndpointEC2, err := ec2Endpoint(ctx, &region)
 
 			if err != nil {
 				return nil, err
 			}
 
-			if strings.TrimPrefix(regionEndpointEC2, "https://") == endpoint {
+			if regionEndpointEC2.Host == endpoint {
 				return &region, nil
 			}
 		}
@@ -152,7 +153,7 @@ func findRegionByEC2Endpoint(endpoint string) (*endpoints.Region, error) {
 	return nil, &retry.NotFoundError{}
 }
 
-func findRegionByName(name string) (*endpoints.Region, error) {
+func findRegionByName(_ context.Context, name string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
 			if region.ID() == name {
@@ -164,11 +165,13 @@ func findRegionByName(name string) (*endpoints.Region, error) {
 	return nil, &retry.NotFoundError{}
 }
 
-func ec2Endpoint(region *endpoints.Region) (string, error) {
-	endpoint, err := ec2.NewDefaultEndpointResolver().ResolveEndpoint(region.ID(), ec2.EndpointResolverOptions{})
+func ec2Endpoint(ctx context.Context, region *endpoints.Region) (*url.URL, error) {
+	endpoint, err := ec2.NewDefaultEndpointResolverV2().ResolveEndpoint(ctx, ec2.EndpointParameters{
+		Region: aws.String(region.ID()),
+	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return endpoint.URL, nil
+	return &endpoint.URI, nil
 }
