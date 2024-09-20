@@ -294,7 +294,7 @@ resource "aws_cloudwatch_log_account_policy" "test" {
   policy_type = "SUBSCRIPTION_FILTER_POLICY"
 
   policy_document = jsonencode({
-    DestinationArn = "${aws_lambda_function.test.arn}"
+    DestinationArn = aws_lambda_function.test.arn
     FilterPattern  = " "
     Distribution   = "Random"
   })
@@ -309,7 +309,7 @@ resource "aws_cloudwatch_log_account_policy" "test" {
   policy_type = "SUBSCRIPTION_FILTER_POLICY"
 
   policy_document = jsonencode({
-    DestinationArn = "${aws_lambda_function.test.arn}"
+    DestinationArn = aws_lambda_function.test.arn
     FilterPattern  = " "
     Distribution   = "Random"
   })
