@@ -54,9 +54,8 @@ func DataSourceCredentialsSchema() *schema.Schema {
 					ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.secret_arn"},
 				},
 				"secret_arn": {
-					Type:     schema.TypeString,
-					Optional: true,
-					// ValidateFunc:  verify.ValidARN,
+					Type:          schema.TypeString,
+					Optional:      true,
 					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn"},
 				},
 			},
