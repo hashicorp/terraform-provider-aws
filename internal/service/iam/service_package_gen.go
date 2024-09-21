@@ -98,6 +98,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Server Certificate",
 		},
 		{
+			Factory:  dataSourceServiceLinkedRole,
+			TypeName: "aws_iam_service_linked_role",
+			Name:     "Service Linked Role",
+		},
+		{
 			Factory:  dataSourceSessionContext,
 			TypeName: "aws_iam_session_context",
 			Name:     "Session Context",

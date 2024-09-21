@@ -109,7 +109,7 @@ func findRoles(ctx context.Context, conn *iam.Client, pathPrefix string, nameReg
 				continue
 			}
 
-			results = append(results, role)
+			results = append((results), role)
 		}
 	}
 	return results, nil
