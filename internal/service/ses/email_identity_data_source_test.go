@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
+func testAccEmailIdentityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	email := acctest.DefaultEmailAddress
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -28,7 +28,6 @@ func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, "aws_ses_email_identity.test"),
 					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", names.AttrARN, "ses", regexache.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
 				),
 			},
@@ -36,11 +35,11 @@ func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSESEmailIdentityDataSource_trailingPeriod(t *testing.T) {
+func testAccEmailIdentityDataSource_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,7 +48,6 @@ func TestAccSESEmailIdentityDataSource_trailingPeriod(t *testing.T) {
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, "aws_ses_email_identity.test"),
 					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", names.AttrARN, "ses", regexache.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
 				),
 			},
@@ -60,11 +58,12 @@ func TestAccSESEmailIdentityDataSource_trailingPeriod(t *testing.T) {
 func testAccEmailIdentityDataDourceConfig_source(email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
-  email = %q
+  email = %[1]q
 }
+
 data "aws_ses_email_identity" "test" {
   depends_on = [aws_ses_email_identity.test]
-  email      = %q
+  email      = %[1]q
 }
-`, email, email)
+`, email)
 }

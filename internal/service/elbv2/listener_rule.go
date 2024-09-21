@@ -498,7 +498,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:        getTagsIn(ctx),
 	}
 
-	input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
+	input.Actions = expandListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 	if diags.HasError() {
 		return diags
 	}
@@ -581,7 +581,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	sort.Slice(rule.Actions, func(i, j int) bool {
 		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	if err := d.Set(names.AttrAction, flattenLbListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
+	if err := d.Set(names.AttrAction, flattenListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
 
@@ -674,7 +674,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange(names.AttrAction) {
-			input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
+			input.Actions = expandListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 			if diags.HasError() {
 				return diags
 			}

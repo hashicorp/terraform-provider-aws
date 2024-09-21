@@ -1050,6 +1050,31 @@ func resourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"tag_specifications": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrResourceType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.EBSResourceType](),
+												},
+												names.AttrPropagateTags: {
+													Type:     schema.TypeString,
+													Optional: true,
+													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+														if awstypes.PropagateTags(old) == awstypes.PropagateTagsNone && new == "" {
+															return true
+														}
+														return false
+													},
+													ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
+												},
+												names.AttrTags: tftags.TagsSchema(),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -1202,7 +1227,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("volume_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.VolumeConfigurations = expandVolumeConfigurations(v.([]interface{}))
+		input.VolumeConfigurations = expandVolumeConfigurations(ctx, v.([]interface{}))
 	}
 
 	output, err := retryServiceCreate(ctx, conn, input)
@@ -1486,7 +1511,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("volume_configuration") {
-			input.VolumeConfigurations = expandVolumeConfigurations(d.Get("volume_configuration").([]interface{}))
+			input.VolumeConfigurations = expandVolumeConfigurations(ctx, d.Get("volume_configuration").([]interface{}))
 		}
 
 		// Retry due to IAM eventual consistency.
@@ -2258,7 +2283,7 @@ func expandSecretOptions(sop []interface{}) []awstypes.Secret {
 	return out
 }
 
-func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfiguration {
+func expandVolumeConfigurations(ctx context.Context, vc []interface{}) []awstypes.ServiceVolumeConfiguration {
 	if len(vc) == 0 {
 		return nil
 	}
@@ -2273,7 +2298,7 @@ func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfig
 		}
 
 		if v, ok := p["managed_ebs_volume"].([]interface{}); ok && len(v) > 0 {
-			config.ManagedEBSVolume = expandManagedEBSVolume(v)
+			config.ManagedEBSVolume = expandManagedEBSVolume(ctx, v)
 		}
 		vcs = append(vcs, config)
 	}
@@ -2281,7 +2306,7 @@ func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfig
 	return vcs
 }
 
-func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolumeConfiguration {
+func expandManagedEBSVolume(ctx context.Context, ebs []interface{}) *awstypes.ServiceManagedEBSVolumeConfiguration {
 	if len(ebs) == 0 {
 		return &awstypes.ServiceManagedEBSVolumeConfiguration{}
 	}
@@ -2315,8 +2340,41 @@ func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolume
 	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {
 		config.VolumeType = aws.String(v)
 	}
+	if v, ok := raw["tag_specifications"].([]interface{}); ok && len(v) > 0 {
+		config.TagSpecifications = expandTagSpecifications(ctx, v)
+	}
 
 	return config
+}
+
+func expandTagSpecifications(ctx context.Context, ts []interface{}) []awstypes.EBSTagSpecification {
+	if len(ts) == 0 {
+		return []awstypes.EBSTagSpecification{}
+	}
+
+	var s []awstypes.EBSTagSpecification
+	for _, item := range ts {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config awstypes.EBSTagSpecification
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
+			config.ResourceType = awstypes.EBSResourceType(v)
+		}
+		if v, ok := raw[names.AttrPropagateTags].(string); ok && v != "" {
+			config.PropagateTags = awstypes.PropagateTags(v)
+		}
+		if v, ok := raw[names.AttrTags].(map[string]any); ok && len(v) > 0 {
+			if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
+				config.Tags = Tags(v)
+			}
+		}
+		s = append(s, config)
+	}
+
+	return s
 }
 
 func expandServices(srv []interface{}) []awstypes.ServiceConnectService {
