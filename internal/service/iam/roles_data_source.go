@@ -5,6 +5,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/YakDriver/regexache"
@@ -50,34 +51,18 @@ func dataSourceRoles() *schema.Resource {
 
 func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var nameRegex, pathPrefix string
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	input := &iam.ListRolesInput{}
-
 	if v, ok := d.GetOk("path_prefix"); ok {
-		input.PathPrefix = aws.String(v.(string))
+		pathPrefix = *aws.String(v.(string))
 	}
-
-	var results []awstypes.Role
-
-	pages := iam.NewListRolesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading IAM roles: %s", err)
-		}
-
-		for _, role := range page.Roles {
-			if reflect.ValueOf(role).IsZero() {
-				continue
-			}
-
-			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.ToString(role.RoleName)) {
-				continue
-			}
-
-			results = append(results, role)
-		}
+	if v, ok := d.GetOk("name_regex"); ok {
+		nameRegex = *aws.String(v.(string))
+	}
+	results, err := findRoles(ctx, conn, pathPrefix, nameRegex)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "find roles: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -98,4 +83,34 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func findRoles(ctx context.Context, conn *iam.Client, pathPrefix string, nameRegex string) ([]awstypes.Role, error) {
+	var results []awstypes.Role
+
+	input := &iam.ListRolesInput{}
+	if pathPrefix != "" {
+		input.PathPrefix = &pathPrefix
+	}
+
+	pages := iam.NewListRolesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("reading IAM roles: %s", err)
+		}
+
+		for _, role := range page.Roles {
+			if reflect.ValueOf(role).IsZero() {
+				continue
+			}
+
+			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.ToString(role.RoleName)) {
+				continue
+			}
+
+			results = append(results, role)
+		}
+	}
+	return results, nil
 }
