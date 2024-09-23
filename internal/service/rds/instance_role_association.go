@@ -93,10 +93,10 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 		_, err = conn.AddRoleToDBInstance(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIamRolePropagationMessage) {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
 		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.AddRoleToDBInstance(ctx, input)
-		}, errCodeInvalidParameterValue, errIamRolePropagationMessage)
+		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
 	}
 
 	if err != nil {

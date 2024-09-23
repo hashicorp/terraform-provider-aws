@@ -87,10 +87,10 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 		_, err = conn.AddRoleToDBCluster(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIamRolePropagationMessage) {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
 		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.AddRoleToDBCluster(ctx, input)
-		}, errCodeInvalidParameterValue, errIamRolePropagationMessage)
+		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
 	}
 
 	if err != nil {

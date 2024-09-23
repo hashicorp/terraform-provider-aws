@@ -11,5 +11,5 @@ const (
 )
 
 const (
-	errIamRolePropagationMessage = "IAM role ARN value is invalid or does not include the required permissions"
+	errIAMRolePropagationMessage = "IAM role ARN value is invalid or does not include the required permissions"
 )
