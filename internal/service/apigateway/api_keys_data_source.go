@@ -56,7 +56,6 @@ func (d *dataSourceAPIKeys) Schema(ctx context.Context, request datasource.Schem
 						},
 						"customer_id": schema.StringAttribute{
 							Computed: true,
-							Optional: true,
 						},
 						names.AttrDescription: schema.StringAttribute{
 							Computed: true,
