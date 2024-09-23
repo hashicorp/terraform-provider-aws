@@ -186,7 +186,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/polly v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.12.0
-	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.7
+	github.com/aws/aws-sdk-go-v2/service/qldb v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.8
