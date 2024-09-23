@@ -601,6 +601,9 @@ func retryCreateRole(ctx context.Context, conn *iam.Client, input *iam.CreateRol
 			if errs.IsAErrorMessageContains[*awstypes.MalformedPolicyDocumentException](err, "Invalid principal in policy") {
 				return true, err
 			}
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
+				return true, err
+			}
 
 			return false, err
 		},
