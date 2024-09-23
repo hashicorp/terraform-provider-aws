@@ -1919,7 +1919,7 @@ func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPen
 	}
 }
 
-func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) { //nolint:unparam
+func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) {
 	pendingStatuses := []string{
 		clusterStatusCreating,
 		clusterStatusMigrating,
