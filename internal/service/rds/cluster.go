@@ -1919,6 +1919,40 @@ func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPen
 	}
 }
 
+func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) { //nolint:unparam
+	pendingStatuses := []string{
+		clusterStatusCreating,
+		clusterStatusMigrating,
+		clusterStatusPreparingDataMigration,
+		clusterStatusRebooting,
+		clusterStatusBackingUp,
+		clusterStatusConfiguringIAMDatabaseAuth,
+		clusterStatusConfiguringEnhancedMonitoring,
+		clusterStatusModifying,
+		clusterStatusRenaming,
+		clusterStatusResettingMasterCredentials,
+		clusterStatusScalingCompute,
+		clusterStatusUpgrading,
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending:    pendingStatuses,
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitDBClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
