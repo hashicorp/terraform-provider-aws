@@ -131,7 +131,10 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	hostedZoneID := d.Get(names.AttrHostedZoneID).(string)
 	name := d.Get(names.AttrName).(string)
 	status := d.Get(names.AttrStatus).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{hostedZoneID, name}, keySigningKeyResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{hostedZoneID, name}, keySigningKeyResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Route 53 Key Signing Key (%s): %s", id, err)
+	}
 	input := &route53.CreateKeySigningKeyInput{
 		CallerReference: aws.String(sdkid.UniqueId()),
 		HostedZoneId:    aws.String(hostedZoneID),
