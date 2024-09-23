@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.25.7
+	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.23.7
