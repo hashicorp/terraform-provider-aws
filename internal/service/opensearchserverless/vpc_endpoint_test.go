@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,6 +22,7 @@ import (
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"time"
 )
 
 func TestAccOpenSearchServerlessVPCEndpoint_basic(t *testing.T) {
@@ -142,6 +144,15 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccVPCEndpointConfig_multiple_securityGroups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint3),
+					testAccCheckVPCEndpointNotRecreated(&vpcendpoint2, &vpcendpoint3),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
+				),
+			},
+			{
 				Config: testAccVPCEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint3),
@@ -195,22 +206,32 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_opensearchserverless_vpc_endpointa" {
+			if rs.Type != "aws_opensearchserverless_vpc_endpoint" {
 				continue
 			}
 
-			_, err := tfopensearchserverless.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+			// Retry the check a few times to allow for eventual consistency
+			err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
+				_, err := tfopensearchserverless.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
-				continue
-			}
+				if tfresource.NotFound(err) {
+					return nil
+				}
+
+				if err != nil {
+					return retry.NonRetryableError(err)
+				}
+
+				return retry.RetryableError(fmt.Errorf("OpenSearch Serverless VPC Endpoint %s still exists", rs.Primary.ID))
+			})
 
 			if err != nil {
 				return err
 			}
-
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, errors.New("not destroyed"))
 		}
+
+		// Wait for a short period to allow AWS to fully remove the VPC Endpoint
+		time.Sleep(30 * time.Second)
 
 		return nil
 	}
@@ -312,11 +333,13 @@ resource "aws_security_group" "test" {
 func testAccVPCEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
   name       = %[1]q
   subnet_ids = [aws_subnet.test[0].id]
   vpc_id     = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))
 }
@@ -324,11 +347,13 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_multiple_subnets(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		testAccVPCEndpointConfig_securityGroupBase(rName, 1),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-  vpc_id     = aws_vpc.test.id
+  name               = %[1]q
+  subnet_ids         = aws_subnet.test[*].id
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))
 }
@@ -342,7 +367,6 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
   vpc_id     = aws_vpc.test.id
-
   security_group_ids = aws_security_group.test[*].id
 }
 `, rName))
@@ -357,7 +381,6 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
   vpc_id     = aws_vpc.test.id
-
   security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))
