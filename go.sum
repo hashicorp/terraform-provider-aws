@@ -112,8 +112,8 @@ github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.18.0 h1:Fno23Zk3fqQKcesvdZ
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.18.0/go.mod h1:Y1Sv53bccpWBNWIw6+29DEztSouqq/u/S6S/lPqI9/A=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.17.0 h1:xbRfmuwVM2u7yr4kDIwK7J5xA11lslB51Q+wniiAsu8=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.17.0/go.mod h1:iX55GDn2lL2pthAp3k3lNpsRfFdfNpvYlHHqu8GQKT0=
-github.com/aws/aws-sdk-go-v2/service/cloud9 v1.26.7 h1:93nQxaTOHWWpy/fRY4F+00vkpwR/EHouw5QUn7R2HYU=
-github.com/aws/aws-sdk-go-v2/service/cloud9 v1.26.7/go.mod h1:GZuSYq2+DIyyXZQl8CtJr/70zCxO5MyfgGM44eluZs8=
+github.com/aws/aws-sdk-go-v2/service/cloud9 v1.27.0 h1:mnWEdfKLz5ajrx/D/OXCSwYPMiJFbJJfe9JywnEmoV8=
+github.com/aws/aws-sdk-go-v2/service/cloud9 v1.27.0/go.mod h1:R6qoyNSjchvHZZrUVpMwqjqOuDNCdk9qoI9IagO02xg=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.20.8 h1:QLKIR/M7rtqGgPkhvZYVeahpJM2kHAKGKSxqAdm4FGA=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.20.8/go.mod h1:aiOymhljgGMZYl4V8sSGPbOT7fnWruJEe+HjyJaxHXU=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.53.8 h1:zhDl3UrTl2IO+C4Ub7TmNNXfxmDOZ7VKIpV+Ayf7f9M=
