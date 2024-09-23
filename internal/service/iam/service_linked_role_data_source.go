@@ -21,22 +21,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name=Service Linked Role)
+// @FrameworkDataSource("aws_iam_service_linked_role",name="Service Linked Role")
 func newDataSourceServiceLinkedRole(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceServiceLinkedRole{}
 
 	return d, nil
 }
 
-const (
-	DSNameServiceLinkedRoles = "Service Linked Roles Data Source"
-)
-
 type dataSourceServiceLinkedRole struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceServiceLinkedRole) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (*dataSourceServiceLinkedRole) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_iam_service_linked_role"
 }
 
@@ -71,7 +67,7 @@ func (d *dataSourceServiceLinkedRole) Schema(ctx context.Context, request dataso
 			names.AttrPath: schema.StringAttribute{
 				Computed: true,
 			},
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
 			"unique_id": schema.StringAttribute{
@@ -92,16 +88,18 @@ func (d *dataSourceServiceLinkedRole) Read(ctx context.Context, request datasour
 	var role awstypes.Role
 	conn := d.Meta().IAMClient(ctx)
 
-	//AWS API does not provide a Get method for Service Linked Roles.
+	//AWS API does not provide a Get/List method for Service Linked Roles.
 	//Matching the role path prefix and role name using regex is the only option to find Service Linked roles
 	var nameRegex string
 	pathPrefix := fmt.Sprintf("/aws-service-role/%s", data.AWSServiceName.ValueString())
 	customSuffix := data.CustomSuffix.ValueString()
 	awsServiceName := data.AWSServiceName.ValueString()
 	if customSuffix == "" {
-		nameRegex = `AWSServiceRole[^_]+$` //regex to match AWSServiceRole prefix and 1 or more characters exluding _ and white spaces
+		//regex to match AWSServiceRole prefix and 1 or more characters exluding _ (underscore)
+		nameRegex = `AWSServiceRole[^_]+$`
 	} else {
-		nameRegex = fmt.Sprintf(`AWSServiceRole[0-9A-Za-z]+_%s$`, customSuffix) //regex to match AWSServiceRole prefix, 1 or more characters and the provided suffix
+		//regex to match AWSServiceRole prefix and any role name, _ (underscore) and the provided suffix
+		nameRegex = fmt.Sprintf(`AWSServiceRole[0-9A-Za-z]+_%s$`, customSuffix)
 	}
 	roles, err := findRoles(ctx, conn, pathPrefix, nameRegex)
 	if err != nil {

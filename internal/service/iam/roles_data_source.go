@@ -21,22 +21,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name=Roles)
+// @FrameworkDataSource("aws_iam_roles",name="Roles")
 func newDataSourceRoles(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRoles{}
 
 	return d, nil
 }
 
-const (
-	DSNameRoles = "Roles Data Source"
-)
-
 type dataSourceRoles struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceRoles) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (*dataSourceRoles) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_iam_roles"
 }
 

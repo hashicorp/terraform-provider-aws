@@ -153,7 +153,6 @@ func testAccServiceLinkedRoleDataSourceConfig_basic(awsServiceName string) strin
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
   description      = "This is a service linked role"
-
 }
 
 data "aws_iam_service_linked_role" "test" {
