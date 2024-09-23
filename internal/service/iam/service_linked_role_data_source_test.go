@@ -157,7 +157,7 @@ resource "aws_iam_service_linked_role" "test" {
 }
 
 data "aws_iam_service_linked_role" "test" {
-    aws_service_name = aws_iam_service_linked_role.test.aws_service_name
+  aws_service_name = aws_iam_service_linked_role.test.aws_service_name
 }
 `, awsServiceName)
 }

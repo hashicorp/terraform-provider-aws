@@ -6,8 +6,8 @@ package iam
 import (
 	"context"
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name=Service Linked Role)
@@ -35,7 +36,7 @@ type dataSourceServiceLinkedRole struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceServiceLinkedRole) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceServiceLinkedRole) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_iam_service_linked_role"
 }
 
@@ -45,9 +46,8 @@ func (d *dataSourceServiceLinkedRole) Schema(ctx context.Context, request dataso
 			"aws_service_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					// These are example validators from terraform-plugin-framework-validators
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`\.`),
+						regexache.MustCompile(`\.`),
 						"must be a full service hostname e.g. elasticbeanstalk.amazonaws.com",
 					),
 				},
@@ -62,13 +62,13 @@ func (d *dataSourceServiceLinkedRole) Schema(ctx context.Context, request dataso
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			"path": schema.StringAttribute{
+			names.AttrPath: schema.StringAttribute{
 				Computed: true,
 			},
 			"arn": schema.StringAttribute{
@@ -141,13 +141,13 @@ func (d *dataSourceServiceLinkedRole) Read(ctx context.Context, request datasour
 }
 
 type ServiceLinkedRoleDataSourceModel struct {
-	RoleId          types.String      `tfsdk:"unique_id"`
-	Arn             types.String      `tfsdk:"arn"`
+	ARN             types.String      `tfsdk:"arn"`
 	AWSServiceName  types.String      `tfsdk:"aws_service_name"`
-	CustomSuffix    types.String      `tfsdk:"custom_suffix"`
+	CreateDate      timetypes.RFC3339 `tfsdk:"create_date"`
 	CreateIfMissing types.Bool        `tfsdk:"create_if_missing"`
+	CustomSuffix    types.String      `tfsdk:"custom_suffix"`
 	Description     types.String      `tfsdk:"description"`
 	Path            types.String      `tfsdk:"path"`
+	RoleId          types.String      `tfsdk:"unique_id"`
 	RoleName        types.String      `tfsdk:"name"`
-	CreateDate      timetypes.RFC3339 `tfsdk:"create_date"`
 }

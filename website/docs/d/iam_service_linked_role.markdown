@@ -28,7 +28,6 @@ data "aws_iam_service_linked_role" "example" {
 * `custom_suffix` - (Optional) Additional string appended to the role name. Not all AWS services support custom suffixes.
 * `create_if_missing` - (Optional) This will create the service linked role if it does not exists. Default value is `false`
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -40,5 +39,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `path` - The path of the role.
 * `unique_id` - The stable and unique string identifying the role.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-
