@@ -231,7 +231,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.16.4
+	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/sso v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.32.1
