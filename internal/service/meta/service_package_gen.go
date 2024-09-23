@@ -14,32 +14,40 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceARN,
+			Factory: newARNDataSource,
+			Name:    "ARN",
 		},
 		{
-			Factory: newDataSourceBillingServiceAccount,
+			Factory: newBillingServiceAccountDataSource,
+			Name:    "Billing Service Account",
 		},
 		{
-			Factory: newDataSourceDefaultTags,
+			Factory: newDefaultTagsDataSource,
+			Name:    "Default Tags",
 		},
 		{
-			Factory: newDataSourceIPRanges,
+			Factory: newIPRangesDataSource,
+			Name:    "IP Ranges",
 		},
 		{
-			Factory: newDataSourcePartition,
+			Factory: newPartitionDataSource,
+			Name:    "Partition",
 		},
 		{
-			Factory: newDataSourceRegion,
+			Factory: newRegionDataSource,
+			Name:    "Region",
 		},
 		{
-			Factory: newDataSourceRegions,
+			Factory: newRegionsDataSource,
 			Name:    "Regions",
 		},
 		{
-			Factory: newDataSourceService,
+			Factory: newServiceDataSource,
+			Name:    "Service",
 		},
 		{
 			Factory: newServicePrincipalDataSource,
+			Name:    "Service Principal",
 		},
 	}
 }

@@ -23,7 +23,7 @@ func DataSourceCredentialsSchema() *schema.Schema {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ValidateFunc:  verify.ValidARN,
-					ConflictsWith: []string{"credentials.0.credential_pair"},
+					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.secret_arn"},
 				},
 				"credential_pair": {
 					Type:     schema.TypeList,
@@ -51,7 +51,12 @@ func DataSourceCredentialsSchema() *schema.Schema {
 							},
 						},
 					},
-					ConflictsWith: []string{"credentials.0.copy_source_arn"},
+					ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.secret_arn"},
+				},
+				"secret_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn"},
 				},
 			},
 		},
@@ -566,6 +571,7 @@ func SSLPropertiesSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -613,6 +619,10 @@ func ExpandDataSourceCredentials(tfList []interface{}) *awstypes.DataSourceCrede
 
 	if v, ok := tfMap["credential_pair"].([]interface{}); ok && len(v) > 0 {
 		apiObject.CredentialPair = expandCredentialPair(v)
+	}
+
+	if v, ok := tfMap["secret_arn"].(string); ok && v != "" {
+		apiObject.SecretArn = aws.String(v)
 	}
 
 	return apiObject

@@ -9,9 +9,11 @@ updates:
     directories:
       - "/"
     groups:
-      aws-sdk-go:
+      aws-sdk-go-v1:
         patterns:
           - "github.com/aws/aws-sdk-go"
+      aws-sdk-go-v2:
+        patterns:
           - "github.com/aws/aws-sdk-go-v2"
           - "github.com/aws/aws-sdk-go-v2/*"
       aws-sdk-go-base:
@@ -20,13 +22,10 @@ updates:
           - "github.com/hashicorp/aws-sdk-go-base/v2/*"
       terraform-devex:
         patterns:
-          - "github.com/hashicorp/terraform-plugin-framework"
-          - "github.com/hashicorp/terraform-plugin-framework-timeouts"
-          - "github.com/hashicorp/terraform-plugin-framework-validators"
-          - "github.com/hashicorp/terraform-plugin-mux"
-          - "github.com/hashicorp/terraform-plugin-sdk/v2"
-          - "github.com/hashicorp/terraform-plugin-testing"
+          - "github.com/hashicorp/terraform-plugin-*"
     ignore:
+      # aws/smithy-go should only be updated via aws/aws-sdk-go-v2
+      - dependency-name: "github.com/aws/smithy-go"
       # hcl/v2 should only be updated via terraform-plugin-sdk
       - dependency-name: "github.com/hashicorp/hcl/v2"
       # terraform-plugin-go should only be updated via terraform-plugin-framework
@@ -50,19 +49,6 @@ updates:
       - "/skaff"
       - "/tools/awssdkpatch"
       - "/tools/tfsdk2fw"
-    ignore:
-      # hcl/v2 should only be updated via terraform-plugin-sdk
-      - dependency-name: "github.com/hashicorp/hcl/v2"
-      # terraform-plugin-go should only be updated via terraform-plugin-framework
-      - dependency-name: "github.com/hashicorp/terraform-plugin-go"
-      # terraform-plugin-log should only be updated via terraform-plugin-framework
-      - dependency-name: "github.com/hashicorp/terraform-plugin-log"
-      # go-hclog should only be updated via terraform-plugin-log
-      - dependency-name: "github.com/hashicorp/go-hclog"
-      # grpc should only be updated via terraform-plugin-go/terraform-plugin-framework
-      - dependency-name: "google.golang.org/grpc"
-      # protobuf should only be updated via terraform-plugin-go/terraform-plugin-framework
-      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30
