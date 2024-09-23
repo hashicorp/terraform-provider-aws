@@ -88,8 +88,8 @@ github.com/aws/aws-sdk-go-v2/service/auditmanager v1.36.0 h1:mnNTeh3ioXgoXlFrPjZ
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.36.0/go.mod h1:auTo9OWA6W4naXZIKjBZPeUdYe/5idHL7r/+6zgbbFo=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.44.0 h1:LcWSlLxJsg8mcNujVpn0qe7427f8G2QZWh48SGJuseM=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.44.0/go.mod h1:Gmv7s//GGvs3nj9aqltFYnLStW8vDIwch0USkE67G4E=
-github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.22.8 h1:CjG6zY51ChHKGmbHDJx4uLDCMZdkPH8unhKyqZspC4w=
-github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.22.8/go.mod h1:u5zgiwlr6yQh9bKAcoeCy/h5vLC9HqzwxV0YkUesayQ=
+github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.23.0 h1:HiTZP8C6wLH7bU+iwlJP6AIICWvr02MibJFCuGt9bDw=
+github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.23.0/go.mod h1:IXXoIU2PoQd+uUpu1qzC+tcyWpaJBLlX3bQTvaxO6Fo=
 github.com/aws/aws-sdk-go-v2/service/backup v1.37.3 h1:1moVmJmsgWcMNzeQtv1WxPgj+z9sroEHQK8X1PHDr1o=
 github.com/aws/aws-sdk-go-v2/service/backup v1.37.3/go.mod h1:8Gg8n/Hq4/EegF64SJfJtAZtoFhsZrv1T1uz/rqw8ow=
 github.com/aws/aws-sdk-go-v2/service/batch v1.44.4 h1:qTH4dr1XXWq7Pa+LpUh7AmyPEIR7OCLEz67hWo1oyJ0=
