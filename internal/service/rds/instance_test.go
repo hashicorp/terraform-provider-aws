@@ -2374,6 +2374,51 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T)
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance types.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	domain := acctest.RandomDomain().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_mssqlDomain(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, names.AttrUsername),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomain, sourceResourceName, names.AttrDomain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_s3Import(t *testing.T) {
 	acctest.Skip(t, "RestoreDBInstanceFromS3 cannot restore from MySQL version 5.6")
 
@@ -9212,6 +9257,41 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 }
 `, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_mssqlDomain(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseMSSQLDomain(rName, domain),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 20
+  backup_retention_period = 1
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  vpc_security_group_ids  = [aws_security_group.test.id]
+
+  domain               = aws_directory_service_directory.directory.id
+  domain_iam_role_name = aws_iam_role.role.name
+}
+
+resource "aws_db_instance" "test" {
+  identifier             = %[1]q
+  instance_class         = aws_db_instance.source.instance_class
+  replicate_source_db    = aws_db_instance.source.identifier
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  vpc_security_group_ids = [aws_security_group.test.id]
+  skip_final_snapshot    = true
+
+  domain               = aws_directory_service_directory.directory.id
+  domain_iam_role_name = aws_iam_role.role.name
+}
+`, rName))
 }
 
 // When testing needs to distinguish a second region and second account in the same region
