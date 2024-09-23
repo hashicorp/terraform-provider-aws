@@ -152,7 +152,7 @@ func testAccServiceLinkedRoleDataSourceConfig_basic(awsServiceName string) strin
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
-  description= "This is a service linked role"
+  description      = "This is a service linked role"
 
 }
 
@@ -166,12 +166,12 @@ func testAccServiceLinkedRoleDataSourceConfig_customSuffix(awsServiceName string
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
-  custom_suffix = %[2]q
+  custom_suffix    = %[2]q
 }
 
 data "aws_iam_service_linked_role" "test" {
     aws_service_name = aws_iam_service_linked_role.test.aws_service_name
-	custom_suffix = aws_iam_service_linked_role.test.custom_suffix
+	custom_suffix    = aws_iam_service_linked_role.test.custom_suffix
 }
 `, awsServiceName, customSuffix)
 }
@@ -180,9 +180,9 @@ func testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName str
 	return fmt.Sprintf(`
 
 data "aws_iam_service_linked_role" "test" {
-    aws_service_name = %[1]q
+    aws_service_name  = %[1]q
 	create_if_missing = %[2]t
-	custom_suffix = %[3]q
+	custom_suffix     = %[3]q
 }
 `, awsServiceName, createIfMissing, customSufix)
 }
