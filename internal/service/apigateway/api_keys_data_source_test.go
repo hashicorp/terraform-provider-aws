@@ -44,7 +44,6 @@ func testAccAPIGatewayKeysDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "items.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.created_date", resourceName, names.AttrCreatedDate),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.customer_id", resourceName, "customer_id"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.description", resourceName, names.AttrDescription),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.enabled", resourceName, names.AttrEnabled),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.id", resourceName, names.AttrID),

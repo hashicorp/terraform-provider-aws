@@ -13,7 +13,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceAPIKeys,
+			Name:    "API Keys",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -27,11 +32,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_api_gateway_api_key",
 			Name:     "API Key",
 			Tags:     &types.ServicePackageResourceTags{},
-		},
-		{
-			Factory:  dataSourceAPIKeys,
-			TypeName: "aws_api_gateway_api_keys",
-			Name:     "API Keys",
 		},
 		{
 			Factory:  dataSourceAuthorizer,

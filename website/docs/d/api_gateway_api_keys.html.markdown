@@ -28,6 +28,7 @@ This resource supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` - AWS Region.
 * `items` - List of objects containing API Key information. See below.
 
 ### `items`
