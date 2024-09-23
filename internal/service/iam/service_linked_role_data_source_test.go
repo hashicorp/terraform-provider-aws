@@ -58,6 +58,9 @@ func TestAccIAMServiceLinkedRoleDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "aws_service_name", resourceName, "aws_service_name"),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "create_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -96,10 +99,11 @@ func TestAccIAMServiceLinkedRoleDataSource_customSuffix(t *testing.T) {
 func TestAccIAMServiceLinkedRoleDataSource_createIfMissing(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_service_linked_role.test"
-	awsServiceName := "inspector.amazonaws.com"
-	name := "AWSServiceRoleForAmazonInspector"
+	awsServiceName := "autoscaling.amazonaws.com"
+	name := "AWSServiceRoleForAutoScaling"
+	customSuffix := "ServiceLinkedRoleDataSource"
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
-	arnResource := fmt.Sprintf("role%s%s", path, name)
+	arnResource := fmt.Sprintf("role%s%s_%s", path, name, customSuffix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -127,11 +131,11 @@ func TestAccIAMServiceLinkedRoleDataSource_createIfMissing(t *testing.T) {
 						t.Fatalf("deleting service-linked role %s: %s", name, err)
 					}
 				},
-				Config:      testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName, false),
-				ExpectError: regexache.MustCompile("role was not found"),
+				Config:      testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName, customSuffix, false),
+				ExpectError: regexache.MustCompile("Role was not found"),
 			},
 			{
-				Config: testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName, true),
+				Config: testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName, customSuffix, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "aws_service_name", awsServiceName),
@@ -148,6 +152,7 @@ func testAccServiceLinkedRoleDataSourceConfig_basic(awsServiceName string) strin
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
+  description= "This is a service linked role"
 
 }
 
@@ -171,12 +176,13 @@ data "aws_iam_service_linked_role" "test" {
 `, awsServiceName, customSuffix)
 }
 
-func testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName string, createIfMissing bool) string {
+func testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName string, customSufix string, createIfMissing bool) string {
 	return fmt.Sprintf(`
 
 data "aws_iam_service_linked_role" "test" {
     aws_service_name = %[1]q
 	create_if_missing = %[2]t
+	custom_suffix = %[3]q
 }
-`, awsServiceName, createIfMissing)
+`, awsServiceName, createIfMissing, customSufix)
 }
