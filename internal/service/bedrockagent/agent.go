@@ -295,7 +295,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.Description.Equal(old.Description) ||
 		!new.Instruction.Equal(old.Instruction) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
-		!new.GuardRailConfiguration.Equal(old.GuardRailConfiguration) ||
+		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
 		input := &bedrockagent.UpdateAgentInput{
 			AgentId:                 fwflex.StringFromFramework(ctx, new.AgentID),
@@ -311,9 +311,9 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
 		}
 
-		if !new.GuardRailConfiguration.Equal(old.GuardRailConfiguration) && !new.GuardRailConfiguration.IsNull() {
+		if !new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) && !new.GuardrailConfiguration.IsNull() {
 			guardrailConfiguration := &awstypes.GuardrailConfiguration{}
-			response.Diagnostics.Append(fwflex.Expand(ctx, new.GuardRailConfiguration, guardrailConfiguration)...)
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.GuardrailConfiguration, guardrailConfiguration)...)
 			if response.Diagnostics.HasError() {
 				return
 			}
@@ -594,7 +594,7 @@ type agentResourceModel struct {
 	CustomerEncryptionKeyARN    fwtypes.ARN                                                       `tfsdk:"customer_encryption_key_arn"`
 	Description                 types.String                                                      `tfsdk:"description"`
 	FoundationModel             types.String                                                      `tfsdk:"foundation_model"`
-	GuardRailConfiguration      fwtypes.ListNestedObjectValueOf[guardrailConfigurationModel]      `tfsdk:"guardrail_configuration"`
+	GuardrailConfiguration      fwtypes.ListNestedObjectValueOf[guardrailConfigurationModel]      `tfsdk:"guardrail_configuration"`
 	ID                          types.String                                                      `tfsdk:"id"`
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
