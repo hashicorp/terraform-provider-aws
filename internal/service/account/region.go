@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,7 +77,10 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	accountID := ""
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
-		id = errs.Must(flex.FlattenResourceId([]string{accountID, region}, regionResourceIDPartCount, false))
+		id, err := flex.FlattenResourceId([]string{accountID, region}, regionResourceIDPartCount, false)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+		}
 	} else {
 		id = region
 	}
