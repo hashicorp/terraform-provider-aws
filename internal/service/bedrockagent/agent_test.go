@@ -187,6 +187,65 @@ func TestAccBedrockAgentAgent_addPrompt(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentAgent_guardrail(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	guardrailResourceName := "aws_bedrock_guardrail.test"
+	var v awstypes.Agent
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_guardrail_noConfig(rName, "anthropic.claude-v2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", acctest.Ct0),
+				),
+			},
+			{
+				Config: testAccAgentConfig_guardrail_withConfig(rName, "anthropic.claude-v2", "DRAFT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "guardrail_configuration.0.guardrail_identifier", guardrailResourceName, "guardrail_id"),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.0.guardrail_version", "DRAFT"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+			{
+				Config: testAccAgentConfig_guardrail_withConfig(rName, "anthropic.claude-v2", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "guardrail_configuration.0.guardrail_identifier", guardrailResourceName, "guardrail_id"),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.0.guardrail_version", acctest.Ct1),
+				),
+			},
+			{
+				Config: testAccAgentConfig_guardrail_noConfig(rName, "anthropic.claude-v2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentAgent_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -391,6 +450,36 @@ data "aws_partition" "current_agent" {}
 `, rName, model)
 }
 
+func testAccAgent_guardrail(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "test_agent_guardrail_permissions" {
+  statement {
+    actions   = ["bedrock:ApplyGuardrail"]
+    resources = [aws_bedrock_guardrail.test.guardrail_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "test_agent_guardrail" {
+  role   = aws_iam_role.test_agent.id
+  policy = data.aws_iam_policy_document.test_agent_guardrail_permissions.json
+}
+
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  description               = %[1]q
+  blocked_input_messaging   = "Sorry, I cannot answer this question."
+  blocked_outputs_messaging = "Sorry, I cannot answer this question."
+  content_policy_config {
+    filters_config {
+      input_strength  = "MEDIUM"
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+  }
+}
+`, rName)
+}
+
 func testAccAgentConfig_basic(rName, model, description string) string {
 	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
@@ -559,4 +648,32 @@ resource "aws_bedrockagent_agent" "test" {
 
 }
 `, rName, model, desc))
+}
+
+func testAccAgentConfig_guardrail_noConfig(rName, model string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), testAccAgent_guardrail(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                 = %[1]q
+  agent_resource_role_arn    = aws_iam_role.test_agent.arn
+  instruction                = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model           = %[2]q
+  skip_resource_in_use_check = true
+}
+`, rName, model))
+}
+
+func testAccAgentConfig_guardrail_withConfig(rName, model, guardrailVersion string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), testAccAgent_guardrail(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                 = %[1]q
+  agent_resource_role_arn    = aws_iam_role.test_agent.arn
+  instruction                = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model           = %[2]q
+  skip_resource_in_use_check = true
+  guardrail_configuration {
+    guardrail_identifier = aws_bedrock_guardrail.test.guardrail_id
+    guardrail_version    = %[3]q
+  }
+}
+`, rName, model, guardrailVersion))
 }
