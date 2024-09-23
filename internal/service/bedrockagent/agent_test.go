@@ -36,6 +36,7 @@ func TestAccBedrockAgentAgent_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
