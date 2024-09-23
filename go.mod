@@ -216,7 +216,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.17.0
-	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.22.8
+	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.8
