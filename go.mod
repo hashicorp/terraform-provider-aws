@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/docdb v1.37.4
+	github.com/aws/aws-sdk-go-v2/service/docdb v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.10
