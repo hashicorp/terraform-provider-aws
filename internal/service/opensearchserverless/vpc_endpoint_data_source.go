@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_opensearchserverless_vpc_endpoint")
-func DataSourceVPCEndpoint() *schema.Resource {
+// @SDKDataSource("aws_opensearchserverless_vpc_endpoint", name="VPC Endpoint")
+func dataSourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointRead,
 
@@ -65,14 +65,12 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, id)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Serverless VPC Endpoint with id (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Serverless VPC Endpoint (%s): %s", id, err)
 	}
 
 	d.SetId(aws.ToString(vpcEndpoint.Id))
-
 	createdDate := time.UnixMilli(aws.ToInt64(vpcEndpoint.CreatedDate))
 	d.Set(names.AttrCreatedDate, createdDate.Format(time.RFC3339))
-
 	d.Set(names.AttrName, vpcEndpoint.Name)
 	d.Set(names.AttrSecurityGroupIDs, vpcEndpoint.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, vpcEndpoint.SubnetIds)
