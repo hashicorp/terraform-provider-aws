@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -136,9 +138,8 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 
 	data.ID = fwflex.StringToFramework(ctx, output.CreateVpcEndpointDetail.Id)
 
-	vpce, err := waitVPCEndpointCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
-	if err != nil {
+	if _, err := waitVPCEndpointCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		resp.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, resNameVPCEndpoint, data.Name.String(), nil),
 			err.Error(),
@@ -146,7 +147,23 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, vpce.SecurityGroupIds, &data.SecurityGroupIDs)...)
+	// Security Group IDs are not returned and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	var securityGroupIDs []*string
+	for _, group := range vpce.Groups {
+		securityGroupIDs = append(securityGroupIDs, group.GroupId)
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -163,7 +180,7 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	vpce, err := findVPCEndpointByID(ctx, conn, data.ID.ValueString())
+	output, err := findVPCEndpointByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -179,7 +196,28 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, vpce, &data)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Security Group IDs are not returned and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	var securityGroupIDs []*string
+	for _, group := range vpce.Groups {
+		securityGroupIDs = append(securityGroupIDs, group.GroupId)
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -241,9 +279,7 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	vpce, err := waitVPCEndpointUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
-
-	if err != nil {
+	if _, err := waitVPCEndpointUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForUpdate, resNameVPCEndpoint, new.Name.String(), nil),
 			err.Error(),
@@ -251,7 +287,23 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, vpce.SecurityGroupIds, &new.SecurityGroupIDs)...)
+	// Security Group IDs are not returned and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), new.ID.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, new.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	var securityGroupIDs []*string
+	for _, group := range vpce.Groups {
+		securityGroupIDs = append(securityGroupIDs, group.GroupId)
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &new.SecurityGroupIDs)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
