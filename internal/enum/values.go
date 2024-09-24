@@ -25,3 +25,9 @@ func Slice[T ~string](l ...T) []string {
 		return string(v)
 	})
 }
+
+func EnumSlice[T Valueser[T]](l ...string) []T {
+	return tfslices.ApplyToAll(l, func(v string) T {
+		return T(v)
+	})
+}
