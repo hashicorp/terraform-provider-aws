@@ -637,6 +637,8 @@ class MyConvertedCode(TerraformStack):
             name="example-snowflake-destination",
             snowflake_configuration=KinesisFirehoseDeliveryStreamSnowflakeConfiguration(
                 account_url="https://example.snowflakecomputing.com",
+                buffering_interval=600,
+                buffering_size=15,
                 database="example-db",
                 private_key="...",
                 role_arn=firehose.arn,
@@ -831,6 +833,8 @@ The `http_endpoint_configuration` configuration block supports the following arg
 The `snowflake_configuration` configuration block supports the following arguments:
 
 * `account_url` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 128, before delivering it to the destination.  The default value is 1MB.
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 0 to 900, before delivering it to the destination.  The default value is 0s.
 * `private_key` - (Optional) The private key for authentication. This value is required if `secrets_manager_configuration` is not provided.
 * `key_passphrase` - (Optional) The passphrase for the private key.
 * `user` - (Optional) The user for authentication. This value is required if `secrets_manager_configuration` is not provided.
@@ -1123,4 +1127,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.20.1 input-542173d779b798e435a3f65b63119440e76a1f7f3289989b1ee44bb96fe4a601 -->
+<!-- cache-key: cdktf-0.20.1 input-e14a6ef26850bbd11cfdffd53a2f5778283f5b9202b48b79227dbc1e2a4e2773 -->

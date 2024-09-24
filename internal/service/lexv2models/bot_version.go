@@ -115,12 +115,12 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	in := &lexmodelsv2.CreateBotVersionInput{
-		BotId:                         aws.String(plan.BotID.ValueString()),
+		BotId:                         plan.BotID.ValueStringPointer(),
 		BotVersionLocaleSpecification: expandLocalSpecification(localeSpec),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	out, err := conn.CreateBotVersion(ctx, in)
@@ -214,8 +214,8 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &lexmodelsv2.DeleteBotVersionInput{
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteBotVersion(ctx, in)
@@ -331,7 +331,7 @@ func expandLocalSpecification(tfMap map[string]versionLocaleDetailsData) map[str
 
 	tfObj := make(map[string]awstypes.BotVersionLocaleDetails)
 	for key, value := range tfMap {
-		tfObj[key] = awstypes.BotVersionLocaleDetails{SourceBotVersion: aws.String(value.SourceBotVersion.ValueString())}
+		tfObj[key] = awstypes.BotVersionLocaleDetails{SourceBotVersion: value.SourceBotVersion.ValueStringPointer()}
 	}
 
 	return tfObj

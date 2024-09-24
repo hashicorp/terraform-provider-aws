@@ -414,7 +414,7 @@ accounts is enabled.
 * `identifier_prefix` - (Optional) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
-storage_type of "io1". Can only be set when `storage_type` is `"io1"` or `"gp3"`.
+storage_type of "io1" or "io2". Can only be set when `storage_type` is `"io1"`, `"io2` or `"gp3"`.
 Cannot be specified for gp3 storage if the `allocated_storage` value is below a per-`engine` threshold.
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
@@ -485,8 +485,8 @@ is ignored and you should instead declare `kms_key_id` with a valid ARN. The
 default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), "gp3" (general purpose SSD that needs `iops` independently)
-or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is specified,
-"gp2" if not.
+"io1" (provisioned IOPS SSD) or "io2" (block express storage provisioned IOPS
+SSD). The default is "io1" if `iops` is specified, "gp2" if not.
 * `storage_throughput` - (Optional) The storage throughput value for the DB instance. Can only be set when `storage_type` is `"gp3"`. Cannot be specified if the `allocated_storage` value is below a per-`engine` threshold. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
@@ -655,4 +655,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d9ab3c6ab96aec0cb8fc8a3ec3a6e2d68ad7952111ee0fbfcd59c9fef3e2baa7 -->
+<!-- cache-key: cdktf-0.20.1 input-4580e974a5e4576dfe92805deffe381a3f8e065605c18948d5b6feb61c2f3c35 -->

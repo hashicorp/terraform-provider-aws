@@ -192,7 +192,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 	conn := r.Meta().DynamoDBClient(ctx)
 
 	_, err := conn.DeleteResourcePolicy(ctx, &dynamodb.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(data.ID.ValueString()),
+		ResourceArn: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {

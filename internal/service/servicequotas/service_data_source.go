@@ -51,7 +51,6 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		for _, s := range page.Services {
-			s := s
 			if aws.ToString(s.ServiceName) == serviceName {
 				service = &s
 				break

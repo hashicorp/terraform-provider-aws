@@ -154,7 +154,7 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	tags = tags.IgnoreConfig(ignoreTagsConfig)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -175,7 +175,7 @@ type dataSourceCollectionData struct {
 	LastModifiedDate   types.String `tfsdk:"last_modified_date"`
 	Name               types.String `tfsdk:"name"`
 	StandbyReplicas    types.String `tfsdk:"standby_replicas"`
-	Tags               types.Map    `tfsdk:"tags"`
+	Tags               tftags.Map   `tfsdk:"tags"`
 	Type               types.String `tfsdk:"type"`
 	FailureMessage     types.String `tfsdk:"failure_message"`
 	FailureCode        types.String `tfsdk:"failure_code"`

@@ -63,6 +63,7 @@ const (
 	CodeStarConnectionsEndpointID          = "codestar-connections"
 	CognitoIdentityEndpointID              = "cognito-identity"
 	ComprehendEndpointID                   = "comprehend"
+	ComputeOptimizerEndpointID             = "compute-optimizer"
 	ConfigServiceEndpointID                = "config"
 	ConnectEndpointID                      = "connect"
 	DataExchangeEndpointID                 = "dataexchange"
@@ -78,6 +79,7 @@ const (
 	EKSEndpointID                          = "eks"
 	ELBEndpointID                          = "elasticloadbalancing"
 	EMREndpointID                          = "elasticmapreduce"
+	ElasticsearchEndpointID                = "es"
 	ElasticTranscoderEndpointID            = "elastictranscoder"
 	ElastiCacheEndpointID                  = "elasticache"
 	EventsEndpointID                       = "events"
@@ -111,6 +113,7 @@ const (
 	PipesEndpointID                        = "pipes"
 	PollyEndpointID                        = "polly"
 	QLDBEndpointID                         = "qldb"
+	QuickSightEndpointID                   = "quicksight"
 	RUMEndpointID                          = "rum"
 	RedshiftEndpointID                     = "redshift"
 	RedshiftServerlessEndpointID           = "redshift-serverless"
@@ -167,6 +170,7 @@ const (
 	APSoutheast2RegionID = "ap-southeast-2" // Asia Pacific (Sydney).
 	APSoutheast3RegionID = "ap-southeast-3" // Asia Pacific (Jakarta).
 	APSoutheast4RegionID = "ap-southeast-4" // Asia Pacific (Melbourne).
+	APSoutheast5RegionID = "ap-southeast-5" // Asia Pacific (Malaysia).
 	CACentral1RegionID   = "ca-central-1"   // Canada (Central).
 	CAWest1RegionID      = "ca-west-1"      // Canada West (Calgary).
 	EUCentral1RegionID   = "eu-central-1"   // Europe (Frankfurt).
@@ -217,6 +221,7 @@ var allRegionIDs = []string{
 	APSoutheast2RegionID,
 	APSoutheast3RegionID,
 	APSoutheast4RegionID,
+	APSoutheast5RegionID,
 	CACentral1RegionID,
 	CAWest1RegionID,
 	EUCentral1RegionID,
@@ -317,7 +322,7 @@ func IsOptInRegion(region string) bool {
 	switch region {
 	case AFSouth1RegionID,
 		APEast1RegionID, APSouth2RegionID,
-		APSoutheast3RegionID, APSoutheast4RegionID,
+		APSoutheast3RegionID, APSoutheast4RegionID, APSoutheast5RegionID,
 		CAWest1RegionID,
 		EUCentral2RegionID,
 		EUSouth1RegionID, EUSouth2RegionID,
@@ -363,16 +368,10 @@ func ReverseDNS(hostname string) string {
 // Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are
 // described in detail in README.md.
 type serviceDatum struct {
-	Aliases            []string
-	AWSServiceEnvVar   string
-	Brand              string
-	ClientSDKV1        bool
-	DeprecatedEnvVar   string
-	GoV1ClientTypeName string
-	HumanFriendly      string
-	ProviderNameUpper  string
-	SDKID              string
-	TFAWSEnvVar        string
+	aliases           []string
+	brand             string
+	humanFriendly     string
+	providerNameUpper string
 }
 
 // serviceData key is the AWS provider service package
@@ -408,15 +407,9 @@ func readHCLIntoServiceData() error {
 		p := l.ProviderPackage()
 
 		sd := serviceDatum{
-			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
-			Brand:              l.Brand(),
-			ClientSDKV1:        l.ClientSDKV1(),
-			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
-			GoV1ClientTypeName: l.GoV1ClientTypeName(),
-			HumanFriendly:      l.HumanFriendly(),
-			ProviderNameUpper:  l.ProviderNameUpper(),
-			SDKID:              l.SDKID(),
-			TFAWSEnvVar:        l.TFAWSEnvVar(),
+			brand:             l.Brand(),
+			humanFriendly:     l.HumanFriendly(),
+			providerNameUpper: l.ProviderNameUpper(),
 		}
 
 		a := []string{p}
@@ -425,7 +418,7 @@ func readHCLIntoServiceData() error {
 			a = append(a, l.Aliases()...)
 		}
 
-		sd.Aliases = a
+		sd.aliases = a
 
 		serviceData[p] = sd
 	}
@@ -435,7 +428,7 @@ func readHCLIntoServiceData() error {
 
 func ProviderPackageForAlias(serviceAlias string) (string, error) {
 	for k, v := range serviceData {
-		for _, hclKey := range v.Aliases {
+		for _, hclKey := range v.aliases {
 			if serviceAlias == hclKey {
 				return k, nil
 			}
@@ -461,92 +454,27 @@ func Aliases() []string {
 	keys := make([]string, 0)
 
 	for _, v := range serviceData {
-		keys = append(keys, v.Aliases...)
+		keys = append(keys, v.aliases...)
 	}
 
 	return keys
 }
 
-type Endpoint struct {
-	ProviderPackage string
-	Aliases         []string
-}
-
-func Endpoints() []Endpoint {
-	endpoints := make([]Endpoint, 0, len(serviceData))
-
-	for k, v := range serviceData {
-		ep := Endpoint{
-			ProviderPackage: k,
-		}
-		if len(v.Aliases) > 1 {
-			ep.Aliases = v.Aliases[1:]
-		}
-		endpoints = append(endpoints, ep)
-	}
-
-	return endpoints
-}
-
 func ProviderNameUpper(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
-		return v.ProviderNameUpper, nil
+		return v.providerNameUpper, nil
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
 }
 
-// Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
-func DeprecatedEnvVar(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.DeprecatedEnvVar
-	}
-
-	return ""
-}
-
-// Deprecated `TF_AWS_<service>_ENDPOINT` envvar defined for some services
-func TFAWSEnvVar(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.TFAWSEnvVar
-	}
-
-	return ""
-}
-
-// Standard service endpoint envvar defined by AWS
-func AWSServiceEnvVar(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.AWSServiceEnvVar
-	}
-
-	return ""
-}
-
-// Service SDK ID from AWS SDK for Go v2
-func SDKID(service string) string {
-	if v, ok := serviceData[service]; ok {
-		return v.SDKID
-	}
-
-	return ""
-}
-
-func ClientSDKV1(service string) bool {
-	if v, ok := serviceData[service]; ok {
-		return v.ClientSDKV1
-	}
-
-	return false
-}
-
 func FullHumanFriendly(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
-		if v.Brand == "" {
-			return v.HumanFriendly, nil
+		if v.brand == "" {
+			return v.humanFriendly, nil
 		}
 
-		return fmt.Sprintf("%s %s", v.Brand, v.HumanFriendly), nil
+		return fmt.Sprintf("%s %s", v.brand, v.humanFriendly), nil
 	}
 
 	if s, err := ProviderPackageForAlias(service); err == nil {
@@ -558,7 +486,7 @@ func FullHumanFriendly(service string) (string, error) {
 
 func HumanFriendly(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
-		return v.HumanFriendly, nil
+		return v.humanFriendly, nil
 	}
 
 	if s, err := ProviderPackageForAlias(service); err == nil {
@@ -566,12 +494,4 @@ func HumanFriendly(service string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
-}
-
-func AWSGoV1ClientTypeName(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV1ClientTypeName, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v1 client type name, %s not found", providerPackage)
 }

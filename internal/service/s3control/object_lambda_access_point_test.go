@@ -213,20 +213,20 @@ func testAccCheckObjectLambdaAccessPointExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccObjectLambdaAccessPointBaseConfig(rName string) string {
+func testAccObjectLambdaAccessPointConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
 
 func testAccObjectLambdaAccessPointConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectLambdaAccessPointConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -257,7 +257,7 @@ resource "aws_s3control_object_lambda_access_point" "test" {
 }
 
 func testAccObjectLambdaAccessPointConfig_optionals(rName string) string {
-	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectLambdaAccessPointConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }

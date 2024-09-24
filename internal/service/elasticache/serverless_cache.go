@@ -547,8 +547,8 @@ type serverlessCacheResourceModel struct {
 	SnapshotRetentionLimit types.Int64                                            `tfsdk:"snapshot_retention_limit"`
 	Status                 types.String                                           `tfsdk:"status"`
 	SubnetIDs              fwtypes.SetValueOf[types.String]                       `tfsdk:"subnet_ids"`
-	Tags                   types.Map                                              `tfsdk:"tags"`
-	TagsAll                types.Map                                              `tfsdk:"tags_all"`
+	Tags                   tftags.Map                                             `tfsdk:"tags"`
+	TagsAll                tftags.Map                                             `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value                                         `tfsdk:"timeouts"`
 	UserGroupID            types.String                                           `tfsdk:"user_group_id"`
 }

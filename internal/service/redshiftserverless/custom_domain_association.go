@@ -164,9 +164,9 @@ func (r *customDomainAssociationResource) Update(ctx context.Context, request re
 	conn := r.Meta().RedshiftServerlessClient(ctx)
 
 	input := &redshiftserverless.UpdateCustomDomainAssociationInput{
-		CustomDomainCertificateArn: aws.String(new.CustomDomainCertificateARN.ValueString()),
-		CustomDomainName:           aws.String(new.CustomDomainName.ValueString()),
-		WorkgroupName:              aws.String(new.WorkgroupName.ValueString()),
+		CustomDomainCertificateArn: new.CustomDomainCertificateARN.ValueStringPointer(),
+		CustomDomainName:           new.CustomDomainName.ValueStringPointer(),
+		WorkgroupName:              new.WorkgroupName.ValueStringPointer(),
 	}
 
 	output, err := conn.UpdateCustomDomainAssociation(ctx, input)
@@ -193,8 +193,8 @@ func (r *customDomainAssociationResource) Delete(ctx context.Context, request re
 	conn := r.Meta().RedshiftServerlessClient(ctx)
 
 	_, err := conn.DeleteCustomDomainAssociation(ctx, &redshiftserverless.DeleteCustomDomainAssociationInput{
-		CustomDomainName: aws.String(data.CustomDomainName.ValueString()),
-		WorkgroupName:    aws.String(data.WorkgroupName.ValueString()),
+		CustomDomainName: data.CustomDomainName.ValueStringPointer(),
+		WorkgroupName:    data.WorkgroupName.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

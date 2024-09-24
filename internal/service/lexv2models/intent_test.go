@@ -842,8 +842,6 @@ func TestIntentAutoFlex(t *testing.T) {
 	)
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(fmt.Sprintf("expand %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 

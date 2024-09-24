@@ -556,8 +556,8 @@ type automationRuleResourceModel struct {
 	RuleName    types.String                                                        `tfsdk:"rule_name"`
 	RuleOrder   types.Int64                                                         `tfsdk:"rule_order"`
 	RuleStatus  fwtypes.StringEnum[awstypes.RuleStatus]                             `tfsdk:"rule_status"`
-	Tags        types.Map                                                           `tfsdk:"tags"`
-	TagsAll     types.Map                                                           `tfsdk:"tags_all"`
+	Tags        tftags.Map                                                          `tfsdk:"tags"`
+	TagsAll     tftags.Map                                                          `tfsdk:"tags_all"`
 }
 
 func (data *automationRuleResourceModel) InitFromID() error {

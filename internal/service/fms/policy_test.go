@@ -263,42 +263,6 @@ func testAccPolicy_resourceTags(t *testing.T) {
 	})
 }
 
-func testAccPolicy_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_fms_policy.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccPolicyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccPolicy_alb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -684,61 +648,6 @@ resource "aws_fms_policy" "test" {
   }
 
   resource_tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
-resource "aws_fms_policy" "test" {
-  exclude_resource_tags = false
-  name                  = %[1]q
-  remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
-
-  security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
-resource "aws_fms_policy" "test" {
-  exclude_resource_tags = false
-  name                  = %[1]q
-  remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
-
-  security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
-  }
-
-  tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
