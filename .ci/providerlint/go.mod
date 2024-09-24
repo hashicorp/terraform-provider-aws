@@ -4,7 +4,7 @@ go 1.22.7
 
 require (
 	github.com/bflad/tfproviderlint v0.30.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.57
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.58
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
 	golang.org/x/tools v0.25.0
 )
@@ -45,6 +45,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.0.0 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect

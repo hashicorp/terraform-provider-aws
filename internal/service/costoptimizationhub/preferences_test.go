@@ -5,7 +5,6 @@ package costoptimizationhub_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcostoptimizationhub "github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -168,17 +166,19 @@ func testAccCheckPreferencesDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			out, err := conn.GetPreferences(ctx, &costoptimizationhub.GetPreferencesInput{})
+			output, err := tfcostoptimizationhub.FindPreferences(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if errs.MessageContains(err, "AccessDenied", "AWS account is not enrolled for recommendations") {
-					// Scenario 1 - Cost Optimization Hub Enrollment status is inactive
-					continue
-				}
 				return err
 			}
-			if (out.MemberAccountDiscountVisibility == types.MemberAccountDiscountVisibilityAll) &&
-				(out.SavingsEstimationMode == types.SavingsEstimationModeBeforeDiscounts) {
-				// Scenario 2 - Cost Optimization Hub Enrollment status is Active but there are default values for the preferences
+
+			if (output.MemberAccountDiscountVisibility == types.MemberAccountDiscountVisibilityAll) &&
+				(output.SavingsEstimationMode == types.SavingsEstimationModeBeforeDiscounts) {
+				// Cost Optimization Hub Enrollment status is Active but there are default values for the preferences.
 				continue
 			}
 
@@ -189,31 +189,28 @@ func testAccCheckPreferencesDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckPreferencesExists(ctx context.Context, name string, preferences *costoptimizationhub.GetPreferencesOutput) resource.TestCheckFunc {
+func testAccCheckPreferencesExists(ctx context.Context, n string, v *costoptimizationhub.GetPreferencesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNamePreferences, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNamePreferences, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
-		resp, err := conn.GetPreferences(ctx, &costoptimizationhub.GetPreferencesInput{})
+
+		output, err := tfcostoptimizationhub.FindPreferences(ctx, conn)
 
 		if err != nil {
-			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNamePreferences, rs.Primary.ID, err)
+			return err
 		}
 
-		*preferences = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccPreferencesBase() string {
+func testAccPreferencesConfig_base() string {
 	return `
 resource "aws_costoptimizationhub_enrollment_status" "test_enrollment_status" {
 }
@@ -221,7 +218,7 @@ resource "aws_costoptimizationhub_enrollment_status" "test_enrollment_status" {
 }
 
 func testAccPreferencesConfig_basic() string {
-	return acctest.ConfigCompose(testAccPreferencesBase(), `
+	return acctest.ConfigCompose(testAccPreferencesConfig_base(), `
 resource "aws_costoptimizationhub_preferences" "test" {
   depends_on = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
 }
@@ -229,7 +226,7 @@ resource "aws_costoptimizationhub_preferences" "test" {
 }
 
 func testAccPreferencesConfig_MemberAccountDiscountVisibility() string {
-	return acctest.ConfigCompose(testAccPreferencesBase(), `
+	return acctest.ConfigCompose(testAccPreferencesConfig_base(), `
 resource "aws_costoptimizationhub_preferences" "test" {
   member_account_discount_visibility = "None"
   depends_on                         = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
@@ -239,7 +236,7 @@ resource "aws_costoptimizationhub_preferences" "test" {
 
 func testAccPreferencesConfig_SavingsEstimationMode(mode string) string {
 	return acctest.ConfigCompose(
-		testAccPreferencesBase(),
+		testAccPreferencesConfig_base(),
 		fmt.Sprintf(`
 resource "aws_costoptimizationhub_preferences" "test" {
   savings_estimation_mode = %[1]q
