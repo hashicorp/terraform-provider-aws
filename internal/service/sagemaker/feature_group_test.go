@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -285,7 +285,7 @@ func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup2),
 					func(*terraform.State) error {
-						if !aws.TimeValue(featureGroup1.CreationTime).Equal(aws.TimeValue(featureGroup1.CreationTime)) {
+						if !aws.ToTime(featureGroup1.CreationTime).Equal(aws.ToTime(featureGroup1.CreationTime)) {
 							return errors.New("SageMaker Feature Group was recreated")
 						}
 						return nil
@@ -467,7 +467,7 @@ func TestAccSageMakerFeatureGroup_disappears(t *testing.T) {
 
 func testAccCheckFeatureGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_feature_group" {
@@ -502,7 +502,7 @@ func testAccCheckFeatureGroupExists(ctx context.Context, n string, v *sagemaker.
 			return fmt.Errorf("No SageMaker Feature Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindFeatureGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -764,7 +764,12 @@ resource "aws_sagemaker_feature_group" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy_attachment.test2]
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFeatureStoreAccess"
 }
 `, rName, format))
 }

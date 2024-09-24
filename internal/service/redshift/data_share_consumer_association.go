@@ -8,10 +8,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -103,7 +104,7 @@ func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req r
 const dataShareConsumerAssociationIDPartCount = 4
 
 func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().RedshiftConn(ctx)
+	conn := r.Meta().RedshiftClient(ctx)
 
 	var plan resourceDataShareConsumerAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -139,10 +140,10 @@ func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req r
 	}
 
 	if !plan.AllowWrites.IsNull() {
-		in.AllowWrites = aws.Bool(plan.AllowWrites.ValueBool())
+		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
 	}
 	if !plan.AssociateEntireAccount.IsNull() {
-		in.AssociateEntireAccount = aws.Bool(plan.AssociateEntireAccount.ValueBool())
+		in.AssociateEntireAccount = plan.AssociateEntireAccount.ValueBoolPointer()
 	}
 	if !plan.ConsumerARN.IsNull() {
 		in.ConsumerArn = aws.String(consumerARN)
@@ -151,7 +152,7 @@ func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req r
 		in.ConsumerRegion = aws.String(consumerRegion)
 	}
 
-	out, err := conn.AssociateDataShareConsumerWithContext(ctx, in)
+	out, err := conn.AssociateDataShareConsumer(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Redshift, create.ErrActionCreating, ResNameDataShareConsumerAssociation, id, err),
@@ -174,7 +175,7 @@ func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req r
 }
 
 func (r *resourceDataShareConsumerAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RedshiftConn(ctx)
+	conn := r.Meta().RedshiftClient(ctx)
 
 	var state resourceDataShareConsumerAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -226,7 +227,7 @@ func (r *resourceDataShareConsumerAssociation) Update(ctx context.Context, req r
 }
 
 func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().RedshiftConn(ctx)
+	conn := r.Meta().RedshiftClient(ctx)
 
 	var state resourceDataShareConsumerAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -235,24 +236,25 @@ func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req r
 	}
 
 	in := &redshift.DisassociateDataShareConsumerInput{
-		DataShareArn: aws.String(state.DataShareARN.ValueString()),
+		DataShareArn: state.DataShareARN.ValueStringPointer(),
 	}
 	if !state.AssociateEntireAccount.IsNull() && state.AssociateEntireAccount.ValueBool() {
 		in.DisassociateEntireAccount = aws.Bool(true)
 	}
 	if !state.ConsumerARN.IsNull() {
-		in.ConsumerArn = aws.String(state.ConsumerARN.ValueString())
+		in.ConsumerArn = state.ConsumerARN.ValueStringPointer()
 	}
 	if !state.ConsumerRegion.IsNull() {
-		in.ConsumerRegion = aws.String(state.ConsumerRegion.ValueString())
+		in.ConsumerRegion = state.ConsumerRegion.ValueStringPointer()
 	}
 
-	_, err := conn.DisassociateDataShareConsumerWithContext(ctx, in)
+	_, err := conn.DisassociateDataShareConsumer(ctx, in)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "because the ARN doesn't exist.") ||
-			tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "either doesn't exist or isn't associated with this data consumer") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
+			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "either doesn't exist or isn't associated with this data consumer") {
 			return
 		}
+
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Redshift, create.ErrActionDeleting, ResNameDataShareConsumerAssociation, state.ID.String(), err),
 			err.Error(),
@@ -274,7 +276,7 @@ func (r *resourceDataShareConsumerAssociation) ConfigValidators(_ context.Contex
 	}
 }
 
-func findDataShareConsumerAssociationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.DataShare, error) {
+func findDataShareConsumerAssociationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.DataShare, error) {
 	parts, err := intflex.ExpandResourceId(id, dataShareConsumerAssociationIDPartCount, true)
 	if err != nil {
 		return nil, err
@@ -288,9 +290,9 @@ func findDataShareConsumerAssociationByID(ctx context.Context, conn *redshift.Re
 		DataShareArn: aws.String(dataShareARN),
 	}
 
-	out, err := conn.DescribeDataSharesWithContext(ctx, in)
-	if tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "because the ARN doesn't exist.") ||
-		tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "either doesn't exist or isn't associated with this data consumer") {
+	out, err := conn.DescribeDataShares(ctx, in)
+	if errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "either doesn't exist or isn't associated with this data consumer") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -317,11 +319,11 @@ func findDataShareConsumerAssociationByID(ctx context.Context, conn *redshift.Re
 	// - `consumer_arn` is set and `ConsumerIdentifier` matches its value.
 	// - `consumer_region` is set and `ConsumerRegion` matches its value.
 	for _, assoc := range share.DataShareAssociations {
-		if aws.StringValue(assoc.Status) == redshift.DataShareStatusActive {
-			if associateEntireAccount == "true" && accountIDFromARN(dataShareARN) == aws.StringValue(assoc.ConsumerIdentifier) ||
-				consumerARN != "" && consumerARN == aws.StringValue(assoc.ConsumerIdentifier) ||
-				consumerRegion != "" && consumerRegion == aws.StringValue(assoc.ConsumerRegion) {
-				return share, nil
+		if assoc.Status == awstypes.DataShareStatusActive {
+			if associateEntireAccount == "true" && accountIDFromARN(dataShareARN) == aws.ToString(assoc.ConsumerIdentifier) ||
+				consumerARN != "" && consumerARN == aws.ToString(assoc.ConsumerIdentifier) ||
+				consumerRegion != "" && consumerRegion == aws.ToString(assoc.ConsumerRegion) {
+				return &share, nil
 			}
 		}
 	}

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -106,7 +106,7 @@ func ParametersSchema() *schema.Schema {
 	}
 }
 
-func ExpandParameters(tfList []interface{}) *quicksight.Parameters {
+func ExpandParameters(tfList []interface{}) *awstypes.Parameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -116,180 +116,184 @@ func ExpandParameters(tfList []interface{}) *quicksight.Parameters {
 		return nil
 	}
 
-	parameters := &quicksight.Parameters{}
+	apiObject := &awstypes.Parameters{}
 
 	if v, ok := tfMap["date_time_parameters"].([]interface{}); ok && len(v) > 0 {
-		parameters.DateTimeParameters = expandDateTimeParameters(v)
+		apiObject.DateTimeParameters = expandDateTimeParameters(v)
 	}
 	if v, ok := tfMap["decimal_parameters"].([]interface{}); ok && len(v) > 0 {
-		parameters.DecimalParameters = expandDecimalParameters(v)
+		apiObject.DecimalParameters = expandDecimalParameters(v)
 	}
 	if v, ok := tfMap["integer_parameters"].([]interface{}); ok && len(v) > 0 {
-		parameters.IntegerParameters = expandIntegerParameters(v)
+		apiObject.IntegerParameters = expandIntegerParameters(v)
 	}
 	if v, ok := tfMap["string_parameters"].([]interface{}); ok && len(v) > 0 {
-		parameters.StringParameters = expandStringParameters(v)
+		apiObject.StringParameters = expandStringParameters(v)
 	}
 
-	return parameters
+	return apiObject
 }
 
-func expandDateTimeParameters(tfList []interface{}) []*quicksight.DateTimeParameter {
+func expandDateTimeParameters(tfList []interface{}) []awstypes.DateTimeParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.DateTimeParameter
+	var apiObjects []awstypes.DateTimeParameter
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		parameter := expandDateTimeParameter(tfMap)
-		if parameter == nil {
+		apiObject := expandDateTimeParameter(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func expandDateTimeParameter(tfMap map[string]interface{}) *quicksight.DateTimeParameter {
+func expandDateTimeParameter(tfMap map[string]interface{}) *awstypes.DateTimeParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.DateTimeParameter{}
+	apiObject := &awstypes.DateTimeParameter{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		parameter.Name = aws.String(v)
+		apiObject.Name = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandStringTimeList(v, time.RFC3339)
+		apiObject.Values = flex.ExpandStringTimeValueList(v, time.RFC3339)
 	}
 
-	return parameter
+	return apiObject
 }
 
-func expandDecimalParameters(tfList []interface{}) []*quicksight.DecimalParameter {
+func expandDecimalParameters(tfList []interface{}) []awstypes.DecimalParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.DecimalParameter
+	var apiObjects []awstypes.DecimalParameter
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		parameter := expandDecimalParameter(tfMap)
-		if parameter == nil {
+		apiObject := expandDecimalParameter(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func expandDecimalParameter(tfMap map[string]interface{}) *quicksight.DecimalParameter {
+func expandDecimalParameter(tfMap map[string]interface{}) *awstypes.DecimalParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.DecimalParameter{}
+	apiObject := &awstypes.DecimalParameter{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		parameter.Name = aws.String(v)
+		apiObject.Name = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandFloat64List(v)
+		apiObject.Values = flex.ExpandFloat64ValueList(v)
 	}
 
-	return parameter
+	return apiObject
 }
 
-func expandIntegerParameters(tfList []interface{}) []*quicksight.IntegerParameter {
+func expandIntegerParameters(tfList []interface{}) []awstypes.IntegerParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.IntegerParameter
+	var apiObjects []awstypes.IntegerParameter
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		parameter := expandIntegerParameter(tfMap)
-		if parameter == nil {
+		apiObject := expandIntegerParameter(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func expandIntegerParameter(tfMap map[string]interface{}) *quicksight.IntegerParameter {
+func expandIntegerParameter(tfMap map[string]interface{}) *awstypes.IntegerParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.IntegerParameter{}
+	apiObject := &awstypes.IntegerParameter{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		parameter.Name = aws.String(v)
+		apiObject.Name = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandInt64List(v)
+		apiObject.Values = flex.ExpandInt64ValueList(v)
 	}
 
-	return parameter
+	return apiObject
 }
 
-func expandStringParameters(tfList []interface{}) []*quicksight.StringParameter {
+func expandStringParameters(tfList []interface{}) []awstypes.StringParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.StringParameter
+	var apiObjects []awstypes.StringParameter
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		parameter := expandStringParameter(tfMap)
-		if parameter == nil {
+		apiObject := expandStringParameter(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func expandStringParameter(tfMap map[string]interface{}) *quicksight.StringParameter {
+func expandStringParameter(tfMap map[string]interface{}) *awstypes.StringParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.StringParameter{}
+	apiObject := &awstypes.StringParameter{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		parameter.Name = aws.String(v)
+		apiObject.Name = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandStringList(v)
+		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 
-	return parameter
+	return apiObject
 }

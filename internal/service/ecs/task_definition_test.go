@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -59,7 +58,6 @@ func Test_StripRevision(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tfecs.TaskDefinitionARNStripRevision(tc.s); got != tc.want {
@@ -279,7 +277,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, names.StandardPartitionID) }, // runtime platform not support on GovCloud
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
@@ -313,7 +311,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, names.StandardPartitionID) }, // runtime platform not support on GovCloud
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
@@ -347,7 +345,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, names.StandardPartitionID) }, // runtime platform not support on GovCloud
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
@@ -609,7 +607,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	if acctest.Partition() == "aws-us-gov" {
+	if acctest.Partition() == names.USGovCloudPartitionID {
 		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
 	}
 
@@ -1457,6 +1455,32 @@ func TestAccECSTaskDefinition_containerDefinitionDockerLabels(t *testing.T) {
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'pROMETHEUS_EXPORTER_PATH')", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'pROMETHEUS_EXPORTER_PORT')", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'pROMETHEUS_TARGET')", acctest.CtFalse),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "alpine"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/38779.
+func TestAccECSTaskDefinition_containerDefinitionNullPortMapping(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionNullPortMapping(rName, "alpine"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].portMappings)", acctest.Ct0),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "alpine"),
 				),
 			},
@@ -3432,6 +3456,27 @@ resource "aws_ecs_task_definition" "test" {
         "PROMETHEUS_EXPORTER_PATH"     = "/prometheus"
         "PROMETHEUS_EXPORTER_JOB_NAME" = "my-job"
       }
+    }
+  ])
+}
+`, rName, image)
+}
+
+func testAccTaskDefinitionConfig_containerDefinitionNullPortMapping(rName, image string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+  container_definitions = jsonencode([
+    {
+      name      = "first"
+      image     = %[2]q
+      cpu       = 10
+      memory    = 512
+      essential = true
+
+      portMappings = [
+        null
+      ]
     }
   ])
 }

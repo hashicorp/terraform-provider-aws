@@ -190,7 +190,7 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 												names.AttrParameters: schema.SetNestedBlock{
 													CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterDetailModel](ctx),
 													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
+														Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 															names.AttrDescription: schema.StringAttribute{
 																Optional: true,
 																Validators: []validator.String{

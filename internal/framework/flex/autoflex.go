@@ -30,7 +30,7 @@ const (
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
 type autoFlexer interface {
-	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value) diag.Diagnostics
+	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, fieldOpts) diag.Diagnostics
 	getOptions() AutoFlexOptions
 }
 
@@ -86,18 +86,21 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if valTo.Kind() == reflect.Interface {
 		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 			"from": valFrom.Type(),
@@ -106,21 +109,33 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		return diags
 	}
 
+	// TODO: this only applies when Flattening
 	if toFlattener, ok := to.(Flattener); ok {
-		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
+		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener")
 		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
 		return diags
 	}
 
+	typeFrom := valFrom.Type()
+	typeTo := valTo.Type()
+
 	opts := flexer.getOptions()
-	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
-		field := typFrom.Field(i)
-		if field.PkgPath != "" {
+	for i := 0; i < typeFrom.NumField(); i++ {
+		fromField := typeFrom.Field(i)
+		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
-		fieldName := field.Name
+		fromNameOverride, fromOpts := autoflexTags(fromField)
+		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		// TODO: this only applies when Expanding
+		if fromNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
 			continue
@@ -132,11 +147,29 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			continue
 		}
 
-		toFieldVal, toFieldName := findFieldFuzzy(ctx, fieldName, valTo, valFrom, flexer)
-		if !toFieldVal.IsValid() {
+		toField, ok := findFieldFuzzy(ctx, fieldName, typeFrom, typeTo, flexer)
+		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		toFieldName := toField.Name
+		// TODO: this only applies when Flattening
+		toNameOverride, toOpts := autoflexTags(toField)
+		toFieldVal := valTo.FieldByIndex(toField.Index)
+		if toNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
+		if toOpts.NoFlatten() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noflatten target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
 			})
 			continue
 		}
@@ -154,7 +187,12 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
+		opts := fieldOpts{
+			legacy:    fromOpts.Legacy() || toOpts.Legacy(),
+			omitempty: toOpts.OmitEmpty(),
+		}
+
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
@@ -163,10 +201,10 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	return diags
 }
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) (reflect.Value, string) {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
 	// first precedence is exact match (case sensitive)
-	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
-		return v, fieldNameFrom
+	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
+		return fieldTo, true
 	}
 
 	// If a "from" field fuzzy matches a "to" field, we are certain the fuzzy match
@@ -177,8 +215,8 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 
 	// second precedence is exact match (case insensitive)
 	opts := flexer.getOptions()
-	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
-		field := typTo.Field(i)
+	for i := 0; i < typeTo.NumField(); i++ {
+		field := typeTo.Field(i)
 		if field.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
@@ -186,24 +224,24 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 		if opts.isIgnoredField(fieldNameTo) {
 			continue
 		}
-		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {
+		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
 			// probably could assume validity here since reflect gave the field name
-			return v, fieldNameTo
+			return fieldTo, true
 		}
 	}
 
 	// third precedence is singular/plural
 	fieldNameTo := plural.Plural(fieldNameFrom)
-	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
-		if v := valTo.FieldByName(fieldNameTo); v.IsValid() {
-			return v, fieldNameTo
+	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
+		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
+			return fieldTo, true
 		}
 	}
 
 	fieldNameTo = plural.Singular(fieldNameFrom)
-	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
-		if v := valTo.FieldByName(fieldNameTo); v.IsValid() {
-			return v, fieldNameTo
+	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
+		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
+			return fieldTo, true
 		}
 	}
 
@@ -214,9 +252,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
+				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), typeFrom, typeTo, flexer)
 			}
-			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom, flexer)
+			return findFieldFuzzy(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer)
 		}
 	}
 
@@ -227,19 +265,28 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
 			if strings.HasSuffix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), valTo, valFrom, flexer)
+				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
 			}
-			return findFieldFuzzy(ctx, fieldNameFrom+v, valTo, valFrom, flexer)
+			return findFieldFuzzy(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
 		}
 	}
 
 	// no finds, fuzzy or otherwise - return zero value
-	return reflect.Value{}, ""
+	return reflect.StructField{}, false
 }
 
-func fieldExistsInStruct(field string, structVal reflect.Value) bool {
-	v := structVal.FieldByName(field)
-	return v.IsValid()
+func fieldExistsInStruct(field string, structType reflect.Type) bool {
+	_, ok := structType.FieldByName(field)
+	return ok
+}
+
+func autoflexTags(field reflect.StructField) (string, tagOptions) {
+	return parseTag(field.Tag.Get("autoflex"))
+}
+
+type fieldOpts struct {
+	legacy    bool
+	omitempty bool
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.

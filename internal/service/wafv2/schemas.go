@@ -1159,7 +1159,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(100, 2000000000),
+					ValidateFunc: validation.IntBetween(10, 2000000000),
 				},
 				"scope_down_statement": scopeDownStatementSchema(level - 1),
 			},

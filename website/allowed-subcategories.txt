@@ -110,6 +110,7 @@ Elemental MediaLive
 Elemental MediaPackage
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging SMS
 EventBridge
 EventBridge Pipes
 EventBridge Scheduler
@@ -172,6 +173,7 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Parallel Computing Service
 Payment Cryptography Control Plane
 Pinpoint
 Polly

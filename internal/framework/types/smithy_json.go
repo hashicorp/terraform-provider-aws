@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
@@ -87,7 +86,7 @@ func (t SmithyJSONType[T]) ValueFromString(ctx context.Context, in basetypes.Str
 		return SmithyJSONUnknown[T](), diags
 	}
 
-	var data map[string]any
+	var data any
 	if err := json.Unmarshal([]byte(in.ValueString()), &data); err != nil {
 		return SmithyJSONUnknown[T](), diags
 	}
@@ -103,8 +102,7 @@ var (
 
 type SmithyJSON[T smithyjson.JSONStringer] struct {
 	basetypes.StringValue
-	validate func(context.Context, tftypes.Value, path.Path) diag.Diagnostics
-	f        func(any) T
+	f func(any) T
 }
 
 func (v SmithyJSON[T]) Equal(o attr.Value) bool {
@@ -150,17 +148,7 @@ func (v SmithyJSON[T]) ValidateAttribute(ctx context.Context, req xattr.Validate
 		return
 	}
 
-	jt, err := jsontypes.NewNormalizedValue(v.ValueString()).ToTerraformValue(ctx)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"JSON Normalized Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(v.validate(ctx, jt, req.Path)...)
+	jsontypes.NewNormalizedValue(v.ValueString()).ValidateAttribute(ctx, req, resp)
 }
 
 func (v SmithyJSON[T]) StringSemanticEquals(ctx context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
@@ -195,7 +183,6 @@ func (v SmithyJSON[T]) StringSemanticEquals(ctx context.Context, newValuable bas
 func SmithyJSONValue[T smithyjson.JSONStringer](value string, f func(any) T) SmithyJSON[T] {
 	return SmithyJSON[T]{
 		StringValue: basetypes.NewStringValue(value),
-		validate:    jsontypes.NormalizedType{}.Validate,
 		f:           f,
 	}
 }

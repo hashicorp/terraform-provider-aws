@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Probe")
+// @FrameworkResource("aws_networkmonitor_probe", name="Probe")
 // @Tags(identifierAttribute="arn")
 func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &probeResource{}, nil
@@ -404,8 +404,8 @@ type probeResourceModel struct {
 	ProbeID         types.String                               `tfsdk:"probe_id"`
 	Protocol        fwtypes.StringEnum[awstypes.Protocol]      `tfsdk:"protocol"`
 	SourceARN       fwtypes.ARN                                `tfsdk:"source_arn"`
-	Tags            types.Map                                  `tfsdk:"tags"`
-	TagsAll         types.Map                                  `tfsdk:"tags_all"`
+	Tags            tftags.Map                                 `tfsdk:"tags"`
+	TagsAll         tftags.Map                                 `tfsdk:"tags_all"`
 	VpcID           types.String                               `tfsdk:"vpc_id"`
 }
 

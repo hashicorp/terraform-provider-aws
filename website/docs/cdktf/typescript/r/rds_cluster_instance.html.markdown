@@ -86,7 +86,7 @@ This resource supports the following arguments:
 * `copyTagsToSnapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `customIamInstanceProfile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `dbParameterGroupName` - (Optional) Name of the DB parameter group to associate with this instance.
-* `dbSubnetGroupName` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `dbSubnetGroupName` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
+* `dbSubnetGroupName` - (Optional, Forces new resource) Specifies the DB subnet group to associate with this DB instance. The default behavior varies depending on whether `dbSubnetGroupName` is specified. Please refer to official [AWS documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html) to understand how `dbSubnetGroupName` and `publiclyAccessible` parameters affect DB instance behaviour. **NOTE:** This must match the `dbSubnetGroupName` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
 * `engineVersion` - (Optional) Database engine version. Please note that to upgrade the `engineVersion` of the instance, it must be done on the `aws_rds_cluster` `engineVersion`. Trying to upgrade in `aws_cluster_instance` will not update the `engineVersion`.
 * `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS cluster instance.
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
@@ -173,4 +173,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3432ce539b59fda8ba91657d459a86e2081f2d650ecc139482315dc284b9923b -->
+<!-- cache-key: cdktf-0.20.1 input-af19b8474f3cda3cefcac28e3c8ffea24781153c3215b6d3109609fe934d4236 -->

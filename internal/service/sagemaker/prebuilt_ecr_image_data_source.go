@@ -17,167 +17,167 @@ import (
 
 const (
 	// SageMaker Algorithm AutoGluon Training
-	RepositoryAutoGluonTraining = "autogluon-training"
+	repositoryAutoGluonTraining = "autogluon-training"
 	// SageMaker Algorithm AutoGluon Inference
-	RepositoryAutoGluonInference = "autogluon-inference"
+	repositoryAutoGluonInference = "autogluon-inference"
 	// SageMaker Algorithm BlazingText
-	RepositoryBlazingText = "blazingtext"
+	repositoryBlazingText = "blazingtext"
 	// SageMaker DLC Chainer
-	RepositoryChainer = "sagemaker-chainer"
+	repositoryChainer = "sagemaker-chainer"
 	// SageMaker Algorithm Clarify
-	RepositoryClarify = "sagemaker-clarify-processing"
+	repositoryClarify = "sagemaker-clarify-processing"
 	// SageMaker Algorithm DJL DeepSpeed
-	RepositoryDJLDeepSpeed = "djl-inference"
+	repositoryDJLDeepSpeed = "djl-inference"
 	// SageMaker Algorithm Data Wrangler
-	RepositoryDataWrangler = "sagemaker-data-wrangler-container"
+	repositoryDataWrangler = "sagemaker-data-wrangler-container"
 	// SageMaker Algorithm Debugger
-	RepositoryDebugger = "sagemaker-debugger-rules"
+	repositoryDebugger = "sagemaker-debugger-rules"
 	// SageMaker Algorithm DeepAR Forecasting
-	RepositoryDeepARForecasting = "forecasting-deepar"
+	repositoryDeepARForecasting = "forecasting-deepar"
 	// SageMaker Algorithm Factorization Machines
-	RepositoryFactorizationMachines = "factorization-machines"
+	repositoryFactorizationMachines = "factorization-machines"
 	// SageMaker Algorithm HuggingFace TensorFlow Training
-	RepositoryHuggingFaceTensorFlowTraining = "huggingface-tensorflow-training"
+	repositoryHuggingFaceTensorFlowTraining = "huggingface-tensorflow-training"
 	// SageMaker Algorithm HuggingFace PyTorch Training
-	RepositoryHuggingFacePyTorchTraining = "huggingface-pytorch-training"
+	repositoryHuggingFacePyTorchTraining = "huggingface-pytorch-training"
 	// SageMaker Algorithm HuggingFace PyTorch Training NeuronX
-	RepositoryHuggingFacePyTorchTrainingNeuronX = "huggingface-pytorch-training-neuronx"
+	repositoryHuggingFacePyTorchTrainingNeuronX = "huggingface-pytorch-training-neuronx"
 	// SageMaker Algorithm HuggingFace PyTorch Training Compiler
-	RepositoryHuggingFacePyTorchTrainingCompiler = "huggingface-pytorch-trcomp-training"
+	repositoryHuggingFacePyTorchTrainingCompiler = "huggingface-pytorch-trcomp-training"
 	// SageMaker Algorithm HuggingFace TensorFlow Training Compiler
-	RepositoryHuggingFaceTensorFlowTrainingCompiler = "huggingface-tensorflow-trcomp-training"
+	repositoryHuggingFaceTensorFlowTrainingCompiler = "huggingface-tensorflow-trcomp-training"
 	// SageMaker Algorithm HuggingFace TensorFlow Inference
-	RepositoryHuggingFaceTensorFlowInference = "huggingface-tensorflow-inference"
+	repositoryHuggingFaceTensorFlowInference = "huggingface-tensorflow-inference"
 	// SageMaker Algorithm HuggingFace PyTorch Inference
-	RepositoryHuggingFacePyTorchInference = "huggingface-pytorch-inference"
+	repositoryHuggingFacePyTorchInference = "huggingface-pytorch-inference"
 	// SageMaker Algorithm HuggingFace PyTorch Inference Neuron
-	RepositoryHuggingFacePyTorchInferenceNeuron = "huggingface-pytorch-inference-neuron"
+	repositoryHuggingFacePyTorchInferenceNeuron = "huggingface-pytorch-inference-neuron"
 	// SageMaker Algorithm HuggingFace PyTorch Inference NeuronX
-	RepositoryHuggingFacePyTorchInferenceNeuronX = "huggingface-pytorch-inference-neuronx"
+	repositoryHuggingFacePyTorchInferenceNeuronX = "huggingface-pytorch-inference-neuronx"
 	// SageMaker LLM HuggingFace Pytorch TGI Inference
-	RepositoryHuggingFacePyTorchTGIInference = "huggingface-pytorch-tgi-inference"
+	repositoryHuggingFacePyTorchTGIInference = "huggingface-pytorch-tgi-inference"
 	// SageMaker Algorithm HuggingFace TEI
-	RepositoryHuggingFaceTEI = "tei"
+	repositoryHuggingFaceTEI = "tei"
 	// SageMaker Algorithm HuggingFace TEI CPU
-	RepositoryHuggingFaceTEICPU = "tei-cpu"
+	repositoryHuggingFaceTEICPU = "tei-cpu"
 	// SageMaker Algorithm IP Insights
-	RepositoryIPInsights = "ipinsights"
+	repositoryIPInsights = "ipinsights"
 	// SageMaker Algorithm Image Classification
-	RepositoryImageClassification = "image-classification"
+	repositoryImageClassification = "image-classification"
 	// SageMaker DLC Inferentia MXNet
-	RepositoryInferentiaMXNet = "sagemaker-neo-mxnet"
+	repositoryInferentiaMXNet = "sagemaker-neo-mxnet"
 	// SageMaker DLC Inferentia PyTorch
-	RepositoryInferentiaPyTorch = "sagemaker-neo-pytorch"
+	repositoryInferentiaPyTorch = "sagemaker-neo-pytorch"
 	// SageMaker Algorithm k-means
-	RepositoryKMeans = "kmeans"
+	repositoryKMeans = "kmeans"
 	// SageMaker Algorithm k-nearest-neighbor
-	RepositoryKNearestNeighbor = "knn"
+	repositoryKNearestNeighbor = "knn"
 	// SageMaker Algorithm Latent Dirichlet Allocation
-	RepositoryLDA = "lda"
+	repositoryLDA = "lda"
 	// SageMaker Algorithm Linear Learner
-	RepositoryLinearLearner = "linear-learner"
+	repositoryLinearLearner = "linear-learner"
 	// SageMaker DLC MXNet Training
-	RepositoryMXNetTraining = "mxnet-training"
+	repositoryMXNetTraining = "mxnet-training"
 	// SageMaker DLC MXNet Inference
-	RepositoryMXNetInference = "mxnet-inference"
+	repositoryMXNetInference = "mxnet-inference"
 	// SageMaker DLC MXNet Inference EIA
-	RepositoryMXNetInferenceEIA = "mxnet-inference-eia"
+	repositoryMXNetInferenceEIA = "mxnet-inference-eia"
 	// SageMaker DLC SageMaker MXNet
-	RepositorySageMakerMXNet = "sagemaker-mxnet" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerMXNet = "sagemaker-mxnet" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker MXNet Serving
-	RepositorySageMakerMXNetServing = "sagemaker-mxnet-serving" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerMXNetServing = "sagemaker-mxnet-serving" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker MXNet EIA
-	RepositorySageMakerMXNetEIA = "sagemaker-mxnet-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerMXNetEIA = "sagemaker-mxnet-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker MXNet Serving EIA
-	RepositorySageMakerMXNetServingEIA = "sagemaker-mxnet-serving-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerMXNetServingEIA = "sagemaker-mxnet-serving-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC MXNet Coach
-	RepositoryMXNetCoach = "sagemaker-rl-mxnet"
+	repositoryMXNetCoach = "sagemaker-rl-mxnet"
 	// SageMaker Model Monitor
-	RepositoryModelMonitor = "sagemaker-model-monitor-analyzer"
+	repositoryModelMonitor = "sagemaker-model-monitor-analyzer"
 	// SageMaker Algorithm Neural Topic Model
-	RepositoryNeuralTopicModel = "ntm"
+	repositoryNeuralTopicModel = "ntm"
 	// SageMaker Algorithm Neo Image Classification
-	RepositoryNeoImageClassification = "image-classification-neo"
+	repositoryNeoImageClassification = "image-classification-neo"
 	// SageMaker DLC Neo MXNet
-	RepositoryNeoMXNet = "sagemaker-inference-mxnet"
+	repositoryNeoMXNet = "sagemaker-inference-mxnet"
 	// SageMaker DLC Neo PyTorch
-	RepositoryNeoPyTorch = "sagemaker-inference-pytorch"
+	repositoryNeoPyTorch = "sagemaker-inference-pytorch"
 	// SageMaker DLC Neo Tensorflow
-	RepositoryNeoTensorflow = "sagemaker-inference-tensorflow"
+	repositoryNeoTensorflow = "sagemaker-inference-tensorflow"
 	// SageMaker DLC Neo XGBoost
-	RepositoryNeoXGBoost = "xgboost-neo"
+	repositoryNeoXGBoost = "xgboost-neo"
 	// SageMaker Algorithm Object Detection
-	RepositoryObjectDetection = "object-detection"
+	repositoryObjectDetection = "object-detection"
 	// SageMaker Algorithm Object2Vec
-	RepositoryObject2Vec = "object2vec"
+	repositoryObject2Vec = "object2vec"
 	// SageMaker Algorithm PCA
-	RepositoryPCA = "pca"
+	repositoryPCA = "pca"
 	// SageMaker DLC PyTorch Training
-	RepositoryPyTorchTraining = "pytorch-training"
+	repositoryPyTorchTraining = "pytorch-training"
 	// SageMaker DLC PyTorch Training NeuronX
-	RepositoryPyTorchTrainingNeuronX = "pytorch-training-neuronx"
+	repositoryPyTorchTrainingNeuronX = "pytorch-training-neuronx"
 	// SageMaker DLC PyTorch Training Compiler
-	RepositoryPyTorchTrainingCompiler = "pytorch-trcomp-training"
+	repositoryPyTorchTrainingCompiler = "pytorch-trcomp-training"
 	// SageMaker DLC SageMaker PyTorch Inference
-	RepositoryPyTorchInference = "pytorch-inference"
+	repositoryPyTorchInference = "pytorch-inference"
 	// SageMaker DLC PyTorch Inference EIA
-	RepositoryPyTorchInferenceEIA = "pytorch-inference-eia"
+	repositoryPyTorchInferenceEIA = "pytorch-inference-eia"
 	// SageMaker DLC PyTorch Inference Graviton
-	RepositoryPyTorchInferenceGraviton = "pytorch-inference-graviton"
+	repositoryPyTorchInferenceGraviton = "pytorch-inference-graviton"
 	// SageMaker DLC PyTorch Inference NeuronX
-	RepositoryPyTorchInferenceNeuronX = "pytorch-inference-neuronx"
+	repositoryPyTorchInferenceNeuronX = "pytorch-inference-neuronx"
 	// SageMaker DLC SageMaker PyTorch
-	RepositorySageMakerPyTorch = "sagemaker-pytorch" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerPyTorch = "sagemaker-pytorch" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker Algorithm Random Cut Forest
-	RepositoryRandomCutForest = "randomcutforest"
+	repositoryRandomCutForest = "randomcutforest"
 	// SageMaker DLC RL Ray PyTorch
-	RepositoryRLRayPyTorch = "sagemaker-rl-ray-container"
+	repositoryRLRayPyTorch = "sagemaker-rl-ray-container"
 	// SageMaker DLC RL Coach Tensorflow
-	RepositoryRLCoachPyTorch = "sagemaker-rl-coach-container"
+	repositoryRLCoachPyTorch = "sagemaker-rl-coach-container"
 	// SageMaker Library scikit-learn
-	RepositoryScikitLearn = "sagemaker-scikit-learn"
+	repositoryScikitLearn = "sagemaker-scikit-learn"
 	// SageMaker Algorithm Semantic Segmentation
-	RepositorySemanticSegmentation = "semantic-segmentation"
+	repositorySemanticSegmentation = "semantic-segmentation"
 	// SageMaker Algorithm Seq2Seq
-	RepositorySeq2Seq = "seq2seq"
+	repositorySeq2Seq = "seq2seq"
 	// SageMaker Algorithm Spark
-	RepositorySpark = "sagemaker-spark-processing"
+	repositorySpark = "sagemaker-spark-processing"
 	// SageMaker Algorithm Spark ML
-	RepositorySparkML = "sagemaker-sparkml-serving"
+	repositorySparkML = "sagemaker-sparkml-serving"
 	// SageMaker DLC TensorFlow Training
-	RepositoryTensorFlowTraining = "tensorflow-training"
+	repositoryTensorFlowTraining = "tensorflow-training"
 	// SageMaker DLC TensorFlow Inference
-	RepositoryTensorFlowInference = "tensorflow-inference"
+	repositoryTensorFlowInference = "tensorflow-inference"
 	// SageMaker Repo TensorFlow Inference EIA
-	RepositoryTensorFlowInferenceEIA = "tensorflow-inference-eia"
+	repositoryTensorFlowInferenceEIA = "tensorflow-inference-eia"
 	// SageMaker DLC TensorFlow Inference Graviton
-	RepositoryTensorFlowInferenceGraviton = "tensorflow-inference-graviton"
+	repositoryTensorFlowInferenceGraviton = "tensorflow-inference-graviton"
 	// SageMaker DLC SageMaker TensorFlow
-	RepositorySageMakerTensorFlow = "sagemaker-tensorflow" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerTensorFlow = "sagemaker-tensorflow" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker TensorFlow EIA
-	RepositorySageMakerTensorFlowEIA = "sagemaker-tensorflow-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerTensorFlowEIA = "sagemaker-tensorflow-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker TensorFlow Serving
-	RepositoryTensorFlowServing = "sagemaker-tensorflow-serving"
+	repositoryTensorFlowServing = "sagemaker-tensorflow-serving"
 	// SageMaker DLC SageMaker TensorFlow Serving EIA
-	RepositoryTensorFlowServingEIA = "sagemaker-tensorflow-serving-eia"
+	repositoryTensorFlowServingEIA = "sagemaker-tensorflow-serving-eia"
 	// SageMaker DLC SageMaker TensorFlow Serving
-	RepositorySageMakerTensorFlowScriptMode = "sagemaker-tensorflow-scriptmode" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerTensorFlowScriptMode = "sagemaker-tensorflow-scriptmode" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC Tensorflow Coach
-	RepositoryTensorflowCoach = "sagemaker-rl-tensorflow"
+	repositoryTensorflowCoach = "sagemaker-rl-tensorflow"
 	// SageMaker DLC Tensorflow Inferentia
-	RepositoryTensorflowInferentia = "sagemaker-neo-tensorflow"
+	repositoryTensorflowInferentia = "sagemaker-neo-tensorflow"
 	// SageMaker Algorithm StabilityAI
-	RepositoryStabilityAI = "stabilityai-pytorch-inference"
+	repositoryStabilityAI = "stabilityai-pytorch-inference"
 	// SageMaker Algorithm VW
-	RepositoryVW = "sagemaker-rl-vw-container"
+	repositoryVW = "sagemaker-rl-vw-container"
 	// SageMaker Algorithm XGBoost
-	RepositoryXGBoost = "sagemaker-xgboost"
+	repositoryXGBoost = "sagemaker-xgboost"
 	// SageMaker Base Python
-	RepositorySageMakerBasePython = "sagemaker-base-python" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerBasePython = "sagemaker-base-python" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker Geospatial
-	RepositorySageMakerGeospatial = "sagemaker-geospatial-v1-0" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
+	repositorySageMakerGeospatial = "sagemaker-geospatial-v1-0" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker NVIDIA Triton Inference
-	RepositoryNVIDIATritonInference = "sagemaker-tritonserver"
+	repositoryNVIDIATritonInference = "sagemaker-tritonserver"
 )
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
@@ -187,7 +187,7 @@ const (
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/semantic-segmentation.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/seq2seq.json
 
-var PrebuiltECRImageIDByRegion_blazing = map[string]string{
+var prebuiltECRImageIDByRegion_blazing = map[string]string{
 	names.AFSouth1RegionID:     "455444449433",
 	names.APEast1RegionID:      "286214385809",
 	names.APNortheast1RegionID: "501404015308",
@@ -227,7 +227,7 @@ var PrebuiltECRImageIDByRegion_blazing = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/clarify.json
 
-var PrebuiltECRImageIDByRegion_clarify = map[string]string{
+var prebuiltECRImageIDByRegion_clarify = map[string]string{
 	names.AFSouth1RegionID:     "811711786498",
 	names.APEast1RegionID:      "098760798382",
 	names.APNortheast1RegionID: "377024640650",
@@ -257,7 +257,7 @@ var PrebuiltECRImageIDByRegion_clarify = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/data-wrangler.json
 
-var PrebuiltECRImageIDByRegion_dataWrangler = map[string]string{
+var prebuiltECRImageIDByRegion_dataWrangler = map[string]string{
 	names.AFSouth1RegionID:     "143210264188",
 	names.APEast1RegionID:      "707077482487",
 	names.APNortheast1RegionID: "649008135260",
@@ -286,7 +286,7 @@ var PrebuiltECRImageIDByRegion_dataWrangler = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/debugger.json
 
-var PrebuiltECRImageIDByRegion_debugger = map[string]string{
+var prebuiltECRImageIDByRegion_debugger = map[string]string{
 	names.AFSouth1RegionID:     "314341159256",
 	names.APEast1RegionID:      "199566480951",
 	names.APNortheast1RegionID: "430734990657",
@@ -321,7 +321,7 @@ var PrebuiltECRImageIDByRegion_debugger = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/neo-tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/xgboost-neo.json
 
-var PrebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
+var prebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
 	names.AFSouth1RegionID:     "774647643957",
 	names.APEast1RegionID:      "110948597952",
 	names.APNortheast1RegionID: "941853720454",
@@ -358,7 +358,7 @@ var PrebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/tensorflow.json
 
-var PrebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
+var prebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	names.AFSouth1RegionID:     "313743910680",
 	names.APEast1RegionID:      "057415533634",
 	names.APNortheast1RegionID: "520713654638",
@@ -390,7 +390,7 @@ var PrebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{ // nosemgrep
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/vw.json
 
-var PrebuiltECRImageIDByRegion_SageMakerRL = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
+var prebuiltECRImageIDByRegion_SageMakerRL = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	names.APNortheast1RegionID: "462105765813",
 	names.APNortheast2RegionID: "462105765813",
 	names.APSouth1RegionID:     "462105765813",
@@ -408,7 +408,7 @@ var PrebuiltECRImageIDByRegion_SageMakerRL = map[string]string{ // nosemgrep:ci.
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/spark.json
 
-var PrebuiltECRImageIDByRegion_spark = map[string]string{
+var prebuiltECRImageIDByRegion_spark = map[string]string{
 	names.AFSouth1RegionID:     "309385258863",
 	names.APEast1RegionID:      "732049463269",
 	names.APNortheast1RegionID: "411782140378",
@@ -446,7 +446,7 @@ var PrebuiltECRImageIDByRegion_spark = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-base-python.json
 
-var PrebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
+var prebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	names.AFSouth1RegionID:     "559312083959",
 	names.APEast1RegionID:      "493642496378",
 	names.APNortheast1RegionID: "102112518831",
@@ -480,13 +480,13 @@ var PrebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{ // nosem
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-geospatial.json
 
-var PrebuiltECRImageIDByRegion_SageMakerGeospatial = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
+var prebuiltECRImageIDByRegion_SageMakerGeospatial = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	names.USWest2RegionID: "081189585635",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/forecasting-deepar.json
 
-var PrebuiltECRImageIDByRegion_deepAR = map[string]string{
+var prebuiltECRImageIDByRegion_deepAR = map[string]string{
 	names.AFSouth1RegionID:     "455444449433",
 	names.APEast1RegionID:      "286214385809",
 	names.APNortheast1RegionID: "633353088612",
@@ -531,7 +531,7 @@ var PrebuiltECRImageIDByRegion_deepAR = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/object2vec.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/pca.json
 
-var PrebuiltECRImageIDByRegion_factorMachines = map[string]string{
+var prebuiltECRImageIDByRegion_factorMachines = map[string]string{
 	names.AFSouth1RegionID:     "455444449433",
 	names.APEast1RegionID:      "286214385809",
 	names.APNortheast1RegionID: "351501993468",
@@ -571,7 +571,7 @@ var PrebuiltECRImageIDByRegion_factorMachines = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/lda.json
 
-var PrebuiltECRImageIDByRegion_lda = map[string]string{
+var prebuiltECRImageIDByRegion_lda = map[string]string{
 	names.APNortheast1RegionID: "258307448986",
 	names.APNortheast2RegionID: "293181348795",
 	names.APSouth1RegionID:     "991648021394",
@@ -596,7 +596,7 @@ var PrebuiltECRImageIDByRegion_lda = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sparkml-serving.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sklearn.json
 
-var PrebuiltECRImageIDByRegion_XGBoost = map[string]string{
+var prebuiltECRImageIDByRegion_XGBoost = map[string]string{
 	names.AFSouth1RegionID:     "510948584623",
 	names.APEast1RegionID:      "651117190479",
 	names.APNortheast1RegionID: "354813040037",
@@ -648,7 +648,7 @@ var PrebuiltECRImageIDByRegion_XGBoost = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/huggingface-llm.json
 
-var PrebuiltECRImageIDByRegion_deepLearning = map[string]string{
+var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
 	names.AFSouth1RegionID:     "626614931356",
 	names.APEast1RegionID:      "871362719292",
 	names.APNortheast1RegionID: "763104351884",
@@ -688,7 +688,7 @@ var PrebuiltECRImageIDByRegion_deepLearning = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/model-monitor.json
 
-var PrebuiltECRImageIDByRegion_modelMonitor = map[string]string{
+var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
 	names.AFSouth1RegionID:     "875698925577",
 	names.APEast1RegionID:      "001633400207",
 	names.APNortheast1RegionID: "574779866223",
@@ -718,8 +718,8 @@ var PrebuiltECRImageIDByRegion_modelMonitor = map[string]string{
 	names.USWest2RegionID:      "159807026194",
 }
 
-// @SDKDataSource("aws_sagemaker_prebuilt_ecr_image")
-func DataSourcePrebuiltECRImage() *schema.Resource {
+// @SDKDataSource("aws_sagemaker_prebuilt_ecr_image", name="Prebuilt ECR Image")
+func dataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
 		Schema: map[string]*schema.Schema{
@@ -727,87 +727,87 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					RepositoryAutoGluonTraining,
-					RepositoryAutoGluonInference,
-					RepositoryBlazingText,
-					RepositoryChainer,
-					RepositoryClarify,
-					RepositoryDJLDeepSpeed,
-					RepositoryDataWrangler,
-					RepositoryDebugger,
-					RepositoryDeepARForecasting,
-					RepositoryFactorizationMachines,
-					RepositoryHuggingFaceTensorFlowTraining,
-					RepositoryHuggingFacePyTorchTraining,
-					RepositoryHuggingFacePyTorchTrainingNeuronX,
-					RepositoryHuggingFacePyTorchTrainingCompiler,
-					RepositoryHuggingFaceTensorFlowTrainingCompiler,
-					RepositoryHuggingFaceTensorFlowInference,
-					RepositoryHuggingFacePyTorchInference,
-					RepositoryHuggingFacePyTorchInferenceNeuron,
-					RepositoryHuggingFacePyTorchInferenceNeuronX,
-					RepositoryHuggingFacePyTorchTGIInference,
-					RepositoryHuggingFaceTEI,
-					RepositoryHuggingFaceTEICPU,
-					RepositoryIPInsights,
-					RepositoryImageClassification,
-					RepositoryInferentiaMXNet,
-					RepositoryInferentiaPyTorch,
-					RepositoryKMeans,
-					RepositoryKNearestNeighbor,
-					RepositoryLDA,
-					RepositoryLinearLearner,
-					RepositoryModelMonitor,
-					RepositoryMXNetTraining,
-					RepositoryMXNetInference,
-					RepositoryMXNetInferenceEIA,
-					RepositoryMXNetCoach,
-					RepositoryNeuralTopicModel,
-					RepositoryNeoImageClassification,
-					RepositoryNeoMXNet,
-					RepositoryNeoPyTorch,
-					RepositoryNeoTensorflow,
-					RepositoryNeoXGBoost,
-					RepositoryNVIDIATritonInference,
-					RepositoryObjectDetection,
-					RepositoryObject2Vec,
-					RepositoryPCA,
-					RepositoryPyTorchTraining,
-					RepositoryPyTorchTrainingNeuronX,
-					RepositoryPyTorchTrainingCompiler,
-					RepositoryPyTorchInference,
-					RepositoryPyTorchInferenceEIA,
-					RepositoryPyTorchInferenceGraviton,
-					RepositoryPyTorchInferenceNeuronX,
-					RepositoryRandomCutForest,
-					RepositoryRLRayPyTorch,
-					RepositoryRLCoachPyTorch,
-					RepositorySageMakerBasePython,
-					RepositorySageMakerGeospatial,
-					RepositorySageMakerMXNet,
-					RepositorySageMakerMXNetServing,
-					RepositorySageMakerMXNetEIA,
-					RepositorySageMakerMXNetServingEIA,
-					RepositorySageMakerPyTorch,
-					RepositorySageMakerTensorFlow,
-					RepositorySageMakerTensorFlowEIA,
-					RepositoryScikitLearn,
-					RepositorySemanticSegmentation,
-					RepositorySeq2Seq,
-					RepositorySpark,
-					RepositorySparkML,
-					RepositoryTensorFlowTraining,
-					RepositoryTensorFlowInference,
-					RepositoryTensorFlowInferenceEIA,
-					RepositoryTensorFlowInferenceGraviton,
-					RepositoryTensorFlowServing,
-					RepositoryTensorFlowServingEIA,
-					RepositorySageMakerTensorFlowScriptMode,
-					RepositoryTensorflowCoach,
-					RepositoryTensorflowInferentia,
-					RepositoryStabilityAI,
-					RepositoryVW,
-					RepositoryXGBoost,
+					repositoryAutoGluonTraining,
+					repositoryAutoGluonInference,
+					repositoryBlazingText,
+					repositoryChainer,
+					repositoryClarify,
+					repositoryDJLDeepSpeed,
+					repositoryDataWrangler,
+					repositoryDebugger,
+					repositoryDeepARForecasting,
+					repositoryFactorizationMachines,
+					repositoryHuggingFaceTensorFlowTraining,
+					repositoryHuggingFacePyTorchTraining,
+					repositoryHuggingFacePyTorchTrainingNeuronX,
+					repositoryHuggingFacePyTorchTrainingCompiler,
+					repositoryHuggingFaceTensorFlowTrainingCompiler,
+					repositoryHuggingFaceTensorFlowInference,
+					repositoryHuggingFacePyTorchInference,
+					repositoryHuggingFacePyTorchInferenceNeuron,
+					repositoryHuggingFacePyTorchInferenceNeuronX,
+					repositoryHuggingFacePyTorchTGIInference,
+					repositoryHuggingFaceTEI,
+					repositoryHuggingFaceTEICPU,
+					repositoryIPInsights,
+					repositoryImageClassification,
+					repositoryInferentiaMXNet,
+					repositoryInferentiaPyTorch,
+					repositoryKMeans,
+					repositoryKNearestNeighbor,
+					repositoryLDA,
+					repositoryLinearLearner,
+					repositoryModelMonitor,
+					repositoryMXNetTraining,
+					repositoryMXNetInference,
+					repositoryMXNetInferenceEIA,
+					repositoryMXNetCoach,
+					repositoryNeuralTopicModel,
+					repositoryNeoImageClassification,
+					repositoryNeoMXNet,
+					repositoryNeoPyTorch,
+					repositoryNeoTensorflow,
+					repositoryNeoXGBoost,
+					repositoryNVIDIATritonInference,
+					repositoryObjectDetection,
+					repositoryObject2Vec,
+					repositoryPCA,
+					repositoryPyTorchTraining,
+					repositoryPyTorchTrainingNeuronX,
+					repositoryPyTorchTrainingCompiler,
+					repositoryPyTorchInference,
+					repositoryPyTorchInferenceEIA,
+					repositoryPyTorchInferenceGraviton,
+					repositoryPyTorchInferenceNeuronX,
+					repositoryRandomCutForest,
+					repositoryRLRayPyTorch,
+					repositoryRLCoachPyTorch,
+					repositorySageMakerBasePython,
+					repositorySageMakerGeospatial,
+					repositorySageMakerMXNet,
+					repositorySageMakerMXNetServing,
+					repositorySageMakerMXNetEIA,
+					repositorySageMakerMXNetServingEIA,
+					repositorySageMakerPyTorch,
+					repositorySageMakerTensorFlow,
+					repositorySageMakerTensorFlowEIA,
+					repositoryScikitLearn,
+					repositorySemanticSegmentation,
+					repositorySeq2Seq,
+					repositorySpark,
+					repositorySparkML,
+					repositoryTensorFlowTraining,
+					repositoryTensorFlowInference,
+					repositoryTensorFlowInferenceEIA,
+					repositoryTensorFlowInferenceGraviton,
+					repositoryTensorFlowServing,
+					repositoryTensorFlowServingEIA,
+					repositorySageMakerTensorFlowScriptMode,
+					repositoryTensorflowCoach,
+					repositoryTensorflowInferentia,
+					repositoryStabilityAI,
+					repositoryVW,
+					repositoryXGBoost,
 				}, false),
 			},
 
@@ -856,95 +856,95 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 
 	id := ""
 	switch repo {
-	case RepositoryBlazingText,
-		RepositoryImageClassification,
-		RepositoryObjectDetection,
-		RepositorySemanticSegmentation,
-		RepositorySeq2Seq:
-		id = PrebuiltECRImageIDByRegion_blazing[region]
-	case RepositoryClarify:
-		id = PrebuiltECRImageIDByRegion_clarify[region]
-	case RepositoryDataWrangler:
-		id = PrebuiltECRImageIDByRegion_dataWrangler[region]
-	case RepositoryDebugger:
-		id = PrebuiltECRImageIDByRegion_debugger[region]
-	case RepositoryDeepARForecasting:
-		id = PrebuiltECRImageIDByRegion_deepAR[region]
-	case RepositoryInferentiaMXNet,
-		RepositoryInferentiaPyTorch,
-		RepositoryMXNetCoach,
-		RepositoryNeoImageClassification,
-		RepositoryNeoMXNet,
-		RepositoryNeoPyTorch,
-		RepositoryNeoTensorflow,
-		RepositoryNeoXGBoost,
-		RepositoryTensorflowInferentia:
-		id = PrebuiltECRImageIDByRegion_inferentiaNeo[region]
-	case RepositoryLDA:
-		id = PrebuiltECRImageIDByRegion_lda[region]
-	case RepositoryModelMonitor:
-		id = PrebuiltECRImageIDByRegion_modelMonitor[region]
-	case RepositoryXGBoost,
-		RepositoryScikitLearn,
-		RepositorySparkML,
-		RepositoryHuggingFaceTEI,
-		RepositoryHuggingFaceTEICPU:
-		id = PrebuiltECRImageIDByRegion_XGBoost[region]
-	case RepositoryChainer,
-		RepositorySageMakerMXNet,
-		RepositorySageMakerMXNetServing,
-		RepositorySageMakerMXNetEIA,
-		RepositorySageMakerMXNetServingEIA,
-		RepositorySageMakerPyTorch,
-		RepositorySageMakerTensorFlow,
-		RepositorySageMakerTensorFlowEIA,
-		RepositorySageMakerTensorFlowScriptMode,
-		RepositoryTensorflowCoach,
-		RepositoryTensorFlowServing,
-		RepositoryTensorFlowServingEIA:
-		id = PrebuiltECRImageIDByRegion_SageMakerCustom[region]
-	case RepositoryAutoGluonTraining,
-		RepositoryAutoGluonInference,
-		RepositoryDJLDeepSpeed,
-		RepositoryHuggingFaceTensorFlowTraining,
-		RepositoryHuggingFacePyTorchTraining,
-		RepositoryHuggingFacePyTorchTrainingNeuronX,
-		RepositoryHuggingFacePyTorchTrainingCompiler,
-		RepositoryHuggingFaceTensorFlowTrainingCompiler,
-		RepositoryHuggingFaceTensorFlowInference,
-		RepositoryHuggingFacePyTorchInference,
-		RepositoryHuggingFacePyTorchInferenceNeuron,
-		RepositoryHuggingFacePyTorchInferenceNeuronX,
-		RepositoryHuggingFacePyTorchTGIInference,
-		RepositoryMXNetTraining,
-		RepositoryMXNetInference,
-		RepositoryMXNetInferenceEIA,
-		RepositoryPyTorchTraining,
-		RepositoryPyTorchTrainingNeuronX,
-		RepositoryPyTorchTrainingCompiler,
-		RepositoryPyTorchInference,
-		RepositoryPyTorchInferenceEIA,
-		RepositoryPyTorchInferenceGraviton,
-		RepositoryPyTorchInferenceNeuronX,
-		RepositoryStabilityAI,
-		RepositoryTensorFlowTraining,
-		RepositoryTensorFlowInference,
-		RepositoryTensorFlowInferenceEIA,
-		RepositoryTensorFlowInferenceGraviton,
-		RepositoryNVIDIATritonInference:
-		id = PrebuiltECRImageIDByRegion_deepLearning[region]
-	case RepositoryRLRayPyTorch,
-		RepositoryRLCoachPyTorch,
-		RepositoryVW:
-		id = PrebuiltECRImageIDByRegion_SageMakerRL[region]
-	case RepositorySageMakerBasePython:
-		id = PrebuiltECRImageIDByRegion_SageMakerBasePython[region]
-	case RepositorySageMakerGeospatial:
-		id = PrebuiltECRImageIDByRegion_SageMakerGeospatial[region]
-	case RepositorySpark:
-		id = PrebuiltECRImageIDByRegion_spark[region]
+	case repositoryBlazingText,
+		repositoryImageClassification,
+		repositoryObjectDetection,
+		repositorySemanticSegmentation,
+		repositorySeq2Seq:
+		id = prebuiltECRImageIDByRegion_blazing[region]
+	case repositoryClarify:
+		id = prebuiltECRImageIDByRegion_clarify[region]
+	case repositoryDataWrangler:
+		id = prebuiltECRImageIDByRegion_dataWrangler[region]
+	case repositoryDebugger:
+		id = prebuiltECRImageIDByRegion_debugger[region]
+	case repositoryDeepARForecasting:
+		id = prebuiltECRImageIDByRegion_deepAR[region]
+	case repositoryInferentiaMXNet,
+		repositoryInferentiaPyTorch,
+		repositoryMXNetCoach,
+		repositoryNeoImageClassification,
+		repositoryNeoMXNet,
+		repositoryNeoPyTorch,
+		repositoryNeoTensorflow,
+		repositoryNeoXGBoost,
+		repositoryTensorflowInferentia:
+		id = prebuiltECRImageIDByRegion_inferentiaNeo[region]
+	case repositoryLDA:
+		id = prebuiltECRImageIDByRegion_lda[region]
+	case repositoryModelMonitor:
+		id = prebuiltECRImageIDByRegion_modelMonitor[region]
+	case repositoryXGBoost,
+		repositoryScikitLearn,
+		repositorySparkML,
+		repositoryHuggingFaceTEI,
+		repositoryHuggingFaceTEICPU:
+		id = prebuiltECRImageIDByRegion_XGBoost[region]
+	case repositoryChainer,
+		repositorySageMakerMXNet,
+		repositorySageMakerMXNetServing,
+		repositorySageMakerMXNetEIA,
+		repositorySageMakerMXNetServingEIA,
+		repositorySageMakerPyTorch,
+		repositorySageMakerTensorFlow,
+		repositorySageMakerTensorFlowEIA,
+		repositorySageMakerTensorFlowScriptMode,
+		repositoryTensorflowCoach,
+		repositoryTensorFlowServing,
+		repositoryTensorFlowServingEIA:
+		id = prebuiltECRImageIDByRegion_SageMakerCustom[region]
+	case repositoryAutoGluonTraining,
+		repositoryAutoGluonInference,
+		repositoryDJLDeepSpeed,
+		repositoryHuggingFaceTensorFlowTraining,
+		repositoryHuggingFacePyTorchTraining,
+		repositoryHuggingFacePyTorchTrainingNeuronX,
+		repositoryHuggingFacePyTorchTrainingCompiler,
+		repositoryHuggingFaceTensorFlowTrainingCompiler,
+		repositoryHuggingFaceTensorFlowInference,
+		repositoryHuggingFacePyTorchInference,
+		repositoryHuggingFacePyTorchInferenceNeuron,
+		repositoryHuggingFacePyTorchInferenceNeuronX,
+		repositoryHuggingFacePyTorchTGIInference,
+		repositoryMXNetTraining,
+		repositoryMXNetInference,
+		repositoryMXNetInferenceEIA,
+		repositoryPyTorchTraining,
+		repositoryPyTorchTrainingNeuronX,
+		repositoryPyTorchTrainingCompiler,
+		repositoryPyTorchInference,
+		repositoryPyTorchInferenceEIA,
+		repositoryPyTorchInferenceGraviton,
+		repositoryPyTorchInferenceNeuronX,
+		repositoryStabilityAI,
+		repositoryTensorFlowTraining,
+		repositoryTensorFlowInference,
+		repositoryTensorFlowInferenceEIA,
+		repositoryTensorFlowInferenceGraviton,
+		repositoryNVIDIATritonInference:
+		id = prebuiltECRImageIDByRegion_deepLearning[region]
+	case repositoryRLRayPyTorch,
+		repositoryRLCoachPyTorch,
+		repositoryVW:
+		id = prebuiltECRImageIDByRegion_SageMakerRL[region]
+	case repositorySageMakerBasePython:
+		id = prebuiltECRImageIDByRegion_SageMakerBasePython[region]
+	case repositorySageMakerGeospatial:
+		id = prebuiltECRImageIDByRegion_SageMakerGeospatial[region]
+	case repositorySpark:
+		id = prebuiltECRImageIDByRegion_spark[region]
 	default:
-		id = PrebuiltECRImageIDByRegion_factorMachines[region]
+		id = prebuiltECRImageIDByRegion_factorMachines[region]
 	}
 
 	if id == "" {
@@ -953,10 +953,10 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(id)
 	d.Set("registry_id", id)
-	d.Set("registry_path", PrebuiltECRImageCreatePath(id, region, suffix, repo, d.Get("image_tag").(string)))
+	d.Set("registry_path", prebuiltECRImageCreatePath(id, region, suffix, repo, d.Get("image_tag").(string)))
 	return diags
 }
 
-func PrebuiltECRImageCreatePath(id, region, suffix, repo, imageTag string) string {
+func prebuiltECRImageCreatePath(id, region, suffix, repo, imageTag string) string {
 	return fmt.Sprintf("%s.dkr.ecr.%s.%s/%s:%s", id, region, suffix, repo, imageTag)
 }

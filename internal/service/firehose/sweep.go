@@ -37,10 +37,9 @@ func sweepDeliveryStreams(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.DeliveryStreamNames {
+		for _, name := range page.DeliveryStreamNames {
 			r := resourceDeliveryStream()
 			d := r.Data(nil)
-			name := v
 			arn := arn.ARN{
 				Partition: client.Partition,
 				Service:   "firehose",

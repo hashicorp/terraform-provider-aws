@@ -93,6 +93,7 @@ func resourceTaskDefinition() *schema.Resource {
 					containerDefinitions(orderedCDs).orderContainers()
 					containerDefinitions(orderedCDs).orderEnvironmentVariables()
 					containerDefinitions(orderedCDs).orderSecrets()
+					containerDefinitions(orderedCDs).compactArrays()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
@@ -103,7 +104,8 @@ func resourceTaskDefinition() *schema.Resource {
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: validTaskDefinitionContainerDefinitions,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
 				Type:     schema.TypeString,

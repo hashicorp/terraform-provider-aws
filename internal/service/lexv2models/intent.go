@@ -257,7 +257,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 	slotValueOverrideLNB := schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotValueOverride](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required: true,
 				},
@@ -577,7 +577,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[PromptAttemptsType](),
@@ -1091,10 +1091,10 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &lexmodelsv2.DeleteIntentInput{
-		IntentId:   aws.String(state.IntentID.ValueString()),
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
+		IntentId:   state.IntentID.ValueStringPointer(),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteIntent(ctx, in)

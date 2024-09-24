@@ -22,6 +22,19 @@ func TestNormalizeJsonStringSchemaStateFunc(t *testing.T) { // nosemgrep:ci.caps
 	}
 }
 
+func TestToLowerSchemaStateFunc(t *testing.T) {
+	t.Parallel()
+
+	var input interface{} = "In-State"
+	want := "in-state"
+
+	got := ToLowerSchemaStateFunc(input)
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+want, -got): %s", diff)
+	}
+}
+
 func TestToUpperSchemaStateFunc(t *testing.T) {
 	t.Parallel()
 

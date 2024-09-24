@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"

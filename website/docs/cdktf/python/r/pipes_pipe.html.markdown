@@ -232,11 +232,10 @@ class MyConvertedCode(TerraformStack):
             ),
             target=target.arn,
             target_parameters=PipesPipeTargetParameters(
-                sqs_queue=[{
-                    "message_deduplication_id": "example-dedupe",
-                    "message_group_id": "example-group"
-                }
-                ]
+                sqs_queue_parameters=PipesPipeTargetParametersSqsQueueParameters(
+                    message_deduplication_id="example-dedupe",
+                    message_group_id="example-group"
+                )
             )
         )
 ```
@@ -659,4 +658,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6d50d509c33f1536f5040887505789b0f615d6bcf6930c041e0188e8d516840b -->
+<!-- cache-key: cdktf-0.20.1 input-1dc037f0f5d2d7b250197accf6c0f7783efa70c8165657f2fd106a1f7d1b38c4 -->

@@ -6,6 +6,8 @@ package batch_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
@@ -13,18 +15,18 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		ApiJson           string
-		ConfigurationJson string
-		ExpectEquivalent  bool
-		ExpectError       bool
+		apiJSON           string
+		configurationJSON string
+		wantEquivalent    bool
+		wantErr           bool
 	}{
 		"empty": {
-			ApiJson:           ``,
-			ConfigurationJson: ``,
-			ExpectEquivalent:  true,
+			apiJSON:           ``,
+			configurationJSON: ``,
+			wantEquivalent:    true,
 		},
 		"empty ResourceRequirements": {
-			ApiJson: `
+			apiJSON: `
 {
 	"command": ["ls", "-la"],
 	"environment": [
@@ -61,7 +63,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	]
 }
 `,
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"command": ["ls", "-la"],
 	"environment": [
@@ -97,10 +99,10 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	]
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"reordered Environment": {
-			ApiJson: `
+			apiJSON: `
 {
 	"command": ["ls", "-la"],
 	"environment": [
@@ -141,7 +143,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	]
 }
 `,
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"command": ["ls", "-la"],
 	"environment": [
@@ -182,11 +184,11 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	]
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"empty environment, mountPoints, ulimits, and volumes": {
 			//lintignore:AWSAT005
-			ApiJson: `
+			apiJSON: `
 {
 	"image": "example:image",
 	"vcpus": 8,
@@ -201,7 +203,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 }
 `,
 			//lintignore:AWSAT005
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
 	"image": "example:image",
@@ -210,11 +212,11 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes": {
 			//lintignore:AWSAT003,AWSAT005
-			ApiJson: `
+			apiJSON: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 	"vcpus": 1,
@@ -234,7 +236,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 }
 `,
 			//lintignore:AWSAT003,AWSAT005
-			ConfigurationJson: `
+			configurationJSON: `
 {
     "image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
     "memory": 4096,
@@ -251,11 +253,11 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	}
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"no fargatePlatformConfiguration": {
 			//lintignore:AWSAT003,AWSAT005
-			ApiJson: `
+			apiJSON: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 	"resourceRequirements": [
@@ -274,7 +276,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 }
 `,
 			//lintignore:AWSAT003,AWSAT005
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 	"resourceRequirements": [
@@ -289,11 +291,11 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	]
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"empty linuxParameters.devices, linuxParameters.tmpfs, logConfiguration.options": {
 			//lintignore:AWSAT003,AWSAT005
-			ApiJson: `
+			apiJSON: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 	"vcpus": 1,
@@ -312,7 +314,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 }
 `,
 			//lintignore:AWSAT003,AWSAT005
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 	"vcpus": 1,
@@ -327,11 +329,11 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	}
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"empty linuxParameters.devices.permissions, linuxParameters.tmpfs.mountOptions": {
 			//lintignore:AWSAT003,AWSAT005
-			ApiJson: `
+			apiJSON: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 	"vcpus": 1,
@@ -354,7 +356,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 }
 `,
 			//lintignore:AWSAT003,AWSAT005
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 	"vcpus": 1,
@@ -374,11 +376,11 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	}
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"empty environment variables": {
 			//lintignore:AWSAT005
-			ApiJson: `
+			apiJSON: `
 {
 	"image": "example:image",
 	"vcpus": 8,
@@ -397,7 +399,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	"resourceRequirements": []
 }`,
 			//lintignore:AWSAT005
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
 	"image": "example:image",
@@ -415,11 +417,11 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	],
 	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
 }`,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"empty environment variable": {
 			//lintignore:AWSAT005
-			ApiJson: `
+			apiJSON: `
 {
 	"image": "example:image",
 	"vcpus": 8,
@@ -433,7 +435,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	"resourceRequirements": []
 }`,
 			//lintignore:AWSAT005
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
 	"image": "example:image",
@@ -447,27 +449,28 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	],
 	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
 }`,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfbatch.EquivalentContainerPropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
-
-			if err != nil && !testCase.ExpectError {
-				t.Errorf("got unexpected error: %s", err)
+			output, err := tfbatch.EquivalentContainerPropertiesJSON(testCase.configurationJSON, testCase.apiJSON)
+			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
+				t.Errorf("EquivalentContainerPropertiesJSON err %t, want %t", got, want)
 			}
 
-			if err == nil && testCase.ExpectError {
-				t.Errorf("expected error, but received none")
-			}
-
-			if got != testCase.ExpectEquivalent {
-				t.Errorf("got %t, expected %t", got, testCase.ExpectEquivalent)
+			if err == nil {
+				if got, want := output, testCase.wantEquivalent; !cmp.Equal(got, want) {
+					t.Errorf("EquivalentContainerPropertiesJSON equivalent %t, want %t", got, want)
+					if want {
+						if diff := jsoncmp.Diff(testCase.configurationJSON, testCase.apiJSON); diff != "" {
+							t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+						}
+					}
+				}
 			}
 		})
 	}

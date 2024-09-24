@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -90,6 +91,12 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"skip_deletion_check": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -145,17 +152,17 @@ func (r *resourceDomain) Create(ctx context.Context, req resource.CreateRequest,
 
 	in := &datazone.CreateDomainInput{
 		ClientToken:         aws.String(sdkid.UniqueId()),
-		DomainExecutionRole: aws.String(plan.DomainExecutionRole.ValueString()),
-		Name:                aws.String(plan.Name.ValueString()),
+		DomainExecutionRole: plan.DomainExecutionRole.ValueStringPointer(),
+		Name:                plan.Name.ValueStringPointer(),
 		Tags:                getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	if !plan.KmsKeyIdentifier.IsNull() {
-		in.KmsKeyIdentifier = aws.String(plan.KmsKeyIdentifier.ValueString())
+		in.KmsKeyIdentifier = plan.KmsKeyIdentifier.ValueStringPointer()
 	}
 
 	if !plan.SingleSignOn.IsNull() {
@@ -265,19 +272,19 @@ func (r *resourceDomain) Update(ctx context.Context, req resource.UpdateRequest,
 		!plan.SingleSignOn.Equal(state.SingleSignOn) {
 		in := &datazone.UpdateDomainInput{
 			ClientToken: aws.String(sdkid.UniqueId()),
-			Identifier:  aws.String(plan.ID.ValueString()),
+			Identifier:  plan.ID.ValueStringPointer(),
 		}
 
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 
 		if !plan.DomainExecutionRole.IsNull() {
-			in.DomainExecutionRole = aws.String(plan.DomainExecutionRole.ValueString())
+			in.DomainExecutionRole = plan.DomainExecutionRole.ValueStringPointer()
 		}
 
 		if !plan.Name.IsNull() {
-			in.Name = aws.String(plan.Name.ValueString())
+			in.Name = plan.Name.ValueStringPointer()
 		}
 
 		if !plan.SingleSignOn.IsNull() {
@@ -323,7 +330,11 @@ func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	in := &datazone.DeleteDomainInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		Identifier:  aws.String(state.ID.ValueString()),
+		Identifier:  state.ID.ValueStringPointer(),
+	}
+
+	if !state.SkipDeletionCheck.IsNull() {
+		in.SkipDeletionCheck = state.SkipDeletionCheck.ValueBoolPointer()
 	}
 
 	_, err := conn.DeleteDomain(ctx, in)
@@ -477,9 +488,10 @@ type domainResourceModel struct {
 	KmsKeyIdentifier    fwtypes.ARN    `tfsdk:"kms_key_identifier"`
 	Name                types.String   `tfsdk:"name"`
 	PortalUrl           types.String   `tfsdk:"portal_url"`
+	SkipDeletionCheck   types.Bool     `tfsdk:"skip_deletion_check"`
 	SingleSignOn        types.List     `tfsdk:"single_sign_on"`
-	Tags                types.Map      `tfsdk:"tags"`
-	TagsAll             types.Map      `tfsdk:"tags_all"`
+	Tags                tftags.Map     `tfsdk:"tags"`
+	TagsAll             tftags.Map     `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
 

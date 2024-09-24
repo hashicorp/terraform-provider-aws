@@ -75,6 +75,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
@@ -113,8 +114,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -237,6 +238,7 @@ func registerSweepers() {
 	finspace.RegisterSweepers()
 	firehose.RegisterSweepers()
 	fis.RegisterSweepers()
+	fms.RegisterSweepers()
 	fsx.RegisterSweepers()
 	gamelift.RegisterSweepers()
 	glacier.RegisterSweepers()
@@ -275,8 +277,8 @@ func registerSweepers() {
 	networkmanager.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
-	opsworks.RegisterSweepers()
 	pinpoint.RegisterSweepers()
+	pinpointsmsvoicev2.RegisterSweepers()
 	pipes.RegisterSweepers()
 	qldb.RegisterSweepers()
 	quicksight.RegisterSweepers()

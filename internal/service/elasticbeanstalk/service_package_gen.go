@@ -25,16 +25,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceApplication,
+			Factory:  dataSourceApplication,
 			TypeName: "aws_elastic_beanstalk_application",
+			Name:     "Application",
 		},
 		{
-			Factory:  DataSourceHostedZone,
+			Factory:  dataSourceHostedZone,
 			TypeName: "aws_elastic_beanstalk_hosted_zone",
 		},
 		{
-			Factory:  DataSourceSolutionStack,
+			Factory:  dataSourceSolutionStack,
 			TypeName: "aws_elastic_beanstalk_solution_stack",
+			Name:     "Solution Stack",
 		},
 	}
 }
@@ -42,7 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceApplication,
+			Factory:  resourceApplication,
 			TypeName: "aws_elastic_beanstalk_application",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
@@ -50,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceApplicationVersion,
+			Factory:  resourceApplicationVersion,
 			TypeName: "aws_elastic_beanstalk_application_version",
 			Name:     "Application Version",
 			Tags: &types.ServicePackageResourceTags{
@@ -58,11 +60,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfigurationTemplate,
+			Factory:  resourceConfigurationTemplate,
 			TypeName: "aws_elastic_beanstalk_configuration_template",
+			Name:     "Configuration Template",
 		},
 		{
-			Factory:  ResourceEnvironment,
+			Factory:  resourceEnvironment,
 			TypeName: "aws_elastic_beanstalk_environment",
 			Name:     "Environment",
 			Tags: &types.ServicePackageResourceTags{
