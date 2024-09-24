@@ -732,6 +732,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
