@@ -59,7 +59,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceSecurityPolicy,
 		},
 		{
-			Factory: newResourceVPCEndpoint,
+			Factory: newVPCEndpointResource,
+			Name:    "VPC Endpoint",
 		},
 	}
 }
