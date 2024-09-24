@@ -114,8 +114,8 @@ github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.17.1 h1:31xxCzw3YQL6CQyZxobfE
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.17.1/go.mod h1:iX55GDn2lL2pthAp3k3lNpsRfFdfNpvYlHHqu8GQKT0=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.27.1 h1:5RsTuCqejz5q1socHGp3bqMe8mqlrF0H447kCcVabeo=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.27.1/go.mod h1:R6qoyNSjchvHZZrUVpMwqjqOuDNCdk9qoI9IagO02xg=
-github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.21.0 h1:EYVyrlWbbi8fsD8ioak913s0Sqp/79h1iw66wenufYA=
-github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.21.0/go.mod h1:m76qmFtlykPrPIMM4wpE3nTukLjkq7bt412UVaQbp1M=
+github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.21.1 h1:wUNIspx0x1tr1YzIAMBHiIrlJGiVySjzWIj2+Z18Sfc=
+github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.21.1/go.mod h1:m76qmFtlykPrPIMM4wpE3nTukLjkq7bt412UVaQbp1M=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.54.0 h1:xYTmnuV8TUx1cL8ajCM5R472x6trJIvO+ZiKiAxiqhA=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.54.0/go.mod h1:85xWVAzH8I6dCauQy7j1nt8CbSELPzGQj45chIZ/qMA=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.39.0 h1:HDD7KoGvyJeuW4MupDxiYxme+Y8C85qXW0cAVT0uAG4=
