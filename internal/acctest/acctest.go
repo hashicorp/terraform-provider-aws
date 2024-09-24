@@ -1067,22 +1067,6 @@ func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
 	}
 }
 
-func PreCheckCECostAllocationTagPayerAccount(ctx context.Context, t *testing.T) {
-	t.Helper()
-
-	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
-
-	_, err := conn.ListCostAllocationTags(ctx, &costexplorer.ListCostAllocationTagsInput{})
-
-	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
-		t.Skip("skipping tests; this AWS account must be a payer account")
-	}
-
-	if err != nil {
-		t.Fatalf("listing Cost Explorer Cost Allocation Tags: %s", err)
-	}
-}
-
 func PreCheckCECostCategoryPayerAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
