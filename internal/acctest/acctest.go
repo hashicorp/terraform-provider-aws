@@ -26,7 +26,6 @@ import (
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -1064,22 +1063,6 @@ func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func PreCheckCECostCategoryPayerAccount(ctx context.Context, t *testing.T) {
-	t.Helper()
-
-	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
-
-	_, err := conn.ListCostCategoryDefinitions(ctx, &costexplorer.ListCostCategoryDefinitionsInput{})
-
-	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
-		t.Skip("skipping tests; this AWS account must be a payer account")
-	}
-
-	if err != nil {
-		t.Fatalf("listing Cost Explorer Cost Categories: %s", err)
 	}
 }
 
