@@ -6752,6 +6752,9 @@ func testAccInstanceConfig_orderableClassSQLServerExGP3() string {
 func testAccInstanceConfig_orderableClassSQLServerSe() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerStandard, "license-included", "standard")
 }
+func testAccInstanceConfig_orderableClassSQLServerEE() string {
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerEnterprise, "license-included", "standard")
+}
 
 func testAccInstanceConfig_orderableClassCustomSQLServerWeb() string {
 	return testAccInstanceConfig_orderableClass("custom-sqlserver-web", "", "gp2")
@@ -9259,9 +9262,50 @@ resource "aws_db_instance" "test" {
 `, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses))
 }
 
+func testAccInstanceConfig_baseMSSQLEnterpriseDomain(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassSQLServerEE(),
+		testAccInstanceConfig_baseVPC(rName),
+		testAccInstanceConfig_ServiceRole(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_directory_service_directory" "directory" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+data "aws_partition" "current" {}
+`, rName, domain))
+}
+
 func testAccInstanceConfig_ReplicateSourceDB_mssqlDomain(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_baseMSSQLDomain(rName, domain),
+		testAccInstanceConfig_baseMSSQLEnterpriseDomain(rName, domain),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 20
@@ -9271,22 +9315,21 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model           = "license-included"
   skip_final_snapshot     = true
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
-  vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
 }
 
 resource "aws_db_instance" "test" {
-  identifier             = %[1]q
-  instance_class         = aws_db_instance.source.instance_class
-  replicate_source_db    = aws_db_instance.source.identifier
-  db_subnet_group_name   = aws_db_subnet_group.test.name
-  vpc_security_group_ids = [aws_security_group.test.id]
-  skip_final_snapshot    = true
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.identifier
+  license_model       = "license-included"
+  skip_final_snapshot = true
 
   domain               = aws_directory_service_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
