@@ -43,8 +43,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Member Association",
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_inspector2_organization_configuration",
+			Name:     "Organization Configuration",
 		},
 	}
 }
