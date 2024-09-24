@@ -5,6 +5,12 @@ package inspector2
 
 // Exports for use in tests only.
 var (
+	ResourceDelegatedAdminAccount = resourceDelegatedAdminAccount
+
+	FindDelegatedAdminAccountByID     = findDelegatedAdminAccountByID
+	WaitDelegatedAdminAccountDisabled = waitDelegatedAdminAccountDisabled
+	WaitDelegatedAdminAccountEnabled  = waitDelegatedAdminAccountEnabled
+
 	EnablerID      = enablerID
 	ParseEnablerID = parseEnablerID
 )

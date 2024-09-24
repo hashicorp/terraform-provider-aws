@@ -225,7 +225,7 @@ func testEnableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Clien
 		return err
 	}
 
-	if err := tfinspector2.WaitDelegatedAdminAccountEnabled(ctx, conn, accountID, time.Minute*2); err != nil {
+	if _, err := tfinspector2.WaitDelegatedAdminAccountEnabled(ctx, conn, accountID, time.Minute*2); err != nil {
 		return err
 	}
 
@@ -240,7 +240,7 @@ func testDisableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Clie
 		return err
 	}
 
-	if err := tfinspector2.WaitDelegatedAdminAccountDisabled(ctx, conn, accountID, time.Minute*2); err != nil {
+	if _, err := tfinspector2.WaitDelegatedAdminAccountDisabled(ctx, conn, accountID, time.Minute*2); err != nil {
 		return err
 	}
 
