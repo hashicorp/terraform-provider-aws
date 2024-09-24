@@ -84,8 +84,8 @@ github.com/aws/aws-sdk-go-v2/service/appsync v1.37.1 h1:C1nJK04nSaLsE8mCppDeC/Hm
 github.com/aws/aws-sdk-go-v2/service/appsync v1.37.1/go.mod h1:MWfGPdl5m3phNVRgLU3fIgPnzTgrFwONX/T8/DK6eoE=
 github.com/aws/aws-sdk-go-v2/service/athena v1.46.0 h1:Tbc20svw3QkhXQzm6vLeWbVyVNotVz1Rf+ji/KFjGEs=
 github.com/aws/aws-sdk-go-v2/service/athena v1.46.0/go.mod h1:BPy6WfKKUTQhO6hVCyImd1I0ejlngPaCu1zU0vZ1vPQ=
-github.com/aws/aws-sdk-go-v2/service/auditmanager v1.36.0 h1:mnNTeh3ioXgoXlFrPjZwqyOFtACKVzHVU4Q+AmypAVQ=
-github.com/aws/aws-sdk-go-v2/service/auditmanager v1.36.0/go.mod h1:auTo9OWA6W4naXZIKjBZPeUdYe/5idHL7r/+6zgbbFo=
+github.com/aws/aws-sdk-go-v2/service/auditmanager v1.36.1 h1:Mtg3974EQpyI1dpWDzLEnsfkaMsyb64ERIAudPapiMg=
+github.com/aws/aws-sdk-go-v2/service/auditmanager v1.36.1/go.mod h1:auTo9OWA6W4naXZIKjBZPeUdYe/5idHL7r/+6zgbbFo=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.44.0 h1:LcWSlLxJsg8mcNujVpn0qe7427f8G2QZWh48SGJuseM=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.44.0/go.mod h1:Gmv7s//GGvs3nj9aqltFYnLStW8vDIwch0USkE67G4E=
 github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.23.0 h1:HiTZP8C6wLH7bU+iwlJP6AIICWvr02MibJFCuGt9bDw=
