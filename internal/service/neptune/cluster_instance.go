@@ -124,7 +124,7 @@ func resourceClusterInstance() *schema.Resource {
 			"neptune_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "default.neptune1",
+				Computed: true,
 			},
 			"neptune_subnet_group_name": {
 				Type:     schema.TypeString,

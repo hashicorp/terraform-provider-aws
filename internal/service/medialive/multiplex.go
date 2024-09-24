@@ -29,6 +29,8 @@ import (
 
 // @SDKResource("aws_medialive_multiplex", name="Multiplex")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexOutput")
+// @Testing(serialize=true)
 func ResourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,

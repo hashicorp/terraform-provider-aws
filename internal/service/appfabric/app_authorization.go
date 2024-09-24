@@ -38,8 +38,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="App Authorization")
+// @FrameworkResource("aws_appfabric_app_authorization", name="App Authorization")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppAuthorization")
+// @Testing(importIgnore="credential")
 func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationResource{}
 
@@ -213,7 +217,7 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	input.AppBundleIdentifier = aws.String(data.AppBundleARN.ValueString())
+	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
 	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
 	input.Tags = getTagsIn(ctx)
 
@@ -498,8 +502,8 @@ type appAuthorizationResourceModel struct {
 	Credential          fwtypes.ListNestedObjectValueOf[credentialModel] `tfsdk:"credential"`
 	ID                  types.String                                     `tfsdk:"id"`
 	Persona             types.String                                     `tfsdk:"persona"`
-	Tags                types.Map                                        `tfsdk:"tags"`
-	TagsAll             types.Map                                        `tfsdk:"tags_all"`
+	Tags                tftags.Map                                       `tfsdk:"tags"`
+	TagsAll             tftags.Map                                       `tfsdk:"tags_all"`
 	Tenant              fwtypes.ListNestedObjectValueOf[tenantModel]     `tfsdk:"tenant"`
 	Timeouts            timeouts.Value                                   `tfsdk:"timeouts"`
 	UpdatedAt           timetypes.RFC3339                                `tfsdk:"updated_at"`

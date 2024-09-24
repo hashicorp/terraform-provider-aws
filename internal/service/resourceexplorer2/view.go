@@ -328,8 +328,8 @@ type viewResourceModel struct {
 	IncludedProperties fwtypes.ListNestedObjectValueOf[includedPropertyModel] `tfsdk:"included_property"`
 	ViewARN            types.String                                           `tfsdk:"arn"`
 	ViewName           types.String                                           `tfsdk:"name"`
-	Tags               types.Map                                              `tfsdk:"tags"`
-	TagsAll            types.Map                                              `tfsdk:"tags_all"`
+	Tags               tftags.Map                                             `tfsdk:"tags"`
+	TagsAll            tftags.Map                                             `tfsdk:"tags_all"`
 }
 
 func (data *viewResourceModel) InitFromID() error {

@@ -162,9 +162,7 @@ func sweepGlobalReplicationGroups(region string) error {
 			grgErrs = multierror.Append(grgErrs, fmt.Errorf("listing ElastiCache Global Replication Groups: %w", err))
 		}
 
-		for _, v := range page.GlobalReplicationGroups {
-			globalReplicationGroup := v
-
+		for _, globalReplicationGroup := range page.GlobalReplicationGroups {
 			grgGroup.Go(func() error {
 				id := aws.ToString(globalReplicationGroup.GlobalReplicationGroupId)
 
@@ -458,8 +456,6 @@ func disassociateMembers(ctx context.Context, conn *elasticache.Client, globalRe
 	var membersGroup multierror.Group
 
 	for _, member := range globalReplicationGroup.Members {
-		member := member
-
 		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
 			continue
 		}

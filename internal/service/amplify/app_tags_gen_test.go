@@ -23,6 +23,7 @@ func testAccAmplifyApp_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAmplifyApp_tags,
 		"null":                                      testAccAmplifyApp_tags_null,
+		"EmptyMap":                                  testAccAmplifyApp_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAmplifyApp_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAmplifyApp_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAmplifyApp_tags_EmptyTag_OnUpdate_Add,
@@ -268,6 +269,63 @@ func testAccAmplifyApp_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/App/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func testAccAmplifyApp_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.App
+	resourceName := "aws_amplify_app.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/App/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/App/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

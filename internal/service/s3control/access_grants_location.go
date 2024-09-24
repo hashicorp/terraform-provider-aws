@@ -111,7 +111,7 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateAccessGrantsLocation(ctx, input)
 	}, errCodeInvalidIAMRole)
 
@@ -205,7 +205,7 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
 			return conn.UpdateAccessGrantsLocation(ctx, input)
 		}, errCodeInvalidIAMRole)
 
@@ -244,7 +244,7 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 	}
 
 	// "AccessGrantsLocationNotEmptyError: Please delete access grants before deleting access grants location".
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteAccessGrantsLocation(ctx, input)
 	}, errCodeAccessGrantsLocationNotEmptyError)
 
@@ -296,8 +296,8 @@ type accessGrantsLocationResourceModel struct {
 	IAMRoleARN              fwtypes.ARN  `tfsdk:"iam_role_arn"`
 	ID                      types.String `tfsdk:"id"`
 	LocationScope           types.String `tfsdk:"location_scope"`
-	Tags                    types.Map    `tfsdk:"tags"`
-	TagsAll                 types.Map    `tfsdk:"tags_all"`
+	Tags                    tftags.Map   `tfsdk:"tags"`
+	TagsAll                 tftags.Map   `tfsdk:"tags_all"`
 }
 
 const (

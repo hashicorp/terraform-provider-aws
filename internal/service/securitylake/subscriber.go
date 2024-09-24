@@ -378,7 +378,7 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	in := &securitylake.DeleteSubscriberInput{
-		SubscriberId: aws.String(data.ID.ValueString()),
+		SubscriberId: data.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSubscriber(ctx, in)
@@ -747,8 +747,8 @@ type subscriberResourceModel struct {
 	S3BucketArn           types.String                                             `tfsdk:"s3_bucket_arn"`
 	SubscriberEndpoint    types.String                                             `tfsdk:"subscriber_endpoint"`
 	SubscriberStatus      types.String                                             `tfsdk:"subscriber_status"`
-	Tags                  types.Map                                                `tfsdk:"tags"`
-	TagsAll               types.Map                                                `tfsdk:"tags_all"`
+	Tags                  tftags.Map                                               `tfsdk:"tags"`
+	TagsAll               tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                           `tfsdk:"timeouts"`
 }
 

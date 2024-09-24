@@ -140,10 +140,10 @@ func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req r
 	}
 
 	if !plan.AllowWrites.IsNull() {
-		in.AllowWrites = aws.Bool(plan.AllowWrites.ValueBool())
+		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
 	}
 	if !plan.AssociateEntireAccount.IsNull() {
-		in.AssociateEntireAccount = aws.Bool(plan.AssociateEntireAccount.ValueBool())
+		in.AssociateEntireAccount = plan.AssociateEntireAccount.ValueBoolPointer()
 	}
 	if !plan.ConsumerARN.IsNull() {
 		in.ConsumerArn = aws.String(consumerARN)
@@ -236,16 +236,16 @@ func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req r
 	}
 
 	in := &redshift.DisassociateDataShareConsumerInput{
-		DataShareArn: aws.String(state.DataShareARN.ValueString()),
+		DataShareArn: state.DataShareARN.ValueStringPointer(),
 	}
 	if !state.AssociateEntireAccount.IsNull() && state.AssociateEntireAccount.ValueBool() {
 		in.DisassociateEntireAccount = aws.Bool(true)
 	}
 	if !state.ConsumerARN.IsNull() {
-		in.ConsumerArn = aws.String(state.ConsumerARN.ValueString())
+		in.ConsumerArn = state.ConsumerARN.ValueStringPointer()
 	}
 	if !state.ConsumerRegion.IsNull() {
-		in.ConsumerRegion = aws.String(state.ConsumerRegion.ValueString())
+		in.ConsumerRegion = state.ConsumerRegion.ValueStringPointer()
 	}
 
 	_, err := conn.DisassociateDataShareConsumer(ctx, in)

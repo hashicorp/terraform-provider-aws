@@ -5,7 +5,6 @@ package guardduty
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -18,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_guardduty_invite_accepter")
-func ResourceInviteAccepter() *schema.Resource {
+// @SDKResource("aws_guardduty_invite_accepter", name="Invite Accepter")
+func resourceInviteAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInviteAccepterCreate,
 		ReadWithoutTimeout:   resourceInviteAccepterRead,
@@ -57,63 +57,27 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	detectorID := d.Get("detector_id").(string)
-	invitationID := ""
 	masterAccountID := d.Get("master_account_id").(string)
 
-	listInvitationsInput := &guardduty.ListInvitationsInput{}
-
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		log.Printf("[DEBUG] Listing GuardDuty Invitations: %+v", listInvitationsInput)
-		pages := guardduty.NewListInvitationsPaginator(conn, listInvitationsInput)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			if invitationID == "" {
-				return retry.RetryableError(fmt.Errorf("unable to find pending GuardDuty Invitation for detector ID (%s) from master account ID (%s)", detectorID, masterAccountID))
-			}
-
-			for _, invitation := range page.Invitations {
-				if aws.ToString(invitation.AccountId) == masterAccountID {
-					invitationID = aws.ToString(invitation.InvitationId)
-					break
-				}
-			}
-		}
-
-		return nil
+	inputLI := &guardduty.ListInvitationsInput{}
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return findInvitation(ctx, conn, inputLI, func(v *awstypes.Invitation) bool {
+			return aws.ToString(v.AccountId) == masterAccountID
+		})
 	})
 
-	if tfresource.TimedOut(err) {
-		pages := guardduty.NewListInvitationsPaginator(conn, listInvitationsInput)
-
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "listing GuardDuty Invitations: %s", err)
-			}
-
-			for _, invitation := range page.Invitations {
-				if aws.ToString(invitation.AccountId) == masterAccountID {
-					invitationID = aws.ToString(invitation.InvitationId)
-					break
-				}
-			}
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Invitation (%s): %s", masterAccountID, err)
 	}
 
-	acceptInvitationInput := &guardduty.AcceptInvitationInput{
+	invitationID := aws.ToString(outputRaw.(*awstypes.Invitation).InvitationId)
+	inputAI := &guardduty.AcceptInvitationInput{
 		DetectorId:   aws.String(detectorID),
 		InvitationId: aws.String(invitationID),
 		MasterId:     aws.String(masterAccountID),
 	}
 
-	log.Printf("[DEBUG] Accepting GuardDuty Invitation: %+v", acceptInvitationInput)
-	_, err = conn.AcceptInvitation(ctx, acceptInvitationInput)
+	_, err = conn.AcceptInvitation(ctx, inputAI)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting GuardDuty Invitation (%s): %s", invitationID, err)
@@ -128,29 +92,20 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	input := &guardduty.GetMasterAccountInput{
-		DetectorId: aws.String(d.Id()),
-	}
+	master, err := findMasterAccountByDetectorID(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading GuardDuty Master Account: %+v", input)
-	output, err := conn.GetMasterAccount(ctx, input)
-
-	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-		log.Printf("[WARN] GuardDuty Detector %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] GuardDuty Detector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s) GuardDuty Master Account: %s", d.Id(), err)
-	}
-
-	if output == nil || output.Master == nil {
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s) GuardDuty Master Account: empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
 	d.Set("detector_id", d.Id())
-	d.Set("master_account_id", output.Master.AccountId)
+	d.Set("master_account_id", master.AccountId)
 
 	return diags
 }
@@ -159,12 +114,9 @@ func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	input := &guardduty.DisassociateFromMasterAccountInput{
+	_, err := conn.DisassociateFromMasterAccount(ctx, &guardduty.DisassociateFromMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Disassociating GuardDuty Detector (%s) from GuardDuty Master Account: %+v", d.Id(), input)
-	_, err := conn.DisassociateFromMasterAccount(ctx, input)
+	})
 
 	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 		return diags
@@ -175,4 +127,64 @@ func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func findInvitation(ctx context.Context, conn *guardduty.Client, input *guardduty.ListInvitationsInput, filter tfslices.Predicate[*awstypes.Invitation]) (*awstypes.Invitation, error) {
+	output, err := findInvitations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInvitations(ctx context.Context, conn *guardduty.Client, input *guardduty.ListInvitationsInput, filter tfslices.Predicate[*awstypes.Invitation]) ([]awstypes.Invitation, error) {
+	var output []awstypes.Invitation
+
+	pages := guardduty.NewListInvitationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Invitations {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func findMasterAccountByDetectorID(ctx context.Context, conn *guardduty.Client, id string) (*awstypes.Master, error) {
+	input := &guardduty.GetMasterAccountInput{
+		DetectorId: aws.String(id),
+	}
+
+	return findMasterAccount(ctx, conn, input)
+}
+
+func findMasterAccount(ctx context.Context, conn *guardduty.Client, input *guardduty.GetMasterAccountInput) (*awstypes.Master, error) {
+	output, err := conn.GetMasterAccount(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Master == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Master, nil
 }

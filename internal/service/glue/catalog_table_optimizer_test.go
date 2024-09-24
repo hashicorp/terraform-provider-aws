@@ -97,6 +97,32 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 	})
 }
 
+func testAccCatalogTableOptimizer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var catalogTableOptimizer glue.GetTableOptimizerOutput
+
+	resourceName := "aws_glue_catalog_table_optimizer.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableOptimizerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTableOptimizer, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCatalogTableOptimizerStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]

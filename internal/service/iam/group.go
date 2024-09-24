@@ -189,7 +189,7 @@ func findGroupByName(ctx context.Context, conn *iam.Client, name string) (*awsty
 	return output.Group, nil
 }
 
-func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.Client, groupName string) error {
+func deleteGroupPolicyAttachments(ctx context.Context, conn *iam.Client, groupName string) error {
 	var attachedPolicies []awstypes.AttachedPolicy
 	input := &iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
@@ -230,7 +230,7 @@ func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.Client, groupNa
 	return nil
 }
 
-func DeleteGroupPolicies(ctx context.Context, conn *iam.Client, groupName string) error {
+func deleteGroupPolicies(ctx context.Context, conn *iam.Client, groupName string) error {
 	var inlinePolicies []string
 	input := &iam.ListGroupPoliciesInput{
 		GroupName: aws.String(groupName),
