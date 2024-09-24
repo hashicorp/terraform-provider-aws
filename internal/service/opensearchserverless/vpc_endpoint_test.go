@@ -336,9 +336,9 @@ func testAccVPCEndpointConfig_basic(rName string) string {
 		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = [aws_subnet.test[0].id]
-  vpc_id     = aws_vpc.test.id
+  name               = %[1]q
+  subnet_ids         = [aws_subnet.test[0].id]
+  vpc_id             = aws_vpc.test.id
   security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))
@@ -364,9 +364,9 @@ func testAccVPCEndpointConfig_multiple_securityGroups(rName string) string {
 		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-  vpc_id     = aws_vpc.test.id
+  name               = %[1]q
+  subnet_ids         = aws_subnet.test[*].id
+  vpc_id             = aws_vpc.test.id
   security_group_ids = aws_security_group.test[*].id
 }
 `, rName))
@@ -378,9 +378,9 @@ func testAccVPCEndpointConfig_single_securityGroup(rName string) string {
 		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-  vpc_id     = aws_vpc.test.id
+  name               = %[1]q
+  subnet_ids         = aws_subnet.test[*].id
+  vpc_id             = aws_vpc.test.id
   security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))
