@@ -117,7 +117,7 @@ The following arguments are optional:
   Each function represents an action in an action group.
   See [`function_schema` Block](#function_schema-block) for details.
 * `parent_action_group_signature` - (Optional) To allow your agent to request the user for additional information when trying to complete a task, set this argument to `AMAZON.UserInput`. You must leave the `description`, `api_schema`, and `action_group_executor` arguments blank for this action group. Valid values: `AMAZON.UserInput`.
-* `prepare_agent` (Optional) Whether or not to prepare the agent after creation or modification. Defaults to `true`.
+* `prepare_agent` - (Optional) Whether or not to prepare the agent after creation or modification. Defaults to `true`.
 * `skip_resource_in_use_check` - (Optional) Whether the in-use check is skipped when deleting the action group.
 
 ### `action_group_executor` Block
