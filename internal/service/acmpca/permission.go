@@ -83,7 +83,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	sourceAccount := d.Get("source_account").(string)
 	id, err := flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Permission (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &acmpca.CreatePermissionInput{
