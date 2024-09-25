@@ -184,7 +184,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if len(disableAccountIDs) > 0 {
-		if _, err := waitEnabled(ctx, conn, disableAccountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := waitDisabled(ctx, conn, disableAccountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
 		}
 	}
