@@ -69,7 +69,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	resourceARN := d.Get(names.AttrResourceARN).(string)
 	id, err := flex.FlattenResourceId([]string{webACLARN, resourceARN}, webACLAssociationResourceIDPartCount, true)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAFv2 WebACL Association (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &wafv2.AssociateWebACLInput{
