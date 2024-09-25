@@ -325,6 +325,28 @@ func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSService_VolumeConfiguration_tagSpecifications(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_volumeConfiguration_tagSpecifications(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -2290,6 +2312,34 @@ resource "aws_ecs_service" "test" {
     managed_ebs_volume {
       role_arn   = aws_iam_role.ecs_service.arn
       size_in_gb = "8"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.ecs_service]
+}
+`, rName))
+}
+
+func testAccServiceConfig_volumeConfiguration_tagSpecifications(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  volume_configuration {
+    name = "vol1"
+    managed_ebs_volume {
+      role_arn   = aws_iam_role.ecs_service.arn
+      size_in_gb = "8"
+      tag_specifications {
+        resource_type  = "volume"
+        propagate_tags = "SERVICE"
+        tags = {
+          Name = %[1]q
+        }
+      }
     }
   }
 
