@@ -2374,6 +2374,51 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T)
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance types.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	domain := acctest.RandomDomain().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_mssqlDomain(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, names.AttrUsername),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomain, sourceResourceName, names.AttrDomain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_s3Import(t *testing.T) {
 	acctest.Skip(t, "RestoreDBInstanceFromS3 cannot restore from MySQL version 5.6")
 
@@ -6707,6 +6752,9 @@ func testAccInstanceConfig_orderableClassSQLServerExGP3() string {
 func testAccInstanceConfig_orderableClassSQLServerSe() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerStandard, "license-included", "standard")
 }
+func testAccInstanceConfig_orderableClassSQLServerEE() string {
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerEnterprise, "license-included", "standard")
+}
 
 func testAccInstanceConfig_orderableClassCustomSQLServerWeb() string {
 	return testAccInstanceConfig_orderableClass("custom-sqlserver-web", "", "gp2")
@@ -9212,6 +9260,81 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 }
 `, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses))
+}
+
+func testAccInstanceConfig_baseMSSQLEnterpriseDomain(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassSQLServerEE(),
+		testAccInstanceConfig_baseVPC(rName),
+		testAccInstanceConfig_ServiceRole(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_directory_service_directory" "directory" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+data "aws_partition" "current" {}
+`, rName, domain))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_mssqlDomain(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseMSSQLEnterpriseDomain(rName, domain),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 20
+  backup_retention_period = 1
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model           = "license-included"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+
+  domain               = aws_directory_service_directory.directory.id
+  domain_iam_role_name = aws_iam_role.role.name
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.identifier
+  license_model       = "license-included"
+  skip_final_snapshot = true
+
+  domain               = aws_directory_service_directory.directory.id
+  domain_iam_role_name = aws_iam_role.role.name
+}
+`, rName))
 }
 
 // When testing needs to distinguish a second region and second account in the same region

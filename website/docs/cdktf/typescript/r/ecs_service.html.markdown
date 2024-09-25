@@ -270,6 +270,7 @@ The `managedEbsVolume` configuration block supports the following:
 * `snapshotId` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `sizeInGb` or a `snapshotId`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
 * `volumeType` - (Optional) Volume type.
+* `tagSpecifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
 ### capacity_provider_strategy
 
@@ -404,6 +405,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `dnsName` - (Optional) Name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
 
+### tag_specifications
+
+`tagSpecifications` supports the following:
+
+* `resourceType` - (Required) The type of volume resource. Valid values, `volume`.
+* `propagateTags` - (Optional) Determines whether to propagate the tags from the task definition to the Amazon EBS volume.
+* `tags` - (Optional) The tags applied to this Amazon EBS volume. `AmazonECSCreated` and `AmazonECSManaged` are reserved tags that can't be used.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -451,4 +460,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4c611dc807a8b73ce37d4b5ba031e23b59e21b78ece1b39d22e47123bb09e5e0 -->
+<!-- cache-key: cdktf-0.20.1 input-9694658630fa74507bc8ff8947daee7d36a64aec10f6597c8db3e564febd7bb0 -->

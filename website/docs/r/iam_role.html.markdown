@@ -69,6 +69,8 @@ resource "aws_iam_role" "instance" {
 
 ### Example of Exclusive Inline Policies
 
+~> The `inline_policy` argument is deprecated. Use the [`aws_iam_role_policy`](./iam_role_policy.html.markdown) resource instead. If Terraform should exclusively manage all inline policy associations (the current behavior of this argument), use the [`aws_iam_role_policies_exclusive`](./iam_role_policies_exclusive.html.markdown) resource as well.
+
 This example creates an IAM role with two inline IAM policies. If someone adds another inline policy out-of-band, on the next apply, Terraform will remove that policy. If someone deletes these policies out-of-band, Terraform will recreate them.
 
 ```terraform
@@ -106,6 +108,8 @@ data "aws_iam_policy_document" "inline_policy" {
 ```
 
 ### Example of Removing Inline Policies
+
+~> The `inline_policy` argument is deprecated. Use the [`aws_iam_role_policy`](./iam_role_policy.html.markdown) resource instead. If Terraform should exclusively manage all inline policy associations (the current behavior of this argument), use the [`aws_iam_role_policies_exclusive`](./iam_role_policies_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role with what appears to be empty IAM `inline_policy` argument instead of using `inline_policy` as a configuration block. The result is that if someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
 
@@ -184,7 +188,7 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the role.
 * `force_detach_policies` - (Optional) Whether to force detaching any policies the role has before destroying it. Defaults to `false`.
-* `inline_policy` - (Optional) Configuration block defining an exclusive set of IAM inline policies associated with the IAM role. See below. If no blocks are configured, Terraform will not manage any inline policies in this resource. Configuring one empty block (i.e., `inline_policy {}`) will cause Terraform to remove _all_ inline policies added out of band on `apply`.
+* `inline_policy` - (Optional, **Deprecated**) Configuration block defining an exclusive set of IAM inline policies associated with the IAM role. See below. If no blocks are configured, Terraform will not manage any inline policies in this resource. Configuring one empty block (i.e., `inline_policy {}`) will cause Terraform to remove _all_ inline policies added out of band on `apply`.
 * `managed_policy_arns` - (Optional) Set of exclusive IAM managed policy ARNs to attach to the IAM role. If this attribute is not configured, Terraform will ignore policy attachments to this resource. When configured, Terraform will align the role's managed policy attachments with this set by attaching or detaching managed policies. Configuring an empty set (i.e., `managed_policy_arns = []`) will cause Terraform to remove _all_ managed policy attachments.
 * `max_session_duration` - (Optional) Maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
 * `name` - (Optional, Forces new resource) Friendly name of the role. If omitted, Terraform will assign a random, unique name. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.

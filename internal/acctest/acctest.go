@@ -21,12 +21,12 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
-	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -41,10 +41,8 @@ import (
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -1067,54 +1065,6 @@ func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
 	}
 }
 
-func PreCheckCECostAllocationTagPayerAccount(ctx context.Context, t *testing.T) {
-	t.Helper()
-
-	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
-
-	_, err := conn.ListCostAllocationTags(ctx, &costexplorer.ListCostAllocationTagsInput{})
-
-	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
-		t.Skip("skipping tests; this AWS account must be a payer account")
-	}
-
-	if err != nil {
-		t.Fatalf("listing Cost Explorer Cost Allocation Tags: %s", err)
-	}
-}
-
-func PreCheckCECostCategoryPayerAccount(ctx context.Context, t *testing.T) {
-	t.Helper()
-
-	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
-
-	_, err := conn.ListCostCategoryDefinitions(ctx, &costexplorer.ListCostCategoryDefinitionsInput{})
-
-	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
-		t.Skip("skipping tests; this AWS account must be a payer account")
-	}
-
-	if err != nil {
-		t.Fatalf("listing Cost Explorer Cost Categories: %s", err)
-	}
-}
-
-func PreCheckCloudSearchAccountAllowListed(ctx context.Context, t *testing.T) {
-	t.Helper()
-
-	conn := Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
-
-	_, err := conn.ListDomainNames(ctx, &cloudsearch.ListDomainNamesInput{})
-
-	if errs.MessageContains(err, "NotAuthorized", "New domain creation not supported on this account") {
-		t.Skip("skipping tests; this AWS account does not support new CloudSearch domain creation")
-	}
-
-	if err != nil {
-		t.Fatalf("listing CloudSearch Domain Names: %s", err)
-	}
-}
-
 func PreCheckInspector2(ctx context.Context, t *testing.T) {
 	t.Helper()
 
@@ -1186,7 +1136,7 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 		t.Fatalf("getting current identity: %s", err)
 	}
 
-	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
+	if aws.ToString(organization.MasterAccountId) != aws.ToString(callerIdentity.Account) {
 		t.Skip("this AWS account must be the management account of an AWS Organization")
 	}
 }
@@ -1208,7 +1158,7 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 		t.Fatalf("getting current identity: %s", err)
 	}
 
-	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
+	if aws.ToString(organization.MasterAccountId) == aws.ToString(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
 	}
 }
@@ -2078,7 +2028,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.StringValue(certificateAuthority.Arn)
+		arn := aws.ToString(certificateAuthority.Arn)
 
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 			CertificateAuthorityArn: aws.String(arn),
@@ -2090,7 +2040,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 
 		issueCertOutput, err := conn.IssueCertificate(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
-			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
+			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
@@ -2128,7 +2078,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
-			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
+			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
 		})
 
 		if err != nil {
@@ -2147,7 +2097,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.StringValue(certificateAuthority.Arn)
+		arn := aws.ToString(certificateAuthority.Arn)
 
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 			CertificateAuthorityArn: aws.String(arn),
@@ -2157,11 +2107,11 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
 		}
 
-		rootCertificateAuthorityArn := aws.StringValue(rootCertificateAuthority.Arn)
+		rootCertificateAuthorityArn := aws.ToString(rootCertificateAuthority.Arn)
 
 		issueCertOutput, err := conn.IssueCertificate(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
-			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
+			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
@@ -2185,7 +2135,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		err = waiter.Wait(ctx, params, CertificateIssueTimeout)
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.StringValue(issueCertOutput.CertificateArn), err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.ToString(issueCertOutput.CertificateArn), err)
 		}
 
 		getCertOutput, err := conn.GetCertificate(ctx, &acmpca.GetCertificateInput{
@@ -2199,8 +2149,8 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
-			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
-			CertificateChain:        []byte(aws.StringValue(getCertOutput.CertificateChain)),
+			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
+			CertificateChain:        []byte(aws.ToString(getCertOutput.CertificateChain)),
 		})
 
 		if err != nil {

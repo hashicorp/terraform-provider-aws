@@ -7,4 +7,6 @@ package costoptimizationhub
 var (
 	ResourceEnrollmentStatus = newResourceEnrollmentStatus
 	ResourcePreferences      = newResourcePreferences
+
+	FindPreferences = findPreferences
 )

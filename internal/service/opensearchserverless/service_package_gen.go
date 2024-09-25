@@ -59,7 +59,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceSecurityPolicy,
 		},
 		{
-			Factory: newResourceVPCEndpoint,
+			Factory: newVPCEndpointResource,
+			Name:    "VPC Endpoint",
 		},
 	}
 }
@@ -71,8 +72,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_opensearchserverless_security_policy",
 		},
 		{
-			Factory:  DataSourceVPCEndpoint,
+			Factory:  dataSourceVPCEndpoint,
 			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
 		},
 	}
 }

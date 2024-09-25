@@ -10,7 +10,7 @@ var (
 	ResourceLifecyclePolicy = newResourceLifecyclePolicy
 	ResourceSecurityConfig  = newResourceSecurityConfig
 	ResourceSecurityPolicy  = newResourceSecurityPolicy
-	ResourceVPCEndpoint     = newResourceVPCEndpoint
+	ResourceVPCEndpoint     = newVPCEndpointResource
 
 	FindAccessPolicyByNameAndType    = findAccessPolicyByNameAndType
 	FindCollectionByID               = findCollectionByID
