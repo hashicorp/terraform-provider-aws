@@ -74,7 +74,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	resourceShareARN, principal := d.Get("resource_share_arn").(string), d.Get(names.AttrPrincipal).(string)
 	id, err := flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RAM Principal Association (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)

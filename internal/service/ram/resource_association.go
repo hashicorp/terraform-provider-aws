@@ -66,7 +66,7 @@ func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceDa
 	resourceShareARN, resourceARN := d.Get("resource_share_arn").(string), d.Get(names.AttrResourceARN).(string)
 	id, err := flex.FlattenResourceId([]string{resourceShareARN, resourceARN}, resourceAssociationResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RAM Resource Association (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
