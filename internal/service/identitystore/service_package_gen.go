@@ -30,8 +30,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceGroup,
+			Factory:  dataSourceGroup,
 			TypeName: "aws_identitystore_group",
+			Name:     "Group",
 		},
 		{
 			Factory:  DataSourceUser,
@@ -43,8 +44,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceGroup,
+			Factory:  resourceGroup,
 			TypeName: "aws_identitystore_group",
+			Name:     "Group",
 		},
 		{
 			Factory:  ResourceGroupMembership,

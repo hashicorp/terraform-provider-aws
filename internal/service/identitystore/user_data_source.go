@@ -347,7 +347,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
-		if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
+		if err := d.Set("external_ids", flattenExternalIDs(user.ExternalIds)); err != nil {
 			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
@@ -425,7 +425,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
-	if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
+	if err := d.Set("external_ids", flattenExternalIDs(user.ExternalIds)); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 

@@ -365,7 +365,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
-	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
+	if err := d.Set("external_ids", flattenExternalIDs(out.ExternalIds)); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 

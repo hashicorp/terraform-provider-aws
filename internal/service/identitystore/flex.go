@@ -133,7 +133,7 @@ func expandAlternateIdentifier(tfMap map[string]interface{}) types.AlternateIden
 
 	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]interface{})) > 0 {
 		return &types.AlternateIdentifierMemberExternalId{
-			Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
+			Value: *expandExternalID(v.([]interface{})[0].(map[string]interface{})),
 		}
 	} else if v, ok := tfMap["unique_attribute"]; ok && len(v.([]interface{})) > 0 {
 		return &types.AlternateIdentifierMemberUniqueAttribute{
@@ -220,54 +220,54 @@ func expandEmails(tfList []interface{}) []types.Email {
 	return s
 }
 
-func expandExternalId(tfMap map[string]interface{}) *types.ExternalId {
+func expandExternalID(tfMap map[string]interface{}) *types.ExternalId {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.ExternalId{}
+	apiObject := &types.ExternalId{}
 
 	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
-		a.Id = aws.String(v)
+		apiObject.Id = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
-		a.Issuer = aws.String(v)
+		apiObject.Issuer = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func flattenExternalId(apiObject *types.ExternalId) map[string]interface{} {
+func flattenExternalID(apiObject *types.ExternalId) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		m[names.AttrID] = aws.ToString(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Issuer; v != nil {
-		m[names.AttrIssuer] = aws.ToString(v)
+		tfMap[names.AttrIssuer] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenExternalIds(apiObjects []types.ExternalId) []interface{} {
+func flattenExternalIDs(apiObjects []types.ExternalId) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenExternalId(&apiObject))
+		tfList = append(tfList, flattenExternalID(&apiObject))
 	}
 
-	return l
+	return tfList
 }
 
 func flattenName(apiObject *types.Name) map[string]interface{} {
@@ -419,15 +419,15 @@ func expandUniqueAttribute(tfMap map[string]interface{}) *types.UniqueAttribute 
 		return nil
 	}
 
-	a := &types.UniqueAttribute{}
+	apiObject := &types.UniqueAttribute{}
 
 	if v, ok := tfMap["attribute_path"].(string); ok && v != "" {
-		a.AttributePath = aws.String(v)
+		apiObject.AttributePath = aws.String(v)
 	}
 
 	if v, ok := tfMap["attribute_value"].(string); ok && v != "" {
-		a.AttributeValue = document.NewLazyDocument(v)
+		apiObject.AttributeValue = document.NewLazyDocument(v)
 	}
 
-	return a
+	return apiObject
 }
