@@ -133,11 +133,7 @@ func testAccCheckDelegatedAdminAccountExists(ctx context.Context, n string) reso
 
 		_, err := tfinspector2.FindDelegatedAdminAccountByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
