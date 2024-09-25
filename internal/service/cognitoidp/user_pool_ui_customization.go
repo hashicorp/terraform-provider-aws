@@ -86,7 +86,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	userPoolID, clientID := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrClientID).(string)
 	id, err := flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Cognito User Pool UI Customization (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &cognitoidentityprovider.SetUICustomizationInput{
