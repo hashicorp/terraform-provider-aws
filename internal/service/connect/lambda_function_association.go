@@ -62,7 +62,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 	functionARN := d.Get(names.AttrFunctionARN).(string)
 	id, err := flex.FlattenResourceId([]string{instanceID, functionARN}, lambdaFunctionAssociationResourceIDPartCount, true)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Lambda Function Association (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &connect.AssociateLambdaFunctionInput{
