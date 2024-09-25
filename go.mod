@@ -1,6 +1,10 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.23.0
+go 1.23.1
+
+// Disable experimental post-quantum key exchange mechanism X25519Kyber768Draft00
+// This was causing errors with AWS Network Firewall
+godebug tlskyber=0
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.5-proton
