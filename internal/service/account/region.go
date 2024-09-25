@@ -73,13 +73,14 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	var id string
+	var err error
 	region := d.Get("region_name").(string)
 	accountID := ""
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
-		id, err := flex.FlattenResourceId([]string{accountID, region}, regionResourceIDPartCount, false)
+		id, err = flex.FlattenResourceId([]string{accountID, region}, regionResourceIDPartCount, false)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	} else {
 		id = region
