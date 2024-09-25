@@ -63,7 +63,7 @@ func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 	patchGroup := d.Get("patch_group").(string)
 	id, err := flex.FlattenResourceId([]string{patchGroup, baselineID}, patchGroupResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSM Patch Group (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	input := &ssm.RegisterPatchBaselineForPatchGroupInput{
 		BaselineId: aws.String(baselineID),
