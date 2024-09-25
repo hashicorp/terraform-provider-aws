@@ -5,7 +5,9 @@ package identitystore
 
 // Exports for use in tests only.
 var (
-	ResourceGroup = resourceGroup
+	ResourceGroup           = resourceGroup
+	ResourceGroupMembership = resourceGroupMembership
 
-	FindGroupByTwoPartKey = findGroupByTwoPartKey
+	FindGroupByTwoPartKey           = findGroupByTwoPartKey
+	FindGroupMembershipByTwoPartKey = findGroupMembershipByTwoPartKey
 )

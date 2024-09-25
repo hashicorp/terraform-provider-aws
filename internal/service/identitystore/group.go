@@ -197,6 +197,25 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
+const groupResourceIDSeparator = "/"
+
+func groupCreateResourceID(identityStoreID, groupID string) string {
+	parts := []string{identityStoreID, groupID}
+	id := strings.Join(parts, groupResourceIDSeparator)
+
+	return id
+}
+
+func groupParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, groupResourceIDSeparator)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected identity-store-id%[2]sgroup-id", id, groupResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
 func findGroupByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, groupID string) (*identitystore.DescribeGroupOutput, error) {
 	input := &identitystore.DescribeGroupInput{
 		GroupId:         aws.String(groupID),
@@ -225,23 +244,4 @@ func findGroup(ctx context.Context, conn *identitystore.Client, input *identitys
 	}
 
 	return output, nil
-}
-
-const groupResourceIDSeparator = "/"
-
-func groupCreateResourceID(identityStoreID, groupID string) string {
-	parts := []string{identityStoreID, groupID}
-	id := strings.Join(parts, groupResourceIDSeparator)
-
-	return id
-}
-
-func groupParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, groupResourceIDSeparator)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected identity-store-id%[2]sgroup-id", id, groupResourceIDSeparator)
-	}
-
-	return parts[0], parts[1], nil
 }
