@@ -263,6 +263,8 @@ func testAccEnabler_lambdaCode(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/inspector/latest/user/inspector_regions.html#ins-regional-feature-availability.
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
