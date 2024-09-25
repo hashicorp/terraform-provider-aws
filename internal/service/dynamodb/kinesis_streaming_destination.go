@@ -65,7 +65,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 	tableName := d.Get(names.AttrTableName).(string)
 	id, err := flex.FlattenResourceId([]string{tableName, streamARN}, kinesisStreamingDestinationResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "enabling DynamoDB Kinesis Streaming Destination (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &dynamodb.EnableKinesisStreamingDestinationInput{
