@@ -90,7 +90,7 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 	qualifier := d.Get("qualifier").(string)
 	id, err := flex.FlattenResourceId([]string{functionName, qualifier}, provisionedConcurrencyConfigResourceIDPartCount, true)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Lambda Provisioned Concurrency Config (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	input := &lambda.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(functionName),

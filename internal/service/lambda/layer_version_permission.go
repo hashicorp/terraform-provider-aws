@@ -104,7 +104,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 	versionNumber := d.Get("version_number").(int)
 	id, err := flex.FlattenResourceId([]string{layerName, strconv.FormatInt(int64(versionNumber), 10)}, layerVersionPermissionResourceIDPartCount, true)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "adding Lambda Layer Version Permission (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	input := &lambda.AddLayerVersionPermissionInput{
 		Action:        aws.String(d.Get(names.AttrAction).(string)),
