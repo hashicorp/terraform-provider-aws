@@ -49,6 +49,7 @@ func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "api_schema.0.payload"),
 					resource.TestCheckResourceAttr(resourceName, "api_schema.0.s3.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
 				),
 			},
 			{
