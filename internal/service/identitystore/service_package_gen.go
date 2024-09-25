@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Group",
 		},
 		{
-			Factory:  DataSourceUser,
+			Factory:  dataSourceUser,
 			TypeName: "aws_identitystore_user",
+			Name:     "User",
 		},
 	}
 }
@@ -54,8 +55,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Group Membership",
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_identitystore_user",
+			Name:     "User",
 		},
 	}
 }

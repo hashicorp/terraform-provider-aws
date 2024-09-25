@@ -7,7 +7,9 @@ package identitystore
 var (
 	ResourceGroup           = resourceGroup
 	ResourceGroupMembership = resourceGroupMembership
+	ResourceUser            = resourceUser
 
 	FindGroupByTwoPartKey           = findGroupByTwoPartKey
 	FindGroupMembershipByTwoPartKey = findGroupMembershipByTwoPartKey
+	FindUserByTwoPartKey            = findUserByTwoPartKey
 )
