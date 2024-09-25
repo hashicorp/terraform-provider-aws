@@ -110,7 +110,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	targetIdentifier := d.Get("target_identifier").(string)
 	id, err := flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ControlTower Control (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &controltower.EnableControlInput{
