@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.31.1
@@ -42,9 +42,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/batch v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.6.1
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.21.0
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/chime v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.19.1
@@ -144,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.13.1
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.30.1
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.26.1
@@ -185,7 +185,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/polly v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.31.1
@@ -214,7 +214,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.159.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.160.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.33.1
