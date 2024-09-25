@@ -209,8 +209,8 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 resource "aws_bedrock_guardrail_version" "test" {
-  description             = %[1]q
-  guardrail_identifier    = aws_bedrock_guardrail.test.guardrail_arn
+  description          = %[1]q
+  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
 }
 `, rName)
 }
@@ -234,9 +234,9 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 resource "aws_bedrock_guardrail_version" "test" {
-  description             = %[1]q
-  guardrail_identifier    = aws_bedrock_guardrail.test.guardrail_arn
-  skip_destroy 			  = true
+  description          = %[1]q
+  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
+  skip_destroy 		   = true
 }
 `, rName)
 }

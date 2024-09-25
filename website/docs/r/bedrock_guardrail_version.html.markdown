@@ -15,9 +15,9 @@ Terraform resource for managing an AWS Bedrock Guardrail Version.
 
 ```terraform
 resource "aws_bedrock_guardrail_version" "example" {
-  description             = "example"
-  guardrail_identifier    = aws_bedrock_guardrail.test.guardrail_arn
-  skip_destroy 			      = true
+  description          = "example"
+  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
+  skip_destroy         = true
 }
 ```
 
