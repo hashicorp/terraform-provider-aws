@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_opensearchserverless_collection: Add `failure_code` and `failure_reason` attributes
+```
