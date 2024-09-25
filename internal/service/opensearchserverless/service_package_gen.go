@@ -57,6 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newResourceSecurityPolicy,
+			Name:    "Security Policy",
 		},
 		{
 			Factory: newVPCEndpointResource,
