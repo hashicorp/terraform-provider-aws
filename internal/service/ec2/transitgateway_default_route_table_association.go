@@ -29,9 +29,9 @@ import (
 func newResourceTransitGatewayDefaultRouteTableAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTransitgatewayDefaultRouteTableAssociation{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -56,7 +56,7 @@ func (r *resourceTransitgatewayDefaultRouteTableAssociation) Schema(ctx context.
 			"original_route_table_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"route_table_id": schema.StringAttribute{
+			"transit_gateway_route_table_id": schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrTransitGatewayID: schema.StringAttribute{
@@ -250,7 +250,7 @@ func (r *resourceTransitgatewayDefaultRouteTableAssociation) Delete(ctx context.
 type transitgatewayDefaultRouteTableAssociationResourceModel struct {
 	ID                   types.String   `tfsdk:"id"`
 	OriginalRouteTableId types.String   `tfsdk:"original_route_table_id"`
-	RouteTableId         types.String   `tfsdk:"route_table_id"`
+	RouteTableId         types.String   `tfsdk:"transit_gateway_route_table_id"`
 	TransitGatewayId     types.String   `tfsdk:"transit_gateway_id"`
 	Timeouts             timeouts.Value `tfsdk:"timeouts"`
 }
