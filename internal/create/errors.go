@@ -80,12 +80,6 @@ func diagError(service, action, resource, id string, gotError error) diag.Diagno
 	}
 }
 
-func AppendDiagErrorMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
-	return append(diags,
-		diagError(service, action, resource, id, errors.New(message)),
-	)
-}
-
 func AppendDiagSettingError(diags diag.Diagnostics, service, resource, id, argument string, gotError error) diag.Diagnostics {
 	return append(diags,
 		diagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError),
