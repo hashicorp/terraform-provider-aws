@@ -64,7 +64,7 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 	userID := d.Get("user_id").(string)
 	id, err := flex.FlattenResourceId([]string{userGroupID, userID}, userGroupAssociationResourceIDPartCount, true)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%s): %s", id, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:  aws.String(userGroupID),
