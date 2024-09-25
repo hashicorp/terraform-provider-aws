@@ -7,6 +7,7 @@ package bedrock
 var (
 	ResourceCustomModel                         = newCustomModelResource
 	ResourceGuardrail                           = newResourceGuardrail
+	ResourceGuardrailVersion                    = newResourceGuardrailVersion
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
 
 	FindCustomModelByID                     = findCustomModelByID

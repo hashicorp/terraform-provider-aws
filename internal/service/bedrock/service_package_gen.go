@@ -62,6 +62,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "guardrail_arn",
 			},
 		},
+		{
+			Factory: newResourceGuardrailVersion,
+			Name:    "Guardrail Version",
+		},
 	}
 }
 
