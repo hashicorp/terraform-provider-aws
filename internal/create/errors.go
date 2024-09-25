@@ -73,14 +73,6 @@ func AppendDiagError(diags diag.Diagnostics, service, action, resource, id strin
 	)
 }
 
-// DiagError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
-// with a standardized error message
-func DiagError(service, action, resource, id string, gotError error) diag.Diagnostics {
-	return diag.Diagnostics{
-		diagError(service, action, resource, id, gotError),
-	}
-}
-
 func diagError(service, action, resource, id string, gotError error) diag.Diagnostic {
 	return diag.Diagnostic{
 		Severity: diag.Error,
