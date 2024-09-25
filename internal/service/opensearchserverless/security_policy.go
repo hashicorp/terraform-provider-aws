@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -37,12 +36,12 @@ func newResourceSecurityPolicy(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type resourceSecurityPolicyData struct {
-	Description   types.String                           `tfsdk:"description"`
-	ID            types.String                           `tfsdk:"id"`
-	Name          types.String                           `tfsdk:"name"`
-	Policy        fwtypes.SmithyJSON[document.Interface] `tfsdk:"policy"`
-	PolicyVersion types.String                           `tfsdk:"policy_version"`
-	Type          types.String                           `tfsdk:"type"`
+	Description   types.String                                    `tfsdk:"description"`
+	ID            types.String                                    `tfsdk:"id"`
+	Name          types.String                                    `tfsdk:"name"`
+	Policy        fwtypes.SmithyJSON[document.Interface]          `tfsdk:"policy"`
+	PolicyVersion types.String                                    `tfsdk:"policy_version"`
+	Type          fwtypes.StringEnum[awstypes.SecurityPolicyType] `tfsdk:"type"`
 }
 
 const (
@@ -90,10 +89,8 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrType: schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.SecurityPolicyType](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.SecurityPolicyType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -189,7 +186,7 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	if !diff.HasChanges() {
+	if diff.HasChanges() {
 		input := &opensearchserverless.UpdateSecurityPolicyInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
@@ -226,7 +223,7 @@ func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.Delete
 	_, err := conn.DeleteSecurityPolicy(ctx, &opensearchserverless.DeleteSecurityPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        state.Name.ValueStringPointer(),
-		Type:        awstypes.SecurityPolicyType(state.Type.ValueString()),
+		Type:        state.Type.ValueEnum(),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -251,7 +248,7 @@ func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.I
 	state := resourceSecurityPolicyData{
 		ID:   types.StringValue(parts[0]),
 		Name: types.StringValue(parts[0]),
-		Type: types.StringValue(parts[1]),
+		Type: fwtypes.StringEnumValue(awstypes.SecurityPolicyType(parts[1])),
 	}
 
 	diags := resp.State.Set(ctx, &state)
