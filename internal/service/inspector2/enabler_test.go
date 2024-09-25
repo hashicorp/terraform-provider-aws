@@ -255,7 +255,7 @@ func testAccEnabler_lambdaCode(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_inspector2_enabler.test"
-	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeLambdaCode}
+	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeLambda, types.ResourceScanTypeLambdaCode}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -275,7 +275,8 @@ func testAccEnabler_lambdaCode(t *testing.T) {
 					testAccCheckEnablerID(resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambdaCode)),
 				),
 			},
