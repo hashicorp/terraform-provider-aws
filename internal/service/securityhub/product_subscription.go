@@ -69,7 +69,7 @@ func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 
 	id, err := flex.FlattenResourceId([]string{productARN, aws.ToString(output.ProductSubscriptionArn)}, productSubscriptionResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "enabling Security Hub Product Subscription (%s): %s", productARN, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.SetId(id)
 
