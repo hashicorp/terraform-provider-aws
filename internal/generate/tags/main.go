@@ -36,6 +36,7 @@ var (
 	serviceTagsSlice         = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
 	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	updateTagsForResource    = flag.Bool("UpdateTagsForResource", false, "whether to generate UpdateTagsForResource")
 	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
 	waitForPropagation       = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
 
@@ -78,6 +79,7 @@ var (
 	untagInTagsElem            = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp                    = flag.String("UntagOp", "UntagResource", "untagOp")
 	updateTagsFunc             = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
+	updateTagsForResourceFunc  = flag.String("UpdateTagsForResourceFunc", "updateTagsForResource", "updateTagsForResourceFunc")
 	waitTagsPropagatedFunc     = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
 	waitContinuousOccurence    = flag.Int("WaitContinuousOccurence", 0, "ContinuousTargetOccurence for Wait function")
 	waitDelay                  = flag.Duration("WaitDelay", 0, "Delay for Wait function")
@@ -106,13 +108,14 @@ func usage() {
 }
 
 type TemplateBody struct {
-	getTag             string
-	header             string
-	listTags           string
-	serviceTagsMap     string
-	serviceTagsSlice   string
-	updateTags         string
-	waitTagsPropagated string
+	getTag                string
+	header                string
+	listTags              string
+	serviceTagsMap        string
+	serviceTagsSlice      string
+	updateTags            string
+	updateTagsForResource string
+	waitTagsPropagated    string
 }
 
 func newTemplateBody(version int, kvtValues bool) *TemplateBody {
@@ -130,23 +133,25 @@ func newTemplateBody(version int, kvtValues bool) *TemplateBody {
 	case sdkV2:
 		if kvtValues {
 			return &TemplateBody{
-				getTag:             "\n" + v2.GetTagBody,
-				header:             v2.HeaderBody,
-				listTags:           "\n" + v2.ListTagsBody,
-				serviceTagsMap:     "\n" + v2.ServiceTagsValueMapBody,
-				serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
-				updateTags:         "\n" + v2.UpdateTagsBody,
-				waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
+				getTag:                "\n" + v2.GetTagBody,
+				header:                v2.HeaderBody,
+				listTags:              "\n" + v2.ListTagsBody,
+				serviceTagsMap:        "\n" + v2.ServiceTagsValueMapBody,
+				serviceTagsSlice:      "\n" + v2.ServiceTagsSliceBody,
+				updateTags:            "\n" + v2.UpdateTagsBody,
+				updateTagsForResource: "\n" + v2.UpdateTagsForResourceBody,
+				waitTagsPropagated:    "\n" + v2.WaitTagsPropagatedBody,
 			}
 		}
 		return &TemplateBody{
-			getTag:             "\n" + v2.GetTagBody,
-			header:             v2.HeaderBody,
-			listTags:           "\n" + v2.ListTagsBody,
-			serviceTagsMap:     "\n" + v2.ServiceTagsMapBody,
-			serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
-			updateTags:         "\n" + v2.UpdateTagsBody,
-			waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
+			getTag:                "\n" + v2.GetTagBody,
+			header:                v2.HeaderBody,
+			listTags:              "\n" + v2.ListTagsBody,
+			serviceTagsMap:        "\n" + v2.ServiceTagsMapBody,
+			serviceTagsSlice:      "\n" + v2.ServiceTagsSliceBody,
+			updateTags:            "\n" + v2.UpdateTagsBody,
+			updateTagsForResource: "\n" + v2.UpdateTagsForResourceBody,
+			waitTagsPropagated:    "\n" + v2.WaitTagsPropagatedBody,
 		}
 	default:
 		return nil
@@ -206,6 +211,8 @@ type TemplateData struct {
 	UntagInTagsElem            string
 	UntagOp                    string
 	UpdateTagsFunc             string
+	UpdateTagsForResource      bool
+	UpdateTagsForResourceFunc  string
 	UpdateTagsIgnoreSystem     bool
 	WaitForPropagation         bool
 	WaitTagsPropagatedFunc     string
@@ -365,6 +372,7 @@ func main() {
 		UntagInTagsElem:            *untagInTagsElem,
 		UntagOp:                    *untagOp,
 		UpdateTagsFunc:             *updateTagsFunc,
+		UpdateTagsForResourceFunc:  *updateTagsForResourceFunc,
 		UpdateTagsIgnoreSystem:     !*updateTagsNoIgnoreSystem,
 		WaitForPropagation:         *waitForPropagation,
 		WaitTagsPropagatedFunc:     *waitTagsPropagatedFunc,
@@ -420,6 +428,12 @@ func main() {
 
 	if *updateTags {
 		if err := d.WriteTemplate("updatetags", templateBody.updateTags, templateData); err != nil {
+			g.Fatalf("generating file (%s): %s", filename, err)
+		}
+	}
+
+	if *updateTagsForResource {
+		if err := d.WriteTemplate("updatetagsforresource", templateBody.updateTagsForResource, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
