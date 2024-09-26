@@ -43,7 +43,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the backup plan.
 * `name` - Display name of a backup plan.
+* `rule` - Rules of a backup plan.
 * `tags` - Metadata that you can assign to help organize the plans you create.
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.
 
-<!-- cache-key: cdktf-0.19.0 input-57458a8d2ad23e0db1998b3c24bffe8d7a9e84c173a10afd8dcf9f9009620a99 -->
+<!-- cache-key: cdktf-0.20.1 input-7c9faa1009394bae11fe135d4c10cca75cdf7772457b91405575d687d1d6ef9a -->

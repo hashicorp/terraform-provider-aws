@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_xray_encryption_config")
@@ -34,12 +35,12 @@ func resourceEncryptionConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.EncryptionType](),
@@ -53,10 +54,10 @@ func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	input := &xray.PutEncryptionConfigInput{
-		Type: types.EncryptionType(d.Get("type").(string)),
+		Type: types.EncryptionType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKeyID); ok {
 		input.KeyId = aws.String(v.(string))
 	}
 
@@ -91,8 +92,8 @@ func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading XRay Encryption Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("key_id", config.KeyId)
-	d.Set("type", config.Type)
+	d.Set(names.AttrKeyID, config.KeyId)
+	d.Set(names.AttrType, config.Type)
 
 	return diags
 }

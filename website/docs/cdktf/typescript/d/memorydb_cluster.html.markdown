@@ -69,8 +69,8 @@ This data source exports the following attributes in addition to the arguments a
     * `num_nodes` - Number of individual nodes in this shard.
     * `slots` - Keyspace for this shard. Example: `0-16383`.
     * `nodes` - Set of nodes in this shard.
-        * `availability_zone` - The Availability Zone in which the node resides.
-        * `create_time` - The date and time when the node was created. Example: `2022-01-01T21:00:00Z`.
+        * `availabilityZone` - The Availability Zone in which the node resides.
+        * `createTime` - The date and time when the node was created. Example: `2022-01-01T21:00:00Z`.
         * `name` - Name of this node.
         * `endpoint`
             * `address` - DNS hostname of the node.
@@ -82,4 +82,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tlsEnabled` - When true, in-transit encryption is enabled for the cluster.
 * `tags` - Map of tags assigned to the cluster.
 
-<!-- cache-key: cdktf-0.19.0 input-60661a32615a44866629e2e9ffadb0c1a33a84edf7060e982e9bec51eec4491d -->
+<!-- cache-key: cdktf-0.20.1 input-60661a32615a44866629e2e9ffadb0c1a33a84edf7060e982e9bec51eec4491d -->

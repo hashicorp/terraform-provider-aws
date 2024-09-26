@@ -34,9 +34,9 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-~> **Note:** When the `withDecryption` argument is set to `true`, the unencrypted values of `secureString` parameters will be stored in the raw state as plain-text as per normal Terraform behavior. [Read more about sensitive data in state](/docs/state/sensitive-data.html).
+~> **Note:** When the `withDecryption` argument is set to `true`, the unencrypted values of `SecureString` parameters will be stored in the raw state as plain-text as per normal Terraform behavior. [Read more about sensitive data in state](/docs/state/sensitive-data.html).
 
-~> **Note:** The data source follows the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For `stringList` type where the value is returned as a comma-separated string with no spaces between comma, you may use the built-in [split](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
+~> **Note:** The data source follows the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For `StringList` type where the value is returned as a comma-separated string with no spaces between comma, you may use the built-in [split](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
 
 ## Argument Reference
 
@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `types` - A list that contains the types (`String`, `StringList`, or `SecureString`) of retrieved parameters.
 * `values` - A list that contains the retrieved parameter values. **Note:** This value is always marked as sensitive in the Terraform plan output, regardless of whether any retrieved parameters are of `SecureString` type. Use the [`nonsensitive` function](https://developer.hashicorp.com/terraform/language/functions/nonsensitive) to override the behavior at your own risk and discretion, if you are certain that there are no sensitive values being retrieved.
 
-<!-- cache-key: cdktf-0.19.0 input-2c5efa2120dfb04d67888b7cc67b770d004cdf9500bcaac792c2d6da59c31265 -->
+<!-- cache-key: cdktf-0.20.1 input-2c5efa2120dfb04d67888b7cc67b770d004cdf9500bcaac792c2d6da59c31265 -->

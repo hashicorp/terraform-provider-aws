@@ -56,51 +56,61 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `configurationSetName` - (Required) The name of the configuration set.
-* `deliveryOptions` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set.
-* `reputationOptions` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set.
-* `sendingOptions` - (Optional) An object that defines whether or not Amazon SES can send email that you send using the configuration set.
-* `suppressionOptions` - (Optional) An object that contains information about the suppression list preferences for your account.
-* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `trackingOptions` - (Optional) An object that defines the open and click tracking options for emails that you send using the configuration set.
-* `vdmOptions` - (Optional) An object that defines the VDM settings that apply to emails that you send using the configuration set.
+* `deliveryOptions` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`deliveryOptions` Block](#delivery_options-block) for details.
+* `reputationOptions` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set. See [`reputationOptions` Block](#reputation_options-block) for details.
+* `sendingOptions` - (Optional) An object that defines whether or not Amazon SES can send email that you send using the configuration set. See [`sendingOptions` Block](#sending_options-block) for details.
+* `suppressionOptions` - (Optional) An object that contains information about the suppression list preferences for your account. See [`suppressionOptions` Block](#suppression_options-block) for details.
+* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `trackingOptions` - (Optional) An object that defines the open and click tracking options for emails that you send using the configuration set. See [`trackingOptions` Block](#tracking_options-block) for details.
+* `vdmOptions` - (Optional) An object that defines the VDM settings that apply to emails that you send using the configuration set. See [`vdmOptions` Block](#vdm_options-block) for details.
 
-### delivery_options
+### `deliveryOptions` Block
 
-This argument supports the following arguments:
+The `deliveryOptions` configuration block supports the following arguments:
 
 * `sendingPoolName` - (Optional) The name of the dedicated IP pool to associate with the configuration set.
 * `tlsPolicy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `REQUIRE`, `OPTIONAL`.
 
-### reputation_options
+### `reputationOptions` Block
 
-This argument supports the following arguments:
+The `reputationOptions` configuration block supports the following arguments:
 
 * `reputationMetricsEnabled` - (Optional) If `true`, tracking of reputation metrics is enabled for the configuration set. If `false`, tracking of reputation metrics is disabled for the configuration set.
 
-### sending_options
+### `sendingOptions` Block
 
-This argument supports the following arguments:
+The `sendingOptions` configuration block supports the following arguments:
 
 * `sendingEnabled` - (Optional) If `true`, email sending is enabled for the configuration set. If `false`, email sending is disabled for the configuration set.
 
-### suppression_options
+### `suppressionOptions` Block
+
+The `suppressionOptions` configuration block supports the following arguments:
 
 * `suppressedReasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
 
-### tracking_options
+### `trackingOptions` Block
+
+The `trackingOptions` configuration block supports the following arguments:
 
 * `customRedirectDomain` - (Required) The domain to use for tracking open and click events.
 
-### vdm_options
+### `vdmOptions` Block
 
-* `dashboardOptions` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard.
-* `guardianOptions` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian.
+The `vdmOptions` configuration block supports the following arguments:
 
-### dashboard_options
+* `dashboardOptions` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard. See [`dashboardOptions` Block](#dashboard_options-block) for details.
+* `guardianOptions` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian. See [`guardianOptions` Block](#guardian_options-block) for details.
+
+### `dashboardOptions` Block
+
+The `dashboardOptions` configuration block supports the following arguments:
 
 * `engagementMetrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
 
-### guardian_options
+### `guardianOptions` Block
+
+The `guardianOptions` configuration block supports the following arguments:
 
 * `optimizedSharedDelivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
 
@@ -110,7 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Configuration Set.
 * `reputationOptions` - An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set.
-    * `last_fresh_start` - The date and time (in Unix time) when the reputation metrics were last given a fresh start. When your account is given a fresh start, your reputation metrics are calculated starting from the date of the fresh start.
+    * `lastFreshStart` - The date and time (in Unix time) when the reputation metrics were last given a fresh start. When your account is given a fresh start, your reputation metrics are calculated starting from the date of the fresh start.
 
 ## Import
 
@@ -120,9 +130,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Sesv2ConfigurationSet } from "./.gen/providers/aws/sesv2-configuration-set";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Sesv2ConfigurationSet.generateConfigForImport(this, "example", "example");
   }
 }
 
@@ -134,4 +150,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set using
 % terraform import aws_sesv2_configuration_set.example example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-10e28775dfdb49d09b8bd0c0f6dc69fead8aab4b14b0a6b4b6476ac6de7c155d -->
+<!-- cache-key: cdktf-0.20.1 input-003c069f05ea5b8836d33ce1f579ac41250d9029ef4a8a5bc4f4d9eb0663e3f6 -->

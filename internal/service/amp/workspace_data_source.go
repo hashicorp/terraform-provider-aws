@@ -12,23 +12,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_prometheus_workspace")
-func DataSourceWorkspace() *schema.Resource {
+// @SDKDataSource("aws_prometheus_workspace", name="Workspace")
+// @Tags
+func dataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,11 +42,11 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -51,28 +57,24 @@ func DataSourceWorkspace() *schema.Resource {
 
 func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
-	workspace, err := FindWorkspaceByID(ctx, conn, workspaceID)
+	workspace, err := findWorkspaceByID(ctx, conn, workspaceID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AMP Workspace (%s): %s", workspaceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s): %s", workspaceID, err)
 	}
 
 	d.SetId(workspaceID)
-
-	d.Set("alias", workspace.Alias)
-	d.Set("arn", workspace.Arn)
-	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrAlias, workspace.Alias)
+	d.Set(names.AttrARN, workspace.Arn)
+	d.Set(names.AttrCreatedDate, workspace.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrKMSKeyARN, workspace.KmsKeyArn)
 	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
-	d.Set("status", workspace.Status.StatusCode)
+	d.Set(names.AttrStatus, workspace.Status.StatusCode)
 
-	if err := d.Set("tags", KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, workspace.Tags)
 
 	return diags
 }

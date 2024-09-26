@@ -13,7 +13,7 @@ description: |-
 Provides a Virtual Private Gateway attachment resource, allowing for an existing
 hardware VPN gateway to be attached and/or detached from a VPC.
 
--> **Note:** The [`awsVpnGateway`](vpn_gateway.html)
+-> **Note:** The [`aws_vpn_gateway`](vpn_gateway.html)
 resource can also automatically attach the Virtual Private Gateway it creates
 to an existing VPC by setting the [`vpcId`](vpn_gateway.html#vpc_id) attribute accordingly.
 
@@ -72,4 +72,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.19.0 input-2348f137f23e9e2ad9c5fe33e3628594f5ea4a23246976fd2266c1cbe04f05d2 -->
+<!-- cache-key: cdktf-0.20.1 input-2348f137f23e9e2ad9c5fe33e3628594f5ea4a23246976fd2266c1cbe04f05d2 -->

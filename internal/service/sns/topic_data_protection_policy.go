@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sns_topic_data_protection_policy")
@@ -35,13 +36,13 @@ func resourceTopicDataProtectionPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -60,10 +61,10 @@ func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	topicARN := d.Get("arn").(string)
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	topicARN := d.Get(names.AttrARN).(string)
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
 	input := &sns.PutDataProtectionPolicyInput{
@@ -100,8 +101,8 @@ func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading SNS Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("policy", output)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrPolicy, output)
 
 	return diags
 }
@@ -112,7 +113,7 @@ func resourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.Reso
 
 	_, err := conn.PutDataProtectionPolicy(ctx, &sns.PutDataProtectionPolicyInput{
 		DataProtectionPolicy: aws.String(""),
-		ResourceArn:          aws.String(d.Get("arn").(string)),
+		ResourceArn:          aws.String(d.Get(names.AttrARN).(string)),
 	})
 
 	if err != nil {

@@ -37,7 +37,7 @@ func ResourceBucketResourceAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket_name": {
+			names.AttrBucketName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -54,10 +54,12 @@ func ResourceBucketResourceAccess() *schema.Resource {
 }
 
 func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.SetResourceAccessForBucketInput{
-		BucketName:   aws.String(d.Get("bucket_name").(string)),
+		BucketName:   aws.String(d.Get(names.AttrBucketName).(string)),
 		ResourceName: aws.String(d.Get("resource_name").(string)),
 		Access:       types.ResourceBucketAccessAllow,
 	}
@@ -65,28 +67,30 @@ func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceD
 	out, err := conn.SetResourceAccessForBucket(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Get(names.AttrBucketName).(string), err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Get("bucket_name").(string))
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Get(names.AttrBucketName).(string))
 
 	if diag != nil {
 		return diag
 	}
 
-	idParts := []string{d.Get("bucket_name").(string), d.Get("resource_name").(string)}
+	idParts := []string{d.Get(names.AttrBucketName).(string), d.Get("resource_name").(string)}
 	id, err := flex.FlattenResourceId(idParts, BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketResourceAccess, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketResourceAccess, d.Get(names.AttrBucketName).(string), err)
 	}
 
 	d.SetId(id)
 
-	return resourceBucketResourceAccessRead(ctx, d, meta)
+	return append(diags, resourceBucketResourceAccessRead(ctx, d, meta)...)
 }
 
 func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindBucketResourceAccessById(ctx, conn, d.Id())
@@ -94,31 +98,33 @@ func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResBucketResourceAccess, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResBucketResourceAccess, d.Id(), err)
 	}
 
 	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
 	}
 
-	d.Set("bucket_name", parts[0])
+	d.Set(names.AttrBucketName, parts[0])
 	d.Set("resource_name", out.Name)
 
-	return nil
+	return diags
 }
 
 func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
 	}
 
 	out, err := conn.SetResourceAccessForBucket(ctx, &lightsail.SetResourceAccessForBucketInput{
@@ -128,11 +134,11 @@ func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Id())
@@ -141,7 +147,7 @@ func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceD
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Client, id string) (*types.ResourceReceivingAccess, error) {

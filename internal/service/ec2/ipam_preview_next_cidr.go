@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_vpc_ipam_preview_next_cidr")
-func ResourceIPAMPreviewNextCIDR() *schema.Resource {
+// @SDKResource("aws_vpc_ipam_preview_next_cidr, name="IPAM Preview Next CIDR")
+func resourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPreviewNextCIDRCreate,
 		ReadWithoutTimeout:   resourceIPAMPreviewNextCIDRRead,
@@ -68,7 +68,7 @@ func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 
 func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
@@ -78,14 +78,14 @@ func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
-		input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
+		input.DisallowedCidrs = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("netmask_length"); ok {
-		input.NetmaskLength = aws.Int64(int64(v.(int)))
+		input.NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	output, err := conn.AllocateIpamPoolCidrWithContext(ctx, input)
+	output, err := conn.AllocateIpamPoolCidr(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "allocating cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
@@ -98,7 +98,7 @@ func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceDa
 	cidr := output.IpamPoolAllocation.Cidr
 
 	d.Set("cidr", cidr)
-	d.SetId(encodeIPAMPreviewNextCIDRID(aws.StringValue(cidr), poolId))
+	d.SetId(encodeIPAMPreviewNextCIDRID(aws.ToString(cidr), poolId))
 
 	return append(diags, resourceIPAMPreviewNextCIDRRead(ctx, d, meta)...)
 }

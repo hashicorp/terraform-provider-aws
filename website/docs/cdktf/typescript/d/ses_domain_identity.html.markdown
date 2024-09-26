@@ -42,4 +42,4 @@ This data source exports the following attributes in addition to the arguments a
 * `domain` - Name of the domain
 * `verificationToken` - Code which when added to the domain as a TXT record will signal to SES that the owner of the domain has authorized SES to act on their behalf.
 
-<!-- cache-key: cdktf-0.19.0 input-c92b09c53a734f66fe357db2ededfa5c3680d8cf83576766510fba91783213fc -->
+<!-- cache-key: cdktf-0.20.1 input-c92b09c53a734f66fe357db2ededfa5c3680d8cf83576766510fba91783213fc -->

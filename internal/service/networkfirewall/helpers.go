@@ -5,10 +5,13 @@ package networkfirewall
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func encryptionConfigurationSchema() *schema.Schema {
@@ -18,49 +21,54 @@ func encryptionConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"key_id": {
+				names.AttrKeyID: {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(networkfirewall.EncryptionType_Values(), false),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
 				},
 			},
 		},
 	}
 }
 
-func expandEncryptionConfiguration(tfList []interface{}) *networkfirewall.EncryptionConfiguration {
-	ec := &networkfirewall.EncryptionConfiguration{Type: aws.String(networkfirewall.EncryptionTypeAwsOwnedKmsKey)}
+func expandEncryptionConfiguration(tfList []interface{}) *awstypes.EncryptionConfiguration {
+	apiObject := &awstypes.EncryptionConfiguration{
+		Type: awstypes.EncryptionTypeAwsOwnedKmsKey,
+	}
+
 	if len(tfList) == 1 && tfList[0] != nil {
 		tfMap := tfList[0].(map[string]interface{})
-		if v, ok := tfMap["key_id"].(string); ok {
-			ec.KeyId = aws.String(v)
+
+		if v, ok := tfMap[names.AttrKeyID].(string); ok {
+			apiObject.KeyId = aws.String(v)
 		}
-		if v, ok := tfMap["type"].(string); ok {
-			ec.Type = aws.String(v)
+		if v, ok := tfMap[names.AttrType].(string); ok {
+			apiObject.Type = awstypes.EncryptionType(v)
 		}
 	}
 
-	return ec
+	return apiObject
 }
 
-func flattenEncryptionConfiguration(apiObject *networkfirewall.EncryptionConfiguration) []interface{} {
-	if apiObject == nil || apiObject.Type == nil {
-		return nil
-	}
-	if aws.StringValue(apiObject.Type) == networkfirewall.EncryptionTypeAwsOwnedKmsKey {
+func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) []interface{} {
+	if apiObject == nil || apiObject.Type == "" {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"key_id": aws.StringValue(apiObject.KeyId),
-		"type":   aws.StringValue(apiObject.Type),
+	if apiObject.Type == awstypes.EncryptionTypeAwsOwnedKmsKey {
+		return nil
 	}
 
-	return []interface{}{m}
+	tfMap := map[string]interface{}{
+		names.AttrKeyID: aws.ToString(apiObject.KeyId),
+		names.AttrType:  apiObject.Type,
+	}
+
+	return []interface{}{tfMap}
 }
 
 func customActionSchema() *schema.Schema {
@@ -86,7 +94,7 @@ func customActionSchema() *schema.Schema {
 											Required: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -110,178 +118,212 @@ func customActionSchema() *schema.Schema {
 	}
 }
 
-func expandCustomActions(l []interface{}) []*networkfirewall.CustomAction {
-	if len(l) == 0 || l[0] == nil {
+func expandCustomActions(tfList []interface{}) []awstypes.CustomAction {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	customActions := make([]*networkfirewall.CustomAction, 0, len(l))
-	for _, tfMapRaw := range l {
-		customAction := &networkfirewall.CustomAction{}
+	apiObjects := make([]awstypes.CustomAction, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
+
+		apiObject := awstypes.CustomAction{}
+
 		if v, ok := tfMap["action_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			customAction.ActionDefinition = expandActionDefinition(v)
+			apiObject.ActionDefinition = expandActionDefinition(v)
 		}
 		if v, ok := tfMap["action_name"].(string); ok && v != "" {
-			customAction.ActionName = aws.String(v)
+			apiObject.ActionName = aws.String(v)
 		}
-		customActions = append(customActions, customAction)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return customActions
+	return apiObjects
 }
 
-func expandActionDefinition(l []interface{}) *networkfirewall.ActionDefinition {
-	if l == nil || l[0] == nil {
+func expandActionDefinition(tfList []interface{}) *awstypes.ActionDefinition {
+	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
-	customAction := &networkfirewall.ActionDefinition{}
+
+	apiObject := &awstypes.ActionDefinition{}
 
 	if v, ok := tfMap["publish_metric_action"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		customAction.PublishMetricAction = expandCustomActionPublishMetricAction(v)
+		apiObject.PublishMetricAction = expandPublishMetricAction(v)
 	}
 
-	return customAction
+	return apiObject
 }
 
-func expandCustomActionPublishMetricAction(l []interface{}) *networkfirewall.PublishMetricAction {
-	if len(l) == 0 || l[0] == nil {
+func expandPublishMetricAction(tfList []interface{}) *awstypes.PublishMetricAction {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	tfMap, ok := l[0].(map[string]interface{})
+
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
-	action := &networkfirewall.PublishMetricAction{}
-	if tfSet, ok := tfMap["dimension"].(*schema.Set); ok && tfSet.Len() > 0 {
-		tfList := tfSet.List()
-		dimensions := make([]*networkfirewall.Dimension, 0, len(tfList))
+
+	apiObject := &awstypes.PublishMetricAction{}
+
+	if v, ok := tfMap["dimension"].(*schema.Set); ok && v.Len() > 0 {
+		tfList := v.List()
+		dimensions := make([]awstypes.Dimension, 0, len(tfList))
+
 		for _, tfMapRaw := range tfList {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
 			if !ok {
 				continue
 			}
-			dimension := &networkfirewall.Dimension{
-				Value: aws.String(tfMap["value"].(string)),
-			}
-			dimensions = append(dimensions, dimension)
+
+			dimensions = append(dimensions, awstypes.Dimension{
+				Value: aws.String(tfMap[names.AttrValue].(string)),
+			})
 		}
-		action.Dimensions = dimensions
+
+		apiObject.Dimensions = dimensions
 	}
-	return action
+
+	return apiObject
 }
 
-func flattenCustomActions(c []*networkfirewall.CustomAction) []interface{} {
-	if c == nil {
+func flattenCustomActions(apiObjects []awstypes.CustomAction) []interface{} {
+	if apiObjects == nil {
 		return []interface{}{}
 	}
 
-	customActions := make([]interface{}, 0, len(c))
-	for _, elem := range c {
-		m := map[string]interface{}{
-			"action_definition": flattenActionDefinition(elem.ActionDefinition),
-			"action_name":       aws.StringValue(elem.ActionName),
+	tfList := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"action_definition": flattenActionDefinition(apiObject.ActionDefinition),
+			"action_name":       aws.ToString(apiObject.ActionName),
 		}
-		customActions = append(customActions, m)
+
+		tfList = append(tfList, tfMap)
 	}
 
-	return customActions
+	return tfList
 }
 
-func flattenActionDefinition(v *networkfirewall.ActionDefinition) []interface{} {
-	if v == nil {
-		return []interface{}{}
-	}
-	m := map[string]interface{}{
-		"publish_metric_action": flattenPublishMetricAction(v.PublishMetricAction),
-	}
-	return []interface{}{m}
-}
-
-func flattenPublishMetricAction(m *networkfirewall.PublishMetricAction) []interface{} {
-	if m == nil {
+func flattenActionDefinition(apiObject *awstypes.ActionDefinition) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	metrics := map[string]interface{}{
-		"dimension": flattenDimensions(m.Dimensions),
+	tfMap := map[string]interface{}{
+		"publish_metric_action": flattenPublishMetricAction(apiObject.PublishMetricAction),
 	}
 
-	return []interface{}{metrics}
+	return []interface{}{tfMap}
 }
 
-func flattenDimensions(d []*networkfirewall.Dimension) []interface{} {
-	dimensions := make([]interface{}, 0, len(d))
-	for _, v := range d {
-		dimension := map[string]interface{}{
-			"value": aws.StringValue(v.Value),
-		}
-		dimensions = append(dimensions, dimension)
+func flattenPublishMetricAction(apiObject *awstypes.PublishMetricAction) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	return dimensions
+	tfMap := map[string]interface{}{
+		"dimension": flattenDimensions(apiObject.Dimensions),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDimensions(apiObjects []awstypes.Dimension) []interface{} {
+	tfList := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			names.AttrValue: aws.ToString(apiObject.Value),
+		})
+	}
+
+	return tfList
 }
 
 func forceNewIfNotRuleOrderDefault(key string, d *schema.ResourceDiff) error {
 	if d.Id() != "" && d.HasChange(key) {
 		old, new := d.GetChange(key)
-		defaultRuleOrderOld := old == nil || old.(string) == "" || old.(string) == networkfirewall.RuleOrderDefaultActionOrder
-		defaultRuleOrderNew := new == nil || new.(string) == "" || new.(string) == networkfirewall.RuleOrderDefaultActionOrder
+		defaultRuleOrderOld := old == nil || old.(string) == "" || old.(string) == string(awstypes.RuleOrderDefaultActionOrder)
+		defaultRuleOrderNew := new == nil || new.(string) == "" || new.(string) == string(awstypes.RuleOrderDefaultActionOrder)
 
 		if (defaultRuleOrderOld && !defaultRuleOrderNew) || (defaultRuleOrderNew && !defaultRuleOrderOld) {
 			return d.ForceNew(key)
 		}
 	}
+
 	return nil
 }
 
-func customActionSchemaDataSource() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"action_definition": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"publish_metric_action": {
-								Type:     schema.TypeList,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"dimension": {
-											Type:     schema.TypeSet,
-											Computed: true,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"value": {
-														Type:     schema.TypeString,
-														Computed: true,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				"action_name": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-			},
-		},
+func expandIPSets(tfList []interface{}) map[string]awstypes.IPSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
 	}
+
+	apiObject := make(map[string]awstypes.IPSet)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if k, ok := tfMap[names.AttrKey].(string); ok && k != "" {
+			if tfList, ok := tfMap["ip_set"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
+				tfMap, ok := tfList[0].(map[string]interface{})
+				if !ok {
+					continue
+				}
+
+				if v, ok := tfMap["definition"].(*schema.Set); ok && v.Len() > 0 {
+					apiObject[k] = awstypes.IPSet{
+						Definition: flex.ExpandStringValueSet(v),
+					}
+				}
+			}
+		}
+	}
+
+	return apiObject
+}
+
+func flattenIPSets(tfMap map[string]awstypes.IPSet) []interface{} {
+	if tfMap == nil {
+		return []interface{}{}
+	}
+
+	tfList := make([]interface{}, 0, len(tfMap))
+
+	for k, v := range tfMap {
+		tfList = append(tfList, map[string]interface{}{
+			names.AttrKey: k,
+			"ip_set":      flattenIPSet(&v),
+		})
+	}
+
+	return tfList
+}
+
+func flattenIPSet(apiObject *awstypes.IPSet) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"definition": apiObject.Definition,
+	}
+
+	return []interface{}{tfMap}
 }

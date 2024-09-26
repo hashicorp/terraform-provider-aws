@@ -36,7 +36,7 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotLocaleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 				Config: testAccBotLocaleConfig_basic(rName, "en_US", 0.7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
-					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", "DRAFT"),
 					resource.TestCheckResourceAttr(resourceName, "locale_id", "en_US"),
 					resource.TestCheckResourceAttr(resourceName, "n_lu_intent_confidence_threshold", "0.7"),
@@ -72,7 +72,7 @@ func TestAccLexV2ModelsBotLocale_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotLocaleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccLexV2ModelsBotLocale_voiceSettings(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotLocaleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,8 +112,8 @@ func TestAccLexV2ModelsBotLocale_voiceSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "voice_settings.*", map[string]string{
-						"voice_id": voiceID,
-						"engine":   string(types.VoiceEngineStandard),
+						"voice_id":       voiceID,
+						names.AttrEngine: string(types.VoiceEngineStandard),
 					}),
 				),
 			},

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testContactChannel_basic(t *testing.T) {
+func testAccContactChannel_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -38,7 +38,7 @@ func testContactChannel_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -49,10 +49,10 @@ func testContactChannel_basic(t *testing.T) {
 					testAccCheckContactChannelExists(ctx, channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
 					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(channelResourceName, "name", rName),
-					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
-					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", contactResourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(channelResourceName, "arn", "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "EMAIL"),
+					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", contactResourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(channelResourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func testContactChannel_basic(t *testing.T) {
 	})
 }
 
-func testContactChannel_disappears(t *testing.T) {
+func testAccContactChannel_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -85,7 +85,7 @@ func testContactChannel_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func testContactChannel_disappears(t *testing.T) {
 	})
 }
 
-func testContactChannel_contactID(t *testing.T) {
+func testAccContactChannel_contactID(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -117,7 +117,7 @@ func testContactChannel_contactID(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func testContactChannel_contactID(t *testing.T) {
 					testAccCheckContactExists(ctx, testContactOneResourceName),
 					testAccCheckContactExists(ctx, testContactTwoResourceName),
 					testAccCheckContactChannelExists(ctx, channelResourceName),
-					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", testContactOneResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", testContactOneResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func testContactChannel_contactID(t *testing.T) {
 					testAccCheckContactExists(ctx, testContactOneResourceName),
 					testAccCheckContactExists(ctx, testContactTwoResourceName),
 					testAccCheckContactChannelExists(ctx, channelResourceName),
-					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", testContactTwoResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", testContactTwoResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func testContactChannel_contactID(t *testing.T) {
 	})
 }
 
-func testContactChannel_deliveryAddress(t *testing.T) {
+func testAccContactChannel_deliveryAddress(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -171,7 +171,7 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -182,7 +182,7 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 					testAccCheckContactChannelExists(ctx, channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
 					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", address1),
-					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "EMAIL"),
 				),
 			},
 			{
@@ -197,7 +197,7 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 					testAccCheckContactChannelExists(ctx, channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
 					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", address2),
-					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "EMAIL"),
 				),
 			},
 			{
@@ -209,14 +209,14 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 	})
 }
 
-func testContactChannel_name(t *testing.T) {
+func testAccContactChannel_name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + "1")
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + "2")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.Ct1)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.Ct2)
 	contactResourceName := "aws_ssmcontacts_contact.test"
 	channelResourceName := "aws_ssmcontacts_contact_channel.test"
 
@@ -225,7 +225,7 @@ func testContactChannel_name(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -234,7 +234,7 @@ func testContactChannel_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckContactChannelExists(ctx, channelResourceName),
-					resource.TestCheckResourceAttr(channelResourceName, "name", rName1),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -247,7 +247,7 @@ func testContactChannel_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckContactChannelExists(ctx, channelResourceName),
-					resource.TestCheckResourceAttr(channelResourceName, "name", rName2),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrName, rName2),
 				),
 			},
 			{
@@ -259,7 +259,7 @@ func testContactChannel_name(t *testing.T) {
 	})
 }
 
-func testContactChannel_type(t *testing.T) {
+func testAccContactChannel_type(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -274,7 +274,7 @@ func testContactChannel_type(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -285,7 +285,7 @@ func testContactChannel_type(t *testing.T) {
 					testAccCheckContactChannelExists(ctx, channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
 					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "EMAIL"),
 				),
 			},
 			{
@@ -300,7 +300,7 @@ func testContactChannel_type(t *testing.T) {
 					testAccCheckContactChannelExists(ctx, channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
 					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", "+12065550100"),
-					resource.TestCheckResourceAttr(channelResourceName, "type", "SMS"),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "SMS"),
 				),
 			},
 			{
@@ -315,7 +315,7 @@ func testContactChannel_type(t *testing.T) {
 					testAccCheckContactChannelExists(ctx, channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
 					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", "+12065550199"),
-					resource.TestCheckResourceAttr(channelResourceName, "type", "VOICE"),
+					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "VOICE"),
 				),
 			},
 			{

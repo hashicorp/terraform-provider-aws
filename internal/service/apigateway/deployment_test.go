@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,18 +18,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 	restApiResourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,11 +38,11 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 				Config: testAccDeploymentConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(".+/")),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
-					resource.TestCheckResourceAttrPair(resourceName, "rest_api_id", restApiResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "rest_api_id", restApiResourceName, names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, "stage_description"),
 					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "variables.%"),
@@ -57,10 +58,34 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayDeployment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var deployment apigateway.GetDeploymentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_deployment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfig_required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDeployment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
-	var restApi apigateway.RestApi
+	var deployment apigateway.GetDeploymentOutput
+	var restApi apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 	restApiResourceName := "aws_api_gateway_rest_api.test"
@@ -68,7 +93,7 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +101,7 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 				Config: testAccDeploymentConfig_stageName(rName, stageName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					testAccCheckRestAPIExists(ctx, restApiResourceName, &restApi),
+					testAccCheckRESTAPIExists(ctx, restApiResourceName, &restApi),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), restApiResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,14 +112,14 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment1, deployment2, deployment3, deployment4 apigateway.Deployment
-	var stage apigateway.Stage
+	var deployment1, deployment2, deployment3, deployment4 apigateway.GetDeploymentOutput
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +128,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment1),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 				// Due to how the Terraform state is handled for resources during creation,
@@ -116,7 +141,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment2),
 					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 			},
@@ -126,7 +151,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment3),
 					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 			},
@@ -136,7 +161,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment4),
 					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description2"),
 				),
 			},
@@ -146,13 +171,13 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,14 +185,14 @@ func TestAccAPIGatewayDeployment_description(t *testing.T) {
 				Config: testAccDeploymentConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -176,14 +201,14 @@ func TestAccAPIGatewayDeployment_description(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
-	var stage apigateway.Stage
+	var deployment apigateway.GetDeploymentOutput
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -201,15 +226,15 @@ func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
-	var stage apigateway.Stage
+	var deployment apigateway.GetDeploymentOutput
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 	stageName := sdkacctest.RandomWithPrefix("tf-acc-test-deployment")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -237,13 +262,13 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_StageName_emptyString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -260,22 +285,22 @@ func TestAccAPIGatewayDeployment_StageName_emptyString(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_variables(rName, "key1", "value1"),
+				Config: testAccDeploymentConfig_variables(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "variables.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "variables.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "variables.key1", acctest.CtValue1),
 				),
 			},
 		},
@@ -285,13 +310,13 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/28997.
 func TestAccAPIGatewayDeployment_conflictingConnectionType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	resourceName := "aws_api_gateway_deployment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -306,18 +331,41 @@ func TestAccAPIGatewayDeployment_conflictingConnectionType(t *testing.T) {
 	})
 }
 
-func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.Deployment) resource.TestCheckFunc {
+func TestAccAPIGatewayDeployment_deploymentCanarySettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var deployment apigateway.GetDeploymentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	url := "https://example.com"
+	resourceName := "aws_api_gateway_deployment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStageConfig_deploymentCanarySettings(rName, url),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Deployment ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.ID)
 
@@ -333,7 +381,7 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.D
 
 func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_deployment" {
@@ -357,9 +405,9 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDeploymentNotRecreated(i, j *apigateway.Deployment) resource.TestCheckFunc {
+func testAccCheckDeploymentNotRecreated(i, j *apigateway.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
+		if !aws.ToTime(i.CreatedDate).Equal(aws.ToTime(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway Deployment recreated")
 		}
 
@@ -367,9 +415,9 @@ func testAccCheckDeploymentNotRecreated(i, j *apigateway.Deployment) resource.Te
 	}
 }
 
-func testAccCheckDeploymentRecreated(i, j *apigateway.Deployment) resource.TestCheckFunc {
+func testAccCheckDeploymentRecreated(i, j *apigateway.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
+		if aws.ToTime(i.CreatedDate).Equal(aws.ToTime(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway Deployment not recreated")
 		}
 
@@ -560,4 +608,25 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs16.x"
 }
 `, rName))
+}
+
+func testAccStageConfig_deploymentCanarySettings(rName, url string) string {
+	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName, url), `
+resource "aws_api_gateway_deployment" "test" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  canary_settings {
+    percent_traffic = "33.33"
+    stage_variable_overrides = {
+      one = "3"
+    }
+    use_stage_cache = "true"
+  }
+  variables = {
+    one = "1"
+    two = "2"
+  }
+}
+`)
 }

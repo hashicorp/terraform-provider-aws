@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 ~> **NOTE:** `instance_id` and one of either `name` or `routing_profile_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instance_id` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
@@ -90,4 +90,4 @@ A `queue_configs` block supports the following attributes:
 * `queue_id` - Identifier for the queue.
 * `queue_name` - Name for the queue.
 
-<!-- cache-key: cdktf-0.19.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->
+<!-- cache-key: cdktf-0.20.1 input-4bef98269c30e5e318435de8076afc54af062a6b62cb6767304c69bb9d6f3ee9 -->

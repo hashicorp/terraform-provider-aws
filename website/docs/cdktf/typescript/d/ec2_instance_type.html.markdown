@@ -92,6 +92,7 @@ This data source exports the following attributes in addition to the arguments a
 * `ipv6Supported` - `true` if IPv6 is supported.
 * `maximumIpv4AddressesPerInterface` - The maximum number of IPv4 addresses per network interface.
 * `maximumIpv6AddressesPerInterface` - The maximum number of IPv6 addresses per network interface.
+* `maximumNetworkCards` - The maximum number of physical network cards that can be allocated to the instance.
 * `maximumNetworkInterfaces` - The maximum number of network interfaces for the instance type.
 * `memorySize` - Size of the instance memory, in MiB.
 * `networkPerformance` - Describes the network performance.
@@ -113,4 +114,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-b7277db3a541ce0f8fed6f01d3571ab61e9905732dcb0c8ed05bebf2a1116184 -->
+<!-- cache-key: cdktf-0.20.1 input-252aea618bdc0d84a31b332d0bcbeb1cfa651313c051ec4ccf79e7e89e9f6ce2 -->

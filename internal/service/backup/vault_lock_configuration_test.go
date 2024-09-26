@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupVaultLockConfiguration_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccBackupVaultLockConfiguration_basic(t *testing.T) {
 	resourceName := "aws_backup_vault_lock_configuration.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +35,7 @@ func TestAccBackupVaultLockConfiguration_basic(t *testing.T) {
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", "3"),
+					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "max_retention_days", "1200"),
 					resource.TestCheckResourceAttr(resourceName, "min_retention_days", "7"),
 				),
@@ -58,7 +59,7 @@ func TestAccBackupVaultLockConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_backup_vault_lock_configuration.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +77,7 @@ func TestAccBackupVaultLockConfiguration_disappears(t *testing.T) {
 
 func testAccCheckVaultLockConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault_lock_configuration" {
 				continue
@@ -110,7 +111,7 @@ func testAccCheckVaultLockConfigurationExists(ctx context.Context, name string, 
 			return fmt.Errorf("No Backup Vault Lock Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
 

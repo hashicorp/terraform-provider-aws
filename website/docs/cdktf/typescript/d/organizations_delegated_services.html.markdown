@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 This data source exports the following attributes in addition to the arguments above:
 
 * `delegatedServices` - Services for which the account is a delegated administrator, which have the following attributes:
-    * `delegation_enabled_date` - The date that the account became a delegated administrator for this service.
-    * `service_principal` - The name of an AWS service that can request an operation for the specified service.
+    * `delegationEnabledDate` - The date that the account became a delegated administrator for this service.
+    * `servicePrincipal` - The name of an AWS service that can request an operation for the specified service.
 
-<!-- cache-key: cdktf-0.19.0 input-75948a55ba6b06c24be13238e2f8b8e4a682a05352b790ab2e35e7f82c3c8577 -->
+<!-- cache-key: cdktf-0.20.1 input-75948a55ba6b06c24be13238e2f8b8e4a682a05352b790ab2e35e7f82c3c8577 -->

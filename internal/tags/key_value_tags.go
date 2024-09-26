@@ -28,6 +28,26 @@ const (
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
+
+	// Environment variables with this prefix will be treated as a `default_tags` key value pair
+	//
+	// The environment variable name after this suffix will be treated as the tag key. The
+	// value of the variable will be treated as the tag value. Empty values are permitted.
+	DefaultTagsEnvVarPrefix = "TF_AWS_DEFAULT_TAGS_"
+
+	// Environment variable specifying a list of tag keys to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple keys are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeysEnvVar = "TF_AWS_IGNORE_TAGS_KEYS"
+
+	// Environment variable specifying a list of tag key prefixes to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple key prefixes are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeyPrefixesEnvVar = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
 )
 
 // DefaultConfig contains tags to default across all resources.
@@ -277,48 +297,6 @@ func (tags KeyValueTags) Keys() []string {
 
 	for k := range tags {
 		result = append(result, k)
-	}
-
-	return result
-}
-
-// ListofMap returns a list of flattened tags.
-// Compatible with setting Terraform state for strongly typed configuration blocks.
-func (tags KeyValueTags) ListofMap() []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(tags))
-
-	for k, v := range tags {
-		m := map[string]interface{}{
-			"key":   k,
-			"value": "",
-		}
-
-		if v == nil {
-			result = append(result, m)
-			continue
-		}
-
-		if v.Value != nil {
-			m["value"] = *v.Value
-		}
-
-		for k, v := range v.AdditionalBoolFields {
-			m[ToSnakeCase(k)] = false
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		for k, v := range v.AdditionalStringFields {
-			m[ToSnakeCase(k)] = ""
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		result = append(result, m)
 	}
 
 	return result
@@ -593,7 +571,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v // Prevent referencing issues
 			kvtm[k] = &TagData{Value: &v}
 		}
 
@@ -602,8 +579,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v
-
 			if v == nil {
 				kvtm[k] = nil
 				continue
@@ -645,6 +620,8 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		return kvtm
 	case types.Map:
 		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
+	case Map:
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
@@ -668,7 +645,7 @@ type TagData struct {
 }
 
 func (td *TagData) ValueString() string {
-	if td.Value == nil {
+	if td == nil || td.Value == nil {
 		return ""
 	}
 
@@ -831,18 +808,18 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 }
 
 // ResolveDuplicatesFramework resolves differences between incoming tags, defaultTags, and ignoreConfig
-func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags fwdiag.Diagnostics) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags *fwdiag.Diagnostics) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
 
-	var tagsAll types.Map
+	var tagsAll Map
 	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
 
 	if diags.HasError() {
 		return KeyValueTags{}
 	}
 
-	result := make(map[string]string)
+	result := make(map[string]string, len(t))
 	for k, v := range t {
 		result[k] = v.ValueString()
 	}

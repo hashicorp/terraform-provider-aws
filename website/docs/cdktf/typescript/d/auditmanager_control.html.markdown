@@ -101,6 +101,6 @@ The following arguments are required:
 
 ## Attribute Reference
 
-See the [`awsAuditmanagerControl` resource](/docs/providers/aws/r/auditmanager_control.html) for details on the returned attributes - they are identical.
+See the [`aws_auditmanager_control` resource](/docs/providers/aws/r/auditmanager_control.html) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.19.0 input-3db48c85023c8e29684006da94ab0858a40f92b8fb222869b34399953eba3333 -->
+<!-- cache-key: cdktf-0.20.1 input-3db48c85023c8e29684006da94ab0858a40f92b8fb222869b34399953eba3333 -->

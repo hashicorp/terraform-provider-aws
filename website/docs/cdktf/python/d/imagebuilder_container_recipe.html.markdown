@@ -78,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the container recipe.
 * `working_directory` - Working directory used during build and test workflows.
 
-<!-- cache-key: cdktf-0.19.0 input-4e22e11f15936a7e4695ac2bfd8c64e0718ffb1c7fab1ad5ef07d652ffab46f0 -->
+<!-- cache-key: cdktf-0.20.1 input-4e22e11f15936a7e4695ac2bfd8c64e0718ffb1c7fab1ad5ef07d652ffab46f0 -->

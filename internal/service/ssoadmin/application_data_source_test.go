@@ -24,7 +24,7 @@ func TestAccSSOAdminApplicationDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,9 +34,9 @@ func TestAccSSOAdminApplicationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_arn", applicationResourceName, "application_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_provider_arn", applicationResourceName, "application_provider_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arn", applicationResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", applicationResourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, applicationResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "portal_options.#", applicationResourceName, "portal_options.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "status", applicationResourceName, "status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, applicationResourceName, names.AttrStatus),
 				),
 			},
 		},

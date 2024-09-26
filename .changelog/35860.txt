@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_caller_identity: Fix authentication signature error when alternate `sts_region` is specified
+```

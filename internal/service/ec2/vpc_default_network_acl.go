@@ -6,7 +6,7 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,19 +27,13 @@ const (
 
 // @SDKResource("aws_default_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
-func ResourceDefaultNetworkACL() *schema.Resource {
-	networkACLRuleSetNestedBlock := &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem:     networkACLRuleNestedBlock,
-		Set:      networkACLRuleHash,
-	}
-
+// @Testing(tagsTest=false)
+func resourceDefaultNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultNetworkACLCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRead,
 		UpdateWithoutTimeout: resourceDefaultNetworkACLUpdate,
-		DeleteWithoutTimeout: resourceDefaultNetworkACLDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -54,42 +48,53 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 		//    - subnet_ids is not Computed
 		// and additions:
 		//   - default_network_acl_id Required/ForceNew
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_network_acl_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			// We want explicit management of Rules here, so we do not allow them to be
-			// computed. Instead, an empty config will enforce just that; removal of the
-			// rules
-			"egress":  networkACLRuleSetNestedBlock,
-			"ingress": networkACLRuleSetNestedBlock,
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// We want explicit management of Subnets here, so we do not allow them to be
-			// computed. Instead, an empty config will enforce just that; removal of the
-			// any Subnets that have been assigned to the Default Network ACL. Because we
-			// can't actually remove them, this will be a continual plan until the
-			// Subnets are themselves destroyed or reassigned to a different Network
-			// ACL
-			"subnet_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			networkACLRuleSetNestedBlock := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     networkACLRuleNestedBlock(),
+					Set:      networkACLRuleHash,
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_network_acl_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				// We want explicit management of Rules here, so we do not allow them to be
+				// computed. Instead, an empty config will enforce just that; removal of the
+				// rules
+				"egress":  networkACLRuleSetNestedBlock(),
+				"ingress": networkACLRuleSetNestedBlock(),
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// We want explicit management of Subnets here, so we do not allow them to be
+				// computed. Instead, an empty config will enforce just that; removal of the
+				// any Subnets that have been assigned to the Default Network ACL. Because we
+				// can't actually remove them, this will be a continual plan until the
+				// Subnets are themselves destroyed or reassigned to a different Network
+				// ACL
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -98,16 +103,16 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 
 func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	naclID := d.Get("default_network_acl_id").(string)
-	nacl, err := FindNetworkACLByID(ctx, conn, naclID)
+	nacl, err := findNetworkACLByID(ctx, conn, naclID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", naclID, err)
 	}
 
-	if !aws.BoolValue(nacl.IsDefault) {
+	if !aws.ToBool(nacl.IsDefault) {
 		return sdkdiag.AppendErrorf(diags, "use the `aws_network_acl` resource instead")
 	}
 
@@ -124,8 +129,8 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
+	oldTags := keyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
@@ -138,7 +143,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceDefaultNetworkACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// Subnets *must* belong to a Network ACL. Subnets are not "removed" from
 	// Network ACLs, instead their association is replaced. In a normal
@@ -153,8 +158,4 @@ func resourceDefaultNetworkACLUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	return append(diags, resourceNetworkACLRead(ctx, d, meta)...)
-}
-
-func resourceDefaultNetworkACLDelete(_ context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	return sdkdiag.AppendWarningf(diags, "EC2 Default Network ACL (%s) not deleted, removing from state", d.Id())
 }

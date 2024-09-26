@@ -6,16 +6,18 @@ package networkmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_sites")
-func DataSourceSites() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_sites", name="Sites")
+func dataSourceSites() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSitesRead,
 
@@ -24,27 +26,29 @@ func DataSourceSites() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
 func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	var diags diag.Diagnostics
 
-	output, err := FindSites(ctx, conn, &networkmanager.GetSitesInput{
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	output, err := findSites(ctx, conn, &networkmanager.GetSitesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Sites: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Sites: %s", err)
 	}
 
 	var siteIDs []string
@@ -56,11 +60,11 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		siteIDs = append(siteIDs, aws.StringValue(v.SiteId))
+		siteIDs = append(siteIDs, aws.ToString(v.SiteId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", siteIDs)
+	d.Set(names.AttrIDs, siteIDs)
 
-	return nil
+	return diags
 }

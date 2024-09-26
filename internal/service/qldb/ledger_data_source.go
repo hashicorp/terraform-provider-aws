@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_qldb_ledger")
@@ -21,19 +23,19 @@ func dataSourceLedger() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLedgerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -45,42 +47,43 @@ func dataSourceLedger() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	ledger, err := findLedgerByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("reading QLDB Ledger (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading QLDB Ledger (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(ledger.Name))
-	d.Set("arn", ledger.Arn)
-	d.Set("deletion_protection", ledger.DeletionProtection)
+	d.Set(names.AttrARN, ledger.Arn)
+	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
 	if ledger.EncryptionDescription != nil {
-		d.Set("kms_key", ledger.EncryptionDescription.KmsKeyArn)
+		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
 	} else {
-		d.Set("kms_key", nil)
+		d.Set(names.AttrKMSKey, nil)
 	}
-	d.Set("name", ledger.Name)
+	d.Set(names.AttrName, ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
-		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

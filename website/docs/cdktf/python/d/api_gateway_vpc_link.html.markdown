@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `target_arns` - List of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
 * `tags` - Key-value map of resource tags
 
-<!-- cache-key: cdktf-0.19.0 input-b5278dc46deda6987341a0eea118c91f7f9e8d4ab7dbcf2deaf2fce3bb8b0ca2 -->
+<!-- cache-key: cdktf-0.20.1 input-b5278dc46deda6987341a0eea118c91f7f9e8d4ab7dbcf2deaf2fce3bb8b0ca2 -->

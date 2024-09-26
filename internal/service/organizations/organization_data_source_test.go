@@ -6,9 +6,9 @@ package organizations_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Creates an new organization so that we are its management account.
@@ -22,21 +22,22 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationDataSourceConfig_newOrganization,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.#", dataSourceName, "accounts.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_service_access_principals.#", dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "enabled_policy_types.#", dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "feature_set", dataSourceName, "feature_set"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_arn", dataSourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_email", dataSourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", dataSourceName, "master_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_account_name", dataSourceName, "master_account_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "non_master_accounts.#", dataSourceName, "non_master_accounts.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "roots.#", dataSourceName, "roots.#"),
 				),
@@ -57,14 +58,14 @@ func testAccOrganizationDataSource_memberAccount(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr(dataSourceName, "accounts.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "feature_set"),
@@ -92,14 +93,14 @@ func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationDataSourceConfig_delegatedAdministrator,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 2),
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "feature_set"),

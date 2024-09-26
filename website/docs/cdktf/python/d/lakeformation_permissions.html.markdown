@@ -100,6 +100,7 @@ The following arguments are required:
 One of the following is required:
 
 * `catalog_resource` - Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
+* `data_cells_filter` - (Optional) Configuration block for a data cells filter resource. Detailed below.
 * `data_location` - Configuration block for a data location resource. Detailed below.
 * `database` - Configuration block for a database resource. Detailed below.
 * `lf_tag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
@@ -110,6 +111,13 @@ One of the following is required:
 The following arguments are optional:
 
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+
+### data_cells_filter
+
+* `database_name` - (Required) The name of the database.
+* `name` - (Required) The name of the data cells filter.
+* `table_catalog_id` - (Required) The ID of the Data Catalog.
+* `table_name` - (Required) The name of the table.
 
 ### data_location
 
@@ -190,4 +198,4 @@ In addition to the above arguments, the following attribute is exported:
 * `permissions` – List of permissions granted to the principal. For details on permissions, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `permissions_with_grant_option` - Subset of `permissions` which the principal can pass.
 
-<!-- cache-key: cdktf-0.19.0 input-f820afbcf35bc80d4121f086cb449534cf9844817817f907e94a928ec49659fd -->
+<!-- cache-key: cdktf-0.20.1 input-bdc82a0c9860b14b7a8d059933d6d05e1dbb3719cb760f4005ac93629213036a -->

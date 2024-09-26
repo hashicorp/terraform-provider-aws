@@ -70,8 +70,8 @@ This resource supports the following arguments:
 
 * `description` - (Optional) The description of the disk image being imported.
 * `format` - (Required) The format of the disk image being imported. One of `VHD` or `VMDK`.
-* `url` - (Optional) The URL to the Amazon S3-based disk image being imported. It can either be a https URL (https://..) or an Amazon S3 URL (s3://..). One of `url` or `user_bucket` must be set.
-* `userBucket` - (Optional) The Amazon S3 bucket for the disk image. One of `url` or `user_bucket` must be set. Detailed below.
+* `url` - (Optional) The URL to the Amazon S3-based disk image being imported. It can either be a https URL (https://..) or an Amazon S3 URL (s3://..). One of `url` or `userBucket` must be set.
+* `userBucket` - (Optional) The Amazon S3 bucket for the disk image. One of `url` or `userBucket` must be set. Detailed below.
 
 ### user_bucket Configuration Block
 
@@ -95,6 +95,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `volumeSize` - The size of the drive in GiBs.
 * `dataEncryptionKeyId` - The data encryption key identifier for the snapshot.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.19.0 input-a913e99cf61c1c6954df7657480fc954e915e7e612a83eefbf5010e1f4fc479d -->
+<!-- cache-key: cdktf-0.20.1 input-a913e99cf61c1c6954df7657480fc954e915e7e612a83eefbf5010e1f4fc479d -->

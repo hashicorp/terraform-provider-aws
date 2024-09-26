@@ -56,4 +56,4 @@ Application version lifecycle (`appversion_lifecycle`) supports the nested attri
 * `max_age_in_days` - Number of days to retain an application version.
 * `delete_source_from_s3` - Specifies whether delete a version's source bundle from S3 when the application version is deleted.
 
-<!-- cache-key: cdktf-0.19.0 input-91e8e35e02809b1291798f560a469b0ee44ac2ca2072d3eb5b99110f092216bf -->
+<!-- cache-key: cdktf-0.20.1 input-91e8e35e02809b1291798f560a469b0ee44ac2ca2072d3eb5b99110f092216bf -->

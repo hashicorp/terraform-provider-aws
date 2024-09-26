@@ -93,12 +93,14 @@ The following arguments are required:
     * HDB - Historical Database. The data is only accessible with read-only permissions from one of the FinSpace managed KX databases mounted to the cluster.
     * RDB - Realtime Database. This type of database captures all the data from a ticker plant and stores it in memory until the end of day, after which it writes all of its data to a disk and reloads the HDB. This cluster type requires local storage for temporary storage of data during the savedown process. If you specify this field in your request, you must provide the `savedownStorageConfiguration` parameter.
     * GATEWAY - A gateway cluster allows you to access data across processes in kdb systems. It allows you to create your own routing logic using the initialization scripts and custom code. This type of cluster does not require a  writable local storage.
+    * GP - A general purpose cluster allows you to quickly iterate on code during development by granting greater access to system commands and enabling a fast reload of custom code. This cluster type can optionally mount databases including cache and savedown storage. For this cluster type, the node count is fixed at 1. It does not support autoscaling and supports only `SINGLE` AZ mode.
+    * Tickerplant – A tickerplant cluster allows you to subscribe to feed handlers based on IAM permissions. It can publish to RDBs, other Tickerplants, and real-time subscribers (RTS). Tickerplants can persist messages to log, which is readable by any RDB environment. It supports only single-node that is only one kdb process.
 * `vpcConfiguration` - (Required) Configuration details about the network where the Privatelink endpoint of the cluster resides. See [vpc_configuration](#vpc_configuration).
 
 The following arguments are optional:
 
 * `autoScalingConfiguration` - (Optional) Configuration based on which FinSpace will scale in or scale out nodes in your cluster. See [auto_scaling_configuration](#auto_scaling_configuration).
-* `availabilityZoneId` - (Optional) The availability zone identifiers for the requested regions. Required when `az_mode` is set to SINGLE.
+* `availabilityZoneId` - (Optional) The availability zone identifiers for the requested regions. Required when `azMode` is set to SINGLE.
 * `cacheStorageConfigurations` - (Optional) Configurations for a read only cache storage associated with a cluster. This cache will be stored as an FSx Lustre that reads from the S3 store. See [cache_storage_configuration](#cache_storage_configuration).
 * `code` - (Optional) Details of the custom code that you want to use inside a cluster when analyzing data. Consists of the S3 source bucket, location, object version, and the relative path from where the custom code is loaded into the cluster. See [code](#code).
 * `commandLineArguments` - (Optional) List of key-value pairs to make available inside the cluster.
@@ -107,16 +109,18 @@ The following arguments are optional:
 * `executionRole` - (Optional) An IAM role that defines a set of permissions associated with a cluster. These permissions are assumed when a cluster attempts to access another cluster.
 * `initializationScript` - (Optional) Path to Q program that will be run at launch of a cluster. This is a relative path within .zip file that contains the custom code, which will be loaded on the cluster. It must include the file name itself. For example, somedir/init.q.
 * `savedownStorageConfiguration` - (Optional) Size and type of the temporary storage that is used to hold data during the savedown process. This parameter is required when you choose `type` as RDB. All the data written to this storage space is lost when the cluster node is restarted. See [savedown_storage_configuration](#savedown_storage_configuration).
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `scalingGroupConfiguration` - (Optional) The structure that stores the configuration details of a scaling group.
+* `tickerplantLogConfiguration` - A configuration to store Tickerplant logs. It consists of a list of volumes that will be mounted to your cluster. For the cluster type Tickerplant , the location of the TP volume on the cluster will be available by using the global variable .aws.tp_log_path.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### auto_scaling_configuration
 
 The auto_scaling_configuration block supports the following arguments:
 
 * `autoScalingMetric` - (Required) Metric your cluster will track in order to scale in and out. For example, CPU_UTILIZATION_PERCENTAGE is the average CPU usage across all nodes in a cluster.
-* `minNodeCount` - (Required) Lowest number of nodes to scale. Must be at least 1 and less than the `max_node_count`. If nodes in cluster belong to multiple availability zones, then `min_node_count` must be at least 3.
+* `minNodeCount` - (Required) Lowest number of nodes to scale. Must be at least 1 and less than the `maxNodeCount`. If nodes in cluster belong to multiple availability zones, then `minNodeCount` must be at least 3.
 * `maxNodeCount` - (Required) Highest number of nodes to scale. Cannot be greater than 5
-* `metricTarget` - (Required) Desired value of chosen `auto_scaling_metric`. When metric drops below this value, cluster will scale in. When metric goes above this value, cluster will scale out. Can be set between 0 and 100 percent.
+* `metricTarget` - (Required) Desired value of chosen `autoScalingMetric`. When metric drops below this value, cluster will scale in. When metric goes above this value, cluster will scale out. Can be set between 0 and 100 percent.
 * `scaleInCooldownSeconds` - (Required) Duration in seconds that FinSpace will wait after a scale in event before initiating another scaling event.
 * `scaleOutCooldownSeconds` - (Required) Duration in seconds that FinSpace will wait after a scale out event before initiating another scaling event.
 
@@ -164,6 +168,7 @@ The database block supports the following arguments:
 * `databaseName` - (Required) Name of the KX database.
 * `cacheConfigurations` - (Optional) Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
 * `changesetId` - (Optional) A unique identifier of the changeset that is associated with the cluster.
+* `dataviewName` - (Optional) The name of the dataview to be used for caching historical data on disk. You cannot update to a different dataview name once a cluster is created. Use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for database to prevent any undesirable behaviors.
 
 #### cache_configurations
 
@@ -176,9 +181,10 @@ The cache_configuration block supports the following arguments:
 
 The savedown_storage_configuration block supports the following arguments:
 
-* `type` - (Required) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
+* `type` - (Optional) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
     * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
-* `size` - (Required) Size of temporary storage in gigabytes. Must be between 10 and 16000.
+* `size` - (Optional) Size of temporary storage in gigabytes. Must be between 10 and 16000.
+* `volumeName` - (Optional) The name of the kdb volume that you want to use as writeable save-down storage for clusters.
 
 ### vpc_configuration
 
@@ -189,6 +195,22 @@ The vpc_configuration block supports the following arguments:
 * `subnet_ids `- (Required) Identifier of the subnet that the Privatelink VPC endpoint uses to connect to the cluster.
 * `ipAddressType` - (Required) IP address type for cluster network configuration parameters. The following type is available: IP_V4 - IP address version 4.
 
+### scaling_group_configuration
+
+The scaling_group_configuration block supports the following arguments:
+
+* `scalingGroupName` - (Required) A unique identifier for the kdb scaling group.
+* `memoryReservation` - (Required) A reservation of the minimum amount of memory that should be available on the scaling group for a kdb cluster to be successfully placed in a scaling group.
+* `nodeCount` - (Required) The number of kdb cluster nodes.
+* `cpu` - The number of vCPUs that you want to reserve for each node of this kdb cluster on the scaling group host.
+* `memoryLimit` - An optional hard limit on the amount of memory a kdb cluster can use.
+
+### tickerplant_log_configuration
+
+The tickerplant_log_configuration block supports the following arguments:
+
+* tickerplant_log_volumes - (Required) The names of the volumes for tickerplant logs.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -197,7 +219,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdTimestamp` - Timestamp at which the cluster is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - A comma-delimited string joining environment ID and cluster name.
 * `lastModifiedTimestamp` - Last timestamp at which the cluster was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -215,9 +237,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { FinspaceKxCluster } from "./.gen/providers/aws/finspace-kx-cluster";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    FinspaceKxCluster.generateConfigForImport(
+      this,
+      "example",
+      "n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster"
+    );
   }
 }
 
@@ -229,4 +261,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a62354273cd0579ac96ba9caa797f616e648f46241c8907e9d1077a7877ab7f0 -->
+<!-- cache-key: cdktf-0.20.1 input-4129376a4ee4e8f5958bb47adc022144fea156388059eab78254408d842ef87a -->

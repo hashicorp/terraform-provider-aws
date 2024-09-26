@@ -5,54 +5,41 @@ package cognitoidp_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceServer cognitoidentityprovider.ResourceServerType
-	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
-	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
-	name2 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_resource_server.main"
+	var resourceServer awstypes.ResourceServerType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	identifier := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_resource_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceServerConfig_basic(identifier, name1, poolName),
+				Config: testAccResourceServerConfig_basic(identifier, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
-					resource.TestCheckResourceAttr(resourceName, "name", name1),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
-				),
-			},
-			{
-				Config: testAccResourceServerConfig_basic(identifier, name2, poolName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
-					resource.TestCheckResourceAttr(resourceName, "name", name2),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, identifier),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.Ct0),
 				),
 			},
 			{
@@ -64,34 +51,58 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
+func TestAccCognitoIDPResourceServer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceServer cognitoidentityprovider.ResourceServerType
-	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
-	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_resource_server.main"
+	var resourceServer awstypes.ResourceServerType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	identifier := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_resource_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceServerConfig_scope(identifier, name, poolName),
+				Config: testAccResourceServerConfig_basic(identifier, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceResourceServer(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceServer awstypes.ResourceServerType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	identifier := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_resource_server.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceServerConfig_scope(identifier, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.Ct2),
 				),
 			},
 			{
-				Config: testAccResourceServerConfig_scopeUpdate(identifier, name, poolName),
+				Config: testAccResourceServerConfig_scopeUpdate(identifier, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.Ct1),
 				),
 			},
 			{
@@ -101,49 +112,33 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 			},
 			// Ensure we can remove scope completely
 			{
-				Config: testAccResourceServerConfig_basic(identifier, name, poolName),
+				Config: testAccResourceServerConfig_basic(identifier, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.Ct0),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckResourceServerExists(ctx context.Context, n string, resourceServer *cognitoidentityprovider.ResourceServerType) resource.TestCheckFunc {
+func testAccCheckResourceServerExists(ctx context.Context, n string, v *awstypes.ResourceServerType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Cognito Resource Server ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
-
-		userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		output, err := conn.DescribeResourceServerWithContext(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
-			Identifier: aws.String(identifier),
-			UserPoolId: aws.String(userPoolID),
-		})
+		output, err := tfcognitoidp.FindResourceServerByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrIdentifier])
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.ResourceServer == nil {
-			return fmt.Errorf("Cognito Resource Server %q information not found", rs.Primary.ID)
-		}
-
-		*resourceServer = *output.ResourceServer
+		*v = *output
 
 		return nil
 	}
@@ -151,54 +146,49 @@ func testAccCheckResourceServerExists(ctx context.Context, n string, resourceSer
 
 func testAccCheckResourceServerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_resource_server" {
 				continue
 			}
 
-			userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
+			_, err := tfcognitoidp.FindResourceServerByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrIdentifier])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			_, err = conn.DescribeResourceServerWithContext(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
-				Identifier: aws.String(identifier),
-				UserPoolId: aws.String(userPoolID),
-			})
-
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-					return nil
-				}
-				return err
-			}
+			return fmt.Errorf("Cognito Resource Server %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccResourceServerConfig_basic(identifier string, name string, poolName string) string {
+func testAccResourceServerConfig_basic(identifier, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_resource_server" "main" {
-  identifier   = "%s"
-  name         = "%s"
-  user_pool_id = aws_cognito_user_pool.main.id
+resource "aws_cognito_resource_server" "test" {
+  identifier   = %[1]q
+  name         = %[2]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool" "main" {
-  name = "%s"
+resource "aws_cognito_user_pool" "test" {
+  name = %[2]q
 }
-`, identifier, name, poolName)
+`, identifier, rName)
 }
 
-func testAccResourceServerConfig_scope(identifier string, name string, poolName string) string {
+func testAccResourceServerConfig_scope(identifier, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_resource_server" "main" {
-  identifier = "%s"
-  name       = "%s"
+resource "aws_cognito_resource_server" "test" {
+  identifier = %[1]q
+  name       = %[2]q
 
   scope {
     scope_name        = "scope_1_name"
@@ -210,31 +200,31 @@ resource "aws_cognito_resource_server" "main" {
     scope_description = "scope_2_description"
   }
 
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool" "main" {
-  name = "%s"
+resource "aws_cognito_user_pool" "test" {
+  name = %[2]q
 }
-`, identifier, name, poolName)
+`, identifier, rName)
 }
 
-func testAccResourceServerConfig_scopeUpdate(identifier string, name string, poolName string) string {
+func testAccResourceServerConfig_scopeUpdate(identifier, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_resource_server" "main" {
-  identifier = "%s"
-  name       = "%s"
+resource "aws_cognito_resource_server" "test" {
+  identifier = %[1]q
+  name       = %[2]q
 
   scope {
     scope_name        = "scope_1_name_updated"
     scope_description = "scope_1_description"
   }
 
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool" "main" {
-  name = "%s"
+resource "aws_cognito_user_pool" "test" {
+  name = %[2]q
 }
-`, identifier, name, poolName)
+`, identifier, rName)
 }

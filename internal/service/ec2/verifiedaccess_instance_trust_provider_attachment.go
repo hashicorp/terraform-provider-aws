@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +21,7 @@ import (
 )
 
 // @SDKResource("aws_verifiedaccess_instance_trust_provider_attachment", name="Verified Access Instance Trust Provider Attachment")
-func ResourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
+func resourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceTrustProviderAttachmentCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceTrustProviderAttachmentRead,
@@ -52,16 +52,16 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 
 	vaiID := d.Get("verifiedaccess_instance_id").(string)
 	vatpID := d.Get("verifiedaccess_trust_provider_id").(string)
-	resourceID := VerifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID)
+	resourceID := verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID)
 	input := &ec2.AttachVerifiedAccessTrustProviderInput{
 		ClientToken:                   aws.String(id.UniqueId()),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	}
 
-	output, err := conn.AttachVerifiedAccessTrustProvider(ctx, input)
+	_, err := conn.AttachVerifiedAccessTrustProvider(ctx, input)
 
-	if err != nil || output == nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Instance Trust Provider Attachment (%s): %s", resourceID, err)
 	}
 
@@ -74,12 +74,12 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Conte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vaiID, vatpID, err := VerifiedAccessInstanceTrustProviderAttachmentParseResourceID(d.Id())
+	vaiID, vatpID, err := verifiedAccessInstanceTrustProviderAttachmentParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
+	err = findVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Trust Provider Attachment (%s) not found, removing from state", d.Id())
@@ -101,7 +101,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vaiID, vatpID, err := VerifiedAccessInstanceTrustProviderAttachmentParseResourceID(d.Id())
+	vaiID, vatpID, err := verifiedAccessInstanceTrustProviderAttachmentParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -113,7 +113,8 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) ||
+		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not attached to instance") {
 		return diags
 	}
 
@@ -126,14 +127,14 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 
 const verifiedAccessInstanceTrustProviderAttachmentResourceIDSeparator = "/"
 
-func VerifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID string) string {
+func verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID string) string {
 	parts := []string{vaiID, vatpID}
 	id := strings.Join(parts, verifiedAccessInstanceTrustProviderAttachmentResourceIDSeparator)
 
 	return id
 }
 
-func VerifiedAccessInstanceTrustProviderAttachmentParseResourceID(id string) (string, string, error) {
+func verifiedAccessInstanceTrustProviderAttachmentParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, verifiedAccessInstanceTrustProviderAttachmentResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

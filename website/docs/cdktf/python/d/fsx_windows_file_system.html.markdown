@@ -66,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_id` - The ID of the primary virtual private cloud (VPC) for the file system.
 * `weekly_maintenance_start_time` - The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
-<!-- cache-key: cdktf-0.19.0 input-7198016fdc5b76faa665d2e4a51c953549b6306de9af8ea688a7e3e2494a16d6 -->
+<!-- cache-key: cdktf-0.20.1 input-7198016fdc5b76faa665d2e4a51c953549b6306de9af8ea688a7e3e2494a16d6 -->

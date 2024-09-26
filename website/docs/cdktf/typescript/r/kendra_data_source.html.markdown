@@ -481,7 +481,7 @@ The following arguments are required:
 
 * `indexId` - (Required, Forces new resource) The identifier of the index for your Amazon Kendra data source.
 * `name` - (Required) A name for your data source connector.
-* `roleArn` - (Required, Optional in one scenario) The Amazon Resource Name (ARN) of a role with permission to access the data source connector. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html). You can't specify the `role_arn` parameter when the `type` parameter is set to `CUSTOM`. The `role_arn` parameter is required for all other data sources.
+* `roleArn` - (Required, Optional in one scenario) The Amazon Resource Name (ARN) of a role with permission to access the data source connector. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html). You can't specify the `roleArn` parameter when the `type` parameter is set to `CUSTOM`. The `roleArn` parameter is required for all other data sources.
 * `type` - (Required, Forces new resource) The type of data source repository. For an updated list of values, refer to [Valid Values for Type](https://docs.aws.amazon.com/kendra/latest/dg/API_CreateDataSource.html#Kendra-CreateDataSource-request-Type).
 
 The following arguments are optional:
@@ -491,7 +491,7 @@ The following arguments are optional:
 * `description` - (Optional) A description for the Data Source connector.
 * `languageCode` - (Optional) The code for a language. This allows you to support a language for all documents when creating the Data Source connector. English is supported by default. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
 * `schedule` - (Optional) Sets the frequency for Amazon Kendra to check the documents in your Data Source repository and update the index. If you don't set a schedule Amazon Kendra will not periodically update the index. You can call the `StartDataSourceSyncJob` API to update the index.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### configuration Block
 
@@ -521,7 +521,7 @@ The `accessControlListConfiguration` configuration block supports the following 
 
 The `documentsMetadataConfiguration` configuration block supports the following arguments:
 
-* `s3Prefix` - (Optional) A prefix used to filter metadata configuration files in the AWS S3 bucket. The S3 bucket might contain multiple metadata files. Use `s3_prefix` to include only the desired metadata files.
+* `s3Prefix` - (Optional) A prefix used to filter metadata configuration files in the AWS S3 bucket. The S3 bucket might contain multiple metadata files. Use `s3Prefix` to include only the desired metadata files.
 
 ### web_crawler_configuration Block
 
@@ -589,7 +589,7 @@ The `customDocumentEnrichmentConfiguration` configuration block supports the fol
 * `inlineConfigurations` - (Optional) Configuration information to alter document attributes or metadata fields and content when ingesting documents into Amazon Kendra. Minimum number of `0` items. Maximum number of `100` items. [Detailed below](#inline_configurations-block).
 * `postExtractionHookConfiguration` - (Optional) A block that specifies the configuration information for invoking a Lambda function in AWS Lambda on the structured documents with their metadata and text extracted. You can use a Lambda function to apply advanced logic for creating, modifying, or deleting document metadata and content. For more information, see [Advanced data manipulation](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#advanced-data-manipulation). [Detailed below](#pre_extraction_hook_configuration-and-post_extraction_hook_configuration-blocks).
 * `preExtractionHookConfiguration` - (Optional) Configuration information for invoking a Lambda function in AWS Lambda on the original or raw documents before extracting their metadata and text. You can use a Lambda function to apply advanced logic for creating, modifying, or deleting document metadata and content. For more information, see [Advanced data manipulation](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#advanced-data-manipulation). [Detailed below](#pre_extraction_hook_configuration-and-post_extraction_hook_configuration-blocks).
-* `roleArn` - (Optional) The Amazon Resource Name (ARN) of a role with permission to run `pre_extraction_hook_configuration` and `post_extraction_hook_configuration` for altering document metadata and content during the document ingestion process. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
+* `roleArn` - (Optional) The Amazon Resource Name (ARN) of a role with permission to run `preExtractionHookConfiguration` and `postExtractionHookConfiguration` for altering document metadata and content during the document ingestion process. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 
 ### inline_configurations Block
 
@@ -658,9 +658,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `dataSourceId` - The unique identifiers of the Data Source.
 * `errorMessage` - When the Status field value is `FAILED`, the ErrorMessage field contains a description of the error that caused the Data Source to fail.
 * `id` - The unique identifiers of the Data Source and index separated by a slash (`/`).
-* `status` - The current status of the Data Source. When the status is `ACTIVE` the Data Source is ready to use. When the status is `FAILED`, the `error_message` field contains the reason that the Data Source failed.
+* `status` - The current status of the Data Source. When the status is `ACTIVE` the Data Source is ready to use. When the status is `FAILED`, the `errorMessage` field contains the reason that the Data Source failed.
 * `updatedAt` - The Unix timestamp of when the Data Source was last updated.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -678,9 +678,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { KendraDataSource } from "./.gen/providers/aws/kendra-data-source";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    KendraDataSource.generateConfigForImport(
+      this,
+      "example",
+      "1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f"
+    );
   }
 }
 
@@ -692,4 +702,4 @@ Using `terraform import`, import Kendra Data Source using the unique identifiers
 % terraform import aws_kendra_data_source.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3d8d2a0a2fb5b1865ed53ffa27e14132c1841e03d807830e180030cfe38f2630 -->
+<!-- cache-key: cdktf-0.20.1 input-3d8d2a0a2fb5b1865ed53ffa27e14132c1841e03d807830e180030cfe38f2630 -->

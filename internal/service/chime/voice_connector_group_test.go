@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,7 +31,7 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,9 +39,9 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, "connector.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", acctest.Ct1),
 				),
 			},
 			{
@@ -65,7 +65,7 @@ func testAccVoiceConnectorGroup_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,15 +101,15 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, "connector.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorGroupConfig_updated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-updated-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-updated-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", acctest.Ct3),
 				),
 			},
 			{
@@ -196,7 +196,7 @@ func testAccCheckVoiceConnectorGroupDestroy(ctx context.Context) resource.TestCh
 				return tfchime.FindVoiceConnectorGroupByID(ctx, conn, rs.Primary.ID)
 			})
 
-			if tfresource.NotFound(err) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				continue
 			}
 

@@ -43,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Bucket ARNs.
 * `buckets` - Buckets names.
 
-<!-- cache-key: cdktf-0.19.0 input-03cc051377d3e56810bf0fa41f5b4edbdf60d4b31b9736a6a776b016266e00c9 -->
+<!-- cache-key: cdktf-0.20.1 input-03cc051377d3e56810bf0fa41f5b4edbdf60d4b31b9736a6a776b016266e00c9 -->

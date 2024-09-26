@@ -46,9 +46,9 @@ class MyConvertedCode extends TerraformStack {
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The ID for the custom key store.
-* `cloudhsmClusterId` - ID for the CloudHSM cluster that is associated with the custom key store.
+* `cloudhsm_cluster_id` - ID for the CloudHSM cluster that is associated with the custom key store.
 * `connectionState` - Indicates whether the custom key store is connected to its CloudHSM cluster.
 * `creationDate` - The date and time when the custom key store was created.
 * `trustAnchorCertificate` - The trust anchor certificate of the associated CloudHSM cluster.
 
-<!-- cache-key: cdktf-0.19.0 input-c99ed837841abb6fb88fc77efec11deea74fe80e9ca93d91eb217568414d6862 -->
+<!-- cache-key: cdktf-0.20.1 input-c99ed837841abb6fb88fc77efec11deea74fe80e9ca93d91eb217568414d6862 -->

@@ -6,21 +6,25 @@ package waf
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_waf_rate_based_rule")
-func DataSourceRateBasedRule() *schema.Resource {
+// @SDKDataSource("aws_waf_rate_based_rule", name="Rate Based Rule")
+func dataSourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRateBasedRuleRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -30,40 +34,53 @@ func DataSourceRateBasedRule() *schema.Resource {
 
 func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
-	name := d.Get("name").(string)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	rules := make([]*waf.RuleSummary, 0)
-	// ListRulesInput does not have a name parameter for filtering
+	name := d.Get(names.AttrName).(string)
 	input := &waf.ListRateBasedRulesInput{}
-	for {
-		output, err := conn.ListRateBasedRulesWithContext(ctx, input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading WAF Rate Based Rules: %s", err)
+	output, err := findRateBasedRule(ctx, conn, input, func(v *awstypes.RuleSummary) bool {
+		return aws.ToString(v.Name) == name
+	})
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Rate Based Rule", err))
+	}
+
+	d.SetId(aws.ToString(output.RuleId))
+
+	return diags
+}
+
+func findRateBasedRule(ctx context.Context, conn *waf.Client, input *waf.ListRateBasedRulesInput, filter tfslices.Predicate[*awstypes.RuleSummary]) (*awstypes.RuleSummary, error) {
+	output, err := findRateBasedRules(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRateBasedRules(ctx context.Context, conn *waf.Client, input *waf.ListRateBasedRulesInput, filter tfslices.Predicate[*awstypes.RuleSummary]) ([]awstypes.RuleSummary, error) {
+	var output []awstypes.RuleSummary
+
+	err := listRateBasedRulesPages(ctx, conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		for _, rule := range output.Rules {
-			if aws.StringValue(rule.Name) == name {
-				rules = append(rules, rule)
+
+		for _, v := range page.Rules {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 
-		if output.NextMarker == nil {
-			break
-		}
-		input.NextMarker = output.NextMarker
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	if len(rules) == 0 {
-		return sdkdiag.AppendErrorf(diags, "WAF Rate Based Rules not found for name: %s", name)
-	}
-
-	if len(rules) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple WAF Rate Based Rules found for name: %s", name)
-	}
-
-	rule := rules[0]
-
-	d.SetId(aws.StringValue(rule.RuleId))
-
-	return diags
+	return output, nil
 }

@@ -31,7 +31,7 @@ func testAccTemplateAssociation_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,7 +39,7 @@ func testAccTemplateAssociation_basic(t *testing.T) {
 				Config: testAccTemplateAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
 				),
 			},
 			{
@@ -62,7 +62,7 @@ func testAccTemplateAssociation_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +89,7 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 				Config: testAccTemplateAssociationConfig_skipDestroy(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 				Config: testAccTemplateAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
 				),
 			},
 		},

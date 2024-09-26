@@ -6,16 +6,18 @@ package networkmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_devices")
-func DataSourceDevices() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_devices", name="Devices")
+func dataSourceDevices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDevicesRead,
 
@@ -24,7 +26,7 @@ func DataSourceDevices() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -33,15 +35,17 @@ func DataSourceDevices() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
 func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetDevicesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -51,10 +55,10 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.SiteId = aws.String(v.(string))
 	}
 
-	output, err := FindDevices(ctx, conn, input)
+	output, err := findDevices(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Devices: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Devices: %s", err)
 	}
 
 	var deviceIDs []string
@@ -66,11 +70,11 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		deviceIDs = append(deviceIDs, aws.StringValue(v.DeviceId))
+		deviceIDs = append(deviceIDs, aws.ToString(v.DeviceId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", deviceIDs)
+	d.Set(names.AttrIDs, deviceIDs)
 
-	return nil
+	return diags
 }

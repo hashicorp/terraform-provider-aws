@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_verifiedpermissions_policy_template
+```

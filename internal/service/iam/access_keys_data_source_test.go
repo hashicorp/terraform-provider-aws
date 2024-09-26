@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
@@ -22,19 +22,19 @@ func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, iam.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IAM)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.create_date", resourceName, "create_date"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.access_key_id", resourceName, "id"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.status", resourceName, "status"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.access_key_id", resourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.status", resourceName, names.AttrStatus),
 				),
 			},
 		},
@@ -51,18 +51,18 @@ func TestAccIAMAccessKeysDataSource_twoKeys(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, iam.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IAM)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeysDataSourceConfig_twoKeys(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName1, "id"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName2, "id"),
+					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName1, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName2, names.AttrID),
 				),
 			},
 		},

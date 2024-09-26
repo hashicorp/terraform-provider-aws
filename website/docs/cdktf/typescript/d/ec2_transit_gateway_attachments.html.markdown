@@ -49,7 +49,9 @@ class MyConvertedCode extends TerraformStack {
       Token.asNumber(Fn.lengthOf(filtered.ids))
     );
     new DataAwsEc2TransitGatewayAttachment(this, "unit", {
-      id: Token.asString(Fn.lookupNested(filtered.ids, [unitCount.index])),
+      transitGatewayAttachmentId: Token.asString(
+        Fn.lookupNested(filtered.ids, [unitCount.index])
+      ),
       count: unitCount,
     });
   }
@@ -83,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-d711b87a1b40869313a118f25c07038992c92b0b5b1accc3b33147f75288e032 -->
+<!-- cache-key: cdktf-0.20.1 input-cd16802f1ecdf7f482b01637c96874b4a3a55f9b974342882ee05de793a81afc -->

@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availability_zones` - List of Availability Zone names where the Redshift Cluster is available.
 
-<!-- cache-key: cdktf-0.19.0 input-e0fdf3575794ac21787874dcbc817842b5e948d938752511869f169f7c1ca44e -->
+<!-- cache-key: cdktf-0.20.1 input-e0fdf3575794ac21787874dcbc817842b5e948d938752511869f169f7c1ca44e -->

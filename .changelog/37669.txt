@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_lambda_function: Fix issue when `source_code_hash` causes drift even if source code has not changed
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Add `code_sha256` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `code_sha256` attribute
+```
+
+```release-note:note
+data-source/aws_lambda_function: `source_code_hash` attribute has been deprecated in favor of `code_sha256`. Will be removed in a future major version
+```

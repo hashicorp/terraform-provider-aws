@@ -12,8 +12,8 @@ description: |-
 
 Provides a resource for managing the main routing table of a VPC.
 
-~> **NOTE:** **Do not** use both `awsDefaultRouteTable` to manage a default route table **and** `awsMainRouteTableAssociation` with the same VPC due to possible route conflicts. See [aws_default_route_table][tf-default-route-table] documentation for more details.
-For more information, see the Amazon VPC User Guide on [Route Tables][aws-route-tables]. For information about managing normal route tables in Terraform, see [`awsRouteTable`][tf-route-tables].
+~> **NOTE:** **Do not** use both `aws_default_route_table` to manage a default route table **and** `aws_main_route_table_association` with the same VPC due to possible route conflicts. See [aws_default_route_table][tf-default-route-table] documentation for more details.
+For more information, see the Amazon VPC User Guide on [Route Tables][aws-route-tables]. For information about managing normal route tables in Terraform, see [`aws_route_table`][tf-route-tables].
 
 ## Example Usage
 
@@ -57,10 +57,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 On VPC creation, the AWS API always creates an initial Main Route Table. This
 resource records the ID of that Route Table under `originalRouteTableId`.
-The "Delete" action for a `mainRouteTableAssociation` consists of resetting
+The "Delete" action for a `main_route_table_association` consists of resetting
 this original table as the Main Route Table for the VPC. You'll see this
 additional Route Table in the AWS console; it must remain intact in order for
-the `mainRouteTableAssociation` delete to work properly.
+the `main_route_table_association` delete to work properly.
 
 ## Timeouts
 
@@ -74,4 +74,4 @@ the `mainRouteTableAssociation` delete to work properly.
 [tf-route-tables]: /docs/providers/aws/r/route_table.html
 [tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
 
-<!-- cache-key: cdktf-0.19.0 input-85ce9464624a099dd063ef1f0d0569910365b562160b38d00d28cc7887154353 -->
+<!-- cache-key: cdktf-0.20.1 input-85ce9464624a099dd063ef1f0d0569910365b562160b38d00d28cc7887154353 -->

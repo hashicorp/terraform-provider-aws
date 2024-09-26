@@ -54,6 +54,8 @@ func ResourceLoadBalancerAttachment() *schema.Resource {
 }
 
 func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
 	req := lightsail.AttachInstancesToLoadBalancerInput{
@@ -64,7 +66,7 @@ func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.Resourc
 	out, err := conn.AttachInstancesToLoadBalancer(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeAttachInstancesToLoadBalancer), ResLoadBalancerAttachment, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeAttachInstancesToLoadBalancer), ResLoadBalancerAttachment, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, lbName)
@@ -81,10 +83,12 @@ func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(strings.Join(vars, ","))
 
-	return resourceLoadBalancerAttachmentRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerAttachmentById(ctx, conn, d.Id())
@@ -92,25 +96,27 @@ func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceD
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerAttachment, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerAttachment, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerAttachment, d.Id(), err)
 	}
 
 	d.Set("instance_name", out)
 	d.Set("lb_name", expandLoadBalancerNameFromId(d.Id()))
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	if len(id_parts) != 2 {
-		return nil
+		return diags
 	}
 
 	lbName := id_parts[0]
@@ -124,7 +130,7 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 	out, err := conn.DetachInstancesFromLoadBalancer(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeDetachInstancesFromLoadBalancer), ResLoadBalancerAttachment, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDetachInstancesFromLoadBalancer), ResLoadBalancerAttachment, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, lbName)
@@ -133,7 +139,7 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func expandLoadBalancerNameFromId(id string) string {

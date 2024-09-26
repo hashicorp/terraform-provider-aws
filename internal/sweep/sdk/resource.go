@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	awsretry "github.com/aws/aws-sdk-go-v2/aws/retry"
+	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"golang.org/x/exp/maps"
 )
 
 type sweepResource struct {
@@ -42,6 +42,11 @@ func newSweepResource(resource *schema.Resource, d *schema.ResourceData, meta *c
 func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	ctx = tflog.SetField(ctx, "id", sr.d.Id())
 
+	// TODO
+	// TODO Once all services have moved to AWS SDK for Go v2 I _think_ we can remove this
+	// TODO custom retry logic as the API clients have been configured to use Adaptive retry.
+	// TODO
+
 	jitter := time.Duration(rand.Int63n(int64(1*time.Second))) - 1*time.Second/2
 	defaultOpts := []tfresource.OptionsFunc{
 		tfresource.WithMinPollInterval(2*time.Second + jitter),
@@ -56,7 +61,7 @@ func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 			var throttled bool
 			// The throttling error codes defined by the AWS SDK for Go v2 are a superset of the
 			// codes defined by v1, so use the v2 codes here.
-			for _, code := range maps.Keys(awsretry.DefaultThrottleErrorCodes) {
+			for _, code := range maps.Keys(retry_sdkv2.DefaultThrottleErrorCodes) {
 				// The resource delete operation returns a diag.Diagnostics, so we have to do a
 				// string comparison instead of checking the error code of an actual error
 				if strings.Contains(err.Error(), code) {

@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `validFrom` - [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of certificate starting validity date.
 * `validTill` - [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of certificate ending validity date.
 
-<!-- cache-key: cdktf-0.19.0 input-11fac79b0d201c3f0e3fe5f7ce9e1273fd98f100c84dc2f6a4a3f5286bb6b1dd -->
+<!-- cache-key: cdktf-0.20.1 input-11fac79b0d201c3f0e3fe5f7ce9e1273fd98f100c84dc2f6a4a3f5286bb6b1dd -->

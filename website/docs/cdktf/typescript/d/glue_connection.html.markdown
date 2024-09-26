@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `physicalConnectionRequirements` - A map of physical connection requirements, such as VPC and SecurityGroup.
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.19.0 input-c3a54c13f6d1584c4b355be148ce4f3063077b22c8de52485229079b8245ad9c -->
+<!-- cache-key: cdktf-0.20.1 input-c3a54c13f6d1584c4b355be148ce4f3063077b22c8de52485229079b8245ad9c -->

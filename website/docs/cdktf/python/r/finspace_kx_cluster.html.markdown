@@ -86,6 +86,8 @@ The following arguments are required:
     * HDB - Historical Database. The data is only accessible with read-only permissions from one of the FinSpace managed KX databases mounted to the cluster.
     * RDB - Realtime Database. This type of database captures all the data from a ticker plant and stores it in memory until the end of day, after which it writes all of its data to a disk and reloads the HDB. This cluster type requires local storage for temporary storage of data during the savedown process. If you specify this field in your request, you must provide the `savedownStorageConfiguration` parameter.
     * GATEWAY - A gateway cluster allows you to access data across processes in kdb systems. It allows you to create your own routing logic using the initialization scripts and custom code. This type of cluster does not require a  writable local storage.
+    * GP - A general purpose cluster allows you to quickly iterate on code during development by granting greater access to system commands and enabling a fast reload of custom code. This cluster type can optionally mount databases including cache and savedown storage. For this cluster type, the node count is fixed at 1. It does not support autoscaling and supports only `SINGLE` AZ mode.
+    * Tickerplant – A tickerplant cluster allows you to subscribe to feed handlers based on IAM permissions. It can publish to RDBs, other Tickerplants, and real-time subscribers (RTS). Tickerplants can persist messages to log, which is readable by any RDB environment. It supports only single-node that is only one kdb process.
 * `vpc_configuration` - (Required) Configuration details about the network where the Privatelink endpoint of the cluster resides. See [vpc_configuration](#vpc_configuration).
 
 The following arguments are optional:
@@ -100,6 +102,8 @@ The following arguments are optional:
 * `execution_role` - (Optional) An IAM role that defines a set of permissions associated with a cluster. These permissions are assumed when a cluster attempts to access another cluster.
 * `initialization_script` - (Optional) Path to Q program that will be run at launch of a cluster. This is a relative path within .zip file that contains the custom code, which will be loaded on the cluster. It must include the file name itself. For example, somedir/init.q.
 * `savedown_storage_configuration` - (Optional) Size and type of the temporary storage that is used to hold data during the savedown process. This parameter is required when you choose `type` as RDB. All the data written to this storage space is lost when the cluster node is restarted. See [savedown_storage_configuration](#savedown_storage_configuration).
+* `scaling_group_configuration` - (Optional) The structure that stores the configuration details of a scaling group.
+* `tickerplant_log_configuration` - A configuration to store Tickerplant logs. It consists of a list of volumes that will be mounted to your cluster. For the cluster type Tickerplant , the location of the TP volume on the cluster will be available by using the global variable .aws.tp_log_path.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### auto_scaling_configuration
@@ -157,6 +161,7 @@ The database block supports the following arguments:
 * `database_name` - (Required) Name of the KX database.
 * `cache_configurations` - (Optional) Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
 * `changeset_id` - (Optional) A unique identifier of the changeset that is associated with the cluster.
+* `dataview_name` - (Optional) The name of the dataview to be used for caching historical data on disk. You cannot update to a different dataview name once a cluster is created. Use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for database to prevent any undesirable behaviors.
 
 #### cache_configurations
 
@@ -169,9 +174,10 @@ The cache_configuration block supports the following arguments:
 
 The savedown_storage_configuration block supports the following arguments:
 
-* `type` - (Required) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
+* `type` - (Optional) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
     * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
-* `size` - (Required) Size of temporary storage in gigabytes. Must be between 10 and 16000.
+* `size` - (Optional) Size of temporary storage in gigabytes. Must be between 10 and 16000.
+* `volume_name` - (Optional) The name of the kdb volume that you want to use as writeable save-down storage for clusters.
 
 ### vpc_configuration
 
@@ -181,6 +187,22 @@ The vpc_configuration block supports the following arguments:
 * `security_group_ids` - (Required) Unique identifier of the VPC security group applied to the VPC endpoint ENI for the cluster.
 * `subnet_ids `- (Required) Identifier of the subnet that the Privatelink VPC endpoint uses to connect to the cluster.
 * `ip_address_type` - (Required) IP address type for cluster network configuration parameters. The following type is available: IP_V4 - IP address version 4.
+
+### scaling_group_configuration
+
+The scaling_group_configuration block supports the following arguments:
+
+* `scaling_group_name` - (Required) A unique identifier for the kdb scaling group.
+* `memory_reservation` - (Required) A reservation of the minimum amount of memory that should be available on the scaling group for a kdb cluster to be successfully placed in a scaling group.
+* `node_count` - (Required) The number of kdb cluster nodes.
+* `cpu` - The number of vCPUs that you want to reserve for each node of this kdb cluster on the scaling group host.
+* `memory_limit` - An optional hard limit on the amount of memory a kdb cluster can use.
+
+### tickerplant_log_configuration
+
+The tickerplant_log_configuration block supports the following arguments:
+
+* tickerplant_log_volumes - (Required) The names of the volumes for tickerplant logs.
 
 ## Attribute Reference
 
@@ -208,9 +230,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.finspace_kx_cluster import FinspaceKxCluster
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        FinspaceKxCluster.generate_config_for_import(self, "example", "n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster")
 ```
 
 Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
@@ -219,4 +247,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a62354273cd0579ac96ba9caa797f616e648f46241c8907e9d1077a7877ab7f0 -->
+<!-- cache-key: cdktf-0.20.1 input-4129376a4ee4e8f5958bb47adc022144fea156388059eab78254408d842ef87a -->

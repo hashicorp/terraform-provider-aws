@@ -55,11 +55,11 @@ This data source exports the following attributes in addition to the arguments a
 * `executionRoleArn` - ARN of the IAM Role used to register the CloudFormation Type.
 * `isDefaultVersion` - Whether the CloudFormation Type version is the default version.
 * `loggingConfig` - List of objects containing logging configuration.
-    * `log_group_name` - Name of the CloudWatch Log Group where CloudFormation sends error logging information when invoking the type's handlers.
-    * `log_role_arn` - ARN of the IAM Role CloudFormation assumes when sending error logging information to CloudWatch Logs.
+    * `logGroupName` - Name of the CloudWatch Log Group where CloudFormation sends error logging information when invoking the type's handlers.
+    * `logRoleArn` - ARN of the IAM Role CloudFormation assumes when sending error logging information to CloudWatch Logs.
 * `provisioningType` - Provisioning behavior of the CloudFormation Type.
 * `schema` - JSON document of the CloudFormation Type schema.
 * `sourceUrl` - URL of the source code for the CloudFormation Type.
 * `visibility` - Scope of the CloudFormation Type.
 
-<!-- cache-key: cdktf-0.19.0 input-dbfea51aa26b3fcf5acdfa155004e8f1f27058ce9b62acf8eba0a37e7a8775f5 -->
+<!-- cache-key: cdktf-0.20.1 input-dbfea51aa26b3fcf5acdfa155004e8f1f27058ce9b62acf8eba0a37e7a8775f5 -->

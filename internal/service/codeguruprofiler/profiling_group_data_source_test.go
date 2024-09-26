@@ -30,7 +30,7 @@ func TestAccCodeGuruProfilerProfilingGroupDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,8 +38,8 @@ func TestAccCodeGuruProfilerProfilingGroupDataSource_basic(t *testing.T) {
 				Config: testAccProfilingGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, dataSourceName, &profilinggroup),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "compute_platform", resourceName, "compute_platform"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "agent_orchestration_config.0.profiling_enabled", resourceName, "agent_orchestration_config.0.profiling_enabled"),
 				),

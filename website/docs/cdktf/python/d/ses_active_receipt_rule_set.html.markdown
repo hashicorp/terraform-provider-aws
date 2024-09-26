@@ -36,4 +36,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - SES receipt rule set ARN.
 * `rule_set_name` - Name of the rule set
 
-<!-- cache-key: cdktf-0.19.0 input-7e5511881f5e55ae7c44bb058232594f1824f28cdd4358ee38cec88c0c71d14b -->
+<!-- cache-key: cdktf-0.20.1 input-7e5511881f5e55ae7c44bb058232594f1824f28cdd4358ee38cec88c0c71d14b -->

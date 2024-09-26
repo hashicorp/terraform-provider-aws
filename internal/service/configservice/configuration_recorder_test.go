@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,17 +16,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccConfigurationRecorder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationRecorderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,8 +35,8 @@ func testAccConfigurationRecorder_basic(t *testing.T) {
 				Config: testAccConfigurationRecorderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 			{
@@ -49,13 +50,13 @@ func testAccConfigurationRecorder_basic(t *testing.T) {
 
 func testAccConfigurationRecorder_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationRecorderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,13 +74,13 @@ func testAccConfigurationRecorder_disappears(t *testing.T) {
 
 func testAccConfigurationRecorder_allParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationRecorderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,12 +88,18 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 				Config: testAccConfigurationRecorderConfig_allParams(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.0.include_global_resource_types", "false"),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", "2"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.include_global_resource_types", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_frequency", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.recording_frequency", "CONTINUOUS"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.0", "AWS::EC2::Instance"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 		},
@@ -101,13 +108,13 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 
 func testAccConfigurationRecorder_recordStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationRecorderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,30 +122,26 @@ func testAccConfigurationRecorder_recordStrategy(t *testing.T) {
 				Config: testAccConfigurationRecorderConfig_recordStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.0.exclusion_by_resource_types.0.resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.exclusion_by_resource_types.0.resource_types.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.recording_strategy.0.use_only", "EXCLUSION_BY_RESOURCE_TYPES"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckConfigurationRecorderExists(ctx context.Context, n string, v *configservice.ConfigurationRecorder) resource.TestCheckFunc {
+func testAccCheckConfigurationRecorderExists(ctx context.Context, n string, v *types.ConfigurationRecorder) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ConfigService Configuration Recorder ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
 		output, err := tfconfig.FindConfigurationRecorderByName(ctx, conn, rs.Primary.ID)
 
@@ -154,7 +157,7 @@ func testAccCheckConfigurationRecorderExists(ctx context.Context, n string, v *c
 
 func testAccCheckConfigurationRecorderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_configuration_recorder_status" {
@@ -251,6 +254,15 @@ resource "aws_config_configuration_recorder" "test" {
     all_supported                 = false
     include_global_resource_types = false
     resource_types                = ["AWS::EC2::Instance", "AWS::CloudTrail::Trail"]
+  }
+
+  recording_mode {
+    recording_frequency = "DAILY"
+
+    recording_mode_override {
+      resource_types      = ["AWS::EC2::Instance"]
+      recording_frequency = "CONTINUOUS"
+    }
   }
 }
 

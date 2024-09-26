@@ -49,39 +49,39 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the service.
 * `arn` - ARN of the service.
 * `description` - Description of the service.
-* `dnsConfig` - Complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance.
-* `healthCheckConfig` - Complex type that contains settings for an optional health check. Only for Public DNS namespaces.
-* `healthCheckCustomConfig` -  A complex type that contains settings for ECS managed health checks.
-* `tags` - Map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tagsAll` - (**Deprecated**) Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `dnsConfig` - Complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance. See [`dnsConfig` Block](#dns_config-block) for details.
+* `healthCheckConfig` - Complex type that contains settings for an optional health check. Only for Public DNS namespaces. See [`healthCheckConfig` Block](#health_check_config-block) for details.
+* `healthCheckCustomConfig` -  A complex type that contains settings for ECS managed health checks. See [`healthCheckCustomConfig` Block](#health_check_custom_config-block) for details.
+* `tags` - Map of tags to assign to the service. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tagsAll` - (**Deprecated**) Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### dns_config
+### `dnsConfig` Block
 
-This argument supports the following arguments:
+The `dnsConfig` configuration block supports the following arguments:
 
 * `namespaceId` - ID of the namespace to use for DNS configuration.
-* `dnsRecords` - An array that contains one DnsRecord object for each resource record set.
+* `dnsRecords` - An array that contains one DnsRecord object for each resource record set. See [`dnsRecords` Block](#dns_records-block) for details.
 * `routingPolicy` - Routing policy that you want to apply to all records that Route 53 creates when you register an instance and specify the service. Valid Values: MULTIVALUE, WEIGHTED
 
-#### dns_records
+#### `dnsRecords` Block
 
-This argument supports the following arguments:
+The `dnsRecords` configuration block supports the following arguments:
 
 * `ttl` - Amount of time, in seconds, that you want DNS resolvers to cache the settings for this resource record set.
 * `type` - Type of the resource, which indicates the value that Amazon Route 53 returns in response to DNS queries. Valid Values: A, AAAA, SRV, CNAME
 
-### health_check_config
+### `healthCheckConfig` Block
 
-This argument supports the following arguments:
+The `healthCheckConfig` configuration block supports the following arguments:
 
 * `failureThreshold` - Number of consecutive health checks. Maximum value of 10.
 * `resourcePath` - Path that you want Route 53 to request when performing health checks. Route 53 automatically adds the DNS name for the service. If you don't specify a value, the default value is /.
 * `type` -  The type of health check that you want to create, which indicates how Route 53 determines whether an endpoint is healthy. Valid Values: HTTP, HTTPS, TCP
 
-### health_check_custom_config
+### `healthCheckCustomConfig` Block
 
-This argument supports the following arguments:
+The `healthCheckCustomConfig` configuration block supports the following arguments:
 
 * `failureThreshold` -  The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
 
-<!-- cache-key: cdktf-0.19.0 input-7f7cfd8f45e41436fd49818ccfcd8108e8b10153e1f88948ca383049b98272be -->
+<!-- cache-key: cdktf-0.20.1 input-ca4c3a8f65675cfbb78530e61a0b943f6407f2807372bf295786f7f517fe0f6e -->

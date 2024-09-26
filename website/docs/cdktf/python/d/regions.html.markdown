@@ -98,4 +98,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-regions.html
 
-<!-- cache-key: cdktf-0.19.0 input-729936980236c90d4bfd49d088a65b256dd691594554c0abd78aef71806ddd45 -->
+<!-- cache-key: cdktf-0.20.1 input-729936980236c90d4bfd49d088a65b256dd691594554c0abd78aef71806ddd45 -->

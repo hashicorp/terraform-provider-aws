@@ -114,23 +114,23 @@ class MyConvertedCode extends TerraformStack {
 Previously, the provider preferred credentials in the following order:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g., `awsAccessKeyId` or `AWS_PROFILE`)
-- Shared credentials file (e.g., `~/Aws/credentials`)
+- Environment variables (e.g., `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
+- Shared credentials file (e.g., `~/.aws/credentials`)
 - EC2 Instance Metadata Service
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS)
 
 The provider now prefers the following credential ordering:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g., `awsAccessKeyId` or `AWS_PROFILE`)
-- Shared credentials and/or configuration file (e.g., `~/Aws/credentials` and `~/.aws/config`)
+- Environment variables (e.g., `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
+- Shared credentials and/or configuration file (e.g., `~/.aws/credentials` and `~/.aws/config`)
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS, EC2 Instance Metadata Service)
 
-This means workarounds of disabling the EC2 Instance Metadata Service handling to enable CodeBuild/ECS/EKS credentials or to enable other credential methods such as `credentialProcess` in the AWS shared configuration are no longer necessary.
+This means workarounds of disabling the EC2 Instance Metadata Service handling to enable CodeBuild/ECS/EKS credentials or to enable other credential methods such as `credential_process` in the AWS shared configuration are no longer necessary.
 
 ### Shared Configuration File Automatically Enabled
 
-The `awsSdkLoadConfig` environment variable is no longer necessary for the provider to automatically load the AWS shared configuration file (e.g., `~/Aws/config`).
+The `AWS_SDK_LOAD_CONFIG` environment variable is no longer necessary for the provider to automatically load the AWS shared configuration file (e.g., `~/.aws/config`).
 
 ### Removal of AWS_METADATA_TIMEOUT Environment Variable Usage
 
@@ -355,14 +355,14 @@ Configuration that depend on the previous behavior will need to be updated.
 
 ### Removal of trailing period in domain_name argument
 
-Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `exampleCom`, the attribute now will be returned as `exampleCom`.
+Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Data Source: aws_route53_zone
 
 ### Removal of trailing period in name argument
 
-Previously the data-source returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `exampleCom`, the attribute now will be returned as `exampleCom`.
+Previously the data-source returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_acm_certificate
@@ -385,11 +385,11 @@ resources that the for_each depends on.
 
 The `domainValidationOptions` attribute is now a set type and the resource will attempt to populate the information necessary during the planning phase to handle the above situation in most environments without workarounds. This change also prevents Terraform from showing unexpected differences if the API returns the results in varying order.
 
-Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g., `domainValidationOptions[0]` or the older `domainValidationOptions0` syntax will return errors).
+Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g., `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors).
 If the `domainValidationOptions` list previously contained only a single element like the two examples just shown,
 it may be possible to wrap these references using the [`tolist()` function](https://www.terraform.io/docs/configuration/functions/tolist.html)
 <!-- markdownlint-disable-next-line no-reversed-links -->
-(e.g., `tolist(awsAcmCertificateExampleDomainValidationOptions)[0]`) as a quick configuration update.
+(e.g., `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update.
 However given the complexity and workarounds required with the previous `domainValidationOptions` attribute implementation,
 different environments will require different configuration updates and migration steps.
 Below is a more advanced example.
@@ -500,7 +500,7 @@ Error: Invalid index
 This value does not have any indices.
 ```
 
-Since the `domainValidationOptions` attribute changed from a list to a set and sets cannot be indexed in Terraform, the recommendation is to update the configuration to use the more stable [resource `forEach` support](https://www.terraform.io/docs/configuration/meta-arguments/for_each.html) instead of [`count`](https://www.terraform.io/docs/configuration/meta-arguments/count.html). Note the slight change in the `validationRecordFqdns` syntax as well.
+Since the `domainValidationOptions` attribute changed from a list to a set and sets cannot be indexed in Terraform, the recommendation is to update the configuration to use the more stable [resource `for_each` support](https://www.terraform.io/docs/configuration/meta-arguments/for_each.html) instead of [`count`](https://www.terraform.io/docs/configuration/meta-arguments/count.html). Note the slight change in the `validationRecordFqdns` syntax as well.
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -696,13 +696,13 @@ Terraform will perform the following actions:
 Plan: 5 to add, 0 to change, 5 to destroy.
 ```
 
-Due to the type of configuration change, Terraform does not know that the previous `awsRoute53Record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](https://www.terraform.io/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g., `[1]`) with the equivalent domain name index (e.g., `["existing2ExampleCom"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. We recommend using this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
+Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](https://www.terraform.io/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g., `[1]`) with the equivalent domain name index (e.g., `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. We recommend using this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
 
 If using `terraform state mv` to reduce the plan to show no changes, no additional steps are required.
 
-In larger or more complex environments though, this process can be tedius to match the old resource address to the new resource address and run all the necessary `terraform state mv` commands. Instead, since the `awsRoute53Record` resource implements the `allow_overwrite = true` argument, it is possible to just remove the old `awsRoute53Record` resources from the Terraform state using the [`terraform state rm` command](https://www.terraform.io/docs/commands/state/rm.html). In this case, Terraform will leave the existing records in Route 53 and plan to just overwrite the existing validation records with the same exact (previous) values.
+In larger or more complex environments though, this process can be tedius to match the old resource address to the new resource address and run all the necessary `terraform state mv` commands. Instead, since the `aws_route53_record` resource implements the `allow_overwrite = true` argument, it is possible to just remove the old `aws_route53_record` resources from the Terraform state using the [`terraform state rm` command](https://www.terraform.io/docs/commands/state/rm.html). In this case, Terraform will leave the existing records in Route 53 and plan to just overwrite the existing validation records with the same exact (previous) values.
 
--> This guide is showing the simpler `terraform state rm` option below as a potential shortcut in this specific situation, however in most other cases `terraform state mv` is required to change from `count` based resources to `forEach` based resources and properly match the existing Terraform state to the updated Terraform configuration.
+-> This guide is showing the simpler `terraform state rm` option below as a potential shortcut in this specific situation, however in most other cases `terraform state mv` is required to change from `count` based resources to `for_each` based resources and properly match the existing Terraform state to the updated Terraform configuration.
 
 ```console
 $ terraform state rm aws_route53_record.existing
@@ -713,7 +713,7 @@ Removed aws_route53_record.existing[3]
 Successfully removed 4 resource instance(s).
 ```
 
-Now the Terraform plan will show only the additions of new Route 53 records (which are exactly the same as before the upgrade) and the proposed recreation of the `awsAcmCertificateValidation` resource. The `awsAcmCertificateValidation` resource recreation will have no effect as the certificate is already validated and issued.
+Now the Terraform plan will show only the additions of new Route 53 records (which are exactly the same as before the upgrade) and the proposed recreation of the `aws_acm_certificate_validation` resource. The `aws_acm_certificate_validation` resource recreation will have no effect as the certificate is already validated and issued.
 
 ```
 An execution plan has been generated and is shown below.
@@ -1014,7 +1014,7 @@ Performing a plan against these resources will not cause any change in state, si
 
 ### subject_alternative_names Changed from List to Set
 
-Previously the `subjectAlternativeNames` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g., `awsAcmCertificateExampleSubjectAlternativeNames[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subjectAlternativeNames` as a reference, possible solutions include changing references to using `for`/`forEach` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
+Previously the `subjectAlternativeNames` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g., `aws_acm_certificate.example.subject_alternative_names[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subjectAlternativeNames` as a reference, possible solutions include changing references to using `for`/`for_each` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
 
 ### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
 
@@ -1024,7 +1024,7 @@ Previously when the `certificateBody`, `certificateChain`, and `privateKey` argu
 
 ### throttling_burst_limit and throttling_rate_limit Arguments Now Default to -1
 
-Previously when the `throttlingBurstLimit` or `throttlingRateLimit` argument was not configured, the resource would enable throttling and set the limit value to the AWS API Gateway default. In addition, as these arguments were marked as `computed`, Terraform ignored any subsequent changes made to these arguments in the resource. These behaviors have been removed and, by default, the `throttlingBurstLimit` and `throttlingRateLimit` arguments will be disabled in the resource with a value of `1`.
+Previously when the `throttlingBurstLimit` or `throttlingRateLimit` argument was not configured, the resource would enable throttling and set the limit value to the AWS API Gateway default. In addition, as these arguments were marked as `Computed`, Terraform ignored any subsequent changes made to these arguments in the resource. These behaviors have been removed and, by default, the `throttlingBurstLimit` and `throttlingRateLimit` arguments will be disabled in the resource with a value of `-1`.
 
 ## Resource: aws_autoscaling_group
 
@@ -1093,7 +1093,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-If `awsAutoscalingAttachment` resources reference your ASG configurations, you will need to add the [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with an `ignoreChanges` argument to prevent Terraform non-empty plans (i.e., forcing resource update) during the next state refresh.
+If `aws_autoscaling_attachment` resources reference your ASG configurations, you will need to add the [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with an `ignore_changes` argument to prevent Terraform non-empty plans (i.e., forcing resource update) during the next state refresh.
 
 For example, given this previous configuration:
 
@@ -1178,10 +1178,10 @@ class MyConvertedCode extends TerraformStack {
 
 ### active_trusted_signers Attribute Name and Type Change
 
-Previously, the `activeTrustedSigners` computed attribute was implemented with a Map that did not support accessing its computed `items` attribute in Terraform 0.12 correctly.
-To address this, the `activeTrustedSigners` attribute has been renamed to `trustedSigners` and is now implemented as a List with a computed `items` List attribute and computed `enabled` boolean attribute.
-The nested `items` attribute includes computed `awsAccountNumber` and `keyPairIds` sub-fields, with the latter implemented as a List.
-Thus, user configurations referencing the `activeTrustedSigners` attribute and its sub-fields will need to be changed as follows.
+Previously, the `active_trusted_signers` computed attribute was implemented with a Map that did not support accessing its computed `items` attribute in Terraform 0.12 correctly.
+To address this, the `active_trusted_signers` attribute has been renamed to `trustedSigners` and is now implemented as a List with a computed `items` List attribute and computed `enabled` boolean attribute.
+The nested `items` attribute includes computed `aws_account_number` and `key_pair_ids` sub-fields, with the latter implemented as a List.
+Thus, user configurations referencing the `active_trusted_signers` attribute and its sub-fields will need to be changed as follows.
 
 Given these previous references:
 
@@ -1201,7 +1201,7 @@ aws_cloudfront_distribution.example.trusted_signers[0].items
 
 ### Removal of arn Wildcard Suffix
 
-Previously, the resource returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the resource previously returned an ARN such as `arn:aws:logs:usEast1:123456789012:logGroup:/example:*` but will now return `arn:aws:logs:usEast1:123456789012:logGroup:/example`.
+Previously, the resource returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the resource previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
 
 Workarounds, such as using `replace()` as shown below, should be removed:
 
@@ -1309,7 +1309,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### GITHUB_TOKEN environment variable removal
 
-Switch your Terraform configuration to the `oAuthToken` element in the `action` `configuration` map instead.
+Switch your Terraform configuration to the `OAuthToken` element in the `action` `configuration` map instead.
 
 For example, given this previous configuration:
 
@@ -1425,7 +1425,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Removal of admin_create_user_config.unused_account_validity_days Argument
 
-The Cognito API previously deprecated the `adminCreateUserConfig` configuration block `unusedAccountValidityDays` argument in preference of the `passwordPolicy` configuration block `temporaryPasswordValidityDays` argument. Configurations will need to be updated to use the API supported configuration.
+The Cognito API previously deprecated the `adminCreateUserConfig` configuration block `unused_account_validity_days` argument in preference of the `passwordPolicy` configuration block `temporaryPasswordValidityDays` argument. Configurations will need to be updated to use the API supported configuration.
 
 For example, given this previous configuration:
 
@@ -1487,7 +1487,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Removal of Automatic aws_dx_gateway_association Import
 
-Previously when importing the `awsDxGateway` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `awsDxGatewayAssociation` resource(s) as well. This automatic resource import has been removed. Use the [`awsDxGatewayAssociation` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
+Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
 
 ## Resource: aws_dx_gateway_association
 
@@ -1762,7 +1762,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### instance_group Configuration Block Removal
 
-Switch your Terraform configuration to the `masterInstanceGroup` and `coreInstanceGroup` configuration blocks instead. For any task instance groups, use the `awsEmrInstanceGroup` resource.
+Switch your Terraform configuration to the `masterInstanceGroup` and `coreInstanceGroup` configuration blocks instead. For any task instance groups, use the `aws_emr_instance_group` resource.
 
 For example, given this previous configuration:
 
@@ -1923,7 +1923,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### allocated_capacity Argument Removal
 
-The Glue API has deprecated the `allocatedCapacity` argument. Switch your Terraform configuration to the `maxCapacity` argument instead.
+The Glue API has deprecated the `allocated_capacity` argument. Switch your Terraform configuration to the `maxCapacity` argument instead.
 
 For example, given this previous configuration:
 
@@ -1989,11 +1989,11 @@ class MyConvertedCode extends TerraformStack {
 
 ### ses_smtp_password Attribute Removal
 
-In many regions today and in all regions after October 1, 2020, the [SES API will only accept version 4 signatures](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/using-ses-api-authentication.html). If referencing the `sesSmtpPassword` attribute, switch your Terraform configuration to the `sesSmtpPasswordV4` attribute instead. Please note that this signature is based on the region of the Terraform AWS Provider. If you need the SES v4 password in multiple regions, it may require using [multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations).
+In many regions today and in all regions after October 1, 2020, the [SES API will only accept version 4 signatures](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/using-ses-api-authentication.html). If referencing the `ses_smtp_password` attribute, switch your Terraform configuration to the `sesSmtpPasswordV4` attribute instead. Please note that this signature is based on the region of the Terraform AWS Provider. If you need the SES v4 password in multiple regions, it may require using [multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations).
 
-Depending on when the `awsIamAccessKey` resource was created, it may not have a `sesSmtpPasswordV4` attribute for you to use. If this is the case you will need to [taint](/docs/commands/taint.html) the resource so that it can be recreated with the new value.
+Depending on when the `aws_iam_access_key` resource was created, it may not have a `sesSmtpPasswordV4` attribute for you to use. If this is the case you will need to [taint](/docs/commands/taint.html) the resource so that it can be recreated with the new value.
 
-Alternatively, you can stage the change by creating a new `awsIamAccessKey` resource and change any downstream dependencies to use the new `sesSmtpPasswordV4` attribute. Once dependents have been updated with the new resource you can remove the old one.
+Alternatively, you can stage the change by creating a new `aws_iam_access_key` resource and change any downstream dependencies to use the new `sesSmtpPasswordV4` attribute. Once dependents have been updated with the new resource you can remove the old one.
 
 ## Resource: aws_iam_instance_profile
 
@@ -2068,7 +2068,7 @@ Previously the resource import would always convert the `functionName` portion o
 
 ### network_interfaces.delete_on_termination Argument type change
 
-The `networkInterfacesDeleteOnTermination` argument is now of type `string`, allowing an unspecified value for the argument since the previous `bool` type only allowed for `true/false` and defaulted to `false` when no value was set. Now to enforce `deleteOnTermination` to `false`, the string `"false"` or bare `false` value must be used.
+The `network_interfaces.delete_on_termination` argument is now of type `string`, allowing an unspecified value for the argument since the previous `bool` type only allowed for `true/false` and defaulted to `false` when no value was set. Now to enforce `deleteOnTermination` to `false`, the string `"false"` or bare `false` value must be used.
 
 For example, given this previous configuration:
 
@@ -2199,7 +2199,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### encryption_info.encryption_in_transit.client_broker Default Updated to Match API
 
-A few weeks after general availability launch and initial release of the `awsMskCluster` resource, the MSK API default for client broker encryption switched from `tlsPlaintext` to `tls`. The attribute default has now been updated to match the more secure API default, however existing Terraform configurations may show a difference if this setting is not configured.
+A few weeks after general availability launch and initial release of the `aws_msk_cluster` resource, the MSK API default for client broker encryption switched from `TLS_PLAINTEXT` to `TLS`. The attribute default has now been updated to match the more secure API default, however existing Terraform configurations may show a difference if this setting is not configured.
 
 To continue using the old default when it was previously not configured, add or modify this configuration:
 
@@ -2247,25 +2247,25 @@ Previously when the `minCapacity` argument in a `scalingConfiguration` block was
 
 ### Removal of trailing period in domain_name argument
 
-Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `exampleCom`, the attribute now will be returned as `exampleCom`.
+Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_route53_zone
 
 ### Removal of trailing period in name argument
 
-Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `exampleCom`, the attribute now will be returned as `exampleCom`.
+Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_s3_bucket
 
 ### Removal of Automatic aws_s3_bucket_policy Import
 
-Previously when importing the `awsS3Bucket` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `awsS3BucketPolicy` resource as well. This automatic resource import has been removed. Use the [`awsS3BucketPolicy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
+Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
 
 ### region Attribute Is Now Read-Only
 
-The `region` attribute is no longer configurable, but it remains as a read-only attribute. The region of the `awsS3Bucket` resource is determined by the region of the Terraform AWS Provider, similar to all other resources.
+The `region` attribute is no longer configurable, but it remains as a read-only attribute. The region of the `aws_s3_bucket` resource is determined by the region of the Terraform AWS Provider, similar to all other resources.
 
 For example, given this previous configuration:
 
@@ -2374,19 +2374,19 @@ class MyConvertedCode extends TerraformStack {
 
 ### Removal of Automatic aws_security_group_rule Import
 
-Previously when importing the `awsSecurityGroup` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `awsSecurityGroupRule` resource(s) as well. This automatic resource import has been removed. Use the [`awsSecurityGroupRule` resource import](/docs/providers/aws/r/security_group_rule.html#import) to import those resources separately.
+Previously when importing the `aws_security_group` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_security_group_rule` resource(s) as well. This automatic resource import has been removed. Use the [`aws_security_group_rule` resource import](/docs/providers/aws/r/security_group_rule.html#import) to import those resources separately.
 
 ## Resource: aws_sns_platform_application
 
 ### platform_credential and platform_principal Arguments No Longer Stored as SHA256 Hash
 
-Previously when the `platformCredential` and `platformPrincipal` arguments were stored in state, they were stored as a SHA256 hash of the actual value. This prevented Terraform from properly updating the resource when necessary and the hashing has been removed. The Terraform AWS Provider will show an update to these arguments on the first apply after upgrading to version 3.0.0, which is fixing the Terraform state to remove the hash. Since the attributes are marked as sensitive, the values in the update will not be visible in the Terraform output. If the non-hashed values have not changed, then no update is occurring other than the Terraform state update. If these arguments are the only two updates and they both match the SHA256 removal, the apply will occur without submitting an actual `setPlatformApplicationAttributes` API call.
+Previously when the `platformCredential` and `platformPrincipal` arguments were stored in state, they were stored as a SHA256 hash of the actual value. This prevented Terraform from properly updating the resource when necessary and the hashing has been removed. The Terraform AWS Provider will show an update to these arguments on the first apply after upgrading to version 3.0.0, which is fixing the Terraform state to remove the hash. Since the attributes are marked as sensitive, the values in the update will not be visible in the Terraform output. If the non-hashed values have not changed, then no update is occurring other than the Terraform state update. If these arguments are the only two updates and they both match the SHA256 removal, the apply will occur without submitting an actual `SetPlatformApplicationAttributes` API call.
 
 ## Resource: aws_spot_fleet_request
 
 ### valid_until Argument No Longer Uses 24 Hour Default
 
-Previously when the `validUntil` argument was not configured, the resource would default to a 24 hour request. This behavior has been removed and allows for non-expiring requests. To recreate the old behavior, the [`timeOffset` resource](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/offset) can potentially be used.
+Previously when the `validUntil` argument was not configured, the resource would default to a 24 hour request. This behavior has been removed and allows for non-expiring requests. To recreate the old behavior, the [`time_offset` resource](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/offset) can potentially be used.
 
 ## Resource: aws_ssm_maintenance_window_task
 
@@ -2542,4 +2542,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-fedd1760b9754507e4a21a87fc167b34be2073f23cf84a5f4c3f209428295c89 -->
+<!-- cache-key: cdktf-0.20.1 input-fedd1760b9754507e4a21a87fc167b34be2073f23cf84a5f4c3f209428295c89 -->

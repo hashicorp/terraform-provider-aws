@@ -4,25 +4,24 @@
 package codebuild
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"fmt"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_codebuild_webhook")
-func ResourceWebhook() *schema.Resource {
+// @SDKResource("aws_codebuild_webhook", name="Webhook")
+func resourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,
 		ReadWithoutTimeout:   resourceWebhookRead,
@@ -34,36 +33,26 @@ func ResourceWebhook() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"project_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"build_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(codebuild.WebhookBuildType_Values(), false),
-			},
 			"branch_filter": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"filter_group"},
+			},
+			"build_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.WebhookBuildType](),
 			},
 			"filter_group": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(codebuild.WebhookFilterType_Values(), false),
-									},
 									"exclude_matched_pattern": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -73,24 +62,55 @@ func ResourceWebhook() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.WebhookFilterType](),
+									},
 								},
 							},
 						},
 					},
 				},
-				Set:           resourceWebhookFilterHash,
 				ConflictsWith: []string{"branch_filter"},
 			},
 			"payload_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"scope_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrDomain: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrScope: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.WebhookScopeType](),
+						},
+					},
+				},
+			},
 			"secret": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,150 +120,97 @@ func ResourceWebhook() *schema.Resource {
 
 func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
+	projectName := d.Get("project_name").(string)
 	input := &codebuild.CreateWebhookInput{
-		ProjectName:  aws.String(d.Get("project_name").(string)),
-		FilterGroups: expandWebhookFilterGroups(d),
+		ProjectName: aws.String(projectName),
 	}
 
-	if v, ok := d.GetOk("build_type"); ok {
-		input.BuildType = aws.String(v.(string))
-	}
-
-	// The CodeBuild API requires this to be non-empty if defined
 	if v, ok := d.GetOk("branch_filter"); ok {
 		input.BranchFilter = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateWebhookWithContext(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeBuild Webhook: %s", err)
+	if v, ok := d.GetOk("build_type"); ok {
+		input.BuildType = types.WebhookBuildType(v.(string))
 	}
 
-	// Secret is only returned on create, so capture it at the start
-	d.Set("secret", resp.Webhook.Secret)
-	d.SetId(d.Get("project_name").(string))
+	if v, ok := d.GetOk("filter_group"); ok && v.(*schema.Set).Len() > 0 {
+		input.FilterGroups = expandWebhookFilterGroups(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("scope_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.ScopeConfiguration = expandScopeConfiguration(v.([]interface{}))
+	}
+
+	output, err := conn.CreateWebhook(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating CodeBuild Webhook (%s): %s", projectName, err)
+	}
+
+	d.SetId(projectName)
+	// Secret is only returned on create.
+	d.Set("secret", output.Webhook.Secret)
 
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func expandWebhookFilterGroups(d *schema.ResourceData) [][]*codebuild.WebhookFilter {
-	configs := d.Get("filter_group").(*schema.Set).List()
-
-	webhookFilters := make([][]*codebuild.WebhookFilter, 0)
-
-	if len(configs) == 0 {
-		return nil
-	}
-
-	for _, config := range configs {
-		filters := expandWebhookFilterData(config.(map[string]interface{}))
-		webhookFilters = append(webhookFilters, filters)
-	}
-
-	return webhookFilters
-}
-
-func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFilter {
-	filters := make([]*codebuild.WebhookFilter, 0)
-
-	filterConfigs := data["filter"].([]interface{})
-
-	for i, filterConfig := range filterConfigs {
-		filter := filterConfig.(map[string]interface{})
-		filters = append(filters, &codebuild.WebhookFilter{
-			Type:                  aws.String(filter["type"].(string)),
-			ExcludeMatchedPattern: aws.Bool(filter["exclude_matched_pattern"].(bool)),
-		})
-		if v := filter["pattern"]; v != nil {
-			filters[i].Pattern = aws.String(v.(string))
-		}
-	}
-
-	return filters
-}
-
 func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	resp, err := conn.BatchGetProjectsWithContext(ctx, &codebuild.BatchGetProjectsInput{
-		Names: []*string{
-			aws.String(d.Id()),
-		},
-	})
+	webhook, err := findWebhookByProjectName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CodeBuild Webhook (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Webhook (%s): %s", d.Id(), err)
 	}
 
-	if d.IsNewResource() && len(resp.Projects) == 0 {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
+	d.Set("build_type", webhook.BuildType)
+	d.Set("branch_filter", webhook.BranchFilter)
+	if err := d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting filter_group: %s", err)
 	}
-
-	if !d.IsNewResource() && len(resp.Projects) == 0 {
-		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
-		d.SetId("")
-		return diags
+	d.Set("payload_url", webhook.PayloadUrl)
+	d.Set("project_name", d.Id())
+	if err := d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scope_configuration: %s", err)
 	}
-
-	project := resp.Projects[0]
-
-	if d.IsNewResource() && project.Webhook == nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
-	}
-
-	if !d.IsNewResource() && project.Webhook == nil {
-		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	d.Set("build_type", project.Webhook.BuildType)
-	d.Set("branch_filter", project.Webhook.BranchFilter)
-	d.Set("filter_group", flattenWebhookFilterGroups(project.Webhook.FilterGroups))
-	d.Set("payload_url", project.Webhook.PayloadUrl)
-	d.Set("project_name", project.Name)
-	d.Set("url", project.Webhook.Url)
-	// The secret is never returned after creation, so don't set it here
+	d.Set("secret", d.Get("secret").(string))
+	d.Set(names.AttrURL, webhook.Url)
 
 	return diags
 }
 
 func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	var err error
-	filterGroups := expandWebhookFilterGroups(d)
+	input := &codebuild.UpdateWebhookInput{
+		ProjectName: aws.String(d.Id()),
+	}
 
-	var buildType *string
 	if v, ok := d.GetOk("build_type"); ok {
-		buildType = aws.String(v.(string))
+		input.BuildType = types.WebhookBuildType(v.(string))
 	}
 
-	if len(filterGroups) >= 1 {
-		_, err = conn.UpdateWebhookWithContext(ctx, &codebuild.UpdateWebhookInput{
-			ProjectName:  aws.String(d.Id()),
-			BuildType:    buildType,
-			FilterGroups: filterGroups,
-			RotateSecret: aws.Bool(false),
-		})
-	} else {
-		_, err = conn.UpdateWebhookWithContext(ctx, &codebuild.UpdateWebhookInput{
-			ProjectName:  aws.String(d.Id()),
-			BuildType:    buildType,
-			BranchFilter: aws.String(d.Get("branch_filter").(string)),
-			RotateSecret: aws.Bool(false),
-		})
+	var filterGroups [][]types.WebhookFilter
+	if v, ok := d.GetOk("filter_group"); ok && v.(*schema.Set).Len() > 0 {
+		filterGroups = expandWebhookFilterGroups(v.(*schema.Set).List())
 	}
+	if len(filterGroups) > 0 {
+		input.FilterGroups = filterGroups
+	} else {
+		input.BranchFilter = aws.String(d.Get("branch_filter").(string))
+	}
+
+	_, err := conn.UpdateWebhook(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CodeBuild Webhook (%s): %s", d.Id(), err)
@@ -254,62 +221,185 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	_, err := conn.DeleteWebhookWithContext(ctx, &codebuild.DeleteWebhookInput{
+	log.Printf("[INFO] Deleting CodeBuild Webhook: %s", d.Id())
+	_, err := conn.DeleteWebhook(ctx, &codebuild.DeleteWebhookInput{
 		ProjectName: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Webhook (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func flattenWebhookFilterGroups(filterList [][]*codebuild.WebhookFilter) *schema.Set {
-	filterSet := schema.Set{
-		F: resourceWebhookFilterHash,
+func findWebhookByProjectName(ctx context.Context, conn *codebuild.Client, name string) (*types.Webhook, error) {
+	output, err := findProjectByNameOrARN(ctx, conn, name)
+
+	if err != nil {
+		return nil, err
 	}
 
-	for _, filters := range filterList {
-		filterSet.Add(flattenWebhookFilterData(filters))
+	if output.Webhook == nil {
+		return nil, tfresource.NewEmptyResultError(name)
 	}
-	return &filterSet
+
+	return output.Webhook, nil
 }
 
-func resourceWebhookFilterHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
+	if len(tfList) == 0 {
+		return nil
+	}
 
-	for _, g := range m {
-		for _, f := range g.([]interface{}) {
-			r := f.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s-", r["type"].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", r["pattern"].(string)))
-			buf.WriteString(fmt.Sprintf("%q", r["exclude_matched_pattern"]))
+	var apiObjects [][]types.WebhookFilter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
+			apiObjects = append(apiObjects, expandWebhookFilters(v))
 		}
 	}
 
-	return create.StringHashcode(buf.String())
+	return apiObjects
 }
 
-func flattenWebhookFilterData(filters []*codebuild.WebhookFilter) map[string]interface{} {
-	values := map[string]interface{}{}
-	ff := make([]interface{}, 0)
-
-	for _, f := range filters {
-		ff = append(ff, map[string]interface{}{
-			"type":                    *f.Type,
-			"pattern":                 *f.Pattern,
-			"exclude_matched_pattern": *f.ExcludeMatchedPattern,
-		})
+func expandWebhookFilters(tfList []interface{}) []types.WebhookFilter {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	values["filter"] = ff
+	var apiObjects []types.WebhookFilter
 
-	return values
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := expandWebhookFilter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.WebhookFilter{}
+
+	if v, ok := tfMap["exclude_matched_pattern"].(bool); ok {
+		apiObject.ExcludeMatchedPattern = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["pattern"].(string); ok && v != "" {
+		apiObject.Pattern = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = types.WebhookFilterType(v)
+	}
+
+	return apiObject
+}
+
+func expandScopeConfiguration(tfList []interface{}) *types.ScopeConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &types.ScopeConfiguration{
+		Name:  aws.String(tfMap[names.AttrName].(string)),
+		Scope: types.WebhookScopeType(tfMap[names.AttrScope].(string)),
+	}
+
+	if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
+		apiObject.Domain = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrFilter: flattenWebhookFilters(apiObject),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenWebhookFilters(apiObjects []types.WebhookFilter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenWebhookFilter(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} {
+	tfMap := map[string]interface{}{
+		names.AttrType: apiObject.Type,
+	}
+
+	if v := apiObject.ExcludeMatchedPattern; v != nil {
+		tfMap["exclude_matched_pattern"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.Pattern; v != nil {
+		tfMap["pattern"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrName:  apiObject.Name,
+		names.AttrScope: apiObject.Scope,
+	}
+
+	if apiObject.Domain != nil {
+		tfMap[names.AttrDomain] = apiObject.Domain
+	}
+
+	return []interface{}{tfMap}
 }

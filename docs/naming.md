@@ -2,7 +2,7 @@
 
 ## Service Identifier
 
-In the AWS Provider, a service identifier should consistently identify an AWS service from code to documentation to provider use by a practitioner. Prominent places you will see service identifiers:
+In the AWS Provider, a service identifier should consistently identify an AWS service from code to documentation to provider used by a practitioner. Prominent places you will see service identifiers:
 
 * The package name (e.g., `internal/service/<serviceidentifier>`)
 * In resource and data source names (e.g., `aws_<serviceidentifier>_thing`)
@@ -51,10 +51,10 @@ When creating a new resource or data source, it is important to get names right.
 1. Follow the [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2). Almost always, the API operations make determining the name simple. For example, the [Amazon CloudWatch Evidently](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/evidently) service includes `CreateExperiment`, `GetExperiment`, `UpdateExperiment`, and `DeleteExperiment`. Thus, the resource (or data source) name is "Experiment."
 2. Give a resource its Terraform configuration (i.e., HCL) name (e.g., `aws_imagebuilder_image_pipeline`) by joining these three parts with underscores:
     * `aws` prefix
-    * [Service identifier](#service-identifier) (service identifiers do not include underscores), all lower case (e.g., `imagebuilder`)
-    * Resource (or data source) name in snake case (spaces replaced with underscores, if any), all lower case (e.g., `image_pipeline`)
-3. Name the main resource function `Resource<ResourceName>()`, with the resource name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `ResourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline.go`.
-4. Similarly, name the main data source function `DataSource<ResourceName>()`, with the data source name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `DataSourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline_data_source.go`.
+    * [Service identifier](#service-identifier) (service identifiers do not include underscores), all lowercase (e.g., `imagebuilder`)
+    * Resource (or data source) name in snake case (spaces replaced with underscores, if any), all lowercase (e.g., `image_pipeline`)
+3. Name the main resource function `Resource<ResourceName>()`, with the resource name in [Mixed Caps](#mixed-caps). Do not include the service name or identifier. For example, define `ResourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline.go`.
+4. Similarly, name the main data source function `DataSource<ResourceName>()`, with the data source name in [Mixed Caps](#mixed-caps). Do not include the service name or identifier. For example, define `DataSourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline_data_source.go`.
 
 ## Files
 
@@ -80,19 +80,20 @@ A correct example is `accessanalyzer_analyzer.html.markdown`. An incorrect examp
 6. Use the `.go` extension.
 7. Idiomatic names for common non-resource, non-data-source files include `consts.go` (service-wide constants), `find.go` (finders), `flex.go` (FLatteners and EXpanders), `generate.go` (directives for code generation), `id.go` (ID creators and parsers), `status.go` (status functions), `sweep.go` (sweepers), `tags_gen.go` (generated tag code), `validate.go` (validators), and `wait.go` (waiters).
 
-## MixedCaps
+## Mixed Caps
 
-Write multiword names in Go using _MixedCaps_ (or _mixedCaps_) rather than underscores.
+!!! note
+    Mixed Caps is different than camel case, Pascal case, or snake case!
+
+Idiomatic Go uses [_Mixed Caps_](https://go.dev/wiki/CodeReviewComments#initialisms) for multiword names in code. Mixed caps is similar to camel case except **initialisms and abbreviations in mixed caps should be the correct, human-readable case**, such as `VPCEndpoint` not `VpcEndpoint`. After all, names in code _are for humans_.
+
+An acronym such as "VPC" should either be all capitalized ("VPC") or all lowercase ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."
 
 For more details on capitalizations we enforce with CI Semgrep tests, see the [Caps List](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md).
 
-Initialisms and other abbreviations are a key difference between many camel/Pascal case interpretations and mixedCaps. **Abbreviations in mixedCaps should be the correct, human-readable case.** After all, names in code _are for humans_. (The mixedCaps convention aligns with HashiCorp's emphasis on pragmatism and beauty.)
-
-For example, an initialism such as "VPC" should either be all capitalized ("VPC") or all lower case ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."
-
 ### Rule
 
-1. Use _mixedCaps_ for function, type, method, variable, and constant names in the Terraform AWS Provider Go code.
+1. Use _mixedCaps_ for names (such as for functions, types, methods, variables, and constants) in the Terraform AWS Provider Go code.
 
 ## Functions
 
@@ -101,7 +102,7 @@ In general, follow Go best practices for good function naming. This rule is for 
 ### Rule
 
 1. Only export functions (capitalize) when necessary, i.e., when the function is used outside the current package, including in the `_test` (`.test`) package.
-2. Use [MixedCaps](#mixedcaps) (exported) or [mixedCaps](#mixedcaps) (not exported). Do not use underscores for multiwords.
+2. Use [MixedCaps](#mixed-caps) (exported) or [mixedCaps](#mixed-caps) (not exported). Do not use underscores for multiwords.
 3. Do not include the service name in the function name. (If functions are used outside the current package, the import package clarifies a function's origin. For example, the EC2 function `FindVPCEndpointByID()` is used outside the `internal/service/ec2` package but where it is used, the call is `tfec2.FindVPCEndpointByID()`.)
 4. For CRUD functions for resources, use this format: `resource<ResourceName><CRUDFunction>`. For example, `resourceImageRecipeUpdate()`, `resourceBaiduChannelRead()`.
 5. For data sources, for Read functions, use this format: `dataSource<DataSourceName>Read`. For example, `dataSourceBrokerRead()`, `dataSourceEngineVersionRead()`.
@@ -115,7 +116,7 @@ In general, follow Go best practices for good variable and constant naming.
 ### Rule
 
 1. Only export variables and constants (capitalize) when necessary, i.e., the variable or constant is used outside the current package, including in the `_test` (`.test`) package.
-2. Use [MixedCaps](#mixedcaps) (exported) or [mixedCaps](#mixedcaps) (not exported). Do not use underscores for multiwords.
+2. Use [MixedCaps](#mixed-caps) (exported) or [mixedCaps](#mixed-caps) (not exported). Do not use underscores for multiwords.
 3. Do not include the service name in variable or constant names. (If variables or constants are used outside the current package, the import package clarifies its origin. For example, IAM's `PropagationTimeout` is widely used outside of IAM but each instance is through the package import alias, `tfiam.PropagationTimeout`. "IAM" is unnecessary in the constant name.)
 4. To improve readability, consider including the resource name in variable and constant names that pertain only to that resource. For example, for a string constant for a "Role" resource and a "not found" status, use `roleStatusNotFound` or `RoleStatusNotFound`, if used outside the service's package.
 5. Do not include "AWS" or "Aws" in the name.
@@ -133,20 +134,20 @@ There are three types of tests in the AWS Provider: (regular) acceptance tests, 
 
 Acceptance test names have a minimum of two (e.g., `TestAccBackupPlan_tags`) or a maximum of three (e.g., `TestAccDynamoDBTable_Replica_multiple`) parts, joined with underscores:
 
-1. First part: All have a _prefix_ (i.e., `TestAcc`), _service name_ (e.g., `Backup`, `DynamoDB`), and _resource name_ (e.g., `Plan`, `Table`), [MixedCaps](#mixedcaps) without underscores between. Do not include "AWS" or "Aws" in the name.
-2. Middle part (Optional): _Test group_ (e.g., `Replica`), uppercase, [MixedCaps](#mixedcaps). Consider a metaphor where tests are chapters in a book. If it is helpful, tests can be grouped together like chapters in a book that are sometimes grouped into parts or sections of the book.
-3. Last part: _Test identifier_ (e.g., `basic`, `tags`, or `multiple`), lowercase, [mixedCaps](#mixedcaps)). The identifier should make the test's purpose clear but be concise. For example, the identifier `conflictsWithCloudFrontDefaultCertificate` (41 characters) conveys no more information than `conflictDefaultCertificate` (26 characters), since "CloudFront" is implied and "with" is _always_ implicit. Avoid words that convey no meaning or whose meaning is implied. For example, "with" (e.g., `_withTags`) is not needed because we imply the name is telling us what the test is _with_. `withTags` can be simplified to `tags`.
+1. First part: All have a _prefix_ (i.e., `TestAcc`), _service name_ (e.g., `Backup`, `DynamoDB`), and _resource name_ (e.g., `Plan`, `Table`), [Mixed Caps](#mixed-caps) without underscores between. Do not include "AWS" or "Aws" in the name.
+2. Middle part (Optional): _Test group_ (e.g., `Replica`), uppercase, [Mixed Caps](#mixed-caps). Consider a metaphor where tests are chapters in a book. If it is helpful, tests can be grouped together like chapters in a book that are sometimes grouped into parts or sections of the book.
+3. Last part: _Test identifier_ (e.g., `basic`, `tags`, or `multiple`), lowercase, [mixedCaps](#mixed-caps)). The identifier should make the test's purpose clear but be concise. For example, the identifier `conflictsWithCloudFrontDefaultCertificate` (41 characters) conveys no more information than `conflictDefaultCertificate` (26 characters), since "CloudFront" is implied and "with" is _always_ implicit. Avoid words that convey no meaning or whose meaning is implied. For example, "with" (e.g., `_withTags`) is not needed because we imply the name is telling us what the test is _with_. `withTags` can be simplified to `tags`.
 
 ### Serialized Acceptance Test Rule
 
-The names of serialized acceptance tests follow the regular [acceptance test name rule](#acceptance-test-rule) **_except_** serialized acceptance test names:
+The names of serialized acceptance tests follow the regular [acceptance test name rule](#acceptance-test-rule) **_except_** for serialized acceptance test names:
 
 1. Start with `testAcc` instead of `TestAcc`
 2. Do not include the name of the service (e.g., a serialized acceptance test would be called `testAccApp_basic` not `testAccAmplifyApp_basic`).
 
 ### Unit Test Rule
 
-Unit test names follow the same [rule](#acceptance-test-rule) as acceptance test names except unit test names:
+Unit test names follow the same [rule](#acceptance-test-rule) as acceptance test names except for unit test names:
 
 1. Start with `Test`, not `TestAcc`
 2. Do not include the name of the service
@@ -160,7 +161,7 @@ This rule is for functions defined in the _test_ context (i.e., in a file ending
 ### Rule
 
 1. Only export functions (capitalize) when necessary, i.e., when the function is used outside the current package. _This is very rare._
-2. Use [MixedCaps](#mixedcaps) (exported) or [mixedCaps](#mixedcaps) (not exported). Do not use underscores for multiwords.
+2. Use [MixedCaps](#mixed-caps) (exported) or [mixedCaps](#mixed-caps) (not exported). Do not use underscores for multiwords.
 3. Do not include the service name in the function name. For example, `testAccCheckAMPWorkspaceExists()` should be named `testAccCheckWorkspaceExists()` instead, dropping the service name.
 4. Several types of support functions occur commonly and should follow these patterns:
     * Destroy: `testAccCheck<Resource>Destroy`
@@ -181,7 +182,7 @@ This rule is for functions defined in the _test_ context (i.e., in a file ending
 ### Rule
 
 1. Only export functions (capitalize) when necessary, i.e., when the function is used outside the current package. _This is very rare._
-2. Use [MixedCaps](#mixedcaps) (exported) or [mixedCaps](#mixedcaps) (not exported). Do not use underscores for multiwords.
+2. Use [MixedCaps](#mixed-caps) (exported) or [mixedCaps](#mixed-caps) (not exported). Do not use underscores for multiwords.
 3. Do not include the service name in the function name.
 4. Follow this pattern: `testAccConfig<Resource>_<TestGroup>_<configDescription>`
     * `_<TestGroup>` is optional. Refer to the [Acceptance Test Rule](#acceptance-test-rule) test group discussion.

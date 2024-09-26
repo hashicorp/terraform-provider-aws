@@ -86,17 +86,17 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - EC2 Transit Gateway Multicast Domain identifier.
 * `arn` - EC2 Transit Gateway Multicast Domain ARN.
 * `associations` - EC2 Transit Gateway Multicast Domain Associations
-    * `subnet_id` - The ID of the subnet associated with the transit gateway multicast domain.
-    * `transit_gateway_attachment_id` - The ID of the transit gateway attachment.
+    * `subnetId` - The ID of the subnet associated with the transit gateway multicast domain.
+    * `transitGatewayAttachmentId` - The ID of the transit gateway attachment.
 * `autoAcceptSharedAssociations` - Whether to automatically accept cross-account subnet associations that are associated with the EC2 Transit Gateway Multicast Domain.
 * `igmpv2Support` - Whether to enable Internet Group Management Protocol (IGMP) version 2 for the EC2 Transit Gateway Multicast Domain.
 * `members` - EC2 Multicast Domain Group Members
-    * `group_ip_address` - The IP address assigned to the transit gateway multicast group.
-    * `network_interface_id` - The group members' network interface ID.
+    * `groupIpAddress` - The IP address assigned to the transit gateway multicast group.
+    * `networkInterfaceId` - The group members' network interface ID.
 * `ownerId` - Identifier of the AWS account that owns the EC2 Transit Gateway Multicast Domain.
 * `sources` - EC2 Multicast Domain Group Sources
-    * `group_ip_address` - The IP address assigned to the transit gateway multicast group.
-    * `network_interface_id` - The group members' network interface ID.
+    * `groupIpAddress` - The IP address assigned to the transit gateway multicast group.
+    * `networkInterfaceId` - The group members' network interface ID.
 * `staticSourcesSupport` - Whether to enable support for statically configuring multicast group sources for the EC2 Transit Gateway Multicast Domain.
 * `tags` - Key-value tags for the EC2 Transit Gateway Multicast Domain.
 * `transitGatewayId` - EC2 Transit Gateway identifier.
@@ -107,4 +107,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-854de9a7e77b920dc2a59508efed1e997a904be759a67e383d582356d4c4d937 -->
+<!-- cache-key: cdktf-0.20.1 input-854de9a7e77b920dc2a59508efed1e997a904be759a67e383d582356d4c4d937 -->

@@ -63,7 +63,7 @@ func ResourceConfiguredTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,12 +82,12 @@ func ResourceConfiguredTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -124,7 +124,7 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 
 	analysisMethod, err := expandAnalysisMethod(d.Get("analysis_method").(string))
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get(names.AttrName).(string), err)
 	}
 	input.AnalysisMethod = analysisMethod
 
@@ -134,11 +134,11 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 
 	out, err := conn.CreateConfiguredTable(ctx, input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.ConfiguredTable == nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 	d.SetId(aws.ToString(out.ConfiguredTable.Id))
 
@@ -168,7 +168,7 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrDescription, configuredTable.Description)
 	d.Set("allowed_columns", configuredTable.AllowedColumns)
 	d.Set("analysis_method", configuredTable.AnalysisMethod)
-	d.Set("create_time", configuredTable.CreateTime.String())
+	d.Set(names.AttrCreateTime, configuredTable.CreateTime.String())
 	d.Set("update_time", configuredTable.UpdateTime.String())
 
 	if err := d.Set("table_reference", flattenTableReference(configuredTable.TableReference)); err != nil {
@@ -182,7 +182,7 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cleanrooms.UpdateConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(d.Id()),
 		}
@@ -259,8 +259,8 @@ func expandTableReference(data []interface{}) types.TableReference {
 	tableReference := data[0].(map[string]interface{})
 	return &types.TableReferenceMemberGlue{
 		Value: types.GlueTableReference{
-			DatabaseName: aws.String(tableReference["database_name"].(string)),
-			TableName:    aws.String(tableReference["table_name"].(string)),
+			DatabaseName: aws.String(tableReference[names.AttrDatabaseName].(string)),
+			TableName:    aws.String(tableReference[names.AttrTableName].(string)),
 		},
 	}
 }
@@ -269,8 +269,8 @@ func flattenTableReference(tableReference types.TableReference) []interface{} {
 	switch v := tableReference.(type) {
 	case *types.TableReferenceMemberGlue:
 		m := map[string]interface{}{
-			"database_name": v.Value.DatabaseName,
-			"table_name":    v.Value.TableName,
+			names.AttrDatabaseName: v.Value.DatabaseName,
+			names.AttrTableName:    v.Value.TableName,
 		}
 		return []interface{}{m}
 	default:

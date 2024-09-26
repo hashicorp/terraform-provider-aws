@@ -27,7 +27,7 @@ func TestAccS3BucketObjectLockConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,9 +36,9 @@ func TestAccS3BucketObjectLockConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
 				),
 			},
@@ -58,7 +58,7 @@ func TestAccS3BucketObjectLockConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +81,7 @@ func TestAccS3BucketObjectLockConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,9 +95,9 @@ func TestAccS3BucketObjectLockConfiguration_update(t *testing.T) {
 				Config: testAccBucketObjectLockConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.years", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.years", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeGovernance)),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,11 +126,11 @@ func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", acctest.Ct3),
 				),
 			},
 			{
@@ -138,9 +138,9 @@ func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
 				),
 			},
@@ -156,7 +156,7 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -164,9 +164,9 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", acctest.Ct0),
 				),
 			},
 			{
@@ -174,9 +174,9 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
 				),
 			},
@@ -191,7 +191,7 @@ func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -200,7 +200,7 @@ func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
 				),
 			},
 			{
@@ -218,7 +218,7 @@ func TestAccS3BucketObjectLockConfiguration_directoryBucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

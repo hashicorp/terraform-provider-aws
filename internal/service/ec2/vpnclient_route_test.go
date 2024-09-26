@@ -8,27 +8,32 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccClientVPNRoute_basic(t *testing.T) {
+func testAccClientVPNRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnRoute
+	var v awstypes.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,12 +41,12 @@ func testAccClientVPNRoute_basic(t *testing.T) {
 				Config: testAccClientVPNRouteConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "origin", "add-route"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_vpc_subnet_id", subnetResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "type", "Nat"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_vpc_subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Nat"),
 				),
 			},
 			{
@@ -53,15 +58,18 @@ func testAccClientVPNRoute_basic(t *testing.T) {
 	})
 }
 
-func testAccClientVPNRoute_disappears(t *testing.T) {
+func testAccClientVPNRoute_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnRoute
+	var v awstypes.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,15 +85,18 @@ func testAccClientVPNRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccClientVPNRoute_description(t *testing.T) {
+func testAccClientVPNRoute_description(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnRoute
+	var v awstypes.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +104,7 @@ func testAccClientVPNRoute_description(t *testing.T) {
 				Config: testAccClientVPNRouteConfig_description(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "test client VPN route"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test client VPN route"),
 				),
 			},
 			{
@@ -107,20 +118,14 @@ func testAccClientVPNRoute_description(t *testing.T) {
 
 func testAccCheckClientVPNRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_client_vpn_route" {
 				continue
 			}
 
-			endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+			_, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_vpc_subnet_id"], rs.Primary.Attributes["destination_cidr_block"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -137,26 +142,16 @@ func testAccCheckClientVPNRouteDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *ec2.ClientVpnRoute) resource.TestCheckFunc {
+func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *awstypes.ClientVpnRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Client VPN Route ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_vpc_subnet_id"], rs.Primary.Attributes["destination_cidr_block"])
 
 		if err != nil {
 			return err

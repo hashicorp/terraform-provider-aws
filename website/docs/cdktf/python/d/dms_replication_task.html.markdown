@@ -60,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `target_endpoint_arn` - The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
 * `replication_task_arn` - The Amazon Resource Name (ARN) for the replication task.
 
-<!-- cache-key: cdktf-0.19.0 input-fa1a1915aa39f86d68f0c890bf2884e184e4111a8bb8bbe6b38fd7c6c992b063 -->
+<!-- cache-key: cdktf-0.20.1 input-fa1a1915aa39f86d68f0c890bf2884e184e4111a8bb8bbe6b38fd7c6c992b063 -->

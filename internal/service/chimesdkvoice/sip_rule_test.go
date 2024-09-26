@@ -30,7 +30,7 @@ func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSipRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,11 +38,11 @@ func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
 				Config: testAccSipRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.sip_media_application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.aws_region"),
 				),
@@ -67,7 +67,7 @@ func TestAccChimeSDKVoiceSipRule_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSipRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +95,7 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSipRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,11 +103,11 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 				Config: testAccSipRuleConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.sip_media_application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.aws_region"),
 				),
@@ -116,8 +116,8 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 				Config: testAccSipRuleConfig_update(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtTrue),
 				),
 			},
 			{

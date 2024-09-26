@@ -29,6 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new Cloud9EnvironmentEc2(this, "example", {
+      imageId: "amazonlinux-2023-x86_64",
       instanceType: "t2.micro",
       name: "example-env",
     });
@@ -50,6 +51,7 @@ import { TerraformOutput, TerraformStack } from "cdktf";
 import { Cloud9EnvironmentEc2 } from "./.gen/providers/aws/cloud9-environment-ec2";
 import { DataAwsInstance } from "./.gen/providers/aws/data-aws-instance";
 interface MyConfig {
+  imageId: any;
   name: any;
 }
 class MyConvertedCode extends TerraformStack {
@@ -57,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     const example = new Cloud9EnvironmentEc2(this, "example", {
       instanceType: "t2.micro",
+      imageId: config.imageId,
       name: config.name,
     });
     new DataAwsInstance(this, "cloud9_instance", {
@@ -94,6 +97,7 @@ import { Cloud9EnvironmentEc2 } from "./.gen/providers/aws/cloud9-environment-ec
 import { DataAwsInstance } from "./.gen/providers/aws/data-aws-instance";
 import { Eip } from "./.gen/providers/aws/eip";
 interface MyConfig {
+  imageId: any;
   name: any;
 }
 class MyConvertedCode extends TerraformStack {
@@ -101,6 +105,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     const example = new Cloud9EnvironmentEc2(this, "example", {
       instanceType: "t2.micro",
+      imageId: config.imageId,
       name: config.name,
     });
     const cloud9Instance = new DataAwsInstance(this, "cloud9_instance", {
@@ -129,22 +134,21 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of the environment.
 * `instanceType` - (Required) The type of instance to connect to the environment, e.g., `t2.micro`.
+* `imageId` - (Required) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
+    * `amazonlinux-2-x86_64`
+    * `amazonlinux-2023-x86_64`
+    * `ubuntu-18.04-x86_64`
+    * `ubuntu-22.04-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64`
 * `automaticStopTimeMinutes` - (Optional) The number of minutes until the running instance is shut down after the environment has last been used.
 * `connectionType` - (Optional) The connection type used for connecting to an Amazon EC2 environment. Valid values are `CONNECT_SSH` and `CONNECT_SSM`. For more information please refer [AWS documentation for Cloud9](https://docs.aws.amazon.com/cloud9/latest/user-guide/ec2-ssm.html).
 * `description` - (Optional) The description of the environment.
-* `imageId` - (Optional) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
-    * `amazonlinux-1-x86_64`
-    * `amazonlinux-2-x86_64`
-    * `ubuntu-18.04-x86_64`
-    * `ubuntu-22.04-x86_64`
-    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64`
-    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
-    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`
-    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64`
-
 * `ownerArn` - (Optional) The ARN of the environment owner. This can be ARN of any AWS IAM principal. Defaults to the environment's creator.
 * `subnetId` - (Optional) The ID of the subnet in Amazon VPC that AWS Cloud9 will use to communicate with the Amazon EC2 instance.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -152,7 +156,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the environment.
 * `arn` - The ARN of the environment.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `type` - The type of the environment (e.g., `ssh` or `ec2`)
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `type` - The type of the environment (e.g., `ssh` or `ec2`).
 
-<!-- cache-key: cdktf-0.19.0 input-0a7b7bb4db1f7b69891ee6f0c3a4d079fd3d0b45f3d6b81be48656fbea075db1 -->
+<!-- cache-key: cdktf-0.20.1 input-bf29aa87e91680d6409c49045f078211230a30d2b90d0276e519038e29cdc43b -->

@@ -50,5 +50,6 @@ This data source exports the following attributes in addition to the arguments a
 * `image_pushed_at` - Date and time, expressed as a unix timestamp, at which the current image was pushed to the repository.
 * `image_size_in_bytes` - Size, in bytes, of the image in the repository.
 * `image_tags` - List of tags associated with this image.
+* `image_uri` - The URI for the specific image version specified by `image_tag` or `image_digest`.
 
-<!-- cache-key: cdktf-0.19.0 input-eb75c0a7672b4cf7c02f9b64096974ed3f209abe2c9c03438c3aa07107bc2b28 -->
+<!-- cache-key: cdktf-0.20.1 input-1ae226f49a1f55e1a08caebd09db34fd57e8439bed838a6ae5cb76a75f4bb2a9 -->

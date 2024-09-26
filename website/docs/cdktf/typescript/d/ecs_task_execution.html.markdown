@@ -12,7 +12,7 @@ description: |-
 
 Terraform data source for managing an AWS ECS (Elastic Container) Task Execution. This data source calls the [RunTask](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) API, allowing execution of one-time tasks that don't fit a standard resource lifecycle. See the [feature request issue](https://github.com/hashicorp/terraform-provider-aws/issues/1703) for additional context.
 
-~> **NOTE on plan operations:** This data source calls the `runTask` API on every read operation, which means new task(s) may be created from a `terraform plan` command if all attributes are known. Placing this functionality behind a data source is an intentional trade off to enable use cases requiring a one-time task execution without relying on [provisioners](https://developer.hashicorp.com/terraform/language/resources/provisioners/syntax). Caution should be taken to ensure the data source is only executed once, or that the resulting tasks can safely run in parallel.
+~> **NOTE on plan operations:** This data source calls the `RunTask` API on every read operation, which means new task(s) may be created from a `terraform plan` command if all attributes are known. Placing this functionality behind a data source is an intentional trade off to enable use cases requiring a one-time task execution without relying on [provisioners](https://developer.hashicorp.com/terraform/language/resources/provisioners/syntax). Caution should be taken to ensure the data source is only executed once, or that the resulting tasks can safely run in parallel.
 
 ## Example Usage
 
@@ -56,6 +56,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `capacityProviderStrategy` - (Optional) Set of capacity provider strategies to use for the cluster. See below.
+* `clientToken` - (Optional) An identifier that you provide to ensure the idempotency of the request. It must be unique and is case sensitive. Up to 64 characters are allowed. The valid characters are characters in the range of 33-126, inclusive. For more information, see [Ensuring idempotency](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html).
 * `desiredCount` - (Optional) Number of instantiations of the specified task to place on your cluster. You can specify up to 10 tasks for each call.
 * `enableEcsManagedTags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enableExecuteCommand` - (Optional) Specifies whether to enable Amazon ECS Exec for the tasks within the service.
@@ -69,7 +70,7 @@ The following arguments are optional:
 * `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags aren't propagated. An error will be received if you specify the `SERVICE` option when running a task. Valid values are `TASK_DEFINITION` or `NONE`.
 * `referenceId` - (Optional) The reference ID to use for the task.
 * `startedBy` - (Optional) An optional tag specified when a task is started.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### capacity_provider_strategy
 
@@ -136,6 +137,6 @@ For more information, see the [Placement Strategy](https://docs.aws.amazon.com/A
 This data source exports the following attributes in addition to the arguments above:
 
 * `taskArns` - A list of the provisioned task ARNs.
-* `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `task_definition` attributes.
+* `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `taskDefinition` attributes.
 
-<!-- cache-key: cdktf-0.19.0 input-43e278c1402adce6a7fc73f884efc857a1ca139e84ad68f7ea78a5f8b607b74c -->
+<!-- cache-key: cdktf-0.20.1 input-e4a4f9cc9f61093c0b25b3b6303b804642909347d59647c613ab6248c6e8f762 -->

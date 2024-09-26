@@ -58,7 +58,7 @@ resource "aws_vpc" "example" {
 The following arguments are required:
 
 * `bucket` - (Required) Name of an AWS Partition S3 General Purpose Bucket or the ARN of S3 on Outposts Bucket that you want to associate this access point with.
-* `name` - (Required) Name you want to assign to this access point.
+* `name` - (Required) Name you want to assign to this access point. See the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-access-points.html?icmpid=docs_amazons3_console#access-points-names) for naming conditions.
 
 The following arguments are optional:
 

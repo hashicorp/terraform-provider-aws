@@ -54,6 +54,7 @@ This data source exports the following attributes in addition to the arguments a
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `security_groups` - List of associated Security Group IDS.
 * `associate_public_ip_address` - Whether a Public IP address is associated with the instance.
+* `primary_ipv6` - Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `user_data` - User Data of the instance.
 * `enable_monitoring` - Whether Detailed Monitoring is Enabled.
 * `ebs_optimized` - Whether the launched EC2 instance will be EBS-optimized.
@@ -89,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 * `device_name` - Name of the device.
 * `virtual_name` - Virtual Name of the device.
 
-<!-- cache-key: cdktf-0.19.0 input-e1cd93bfea359bae7e967acc82a26e1a08ef38531f91dbee6e143392ac081f6b -->
+<!-- cache-key: cdktf-0.20.1 input-0f7904ad6942115d54298c7ae804e89f82902ce14639bff2f34ee2ea3c0c7e22 -->

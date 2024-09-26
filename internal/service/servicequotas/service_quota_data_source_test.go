@@ -21,24 +21,24 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
-			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_code(setQuotaServiceCode, setQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
-					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "5"),
+					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", "VPCs per Region"),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", setQuotaServiceCode),
-					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Virtual Private Cloud (Amazon VPC)"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon Virtual Private Cloud (Amazon VPC)"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", acctest.Ct0),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -53,25 +53,25 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
-			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaUnset(ctx, t, unsetQuotaServiceCode, unsetQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_code(unsetQuotaServiceCode, unsetQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexache.MustCompile(`^\d+$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
+					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDefaultValue, regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", unsetQuotaServiceCode),
-					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Simple Storage Service (Amazon S3)"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon Simple Storage Service (Amazon S3)"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", acctest.Ct0),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrValue, dataSourceName, names.AttrDefaultValue),
 				),
 			},
 		},
@@ -86,32 +86,32 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_hasUsageMetric(t *test
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
-			preCheckServiceQuotaHasUsageMetric(ctx, hasUsageMetricServiceCode, hasUsageMetricQuotaCode, t)
+			testAccPreCheckServiceQuotaHasUsageMetric(ctx, t, hasUsageMetricServiceCode, hasUsageMetricQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_code(hasUsageMetricServiceCode, hasUsageMetricQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "500"),
-					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
+					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "500"),
+					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", hasUsageMetricQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", hasUsageMetricQuotaName),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", hasUsageMetricServiceCode),
-					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon EC2 Auto Scaling"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon EC2 Auto Scaling"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_namespace", "AWS/Usage"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_name", "ResourceCount"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_statistic_recommendation", "Maximum"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.service", "AutoScaling"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.class", "None"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.type", "Resource"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.resource", "NumberOfAutoScalingGroup"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -126,7 +126,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *tes
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -146,24 +146,24 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
-			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
-					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "5"),
+					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", setQuotaQuotaName),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", setQuotaServiceCode),
-					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Virtual Private Cloud (Amazon VPC)"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon Virtual Private Cloud (Amazon VPC)"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", acctest.Ct0),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -178,25 +178,25 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
-			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaUnset(ctx, t, unsetQuotaServiceCode, unsetQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_name(unsetQuotaServiceCode, unsetQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexache.MustCompile(`^\d+$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
+					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDefaultValue, regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", unsetQuotaServiceCode),
-					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Simple Storage Service (Amazon S3)"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon Simple Storage Service (Amazon S3)"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", acctest.Ct0),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrValue, dataSourceName, names.AttrDefaultValue),
 				),
 			},
 		},
@@ -211,32 +211,32 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_hasUsageMetric(t *test
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
-			preCheckServiceQuotaHasUsageMetric(ctx, hasUsageMetricServiceCode, hasUsageMetricQuotaCode, t)
+			testAccPreCheckServiceQuotaHasUsageMetric(ctx, t, hasUsageMetricServiceCode, hasUsageMetricQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_name(hasUsageMetricServiceCode, hasUsageMetricQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "500"),
-					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
+					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "500"),
+					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", hasUsageMetricQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", hasUsageMetricQuotaName),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", hasUsageMetricServiceCode),
-					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon EC2 Auto Scaling"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon EC2 Auto Scaling"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_namespace", "AWS/Usage"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_name", "ResourceCount"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_statistic_recommendation", "Maximum"),
-					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.service", "AutoScaling"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.class", "None"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.type", "Resource"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.resource", "NumberOfAutoScalingGroup"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -251,7 +251,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaName(t *tes
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

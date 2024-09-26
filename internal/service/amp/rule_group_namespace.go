@@ -5,20 +5,28 @@ package amp
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/amp"
+	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_prometheus_rule_group_namespace")
-func ResourceRuleGroupNamespace() *schema.Resource {
+// @SDKResource("aws_prometheus_rule_group_namespace", name="Rule Group Namespace")
+func resourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,
 		ReadWithoutTimeout:   resourceRuleGroupNamespaceRead,
@@ -34,7 +42,7 @@ func ResourceRuleGroupNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,24 +58,23 @@ func ResourceRuleGroupNamespace() *schema.Resource {
 
 func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
-	name := d.Get("name").(string)
-	input := &prometheusservice.CreateRuleGroupsNamespaceInput{
+	name := d.Get(names.AttrName).(string)
+	input := &amp.CreateRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
 		Name:        aws.String(name),
 		WorkspaceId: aws.String(workspaceID),
 	}
 
-	output, err := conn.CreateRuleGroupsNamespaceWithContext(ctx, input)
+	output, err := conn.CreateRuleGroupsNamespace(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Prometheus Rule Group Namespace (%s) for Workspace (%s): %s", name, workspaceID, err)
 	}
 
-	d.SetId(aws.StringValue(output.Arn))
+	d.SetId(aws.ToString(output.Arn))
 
 	if _, err := waitRuleGroupNamespaceCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Rule Group Namespace (%s) create: %s", d.Id(), err)
@@ -78,10 +85,9 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
-
-	rgn, err := FindRuleGroupNamespaceByARN(ctx, conn, d.Id())
+	rgn, err := findRuleGroupNamespaceByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Prometheus Rule Group Namespace (%s) not found, removing from state", d.Id())
@@ -94,7 +100,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("data", string(rgn.Data))
-	d.Set("name", rgn.Name)
+	d.Set(names.AttrName, rgn.Name)
 	_, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -106,16 +112,15 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
-
-	input := &prometheusservice.PutRuleGroupsNamespaceInput{
+	input := &amp.PutRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	}
 
-	_, err := conn.PutRuleGroupsNamespaceWithContext(ctx, input)
+	_, err := conn.PutRuleGroupsNamespace(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
@@ -130,16 +135,15 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Rule Group Namespace: (%s)", d.Id())
-	_, err := conn.DeleteRuleGroupsNamespaceWithContext(ctx, &prometheusservice.DeleteRuleGroupsNamespaceInput{
-		Name:        aws.String(d.Get("name").(string)),
+	_, err := conn.DeleteRuleGroupsNamespace(ctx, &amp.DeleteRuleGroupsNamespaceInput{
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -152,4 +156,128 @@ func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func nameAndWorkspaceIDFromRuleGroupNamespaceARN(v string) (string, string, error) {
+	p, err := arn.Parse(v)
+	if err != nil {
+		return "", "", err
+	}
+
+	v = p.Resource
+	parts := strings.Split(v, "/")
+
+	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedserviceforprometheus.html#amazonmanagedserviceforprometheus-resources-for-iam-policies.
+	if len(parts) == 3 && parts[0] == "rulegroupsnamespace" && parts[1] != "" && parts[2] != "" {
+		return parts[2], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for resource (%[1]s), expected rulegroupsnamespace/${WorkspaceId}/${Namespace}", v)
+}
+
+func findRuleGroupNamespaceByARN(ctx context.Context, conn *amp.Client, arn string) (*types.RuleGroupsNamespaceDescription, error) {
+	name, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(arn)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &amp.DescribeRuleGroupsNamespaceInput{
+		Name:        aws.String(name),
+		WorkspaceId: aws.String(workspaceID),
+	}
+
+	output, err := conn.DescribeRuleGroupsNamespace(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RuleGroupsNamespace == nil || output.RuleGroupsNamespace.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RuleGroupsNamespace, nil
+}
+
+func statusRuleGroupNamespace(ctx context.Context, conn *amp.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findRuleGroupNamespaceByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.StatusCode), nil
+	}
+}
+
+func waitRuleGroupNamespaceCreated(ctx context.Context, conn *amp.Client, id string) (*types.RuleGroupsNamespaceDescription, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.RuleGroupsNamespaceStatusCodeCreating),
+		Target:  enum.Slice(types.RuleGroupsNamespaceStatusCodeActive),
+		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.RuleGroupsNamespaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *amp.Client, id string) (*types.RuleGroupsNamespaceDescription, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.RuleGroupsNamespaceStatusCodeUpdating),
+		Target:  enum.Slice(types.RuleGroupsNamespaceStatusCodeActive),
+		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.RuleGroupsNamespaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *amp.Client, id string) (*types.RuleGroupsNamespaceDescription, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.RuleGroupsNamespaceStatusCodeDeleting),
+		Target:  []string{},
+		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.RuleGroupsNamespaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }

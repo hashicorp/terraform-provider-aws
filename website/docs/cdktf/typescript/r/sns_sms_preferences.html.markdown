@@ -47,4 +47,8 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.19.0 input-fb3841d6bcaa58c6f6663ac36ae2dd4fc2b84b493c3c7984f840593cb184fb68 -->
+## Import
+
+You cannot import the SMS preferences.
+
+<!-- cache-key: cdktf-0.20.1 input-c9ad3078f177ccfd459ba9334afc0c999a4f52d7b82418030d49752612261341 -->

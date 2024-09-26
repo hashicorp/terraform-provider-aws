@@ -93,33 +93,33 @@ One or more of the following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the firewall.
-* `deleteProtection` - Boolean flag indicating whether it is possible to delete the firewall.
+* `deleteProtection` - A flag indicating whether the firewall is protected against deletion.
 * `description` - Description of the firewall.
 * `encryptionConfiguration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
-    * `key_id` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
+    * `keyId` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
     * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
 * `firewallPolicyArn` - ARN of the VPC Firewall policy.
-* `firewallPolicyChangeProtection` - A boolean flag indicating whether it is possible to change the associated firewall policy.
+* `firewallPolicyChangeProtection` - A flag indicating whether the firewall is protected against a change to the firewall policy association.
 * `firewallStatus` - Nested list of information about the current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
-            * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
-            * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
-        * `availability_zone` - The Availability Zone where the subnet is configured.
+            * `endpointId` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
+            * `subnetId` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
+        * `availabilityZone` - The Availability Zone where the subnet is configured.
     * `capacity_usage_summary` - Aggregated count of all resources used by reference sets in a firewall.
         * `cidrs` - Capacity usage of CIDR blocks used by IP set references in a firewall.
             * `available_cidr_count` - Available number of CIDR blocks available for use by the IP set references in a firewall.
-            * `ip_set_references` - The list of IP set references used by a firewall.
+            * `ipSetReferences` - The list of IP set references used by a firewall.
                 * `resolved_cidr_count` - Total number of CIDR blocks used by the IP set references in a firewall.
             * `utilized_cidr_count` - Number of CIDR blocks used by the IP set references in a firewall.
     * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
 * `id` - ARN that identifies the firewall.
 * `name` - Descriptive name of the firewall.
-* `subnetChangeProtection` - A boolean flag indicating whether it is possible to change the associated subnet(s).
+* `subnetChangeProtection` - A flag indicating whether the firewall is protected against changes to the subnet associations.
 * `subnetMapping` - Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet.
-    * `subnet_id` - The unique identifier for the subnet.
-* `tags` - Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+    * `subnetId` - The unique identifier for the subnet.
+* `tags` - Map of resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `updateToken` - String token used when updating a firewall.
 * `vpcId` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.19.0 input-24e5c2406618e6513cfbf45303a085d913cb2cabcf2e44e12fc1f263b2a91298 -->
+<!-- cache-key: cdktf-0.20.1 input-a59cacdd1e7c3ecd8aa16a8357c1506414a68612594db4e02ba5c59b5dc47f6f -->

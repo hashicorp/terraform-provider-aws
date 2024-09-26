@@ -45,4 +45,4 @@ The following attribute is additionally exported:
 * `id` - The ID of the firewall configuration.
 * `owner_id` - The Amazon Web Services account ID of the owner of the VPC that this firewall configuration applies to.
 
-<!-- cache-key: cdktf-0.19.0 input-b0f09d7efd8e098bbc579593a822c42d9bc95461129ab91f2ff09be220ad7bf4 -->
+<!-- cache-key: cdktf-0.20.1 input-b0f09d7efd8e098bbc579593a822c42d9bc95461129ab91f2ff09be220ad7bf4 -->

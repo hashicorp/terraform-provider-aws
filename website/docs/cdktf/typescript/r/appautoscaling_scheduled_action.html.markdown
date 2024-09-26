@@ -108,12 +108,12 @@ This resource supports the following arguments:
 * `schedule` - (Required) Schedule for this action. The following formats are supported: At expressions - at(yyyy-mm-ddThh:mm:ss), Rate expressions - rate(valueunit), Cron expressions - cron(fields). Times for at expressions and cron expressions are evaluated using the time zone configured in `timezone`. Documentation can be found in the `Timezone` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PutScheduledAction.html)
 * `startTime` - (Optional) Date and time for the scheduled action to start in RFC 3339 format. The timezone is not affected by the setting of `timezone`.
 * `endTime` - (Optional) Date and time for the scheduled action to end in RFC 3339 format. The timezone is not affected by the setting of `timezone`.
-* `timezone` - (Optional) Time zone used when setting a scheduled action by using an at or cron expression. Does not affect timezone for `start_time` and `end_time`. Valid values are the [canonical names of the IANA time zones supported by Joda-Time](https://www.joda.org/joda-time/timezones.html), such as `Etc/GMT+9` or `Pacific/Tahiti`. Default is `UTC`.
+* `timezone` - (Optional) Time zone used when setting a scheduled action by using an at or cron expression. Does not affect timezone for `startTime` and `endTime`. Valid values are the [canonical names of the IANA time zones supported by Joda-Time](https://www.joda.org/joda-time/timezones.html), such as `Etc/GMT+9` or `Pacific/Tahiti`. Default is `UTC`.
 
 ### Scalable Target Action Arguments
 
-* `maxCapacity` - (Optional) Maximum capacity. At least one of `max_capacity` or `min_capacity` must be set.
-* `minCapacity` - (Optional) Minimum capacity. At least one of `min_capacity` or `max_capacity` must be set.
+* `maxCapacity` - (Optional) Maximum capacity. At least one of `maxCapacity` or `minCapacity` must be set.
+* `minCapacity` - (Optional) Minimum capacity. At least one of `minCapacity` or `maxCapacity` must be set.
 
 ## Attribute Reference
 
@@ -121,4 +121,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the scheduled action.
 
-<!-- cache-key: cdktf-0.19.0 input-2340bae330ec995b135b58fdb2388300b4f924ab8525d2c122eed0efb9dccbdd -->
+<!-- cache-key: cdktf-0.20.1 input-2340bae330ec995b135b58fdb2388300b4f924ab8525d2c122eed0efb9dccbdd -->

@@ -52,7 +52,6 @@ func TestName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -122,7 +121,6 @@ func TestNameWithSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -167,7 +165,6 @@ func TestNameWithDefaultPrefix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -221,7 +218,6 @@ func TestHasResourceUniqueIDPlusAdditionalSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -281,7 +277,6 @@ func TestNamePrefixFromName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -383,7 +378,6 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 

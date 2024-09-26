@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Constraint status.
 * `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `RESOURCE_UPDATE`, `STACKSET`, and `TEMPLATE`.
 
-<!-- cache-key: cdktf-0.19.0 input-da418dc5c6998e476df08abac67c17c4dc70e9bf30247effbc012c2e90dbc9b3 -->
+<!-- cache-key: cdktf-0.20.1 input-da418dc5c6998e476df08abac67c17c4dc70e9bf30247effbc012c2e90dbc9b3 -->

@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ids` - Set of cognito user pool ids.
 * `arns` - Set of cognito user pool Amazon Resource Names (ARNs).
 
-<!-- cache-key: cdktf-0.19.0 input-75e710379276dd4b4879fdf870f90225a6aad57dec06cd592a215bcaab891f06 -->
+<!-- cache-key: cdktf-0.20.1 input-75e710379276dd4b4879fdf870f90225a6aad57dec06cd592a215bcaab891f06 -->

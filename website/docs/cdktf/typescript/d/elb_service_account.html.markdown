@@ -13,7 +13,7 @@ description: |-
 Use this data source to get the Account ID of the [AWS Elastic Load Balancing Service Account](http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy)
 in a given region for the purpose of permitting in S3 bucket policy.
 
-~> **Note:** For AWS Regions opened since Jakarta (`apSoutheast3`) in December 2021, AWS [documents that](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
+~> **Note:** For AWS Regions opened since Jakarta (`ap-southeast-3`) in December 2021, AWS [documents that](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
 ## Example Usage
 
@@ -104,4 +104,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS ELB service account in the selected region.
 * `arn` - ARN of the AWS ELB service account in the selected region.
 
-<!-- cache-key: cdktf-0.19.0 input-5c1a0a2f00d960e1eac9847050597712fa9715a5b915ce4e9af9ffb2813ec3ab -->
+<!-- cache-key: cdktf-0.20.1 input-5c1a0a2f00d960e1eac9847050597712fa9715a5b915ce4e9af9ffb2813ec3ab -->

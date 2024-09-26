@@ -5,47 +5,47 @@ package bedrock
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const DSNameFoundationModel = "Foundation Model Data Source"
-
 // @FrameworkDataSource(name="Foundation Model")
-func newDataSourceFoundationModel(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceFoundationModel{}, nil
+func newFoundationModelDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &foundationModelDataSource{}, nil
 }
 
-type dataSourceFoundationModel struct {
+type foundationModelDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceFoundationModel) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *foundationModelDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_bedrock_foundation_model"
 }
 
-func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *foundationModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"customizations_supported": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: framework.IDAttribute(),
 			"inference_types_supported": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			"input_modalities": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -59,10 +59,11 @@ func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.S
 				Computed: true,
 			},
 			"output_modalities": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			"provider_name": schema.StringAttribute{
+			names.AttrProviderName: schema.StringAttribute{
 				Computed: true,
 			},
 			"response_streaming_supported": schema.BoolAttribute{
@@ -72,57 +73,46 @@ func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.S
 	}
 }
 
-func (d *dataSourceFoundationModel) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	conn := d.Meta().BedrockClient(ctx)
-
-	var data foundationModel
+func (d *foundationModelDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data foundationModelDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := d.Meta().BedrockClient(ctx)
+
 	input := &bedrock.GetFoundationModelInput{
-		ModelIdentifier: data.ModelID.ValueStringPointer(),
+		ModelIdentifier: fwflex.StringFromFramework(ctx, data.ModelID),
 	}
-	model, err := conn.GetFoundationModel(ctx, input)
+
+	output, err := conn.GetFoundationModel(ctx, input)
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionReading, DSNameFoundationModel, data.ModelID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Foundation Model (%s)", data.ModelID.ValueString()), err.Error())
+
 		return
 	}
 
-	data.refreshFromOutput(ctx, model)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.ModelDetails, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.ID = data.ModelID
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type foundationModel struct {
-	CustomizationsSupported    types.Set    `tfsdk:"customizations_supported"`
-	ID                         types.String `tfsdk:"id"`
-	InferenceTypesSupported    types.Set    `tfsdk:"inference_types_supported"`
-	InputModalities            types.Set    `tfsdk:"input_modalities"`
-	ModelArn                   types.String `tfsdk:"model_arn"`
-	ModelID                    types.String `tfsdk:"model_id"`
-	ModelName                  types.String `tfsdk:"model_name"`
-	OutputModalities           types.Set    `tfsdk:"output_modalities"`
-	ProviderName               types.String `tfsdk:"provider_name"`
-	ResponseStreamingSupported types.Bool   `tfsdk:"response_streaming_supported"`
-}
-
-func (data *foundationModel) refreshFromOutput(ctx context.Context, model *bedrock.GetFoundationModelOutput) {
-	if model == nil {
-		return
-	}
-
-	data.ID = flex.StringToFramework(ctx, model.ModelDetails.ModelId)
-	data.ModelArn = flex.StringToFramework(ctx, model.ModelDetails.ModelArn)
-	data.ModelID = flex.StringToFramework(ctx, model.ModelDetails.ModelId)
-	data.ModelName = flex.StringToFramework(ctx, model.ModelDetails.ModelName)
-	data.ProviderName = flex.StringToFramework(ctx, model.ModelDetails.ProviderName)
-	data.CustomizationsSupported = flex.FlattenFrameworkStringValueSet(ctx, model.ModelDetails.CustomizationsSupported)
-	data.InferenceTypesSupported = flex.FlattenFrameworkStringValueSet(ctx, model.ModelDetails.InferenceTypesSupported)
-	data.InputModalities = flex.FlattenFrameworkStringValueSet(ctx, model.ModelDetails.InputModalities)
-	data.OutputModalities = flex.FlattenFrameworkStringValueSet(ctx, model.ModelDetails.OutputModalities)
-	data.ResponseStreamingSupported = flex.BoolToFramework(ctx, model.ModelDetails.ResponseStreamingSupported)
+type foundationModelDataSourceModel struct {
+	CustomizationsSupported    fwtypes.SetValueOf[types.String] `tfsdk:"customizations_supported"`
+	ID                         types.String                     `tfsdk:"id"`
+	InferenceTypesSupported    fwtypes.SetValueOf[types.String] `tfsdk:"inference_types_supported"`
+	InputModalities            fwtypes.SetValueOf[types.String] `tfsdk:"input_modalities"`
+	ModelARN                   types.String                     `tfsdk:"model_arn"`
+	ModelID                    types.String                     `tfsdk:"model_id"`
+	ModelName                  types.String                     `tfsdk:"model_name"`
+	OutputModalities           fwtypes.SetValueOf[types.String] `tfsdk:"output_modalities"`
+	ProviderName               types.String                     `tfsdk:"provider_name"`
+	ResponseStreamingSupported types.Bool                       `tfsdk:"response_streaming_supported"`
 }

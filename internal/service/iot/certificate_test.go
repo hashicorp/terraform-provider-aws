@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTCertificate_csr(t *testing.T) {
@@ -23,7 +23,7 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -31,12 +31,12 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 				Config: testAccCertificateConfig_csr,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckResourceAttrSet(resourceName, "csr"),
-					resource.TestCheckNoResourceAttr(resourceName, "private_key"),
-					resource.TestCheckNoResourceAttr(resourceName, "public_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPublicKey),
 				),
 			},
 		},
@@ -49,7 +49,7 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,12 +57,12 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 				Config: testAccCertificateConfig_keys,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
-					resource.TestCheckResourceAttrSet(resourceName, "private_key"),
-					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPrivateKey),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
 				),
 			},
 		},
@@ -77,7 +77,7 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,19 +85,19 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_existingCertificate(certificate, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
-					resource.TestCheckNoResourceAttr(resourceName, "private_key"),
-					resource.TestCheckNoResourceAttr(resourceName, "public_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPublicKey),
 				),
 			},
 			{
 				Config: testAccCertificateConfig_existingCertificate(certificate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 				),
 			},
 		},
@@ -111,7 +111,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindCertificateByID(ctx, conn, rs.Primary.ID)
 
@@ -121,7 +121,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_certificate" {

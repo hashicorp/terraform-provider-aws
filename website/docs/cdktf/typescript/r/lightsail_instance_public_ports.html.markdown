@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
     const test = new LightsailInstance(this, "test", {
       availabilityZone: Token.asString(Fn.lookupNested(available.names, ["0"])),
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       name: "yak_sail",
     });
     const awsLightsailInstancePublicPortsTest =
@@ -60,7 +60,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `instanceName` - (Required) Name of the Lightsail Instance.
-* `portInfo` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. Detailed below.
+* `portInfo` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `portInfo`. Detailed below.
 
 ### port_info
 
@@ -81,4 +81,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID of the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-e75c0ed1fb7d870f438bb0070ff3f05dfd9b9a1c05192739f74b37a508a5e0f0 -->
+<!-- cache-key: cdktf-0.20.1 input-dce599696ef2f93bfa8cafe79f5be851558b96bc97c2a9206fac2f0d24cb07d7 -->

@@ -8,13 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,20 +21,20 @@ import (
 
 func TestAccSSMServiceSetting_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var setting ssm.ServiceSetting
+	var setting awstypes.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceSettingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceSettingConfig_basic("false"),
+				Config: testAccServiceSettingConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
-					resource.TestCheckResourceAttr(resourceName, "setting_value", "false"),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
 				),
 			},
 			{
@@ -44,10 +43,10 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceSettingConfig_basic("true"),
+				Config: testAccServiceSettingConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
-					resource.TestCheckResourceAttr(resourceName, "setting_value", "true"),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 				),
 			},
 		},
@@ -56,14 +55,14 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 
 func testAccCheckServiceSettingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_service_setting" {
 				continue
 			}
 
-			output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.Attributes["setting_id"])
+			output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -73,34 +72,30 @@ func testAccCheckServiceSettingDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			if aws.StringValue(output.Status) == "Default" {
+			if aws.ToString(output.Status) == "Default" {
 				continue
 			}
 
-			return create.Error(names.SSM, create.ErrActionCheckingDestroyed, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
+			return fmt.Errorf("SSM Service Setting %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceSettingExists(ctx context.Context, n string, v *ssm.ServiceSetting) resource.TestCheckFunc {
+func testAccServiceSettingExists(ctx context.Context, n string, v *awstypes.ServiceSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Service Setting ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
-
-		output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.Attributes["setting_id"])
+		output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.SSM, create.ErrActionReading, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
+			return err
 		}
 
 		*v = *output

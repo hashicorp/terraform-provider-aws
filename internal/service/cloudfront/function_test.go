@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(cloudfront.EndpointsID, testAccErrorCheckSkipFunction)
+	acctest.RegisterServiceErrorCheckFunc(names.CloudFrontServiceID, testAccErrorCheckSkipFunction)
 }
 
 func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
@@ -35,8 +37,8 @@ func TestAccCloudFrontFunction_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,14 +46,14 @@ func TestAccCloudFrontFunction_basic(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("function/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "runtime", "cloudfront-js-1.0"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 			{
@@ -72,8 +74,8 @@ func TestAccCloudFrontFunction_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,8 +98,8 @@ func TestAccCloudFrontFunction_publish(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,8 +109,8 @@ func TestAccCloudFrontFunction_publish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
-					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
 				),
 			},
 			{
@@ -123,8 +125,8 @@ func TestAccCloudFrontFunction_publish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", "ETVPDKIKX0DER"),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 		},
@@ -140,8 +142,8 @@ func TestAccCloudFrontFunction_associated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,14 +153,14 @@ func TestAccCloudFrontFunction_associated(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					// After creation the function will be in UNASSOCIATED status.
 					// Apply the same configuration and it will move to DEPLOYED status.
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 			{
 				Config: testAccFunctionConfig_associated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 				),
 			},
 			{
@@ -184,8 +186,8 @@ func TestAccCloudFrontFunction_Update_code(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,8 +222,8 @@ func TestAccCloudFrontFunction_UpdateCodeAndPublish(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,8 +232,8 @@ func TestAccCloudFrontFunction_UpdateCodeAndPublish(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
-					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
 				),
 			},
 			{
@@ -239,8 +241,8 @@ func TestAccCloudFrontFunction_UpdateCodeAndPublish(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "E3UN6WX5RRO2AG"),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 			{
@@ -260,8 +262,8 @@ func TestAccCloudFrontFunction_Update_comment(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -269,14 +271,14 @@ func TestAccCloudFrontFunction_Update_comment(t *testing.T) {
 				Config: testAccFunctionConfig_comment(rName, "test 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test 1"),
 				),
 			},
 			{
 				Config: testAccFunctionConfig_comment(rName, "test 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test 2"),
 				),
 			},
 			{
@@ -289,16 +291,59 @@ func TestAccCloudFrontFunction_Update_comment(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontFunction_KeyValueStoreAssociations(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf cloudfront.DescribeFunctionOutput
+	resourceName := "aws_cloudfront_function.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_KeyValueStoreAssociation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish"},
+			},
+			{
+				Config: testAccFunctionConfig_KeyValueStoreAssociationCodeUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_KeyValueStoreAssociationUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test2", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_function" {
 				continue
 			}
 
-			_, err := tfcloudfront.FindFunctionByNameAndStage(ctx, conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
+			_, err := tfcloudfront.FindFunctionByTwoPartKey(ctx, conn, rs.Primary.ID, awstypes.FunctionStageDevelopment)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -319,16 +364,12 @@ func testAccCheckFunctionExists(ctx context.Context, n string, v *cloudfront.Des
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("CloudFront Function not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("CloudFront Function ID not set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
-
-		output, err := tfcloudfront.FindFunctionByNameAndStage(ctx, conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
+		output, err := tfcloudfront.FindFunctionByTwoPartKey(ctx, conn, rs.Primary.ID, awstypes.FunctionStageDevelopment)
 
 		if err != nil {
 			return err
@@ -575,4 +616,84 @@ function handler(event) {
 EOT
 }
 `, rName, comment)
+}
+
+func testAccFunctionConfig_KeyValueStoreAssociation(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKeyValueStoreConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name                         = %[1]q
+  runtime                      = "cloudfront-js-2.0"
+  key_value_store_associations = [aws_cloudfront_key_value_store.test.arn]
+  code                         = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+}
+`, rName))
+}
+
+func testAccFunctionConfig_KeyValueStoreAssociationCodeUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKeyValueStoreConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name                         = %[1]q
+  runtime                      = "cloudfront-js-2.0"
+  key_value_store_associations = [aws_cloudfront_key_value_store.test.arn]
+  code                         = <<-EOT
+// updated code
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+}
+`, rName))
+}
+
+func testAccFunctionConfig_KeyValueStoreAssociationUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKeyValueStoreConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_key_value_store" "test2" {
+  name = "%[1]s2"
+}
+resource "aws_cloudfront_function" "test" {
+  name                         = %[1]q
+  runtime                      = "cloudfront-js-2.0"
+  key_value_store_associations = [aws_cloudfront_key_value_store.test2.arn]
+  code                         = <<-EOT
+// updated code
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+}
+`, rName))
 }

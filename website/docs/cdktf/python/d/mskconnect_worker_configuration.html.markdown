@@ -45,5 +45,6 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - a summary description of the worker configuration.
 * `latest_revision` - an ID of the latest successfully created revision of the worker configuration.
 * `properties_file_content` - contents of connect-distributed.properties file.
+* `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-a4a19bc8bace9a17fd9c5067fbaf9f50bdef230bacb36537455d33cae493f587 -->
+<!-- cache-key: cdktf-0.20.1 input-b067e099cacc6901069c55fafe52d9391278196c63c58becdcbbd36667cf890b -->

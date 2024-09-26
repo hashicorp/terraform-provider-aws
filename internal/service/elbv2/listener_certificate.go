@@ -7,209 +7,208 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_alb_listener_certificate")
-// @SDKResource("aws_lb_listener_certificate")
-func ResourceListenerCertificate() *schema.Resource {
+// @SDKResource("aws_alb_listener_certificate", name="Listener Certificate")
+// @SDKResource("aws_lb_listener_certificate", name="Listener Certificate")
+func resourceListenerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCertificateCreate,
 		ReadWithoutTimeout:   resourceListenerCertificateRead,
 		DeleteWithoutTimeout: resourceListenerCertificateDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrCertificateARN: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"listener_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 		},
 	}
 }
 
-const (
-	ResNameListenerCertificate  = "Listener Certificate"
-	ListenerCertificateNotFound = "ListenerCertificateNotFound"
-)
-
 func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	listenerArn := d.Get("listener_arn").(string)
-	certificateArn := d.Get("certificate_arn").(string)
-
-	params := &elbv2.AddListenerCertificatesInput{
-		ListenerArn: aws.String(listenerArn),
-		Certificates: []*elbv2.Certificate{{
-			CertificateArn: aws.String(certificateArn),
+	listenerARN := d.Get("listener_arn").(string)
+	certificateARN := d.Get(names.AttrCertificateARN).(string)
+	id := listenerCertificateCreateResourceID(listenerARN, certificateARN)
+	input := &elasticloadbalancingv2.AddListenerCertificatesInput{
+		Certificates: []awstypes.Certificate{{
+			CertificateArn: aws.String(certificateARN),
 		}},
+		ListenerArn: aws.String(listenerARN),
 	}
 
-	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", certificateArn, listenerArn)
-
-	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-		_, err := conn.AddListenerCertificatesWithContext(ctx, params)
-
-		// Retry for IAM Server Certificate eventual consistency
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, iamPropagationTimeout, func() (interface{}, error) {
+		return conn.AddListenerCertificates(ctx, input)
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.AddListenerCertificatesWithContext(ctx, params)
-	}
-
 	if err != nil {
-		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionCreating, ResNameListenerCertificate, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Listener Certificate (%s): %s", id, err)
 	}
 
-	d.SetId(listenerCertificateCreateID(listenerArn, certificateArn))
+	d.SetId(id)
 
 	return append(diags, resourceListenerCertificateRead(ctx, d, meta)...)
 }
 
 func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
+	listenerARN, certificateARN, err := listenerCertificateParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
-
-	err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-		err := findListenerCertificate(ctx, conn, certificateArn, listenerArn, true, nil)
-		if tfresource.NotFound(err) && d.IsNewResource() {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		err = findListenerCertificate(ctx, conn, certificateArn, listenerArn, true, nil)
-	}
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (interface{}, error) {
+		return findListenerCertificateByTwoPartKey(ctx, conn, listenerARN, certificateARN)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id())
+		log.Printf("[WARN] ELBv2 Listener Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener Certificate (%s): %s", d.Id(), err)
 	}
 
-	d.Set("certificate_arn", certificateArn)
-	d.Set("listener_arn", listenerArn)
+	d.Set(names.AttrCertificateARN, certificateARN)
+	d.Set("listener_arn", listenerARN)
 
 	return diags
 }
 
 func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	certificateArn := d.Get("certificate_arn").(string)
-	listenerArn := d.Get("listener_arn").(string)
-
-	log.Printf("[DEBUG] Deleting certificate: %s of listener: %s", certificateArn, listenerArn)
-
-	params := &elbv2.RemoveListenerCertificatesInput{
-		ListenerArn: aws.String(listenerArn),
-		Certificates: []*elbv2.Certificate{{
-			CertificateArn: aws.String(certificateArn),
-		}},
+	listenerARN, certificateARN, err := listenerCertificateParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err := conn.RemoveListenerCertificatesWithContext(ctx, params)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-			return diags
-		}
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-			return diags
-		}
+	log.Printf("[INFO] Deleting ELBv2 Listener Certificate: %s", d.Id())
+	_, err = conn.RemoveListenerCertificates(ctx, &elasticloadbalancingv2.RemoveListenerCertificatesInput{
+		Certificates: []awstypes.Certificate{{
+			CertificateArn: aws.String(certificateARN),
+		}},
+		ListenerArn: aws.String(listenerARN),
+	})
 
-		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionDeleting, ResNameListenerCertificate, d.Id(), err)
+	if errs.IsA[*awstypes.CertificateNotFoundException](err) || errs.IsA[*awstypes.ListenerNotFoundException](err) {
+		return diags
+	}
+
+	// Even though we're not trying to remove the default certificate, AWS started returning this error around 2023-12-09.
+	if errs.IsAErrorMessageContains[*awstypes.OperationNotPermittedException](err, "Default certificate cannot be removed") {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Listener Certificate (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findListenerCertificate(ctx context.Context, conn *elbv2.ELBV2, certificateArn, listenerArn string, skipDefault bool, nextMarker *string) error {
-	params := &elbv2.DescribeListenerCertificatesInput{
-		ListenerArn: aws.String(listenerArn),
-		PageSize:    aws.Int64(400),
-	}
-	if nextMarker != nil {
-		params.Marker = nextMarker
+const listenerCertificateResourceIDSeparator = "_"
+
+func listenerCertificateCreateResourceID(listenerARN, certificateARN string) string {
+	parts := []string{listenerARN, certificateARN}
+	id := strings.Join(parts, listenerCertificateResourceIDSeparator)
+
+	return id
+}
+
+func listenerCertificateParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, listenerCertificateResourceIDSeparator, 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
 
-	resp, err := conn.DescribeListenerCertificatesWithContext(ctx, params)
-	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-		return &retry.NotFoundError{
-			LastRequest: params,
-			LastError:   err,
-		}
-	}
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected LISTENER_ARN%[2]sCERTIFICATE_ARN", id, listenerCertificateResourceIDSeparator)
+}
+
+func findListenerCertificate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenerCertificatesInput, filter tfslices.Predicate[*awstypes.Certificate]) (*awstypes.Certificate, error) {
+	output, err := findListenerCertificates(ctx, conn, input, filter)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, cert := range resp.Certificates {
-		if skipDefault && aws.BoolValue(cert.IsDefault) {
-			continue
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findListenerCertificates(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenerCertificatesInput, filter tfslices.Predicate[*awstypes.Certificate]) ([]awstypes.Certificate, error) {
+	var output []awstypes.Certificate
+
+	err := describeListenerCertificatesPages(ctx, conn, input, func(page *elasticloadbalancingv2.DescribeListenerCertificatesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if aws.StringValue(cert.CertificateArn) == certificateArn {
-			return nil
+		for _, v := range page.Certificates {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	if resp.NextMarker != nil {
-		return findListenerCertificate(ctx, conn, certificateArn, listenerArn, skipDefault, resp.NextMarker)
+	if err != nil {
+		return nil, err
 	}
 
-	return &retry.NotFoundError{
-		LastRequest: params,
-		Message:     fmt.Sprintf("%s: certificate %s for listener %s not found", ListenerCertificateNotFound, certificateArn, listenerArn),
+	return output, nil
+}
+
+func findListenerCertificateByTwoPartKey(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN, certificateARN string) (*awstypes.Certificate, error) {
+	input := &elasticloadbalancingv2.DescribeListenerCertificatesInput{
+		ListenerArn: aws.String(listenerARN),
+		PageSize:    aws.Int32(400),
 	}
+
+	return findListenerCertificate(ctx, conn, input, func(v *awstypes.Certificate) bool {
+		return !aws.ToBool(v.IsDefault) && aws.ToString(v.CertificateArn) == certificateARN
+	})
 }

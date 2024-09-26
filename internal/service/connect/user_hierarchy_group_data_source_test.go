@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/connect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
@@ -24,25 +24,25 @@ func testAccUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupDataSourceConfig_groupID(rName, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_group_id", resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.#", resourceName, "hierarchy_path.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.arn", resourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.arn", resourceName2, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.id", resourceName2, "hierarchy_group_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.name", resourceName2, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.name", resourceName2, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.id", resourceName, "hierarchy_group_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.name", resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "level_id", resourceName, "level_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
@@ -61,25 +61,25 @@ func testAccUserHierarchyGroupDataSource_name(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupDataSourceConfig_name(rName, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_group_id", resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.#", resourceName, "hierarchy_path.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.arn", resourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.arn", resourceName2, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.id", resourceName2, "hierarchy_group_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.name", resourceName2, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_one.0.name", resourceName2, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.id", resourceName, "hierarchy_group_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_path.0.level_two.0.name", resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "level_id", resourceName, "level_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},

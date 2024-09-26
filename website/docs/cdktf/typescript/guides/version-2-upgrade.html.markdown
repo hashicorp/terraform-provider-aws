@@ -133,13 +133,13 @@ class MyConvertedCode extends TerraformStack {
 
 ### owners Argument Now Required
 
-The `owners` argument is now required. Specifying `ownerId` or `ownerAlias` under `filter` does not satisfy this requirement.
+The `owners` argument is now required. Specifying `owner-id` or `owner-alias` under `filter` does not satisfy this requirement.
 
 ## Data Source: aws_ami_ids
 
 ### owners Argument Now Required
 
-The `owners` argument is now required. Specifying `ownerId` or `ownerAlias` under `filter` does not satisfy this requirement.
+The `owners` argument is now required. Specifying `owner-id` or `owner-alias` under `filter` does not satisfy this requirement.
 
 ## Data Source: aws_iam_role
 
@@ -159,12 +159,12 @@ Switch your Terraform configuration to the `name` argument instead.
 
 ### Data Source Removal and Migrating to aws_kms_secrets Data Source
 
-The implementation of the `awsKmsSecret` data source, prior to Terraform AWS provider version 2.0.0, used dynamic attribute behavior which is not supported with Terraform 0.12 and beyond (full details available in [this GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/5144)).
+The implementation of the `aws_kms_secret` data source, prior to Terraform AWS provider version 2.0.0, used dynamic attribute behavior which is not supported with Terraform 0.12 and beyond (full details available in [this GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/5144)).
 
 Terraform configuration migration steps:
 
-* Change the data source type from `awsKmsSecret` to `aws_kms_secrets`
-* Change any attribute reference (e.g., `"${dataAwsKmsSecretExampleAttribute}"`) from `.ATTRIBUTE` to `.plaintext["ATTRIBUTE"]`
+* Change the data source type from `aws_kms_secret` to `aws_kms_secrets`
+* Change any attribute reference (e.g., `"${data.aws_kms_secret.example.ATTRIBUTE}"`) from `.ATTRIBUTE` to `.plaintext["ATTRIBUTE"]`
 
 As an example, lets take the below sample configuration and migrate it.
 
@@ -208,7 +208,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Notice that the `awsKmsSecret` data source previously was taking the two `secret` configuration block `name` arguments and generating those as attribute names (`masterPassword` and `masterUsername` in this case). To remove the incompatible behavior, this updated version of the data source provides the decrypted value of each of those `secret` configuration block `name` arguments within a map attribute named `plaintext`.
+Notice that the `aws_kms_secret` data source previously was taking the two `secret` configuration block `name` arguments and generating those as attribute names (`masterPassword` and `masterUsername` in this case). To remove the incompatible behavior, this updated version of the data source provides the decrypted value of each of those `secret` configuration block `name` arguments within a map attribute named `plaintext`.
 
 Updating the sample configuration from above:
 
@@ -260,7 +260,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### arn and qualified_arn Attribute Behavior Changes
 
-The `arn` attribute now always returns the unqualified (no `:qualifier` or `:version` suffix) ARN value and the `qualifiedArn` attribute now always returns the qualified (includes `:qualifier` or `:version` suffix) ARN value. Previously by default, the `arn` attribute included `:$latest` suffix when not setting the optional `qualifier` argument, which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$latest` and reference the `qualifiedArn` attribute.
+The `arn` attribute now always returns the unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN value and the `qualifiedArn` attribute now always returns the qualified (includes `:QUALIFIER` or `:VERSION` suffix) ARN value. Previously by default, the `arn` attribute included `:$LATEST` suffix when not setting the optional `qualifier` argument, which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualifiedArn` attribute.
 
 ## Data Source: aws_region
 
@@ -274,8 +274,8 @@ Simply remove `current = true` from your Terraform configuration. The data sourc
 
 Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage. To migrate your Terraform configuration, the AWS provider implements support for usage plans with the following resources:
 
-* [`awsApiGatewayUsagePlan`](/docs/providers/aws/r/api_gateway_usage_plan.html)
-* [`awsApiGatewayUsagePlanKey`](/docs/providers/aws/r/api_gateway_usage_plan_key.html)
+* [`aws_api_gateway_usage_plan`](/docs/providers/aws/r/api_gateway_usage_plan.html)
+* [`aws_api_gateway_usage_plan_key`](/docs/providers/aws/r/api_gateway_usage_plan_key.html)
 
 For example, given this previous configuration:
 
@@ -967,8 +967,8 @@ Choose one argument or the other. These arguments update the same underlying inf
 
 Default connections have been removed as part of LAG creation. To migrate your Terraform configuration, the AWS provider implements the following resources:
 
-* [`awsDxConnection`](/docs/providers/aws/r/dx_connection.html)
-* [`awsDxConnectionAssociation`](/docs/providers/aws/r/dx_connection_association.html)
+* [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html)
+* [`aws_dx_connection_association`](/docs/providers/aws/r/dx_connection_association.html)
 
 For example, given this previous configuration:
 
@@ -1217,7 +1217,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Import Now Required For Existing Infrastructure
 
-When attempting to bring existing IAM User Login Profiles under Terraform management, `terraform import` is now required. See the [`awsIamUserLoginProfile` resource documentation](https://www.terraform.io/docs/providers/aws/r/iam_user_login_profile.html) for more information.
+When attempting to bring existing IAM User Login Profiles under Terraform management, `terraform import` is now required. See the [`aws_iam_user_login_profile` resource documentation](https://www.terraform.io/docs/providers/aws/r/iam_user_login_profile.html) for more information.
 
 ## Resource: aws_instance
 
@@ -1231,7 +1231,7 @@ Switch your attribute references to the `primaryNetworkInterfaceId` attribute in
 
 Setting `reservedConcurrentExecutions` to `0` will now disable Lambda Function invocations, causing downtime for the Lambda Function.
 
-Previously `reservedConcurrentExecutions` accepted `0` and below for unreserved concurrency, which means it was not previously possible to disable invocations. The argument now differentiates between a new value for unreserved concurrency (`1`) and disabling Lambda invocations (`0`). If previously configuring this value to `0` for unreserved concurrency, update the configured value to `1` or the resource will disable Lambda Function invocations on update. If previously unconfigured, the argument does not require any changes.
+Previously `reservedConcurrentExecutions` accepted `0` and below for unreserved concurrency, which means it was not previously possible to disable invocations. The argument now differentiates between a new value for unreserved concurrency (`-1`) and disabling Lambda invocations (`0`). If previously configuring this value to `0` for unreserved concurrency, update the configured value to `-1` or the resource will disable Lambda Function invocations on update. If previously unconfigured, the argument does not require any changes.
 
 See the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html) for more information about concurrency.
 
@@ -1375,8 +1375,8 @@ class MyConvertedCode extends TerraformStack {
 
 ### Import Change
 
-Previously, importing this resource resulted in an `awsRoute` resource for each route, in
-addition to the `awsRouteTable`, in the Terraform state. Support for importing `awsRoute` resources has been added and importing this resource only adds the `awsRouteTable`
+Previously, importing this resource resulted in an `aws_route` resource for each route, in
+addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table`
 resource, with in-line routes, to the state.
 
 ## Resource: aws_route53_record
@@ -1385,7 +1385,7 @@ resource, with in-line routes, to the state.
 
 The resource now requires existing Route 53 Records to be imported into the Terraform state for management unless the `allowOverwrite` argument is enabled.
 
-For example, if the `wwwExampleCom` Route 53 Record in the `exampleCom` Route 53 Hosted Zone existed previously and this new Terraform configuration was introduced:
+For example, if the `www.example.com` Route 53 Record in the `example.com` Route 53 Hosted Zone existed previously and this new Terraform configuration was introduced:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -1413,7 +1413,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-During resource creation in version 1.X and prior, it would silently perform an `upsert` changeset to the existing Route 53 Record and not report back an error. In version 2.0.0 of the Terraform AWS Provider, the resource now performs a `create` changeset, which will error for existing Route 53 Records.
+During resource creation in version 1.X and prior, it would silently perform an `UPSERT` changeset to the existing Route 53 Record and not report back an error. In version 2.0.0 of the Terraform AWS Provider, the resource now performs a `CREATE` changeset, which will error for existing Route 53 Records.
 
 The `allowOverwrite` argument provides a workaround to keep the old behavior, but most existing workflows should be updated to perform a `terraform import` command like the following instead:
 
@@ -1421,7 +1421,7 @@ The `allowOverwrite` argument provides a workaround to keep the old behavior, bu
 $ terraform import aws_route53_record.www ZONEID_www.example.com_TYPE
 ```
 
-More information can be found in the [`awsRoute53Record` resource documentation](https://www.terraform.io/docs/providers/aws/r/route53_record.html#import).
+More information can be found in the [`aws_route53_record` resource documentation](https://www.terraform.io/docs/providers/aws/r/route53_record.html#import).
 
 ## Resource: aws_route53_zone
 
@@ -1560,4 +1560,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-603687597fabf51f83331995b133df850861a17c0d29ee4fbc2f2bfc3a7c98e8 -->
+<!-- cache-key: cdktf-0.20.1 input-603687597fabf51f83331995b133df850861a17c0d29ee4fbc2f2bfc3a7c98e8 -->

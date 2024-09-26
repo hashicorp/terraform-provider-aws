@@ -52,9 +52,9 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the reservation. Same as `offering_id`.
+* `id` - Unique identifier for the reservation. Same as `offeringId`.
 * `currencyCode` - Currency code for the reserved DB instance.
 * `fixedPrice` - Fixed price charged for this reserved DB instance.
 * `offeringId` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.19.0 input-a71cd524be029d3d53583d22786d99a97f23ac7fc0880861778d7b20d3ece4a7 -->
+<!-- cache-key: cdktf-0.20.1 input-a71cd524be029d3d53583d22786d99a97f23ac7fc0880861778d7b20d3ece4a7 -->

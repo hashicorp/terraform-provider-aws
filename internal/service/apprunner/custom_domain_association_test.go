@@ -27,7 +27,7 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,12 +35,12 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDomainAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", acctest.Ct3),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "pending_certificate_dns_validation"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "pending_certificate_dns_validation"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.Te
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-			_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["service_arn"])
+			_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -112,7 +112,7 @@ func testAccCheckCustomDomainAssociationExists(ctx context.Context, n string) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-		_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["service_arn"])
+		_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
 
 		return err
 	}

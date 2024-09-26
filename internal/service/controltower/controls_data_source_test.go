@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +27,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -40,39 +41,16 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	// leverage the control tower created "aws-controltower-BaselineCloudTrail" to confirm control tower is deployed
-	var trails []string
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
+	// Leverage the Control Tower created "aws-controltower-BaselineCloudTrail" to confirm Control Tower is deployed.
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailClient(ctx)
+	_, err := tfcloudtrail.FindTrailInfoByName(ctx, conn, "aws-controltower-BaselineCloudTrail")
 
-	input := &cloudtrail.ListTrailsInput{}
-	err := conn.ListTrailsPagesWithContext(ctx, input, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, trail := range page.Trails {
-			if trail == nil {
-				continue
-			}
-			trails = append(trails, *trail.Name)
-		}
-
-		return !lastPage
-	})
+	if tfresource.NotFound(err) {
+		t.Skip("skipping since Control Tower not found")
+	}
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	// Ensure there is a Control Tower trail
-	ctTrail := false
-	for _, t := range trails {
-		if t == "aws-controltower-BaselineCloudTrail" {
-			ctTrail = true
-		}
-	}
-	if !ctTrail {
-		t.Skip("skipping since Control Tower not found")
 	}
 }
 

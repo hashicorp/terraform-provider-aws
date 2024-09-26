@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
@@ -23,27 +23,27 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_simpleAD(rName, alias, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "access_url", dataSourceName, "access_url"),
-					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAlias, dataSourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.#", dataSourceName, "connect_settings.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "directory_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_ip_addresses.#", dataSourceName, "dns_ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSize, dataSourceName, names.AttrSize),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.#", dataSourceName, "vpc_settings.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.0.availability_zones.#", dataSourceName, "vpc_settings.0.availability_zones.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.0.subnet_ids.#", dataSourceName, "vpc_settings.0.subnet_ids.#"),
@@ -64,27 +64,27 @@ func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_microsoftAD(rName, alias, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "access_url", dataSourceName, "access_url"),
-					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAlias, dataSourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.#", dataSourceName, "connect_settings.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "directory_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_ip_addresses.#", dataSourceName, "dns_ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSize, dataSourceName, names.AttrSize),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.#", dataSourceName, "vpc_settings.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.0.availability_zones.#", dataSourceName, "vpc_settings.0.availability_zones.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.0.subnet_ids.#", dataSourceName, "vpc_settings.0.subnet_ids.#"),
@@ -108,14 +108,14 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_connector(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "access_url", dataSourceName, "access_url"),
-					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAlias, dataSourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.#", dataSourceName, "connect_settings.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.0.availability_zones.#", dataSourceName, "connect_settings.0.availability_zones.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.0.connect_ips.#", dataSourceName, "connect_settings.0.connect_ips.#"),
@@ -123,18 +123,18 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.0.customer_username", dataSourceName, "connect_settings.0.customer_username"),
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.0.subnet_ids.#", dataSourceName, "connect_settings.0.subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "connect_settings.0.vpc_id", dataSourceName, "connect_settings.0.vpc_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "directory_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_ip_addresses.#", dataSourceName, "dns_ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSize, dataSourceName, names.AttrSize),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.#", dataSourceName, "vpc_settings.#"),
 				),
 			},
@@ -155,14 +155,14 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_sharedMicrosoftAD(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "dns_ip_addresses.#", dataSourceName, "dns_ip_addresses.#"),
-					resource.TestCheckResourceAttr(dataSourceName, "type", "SharedMicrosoftAD"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "SharedMicrosoftAD"),
 				),
 			},
 		},

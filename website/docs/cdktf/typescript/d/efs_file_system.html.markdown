@@ -71,4 +71,4 @@ This data source exports the following attributes in addition to the arguments a
 * `throughputMode` - Throughput mode for the file system.
 * `sizeInBytes` - Current byte count used by the file system.
 
-<!-- cache-key: cdktf-0.19.0 input-91848697481eb0959ef949486e3ade78e73077540a9a38720f250c99edbeced7 -->
+<!-- cache-key: cdktf-0.20.1 input-91848697481eb0959ef949486e3ade78e73077540a9a38720f250c99edbeced7 -->

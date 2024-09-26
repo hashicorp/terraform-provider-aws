@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the gateway.
 * `ownerAccountId` - AWS Account ID of the gateway.
 
-<!-- cache-key: cdktf-0.19.0 input-3127f300941d7e2a8378ebe59e0ac105a1d12fbec8c4b114a8a16614047676a0 -->
+<!-- cache-key: cdktf-0.20.1 input-3127f300941d7e2a8378ebe59e0ac105a1d12fbec8c4b114a8a16614047676a0 -->

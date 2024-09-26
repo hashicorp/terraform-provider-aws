@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `releaseLabels` - Returned release labels.
 
-<!-- cache-key: cdktf-0.19.0 input-caff30a437585dca8d53271b57c03d47d50046916f1661780cb3a6963d53b86c -->
+<!-- cache-key: cdktf-0.20.1 input-caff30a437585dca8d53271b57c03d47d50046916f1661780cb3a6963d53b86c -->

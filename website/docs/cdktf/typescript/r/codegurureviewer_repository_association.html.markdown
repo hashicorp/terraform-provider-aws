@@ -62,7 +62,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `repository` - (Required) An object describing the repository to associate. Valid values: `bitbucket`, `codecommit`, `github_enterprise_server`, or `s3_bucket`. Block is documented below. Note: for repositories that leverage CodeStar connections (ex. `bitbucket`, `github_enterprise_server`) the connection must be in `Available` status prior to creating this resource.
+* `repository` - (Required) An object describing the repository to associate. Valid values: `bitbucket`, `codecommit`, `githubEnterpriseServer`, or `s3Bucket`. Block is documented below. Note: for repositories that leverage CodeStar connections (ex. `bitbucket`, `githubEnterpriseServer`) the connection must be in `Available` status prior to creating this resource.
 
 The following arguments are optional:
 
@@ -122,4 +122,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.19.0 input-b8a4a1df23287da973904a4fa9f7f519b62aeebe1f60535df99ad7d1c408a770 -->
+<!-- cache-key: cdktf-0.20.1 input-b8a4a1df23287da973904a4fa9f7f519b62aeebe1f60535df99ad7d1c408a770 -->

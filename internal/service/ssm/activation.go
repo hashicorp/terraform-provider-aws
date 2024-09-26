@@ -8,13 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,7 +25,10 @@ import (
 
 // @SDKResource("aws_ssm_activation", name="Activation")
 // @Tags
-func ResourceActivation() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Activation")
+// @Testing(importIgnore="activation_code")
+// @Testing(tagsUpdateForceNew=true)
+func resourceActivation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivationCreate,
 		ReadWithoutTimeout:   resourceActivationRead,
@@ -39,7 +43,7 @@ func ResourceActivation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -60,7 +64,7 @@ func ResourceActivation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -84,16 +88,16 @@ func ResourceActivation() *schema.Resource {
 
 func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreateActivationInput{
 		DefaultInstanceName: aws.String(name),
 		IamRole:             aws.String(d.Get("iam_role").(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -103,12 +107,12 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("registration_limit"); ok {
-		input.RegistrationLimit = aws.Int64(int64(v.(int)))
+		input.RegistrationLimit = aws.Int32(int32(v.(int)))
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateActivationWithContext(ctx, input)
-	}, "ValidationException", "Nonexistent role")
+		return conn.CreateActivation(ctx, input)
+	}, errCodeValidationException, "Nonexistent role")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSM Activation (%s): %s", name, err)
@@ -116,7 +120,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	output := outputRaw.(*ssm.CreateActivationOutput)
 
-	d.SetId(aws.StringValue(output.ActivationId))
+	d.SetId(aws.ToString(output.ActivationId))
 	d.Set("activation_code", output.ActivationCode)
 
 	return append(diags, resourceActivationRead(ctx, d, meta)...)
@@ -124,9 +128,9 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	activation, err := FindActivationByID(ctx, conn, d.Id())
+	activation, err := findActivationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSM Activation %s not found, removing from state", d.Id())
@@ -138,11 +142,11 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading SSM Activation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", activation.Description)
-	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
+	d.Set(names.AttrDescription, activation.Description)
+	d.Set("expiration_date", aws.ToTime(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)
-	d.Set("name", activation.DefaultInstanceName)
+	d.Set(names.AttrName, activation.DefaultInstanceName)
 	d.Set("registration_count", activation.RegistrationsCount)
 	d.Set("registration_limit", activation.RegistrationLimit)
 
@@ -153,14 +157,14 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())
-	_, err := conn.DeleteActivationWithContext(ctx, &ssm.DeleteActivationInput{
+	_, err := conn.DeleteActivation(ctx, &ssm.DeleteActivationInput{
 		ActivationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidActivation) {
+	if errs.IsA[*awstypes.InvalidActivation](err) {
 		return diags
 	}
 
@@ -171,12 +175,12 @@ func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindActivationByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.Activation, error) {
+func findActivationByID(ctx context.Context, conn *ssm.Client, id string) (*awstypes.Activation, error) {
 	input := &ssm.DescribeActivationsInput{
-		Filters: []*ssm.DescribeActivationsFilter{
+		Filters: []awstypes.DescribeActivationsFilter{
 			{
-				FilterKey:    aws.String("ActivationIds"),
-				FilterValues: aws.StringSlice([]string{id}),
+				FilterKey:    awstypes.DescribeActivationsFilterKeysActivationIds,
+				FilterValues: []string{id},
 			},
 		},
 	}
@@ -184,34 +188,29 @@ func FindActivationByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.Act
 	return findActivation(ctx, conn, input)
 }
 
-func findActivation(ctx context.Context, conn *ssm.SSM, input *ssm.DescribeActivationsInput) (*ssm.Activation, error) {
-	var output []*ssm.Activation
-
-	err := conn.DescribeActivationsPagesWithContext(ctx, input, func(page *ssm.DescribeActivationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.ActivationList {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
+func findActivation(ctx context.Context, conn *ssm.Client, input *ssm.DescribeActivationsInput) (*awstypes.Activation, error) {
+	output, err := findActivations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findActivations(ctx context.Context, conn *ssm.Client, input *ssm.DescribeActivationsInput) ([]awstypes.Activation, error) {
+	var output []awstypes.Activation
+
+	pages := ssm.NewDescribeActivationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ActivationList...)
 	}
 
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
+	return output, nil
 }

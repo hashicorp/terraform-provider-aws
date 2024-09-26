@@ -71,4 +71,4 @@ This data source exports the following attributes in addition to the arguments a
 * `rackElevation` - Position of an asset in a rack measured in rack units.
 * `rackId` - Rack ID of the asset.
 
-<!-- cache-key: cdktf-0.19.0 input-8f6a07737f519ffaadeaca6364717f481098718bcbccdc2303dde41b73d75ac9 -->
+<!-- cache-key: cdktf-0.20.1 input-8f6a07737f519ffaadeaca6364717f481098718bcbccdc2303dde41b73d75ac9 -->

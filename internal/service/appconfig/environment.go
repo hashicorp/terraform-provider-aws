@@ -36,11 +36,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_appconfig_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
@@ -56,7 +55,7 @@ func (r *resourceEnvironment) Metadata(_ context.Context, request resource.Metad
 func (r *resourceEnvironment) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -68,13 +67,13 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 					),
 				},
 			},
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(""), // Needed for backwards compatibility with SDK resource
@@ -85,20 +84,20 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Computed:           true,
 				DeprecationMessage: "This attribute is unused and will be removed in a future version of the provider",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -155,14 +154,14 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 	}
 
 	input := &appconfig.CreateEnvironmentInput{
-		Name:          aws.String(plan.Name.ValueString()),
+		Name:          plan.Name.ValueStringPointer(),
 		ApplicationId: aws.String(appId),
-		Tags:          aws.ToStringMap(getTagsIn(ctx)),
+		Tags:          getTagsIn(ctx),
 		Monitors:      expandMonitors(monitors),
 	}
 
 	if !(plan.Description.IsNull() || plan.Description.IsUnknown()) {
-		input.Description = aws.String(plan.Description.ValueString())
+		input.Description = plan.Description.ValueStringPointer()
 	}
 
 	environment, err := conn.CreateEnvironment(ctx, input)
@@ -240,11 +239,11 @@ func (r *resourceEnvironment) Update(ctx context.Context, request resource.Updat
 		updateInput := plan.updateEnvironmentInput()
 
 		if !plan.Description.Equal(state.Description) {
-			updateInput.Description = aws.String(plan.Description.ValueString())
+			updateInput.Description = plan.Description.ValueStringPointer()
 		}
 
 		if !plan.Name.Equal(state.Name) {
-			updateInput.Name = aws.String(plan.Name.ValueString())
+			updateInput.Name = plan.Name.ValueStringPointer()
 		}
 
 		if !plan.Monitors.Equal(state.Monitors) {
@@ -283,8 +282,8 @@ func (r *resourceEnvironment) Delete(ctx context.Context, request resource.Delet
 	}
 
 	tflog.Debug(ctx, "Deleting AppConfig Environment", map[string]any{
-		"application_id": state.ApplicationID.ValueString(),
-		"environment_id": state.EnvironmentID.ValueString(),
+		names.AttrApplicationID: state.ApplicationID.ValueString(),
+		"environment_id":        state.EnvironmentID.ValueString(),
 	})
 
 	_, err := conn.DeleteEnvironment(ctx, state.deleteEnvironmentInput())
@@ -307,7 +306,7 @@ func (r *resourceEnvironment) ImportState(ctx context.Context, request resource.
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("environment_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_id"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrApplicationID), parts[1])...)
 }
 
 func (r *resourceEnvironment) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -323,8 +322,8 @@ type resourceEnvironmentData struct {
 	Monitors      types.Set    `tfsdk:"monitor"`
 	Name          types.String `tfsdk:"name"`
 	State         types.String `tfsdk:"state"`
-	Tags          types.Map    `tfsdk:"tags"`
-	TagsAll       types.Map    `tfsdk:"tags_all"`
+	Tags          tftags.Map   `tfsdk:"tags"`
+	TagsAll       tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (d *resourceEnvironmentData) refreshFromCreateOutput(ctx context.Context, meta *conns.AWSClient, out *appconfig.CreateEnvironmentOutput) diag.Diagnostics {
@@ -395,22 +394,22 @@ func (d *resourceEnvironmentData) refreshFromUpdateOutput(ctx context.Context, m
 
 func (d *resourceEnvironmentData) getEnvironmentInput() *appconfig.GetEnvironmentInput {
 	return &appconfig.GetEnvironmentInput{
-		ApplicationId: aws.String(d.ApplicationID.ValueString()),
-		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+		ApplicationId: d.ApplicationID.ValueStringPointer(),
+		EnvironmentId: d.EnvironmentID.ValueStringPointer(),
 	}
 }
 
 func (d *resourceEnvironmentData) updateEnvironmentInput() *appconfig.UpdateEnvironmentInput {
 	return &appconfig.UpdateEnvironmentInput{
-		ApplicationId: aws.String(d.ApplicationID.ValueString()),
-		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+		ApplicationId: d.ApplicationID.ValueStringPointer(),
+		EnvironmentId: d.EnvironmentID.ValueStringPointer(),
 	}
 }
 
 func (d *resourceEnvironmentData) deleteEnvironmentInput() *appconfig.DeleteEnvironmentInput {
 	return &appconfig.DeleteEnvironmentInput{
-		ApplicationId: aws.String(d.ApplicationID.ValueString()),
-		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+		ApplicationId: d.ApplicationID.ValueStringPointer(),
+		EnvironmentId: d.EnvironmentID.ValueStringPointer(),
 	}
 }
 
@@ -457,11 +456,11 @@ type monitorData struct {
 
 func (m monitorData) expand() awstypes.Monitor {
 	result := awstypes.Monitor{
-		AlarmArn: aws.String(m.AlarmARN.ValueString()),
+		AlarmArn: m.AlarmARN.ValueStringPointer(),
 	}
 
 	if !m.AlarmRoleARN.IsNull() {
-		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueString())
+		result.AlarmRoleArn = m.AlarmRoleARN.ValueStringPointer()
 	}
 
 	return result
@@ -475,5 +474,5 @@ func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor) *monito
 }
 
 func (m *monitorData) value(ctx context.Context) types.Object {
-	return fwtypes.NewObjectValueOf[monitorData](ctx, m).ObjectValue
+	return fwtypes.NewObjectValueOfMust[monitorData](ctx, m).ObjectValue
 }

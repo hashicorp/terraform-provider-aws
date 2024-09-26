@@ -34,7 +34,7 @@ func TestAccIVSChatRoom_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,10 +42,10 @@ func TestAccIVSChatRoom_basic(t *testing.T) {
 				Config: testAccRoomConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexache.MustCompile(`room/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`room/.+`)),
 				),
 			},
 			{
@@ -68,16 +68,16 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoomConfig_tags1("key1", "value1"),
+				Config: testAccRoomConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -86,20 +86,20 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoomConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccRoomConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRoomConfig_tags1("key2", "value2"),
+				Config: testAccRoomConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -117,7 +117,7 @@ func TestAccIVSChatRoom_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,7 +148,7 @@ func TestAccIVSChatRoom_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +172,7 @@ func TestAccIVSChatRoom_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maximum_message_rate_per_second", maximumMessageRatePerSecond),
 					resource.TestCheckResourceAttr(resourceName, "message_review_handler.0.fallback_result", fallbackResult),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "message_review_handler.0.uri", "lambda", fmt.Sprintf("function:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -191,7 +191,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -199,8 +199,8 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Config: testAccRoomConfig_loggingConfiguration1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test1", names.AttrARN),
 				),
 			},
 			{
@@ -213,9 +213,9 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room2),
 					testAccCheckRoomNotRecreated(&room1, &room2),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test1", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.1", "aws_ivschat_logging_configuration.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test1", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.1", "aws_ivschat_logging_configuration.test2", names.AttrARN),
 				),
 			},
 			{
@@ -223,8 +223,8 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room3),
 					testAccCheckRoomNotRecreated(&room2, &room3),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test3", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test3", names.AttrARN),
 				),
 			},
 			{
@@ -232,7 +232,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room4),
 					testAccCheckRoomNotRecreated(&room3, &room4),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct0),
 				),
 			},
 		},
@@ -251,7 +251,7 @@ func TestAccIVSChatRoom_update_remove_messageReviewHandler_uri(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{

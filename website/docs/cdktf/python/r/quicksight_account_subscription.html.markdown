@@ -39,7 +39,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `account_name` - (Required) Name of your Amazon QuickSight account. This name is unique over all of AWS, and it appears only when users sign in.
-* `authentication_method` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `IAM_AND_QUICKSIGHT`, `IAM_ONLY`, and `ACTIVE_DIRECTORY`.
+* `authentication_method` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `IAM_AND_QUICKSIGHT`, `IAM_ONLY`, `IAM_IDENTITY_CENTER`, and `ACTIVE_DIRECTORY`.
 * `edition` - (Required) Edition of Amazon QuickSight that you want your account to have. Currently, you can choose from `STANDARD`, `ENTERPRISE` or `ENTERPRISE_AND_Q`.
 * `notification_email` - (Required) Email address that you want Amazon QuickSight to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.
 
@@ -53,6 +53,7 @@ The following arguments are optional:
 * `directory_id` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
 * `email_address` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `first_name` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `iam_identity_center_instance_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM Identity Center instance.
 * `last_name` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `reader_group` - (Optional) Reader group associated with your Active Direcrtory.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
@@ -74,4 +75,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.19.0 input-875d75585da05795e23c019e0ffaab500682447eb4464a05a6d4c3ae31219bd9 -->
+<!-- cache-key: cdktf-0.20.1 input-6814e7a35693f8c5c6631a3a5eae738a826b652a72b3cfb8a4b0731b50c2c7fb -->

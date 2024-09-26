@@ -63,7 +63,7 @@ The following arguments are required:
 
 * `dataAccessRoleArn` - (Required) The ARN for an IAM Role which allows Comprehend to read the training and testing data.
 * `inputDataConfig` - (Required) Configuration for the training and testing data.
-  See the [`input_data_config` Configuration Block](#input_data_config-configuration-block) section below.
+  See the [`inputDataConfig` Configuration Block](#input_data_config-configuration-block) section below.
 * `languageCode` - (Required) Two-letter language code for the language.
   One of `en`, `es`, `fr`, `it`, `de`, or `pt`.
 * `name` - (Required) Name for the Document Classifier.
@@ -78,37 +78,37 @@ The following arguments are optional:
 * `modelKmsKeyId` - (Optional) KMS Key used to encrypt trained Document Classifiers.
   Can be a KMS Key ID or a KMS Key ARN.
 * `outputDataConfig` - (Optional) Configuration for the output results of training.
-  See the [`output_data_config` Configuration Block](#output_data_config-configuration-block) section below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  See the [`outputDataConfig` Configuration Block](#output_data_config-configuration-block) section below.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `versionName` - (Optional) Name for the version of the Document Classifier.
   Each version must have a unique name within the Document Classifier.
   If omitted, Terraform will assign a random, unique version name.
   If explicitly set to `""`, no version name will be set.
   Has a maximum length of 63 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
-  Conflicts with `version_name_prefix`.
+  Conflicts with `versionNamePrefix`.
 * `versionNamePrefix` - (Optional) Creates a unique version name beginning with the specified prefix.
   Has a maximum length of 37 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
-  Conflicts with `version_name`.
+  Conflicts with `versionName`.
 * `volumeKmsKeyId` - (Optional) KMS Key used to encrypt storage volumes during job processing.
   Can be a KMS Key ID or a KMS Key ARN.
 * `vpcConfig` - (Optional) Configuration parameters for VPC to contain Document Classifier resources.
-  See the [`vpc_config` Configuration Block](#vpc_config-configuration-block) section below.
+  See the [`vpcConfig` Configuration Block](#vpc_config-configuration-block) section below.
 
 ### `inputDataConfig` Configuration Block
 
 * `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
-  Used if `data_format` is `AUGMENTED_MANIFEST`.
-  See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
+  Used if `dataFormat` is `AUGMENTED_MANIFEST`.
+  See the [`augmentedManifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `dataFormat` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
   One of `COMPREHEND_CSV` or `AUGMENTED_MANIFEST`.
 * `labelDelimiter` - (Optional) Delimiter between labels when training a multi-label classifier.
   Valid values are `|`, `~`, `!`, `@`, `#`, `$`, `%`, `^`, `*`, `-`, `_`, `+`, `=`, `\`, `:`, `;`, `>`, `?`, `/`, `<space>`, and `<tab>`.
   Default is `|`.
 * `s3Uri` - (Optional) Location of training documents.
-  Used if `data_format` is `COMPREHEND_CSV`.
-* `testS3Uri` - (Optional) Location of test documents.
+  Used if `dataFormat` is `COMPREHEND_CSV`.
+* `test_s3uri` - (Optional) Location of test documents.
 
 ### `augmentedManifests` Configuration Block
 
@@ -127,7 +127,7 @@ The following arguments are optional:
   Can be a KMS Key ID, a KMS Key ARN, a KMS Alias name, or a KMS Alias ARN.
 * `outputS3Uri` - (Computed) Full path for the output documents.
 * `s3Uri` - (Required) Destination path for the output documents.
-  The full path to the output file will be returned in `output_s3_uri`.
+  The full path to the output file will be returned in `outputS3Uri`.
 
 ### `vpcConfig` Configuration Block
 
@@ -139,11 +139,11 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Document Classifier version.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
-`awsComprehendDocumentClassifier` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
+`aws_comprehend_document_classifier` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
 * `create` - (Optional, Default: `60m`)
 * `update` - (Optional, Default: `60m`)
@@ -157,9 +157,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ComprehendDocumentClassifier } from "./.gen/providers/aws/comprehend-document-classifier";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ComprehendDocumentClassifier.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:comprehend:us-west-2:123456789012:document_classifier/example"
+    );
   }
 }
 
@@ -171,4 +181,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->
+<!-- cache-key: cdktf-0.20.1 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->

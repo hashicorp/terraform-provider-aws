@@ -21,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_securityhub_action_target")
-func ResourceActionTarget() *schema.Resource {
+// @SDKResource("aws_securityhub_action_target", name="Action Target")
+func resourceActionTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActionTargetCreate,
 		ReadWithoutTimeout:   resourceActionTargetRead,
@@ -35,15 +36,15 @@ func ResourceActionTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -52,7 +53,7 @@ func ResourceActionTarget() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -67,11 +68,11 @@ func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	id := d.Get("identifier").(string)
+	id := d.Get(names.AttrIdentifier).(string)
 	input := &securityhub.CreateActionTargetInput{
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Id:          aws.String(id),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	output, err := conn.CreateActionTarget(ctx, input)
@@ -94,7 +95,7 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindActionTargetByARN(ctx, conn, d.Id())
+	output, err := findActionTargetByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Action Target %s not found, removing from state", d.Id())
@@ -106,10 +107,10 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Action Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ActionTargetArn)
-	d.Set("description", output.Description)
-	d.Set("identifier", actionTargetIdentifier)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.ActionTargetArn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrIdentifier, actionTargetIdentifier)
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
@@ -120,8 +121,8 @@ func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &securityhub.UpdateActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
-		Description:     aws.String(d.Get("description").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if _, err := conn.UpdateActionTarget(ctx, input); err != nil {
@@ -161,27 +162,44 @@ func actionTargetParseID(arn string) (string, error) {
 	return parts[2], nil
 }
 
-func FindActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
+func findActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
 	input := &securityhub.DescribeActionTargetsInput{
 		ActionTargetArns: []string{arn},
 	}
 
-	output, err := conn.DescribeActionTargets(ctx, input)
+	return findActionTarget(ctx, conn, input)
+}
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findActionTarget(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeActionTargetsInput) (*types.ActionTarget, error) {
+	output, err := findActionTargets(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findActionTargets(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeActionTargetsInput) ([]types.ActionTarget, error) {
+	var output []types.ActionTarget
+
+	pages := securityhub.NewDescribeActionTargetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ActionTargets...)
 	}
 
-	return tfresource.AssertSingleValueResult(output.ActionTargets)
+	return output, nil
 }

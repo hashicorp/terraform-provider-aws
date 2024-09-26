@@ -41,29 +41,29 @@ func (d *dataSourceLifecyclePolicy) Metadata(_ context.Context, _ datasource.Met
 func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"last_modified_date": schema.StringAttribute{
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				Computed: true,
 			},
 			"policy_version": schema.StringAttribute{
 				Computed: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.LifecyclePolicyType](),
@@ -91,29 +91,17 @@ func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, out.Name)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.Name = flex.StringToFramework(ctx, out.Name)
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-	data.PolicyVersion = flex.StringToFramework(ctx, out.PolicyVersion)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
+	data.ID = flex.StringToFramework(ctx, out.Name)
 	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
 	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
 
 	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
 	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
-
-	policyBytes, err := out.Policy.MarshalSmithyDocument()
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameLifecyclePolicy, data.Name.ValueString(), err),
-			err.Error(),
-		)
-	}
-
-	pb := string(policyBytes)
-	data.Policy = flex.StringToFramework(ctx, &pb)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

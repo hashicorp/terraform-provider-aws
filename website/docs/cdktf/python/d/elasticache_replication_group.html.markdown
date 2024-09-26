@@ -45,6 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the created ElastiCache Replication Group.
 * `auth_token_enabled` - Whether an AuthToken (password) is enabled.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
+* `cluster_mode` - Whether cluster mode is enabled or disabled.
 * `node_type` – The cluster node type.
 * `num_cache_clusters` – The number of cache clusters that the replication group has.
 * `num_node_groups` - Number of node groups (shards) for the replication group.
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `primary_endpoint_address` - The endpoint of the primary node in this node group (shard).
 * `reader_endpoint_address` - The endpoint of the reader node in this node group (shard).
 
-<!-- cache-key: cdktf-0.19.0 input-88b0ad58e7a5f900fe3b48cf41ab1eb422b27cf6f91b31132f855aea899008d0 -->
+<!-- cache-key: cdktf-0.20.1 input-0a09a165e844244961e767fdfba1cd3d4e4518e4b3958f1415c491847d1b687a -->

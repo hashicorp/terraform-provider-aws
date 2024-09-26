@@ -5,28 +5,80 @@ package flex
 
 import (
 	"context"
-	"testing"
+	"encoding/json"
+	"errors"
+	"reflect"
+	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	smithydocument "github.com/aws/smithy-go/document"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
-type TestFlex00 struct{}
+type emptyStruct struct{}
 
-type TestFlexTF01 struct {
+type tfSingleStringField struct {
 	Field1 types.String `tfsdk:"field1"`
 }
 
-type TestFlexTF02 struct {
+type tfSingleStringFieldIgnore struct {
+	Field1 types.String `tfsdk:"field1" autoflex:"-"`
+}
+
+type tfSingleStringFieldOmitEmpty struct {
+	Field1 types.String `tfsdk:"field1" autoflex:",omitempty"`
+}
+
+type tfSingleStringFieldLegacy struct {
+	Field1 types.String `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSingleFloat64Field struct {
+	Field1 types.Float64 `tfsdk:"field1"`
+}
+
+type tfSingleFloat64FieldLegacy struct {
+	Field1 types.Float64 `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSingleFloat32Field struct {
+	Field1 types.Float32 `tfsdk:"field1"`
+}
+
+type tfSingleFloat32FieldLegacy struct {
+	Field1 types.Float32 `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSingleInt64Field struct {
 	Field1 types.Int64 `tfsdk:"field1"`
 }
 
+type tfSingleInt64FieldLegacy struct {
+	Field1 types.Int64 `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSingleInt32Field struct {
+	Field1 types.Int32 `tfsdk:"field1"`
+}
+
+type tfSingleInt32FieldLegacy struct {
+	Field1 types.Int32 `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSingleBoolField struct {
+	Field1 types.Bool `tfsdk:"field1"`
+}
+
+type tfSingleBoolFieldLegacy struct {
+	Field1 types.Bool `tfsdk:"field1" autoflex:",legacy"`
+}
+
 // All primitive types.
-type TestFlexTF03 struct {
+type tfAllThePrimitiveFields struct {
 	Field1  types.String  `tfsdk:"field1"`
 	Field2  types.String  `tfsdk:"field2"`
 	Field3  types.Int64   `tfsdk:"field3"`
@@ -41,64 +93,7 @@ type TestFlexTF03 struct {
 	Field12 types.Bool    `tfsdk:"field12"`
 }
 
-// List/Set/Map of primitive types.
-type TestFlexTF04 struct {
-	Field1 types.List `tfsdk:"field1"`
-	Field2 types.List `tfsdk:"field2"`
-	Field3 types.Set  `tfsdk:"field3"`
-	Field4 types.Set  `tfsdk:"field4"`
-	Field5 types.Map  `tfsdk:"field5"`
-	Field6 types.Map  `tfsdk:"field6"`
-}
-
-type TestFlexTF05 struct {
-	Field1 fwtypes.ListNestedObjectValueOf[TestFlexTF01] `tfsdk:"field1"`
-}
-
-type TestFlexTF06 struct {
-	Field1 fwtypes.SetNestedObjectValueOf[TestFlexTF01] `tfsdk:"field1"`
-}
-
-type TestFlexTF07 struct {
-	Field1 types.String                                  `tfsdk:"field1"`
-	Field2 fwtypes.ListNestedObjectValueOf[TestFlexTF05] `tfsdk:"field2"`
-	Field3 types.Map                                     `tfsdk:"field3"`
-	Field4 fwtypes.SetNestedObjectValueOf[TestFlexTF02]  `tfsdk:"field4"`
-}
-
-// TestFlexTF08 testing for idiomatic singular on TF side but plural on AWS side
-type TestFlexTF08 struct {
-	Field fwtypes.ListNestedObjectValueOf[TestFlexTF01] `tfsdk:"field"`
-}
-
-type TestFlexTF09 struct {
-	City      types.List `tfsdk:"city"`
-	Coach     types.List `tfsdk:"coach"`
-	Tomato    types.List `tfsdk:"tomato"`
-	Vertex    types.List `tfsdk:"vertex"`
-	Criterion types.List `tfsdk:"criterion"`
-	Datum     types.List `tfsdk:"datum"`
-	Hive      types.List `tfsdk:"hive"`
-}
-
-// TestFlexTF10 testing for fields that only differ by capitalization
-type TestFlexTF10 struct {
-	FieldURL types.String `tfsdk:"field_url"`
-}
-
-type TestFlexAWS01 struct {
-	Field1 string
-}
-
-type TestFlexAWS02 struct {
-	Field1 *string
-}
-
-type TestFlexAWS03 struct {
-	Field1 int64
-}
-
-type TestFlexAWS04 struct {
+type awsAllThePrimitiveFields struct {
 	Field1  string
 	Field2  *string
 	Field3  int32
@@ -113,7 +108,27 @@ type TestFlexAWS04 struct {
 	Field12 *bool
 }
 
-type TestFlexAWS05 struct {
+// List/Set/Map of primitive types.
+type tfCollectionsOfPrimitiveElements struct {
+	Field1 types.List `tfsdk:"field1"`
+	Field2 types.List `tfsdk:"field2"`
+	Field3 types.Set  `tfsdk:"field3"`
+	Field4 types.Set  `tfsdk:"field4"`
+	Field5 types.Map  `tfsdk:"field5"`
+	Field6 types.Map  `tfsdk:"field6"`
+}
+
+// List/Set/Map of string types.
+type tfTypedCollectionsOfPrimitiveElements struct {
+	Field1 fwtypes.ListValueOf[types.String] `tfsdk:"field1"`
+	Field2 fwtypes.ListValueOf[types.String] `tfsdk:"field2"`
+	Field3 fwtypes.SetValueOf[types.String]  `tfsdk:"field3"`
+	Field4 fwtypes.SetValueOf[types.String]  `tfsdk:"field4"`
+	Field5 fwtypes.MapValueOf[types.String]  `tfsdk:"field5"`
+	Field6 fwtypes.MapValueOf[types.String]  `tfsdk:"field6"`
+}
+
+type awsCollectionsOfPrimitiveElements struct {
 	Field1 []string
 	Field2 []*string
 	Field3 []string
@@ -122,30 +137,76 @@ type TestFlexAWS05 struct {
 	Field6 map[string]*string
 }
 
-type TestFlexAWS06 struct {
-	Field1 *TestFlexAWS01
+type awsSimpleStringValueSlice struct {
+	Field1 []string
 }
 
-type TestFlexAWS07 struct {
-	Field1 []*TestFlexAWS01
+type tfSimpleSet struct {
+	Field1 types.Set `tfsdk:"field1"`
 }
 
-type TestFlexAWS08 struct {
-	Field1 []TestFlexAWS01
+type tfSimpleSetLegacy struct {
+	Field1 types.Set `tfsdk:"field1" autoflex:",legacy"`
 }
 
-type TestFlexAWS09 struct {
+type tfSimpleList struct {
+	Field1 types.List `tfsdk:"field1"`
+}
+
+type tfSimpleListLegacy struct {
+	Field1 types.List `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfListOfNestedObject struct {
+	Field1 fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
+}
+
+type tfListOfNestedObjectLegacy struct {
+	Field1 fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSetOfNestedObject struct {
+	Field1 fwtypes.SetNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
+}
+
+type tfSetOfNestedObjectLegacy struct {
+	Field1 fwtypes.SetNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfComplexValue struct {
+	Field1 types.String                                          `tfsdk:"field1"`
+	Field2 fwtypes.ListNestedObjectValueOf[tfListOfNestedObject] `tfsdk:"field2"`
+	Field3 types.Map                                             `tfsdk:"field3"`
+	Field4 fwtypes.SetNestedObjectValueOf[tfSingleInt64Field]    `tfsdk:"field4"`
+}
+
+type awsComplexValue struct {
 	Field1 string
-	Field2 *TestFlexAWS06
+	Field2 *awsNestedObjectPointer
 	Field3 map[string]*string
-	Field4 []TestFlexAWS03
+	Field4 []awsSingleInt64Value
 }
 
-type TestFlexAWS10 struct {
-	Fields []TestFlexAWS01
+// tfSingluarListOfNestedObjects testing for idiomatic singular on TF side but plural on AWS side
+type tfSingluarListOfNestedObjects struct {
+	Field fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field"`
 }
 
-type TestFlexAWS11 struct {
+type awsPluralSliceOfNestedObjectValues struct {
+	Fields []awsSingleStringValue
+}
+
+type tfSpecialPluralization struct {
+	City      types.List `tfsdk:"city"`
+	Coach     types.List `tfsdk:"coach"`
+	Tomato    types.List `tfsdk:"tomato"`
+	Vertex    types.List `tfsdk:"vertex"`
+	Criterion types.List `tfsdk:"criterion"`
+	Datum     types.List `tfsdk:"datum"`
+	Hive      types.List `tfsdk:"hive"`
+}
+
+type awsSpecialPluralization struct {
 	Cities   []*string
 	Coaches  []*string
 	Tomatoes []*string
@@ -155,1534 +216,485 @@ type TestFlexAWS11 struct {
 	Hives    []*string
 }
 
-type TestFlexAWS12 struct {
+// tfCaptializationDiff testing for fields that only differ by capitalization
+type tfCaptializationDiff struct {
+	FieldURL types.String `tfsdk:"field_url"`
+}
+
+// awsCapitalizationDiff testing for fields that only differ by capitalization
+type awsCapitalizationDiff struct {
 	FieldUrl *string
 }
 
-type TestFlexTF16 struct {
+type awsSingleBoolValue struct {
+	Field1 bool
+}
+
+type awsSingleBoolPointer struct {
+	Field1 *bool
+}
+
+type awsSingleStringValue struct {
+	Field1 string
+}
+
+type awsSingleStringPointer struct {
+	Field1 *string
+}
+
+type awsSingleFloat64Value struct {
+	Field1 float64
+}
+
+type awsSingleFloat64Pointer struct {
+	Field1 *float64
+}
+
+type awsSingleFloat32Value struct {
+	Field1 float32
+}
+
+type awsSingleFloat32Pointer struct {
+	Field1 *float32
+}
+
+type awsSingleInt64Value struct {
+	Field1 int64
+}
+
+type awsSingleInt64Pointer struct {
+	Field1 *int64
+}
+
+type awsSingleInt32Value struct {
+	Field1 int32
+}
+
+type awsSingleInt32Pointer struct {
+	Field1 *int32
+}
+
+type awsNestedObjectPointer struct {
+	Field1 *awsSingleStringValue
+}
+
+type awsSliceOfNestedObjectPointers struct {
+	Field1 []*awsSingleStringValue
+}
+
+type awsSliceOfNestedObjectValues struct {
+	Field1 []awsSingleStringValue
+}
+
+// tfFieldNamePrefix has no prefix to test matching on prefix
+type tfFieldNamePrefix struct {
 	Name types.String `tfsdk:"name"`
 }
 
-type TestFlexAWS18 struct {
+// awsFieldNamePrefix has prefix to test matching on prefix
+type awsFieldNamePrefix struct {
 	IntentName *string
 }
 
-func TestGenericExpand(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-	testString := "test"
-	testStringResult := "a"
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
-		{
-			TestName: "nil Source and Target",
-			WantErr:  true,
-		},
-		{
-			TestName: "non-pointer Target",
-			Source:   TestFlex00{},
-			Target:   0,
-			WantErr:  true,
-		},
-		{
-			TestName: "non-struct Source",
-			Source:   testString,
-			Target:   &TestFlex00{},
-			WantErr:  true,
-		},
-		{
-			TestName: "non-struct Target",
-			Source:   TestFlex00{},
-			Target:   &testString,
-			WantErr:  true,
-		},
-		{
-			TestName:   "types.String to string",
-			Source:     types.StringValue("a"),
-			Target:     &testString,
-			WantTarget: &testStringResult,
-		},
-		{
-			TestName:   "empty struct Source and Target",
-			Source:     TestFlex00{},
-			Target:     &TestFlex00{},
-			WantTarget: &TestFlex00{},
-		},
-		{
-			TestName:   "empty struct pointer Source and Target",
-			Source:     &TestFlex00{},
-			Target:     &TestFlex00{},
-			WantTarget: &TestFlex00{},
-		},
-		{
-			TestName:   "single string struct pointer Source and empty Target",
-			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
-			Target:     &TestFlex00{},
-			WantTarget: &TestFlex00{},
-		},
-		{
-			TestName: "does not implement attr.Value Source",
-			Source:   &TestFlexAWS01{Field1: "a"},
-			Target:   &TestFlexAWS01{},
-			WantErr:  true,
-		},
-		{
-			TestName:   "single string Source and single string Target",
-			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
-			Target:     &TestFlexAWS01{},
-			WantTarget: &TestFlexAWS01{Field1: "a"},
-		},
-		{
-			TestName:   "single string Source and single *string Target",
-			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
-			Target:     &TestFlexAWS02{},
-			WantTarget: &TestFlexAWS02{Field1: aws.String("a")},
-		},
-		{
-			TestName:   "single string Source and single int64 Target",
-			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
-			Target:     &TestFlexAWS03{},
-			WantTarget: &TestFlexAWS03{},
-		},
-		{
-			TestName: "primtive types Source and primtive types Target",
-			Source: &TestFlexTF03{
-				Field1:  types.StringValue("field1"),
-				Field2:  types.StringValue("field2"),
-				Field3:  types.Int64Value(3),
-				Field4:  types.Int64Value(-4),
-				Field5:  types.Int64Value(5),
-				Field6:  types.Int64Value(-6),
-				Field7:  types.Float64Value(7.7),
-				Field8:  types.Float64Value(-8.8),
-				Field9:  types.Float64Value(9.99),
-				Field10: types.Float64Value(-10.101),
-				Field11: types.BoolValue(true),
-				Field12: types.BoolValue(false),
-			},
-			Target: &TestFlexAWS04{},
-			WantTarget: &TestFlexAWS04{
-				Field1:  "field1",
-				Field2:  aws.String("field2"),
-				Field3:  3,
-				Field4:  aws.Int32(-4),
-				Field5:  5,
-				Field6:  aws.Int64(-6),
-				Field7:  7.7,
-				Field8:  aws.Float32(-8.8),
-				Field9:  9.99,
-				Field10: aws.Float64(-10.101),
-				Field11: true,
-				Field12: aws.Bool(false),
-			},
-		},
-		{
-			TestName: "List/Set/Map of primitive types Source and slice/map of primtive types Target",
-			Source: &TestFlexTF04{
-				Field1: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field2: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field3: types.SetValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field4: types.SetValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field5: types.MapValueMust(types.StringType, map[string]attr.Value{
-					"A": types.StringValue("a"),
-					"B": types.StringValue("b"),
-				}),
-				Field6: types.MapValueMust(types.StringType, map[string]attr.Value{
-					"A": types.StringValue("a"),
-					"B": types.StringValue("b"),
-				}),
-			},
-			Target: &TestFlexAWS05{},
-			WantTarget: &TestFlexAWS05{
-				Field1: []string{"a", "b"},
-				Field2: aws.StringSlice([]string{"a", "b"}),
-				Field3: []string{"a", "b"},
-				Field4: aws.StringSlice([]string{"a", "b"}),
-				Field5: map[string]string{"A": "a", "B": "b"},
-				Field6: aws.StringMap(map[string]string{"A": "a", "B": "b"}),
-			},
-		},
-		{
-			TestName:   "single list Source and *struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
-			Target:     &TestFlexAWS06{},
-			WantTarget: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
-		},
-		{
-			TestName:   "single set Source and *struct Target",
-			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
-			Target:     &TestFlexAWS06{},
-			WantTarget: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
-		},
-		{
-			TestName:   "empty list Source and empty []struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
-			Target:     &TestFlexAWS08{},
-			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
-		},
-		{
-			TestName: "non-empty list Source and non-empty []struct Target",
-			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-			Target: &TestFlexAWS08{},
-			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-		},
-		{
-			TestName:   "empty list Source and empty []*struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
-			Target:     &TestFlexAWS07{},
-			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
-		},
-		{
-			TestName: "non-empty list Source and non-empty []*struct Target",
-			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-			Target: &TestFlexAWS07{},
-			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-		},
-		{
-			TestName:   "empty list Source and empty []struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
-			Target:     &TestFlexAWS08{},
-			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
-		},
-		{
-			TestName: "non-empty list Source and non-empty []struct Target",
-			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-			Target: &TestFlexAWS08{},
-			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-		},
-		{
-			TestName:   "empty set Source and empty []*struct Target",
-			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
-			Target:     &TestFlexAWS07{},
-			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
-		},
-		{
-			TestName: "non-empty set Source and non-empty []*struct Target",
-			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-			Target: &TestFlexAWS07{},
-			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-		},
-		{
-			TestName: "non-empty set Source and non-empty []struct Target",
-			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-			Target: &TestFlexAWS08{},
-			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-		},
-		{
-			TestName: "complex Source and complex Target",
-			Source: &TestFlexTF07{
-				Field1: types.StringValue("m"),
-				Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF05{
-					Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
-						Field1: types.StringValue("n"),
-					}),
-				}),
-				Field3: types.MapValueMust(types.StringType, map[string]attr.Value{
-					"X": types.StringValue("x"),
-					"Y": types.StringValue("y"),
-				}),
-				Field4: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF02{
-					{Field1: types.Int64Value(100)},
-					{Field1: types.Int64Value(2000)},
-					{Field1: types.Int64Value(30000)},
-				}),
-			},
-			Target: &TestFlexAWS09{},
-			WantTarget: &TestFlexAWS09{
-				Field1: "m",
-				Field2: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "n"}},
-				Field3: aws.StringMap(map[string]string{"X": "x", "Y": "y"}),
-				Field4: []TestFlexAWS03{{Field1: 100}, {Field1: 2000}, {Field1: 30000}},
-			},
-		},
-		{
-			TestName: "plural ordinary field names",
-			Source: &TestFlexTF08{
-				Field: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
-					Field1: types.StringValue("a"),
-				}),
-			},
-			Target: &TestFlexAWS10{},
-			WantTarget: &TestFlexAWS10{
-				Fields: []TestFlexAWS01{{Field1: "a"}},
-			},
-		},
-		{
-			TestName: "plural field names",
-			Source: &TestFlexTF09{
-				City: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("paris"),
-					types.StringValue("london"),
-				}),
-				Coach: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("guardiola"),
-					types.StringValue("mourinho"),
-				}),
-				Tomato: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("brandywine"),
-					types.StringValue("roma"),
-				}),
-				Vertex: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("ab"),
-					types.StringValue("bc"),
-				}),
-				Criterion: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("votes"),
-					types.StringValue("editors"),
-				}),
-				Datum: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
-					types.StringValue("0f10cb10-2076-5254-bd21-d3f62fe66303"),
-				}),
-				Hive: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("Cegieme"),
-					types.StringValue("Fahumvid"),
-				}),
-			},
-			Target: &TestFlexAWS11{},
-			WantTarget: &TestFlexAWS11{
-				Cities: []*string{
-					aws.String("paris"),
-					aws.String("london"),
-				},
-				Coaches: []*string{
-					aws.String("guardiola"),
-					aws.String("mourinho"),
-				},
-				Tomatoes: []*string{
-					aws.String("brandywine"),
-					aws.String("roma"),
-				},
-				Vertices: []*string{
-					aws.String("ab"),
-					aws.String("bc"),
-				},
-				Criteria: []*string{
-					aws.String("votes"),
-					aws.String("editors"),
-				},
-				Data: []*string{
-					aws.String("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
-					aws.String("0f10cb10-2076-5254-bd21-d3f62fe66303"),
-				},
-				Hives: []*string{
-					aws.String("Cegieme"),
-					aws.String("Fahumvid"),
-				},
-			},
-		},
-		{
-			TestName: "capitalization field names",
-			Source: &TestFlexTF10{
-				FieldURL: types.StringValue("h"),
-			},
-			Target: &TestFlexAWS12{},
-			WantTarget: &TestFlexAWS12{
-				FieldUrl: aws.String("h"),
-			},
-		},
-		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
-			TestName: "resource name prefix",
-			Source: &TestFlexTF16{
-				Name: types.StringValue("Ovodoghen"),
-			},
-			Target: &TestFlexAWS18{},
-			WantTarget: &TestFlexAWS18{
-				IntentName: aws.String("Ovodoghen"),
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
-
-			err := Expand(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
-
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
+type tfFieldNamePrefixInsensitive struct {
+	ID types.String `tfsdk:"id"`
 }
 
-type TestFlexTF11 struct {
+type awsFieldNamePrefixInsensitive struct {
+	ClientId *string
+}
+
+// tfFieldNameSuffix has no suffix to test matching on suffix
+type tfFieldNameSuffix struct {
+	Policy types.String `tfsdk:"policy"`
+}
+
+// awsFieldNameSuffix has suffix to test matching on suffix
+type awsFieldNameSuffix struct {
+	PolicyConfig *string
+}
+
+type tfRFC3339Time struct {
+	CreationDateTime timetypes.RFC3339 `tfsdk:"creation_date_time"`
+}
+
+type awsRFC3339TimePointer struct {
+	CreationDateTime *time.Time
+}
+
+type awsRFC3339TimeValue struct {
+	CreationDateTime time.Time
+}
+
+type tfMapOfString struct {
 	FieldInner fwtypes.MapValueOf[basetypes.StringValue] `tfsdk:"field_inner"`
 }
 
-type TestFlexTF12 struct {
-	FieldInner fwtypes.ObjectMapValueOf[TestFlexTF01] `tfsdk:"field_inner"`
+type tfNestedMapOfString struct {
+	FieldOuter fwtypes.ListNestedObjectValueOf[tfMapOfString] `tfsdk:"field_outer"`
 }
 
-type TestFlexTF13 struct {
-	FieldInner fwtypes.ObjectMapValueOf[*TestFlexTF01] `tfsdk:"field_inner"`
+type awsNestedMapOfString struct {
+	FieldOuter awsMapOfString
 }
 
-type TestFlexTF14 struct {
-	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF11] `tfsdk:"field_outer"`
+type tfMapOfMapOfString struct {
+	Field1 fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"field1"`
 }
 
-type TestFlexTF15 struct {
-	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF12] `tfsdk:"field_outer"`
-}
-
-type TestFlexAWS13 struct {
+type awsMapOfString struct {
 	FieldInner map[string]string
 }
 
-type TestFlexAWS14 struct {
-	FieldInner map[string]TestFlexAWS01
+type awsMapOfMapOfString struct {
+	Field1 map[string]map[string]string
 }
 
-type TestFlexAWS15 struct {
-	FieldInner map[string]*TestFlexAWS01
+type awsMapOfMapOfStringPointer struct {
+	Field1 map[string]map[string]*string
 }
 
-type TestFlexAWS16 struct {
-	FieldOuter TestFlexAWS13
+type awsMapOfStringPointer struct {
+	FieldInner map[string]*string
 }
 
-type TestFlexAWS17 struct {
-	FieldOuter TestFlexAWS14
-}
-
-type TestEnum string
+type testEnum string
 
 // Enum values for SlotShape
 const (
-	TestEnumScalar TestEnum = "Scalar"
-	TestEnumList   TestEnum = "List"
+	testEnumScalar testEnum = "Scalar"
+	testEnumList   testEnum = "List"
 )
 
-func (TestEnum) Values() []TestEnum {
-	return []TestEnum{
-		"Scalar",
-		"List",
+func (testEnum) Values() []testEnum {
+	return []testEnum{
+		testEnumScalar,
+		testEnumList,
 	}
 }
 
-type TestFlexComplexNestTF01 struct { // ie, DialogState
-	DialogAction      fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF02] `tfsdk:"dialog_action"`
-	Intent            fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF03] `tfsdk:"intent"`
-	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]                `tfsdk:"session_attributes"`
-}
-type TestFlexComplexNestAWS01 struct { // ie, DialogState
-	DialogAction      *TestFlexComplexNestAWS02
-	Intent            *TestFlexComplexNestAWS03
-	SessionAttributes map[string]string
-}
-
-type TestFlexComplexNestTF02 struct { // ie, DialogAction
-	Type                fwtypes.StringEnum[TestEnum] `tfsdk:"type"`
-	SlotToElicit        types.String                 `tfsdk:"slot_to_elicit"`
-	SuppressNextMessage types.Bool                   `tfsdk:"suppress_next_message"`
-}
-type TestFlexComplexNestAWS02 struct { // ie, DialogAction
-	Type                TestEnum
-	SlotToElicit        *string
-	SuppressNextMessage *bool
-}
-
-type TestFlexComplexNestTF03 struct { // ie, IntentOverride
-	Name  types.String                                      `tfsdk:"name"`
-	Slots fwtypes.ObjectMapValueOf[TestFlexComplexNestTF04] `tfsdk:"slots"`
-}
-type TestFlexComplexNestAWS03 struct { // ie, IntentOverride
-	Name  *string
-	Slots map[string]TestFlexComplexNestAWS04
-}
-
-type TestFlexComplexNestTF04 struct { // ie, TestFlexComplexNestAWS04
-	Shape fwtypes.StringEnum[TestEnum]                             `tfsdk:"shape"`
-	Value fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF05] `tfsdk:"value"`
-}
-type TestFlexComplexNestAWS04 struct { // ie, SlotValueOverride
-	Shape  TestEnum
-	Value  *TestFlexComplexNestAWS05
-	Values []TestFlexComplexNestAWS04 // recursive type
-}
-
-type TestFlexComplexNestTF05 struct { // ie, SlotValue
-	InterpretedValue types.String `tfsdk:"interpreted_value"`
-}
-type TestFlexComplexNestAWS05 struct { // ie, SlotValue
-	InterpretedValue *string
-}
-
-type TestFlexPluralityTF01 struct {
+type tfPluralAndSingularFields struct {
 	Value types.String `tfsdk:"Value"`
 }
-type TestFlexPluralityAWS01 struct {
+
+type awsPluralAndSingularFields struct {
 	Value  string
 	Values string
 }
 
-func TestGenericExpandAdvanced(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	testCases := []struct {
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
-		{
-			TestName: "map string",
-			Source: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-					"x": types.StringValue("y"),
-				}),
-			},
-			Target: &TestFlexAWS13{},
-			WantTarget: &TestFlexAWS13{
-				FieldInner: map[string]string{
-					"x": "y",
-				},
-			},
-		},
-		{
-			TestName: "object map",
-			Source: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx, map[string]TestFlexTF01{
-					"x": {
-						Field1: types.StringValue("a"),
-					}},
-				),
-			},
-			Target: &TestFlexAWS14{},
-			WantTarget: &TestFlexAWS14{
-				FieldInner: map[string]TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-		},
-		{
-			TestName: "object map ptr target",
-			Source: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-					map[string]TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-			Target: &TestFlexAWS15{},
-			WantTarget: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-		},
-		{
-			TestName: "object map ptr source and target",
-			Source: &TestFlexTF13{
-				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
-					map[string]*TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-			Target: &TestFlexAWS15{},
-			WantTarget: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-		},
-		{
-			TestName: "nested string map",
-			Source: &TestFlexTF14{
-				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-						"x": types.StringValue("y"),
-					}),
-				}),
-			},
-			Target: &TestFlexAWS16{},
-			WantTarget: &TestFlexAWS16{
-				FieldOuter: TestFlexAWS13{
-					FieldInner: map[string]string{
-						"x": "y",
-					},
-				},
-			},
-		},
-		{
-			TestName: "nested object map",
-			Source: &TestFlexTF15{
-				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
-					FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-						map[string]TestFlexTF01{
-							"x": {
-								Field1: types.StringValue("a"),
-							},
-						},
-					),
-				}),
-			},
-			Target: &TestFlexAWS17{},
-			WantTarget: &TestFlexAWS17{
-				FieldOuter: TestFlexAWS14{
-					FieldInner: map[string]TestFlexAWS01{
-						"x": {
-							Field1: "a",
-						},
-					},
-				},
-			},
-		},
-		{
-			TestName: "complex nesting",
-			Source: &TestFlexComplexNestTF01{
-				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
-					Type:                fwtypes.StringEnumValue(TestEnumList),
-					SlotToElicit:        types.StringValue("x"),
-					SuppressNextMessage: types.BoolValue(true),
-				}),
-				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
-					Name: types.StringValue("x"),
-					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
-						"x": {
-							Shape: fwtypes.StringEnumValue(TestEnumList),
-							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
-								InterpretedValue: types.StringValue("y"),
-							}),
-						},
-					}),
-				}),
-				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-					"x": basetypes.NewStringValue("y"),
-				}),
-			},
-			Target: &TestFlexComplexNestAWS01{},
-			WantTarget: &TestFlexComplexNestAWS01{
-				DialogAction: &TestFlexComplexNestAWS02{
-					Type:                TestEnumList,
-					SlotToElicit:        aws.String("x"),
-					SuppressNextMessage: aws.Bool(true),
-				},
-				Intent: &TestFlexComplexNestAWS03{
-					Name: aws.String("x"),
-					Slots: map[string]TestFlexComplexNestAWS04{
-						"x": {
-							Shape: TestEnumList,
-							Value: &TestFlexComplexNestAWS05{
-								InterpretedValue: aws.String("y"),
-							},
-						},
-					},
-				},
-				SessionAttributes: map[string]string{
-					"x": "y",
-				},
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			err := Expand(ctx, testCase.Source, testCase.Target)
-			gotErr := err != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
-
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
-type TestFlexTF17 struct {
+type tfSingleARNField struct {
 	Field1 fwtypes.ARN `tfsdk:"field1"`
 }
 
-func TestGenericExpandCustomStringType(t *testing.T) {
-	t.Parallel()
+type tfMapBlockList struct {
+	MapBlock fwtypes.ListNestedObjectValueOf[tfMapBlockElement] `tfsdk:"map_block"`
+}
 
-	a := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
-	ctx := context.Background()
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
-		{
-			TestName:   "single ARN Source and single string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
-			Target:     &TestFlexAWS01{},
-			WantTarget: &TestFlexAWS01{Field1: a},
-		},
-		{
-			TestName:   "single ARN Source and single *string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
-			Target:     &TestFlexAWS02{},
-			WantTarget: &TestFlexAWS02{Field1: aws.String(a)},
-		},
+type tfMapBlockSet struct {
+	MapBlock fwtypes.SetNestedObjectValueOf[tfMapBlockElement] `tfsdk:"map_block"`
+}
+
+type awsMapBlockValues struct {
+	MapBlock map[string]awsMapBlockElement
+}
+
+type awsMapBlockPointers struct {
+	MapBlock map[string]*awsMapBlockElement
+}
+
+type tfMapBlockElement struct {
+	MapBlockKey types.String `tfsdk:"map_block_key"`
+	Attr1       types.String `tfsdk:"attr1"`
+	Attr2       types.String `tfsdk:"attr2"`
+}
+
+type awsMapBlockElement struct {
+	Attr1 string
+	Attr2 string
+}
+
+type tfMapBlockListEnumKey struct {
+	MapBlock fwtypes.ListNestedObjectValueOf[tfMapBlockElementEnumKey] `tfsdk:"map_block"`
+}
+
+type tfMapBlockElementEnumKey struct {
+	MapBlockKey fwtypes.StringEnum[testEnum] `tfsdk:"map_block_key"`
+	Attr1       types.String                 `tfsdk:"attr1"`
+	Attr2       types.String                 `tfsdk:"attr2"`
+}
+
+type tfMapBlockListNoKey struct {
+	MapBlock fwtypes.ListNestedObjectValueOf[tfMapBlockElementNoKey] `tfsdk:"map_block"`
+}
+
+type tfMapBlockElementNoKey struct {
+	Attr1 types.String `tfsdk:"attr1"`
+	Attr2 types.String `tfsdk:"attr2"`
+}
+
+var _ smithyjson.JSONStringer = (*testJSONDocument)(nil)
+var _ smithydocument.Marshaler = (*testJSONDocument)(nil)
+
+type testJSONDocument struct {
+	Value any
+}
+
+func newTestJSONDocument(v any) smithyjson.JSONStringer {
+	return &testJSONDocument{Value: v}
+}
+
+func (m *testJSONDocument) UnmarshalSmithyDocument(v interface{}) error {
+	data, err := json.Marshal(m.Value)
+	if err != nil {
+		return err
 	}
+	return json.Unmarshal(data, v)
+}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
+func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
+	return json.Marshal(m.Value)
+}
 
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
+var _ smithyjson.JSONStringer = &testJSONDocumentError{}
 
-			err := Expand(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
+type testJSONDocumentError struct{}
 
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
+func (m *testJSONDocumentError) UnmarshalSmithyDocument(v interface{}) error {
+	return errUnmarshallSmithyDocument
+}
 
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
+func (m *testJSONDocumentError) MarshalSmithyDocument() ([]byte, error) {
+	return nil, errMarshallSmithyDocument
+}
+
+var (
+	errUnmarshallSmithyDocument = errors.New("test unmarshal error")
+	errMarshallSmithyDocument   = errors.New("test marshal error")
+)
+
+type awsJSONStringer struct {
+	Field1 smithyjson.JSONStringer `json:"field1"`
+}
+
+type tfJSONStringer struct {
+	Field1 fwtypes.SmithyJSON[smithyjson.JSONStringer] `tfsdk:"field1"`
+}
+
+type tfListNestedObject[T any] struct {
+	Field1 fwtypes.ListNestedObjectValueOf[T] `tfsdk:"field1"`
+}
+
+type tfSetNestedObject[T any] struct {
+	Field1 fwtypes.SetNestedObjectValueOf[T] `tfsdk:"field1"`
+}
+
+type tfObjectValue[T any] struct {
+	Field1 fwtypes.ObjectValueOf[T] `tfsdk:"field1"`
+}
+
+type tfInterfaceFlexer struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var (
+	_ Expander  = tfInterfaceFlexer{}
+	_ Flattener = &tfInterfaceFlexer{}
+)
+
+func (t tfInterfaceFlexer) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return &awsInterfaceInterfaceImpl{
+		AWSField: StringValueFromFramework(ctx, t.Field1),
+	}, nil
+}
+
+func (t *tfInterfaceFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case awsInterfaceInterfaceImpl:
+		t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		return diags
+
+	default:
+		return diags
 	}
 }
 
-func TestGenericFlatten(t *testing.T) {
-	t.Parallel()
+type tfInterfaceIncompatibleExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
 
-	ctx := context.Background()
-	testString := "test"
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
-		{
-			TestName: "nil Source and Target",
-			WantErr:  true,
-		},
-		{
-			TestName: "non-pointer Target",
-			Source:   TestFlex00{},
-			Target:   0,
-			WantErr:  true,
-		},
-		{
-			TestName: "non-struct Source",
-			Source:   testString,
-			Target:   &TestFlex00{},
-			WantErr:  true,
-		},
-		{
-			TestName: "non-struct Target",
-			Source:   TestFlex00{},
-			Target:   &testString,
-			WantErr:  true,
-		},
-		{
-			TestName:   "empty struct Source and Target",
-			Source:     TestFlex00{},
-			Target:     &TestFlex00{},
-			WantTarget: &TestFlex00{},
-		},
-		{
-			TestName:   "empty struct pointer Source and Target",
-			Source:     &TestFlex00{},
-			Target:     &TestFlex00{},
-			WantTarget: &TestFlex00{},
-		},
-		{
-			TestName:   "single string struct pointer Source and empty Target",
-			Source:     &TestFlexAWS01{Field1: "a"},
-			Target:     &TestFlex00{},
-			WantTarget: &TestFlex00{},
-		},
-		{
-			TestName: "does not implement attr.Value Target",
-			Source:   &TestFlexAWS01{Field1: "a"},
-			Target:   &TestFlexAWS01{},
-			WantErr:  true,
-		},
-		{
-			TestName:   "single empty string Source and single string Target",
-			Source:     &TestFlexAWS01{},
-			Target:     &TestFlexTF01{},
-			WantTarget: &TestFlexTF01{Field1: types.StringValue("")},
-		},
-		{
-			TestName:   "single string Source and single string Target",
-			Source:     &TestFlexAWS01{Field1: "a"},
-			Target:     &TestFlexTF01{},
-			WantTarget: &TestFlexTF01{Field1: types.StringValue("a")},
-		},
-		{
-			TestName:   "single nil *string Source and single string Target",
-			Source:     &TestFlexAWS02{},
-			Target:     &TestFlexTF01{},
-			WantTarget: &TestFlexTF01{Field1: types.StringNull()},
-		},
-		{
-			TestName:   "single *string Source and single string Target",
-			Source:     &TestFlexAWS02{Field1: aws.String("a")},
-			Target:     &TestFlexTF01{},
-			WantTarget: &TestFlexTF01{Field1: types.StringValue("a")},
-		},
-		{
-			TestName:   "single string Source and single int64 Target",
-			Source:     &TestFlexAWS01{Field1: "a"},
-			Target:     &TestFlexTF02{},
-			WantTarget: &TestFlexTF02{},
-		},
-		{
-			TestName: "zero value primtive types Source and primtive types Target",
-			Source:   &TestFlexAWS04{},
-			Target:   &TestFlexTF03{},
-			WantTarget: &TestFlexTF03{
-				Field1:  types.StringValue(""),
-				Field2:  types.StringNull(),
-				Field3:  types.Int64Value(0),
-				Field4:  types.Int64Null(),
-				Field5:  types.Int64Value(0),
-				Field6:  types.Int64Null(),
-				Field7:  types.Float64Value(0),
-				Field8:  types.Float64Null(),
-				Field9:  types.Float64Value(0),
-				Field10: types.Float64Null(),
-				Field11: types.BoolValue(false),
-				Field12: types.BoolNull(),
-			},
-		},
-		{
-			TestName: "primtive types Source and primtive types Target",
-			Source: &TestFlexAWS04{
-				Field1:  "field1",
-				Field2:  aws.String("field2"),
-				Field3:  3,
-				Field4:  aws.Int32(-4),
-				Field5:  5,
-				Field6:  aws.Int64(-6),
-				Field7:  7.7,
-				Field8:  aws.Float32(-8.8),
-				Field9:  9.99,
-				Field10: aws.Float64(-10.101),
-				Field11: true,
-				Field12: aws.Bool(false),
-			},
-			Target: &TestFlexTF03{},
-			WantTarget: &TestFlexTF03{
-				Field1: types.StringValue("field1"),
-				Field2: types.StringValue("field2"),
-				Field3: types.Int64Value(3),
-				Field4: types.Int64Value(-4),
-				Field5: types.Int64Value(5),
-				Field6: types.Int64Value(-6),
-				// float32 -> float64 precision problems.
-				Field7:  types.Float64Value(float64(float32(7.7))),
-				Field8:  types.Float64Value(float64(float32(-8.8))),
-				Field9:  types.Float64Value(9.99),
-				Field10: types.Float64Value(-10.101),
-				Field11: types.BoolValue(true),
-				Field12: types.BoolValue(false),
-			},
-		},
-		{
-			TestName: "zero value slice/map of primtive primtive types Source and List/Set/Map of primtive types Target",
-			Source:   &TestFlexAWS05{},
-			Target:   &TestFlexTF04{},
-			WantTarget: &TestFlexTF04{
-				Field1: types.ListNull(types.StringType),
-				Field2: types.ListNull(types.StringType),
-				Field3: types.SetNull(types.StringType),
-				Field4: types.SetNull(types.StringType),
-				Field5: types.MapNull(types.StringType),
-				Field6: types.MapNull(types.StringType),
-			},
-		},
-		{
-			TestName: "slice/map of primtive primtive types Source and List/Set/Map of primtive types Target",
-			Source: &TestFlexAWS05{
-				Field1: []string{"a", "b"},
-				Field2: aws.StringSlice([]string{"a", "b"}),
-				Field3: []string{"a", "b"},
-				Field4: aws.StringSlice([]string{"a", "b"}),
-				Field5: map[string]string{"A": "a", "B": "b"},
-				Field6: aws.StringMap(map[string]string{"A": "a", "B": "b"}),
-			},
-			Target: &TestFlexTF04{},
-			WantTarget: &TestFlexTF04{
-				Field1: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field2: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field3: types.SetValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field4: types.SetValueMust(types.StringType, []attr.Value{
-					types.StringValue("a"),
-					types.StringValue("b"),
-				}),
-				Field5: types.MapValueMust(types.StringType, map[string]attr.Value{
-					"A": types.StringValue("a"),
-					"B": types.StringValue("b"),
-				}),
-				Field6: types.MapValueMust(types.StringType, map[string]attr.Value{
-					"A": types.StringValue("a"),
-					"B": types.StringValue("b"),
-				}),
-			},
-		},
-		{
-			TestName:   "nil *struct Source and single list Target",
-			Source:     &TestFlexAWS06{},
-			Target:     &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx)},
-		},
-		{
-			TestName:   "*struct Source and single list Target",
-			Source:     &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
-			Target:     &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
-		},
-		{
-			TestName:   "*struct Source and single set Target",
-			Source:     &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
-			Target:     &TestFlexTF06{},
-			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
-		},
-		{
-			TestName:   "nil []struct and null list Target",
-			Source:     &TestFlexAWS08{},
-			Target:     &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx)},
-		},
-		{
-			TestName:   "nil []struct and null set Target",
-			Source:     &TestFlexAWS08{},
-			Target:     &TestFlexTF06{},
-			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfNull[TestFlexTF01](ctx)},
-		},
-		{
-			TestName:   "empty []struct and empty list Target",
-			Source:     &TestFlexAWS08{Field1: []TestFlexAWS01{}},
-			Target:     &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
-		},
-		{
-			TestName:   "empty []struct and empty struct Target",
-			Source:     &TestFlexAWS08{Field1: []TestFlexAWS01{}},
-			Target:     &TestFlexTF06{},
-			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
-		},
-		{
-			TestName: "non-empty []struct and non-empty list Target",
-			Source: &TestFlexAWS08{Field1: []TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-			Target: &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-		},
-		{
-			TestName: "non-empty []struct and non-empty set Target",
-			Source: &TestFlexAWS08{Field1: []TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-			Target: &TestFlexTF06{},
-			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-		},
-		{
-			TestName:   "nil []*struct and null list Target",
-			Source:     &TestFlexAWS07{},
-			Target:     &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx)},
-		},
-		{
-			TestName:   "nil []*struct and null set Target",
-			Source:     &TestFlexAWS07{},
-			Target:     &TestFlexTF06{},
-			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfNull[TestFlexTF01](ctx)},
-		},
-		{
-			TestName:   "empty []*struct and empty list Target",
-			Source:     &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
-			Target:     &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
-		},
-		{
-			TestName:   "empty []*struct and empty set Target",
-			Source:     &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
-			Target:     &TestFlexTF06{},
-			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
-		},
-		{
-			TestName: "non-empty []*struct and non-empty list Target",
-			Source: &TestFlexAWS07{Field1: []*TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-			Target: &TestFlexTF05{},
-			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-		},
-		{
-			TestName: "non-empty []*struct and non-empty set Target",
-			Source: &TestFlexAWS07{Field1: []*TestFlexAWS01{
-				{Field1: "a"},
-				{Field1: "b"},
-			}},
-			Target: &TestFlexTF06{},
-			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
-				{Field1: types.StringValue("a")},
-				{Field1: types.StringValue("b")},
-			})},
-		},
-		{
-			TestName: "complex Source and complex Target",
-			Source: &TestFlexAWS09{
-				Field1: "m",
-				Field2: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "n"}},
-				Field3: aws.StringMap(map[string]string{"X": "x", "Y": "y"}),
-				Field4: []TestFlexAWS03{{Field1: 100}, {Field1: 2000}, {Field1: 30000}},
-			},
-			Target: &TestFlexTF07{},
-			WantTarget: &TestFlexTF07{
-				Field1: types.StringValue("m"),
-				Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF05{
-					Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
-						Field1: types.StringValue("n"),
-					}),
-				}),
-				Field3: types.MapValueMust(types.StringType, map[string]attr.Value{
-					"X": types.StringValue("x"),
-					"Y": types.StringValue("y"),
-				}),
-				Field4: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF02{
-					{Field1: types.Int64Value(100)},
-					{Field1: types.Int64Value(2000)},
-					{Field1: types.Int64Value(30000)},
-				}),
-			},
-		},
-		{
-			TestName: "plural ordinary field names",
-			Source: &TestFlexAWS10{
-				Fields: []TestFlexAWS01{{Field1: "a"}},
-			},
-			Target: &TestFlexTF08{},
-			WantTarget: &TestFlexTF08{
-				Field: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
-					Field1: types.StringValue("a"),
-				}),
-			},
-		},
-		{
-			TestName: "plural field names",
-			Source: &TestFlexAWS11{
-				Cities: []*string{
-					aws.String("paris"),
-					aws.String("london"),
-				},
-				Coaches: []*string{
-					aws.String("guardiola"),
-					aws.String("mourinho"),
-				},
-				Tomatoes: []*string{
-					aws.String("brandywine"),
-					aws.String("roma"),
-				},
-				Vertices: []*string{
-					aws.String("ab"),
-					aws.String("bc"),
-				},
-				Criteria: []*string{
-					aws.String("votes"),
-					aws.String("editors"),
-				},
-				Data: []*string{
-					aws.String("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
-					aws.String("0f10cb10-2076-5254-bd21-d3f62fe66303"),
-				},
-				Hives: []*string{
-					aws.String("Cegieme"),
-					aws.String("Fahumvid"),
-				},
-			},
-			Target: &TestFlexTF09{},
-			WantTarget: &TestFlexTF09{
-				City: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("paris"),
-					types.StringValue("london"),
-				}),
-				Coach: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("guardiola"),
-					types.StringValue("mourinho"),
-				}),
-				Tomato: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("brandywine"),
-					types.StringValue("roma"),
-				}),
-				Vertex: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("ab"),
-					types.StringValue("bc"),
-				}),
-				Criterion: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("votes"),
-					types.StringValue("editors"),
-				}),
-				Datum: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
-					types.StringValue("0f10cb10-2076-5254-bd21-d3f62fe66303"),
-				}),
-				Hive: types.ListValueMust(types.StringType, []attr.Value{
-					types.StringValue("Cegieme"),
-					types.StringValue("Fahumvid"),
-				}),
-			},
-		},
-		{
-			TestName: "capitalization field names",
-			Source: &TestFlexAWS12{
-				FieldUrl: aws.String("h"),
-			},
-			Target: &TestFlexTF10{},
-			WantTarget: &TestFlexTF10{
-				FieldURL: types.StringValue("h"),
-			},
-		},
-		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
-			TestName: "resource name prefix",
-			Source: &TestFlexAWS18{
-				IntentName: aws.String("Ovodoghen"),
-			},
-			Target: &TestFlexTF16{},
-			WantTarget: &TestFlexTF16{
-				Name: types.StringValue("Ovodoghen"),
-			},
-		},
-	}
+var _ Expander = tfInterfaceIncompatibleExpander{}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
+func (t tfInterfaceIncompatibleExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return &awsInterfaceIncompatibleImpl{
+		AWSField: StringValueFromFramework(ctx, t.Field1),
+	}, nil
+}
 
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
+type awsInterfaceIncompatibleImpl struct {
+	AWSField string
+}
 
-			err := Flatten(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
+type awsInterfaceSingle struct {
+	Field1 awsInterfaceInterface
+}
 
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
+type awsInterfaceSlice struct {
+	Field1 []awsInterfaceInterface
+}
 
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
+type awsInterfaceInterface interface {
+	isAWSInterfaceInterface()
+}
+
+type awsInterfaceInterfaceImpl struct {
+	AWSField string
+}
+
+var _ awsInterfaceInterface = &awsInterfaceInterfaceImpl{}
+
+func (t *awsInterfaceInterfaceImpl) isAWSInterfaceInterface() {} // nosemgrep:ci.aws-in-func-name
+
+type tfFlexer struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var (
+	_ Expander  = tfFlexer{}
+	_ Flattener = &tfFlexer{}
+)
+
+func (t tfFlexer) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return &awsExpander{
+		AWSField: StringValueFromFramework(ctx, t.Field1),
+	}, nil
+}
+
+func (t *tfFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case awsExpander:
+		t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		return diags
+
+	default:
+		return diags
 	}
 }
 
-func TestGenericFlattenAdvanced(t *testing.T) {
-	t.Parallel()
+type tfExpanderListNestedObject tfListNestedObject[tfFlexer]
 
-	ctx := context.Background()
+type tfExpanderSetNestedObject tfSetNestedObject[tfFlexer]
 
-	testCases := []struct {
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
-		{
-			TestName: "map string",
-			Source: &TestFlexAWS13{
-				FieldInner: map[string]string{
-					"x": "y",
-				},
-			},
-			Target: &TestFlexTF11{},
-			WantTarget: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-					"x": types.StringValue("y"),
-				}),
-			},
-		},
-		{
-			TestName: "object map",
-			Source: &TestFlexAWS14{
-				FieldInner: map[string]TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF12{},
-			WantTarget: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx, map[string]TestFlexTF01{
-					"x": {
-						Field1: types.StringValue("a"),
-					}},
-				),
-			},
-		},
-		{
-			TestName: "object map ptr source",
-			Source: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF12{},
-			WantTarget: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-					map[string]TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-		},
-		{
-			TestName: "object map ptr target",
-			Source: &TestFlexAWS14{
-				FieldInner: map[string]TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF13{},
-			WantTarget: &TestFlexTF13{
-				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
-					map[string]*TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-		},
-		{
-			TestName: "object map ptr source and target",
-			Source: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF13{},
-			WantTarget: &TestFlexTF13{
-				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
-					map[string]*TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-		},
-		{
-			TestName: "nested string map",
-			Source: &TestFlexAWS16{
-				FieldOuter: TestFlexAWS13{
-					FieldInner: map[string]string{
-						"x": "y",
-					},
-				},
-			},
-			Target: &TestFlexTF14{},
-			WantTarget: &TestFlexTF14{
-				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-						"x": types.StringValue("y"),
-					}),
-				}),
-			},
-		},
-		{
-			TestName: "nested object map",
-			Source: &TestFlexAWS17{
-				FieldOuter: TestFlexAWS14{
-					FieldInner: map[string]TestFlexAWS01{
-						"x": {
-							Field1: "a",
-						},
-					},
-				},
-			},
-			Target: &TestFlexTF15{},
-			WantTarget: &TestFlexTF15{
-				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
-					FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-						map[string]TestFlexTF01{
-							"x": {
-								Field1: types.StringValue("a"),
-							},
-						},
-					),
-				}),
-			},
-		},
-		{
-			TestName: "strange plurality",
-			Source: &TestFlexPluralityAWS01{
-				Value:  "a",
-				Values: "b",
-			},
-			Target: &TestFlexPluralityTF01{},
-			WantTarget: &TestFlexPluralityTF01{
-				Value: types.StringValue("a"),
-			},
-		},
-		{
-			TestName: "complex nesting",
-			Source: &TestFlexComplexNestAWS01{
-				DialogAction: &TestFlexComplexNestAWS02{
-					Type:                TestEnumList,
-					SlotToElicit:        aws.String("x"),
-					SuppressNextMessage: aws.Bool(true),
-				},
-				Intent: &TestFlexComplexNestAWS03{
-					Name: aws.String("x"),
-					Slots: map[string]TestFlexComplexNestAWS04{
-						"x": {
-							Shape: TestEnumList,
-							Value: &TestFlexComplexNestAWS05{
-								InterpretedValue: aws.String("y"),
-							},
-						},
-					},
-				},
-				SessionAttributes: map[string]string{
-					"x": "y",
-				},
-			},
-			Target: &TestFlexComplexNestTF01{},
-			WantTarget: &TestFlexComplexNestTF01{
-				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
-					Type:                fwtypes.StringEnumValue(TestEnumList),
-					SlotToElicit:        types.StringValue("x"),
-					SuppressNextMessage: types.BoolValue(true),
-				}),
-				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
-					Name: types.StringValue("x"),
-					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
-						"x": {
-							Shape: fwtypes.StringEnumValue(TestEnumList),
-							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
-								InterpretedValue: types.StringValue("y"),
-							}),
-						},
-					}),
-				}),
-				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-					"x": basetypes.NewStringValue("y"),
-				}),
-			},
-		},
-	}
+type tfExpanderObjectValue tfObjectValue[tfFlexer]
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
+type tfTypedExpanderListNestedObject tfListNestedObject[tfTypedExpander]
 
-			err := Flatten(ctx, testCase.Source, testCase.Target)
-			gotErr := err != nil
+type tfTypedExpanderSetNestedObject tfSetNestedObject[tfTypedExpander]
 
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
+type tfTypedExpanderObjectValue tfObjectValue[tfTypedExpander]
 
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
+type tfExpanderToString struct {
+	Field1 types.String `tfsdk:"field1"`
 }
 
-func TestGenericFlattenCustomStringType(t *testing.T) {
-	t.Parallel()
+var _ Expander = tfExpanderToString{}
 
-	a := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
-	ctx := context.Background()
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
-		{
-			TestName:   "single string Source and single ARN Target",
-			Source:     &TestFlexAWS01{Field1: a},
-			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
-		},
-		{
-			TestName:   "single *string Source and single ARN Target",
-			Source:     &TestFlexAWS02{Field1: aws.String(a)},
-			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
-		},
-		{
-			TestName:   "single nil *string Source and single ARN Target",
-			Source:     &TestFlexAWS02{},
-			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNNull()},
-		},
+func (t tfExpanderToString) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return StringValueFromFramework(ctx, t.Field1), nil
+}
+
+type tfExpanderToNil struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ Expander = tfExpanderToNil{}
+
+func (t tfExpanderToNil) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return nil, nil
+}
+
+type tfTypedExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ TypedExpander = tfTypedExpander{}
+
+func (t tfTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	return &awsExpander{
+		AWSField: StringValueFromFramework(ctx, t.Field1),
+	}, nil
+}
+
+type tfTypedExpanderToNil struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ TypedExpander = tfTypedExpanderToNil{}
+
+func (t tfTypedExpanderToNil) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	return nil, nil
+}
+
+type tfInterfaceTypedExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ TypedExpander = tfInterfaceTypedExpander{}
+
+func (t tfInterfaceTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	switch targetType {
+	case reflect.TypeFor[awsInterfaceInterface]():
+		return &awsInterfaceInterfaceImpl{
+			AWSField: StringValueFromFramework(ctx, t.Field1),
+		}, nil
 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
+	return nil, nil
+}
 
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
+type tfInterfaceIncompatibleTypedExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
 
-			err := Flatten(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
+var _ TypedExpander = tfInterfaceIncompatibleTypedExpander{}
 
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
+func (t tfInterfaceIncompatibleTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	return &awsInterfaceIncompatibleImpl{
+		AWSField: StringValueFromFramework(ctx, t.Field1),
+	}, nil
+}
 
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
+type awsExpander struct {
+	AWSField string
+}
+
+type awsExpanderIncompatible struct {
+	Incompatible int
+}
+
+type awsExpanderSingleStruct struct {
+	Field1 awsExpander
+}
+
+type awsExpanderSinglePtr struct {
+	Field1 *awsExpander
+}
+
+type awsExpanderStructSlice struct {
+	Field1 []awsExpander
+}
+
+type awsExpanderPtrSlice struct {
+	Field1 []*awsExpander
+}
+
+type tfListOfStringEnum struct {
+	Field1 fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]] `tfsdk:"field1"`
+}
+
+type tfSetOfStringEnum struct {
+	Field1 fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]] `tfsdk:"field1"`
+}
+
+type awsSliceOfStringEnum struct {
+	Field1 []testEnum
 }

@@ -12,7 +12,7 @@ description: |-
 
 Provides a Load Balancer resource.
 
-~> **Note:** `awsAlb` is known as `awsLb`. The functionality is identical.
+~> **Note:** `aws_alb` is known as `aws_lb`. The functionality is identical.
 
 ## Example Usage
 
@@ -158,58 +158,63 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `accessLogs` - (Optional) An Access Logs block. Access Logs documented below.
-* `customerOwnedIpv4Pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
-* `desyncMitigationMode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
-* `dnsRecordClientRoutingPolicy` - (Optional) Indicates how traffic is distributed among the load balancer Availability Zones. Possible values are `any_availability_zone` (default), `availability_zone_affinity`, or `partial_availability_zone_affinity`. See   [Availability Zone DNS affinity](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#zonal-dns-affinity) for additional details. Only valid for `network` type load balancers.
-* `dropInvalidHeaderFields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
+* `accessLogs` - (Optional) Access Logs block. See below.
+* `connectionLogs` - (Optional) Connection Logs block. See below. Only valid for Load Balancers of type `application`.
+* `clientKeepAlive` - (Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds.
+* `customerOwnedIpv4Pool` - (Optional) ID of the customer owned ipv4 pool to use for this load balancer.
+* `desyncMitigationMode` - (Optional) How the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
+* `dnsRecordClientRoutingPolicy` - (Optional) How traffic is distributed among the load balancer Availability Zones. Possible values are `any_availability_zone` (default), `availability_zone_affinity`, or `partial_availability_zone_affinity`. See   [Availability Zone DNS affinity](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#zonal-dns-affinity) for additional details. Only valid for `network` type load balancers.
+* `dropInvalidHeaderFields` - (Optional) Whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
 * `enableCrossZoneLoadBalancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled. For `network` and `gateway` type load balancers, this feature is disabled by default (`false`). For `application` load balancer this feature is always enabled (`true`) and cannot be disabled. Defaults to `false`.
 * `enableDeletionProtection` - (Optional) If true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer. Defaults to `false`.
-* `enableHttp2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
-* `enableTlsVersionAndCipherSuiteHeaders` - (Optional) Indicates whether the two headers (`x-amzn-tls-version` and `x-amzn-tls-cipher-suite`), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. Only valid for Load Balancers of type `application`. Defaults to `false`
-* `enableXffClientPort` - (Optional) Indicates whether the X-Forwarded-For header should preserve the source port that the client used to connect to the load balancer in `application` load balancers. Defaults to `false`.
-* `enableWafFailOpen` - (Optional) Indicates whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF. Defaults to `false`.
-* `idleTimeout` - (Optional) The time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type `application`. Default: 60.
+* `enableHttp2` - (Optional) Whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
+* `enableTlsVersionAndCipherSuiteHeaders` - (Optional) Whether the two headers (`x-amzn-tls-version` and `x-amzn-tls-cipher-suite`), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. Only valid for Load Balancers of type `application`. Defaults to `false`
+* `enableXffClientPort` - (Optional) Whether the X-Forwarded-For header should preserve the source port that the client used to connect to the load balancer in `application` load balancers. Defaults to `false`.
+* `enableWafFailOpen` - (Optional) Whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF. Defaults to `false`.
+* `enforceSecurityGroupInboundRulesOnPrivateLinkTraffic` - (Optional) Whether inbound security group rules are enforced for traffic originating from a PrivateLink. Only valid for Load Balancers of type `network`. The possible values are `on` and `off`.
+* `idleTimeout` - (Optional) Time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type `application`. Default: 60.
 * `internal` - (Optional) If true, the LB will be internal. Defaults to `false`.
-* `ipAddressType` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`.
-* `loadBalancerType` - (Optional) The type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
-* `name` - (Optional) The name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters,
-must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified,
-Terraform will autogenerate a name beginning with `tf-lb`.
+* `ipAddressType` - (Optional) Type of IP addresses used by the subnets for your load balancer. The possible values depend upon the load balancer type: `ipv4` (all load balancer types), `dualstack` (all load balancer types), and `dualstack-without-public-ipv4` (type `application` only).
+* `loadBalancerType` - (Optional) Type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
+* `name` - (Optional) Name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified, Terraform will autogenerate a name beginning with `tf-lb`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `securityGroups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
-* `preserveHostHeader` - (Optional) Indicates whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
-* `subnetMapping` - (Optional) A subnet mapping block as documented below.
-* `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
-cannot be updated for Load Balancers of type `network`. Changing this value
-for load balancers of type `network` will force a recreation of the resource.
+* `securityGroups` - (Optional) List of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
+* `preserveHostHeader` - (Optional) Whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
+* `subnetMapping` - (Optional) Subnet mapping block. See below. For Load Balancers of type `network` subnet mappings can only be added.
+* `subnets` - (Optional) List of subnet IDs to attach to the LB. For Load Balancers of type `network` subnets can only be added (see [Availability Zones](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#availability-zones)), deleting a subnet for load balancers of type `network` will force a recreation of the resource.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xffHeaderProcessingMode` - (Optional) Determines how the load balancer modifies the `X-Forwarded-For` header in the HTTP request before sending the request to the target. The possible values are `append`, `preserve`, and `remove`. Only valid for Load Balancers of type `application`. The default is `append`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### access_logs
 
-* `bucket` - (Required) The S3 bucket name to store the logs in.
-* `enabled` - (Optional) Boolean to enable / disable `access_logs`. Defaults to `false`, even when `bucket` is specified.
-* `prefix` - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
+* `bucket` - (Required) S3 bucket name to store the logs in.
+* `enabled` - (Optional) Boolean to enable / disable `accessLogs`. Defaults to `false`, even when `bucket` is specified.
+* `prefix` - (Optional) S3 bucket prefix. Logs are stored in the root if not configured.
+
+### connection_logs
+
+* `bucket` - (Required) S3 bucket name to store the logs in.
+* `enabled` - (Optional) Boolean to enable / disable `connectionLogs`. Defaults to `false`, even when `bucket` is specified.
+* `prefix` - (Optional) S3 bucket prefix. Logs are stored in the root if not configured.
 
 ### subnet_mapping
 
 * `subnetId` - (Required) ID of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
-* `allocationId` - (Optional) The allocation ID of the Elastic IP address for an internet-facing load balancer.
-* `ipv6Address` - (Optional) The IPv6 address. You associate IPv6 CIDR blocks with your VPC and choose the subnets where you launch both internet-facing and internal Application Load Balancers or Network Load Balancers.
-* `privateIpv4Address` - (Optional) The private IPv4 address for an internal load balancer.
+* `allocationId` - (Optional) Allocation ID of the Elastic IP address for an internet-facing load balancer.
+* `ipv6Address` - (Optional) IPv6 address. You associate IPv6 CIDR blocks with your VPC and choose the subnets where you launch both internet-facing and internal Application Load Balancers or Network Load Balancers.
+* `privateIpv4Address` - (Optional) Private IPv4 address for an internal load balancer.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the load balancer (matches `id`).
-* `arnSuffix` - The ARN suffix for use with CloudWatch Metrics.
-* `dnsName` - The DNS name of the load balancer.
-* `id` - The ARN of the load balancer (matches `arn`).
-* `subnetMapping.*OutpostId` - ID of the Outpost containing the load balancer.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `zoneId` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
+* `arn` - ARN of the load balancer (matches `id`).
+* `arnSuffix` - ARN suffix for use with CloudWatch Metrics.
+* `dnsName` - DNS name of the load balancer.
+* `id` - ARN of the load balancer (matches `arn`).
+* `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `zoneId` - Canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
 
 ## Timeouts
 
@@ -227,9 +232,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Lb } from "./.gen/providers/aws/lb";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Lb.generateConfigForImport(
+      this,
+      "bar",
+      "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+    );
   }
 }
 
@@ -241,4 +256,4 @@ Using `terraform import`, import LBs using their ARN. For example:
 % terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-11d928929bb1ef617daceb855e42b2dfca81e2f529334101c305ff8082f913d7 -->
+<!-- cache-key: cdktf-0.20.1 input-45fe3924afbfab1cd6888154fab4006646467bb8e03eaad41c257e0ae509cfcc -->

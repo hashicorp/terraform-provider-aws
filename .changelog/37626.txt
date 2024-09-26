@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_ssm_patch_baseline: Correct handling of `default_baseline`

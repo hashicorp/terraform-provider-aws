@@ -5,30 +5,36 @@ package budgets
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/budgets"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/shopspring/decimal"
 )
 
 // @SDKResource("aws_budgets_budget")
+// @Tags(identifierAttribute="arn")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -41,14 +47,14 @@ func ResourceBudget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,9 +65,9 @@ func ResourceBudget() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auto_adjust_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(budgets.AutoAdjustType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AutoAdjustType](),
 						},
 						"historical_options": {
 							Type:     schema.TypeList,
@@ -89,9 +95,9 @@ func ResourceBudget() *schema.Resource {
 				},
 			},
 			"budget_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(budgets.BudgetType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.BudgetType](),
 			},
 			"cost_filter": {
 				Type:     schema.TypeSet,
@@ -99,11 +105,11 @@ func ResourceBudget() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Schema{
@@ -191,19 +197,19 @@ func ResourceBudget() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"planned_limit"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			"notification": {
 				Type:     schema.TypeSet,
@@ -211,14 +217,14 @@ func ResourceBudget() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"comparison_operator": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(budgets.ComparisonOperator_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
 						},
 						"notification_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(budgets.NotificationType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
 						},
 						"subscriber_email_addresses": {
 							Type:     schema.TypeSet,
@@ -238,9 +244,9 @@ func ResourceBudget() *schema.Resource {
 							Required: true,
 						},
 						"threshold_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(budgets.ThresholdType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ThresholdType](),
 						},
 					},
 				},
@@ -255,12 +261,12 @@ func ResourceBudget() *schema.Resource {
 							Required:         true,
 							DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validTimePeriodTimestamp,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -268,6 +274,8 @@ func ResourceBudget() *schema.Resource {
 				},
 				ConflictsWith: []string{"limit_amount", "limit_unit"},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"time_period_end": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -281,18 +289,19 @@ func ResourceBudget() *schema.Resource {
 				ValidateFunc: validTimePeriodTimestamp,
 			},
 			"time_unit": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(budgets.TimeUnit_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
 			},
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	budget, err := expandBudgetUnmarshal(d)
 
@@ -300,24 +309,25 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	budget.BudgetName = aws.String(name)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
 
-	_, err = conn.CreateBudgetWithContext(ctx, &budgets.CreateBudgetInput{
-		AccountId: aws.String(accountID),
-		Budget:    budget,
+	_, err = conn.CreateBudget(ctx, &budgets.CreateBudgetInput{
+		AccountId:    aws.String(accountID),
+		Budget:       budget,
+		ResourceTags: getTagsIn(ctx),
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Budget (%s): %s", name, err)
 	}
 
-	d.SetId(BudgetCreateResourceID(accountID, aws.StringValue(budget.BudgetName)))
+	d.SetId(BudgetCreateResourceID(accountID, aws.ToString(budget.BudgetName)))
 
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
@@ -334,7 +344,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -342,7 +352,11 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
+	//budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
+
+	budget, err := FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
+		return FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
@@ -354,14 +368,14 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
 		AccountID: accountID,
-		Resource:  fmt.Sprintf("budget/%s", budgetName),
+		Resource:  "budget/" + budgetName,
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_type", budget.BudgetType)
 
 	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
@@ -379,8 +393,8 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("limit_unit", budget.BudgetLimit.Unit)
 	}
 
-	d.Set("name", budget.BudgetName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
+	d.Set(names.AttrName, budget.BudgetName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	if err := d.Set("planned_limit", convertPlannedBudgetLimitsToSet(budget.PlannedBudgetLimits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting planned_limit: %s", err)
@@ -408,16 +422,16 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	for _, notification := range notifications {
 		tfMap := make(map[string]interface{})
 
-		tfMap["comparison_operator"] = aws.StringValue(notification.ComparisonOperator)
-		tfMap["threshold"] = aws.Float64Value(notification.Threshold)
-		tfMap["notification_type"] = aws.StringValue(notification.NotificationType)
+		tfMap["comparison_operator"] = string(notification.ComparisonOperator)
+		tfMap["threshold"] = notification.Threshold
+		tfMap["notification_type"] = string(notification.NotificationType)
 
-		if notification.ThresholdType == nil {
+		if notification.ThresholdType == "" {
 			// The AWS API doesn't seem to return a ThresholdType if it's set to PERCENTAGE
 			// Set it manually to make behavior more predictable
-			tfMap["threshold_type"] = budgets.ThresholdTypePercentage
+			tfMap["threshold_type"] = awstypes.ThresholdTypePercentage
 		} else {
-			tfMap["threshold_type"] = aws.StringValue(notification.ThresholdType)
+			tfMap["threshold_type"] = string(notification.ThresholdType)
 		}
 
 		subscribers, err := findSubscribers(ctx, conn, accountID, budgetName, notification)
@@ -435,10 +449,10 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		var snsSubscribers []string
 
 		for _, subscriber := range subscribers {
-			if aws.StringValue(subscriber.SubscriptionType) == budgets.SubscriptionTypeSns {
-				snsSubscribers = append(snsSubscribers, aws.StringValue(subscriber.Address))
-			} else if aws.StringValue(subscriber.SubscriptionType) == budgets.SubscriptionTypeEmail {
-				emailSubscribers = append(emailSubscribers, aws.StringValue(subscriber.Address))
+			if subscriber.SubscriptionType == awstypes.SubscriptionTypeSns {
+				snsSubscribers = append(snsSubscribers, aws.ToString(subscriber.Address))
+			} else if subscriber.SubscriptionType == awstypes.SubscriptionTypeEmail {
+				emailSubscribers = append(emailSubscribers, aws.ToString(subscriber.Address))
 			}
 		}
 
@@ -458,7 +472,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
 
@@ -472,7 +486,7 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	_, err = conn.UpdateBudgetWithContext(ctx, &budgets.UpdateBudgetInput{
+	_, err = conn.UpdateBudget(ctx, &budgets.UpdateBudgetInput{
 		AccountId: aws.String(accountID),
 		NewBudget: budget,
 	})
@@ -493,7 +507,7 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -502,12 +516,12 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Budget: %s", d.Id())
-	_, err = conn.DeleteBudgetWithContext(ctx, &budgets.DeleteBudgetInput{
+	_, err = conn.DeleteBudget(ctx, &budgets.DeleteBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -537,15 +551,15 @@ func BudgetParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
 }
 
-func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string) (*budgets.Budget, error) {
+func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string) (*awstypes.Budget, error) {
 	input := &budgets.DescribeBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
 	}
 
-	output, err := conn.DescribeBudgetWithContext(ctx, input)
+	output, err := conn.DescribeBudget(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -563,38 +577,35 @@ func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Budgets, accountI
 	return output.Budget, nil
 }
 
-func findNotifications(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string) ([]*budgets.Notification, error) {
+func findNotifications(ctx context.Context, conn *budgets.Client, accountID, budgetName string) ([]awstypes.Notification, error) {
 	input := &budgets.DescribeNotificationsForBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
 	}
-	var output []*budgets.Notification
+	var output []awstypes.Notification
 
-	err := conn.DescribeNotificationsForBudgetPagesWithContext(ctx, input, func(page *budgets.DescribeNotificationsForBudgetOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := budgets.NewDescribeNotificationsForBudgetPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 
-		for _, notification := range page.Notifications {
-			if notification == nil {
+		if err != nil {
+			return nil, err
+		}
+
+		for _, np := range page.Notifications {
+			if np == (awstypes.Notification{}) {
 				continue
 			}
 
-			output = append(output, notification)
+			output = append(output, np)
 		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	if len(output) == 0 {
@@ -604,39 +615,36 @@ func findNotifications(ctx context.Context, conn *budgets.Budgets, accountID, bu
 	return output, nil
 }
 
-func findSubscribers(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string, notification *budgets.Notification) ([]*budgets.Subscriber, error) {
+func findSubscribers(ctx context.Context, conn *budgets.Client, accountID, budgetName string, notification awstypes.Notification) ([]awstypes.Subscriber, error) {
 	input := &budgets.DescribeSubscribersForNotificationInput{
 		AccountId:    aws.String(accountID),
 		BudgetName:   aws.String(budgetName),
-		Notification: notification,
+		Notification: &notification,
 	}
-	var output []*budgets.Subscriber
+	var output []awstypes.Subscriber
 
-	err := conn.DescribeSubscribersForNotificationPagesWithContext(ctx, input, func(page *budgets.DescribeSubscribersForNotificationOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := budgets.NewDescribeSubscribersForNotificationPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, subscriber := range page.Subscribers {
-			if subscriber == nil {
+			if subscriber == (awstypes.Subscriber{}) {
 				continue
 			}
 
 			output = append(output, subscriber)
 		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	if len(output) == 0 {
@@ -646,15 +654,15 @@ func findSubscribers(ctx context.Context, conn *budgets.Budgets, accountID, budg
 	return output, nil
 }
 
-func createBudgetNotifications(ctx context.Context, conn *budgets.Budgets, notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string) error {
+func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifications []*awstypes.Notification, subscribers [][]awstypes.Subscriber, budgetName string, accountID string) error {
 	for i, notification := range notifications {
 		subscribers := subscribers[i]
 
 		if len(subscribers) == 0 {
-			return fmt.Errorf("Budget notification must have at least one subscriber")
+			return errors.New("Budget notification must have at least one subscriber")
 		}
 
-		_, err := conn.CreateNotificationWithContext(ctx, &budgets.CreateNotificationInput{
+		_, err := conn.CreateNotification(ctx, &budgets.CreateNotificationInput{
 			AccountId:    aws.String(accountID),
 			BudgetName:   aws.String(budgetName),
 			Notification: notification,
@@ -669,7 +677,7 @@ func createBudgetNotifications(ctx context.Context, conn *budgets.Budgets, notif
 	return nil
 }
 
-func updateBudgetNotifications(ctx context.Context, conn *budgets.Budgets, d *schema.ResourceData) error {
+func updateBudgetNotifications(ctx context.Context, conn *budgets.Client, d *schema.ResourceData) error {
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
@@ -691,7 +699,7 @@ func updateBudgetNotifications(ctx context.Context, conn *budgets.Budgets, d *sc
 				Notification: notification,
 			}
 
-			_, err := conn.DeleteNotificationWithContext(ctx, input)
+			_, err := conn.DeleteNotification(ctx, input)
 
 			if err != nil {
 				return fmt.Errorf("deleting Budget (%s) notification: %s", d.Id(), err)
@@ -708,74 +716,73 @@ func updateBudgetNotifications(ctx context.Context, conn *budgets.Budgets, d *sc
 	return nil
 }
 
-func flattenAutoAdjustData(autoAdjustData *budgets.AutoAdjustData) []map[string]interface{} {
+func flattenAutoAdjustData(autoAdjustData *awstypes.AutoAdjustData) []map[string]interface{} {
 	if autoAdjustData == nil {
 		return []map[string]interface{}{}
 	}
 
 	attrs := map[string]interface{}{
-		"auto_adjust_type":      aws.StringValue(autoAdjustData.AutoAdjustType),
-		"last_auto_adjust_time": aws.TimeValue(autoAdjustData.LastAutoAdjustTime).Format(time.RFC3339),
+		"auto_adjust_type":      string(autoAdjustData.AutoAdjustType),
+		"last_auto_adjust_time": aws.ToTime(autoAdjustData.LastAutoAdjustTime).Format(time.RFC3339),
 	}
 
-	if *autoAdjustData.HistoricalOptions != (budgets.HistoricalOptions{}) { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+	if *autoAdjustData.HistoricalOptions != (awstypes.HistoricalOptions{}) { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 		attrs["historical_options"] = flattenHistoricalOptions(autoAdjustData.HistoricalOptions)
 	}
 
 	return []map[string]interface{}{attrs}
 }
 
-func flattenHistoricalOptions(historicalOptions *budgets.HistoricalOptions) []map[string]interface{} {
+func flattenHistoricalOptions(historicalOptions *awstypes.HistoricalOptions) []map[string]interface{} {
 	if historicalOptions == nil {
 		return []map[string]interface{}{}
 	}
 
 	attrs := map[string]interface{}{
-		"budget_adjustment_period":   aws.Int64Value(historicalOptions.BudgetAdjustmentPeriod),
-		"lookback_available_periods": aws.Int64Value(historicalOptions.LookBackAvailablePeriods),
+		"budget_adjustment_period":   int64(aws.ToInt32(historicalOptions.BudgetAdjustmentPeriod)),
+		"lookback_available_periods": int64(aws.ToInt32(historicalOptions.LookBackAvailablePeriods)),
 	}
 
 	return []map[string]interface{}{attrs}
 }
 
-func flattenCostTypes(costTypes *budgets.CostTypes) []map[string]interface{} {
+func flattenCostTypes(costTypes *awstypes.CostTypes) []map[string]interface{} {
 	if costTypes == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"include_credit":             aws.BoolValue(costTypes.IncludeCredit),
-		"include_discount":           aws.BoolValue(costTypes.IncludeDiscount),
-		"include_other_subscription": aws.BoolValue(costTypes.IncludeOtherSubscription),
-		"include_recurring":          aws.BoolValue(costTypes.IncludeRecurring),
-		"include_refund":             aws.BoolValue(costTypes.IncludeRefund),
-		"include_subscription":       aws.BoolValue(costTypes.IncludeSubscription),
-		"include_support":            aws.BoolValue(costTypes.IncludeSupport),
-		"include_tax":                aws.BoolValue(costTypes.IncludeTax),
-		"include_upfront":            aws.BoolValue(costTypes.IncludeUpfront),
-		"use_amortized":              aws.BoolValue(costTypes.UseAmortized),
-		"use_blended":                aws.BoolValue(costTypes.UseBlended),
+		"include_credit":             aws.ToBool(costTypes.IncludeCredit),
+		"include_discount":           aws.ToBool(costTypes.IncludeDiscount),
+		"include_other_subscription": aws.ToBool(costTypes.IncludeOtherSubscription),
+		"include_recurring":          aws.ToBool(costTypes.IncludeRecurring),
+		"include_refund":             aws.ToBool(costTypes.IncludeRefund),
+		"include_subscription":       aws.ToBool(costTypes.IncludeSubscription),
+		"include_support":            aws.ToBool(costTypes.IncludeSupport),
+		"include_tax":                aws.ToBool(costTypes.IncludeTax),
+		"include_upfront":            aws.ToBool(costTypes.IncludeUpfront),
+		"use_amortized":              aws.ToBool(costTypes.UseAmortized),
+		"use_blended":                aws.ToBool(costTypes.UseBlended),
 	}
 	return []map[string]interface{}{m}
 }
 
-func convertCostFiltersToMap(costFilters map[string][]*string) []map[string]interface{} {
+func convertCostFiltersToMap(costFilters map[string][]string) []map[string]interface{} {
 	convertedCostFilters := make([]map[string]interface{}, 0)
 	for k, v := range costFilters {
 		convertedCostFilter := make(map[string]interface{})
 		filterValues := make([]string, 0)
-		for _, singleFilterValue := range v {
-			filterValues = append(filterValues, *singleFilterValue)
-		}
-		convertedCostFilter["values"] = filterValues
-		convertedCostFilter["name"] = k
+		filterValues = append(filterValues, v...)
+
+		convertedCostFilter[names.AttrValues] = filterValues
+		convertedCostFilter[names.AttrName] = k
 		convertedCostFilters = append(convertedCostFilters, convertedCostFilter)
 	}
 
 	return convertedCostFilters
 }
 
-func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]*budgets.Spend) []interface{} {
+func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]awstypes.Spend) []interface{} {
 	if plannedBudgetLimits == nil {
 		return nil
 	}
@@ -784,7 +791,7 @@ func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]*budgets.Spe
 	i := 0
 
 	for k, v := range plannedBudgetLimits {
-		if v == nil {
+		if v == (awstypes.Spend{}) {
 			return nil
 		}
 
@@ -794,9 +801,9 @@ func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]*budgets.Spe
 		}
 
 		convertedPlannedBudgetLimit := make(map[string]string)
-		convertedPlannedBudgetLimit["amount"] = aws.StringValue(v.Amount)
-		convertedPlannedBudgetLimit["start_time"] = startTime
-		convertedPlannedBudgetLimit["unit"] = aws.StringValue(v.Unit)
+		convertedPlannedBudgetLimit["amount"] = aws.ToString(v.Amount)
+		convertedPlannedBudgetLimit[names.AttrStartTime] = startTime
+		convertedPlannedBudgetLimit[names.AttrUnit] = aws.ToString(v.Unit)
 
 		convertedPlannedBudgetLimits[i] = convertedPlannedBudgetLimit
 		i++
@@ -805,18 +812,18 @@ func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]*budgets.Spe
 	return convertedPlannedBudgetLimits
 }
 
-func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
-	budgetName := d.Get("name").(string)
+func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
+	budgetName := d.Get(names.AttrName).(string)
 	budgetType := d.Get("budget_type").(string)
 	budgetTimeUnit := d.Get("time_unit").(string)
-	budgetCostFilters := make(map[string][]*string)
+	budgetCostFilters := make(map[string][]string)
 
 	if costFilter, ok := d.GetOk("cost_filter"); ok {
 		for _, v := range costFilter.(*schema.Set).List() {
 			element := v.(map[string]interface{})
-			key := element["name"].(string)
-			for _, filterValue := range element["values"].([]interface{}) {
-				budgetCostFilters[key] = append(budgetCostFilters[key], aws.String(filterValue.(string)))
+			key := element[names.AttrName].(string)
+			for _, filterValue := range element[names.AttrValues].([]interface{}) {
+				budgetCostFilters[key] = append(budgetCostFilters[key], filterValue.(string))
 			}
 		}
 	}
@@ -833,14 +840,14 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 		return nil, err
 	}
 
-	budget := &budgets.Budget{
+	budget := &awstypes.Budget{
 		BudgetName: aws.String(budgetName),
-		BudgetType: aws.String(budgetType),
-		TimePeriod: &budgets.TimePeriod{
+		BudgetType: awstypes.BudgetType(budgetType),
+		TimePeriod: &awstypes.TimePeriod{
 			End:   budgetTimePeriodEnd,
 			Start: budgetTimePeriodStart,
 		},
-		TimeUnit:    aws.String(budgetTimeUnit),
+		TimeUnit:    awstypes.TimeUnit(budgetTimeUnit),
 		CostFilters: budgetCostFilters,
 	}
 
@@ -861,7 +868,7 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 			spendUnitValue, spendUnitOk := d.GetOk("limit_unit")
 
 			if spendUnitOk && spendLimitOk {
-				budget.BudgetLimit = &budgets.Spend{
+				budget.BudgetLimit = &awstypes.Spend{
 					Amount: aws.String(spendAmountValue.(string)),
 					Unit:   aws.String(spendUnitValue.(string)),
 				}
@@ -876,15 +883,15 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	return budget, nil
 }
 
-func expandAutoAdjustData(tfMap map[string]interface{}) *budgets.AutoAdjustData {
+func expandAutoAdjustData(tfMap map[string]interface{}) *awstypes.AutoAdjustData {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &budgets.AutoAdjustData{}
+	apiObject := &awstypes.AutoAdjustData{}
 
 	if v, ok := tfMap["auto_adjust_type"].(string); ok {
-		apiObject.AutoAdjustType = aws.String(v)
+		apiObject.AutoAdjustType = awstypes.AutoAdjustType(v)
 	}
 
 	if v, ok := tfMap["historical_options"].([]interface{}); ok && len(v) > 0 {
@@ -894,28 +901,28 @@ func expandAutoAdjustData(tfMap map[string]interface{}) *budgets.AutoAdjustData 
 	return apiObject
 }
 
-func expandHistoricalOptions(l []interface{}) *budgets.HistoricalOptions {
+func expandHistoricalOptions(l []interface{}) *awstypes.HistoricalOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	apiObject := &budgets.HistoricalOptions{}
+	apiObject := &awstypes.HistoricalOptions{}
 
 	if v, ok := m["budget_adjustment_period"].(int); ok && v != 0 {
-		apiObject.BudgetAdjustmentPeriod = aws.Int64(int64(v))
+		apiObject.BudgetAdjustmentPeriod = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
+func expandCostTypes(tfMap map[string]interface{}) *awstypes.CostTypes {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &budgets.CostTypes{}
+	apiObject := &awstypes.CostTypes{}
 
 	if v, ok := tfMap["include_credit"].(bool); ok {
 		apiObject.IncludeCredit = aws.Bool(v)
@@ -954,21 +961,21 @@ func expandCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
 	return apiObject
 }
 
-func expandPlannedBudgetLimitsUnmarshal(plannedBudgetLimitsRaw []interface{}) (map[string]*budgets.Spend, error) {
-	plannedBudgetLimits := make(map[string]*budgets.Spend, len(plannedBudgetLimitsRaw))
+func expandPlannedBudgetLimitsUnmarshal(plannedBudgetLimitsRaw []interface{}) (map[string]awstypes.Spend, error) {
+	plannedBudgetLimits := make(map[string]awstypes.Spend, len(plannedBudgetLimitsRaw))
 
 	for _, plannedBudgetLimit := range plannedBudgetLimitsRaw {
 		plannedBudgetLimit := plannedBudgetLimit.(map[string]interface{})
 
-		key, err := TimePeriodSecondsFromString(plannedBudgetLimit["start_time"].(string))
+		key, err := TimePeriodSecondsFromString(plannedBudgetLimit[names.AttrStartTime].(string))
 		if err != nil {
 			return nil, err
 		}
 
 		amount := plannedBudgetLimit["amount"].(string)
-		unit := plannedBudgetLimit["unit"].(string)
+		unit := plannedBudgetLimit[names.AttrUnit].(string)
 
-		plannedBudgetLimits[key] = &budgets.Spend{
+		plannedBudgetLimits[key] = awstypes.Spend{
 			Amount: aws.String(amount),
 			Unit:   aws.String(unit),
 		}
@@ -977,9 +984,9 @@ func expandPlannedBudgetLimitsUnmarshal(plannedBudgetLimitsRaw []interface{}) (m
 	return plannedBudgetLimits, nil
 }
 
-func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budgets.Notification, [][]*budgets.Subscriber) {
-	notifications := make([]*budgets.Notification, len(notificationsRaw))
-	subscribersForNotifications := make([][]*budgets.Subscriber, len(notificationsRaw))
+func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*awstypes.Notification, [][]awstypes.Subscriber) {
+	notifications := make([]*awstypes.Notification, len(notificationsRaw))
+	subscribersForNotifications := make([][]awstypes.Subscriber, len(notificationsRaw))
 	for i, notificationRaw := range notificationsRaw {
 		notificationRaw := notificationRaw.(map[string]interface{})
 		comparisonOperator := notificationRaw["comparison_operator"].(string)
@@ -987,27 +994,27 @@ func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budg
 		thresholdType := notificationRaw["threshold_type"].(string)
 		notificationType := notificationRaw["notification_type"].(string)
 
-		notifications[i] = &budgets.Notification{
-			ComparisonOperator: aws.String(comparisonOperator),
-			Threshold:          aws.Float64(threshold),
-			ThresholdType:      aws.String(thresholdType),
-			NotificationType:   aws.String(notificationType),
+		notifications[i] = &awstypes.Notification{
+			ComparisonOperator: awstypes.ComparisonOperator(comparisonOperator),
+			Threshold:          threshold,
+			ThresholdType:      awstypes.ThresholdType(thresholdType),
+			NotificationType:   awstypes.NotificationType(notificationType),
 		}
 
-		emailSubscribers := expandSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
-		snsSubscribers := expandSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
+		emailSubscribers := expandSubscribers(notificationRaw["subscriber_email_addresses"], awstypes.SubscriptionTypeEmail)
+		snsSubscribers := expandSubscribers(notificationRaw["subscriber_sns_topic_arns"], awstypes.SubscriptionTypeSns)
 
 		subscribersForNotifications[i] = append(emailSubscribers, snsSubscribers...)
 	}
 	return notifications, subscribersForNotifications
 }
 
-func expandSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
-	result := make([]*budgets.Subscriber, 0)
+func expandSubscribers(rawList interface{}, subscriptionType awstypes.SubscriptionType) []awstypes.Subscriber {
+	result := make([]awstypes.Subscriber, 0)
 	addrs := flex.ExpandStringSet(rawList.(*schema.Set))
 	for _, addr := range addrs {
-		result = append(result, &budgets.Subscriber{
-			SubscriptionType: aws.String(subscriptionType),
+		result = append(result, awstypes.Subscriber{
+			SubscriptionType: subscriptionType,
 			Address:          addr,
 		})
 	}
@@ -1050,9 +1057,7 @@ func TimePeriodSecondsToString(s string) (string, error) {
 		return "", err
 	}
 
-	startTime = startTime * 1000
-
-	return aws.SecondsTimeValue(&startTime).UTC().Format(timePeriodLayout), nil
+	return time.Unix(startTime, 0).UTC().Format(timePeriodLayout), nil
 }
 
 const (
@@ -1078,7 +1083,7 @@ func TimePeriodTimestampToString(ts *time.Time) string {
 		return ""
 	}
 
-	return aws.TimeValue(ts).Format(timePeriodLayout)
+	return aws.ToTime(ts).Format(timePeriodLayout)
 }
 
 func validTimePeriodTimestamp(v interface{}, k string) (ws []string, errors []error) {

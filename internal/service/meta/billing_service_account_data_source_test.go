@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
@@ -24,8 +25,8 @@ func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBillingServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", billingAccountID),
-					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", billingAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, billingAccountID),
+					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, names.AttrARN, billingAccountID, "iam", "root"),
 				),
 			},
 		},

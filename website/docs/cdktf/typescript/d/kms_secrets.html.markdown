@@ -16,7 +16,7 @@ Decrypt multiple secrets from data encrypted with the AWS KMS service.
 
 ## Example Usage
 
-If you do not already have a `ciphertextBlob` from encrypting a KMS secret, you can use the below commands to obtain one using the [AWS CLI kms encrypt](https://docs.aws.amazon.com/cli/latest/reference/kms/encrypt.html) command. This requires you to have your AWS CLI setup correctly and replace the `keyId` with your own. Alternatively you can use `--plaintext 'master-password'` (CLIv1) or `--plaintext fileb://<(echo -n 'master-password')` (CLIv2) instead of reading from a file.
+If you do not already have a `CiphertextBlob` from encrypting a KMS secret, you can use the below commands to obtain one using the [AWS CLI kms encrypt](https://docs.aws.amazon.com/cli/latest/reference/kms/encrypt.html) command. This requires you to have your AWS CLI setup correctly and replace the `--key-id` with your own. Alternatively you can use `--plaintext 'master-password'` (CLIv1) or `--plaintext fileb://<(echo -n 'master-password')` (CLIv2) instead of reading from a file.
 
 -> If you have a newline character at the end of your file, it will be decrypted with this newline character intact. For most use cases this is undesirable and leads to incorrect passwords or invalid values, as well as possible changes in the plan. Be sure to use `echo -n` if necessary.
 -> If you are using asymmetric keys ensure you are using the right encryption algorithm when you encrypt and decrypt else you will get IncorrectKeyException during the decrypt phase.
@@ -106,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `plaintext` - Map containing each `secret` `name` as the key with its decrypted plaintext value
 
-<!-- cache-key: cdktf-0.19.0 input-163ab67c377949aee00b00e3a19b28f529fc14cff02471ea6c0bd31a209a5b1d -->
+<!-- cache-key: cdktf-0.20.1 input-163ab67c377949aee00b00e3a19b28f529fc14cff02471ea6c0bd31a209a5b1d -->

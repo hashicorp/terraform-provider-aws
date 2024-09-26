@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing.T) {
@@ -22,26 +22,26 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomRoutingAcceleratorDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "enabled", resourceName, "enabled"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "hosted_zone_id", resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrEnabled, resourceName, names.AttrEnabled),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.#", resourceName, "ip_sets.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.0.ip_addresses.#", resourceName, "ip_sets.0.ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.0.ip_addresses.0", resourceName, "ip_sets.0.ip_addresses.0"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.0.ip_addresses.1", resourceName, "ip_sets.0.ip_addresses.1"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.0.ip_family", resourceName, "ip_sets.0.ip_family"),
 
-					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "enabled", resourceName, "enabled"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "hosted_zone_id", resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrEnabled, resourceName, names.AttrEnabled),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_sets.#", resourceName, "ip_sets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_sets.0.ip_addresses.#", resourceName, "ip_sets.0.ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_sets.0.ip_addresses.0", resourceName, "ip_sets.0.ip_addresses.0"),

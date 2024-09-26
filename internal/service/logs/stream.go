@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_stream")
@@ -33,16 +35,16 @@ func resourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"log_group_name": {
+			names.AttrLogGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,72 +55,78 @@ func resourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.CreateLogStreamInput{
-		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
+		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(name),
 	}
 
 	_, err := conn.CreateLogStream(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Logs Log Stream (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Log Stream (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return findLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+		return findLogStreamByTwoPartKey(ctx, conn, d.Get(names.AttrLogGroupName).(string), d.Id())
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for CloudWatch Logs Log Stream (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Logs Log Stream (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceStreamRead(ctx, d, meta)
+	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	ls, err := findLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+	ls, err := findLogStreamByTwoPartKey(ctx, conn, d.Get(names.AttrLogGroupName).(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Log Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", ls.Arn)
-	d.Set("name", ls.LogStreamName)
+	d.Set(names.AttrARN, ls.Arn)
+	d.Set(names.AttrName, ls.LogStreamName)
 
-	return nil
+	return diags
 }
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
 	_, err := conn.DeleteLogStream(ctx, &cloudwatchlogs.DeleteLogStreamInput{
-		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
+		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(d.Id()),
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -131,7 +139,7 @@ func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	logStreamName := parts[1]
 
 	d.SetId(logStreamName)
-	d.Set("log_group_name", logGroupName)
+	d.Set(names.AttrLogGroupName, logGroupName)
 
 	return []*schema.ResourceData{d}, nil
 }

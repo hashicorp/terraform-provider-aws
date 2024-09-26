@@ -14,7 +14,7 @@ Provides a resource to manage a domain that has been [registered](https://docs.a
 
 **This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
 
-The `awsRoute53DomainsRegisteredDomain` resource behaves differently from normal resources in that if a domain has been registered, Terraform does not _register_ this domain, but instead "adopts" it into management. `terraform destroy` does not delete the domain but does remove the resource from Terraform state.
+The `aws_route53domains_registered_domain` resource behaves differently from normal resources in that if a domain has been registered, Terraform does not _register_ this domain, but instead "adopts" it into management. `terraform destroy` does not delete the domain but does remove the resource from Terraform state.
 
 ## Example Usage
 
@@ -53,21 +53,25 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** You must specify the same privacy setting for `adminPrivacy`, `registrantPrivacy` and `techPrivacy`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
-* `adminContact` - (Optional) Details about the domain administrative contact.
+* `adminContact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `adminPrivacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
 * `autoRenew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
+* `billingContact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
+* `billingPrivacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
 * `domainName` - (Required) The name of the registered domain.
-* `nameServer` - (Optional) The list of nameservers for the domain.
-* `registrantContact` - (Optional) Details about the domain registrant.
+* `nameServer` - (Optional) The list of nameservers for the domain. See [`nameServer` Blocks](#name_server-blocks) for more details.
+* `registrantContact` - (Optional) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
 * `registrantPrivacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `techContact` - (Optional) Details about the domain technical contact.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `techContact` - (Optional) Details about the domain technical contact. See [Contact Blocks](#contact-blocks) for more details.
 * `techPrivacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 * `transferLock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
 
-The `adminContact`, `registrantContact` and `techContact` objects support the following:
+### Contact Blocks
+
+The `adminContact`, `billingContact`, `registrantContact` and `techContact` blocks support the following:
 
 * `addressLine1` - (Optional) First line of the contact's address.
 * `addressLine2` - (Optional) Second line of contact's address, if any.
@@ -84,7 +88,9 @@ The `adminContact`, `registrantContact` and `techContact` objects support the fo
 * `state` - (Optional) The state or province of the contact's city.
 * `zipCode` - (Optional) The zip or postal code of the contact's address.
 
-The `nameServer` object supports the following:
+### `nameServer` Blocks
+
+The `nameServer` blocks supports the following:
 
 * `glueIps` - (Optional) Glue IP addresses of a name server. The list can contain only one IPv4 and one IPv6 address.
 * `name` - (Required) The fully qualified host name of the name server.
@@ -102,7 +108,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `registrarUrl` - Web address of the registrar.
 * `reseller` - Reseller of the domain.
 * `statusList` - List of [domain name status codes](https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updatedDate` - The last updated date of the domain as found in the response to a WHOIS query.
 * `whoisServer` - The fully qualified name of the WHOIS server that can answer the WHOIS query for the domain.
 
@@ -113,4 +119,36 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)
 
-<!-- cache-key: cdktf-0.19.0 input-98a8952abfb9875700e225d9486f8339896363be535628d57f8d8ab898718bdc -->
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import domains using the domain_name. For example:
+
+```typescript
+// DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
+import { Construct } from "constructs";
+import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Route53DomainsRegisteredDomain } from "./.gen/providers/aws/route53-domains-registered-domain";
+class MyConvertedCode extends TerraformStack {
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+    Route53DomainsRegisteredDomain.generateConfigForImport(
+      this,
+      "example",
+      "example.com"
+    );
+  }
+}
+
+```
+
+Using `terraform import`, import domains using the domain name. For example:
+
+```console
+% terraform import aws_route53domains_registered_domain.example example.com
+```
+
+<!-- cache-key: cdktf-0.20.1 input-f3a43c49a370aa3f3597964c2d4afca7628a448994f55687aeb34234b8e0224c -->

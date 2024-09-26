@@ -64,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table Association identifiers.
 
-<!-- cache-key: cdktf-0.19.0 input-bfa58264f45212830b07dd741569d6e94ca91a2bd3663b4e9cf46da0d1431ddd -->
+<!-- cache-key: cdktf-0.20.1 input-bfa58264f45212830b07dd741569d6e94ca91a2bd3663b4e9cf46da0d1431ddd -->

@@ -25,8 +25,8 @@ func TestAccAuditManagerOrganizationAdminAccountRegistration_serial(t *testing.T
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccOrganizationAdminAccountRegistration_basic,
-		"disappears": testAccOrganizationAdminAccountRegistration_disappears,
+		acctest.CtBasic:      testAccOrganizationAdminAccountRegistration_basic,
+		acctest.CtDisappears: testAccOrganizationAdminAccountRegistration_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -46,7 +46,7 @@ func testAccOrganizationAdminAccountRegistration_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationAdminAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationAdminAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{

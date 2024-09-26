@@ -73,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 * `compliance_resource_types` - Describes whether the control scope includes one or more types of resources, such as EFS or RDS.
 * `tags` - Tag key-value pair applied to those AWS resources that you want to trigger an evaluation for a rule. A maximum of one key-value pair can be provided.
 
-<!-- cache-key: cdktf-0.19.0 input-070382f6ead1d1cc0b69de2f856a82f41ed348235bed7c03c3b9216ebaf43096 -->
+<!-- cache-key: cdktf-0.20.1 input-070382f6ead1d1cc0b69de2f856a82f41ed348235bed7c03c3b9216ebaf43096 -->

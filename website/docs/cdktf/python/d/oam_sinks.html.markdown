@@ -37,4 +37,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - Set of ARN of the Sinks.
 
-<!-- cache-key: cdktf-0.19.0 input-b46f5566657905f2a09bc4770daf56461626b99543a0e965bfb54b6891ad7156 -->
+<!-- cache-key: cdktf-0.20.1 input-b46f5566657905f2a09bc4770daf56461626b99543a0e965bfb54b6891ad7156 -->

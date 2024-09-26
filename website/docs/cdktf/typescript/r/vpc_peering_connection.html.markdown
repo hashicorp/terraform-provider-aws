@@ -21,10 +21,10 @@ Using a VPC Peering Connection Options resource decouples management of the conn
 management of the VPC Peering Connection and allows options to be set correctly in cross-account scenarios.
 
 -> **Note:** For cross-account (requester's AWS account differs from the accepter's AWS account) or inter-region
-VPC Peering Connections use the `awsVpcPeeringConnection` resource to manage the requester's side of the
-connection and use the `awsVpcPeeringConnectionAccepter` resource to manage the accepter's side of the connection.
+VPC Peering Connections use the `aws_vpc_peering_connection` resource to manage the requester's side of the
+connection and use the `aws_vpc_peering_connection_accepter` resource to manage the accepter's side of the connection.
 
--> **Note:** Creating multiple `awsVpcPeeringConnection` resources with the same `peerVpcId` and `vpcId` will not produce an error. Instead, AWS will return the connection `id` that already exists, resulting in multiple `awsVpcPeeringConnection` resources with the same `id`.
+-> **Note:** Creating multiple `aws_vpc_peering_connection` resources with the same `peerVpcId` and `vpcId` will not produce an error. Instead, AWS will return the connection `id` that already exists, resulting in multiple `aws_vpc_peering_connection` resources with the same `id`.
 
 ## Example Usage
 
@@ -160,25 +160,25 @@ can be done using the [`autoAccept`](vpc_peering_connection.html#auto_accept) at
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
-* `peerOwnerId` - (Optional) The AWS account ID of the owner of the peer VPC.
-   Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `peerVpcId` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
+* `peerOwnerId` - (Optional) The AWS account ID of the target peer VPC.
+   Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.
+* `peerVpcId` - (Required) The ID of the target VPC with which you are creating the VPC Peering Connection.
 * `vpcId` - (Required) The ID of the requester VPC.
 * `autoAccept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
-* `peerRegion` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `auto_accept` must be `false`,
+* `peerRegion` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `autoAccept` must be `false`,
 and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that accepts
 the peering connection (a maximum of one).
 * `requester` (Optional) - A optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that requests
 the peering connection (a maximum of one).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Accepter and Requester Arguments
 
 -> **Note:** When enabled, the DNS resolution feature requires that VPCs participating in the peering
-must have support for the DNS hostnames enabled. This can be done using the [`enableDnsHostnames`](vpc.html#enable_dns_hostnames) attribute in the [`awsVpc`](vpc.html) resource. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
+must have support for the DNS hostnames enabled. This can be done using the [`enableDnsHostnames`](vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
 * `allowRemoteVpcDnsResolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
 private IP addresses when queried from instances in the peer VPC.
@@ -189,12 +189,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the VPC Peering Connection.
 * `acceptStatus` - The status of the VPC Peering Connection request.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Notes
 
 If both VPCs are not in the same AWS account and region do not enable the `autoAccept` attribute.
-The accepter can manage its side of the connection using the `awsVpcPeeringConnectionAccepter` resource
+The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
 
 ## Timeouts
@@ -213,9 +213,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { VpcPeeringConnection } from "./.gen/providers/aws/vpc-peering-connection";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    VpcPeeringConnection.generateConfigForImport(
+      this,
+      "testConnection",
+      "pcx-111aaa111"
+    );
   }
 }
 
@@ -229,4 +239,4 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.19.0 input-73a508d459b90465fa5267c1055341add54eefba044dcb055a7d430ee33449de -->
+<!-- cache-key: cdktf-0.20.1 input-81146d4d65b74a0127fbac7a0b412052b1f13331dcc243c687067a6fe2c7a258 -->

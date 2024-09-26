@@ -48,10 +48,31 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
+* `id` - ARN of the link.
 * `label` - Label that is assigned to this link.
 * `labelTemplate` - Human-readable name used to identify this source account when you are viewing data from it in the monitoring account.
+* `linkConfiguration` - Configuration for creating filters that specify that only some metric namespaces or log groups are to be shared from the source account to the monitoring account. See [`linkConfiguration` Block](#link_configuration-block) for details.
 * `linkId` - ID string that AWS generated as part of the link ARN.
 * `resourceTypes` - Types of data that the source account shares with the monitoring account.
 * `sinkArn` - ARN of the sink that is used for this link.
 
-<!-- cache-key: cdktf-0.19.0 input-26fcd6d6196bf524f0cfb96d5f07e971f686ef152091f112f43b672b61693a13 -->
+### `linkConfiguration` Block
+
+The `linkConfiguration` configuration block supports the following arguments:
+
+* `logGroupConfiguration` - Configuration for filtering which log groups are to send log events from the source account to the monitoring account. See [`logGroupConfiguration` Block](#log_group_configuration-block) for details.
+* `metricConfiguration` - Configuration for filtering which metric namespaces are to be shared from the source account to the monitoring account. See [`metricConfiguration` Block](#metric_configuration-block) for details.
+
+### `logGroupConfiguration` Block
+
+The `logGroupConfiguration` configuration block supports the following arguments:
+
+* `filter` - Filter string that specifies which log groups are to share their log events with the monitoring account. See [LogGroupConfiguration](https://docs.aws.amazon.com/OAM/latest/APIReference/API_LogGroupConfiguration.html) for details.
+
+### `metricConfiguration` Block
+
+The `metricConfiguration` configuration block supports the following arguments:
+
+* `filter` - Filter string that specifies  which metrics are to be shared with the monitoring account. See [MetricConfiguration](https://docs.aws.amazon.com/OAM/latest/APIReference/API_MetricConfiguration.html) for details.
+
+<!-- cache-key: cdktf-0.20.1 input-f4729e4598ebdb9f58fe0c4d1e223a55c5e962738dad8cf63407b1f580279abe -->

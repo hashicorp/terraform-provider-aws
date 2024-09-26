@@ -52,11 +52,11 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func ResourceProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -95,7 +95,7 @@ func ResourceProject() *schema.Resource {
 							ConflictsWith: []string{"data_delivery.0.cloudwatch_logs"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -103,7 +103,7 @@ func ResourceProject() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
 										),
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -117,7 +117,7 @@ func ResourceProject() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 160),
@@ -130,7 +130,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,7 +138,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -147,7 +147,7 @@ func ResourceProject() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 				),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,13 +164,13 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &evidently.CreateProjectInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -216,15 +216,15 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("active_experiment_count", project.ActiveExperimentCount)
 	d.Set("active_launch_count", project.ActiveLaunchCount)
-	d.Set("arn", project.Arn)
-	d.Set("created_time", aws.ToTime(project.CreatedTime).Format(time.RFC3339))
-	d.Set("description", project.Description)
+	d.Set(names.AttrARN, project.Arn)
+	d.Set(names.AttrCreatedTime, aws.ToTime(project.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, project.Description)
 	d.Set("experiment_count", project.ExperimentCount)
 	d.Set("feature_count", project.FeatureCount)
-	d.Set("last_updated_time", aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("launch_count", project.LaunchCount)
-	d.Set("name", project.Name)
-	d.Set("status", project.Status)
+	d.Set(names.AttrName, project.Name)
+	d.Set(names.AttrStatus, project.Status)
 
 	setTagsOut(ctx, project.Tags)
 
@@ -240,9 +240,9 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	// UpdateProjectWithContext: Updates the description of an existing project.
 	// UpdateProjectDataDeliveryWithContext: Updates the data storage options for this project.
 
-	if d.HasChanges("description") {
+	if d.HasChanges(names.AttrDescription) {
 		_, err := conn.UpdateProject(ctx, &evidently.UpdateProjectInput{
-			Description: aws.String(d.Get("description").(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			Project:     aws.String(d.Id()),
 		})
 
@@ -269,7 +269,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// You can't specify both cloudWatchLogs and s3Destination in the same operation.
-		if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+		if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
 			input.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
 		}
 
@@ -328,7 +328,7 @@ func expandDataDelivery(dataDelivery []interface{}) *awstypes.ProjectDataDeliver
 
 	result := &awstypes.ProjectDataDeliveryConfig{}
 
-	if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
 		result.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
 	}
 
@@ -370,11 +370,11 @@ func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationCon
 
 	result := &awstypes.S3DestinationConfig{}
 
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -389,7 +389,7 @@ func flattenDataDelivery(dataDelivery *awstypes.ProjectDataDelivery) []interface
 	values := map[string]interface{}{}
 
 	if dataDelivery.CloudWatchLogs != nil {
-		values["cloudwatch_logs"] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
+		values[names.AttrCloudWatchLogs] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
 	}
 
 	if dataDelivery.S3Destination != nil {
@@ -421,11 +421,11 @@ func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
 	values := map[string]interface{}{}
 
 	if s3Destination.Bucket != nil {
-		values["bucket"] = aws.ToString(s3Destination.Bucket)
+		values[names.AttrBucket] = aws.ToString(s3Destination.Bucket)
 	}
 
 	if s3Destination.Prefix != nil {
-		values["prefix"] = aws.ToString(s3Destination.Prefix)
+		values[names.AttrPrefix] = aws.ToString(s3Destination.Prefix)
 	}
 
 	return []interface{}{values}

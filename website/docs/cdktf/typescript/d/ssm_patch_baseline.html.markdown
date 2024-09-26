@@ -65,11 +65,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This data source supports the following arguments:
+The following arguments are required:
 
 * `owner` - (Required) Owner of the baseline. Valid values: `All`, `AWS`, `Self` (the current account).
-* `namePrefix` - (Optional) Filter results by the baseline name prefix.
+
+The following arguments are optional:
+
 * `defaultBaseline` - (Optional) Filters the results against the baselines default_baseline field.
+* `namePrefix` - (Optional) Filter results by the baseline name prefix.
 * `operatingSystem` - (Optional) Specified OS for the baseline. Valid values: `AMAZON_LINUX`, `AMAZON_LINUX_2`, `UBUNTU`, `REDHAT_ENTERPRISE_LINUX`, `SUSE`, `CENTOS`, `ORACLE_LINUX`, `DEBIAN`, `MACOS`, `RASPBIAN` and `ROCKY_LINUX`.
 
 ## Attribute Reference
@@ -77,27 +80,28 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `approvedPatches` - List of explicitly approved patches for the baseline.
-* `approvedPatchesComplianceLevel` - The compliance level for approved patches.
+* `approvedPatchesComplianceLevel` - Compliance level for approved patches.
 * `approvedPatchesEnableNonSecurity` - Indicates whether the list of approved patches includes non-security updates that should be applied to the instances.
 * `approvalRule` - List of rules used to include patches in the baseline.
-    * `approve_after_days` - The number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline.
-    * `approve_until_date` - The cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically. Date is formatted as `YYYY-MM-DD`. Conflicts with `approve_after_days`
-    * `compliance_level` - The compliance level for patches approved by this rule.
-    * `enable_non_security` - Boolean enabling the application of non-security updates.
-    * `patch_filter` - The patch filter group that defines the criteria for the rule.
-        * `key` - The key for the filter.
-        * `values` - The value for the filter.
+    * `approveAfterDays` - Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline.
+    * `approveUntilDate` - Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically. Date is formatted as `YYYY-MM-DD`. Conflicts with `approveAfterDays`
+    * `complianceLevel` - Compliance level for patches approved by this rule.
+    * `enableNonSecurity` - Boolean enabling the application of non-security updates.
+    * `patchFilter` - Patch filter group that defines the criteria for the rule.
+        * `key` - Key for the filter.
+        * `values` - Value for the filter.
 * `globalFilter` - Set of global filters used to exclude patches from the baseline.
-    * `key` - The key for the filter.
-    * `values` - The value for the filter.
+    * `key` - Key for the filter.
+    * `values` - Value for the filter.
 * `id` - ID of the baseline.
+* `json` - JSON representation of the baseline.
 * `name` - Name of the baseline.
 * `description` - Description of the baseline.
 * `rejectedPatches` - List of rejected patches.
-* `rejectedPatchesAction` - The action specified to take on patches included in the `rejected_patches` list.
+* `rejectedPatchesAction` - Action specified to take on patches included in the `rejectedPatches` list.
 * `source` - Information about the patches to use to update the managed nodes, including target operating systems and source repositories.
-    * `configuration` - The value of the yum repo configuration.
-    * `name` - The name specified to identify the patch source.
-    * `products` - The specific operating system versions a patch repository applies to.
+    * `configuration` - Value of the yum repo configuration.
+    * `name` - Name specified to identify the patch source.
+    * `products` - Specific operating system versions a patch repository applies to.
 
-<!-- cache-key: cdktf-0.19.0 input-1c115d0fa5611577b6c8646f608f018267b9450033415bb6dcacd2efe1e7a958 -->
+<!-- cache-key: cdktf-0.20.1 input-8ee6d71e67ed884af76dd23dafa24872940eb751791d12905502839059364dab -->

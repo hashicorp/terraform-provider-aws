@@ -11,7 +11,7 @@ This guide describes the behavior of the Terraform AWS Provider and provides cod
 
 !!! note
     The helper functions detailed below **are** compatible with Terraform Plugin Framework based resources (the required library for net-new resources).
-    While these functions currently reside the in the legacy Terraform Plugin SDK repository, they are not directly tied to functionality exclusive to this library, and likely will be moved to a standalone library or into the AWS provider itself in the future.
+    While these functions currently reside in the legacy Terraform Plugin SDK repository, they are not directly tied to functionality exclusive to this library, and likely will be moved to a standalone library or into the AWS provider itself in the future.
 
 ## Terraform Plugin SDK Functionality
 
@@ -85,16 +85,20 @@ When custom service client configurations are applied, these will be defined in 
     func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3_sdkv2.Client, error) {
     	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
     
-    	return s3_sdkv2.NewFromConfig(cfg, func(o *s3_sdkv2.Options) {
-            // ..other configuration..
-    
-    		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
-    			if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
-    				return aws_sdkv2.TrueTernary
-    			}
-    			return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
-    		}))
-    	}), nil
+    	return s3_sdkv2.NewFromConfig(cfg,
+			s3.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+			withBaseEndpoint(config[names.AttrEndpoint].(string)),
+			func(o *s3_sdkv2.Options) {
+				// ..other configuration..
+		
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+						return aws_sdkv2.TrueTernary
+					}
+					return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
+				}))
+			},
+		), nil
     }
     ```
 
@@ -369,7 +373,7 @@ Depending on the service and general AWS load, these errors can be frequent or r
 In order to avoid this issue, identify operations that make changes.
 Then, when calling any other operations that rely on the changes, account for the possibility that the AWS service has not yet fully realized them.
 
-Handling eventual consistency looks slightly different for Terraform Plugin Framework based resources versus Plugin SDK V2. For Terraform Framework based resources, a `Get`/`Describe` API call should be made after the create request completes, all within the `Create` method. For Terraform Plugin SDK V2 resources, the `Create` function should return by calling the `Read` function. Both approaches fill in computed attributes and ensures that the AWS service applied the configuration correctly. Add retry logic to the `Get`/`Describe` API call (Plugin Framework) or `Read` function (Plugin SDK V2) to overcome the temporary condition on resource creation.
+Handling eventual consistency looks slightly different for Terraform Plugin Framework based resources versus Plugin SDK V2. For Terraform Framework based resources, a `Get`/`Describe` API call should be made after the create request completes, all within the `Create` method. For Terraform Plugin SDK V2 resources, the `Create` function should return by calling the `Read` function. Both approaches fill in computed attributes and ensure that the AWS service applied the configuration correctly. Add retry logic to the `Get`/`Describe` API call (Plugin Framework) or `Read` function (Plugin SDK V2) to overcome the temporary condition on resource creation.
 
 !!! note
     For eventually consistent resources, "not found" errors can still occur in the `Read` function even after implementing [Resource Lifecycle Waiters](#resource-lifecycle-waiters).
@@ -505,7 +509,7 @@ const (
 
 ### Resource Attribute Value Waiters
 
-An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `retry.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example, the waiting logic can be implemeted as:
+An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `retry.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example, the waiting logic can be implemented as:
 
 === "AWS SDK Go V2 (Preferred)"
     ```go
@@ -650,7 +654,7 @@ If it is necessary to customize the timeouts and polling, we generally prefer us
 
 ### Resource Lifecycle Waiters
 
-Most of the codebase uses `retry.StateChangeConf` and `retry.StateRefreshFunc` handlers for tracking either component level status fields or explicit tracking identifiers.
+Most of the codebase uses `retry.StateChangeConf` and `retry.StateRefreshFunc` handlers for tracking either component-level status fields or explicit tracking identifiers.
 These should be placed in the `internal/service/{SERVICE}` package and split into separate functions. For example:
 
 === "AWS SDK Go V2 (Preferred)"

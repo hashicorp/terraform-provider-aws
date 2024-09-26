@@ -93,13 +93,13 @@ This configuration block has the following optional arguments (one of the three 
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the object.
 * `checksum_crc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
 * `checksum_crc32c` - The base64-encoded, 32-bit CRC32C checksum of the object.
 * `checksum_sha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
 * `checksum_sha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
 * `expiration` - If the object expiration is configured, this attribute will be set.
-* `id` - The `key` of the resource supplied above.
 * `last_modified` - Returns the date that the object was last modified, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `request_charged` - If present, indicates that the requester was successfully charged for the request.
 * `source_version_id` - Version of the copied object in the source bucket.

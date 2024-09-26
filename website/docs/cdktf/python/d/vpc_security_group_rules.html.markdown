@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all the security group rule IDs found.
 
-<!-- cache-key: cdktf-0.19.0 input-87719c79ae2f1f4c5613b3ccab85a172f42cc7b1318d60caecef6a1733d22344 -->
+<!-- cache-key: cdktf-0.20.1 input-87719c79ae2f1f4c5613b3ccab85a172f42cc7b1318d60caecef6a1733d22344 -->

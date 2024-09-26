@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -17,11 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"golang.org/x/exp/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
-func ResourceImageBlockPublicAccess() *schema.Resource {
+func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,
 		ReadWithoutTimeout:   resourceImageBlockPublicAccessRead,
@@ -33,7 +34,7 @@ func ResourceImageBlockPublicAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"state": {
+			names.AttrState: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
@@ -46,7 +47,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	state := d.Get("state").(string)
+	state := d.Get(names.AttrState).(string)
 
 	if slices.Contains(imageBlockPublicAccessEnabledState_Values(), state) {
 		input := &ec2.EnableImageBlockPublicAccessInput{
@@ -72,7 +73,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 		d.SetId(meta.(*conns.AWSClient).Region)
 	}
 
-	if err := WaitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Image Block Public Access state (%s): %s", state, err)
 	}
 
@@ -83,7 +84,7 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := FindImageBlockPublicAccessState(ctx, conn)
+	output, err := findImageBlockPublicAccessState(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Image Block Public Access %s not found, removing from state", d.Id())
@@ -95,7 +96,7 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Image Block Public Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set("state", output)
+	d.Set(names.AttrState, output)
 
 	return diags
 }

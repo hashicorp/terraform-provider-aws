@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the connector.
 * `description` - Summary description of the connector.
+* `tags` - A map of tags assigned to the resource.
 * `version` - Current version of the connector.
 
-<!-- cache-key: cdktf-0.19.0 input-95d0c19f97dab5d0efafc846bda415a3a1bd7527693cac6b19d936ae768634cf -->
+<!-- cache-key: cdktf-0.20.1 input-6b069cef1eae80ae5ad1164753de1eebfd6bac10e9db05bd513fc965662feb02 -->

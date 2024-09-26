@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `recovery_points` - Number of recovery points that are stored in a backup vault.
 * `tags` - Metadata that you can assign to help organize the resources that you create.
 
-<!-- cache-key: cdktf-0.19.0 input-75bcf13abdcd543599d4af41c0a3cd4883e1f1ea69bf45b112f8908ac5682ba7 -->
+<!-- cache-key: cdktf-0.20.1 input-75bcf13abdcd543599d4af41c0a3cd4883e1f1ea69bf45b112f8908ac5682ba7 -->

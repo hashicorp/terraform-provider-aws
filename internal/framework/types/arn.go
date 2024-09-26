@@ -11,16 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-// ProviderErrorDetailPrefix contains instructions for reporting provider errors to provider developers
-const ProviderErrorDetailPrefix = "An unexpected error was encountered trying to validate an attribute value. " +
-	"This is always an error in the provider. Please report the following to the provider developer:\n\n"
+var (
+	_ basetypes.StringTypable = (*arnType)(nil)
+)
 
 type arnType struct {
 	basetypes.StringType
@@ -28,12 +26,6 @@ type arnType struct {
 
 var (
 	ARNType = arnType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*arnType)(nil)
-	_ basetypes.StringTypable  = (*arnType)(nil)
-	_ basetypes.StringValuable = (*ARN)(nil)
 )
 
 func (t arnType) Equal(o attr.Type) bool {
@@ -94,35 +86,10 @@ func (arnType) ValueType(context.Context) attr.Value {
 	return ARN{}
 }
 
-func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !in.IsKnown() || in.IsNull() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"ARN Type Validation Error",
-			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
-		)
-		return diags
-	}
-
-	if !arn.IsARN(value) {
-		diags.AddAttributeError(
-			path,
-			"ARN Type Validation Error",
-			fmt.Sprintf("Value %q cannot be parsed as an ARN.", value),
-		)
-		return diags
-	}
-
-	return diags
-}
+var (
+	_ basetypes.StringValuable    = (*ARN)(nil)
+	_ xattr.ValidateableAttribute = (*ARN)(nil)
+)
 
 func ARNNull() ARN {
 	return ARN{StringValue: basetypes.NewStringNull()}
@@ -132,10 +99,21 @@ func ARNUnknown() ARN {
 	return ARN{StringValue: basetypes.NewStringUnknown()}
 }
 
+// ARNValue initializes a new ARN type with the provided value
+//
+// This function does not return diagnostics, and therefore invalid ARN values
+// are not handled during construction. Invalid values will be detected by the
+// ValidateAttribute method, called by the ValidateResourceConfig RPC during
+// operations like `terraform validate`, `plan`, or `apply`.
 func ARNValue(value string) ARN {
+	// swallow any ARN parsing errors here and just pass along the
+	// zero value arn.ARN. Invalid values will be handled downstream
+	// by the ValidateAttribute method.
+	v, _ := arn.Parse(value)
+
 	return ARN{
 		StringValue: basetypes.NewStringValue(value),
-		value:       errs.Must(arn.Parse(value)),
+		value:       v,
 	}
 }
 
@@ -158,7 +136,23 @@ func (ARN) Type(context.Context) attr.Type {
 	return ARNType
 }
 
-// ValueARN returns the known arn.ARN value. If ARN is null or unknown, returns {}.
+// ValueARN returns the known arn.ARN value. If ARN is null, unknown, or invalid returns ARN{}.
 func (v ARN) ValueARN() arn.ARN {
 	return v.value
+}
+
+func (v ARN) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	if !arn.IsARN(v.ValueString()) {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid ARN Value",
+			"The provided value cannot be parsed as an ARN.\n\n"+
+				"Path: "+req.Path.String()+"\n"+
+				"Value: "+v.ValueString(),
+		)
+	}
 }

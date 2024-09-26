@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
@@ -22,32 +22,34 @@ func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "alpn_policy", resourceName, "alpn_policy"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_arn", resourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCertificateARN, resourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.#", resourceName, "default_action.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.target_group_arn", resourceName, "default_action.0.target_group_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "load_balancer_arn", resourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "mutual_authentication.#", resourceName, "mutual_authentication.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrProtocol, resourceName, names.AttrProtocol),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ssl_policy", resourceName, "ssl_policy"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "alpn_policy", dataSourceName, "alpn_policy"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "default_action.#", dataSourceName, "default_action.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "default_action.0.target_group_arn", dataSourceName, "default_action.0.target_group_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "load_balancer_arn", dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "mutual_authentication.#", dataSourceName, "mutual_authentication.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "port", dataSourceName, "port"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "protocol", dataSourceName, "protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrPort, dataSourceName, names.AttrPort),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrProtocol, dataSourceName, names.AttrProtocol),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ssl_policy", dataSourceName, "ssl_policy"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

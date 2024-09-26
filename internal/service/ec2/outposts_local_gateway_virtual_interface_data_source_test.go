@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.T) {
@@ -20,13 +20,13 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^lgw-vif-`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^lgw-vif-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexache.MustCompile(`^\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
@@ -45,13 +45,13 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^lgw-vif-`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^lgw-vif-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexache.MustCompile(`^\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
@@ -72,13 +72,13 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_tags(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", sourceDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, sourceDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "local_address", sourceDataSourceName, "local_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "local_bgp_asn", sourceDataSourceName, "local_bgp_asn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "local_gateway_id", sourceDataSourceName, "local_gateway_id"),

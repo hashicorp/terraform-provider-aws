@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,22 +36,22 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_updated", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "key_pair", ""),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "subnet_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSubnetID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -69,7 +70,7 @@ func TestAccImageBuilderInfrastructureConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +93,7 @@ func TestAccImageBuilderInfrastructureConfiguration_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func TestAccImageBuilderInfrastructureConfiguration_description(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -113,7 +114,7 @@ func TestAccImageBuilderInfrastructureConfiguration_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -127,7 +128,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceMetadataOptions(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,7 +136,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceMetadataOptions(t *t
 				Config: testAccInfrastructureConfigurationConfig_instanceMetadataOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.0.http_put_response_hop_limit", "64"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.0.http_tokens", "required"),
 				),
@@ -158,7 +159,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceProfileName(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,7 +167,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceProfileName(t *testi
 				Config: testAccInfrastructureConfigurationConfig_instanceProfileName1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, names.AttrName),
 				),
 			},
 			{
@@ -179,7 +180,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceProfileName(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName2, names.AttrName),
 				),
 			},
 		},
@@ -193,7 +194,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceTypes(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -201,7 +202,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceTypes(t *testing.T) 
 				Config: testAccInfrastructureConfigurationConfig_instanceTypes1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", acctest.Ct1),
 				),
 			},
 			{
@@ -214,7 +215,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceTypes(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", acctest.Ct1),
 				),
 			},
 		},
@@ -239,7 +240,7 @@ func TestAccImageBuilderInfrastructureConfiguration_keyPair(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,7 +277,7 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -284,9 +285,9 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t
 				Config: testAccInfrastructureConfigurationConfig_loggingS3LogsS3BucketName1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName, names.AttrBucket),
 				),
 			},
 			{
@@ -299,9 +300,9 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName2, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName2, names.AttrBucket),
 				),
 			},
 		},
@@ -315,7 +316,7 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3KeyPrefix(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -323,8 +324,8 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3KeyPrefix(t 
 				Config: testAccInfrastructureConfigurationConfig_loggingS3LogsS3KeyPrefix(rName, "/prefix1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.0.s3_key_prefix", "/prefix1/"),
 				),
 			},
@@ -338,8 +339,8 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3KeyPrefix(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.0.s3_key_prefix", "/prefix2/"),
 				),
 			},
@@ -354,16 +355,16 @@ func TestAccImageBuilderInfrastructureConfiguration_resourceTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInfrastructureConfigurationConfig_resourceTags(rName, "key1", "value1"),
+				Config: testAccInfrastructureConfigurationConfig_resourceTags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -372,12 +373,12 @@ func TestAccImageBuilderInfrastructureConfiguration_resourceTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInfrastructureConfigurationConfig_resourceTags(rName, "key2", "value2"),
+				Config: testAccInfrastructureConfigurationConfig_resourceTags(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -393,7 +394,7 @@ func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -401,8 +402,8 @@ func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.
 				Config: testAccInfrastructureConfigurationConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName, names.AttrID),
 				),
 			},
 			{
@@ -415,8 +416,8 @@ func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, names.AttrID),
 				),
 			},
 		},
@@ -432,7 +433,7 @@ func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -440,7 +441,7 @@ func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_snsTopicARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -453,7 +454,7 @@ func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName2, names.AttrARN),
 				),
 			},
 		},
@@ -469,7 +470,7 @@ func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -477,7 +478,7 @@ func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_subnetID1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -490,7 +491,7 @@ func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName2, names.AttrID),
 				),
 			},
 		},
@@ -504,16 +505,16 @@ func TestAccImageBuilderInfrastructureConfiguration_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInfrastructureConfigurationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccInfrastructureConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -522,20 +523,20 @@ func TestAccImageBuilderInfrastructureConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInfrastructureConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccInfrastructureConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccInfrastructureConfigurationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccInfrastructureConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -549,7 +550,7 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -557,7 +558,7 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 				Config: testAccInfrastructureConfigurationConfig_terminateInstanceOnFailure(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "true"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtTrue),
 				),
 			},
 			{
@@ -570,7 +571,7 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtFalse),
 				),
 			},
 		},

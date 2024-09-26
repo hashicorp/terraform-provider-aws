@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the infrastructure configuration.
 * `terminate_instance_on_failure` - Whether instances are terminated on failure.
 
-<!-- cache-key: cdktf-0.19.0 input-7380cb5d85c6d7849e3a07a0e4591a1b51c24389729b623e1b3ca40a6eea581e -->
+<!-- cache-key: cdktf-0.20.1 input-7380cb5d85c6d7849e3a07a0e4591a1b51c24389729b623e1b3ca40a6eea581e -->

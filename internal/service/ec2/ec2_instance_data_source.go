@@ -10,10 +10,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,10 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_instance")
-func DataSourceInstance() *schema.Resource {
+// @SDKDataSource("aws_instance", name="Instance")
+// @Tags
+func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
@@ -37,7 +40,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +48,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,32 +77,32 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrTags: tftags.TagsSchemaComputed(),
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -107,11 +110,11 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -121,8 +124,8 @@ func DataSourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -135,7 +138,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -147,7 +150,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -155,14 +158,14 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -185,12 +188,12 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"instance_tags": tftags.TagsSchemaComputed(),
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -204,6 +207,10 @@ func DataSourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"key_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"launch_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -251,7 +258,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -312,28 +319,28 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrTags: tftags.TagsSchemaComputed(),
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -341,11 +348,11 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -357,7 +364,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -368,11 +375,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -385,7 +392,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -399,45 +406,44 @@ func DataSourceInstance() *schema.Resource {
 // dataSourceInstanceRead performs the instanceID lookup
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// Build up search parameters
 	input := &ec2.DescribeInstancesInput{}
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk("instance_id"); ok {
-		input.InstanceIds = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
+		input.InstanceIds = []string{v.(string)}
 	}
 
-	instance, err := FindInstance(ctx, conn, input)
+	instance, err := findInstance(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance", err))
 	}
 
-	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.StringValue(instance.InstanceId))
-	if err := instanceDescriptionAttributes(ctx, d, instance, conn, ignoreTagsConfig); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.StringValue(instance.InstanceId), err)
+	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.ToString(instance.InstanceId))
+	if err := instanceDescriptionAttributes(ctx, d, meta, instance); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.ToString(instance.InstanceId), err)
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(ctx, aws.StringValue(instance.InstanceId), conn)
+		passwordData, err := getInstancePasswordData(ctx, aws.ToString(instance.InstanceId), conn, d.Timeout(schema.TimeoutRead))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.StringValue(instance.InstanceId), err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.ToString(instance.InstanceId), err)
 		}
 		d.Set("password_data", passwordData)
 	}
@@ -446,21 +452,22 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) error {
-	d.SetId(aws.StringValue(instance.InstanceId))
+func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance) error {
+	d.SetId(aws.ToString(instance.InstanceId))
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	instanceType := aws.StringValue(instance.InstanceType)
-	instanceTypeInfo, err := FindInstanceTypeByName(ctx, conn, instanceType)
+	instanceType := string(instance.InstanceType)
+	instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
 
 	if err != nil {
 		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
@@ -468,7 +475,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	d.Set("availability_zone", instance.Placement.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, instance.Placement.AvailabilityZone)
 	d.Set("placement_group", instance.Placement.GroupName)
 	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
 	d.Set("tenancy", instance.Placement.Tenancy)
@@ -476,8 +483,9 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 
 	d.Set("ami", instance.ImageId)
-	d.Set("instance_type", instanceType)
+	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
+	d.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
@@ -485,7 +493,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set("public_ip", instance.PublicIpAddress)
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
-		name, err := InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
+		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
 			return fmt.Errorf("setting iam_instance_profile: %w", err)
@@ -499,15 +507,15 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	// iterate through network interfaces, and set subnet, network_interface, public_addr
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
-			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				d.Set("subnet_id", ni.SubnetId)
-				d.Set("network_interface_id", ni.NetworkInterfaceId)
+			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
+				d.Set(names.AttrSubnetID, ni.SubnetId)
+				d.Set(names.AttrNetworkInterfaceID, ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 
 				secondaryIPs := make([]string, 0, len(ni.PrivateIpAddresses))
 				for _, ip := range ni.PrivateIpAddresses {
-					if !aws.BoolValue(ip.Primary) {
-						secondaryIPs = append(secondaryIPs, aws.StringValue(ip.PrivateIpAddress))
+					if !aws.ToBool(ip.Primary) {
+						secondaryIPs = append(secondaryIPs, aws.ToString(ip.PrivateIpAddress))
 					}
 				}
 				if err := d.Set("secondary_private_ips", secondaryIPs); err != nil {
@@ -516,7 +524,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 				ipV6Addresses := make([]string, 0, len(ni.Ipv6Addresses))
 				for _, ip := range ni.Ipv6Addresses {
-					ipV6Addresses = append(ipV6Addresses, aws.StringValue(ip.Ipv6Address))
+					ipV6Addresses = append(ipV6Addresses, aws.ToString(ip.Ipv6Address))
 				}
 				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
 					return fmt.Errorf("setting ipv6_addresses: %w", err)
@@ -524,32 +532,30 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else {
-		d.Set("subnet_id", instance.SubnetId)
-		d.Set("network_interface_id", "")
+		d.Set(names.AttrSubnetID, instance.SubnetId)
+		d.Set(names.AttrNetworkInterfaceID, "")
 	}
 
 	d.Set("ebs_optimized", instance.EbsOptimized)
-	if aws.StringValue(instance.SubnetId) != "" {
+	if aws.ToString(instance.SubnetId) != "" {
 		d.Set("source_dest_check", instance.SourceDestCheck)
 	}
 
 	if instance.Monitoring != nil {
-		monitoringState := aws.StringValue(instance.Monitoring.State)
-		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
+		monitoringState := string(instance.Monitoring.State)
+		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
+	setTagsOut(ctx, instance.Tags)
 
 	// Security Groups
 	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
-		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.ToString(instance.InstanceId), err)
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, instance, conn); err != nil {
-		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
+	if err := readBlockDevices(ctx, d, meta, instance, true); err != nil {
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.ToString(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
 		d.Set("ephemeral_block_device", []interface{}{})
@@ -557,35 +563,35 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Lookup and Set Instance Attributes
 	{
-		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
+		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiStop, err)
+			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
 		d.Set("disable_api_stop", attr.DisableApiStop.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiTermination),
+		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+			Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiTermination, err)
+			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiTermination, err)
 		}
 		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String(ec2.InstanceAttributeNameUserData),
+		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+			Attribute:  awstypes.InstanceAttributeNameUserData,
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameUserData, err)
+			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameUserData, err)
 		}
 		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
-			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))
+			d.Set("user_data", userDataHashSum(aws.ToString(attr.UserData.Value)))
 			if d.Get("get_user_data").(bool) {
 				d.Set("user_data_base64", attr.UserData.Value)
 			}
@@ -594,8 +600,8 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
-	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
-		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(ctx, conn, d.Id())
+	if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
+		instanceCreditSpecification, err := findInstanceCreditSpecificationByID(ctx, conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.

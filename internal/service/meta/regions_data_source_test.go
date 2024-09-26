@@ -81,7 +81,7 @@ func TestAccMetaRegionsDataSource_nonExistentRegion(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_nonExistentRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct0),
 				),
 			},
 		},

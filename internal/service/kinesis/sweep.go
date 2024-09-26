@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -27,34 +28,32 @@ func sweepStreams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.KinesisConn(ctx)
+	conn := client.KinesisClient(ctx)
+	input := &kinesis.ListStreamsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &kinesis.ListStreamsInput{}
-	err = conn.ListStreamsPagesWithContext(ctx, input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := kinesis.NewListStreamsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Kinesis Streams (%s): %w", region, err)
 		}
 
 		for _, v := range page.StreamSummaries {
-			r := ResourceStream()
+			r := resourceStream()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.StreamARN))
+			d.SetId(aws.ToString(v.StreamARN))
 			d.Set("enforce_consumer_deletion", true)
-			d.Set("name", v.StreamName)
+			d.Set(names.AttrName, v.StreamName)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error listing Kinesis Streams (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

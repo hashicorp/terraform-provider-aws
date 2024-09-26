@@ -121,4 +121,4 @@ The following arguments are supported for `active_directory_configuration` confi
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - The SVM endpoint's IP addresses.
 
-<!-- cache-key: cdktf-0.19.0 input-f6cea127fecc9fef03f1751e79c3dcabeee15d54d55425580842b9e868758d48 -->
+<!-- cache-key: cdktf-0.20.1 input-f6cea127fecc9fef03f1751e79c3dcabeee15d54d55425580842b9e868758d48 -->

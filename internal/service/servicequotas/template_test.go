@@ -48,7 +48,7 @@ func testAccTemplate_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,10 +56,10 @@ func testAccTemplate_basic(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", lambdaStorageValue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaStorageValue),
 				),
 			},
 			{
@@ -83,7 +83,7 @@ func testAccTemplate_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func testAccTemplate_value(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,10 +120,10 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaENIValue),
 				),
 			},
 			{
@@ -135,10 +135,10 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValueUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValueUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaENIValueUpdated),
 				),
 			},
 		},

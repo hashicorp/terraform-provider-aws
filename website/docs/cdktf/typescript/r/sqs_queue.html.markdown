@@ -105,18 +105,39 @@ import { Fn, Token, TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { SqsQueue } from "./.gen/providers/aws/sqs-queue";
+import { SqsQueueRedriveAllowPolicy } from "./.gen/providers/aws/sqs-queue-redrive-allow-policy";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    new SqsQueue(this, "terraform_queue_deadletter", {
-      name: "terraform-example-deadletter-queue",
-      redriveAllowPolicy: Token.asString(
+    const terraformQueueDeadletter = new SqsQueue(
+      this,
+      "terraform_queue_deadletter",
+      {
+        name: "terraform-example-deadletter-queue",
+      }
+    );
+    const terraformQueue = new SqsQueue(this, "terraform_queue", {
+      name: "terraform-example-queue",
+      redrivePolicy: Token.asString(
         Fn.jsonencode({
-          redrivePermission: "byQueue",
-          sourceQueueArns: [terraformQueue.arn],
+          deadLetterTargetArn: terraformQueueDeadletter.arn,
+          maxReceiveCount: 4,
         })
       ),
     });
+    new SqsQueueRedriveAllowPolicy(
+      this,
+      "terraform_queue_redrive_allow_policy",
+      {
+        queueUrl: terraformQueueDeadletter.id,
+        redriveAllowPolicy: Token.asString(
+          Fn.jsonencode({
+            redrivePermission: "byQueue",
+            sourceQueueArns: [terraformQueue.arn],
+          })
+        ),
+      }
+    );
   }
 }
 
@@ -175,7 +196,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Optional) The name of the queue. Queue names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long. For a FIFO (first-in-first-out) queue, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`
+* `name` - (Optional) The name of the queue. Queue names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long. For a FIFO (first-in-first-out) queue, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`
 * `visibilityTimeoutSeconds` - (Optional) The visibility timeout for the queue. An integer from 0 to 43200 (12 hours). The default for this attribute is 30. For more information about visibility timeout, see [AWS docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/AboutVT.html).
 * `messageRetentionSeconds` - (Optional) The number of seconds Amazon SQS retains a message. Integer representing seconds, from 60 (1 minute) to 1209600 (14 days). The default for this attribute is 345600 (4 days).
@@ -192,7 +213,7 @@ This resource supports the following arguments:
 * `kmsDataKeyReusePeriodSeconds` - (Optional) The length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt or decrypt messages before calling AWS KMS again. An integer representing seconds, between 60 seconds (1 minute) and 86,400 seconds (24 hours). The default is 300 (5 minutes).
 * `deduplicationScope` - (Optional) Specifies whether message deduplication occurs at the message group or queue level. Valid values are `messageGroup` and `queue` (default).
 * `fifoThroughputLimit` - (Optional) Specifies whether the FIFO queue throughput quota applies to the entire queue or per message group. Valid values are `perQueue` (default) and `perMessageGroupId`.
-* `tags` - (Optional) A map of tags to assign to the queue. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the queue. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -200,7 +221,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The URL for the created Amazon SQS queue.
 * `arn` - The ARN of the SQS queue
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `url` - Same as `id`: The URL for the created Amazon SQS queue.
 
 ## Import
@@ -211,9 +232,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SqsQueue } from "./.gen/providers/aws/sqs-queue";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SqsQueue.generateConfigForImport(
+      this,
+      "publicQueue",
+      "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
+    );
   }
 }
 
@@ -225,4 +256,4 @@ Using `terraform import`, import SQS Queues using the queue `url`. For example:
 % terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-61c8bbd892ec566ac1dba66044b682f7399f3a0480c812df8151302e52b9e635 -->
+<!-- cache-key: cdktf-0.20.1 input-73d659bd50569b3c8fc9416a390ac20884b69a87261e4c407bc298935589e844 -->

@@ -20,10 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_securityhub_member")
-func ResourceMember() *schema.Resource {
+// @SDKResource("aws_securityhub_member", name="Member")
+func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
 		ReadWithoutTimeout:   resourceMemberRead,
@@ -34,13 +35,13 @@ func ResourceMember() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -66,14 +67,14 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	input := &securityhub.CreateMembersInput{
 		AccountDetails: []types.AccountDetails{{
 			AccountId: aws.String(accountID),
 		}},
 	}
 
-	if v, ok := d.GetOk("email"); ok {
+	if v, ok := d.GetOk(names.AttrEmail); ok {
 		input.AccountDetails[0].Email = aws.String(v.(string))
 	}
 
@@ -112,7 +113,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	member, err := FindMemberByAccountID(ctx, conn, d.Id())
+	member, err := findMemberByAccountID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Member (%s) not found, removing from state", d.Id())
@@ -124,8 +125,8 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Member (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", member.AccountId)
-	d.Set("email", member.Email)
+	d.Set(names.AttrAccountID, member.AccountId)
+	d.Set(names.AttrEmail, member.Email)
 	status := aws.ToString(member.MemberStatus)
 	const (
 		// Associated is the member status naming for Regions that do not support Organizations.
@@ -179,14 +180,28 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
+func findMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
 	input := &securityhub.GetMembersInput{
 		AccountIds: []string{accountID},
 	}
 
+	return findMember(ctx, conn, input)
+}
+
+func findMember(ctx context.Context, conn *securityhub.Client, input *securityhub.GetMembersInput) (*types.Member, error) {
+	output, err := findMembers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findMembers(ctx context.Context, conn *securityhub.Client, input *securityhub.GetMembersInput) ([]types.Member, error) {
 	output, err := conn.GetMembers(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") || tfawserr.ErrMessageContains(err, errCodeBadRequestException, "The request is rejected since no such resource found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -201,7 +216,7 @@ func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accoun
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return tfresource.AssertSingleValueResult(output.Members)
+	return output.Members, nil
 }
 
 func unprocessedAccountError(apiObject types.Result) error {

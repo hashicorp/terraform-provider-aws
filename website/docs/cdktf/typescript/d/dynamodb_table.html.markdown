@@ -45,4 +45,4 @@ This data source supports the following arguments:
 See the [DynamoDB Table Resource](/docs/providers/aws/r/dynamodb_table.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.19.0 input-1f59fb72cfbdb2e6f0ab733246fe01d5f9b99e7b551e1073e5c40c8c404bd9ef -->
+<!-- cache-key: cdktf-0.20.1 input-1f59fb72cfbdb2e6f0ab733246fe01d5f9b99e7b551e1073e5c40c8c404bd9ef -->

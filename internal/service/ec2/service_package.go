@@ -6,48 +6,49 @@ package ec2
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ec2_sdkv1.EC2) (*ec2_sdkv1.EC2, error) {
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		switch err := r.Error; r.Operation.Name {
-		case "AttachVpnGateway", "DetachVpnGateway":
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ec2_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-		case "CreateClientVpnEndpoint":
-			if tfawserr.ErrMessageContains(err, errCodeOperationNotPermitted, "Endpoint cannot be created while another endpoint is being created") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+	return ec2_sdkv2.NewFromConfig(cfg,
+		ec2_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *ec2_sdkv2.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "This call cannot be completed because there are pending VPNs or Virtual Interfaces") { // AttachVpnGateway, DetachVpnGateway
+					return aws_sdkv2.TrueTernary
+				}
 
-		case "CreateClientVpnRoute", "DeleteClientVpnRoute":
-			if tfawserr.ErrMessageContains(err, errCodeConcurrentMutationLimitExceeded, "Cannot initiate another change for this endpoint at this time") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+				if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) { // CreateCapacityReservation, RunInstances
+					return aws_sdkv2.TrueTernary
+				}
 
-		case "CreateVpnConnection":
-			if tfawserr.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationNotPermitted, "Endpoint cannot be created while another endpoint is being created") { // CreateClientVpnEndpoint
+					return aws_sdkv2.TrueTernary
+				}
 
-		case "CreateVpnGateway":
-			if tfawserr.ErrMessageContains(err, errCodeVPNGatewayLimitExceeded, "maximum number of mutating objects has been reached") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeConcurrentMutationLimitExceeded, "Cannot initiate another change for this endpoint at this time") { // CreateClientVpnRoute, DeleteClientVpnRoute
+					return aws_sdkv2.TrueTernary
+				}
 
-		case "RunInstances":
-			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
-			if tfawserr.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) {
-				r.Retryable = aws_sdkv1.Bool(false)
-			}
-		}
-	})
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnConnection
+					return aws_sdkv2.TrueTernary
+				}
 
-	return conn, nil
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeVPNGatewayLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnGateway
+					return aws_sdkv2.TrueTernary
+				}
+
+				return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

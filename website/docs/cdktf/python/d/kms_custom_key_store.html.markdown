@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `creation_date` - The date and time when the custom key store was created.
 * `trust_anchor_certificate` - The trust anchor certificate of the associated CloudHSM cluster.
 
-<!-- cache-key: cdktf-0.19.0 input-c99ed837841abb6fb88fc77efec11deea74fe80e9ca93d91eb217568414d6862 -->
+<!-- cache-key: cdktf-0.20.1 input-c99ed837841abb6fb88fc77efec11deea74fe80e9ca93d91eb217568414d6862 -->

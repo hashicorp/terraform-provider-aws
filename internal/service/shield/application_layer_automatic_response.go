@@ -5,30 +5,46 @@ package shield
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type applicationLayerAutomaticResponseAction string
+
+const (
+	applicationLayerAutomaticResponseActionBlock applicationLayerAutomaticResponseAction = "BLOCK"
+	applicationLayerAutomaticResponseActionCount applicationLayerAutomaticResponseAction = "COUNT"
+)
+
+func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutomaticResponseAction {
+	return []applicationLayerAutomaticResponseAction{
+		applicationLayerAutomaticResponseActionBlock,
+		applicationLayerAutomaticResponseActionCount,
+	}
+}
+
 // @FrameworkResource(name="Application Layer Automatic Response")
-func newResourceApplicationLayerAutomaticResponse(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplicationLayerAutomaticResponse{}
+func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &applicationLayerAutomaticResponseResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -37,38 +53,34 @@ func newResourceApplicationLayerAutomaticResponse(_ context.Context) (resource.R
 	return r, nil
 }
 
-const (
-	ResNameApplicationLayerAutomaticResponse = "Application Layer Automatic Response"
-)
-
-type resourceApplicationLayerAutomaticResponse struct {
+type applicationLayerAutomaticResponseResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceApplicationLayerAutomaticResponse) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_shield_application_layer_automatic_response"
+func (r *applicationLayerAutomaticResponseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_shield_application_layer_automatic_response"
 }
 
-func (r *resourceApplicationLayerAutomaticResponse) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"resource_arn": schema.StringAttribute{
-				Required: true,
+			names.AttrAction: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[applicationLayerAutomaticResponseAction](),
+				Required:   true,
+			},
+			names.AttrID: framework.IDAttribute(),
+			names.AttrResourceARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"action": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf([]string{"BLOCK", "COUNT"}...),
-				},
-			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -77,328 +89,259 @@ func (r *resourceApplicationLayerAutomaticResponse) Schema(ctx context.Context, 
 	}
 }
 
-func (r *resourceApplicationLayerAutomaticResponse) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var plan resourceApplicationLayerAutomaticResponseData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *applicationLayerAutomaticResponseResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data applicationLayerAutomaticResponseResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	action := &shield.ResponseAction{}
-	switch plan.Action.ValueString() {
-	case "BLOCK":
-		action.Block = &shield.BlockAction{}
-	case "COUNT":
-		action.Count = &shield.CountAction{}
+	conn := r.Meta().ShieldClient(ctx)
+
+	action := &awstypes.ResponseAction{}
+	switch data.Action.ValueEnum() {
+	case applicationLayerAutomaticResponseActionBlock:
+		action.Block = &awstypes.BlockAction{}
+	case applicationLayerAutomaticResponseActionCount:
+		action.Count = &awstypes.CountAction{}
 	}
 
-	in := &shield.EnableApplicationLayerAutomaticResponseInput{
-		ResourceArn: aws.String(plan.ResourceARN.ValueString()),
+	resourceARN := data.ResourceARN.ValueString()
+	input := &shield.EnableApplicationLayerAutomaticResponseInput{
 		Action:      action,
+		ResourceArn: aws.String(resourceARN),
 	}
 
-	_, err := conn.EnableApplicationLayerAutomaticResponseWithContext(ctx, in)
+	_, err := conn.EnableApplicationLayerAutomaticResponse(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameApplicationLayerAutomaticResponse, plan.ResourceARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("enabling Shield Application Layer Automatic Response (%s)", resourceARN), err.Error())
+
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitApplicationLayerAutomaticResponseCreated(ctx, conn, plan.ResourceARN.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForCreation, ResNameApplicationLayerAutomaticResponse, plan.ResourceARN.String(), err),
-			err.Error(),
-		)
+	// Set values for unknowns.
+	data.setID()
+
+	if _, err := waitApplicationLayerAutomaticResponseEnabled(ctx, conn, resourceARN, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Shield Application Layer Automatic Response (%s) create", resourceARN), err.Error())
+
 		return
 	}
 
-	plan.ID = types.StringValue(plan.ResourceARN.ValueString())
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceApplicationLayerAutomaticResponse) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var state resourceApplicationLayerAutomaticResponseData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *applicationLayerAutomaticResponseResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data applicationLayerAutomaticResponseResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &shield.DescribeProtectionInput{
-		ResourceArn: aws.String(state.ID.ValueString()),
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
 	}
 
-	out, err := conn.DescribeProtectionWithContext(ctx, in)
+	conn := r.Meta().ShieldClient(ctx)
+
+	resourceARN := data.ID.ValueString()
+	output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameApplicationLayerAutomaticResponse, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Shield Application Layer Automatic Response (%s)", resourceARN), err.Error())
+
 		return
 	}
-	if out != nil &&
-		out.Protection != nil &&
-		out.Protection.ApplicationLayerAutomaticResponseConfiguration != nil &&
-		out.Protection.ApplicationLayerAutomaticResponseConfiguration.Action != nil {
-		if out.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.Block != nil {
-			state.Action = types.StringValue("BLOCK")
-		}
-		if out.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.Count != nil {
-			state.Action = types.StringValue("COUNT")
-		}
+
+	if output.Action.Block != nil {
+		data.Action = fwtypes.StringEnumValue(applicationLayerAutomaticResponseActionBlock)
+	} else if output.Action.Count != nil {
+		data.Action = fwtypes.StringEnumValue(applicationLayerAutomaticResponseActionCount)
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceApplicationLayerAutomaticResponse) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var plan, state resourceApplicationLayerAutomaticResponseData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *applicationLayerAutomaticResponseResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new applicationLayerAutomaticResponseResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Action.Equal(state.Action) {
-		action := &shield.ResponseAction{}
-		switch plan.Action.ValueString() {
-		case "BLOCK":
-			action.Block = &shield.BlockAction{}
-		case "COUNT":
-			action.Count = &shield.CountAction{}
+	conn := r.Meta().ShieldClient(ctx)
+
+	if !new.Action.Equal(old.Action) {
+		action := &awstypes.ResponseAction{}
+		switch new.Action.ValueEnum() {
+		case applicationLayerAutomaticResponseActionBlock:
+			action.Block = &awstypes.BlockAction{}
+		case applicationLayerAutomaticResponseActionCount:
+			action.Count = &awstypes.CountAction{}
 		}
-		in := &shield.UpdateApplicationLayerAutomaticResponseInput{
-			ResourceArn: aws.String(plan.ResourceARN.ValueString()),
+
+		resourceARN := new.ResourceARN.ValueString()
+		input := &shield.UpdateApplicationLayerAutomaticResponseInput{
 			Action:      action,
+			ResourceArn: aws.String(resourceARN),
 		}
 
-		out, err := conn.UpdateApplicationLayerAutomaticResponseWithContext(ctx, in)
+		_, err := conn.UpdateApplicationLayerAutomaticResponse(ctx, input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameApplicationLayerAutomaticResponse, plan.ID.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Shield Application Layer Automatic Response (%s)", resourceARN), err.Error())
+
 			return
 		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameApplicationLayerAutomaticResponse, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+
+		if _, err := waitApplicationLayerAutomaticResponseEnabled(ctx, conn, resourceARN, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Shield Application Layer Automatic Response (%s) update", resourceARN), err.Error())
+
 			return
 		}
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitApplicationLayerAutomaticResponseUpdated(ctx, conn, plan.ResourceARN.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForUpdate, ResNameApplicationLayerAutomaticResponse, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceApplicationLayerAutomaticResponse) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var state resourceApplicationLayerAutomaticResponseData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *applicationLayerAutomaticResponseResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data applicationLayerAutomaticResponseResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &shield.DisableApplicationLayerAutomaticResponseInput{
-		ResourceArn: aws.String(state.ResourceARN.ValueString()),
+	conn := r.Meta().ShieldClient(ctx)
+
+	resourceARN := data.ID.ValueString()
+	input := &shield.DisableApplicationLayerAutomaticResponseInput{
+		ResourceArn: aws.String(resourceARN),
 	}
 
-	protectionOutput, err := conn.DescribeProtectionWithContext(ctx, &shield.DescribeProtectionInput{
-		ResourceArn: aws.String(state.ResourceARN.ValueString()),
-	})
-	if err != nil {
-		var nfe *shield.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionDeleting, ResNameApplicationLayerAutomaticResponse, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if protectionOutput != nil {
-		if protectionOutput.Protection.ApplicationLayerAutomaticResponseConfiguration != nil && protectionOutput.Protection.ApplicationLayerAutomaticResponseConfiguration.Status != nil {
-			if aws.StringValue(protectionOutput.Protection.ApplicationLayerAutomaticResponseConfiguration.Status) == "DISABLED" {
-				return
-			}
-		}
-	} else {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionDeleting, ResNameApplicationLayerAutomaticResponse, state.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-	}
+	_, err := conn.DisableApplicationLayerAutomaticResponse(ctx, input)
 
-	_, err = conn.DisableApplicationLayerAutomaticResponseWithContext(ctx, in)
-	if err != nil {
-		var nfe *shield.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionDeleting, ResNameApplicationLayerAutomaticResponse, state.ID.String(), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitApplicationLayerAutomaticResponseDeleted(ctx, conn, state.ResourceARN.ValueString(), deleteTimeout)
-
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForDeletion, ResNameApplicationLayerAutomaticResponse, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("disabling Application Layer Automatic Response (%s)", resourceARN), err.Error())
+
+		return
+	}
+
+	if _, err := waitApplicationLayerAutomaticResponseDeleted(ctx, conn, resourceARN, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Shield Application Layer Automatic Response (%s) delete", resourceARN), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceApplicationLayerAutomaticResponse) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, conn *shield.Client, arn string) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) {
+	output, err := findProtectionByResourceARN(ctx, conn, arn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ApplicationLayerAutomaticResponseConfiguration == nil || output.ApplicationLayerAutomaticResponseConfiguration.Action == nil {
+		return nil, tfresource.NewEmptyResultError(arn)
+	}
+
+	if status := output.ApplicationLayerAutomaticResponseConfiguration.Status; status == awstypes.ApplicationLayerAutomaticResponseStatusDisabled {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: arn,
+		}
+	}
+
+	return output.ApplicationLayerAutomaticResponseConfiguration, nil
 }
 
-func waitApplicationLayerAutomaticResponseCreated(ctx context.Context, conn *shield.Shield, resourceArn string, timeout time.Duration) (*shield.DescribeProtectionOutput, error) {
+func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusApplicationLayerAutomaticResponse(ctx, conn, resourceArn),
+		Target:                    enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
+		Refresh:                   statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*shield.DescribeProtectionOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.ApplicationLayerAutomaticResponseConfiguration); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-func waitApplicationLayerAutomaticResponseUpdated(ctx context.Context, conn *shield.Shield, resourceArn string, timeout time.Duration) (*shield.DescribeProtectionOutput, error) {
+func waitApplicationLayerAutomaticResponseDeleted(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusApplicationLayerAutomaticResponse(ctx, conn, resourceArn),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*shield.DescribeProtectionOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitApplicationLayerAutomaticResponseDeleted(ctx context.Context, conn *shield.Shield, resourceArn string, timeout time.Duration) (*shield.DescribeProtectionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
 		Target:  []string{},
-		Refresh: statusApplicationLayerAutomaticResponseDeleted(ctx, conn, resourceArn),
+		Refresh: statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),
 		Timeout: timeout,
 	}
+
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if out, ok := outputRaw.(*shield.DescribeProtectionOutput); ok {
-		return out, err
+	if output, ok := outputRaw.(*awstypes.ApplicationLayerAutomaticResponseConfiguration); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Shield, resourceArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := describeApplicationLayerAutomaticResponse(ctx, conn, resourceArn)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-		curStatus := aws.StringValue(out.Protection.ApplicationLayerAutomaticResponseConfiguration.Status)
-
-		if curStatus == "ENABLED" {
-			return out, statusNormal, nil
-		}
-		return nil, statusChangePending, nil
-	}
+type applicationLayerAutomaticResponseResourceModel struct {
+	Action      fwtypes.StringEnum[applicationLayerAutomaticResponseAction] `tfsdk:"action"`
+	ID          types.String                                                `tfsdk:"id"`
+	ResourceARN fwtypes.ARN                                                 `tfsdk:"resource_arn"`
+	Timeouts    timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
-func statusApplicationLayerAutomaticResponseDeleted(ctx context.Context, conn *shield.Shield, resourceArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := describeApplicationLayerAutomaticResponse(ctx, conn, resourceArn)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-		curStatus := aws.StringValue(out.Protection.ApplicationLayerAutomaticResponseConfiguration.Status)
-
-		if curStatus == "DISABLED" {
-			return nil, "", nil
-		}
-		return out, statusDeleting, nil
-	}
-}
-
-func describeApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Shield, resourceArn string) (*shield.DescribeProtectionOutput, error) {
-	in := &shield.DescribeProtectionInput{
-		ResourceArn: aws.String(resourceArn),
-	}
-	out, err := conn.DescribeProtectionWithContext(ctx, in)
+func (data *applicationLayerAutomaticResponseResourceModel) InitFromID() error {
+	_, err := arn.Parse(data.ID.ValueString())
 	if err != nil {
-		var nfe *shield.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+		return err
 	}
 
-	if out == nil || out.Protection == nil || out.Protection.ApplicationLayerAutomaticResponseConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
+	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
 
-	return out, nil
+	return nil
 }
 
-type resourceApplicationLayerAutomaticResponseData struct {
-	ID          types.String   `tfsdk:"id"`
-	ResourceARN types.String   `tfsdk:"resource_arn"`
-	Action      types.String   `tfsdk:"action"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+func (data *applicationLayerAutomaticResponseResourceModel) setID() {
+	data.ID = data.ResourceARN.StringValue
 }

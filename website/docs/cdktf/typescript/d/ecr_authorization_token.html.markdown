@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `proxyEndpoint` - Registry URL to use in the docker login command.
 * `userName` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.19.0 input-d34a382e4ced5a92cb958e15e5c5a33471a37b0250050f1b1a0f69eb8326fece -->
+<!-- cache-key: cdktf-0.20.1 input-d34a382e4ced5a92cb958e15e5c5a33471a37b0250050f1b1a0f69eb8326fece -->

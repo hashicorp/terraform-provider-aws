@@ -56,7 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the Index.
 * `roleArn` - An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `BatchPutDocument` API to index documents from an Amazon S3 bucket.
 * `serverSideEncryptionConfiguration` - A block that specifies the identifier of the AWS KMS customer managed key (CMK) that's used to encrypt data indexed by Amazon Kendra. Amazon Kendra doesn't support asymmetric CMKs. Documented below.
-* `status` - Current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
+* `status` - Current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `errorMessage` field contains a message that explains why.
 * `updatedAt` - Unix datetime that the index was last updated.
 * `userContextPolicy` - User context policy. Valid values are `ATTRIBUTE_FILTER` or `USER_TOKEN`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/APIReference/API_CreateIndex.html#kendra-CreateIndex-request-UserContextPolicy).
 * `userGroupResolutionConfiguration` - A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. Documented below.
@@ -92,17 +92,17 @@ A `search` block supports the following attributes:
 
 A `indexStatistics` block supports the following attributes:
 
-* `faqStatistics` - Block that specifies the number of question and answer topics in the index. Documented below.
-* `textDocumentStatistics` - A block that specifies the number of text documents indexed.
+* `faq_statistics` - Block that specifies the number of question and answer topics in the index. Documented below.
+* `text_document_statistics` - A block that specifies the number of text documents indexed.
 
-A `faqStatistics` block supports the following attributes:
+A `faq_statistics` block supports the following attributes:
 
-* `indexedQuestionAnswersCount` - The total number of FAQ questions and answers contained in the index.
+* `indexed_question_answers_count` - The total number of FAQ questions and answers contained in the index.
 
-A `textDocumentStatistics` block supports the following attributes:
+A `text_document_statistics` block supports the following attributes:
 
-* `indexedTextBytes` - Total size, in bytes, of the indexed documents.
-* `indexedTextDocumentsCount` - The number of text documents indexed.
+* `indexed_text_bytes` - Total size, in bytes, of the indexed documents.
+* `indexed_text_documents_count` - The number of text documents indexed.
 
 A `serverSideEncryptionConfiguration` block supports the following attributes:
 
@@ -132,4 +132,4 @@ A `jwtTokenTypeConfiguration` block supports the following attributes:
 * `url` - Signing key URL.
 * `userNameAttributeField` - The user name attribute field.
 
-<!-- cache-key: cdktf-0.19.0 input-e76a9b0bb218897eea66052e6f4809ec4cf76d678314db182219fa620bdbe4a4 -->
+<!-- cache-key: cdktf-0.20.1 input-e76a9b0bb218897eea66052e6f4809ec4cf76d678314db182219fa620bdbe4a4 -->

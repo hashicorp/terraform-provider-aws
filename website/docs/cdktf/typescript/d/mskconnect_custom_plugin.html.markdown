@@ -48,5 +48,6 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - a summary description of the custom plugin.
 * `latestRevision` - an ID of the latest successfully created revision of the custom plugin.
 * `state` - the state of the custom plugin.
+* `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-69d528a4e92608d40820215e21637edad56d0cf8bd42eb304519e5181a028a94 -->
+<!-- cache-key: cdktf-0.20.1 input-28566c2af2eb3f9271930a296190e0fa72fa3252c45e4e9372c8acffa9b7bd6d -->

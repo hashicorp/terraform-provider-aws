@@ -5,16 +5,17 @@ package ecrpublic
 
 import (
 	"context"
-	"encoding/base64"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecrpublic"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecrpublic_authorization_token")
@@ -32,12 +33,12 @@ func DataSourceAuthorizationToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,19 +48,20 @@ func DataSourceAuthorizationToken() *schema.Resource {
 
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 	params := &ecrpublic.GetAuthorizationTokenInput{}
 
-	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)
+	out, err := conn.GetAuthorizationToken(ctx, params)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting ECR Public authorization token: %s", err)
 	}
 
 	authorizationData := out.AuthorizationData
-	authorizationToken := aws.StringValue(authorizationData.AuthorizationToken)
-	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
-	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
+	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
+	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
+	authBytes, err := itypes.Base64Decode(authorizationToken)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding ECR Public authorization token: %s", err)
 	}
@@ -74,8 +76,8 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("authorization_token", authorizationToken)
 	d.Set("expires_at", expiresAt)
-	d.Set("user_name", userName)
-	d.Set("password", password)
+	d.Set(names.AttrUserName, userName)
+	d.Set(names.AttrPassword, password)
 
 	return diags
 }

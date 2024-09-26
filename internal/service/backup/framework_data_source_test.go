@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccFrameworkDataSource_basic(t *testing.T) {
@@ -21,44 +21,44 @@ func testAccFrameworkDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "control.#", resourceName, "control.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
-						"name":                    "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
-						"input_parameter.#":       "1",
+						names.AttrName:            "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
+						"input_parameter.#":       acctest.Ct1,
 						"input_parameter.0.name":  "requiredRetentionDays",
 						"input_parameter.0.value": "35",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
-						"name":              "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
-						"input_parameter.#": "3",
+						names.AttrName:      "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
+						"input_parameter.#": acctest.Ct3,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
-						"name": "BACKUP_RECOVERY_POINT_ENCRYPTED",
+						names.AttrName: "BACKUP_RECOVERY_POINT_ENCRYPTED",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
-						"name":                                "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN",
-						"scope.#":                             "1",
-						"scope.0.compliance_resource_ids.#":   "1",
-						"scope.0.compliance_resource_types.#": "1",
+						names.AttrName:                        "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN",
+						"scope.#":                             acctest.Ct1,
+						"scope.0.compliance_resource_ids.#":   acctest.Ct1,
+						"scope.0.compliance_resource_types.#": acctest.Ct1,
 						"scope.0.compliance_resource_types.0": "EBS",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
-						"name": "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED",
+						names.AttrName: "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "control.*.scope.0.compliance_resource_ids.0", "aws_ebs_volume.test", "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "control.*.scope.0.compliance_resource_ids.0", "aws_ebs_volume.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(datasourceName, "deployment_status", resourceName, "deployment_status"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
@@ -74,24 +74,24 @@ func testAccFrameworkDataSource_controlScopeTag(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkDataSourceConfig_controlScopeTag(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "control.#", resourceName, "control.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "control.0.name", resourceName, "control.0.name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "control.0.scope.#", resourceName, "control.0.scope.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "control.0.scope.0.tags.%", resourceName, "control.0.scope.0.tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "control.0.scope.0.tags.Name", resourceName, "control.0.scope.0.tags.Name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(datasourceName, "deployment_status", resourceName, "deployment_status"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
