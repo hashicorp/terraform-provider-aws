@@ -242,6 +242,7 @@ class MyConvertedCode extends TerraformStack {
               subnetIds,
               id,
               dnsSupport,
+              securityGroupReferencingSupport,
               ipv6Support,
               transitGatewayId,
               vpcId,

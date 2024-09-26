@@ -59,6 +59,12 @@ func resourceTransitGatewayVPCAttachment() *schema.Resource {
 				Default:          awstypes.Ipv6SupportValueDisable,
 				ValidateDiagFunc: enum.Validate[awstypes.Ipv6SupportValue](),
 			},
+			"security_group_referencing_support": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
+				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -104,9 +110,10 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 	input := &ec2.CreateTransitGatewayVpcAttachmentInput{
 		Options: &awstypes.CreateTransitGatewayVpcAttachmentRequestOptions{
-			ApplianceModeSupport: awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
-			DnsSupport:           awstypes.DnsSupportValue(d.Get("dns_support").(string)),
-			Ipv6Support:          awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
+			ApplianceModeSupport:            awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
+			DnsSupport:                      awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+			Ipv6Support:                     awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
+			SecurityGroupReferencingSupport: awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string)),
 		},
 		SubnetIds:         flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
@@ -214,6 +221,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
+	d.Set("security_group_referencing_support", transitGatewayVPCAttachment.Options.SecurityGroupReferencingSupport)
 	d.Set(names.AttrSubnetIDs, transitGatewayVPCAttachment.SubnetIds)
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
@@ -230,12 +238,13 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", names.AttrSubnetIDs) {
+	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", "security_group_referencing_support", names.AttrSubnetIDs) {
 		input := &ec2.ModifyTransitGatewayVpcAttachmentInput{
 			Options: &awstypes.ModifyTransitGatewayVpcAttachmentRequestOptions{
-				ApplianceModeSupport: awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
-				DnsSupport:           awstypes.DnsSupportValue(d.Get("dns_support").(string)),
-				Ipv6Support:          awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
+				ApplianceModeSupport:            awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
+				DnsSupport:                      awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+				Ipv6Support:                     awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
+				SecurityGroupReferencingSupport: awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string)),
 			},
 			TransitGatewayAttachmentId: aws.String(d.Id()),
 		}
