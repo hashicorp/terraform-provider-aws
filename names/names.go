@@ -21,6 +21,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -335,23 +336,19 @@ func IsOptInRegion(region string) bool {
 	}
 }
 
+// PartitionForRegion returns the partition ID for the given Region.
+// Returns "" if the Region is empty.
+// Returns "aws" if no known partition includes the Region.
 func PartitionForRegion(region string) string {
-	switch region {
-	case "":
+	if region == "" {
 		return ""
-	case CNNorth1RegionID, CNNorthwest1RegionID:
-		return ChinaPartitionID
-	case USISOEast1RegionID, USISOWest1RegionID:
-		return ISOPartitionID
-	case USISOBEast1RegionID:
-		return ISOBPartitionID
-	case EUISOEWest1RegionID:
-		return ISOEPartitionID
-	case USGovEast1RegionID, USGovWest1RegionID:
-		return USGovCloudPartitionID
-	default:
-		return StandardPartitionID
 	}
+
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
+		return partition.ID()
+	}
+
+	return endpoints.AwsPartitionID
 }
 
 // ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
