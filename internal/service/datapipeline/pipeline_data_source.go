@@ -46,7 +46,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	pipelineId := d.Get("pipeline_id").(string)
 
-	v, err := findPipeline(ctx, pipelineId, conn)
+	v, err := findPipeline(ctx, conn, pipelineId)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing DataPipeline Pipeline (%s): %s", pipelineId, err)
 	}

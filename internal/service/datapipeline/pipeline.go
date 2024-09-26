@@ -87,7 +87,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
-	v, err := findPipeline(ctx, d.Id(), conn)
+	v, err := findPipeline(ctx, conn, d.Id())
 	if errs.IsA[*awstypes.PipelineNotFoundException](err) || errs.IsA[*awstypes.PipelineDeletedException](err) || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -135,7 +135,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func findPipeline(ctx context.Context, id string, conn *datapipeline.Client) (*awstypes.PipelineDescription, error) {
+func findPipeline(ctx context.Context, conn *datapipeline.Client, id string) (*awstypes.PipelineDescription, error) {
 	opts := datapipeline.DescribePipelinesInput{
 		PipelineIds: []string{id},
 	}
