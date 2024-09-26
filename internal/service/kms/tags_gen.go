@@ -156,28 +156,8 @@ func updateTags(ctx context.Context, conn *kms.Client, identifier string, oldTag
 	}
 
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
-		checkFunc := func(tags tftags.KeyValueTags) func() (bool, error) {
-			return func() (bool, error) {
-				output, err := listTags(ctx, conn, identifier, optFns...)
-
-				if tfresource.NotFound(err) {
-					return false, nil
-				}
-
-				if err != nil {
-					return false, err
-				}
-
-				if inContext, ok := tftags.FromContext(ctx); ok {
-					tags = tags.IgnoreConfig(inContext.IgnoreConfig)
-					output = output.IgnoreConfig(inContext.IgnoreConfig)
-				}
-
-				return output.Equal(tags), nil
-			}
-		}
-
-		if err := waitTagsPropagated(ctx, conn, identifier, newTags, checkFunc(newTags), optFns...); err != nil {
+		check := checkFunc(ctx, conn, newTags, identifier, optFns...)
+		if err := waitTagsPropagated(ctx, newTags, check); err != nil {
 			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
 		}
 	}
@@ -194,7 +174,7 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier st
 // waitTagsPropagated waits for kms service tags to be propagated.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags tftags.KeyValueTags, checkFunc func() (bool, error), optFns ...func(*kms.Options)) error {
+func waitTagsPropagated(ctx context.Context, tags tftags.KeyValueTags, checkFunc func() (bool, error)) error {
 	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
 		names.AttrTags: tags,
 	})
@@ -205,4 +185,25 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 	}
 
 	return tfresource.WaitUntil(ctx, 10*time.Minute, checkFunc, opts)
+}
+
+// checkFunc returns a function that checks if the tags are propagated.
+func checkFunc(ctx context.Context, conn *kms.Client, tags tftags.KeyValueTags, id string, optFns ...func(*kms.Options)) func() (bool, error) {
+	return func() (bool, error) {
+		output, err := listTags(ctx, conn, id, optFns...)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
+		}
+		return output.Equal(tags), nil
+	}
 }

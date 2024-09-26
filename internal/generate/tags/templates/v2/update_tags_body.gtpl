@@ -164,28 +164,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{ if .WaitForPropagation }}
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
-		checkFunc := func(tags tftags.KeyValueTags) func() (bool, error) {
-			return func() (bool, error) {
-				output, err := listTags(ctx, conn, identifier, optFns...)
-
-				if tfresource.NotFound(err) {
-					return false, nil
-				}
-
-				if err != nil {
-					return false, err
-				}
-
-				if inContext, ok := tftags.FromContext(ctx); ok {
-					tags = tags.IgnoreConfig(inContext.IgnoreConfig)
-					output = output.IgnoreConfig(inContext.IgnoreConfig)
-				}
-
-				return output.Equal(tags), nil
-			}
-		}
-
-		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags, checkFunc(newTags), optFns...); err != nil {
+        check := checkFunc(ctx, conn, newTags, identifier, optFns...)
+		if err := {{ .WaitTagsPropagatedFunc }}(ctx, newTags, check); err != nil {
 			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
 		}
 	}

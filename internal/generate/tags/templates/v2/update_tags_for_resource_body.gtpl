@@ -164,9 +164,9 @@ func {{ .UpdateTagsForResourceFunc }}(ctx context.Context, conn {{ .ClientType }
 
 	{{ if .WaitForPropagation }}
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
-		checkFunc := func(tags tftags.KeyValueTags) func() (bool, error) {
+		checkFunc := func(ctx context.Context, conn {{ .ClientType }}, tags tftags.KeyValueTags, id string, optFns ...func(*{{ .AWSService }}.Options)) func() (bool, error) {
 			return func() (bool, error) {
-				output, err := listTags(ctx, conn, identifier, optFns...)
+				output, err := listTags(ctx, conn, id, optFns...)
 
 				if tfresource.NotFound(err) {
 					return false, nil
@@ -185,7 +185,7 @@ func {{ .UpdateTagsForResourceFunc }}(ctx context.Context, conn {{ .ClientType }
 			}
 		}
 
-		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags, checkFunc(newTags), optFns...); err != nil {
+		if err := {{ .WaitTagsPropagatedFunc }}(ctx, newTags, checkFunc(ctx, conn, newTags, identifier, optFns...)); err != nil {
 			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
 		}
 	}
