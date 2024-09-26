@@ -6,7 +6,6 @@ package ec2_test
 import (
 	"context"
 	"errors"
-	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
