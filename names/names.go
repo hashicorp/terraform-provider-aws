@@ -18,7 +18,6 @@ package names
 import (
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -209,51 +208,6 @@ const (
 	// AWS ISOF partition's regions.
 	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
-
-var allRegionIDs = []string{
-	AFSouth1RegionID,
-	APEast1RegionID,
-	APNortheast1RegionID,
-	APNortheast2RegionID,
-	APNortheast3RegionID,
-	APSouth1RegionID,
-	APSouth2RegionID,
-	APSoutheast1RegionID,
-	APSoutheast2RegionID,
-	APSoutheast3RegionID,
-	APSoutheast4RegionID,
-	APSoutheast5RegionID,
-	CACentral1RegionID,
-	CAWest1RegionID,
-	EUCentral1RegionID,
-	EUCentral2RegionID,
-	EUNorth1RegionID,
-	EUSouth1RegionID,
-	EUSouth2RegionID,
-	EUWest1RegionID,
-	EUWest2RegionID,
-	EUWest3RegionID,
-	ILCentral1RegionID,
-	MECentral1RegionID,
-	MESouth1RegionID,
-	SAEast1RegionID,
-	USEast1RegionID,
-	USEast2RegionID,
-	USWest1RegionID,
-	USWest2RegionID,
-	CNNorth1RegionID,
-	CNNorthwest1RegionID,
-	USGovEast1RegionID,
-	USGovWest1RegionID,
-	USISOEast1RegionID,
-	USISOWest1RegionID,
-	USISOBEast1RegionID,
-	EUISOEWest1RegionID,
-}
-
-func Regions() []string {
-	return slices.Clone(allRegionIDs)
-}
 
 func DNSSuffixForPartition(partition string) string {
 	switch partition {
