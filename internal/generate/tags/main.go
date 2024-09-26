@@ -83,7 +83,6 @@ var (
 	updateTagsFunc             = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
 	waitTagsPropagatedFunc     = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
 	waitContinuousOccurence    = flag.Int("WaitContinuousOccurence", 0, "ContinuousTargetOccurence for Wait function")
-	waitFuncComparator         = flag.String("WaitFuncComparator", "Equal", "waitFuncComparator")
 	waitDelay                  = flag.Duration("WaitDelay", 0, "Delay for Wait function")
 	waitMinTimeout             = flag.Duration("WaitMinTimeout", 0, `"MinTimeout" (minimum poll interval) for Wait function`)
 	waitPollInterval           = flag.Duration("WaitPollInterval", 0, "PollInterval for Wait function")
@@ -215,7 +214,6 @@ type TemplateData struct {
 	WaitTagsPropagatedFunc     string
 	WaitContinuousOccurence    int
 	WaitDelay                  string
-	WaitFuncComparator         string
 	WaitMinTimeout             string
 	WaitPollInterval           string
 	WaitTimeout                string
@@ -372,7 +370,6 @@ func main() {
 		UpdateTagsFunc:             *updateTagsFunc,
 		UpdateTagsIgnoreSystem:     !*updateTagsNoIgnoreSystem,
 		WaitForPropagation:         *waitForPropagation,
-		WaitFuncComparator:         *waitFuncComparator,
 		WaitTagsPropagatedFunc:     *waitTagsPropagatedFunc,
 		WaitContinuousOccurence:    *waitContinuousOccurence,
 		WaitDelay:                  formatDuration(*waitDelay),
