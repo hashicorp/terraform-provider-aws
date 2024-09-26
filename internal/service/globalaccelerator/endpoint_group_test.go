@@ -85,7 +85,7 @@ func TestAccGlobalAcceleratorEndpointGroup_crossAccount(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "cross_account_attachment_arn", "arn:aws:elasticloadbalancing:us-west-1:111111111111:loadbalancer/net/nlb-01/8a6825aea9cdab43"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_arn", "arn:aws:elasticloadbalancing:us-west-1:111111111111:loadbalancer/net/nlb-01/8a6825aea9cdab43"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", acctest.Ct3),
@@ -149,6 +149,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
+						"attachment_arn":                 "",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
@@ -935,7 +936,7 @@ func testAccEndpointGroupConfig_crossAccount(rName string) string {
 
 	resource "aws_globalaccelerator_endpoint_group" "test" {
 	  listener_arn = aws_globalaccelerator_listener.test.id
-	  cross_account_attachment_arn = "arn:aws:elasticloadbalancing:us-west-1:111111111111:loadbalancer/net/nlb-01/8a6825aea9cdab43"
+	  attachment_arn = "arn:aws:elasticloadbalancing:us-west-1:111111111111:loadbalancer/net/nlb-01/8a6825aea9cdab43"
 	}
 	`, rName)
 }
