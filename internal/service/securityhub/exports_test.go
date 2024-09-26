@@ -33,6 +33,7 @@ var (
 	FindMemberByAccountID                         = findMemberByAccountID
 	FindOrganizationConfiguration                 = findOrganizationConfiguration
 	FindProductSubscriptionByARN                  = findProductSubscriptionByARN
+	FindStandardsControlAssociationByTwoPartKey   = findStandardsControlAssociationByTwoPartKey
 	FindStandardsControlByTwoPartKey              = findStandardsControlByTwoPartKey
 	FindStandardsSubscriptionByARN                = findStandardsSubscriptionByARN
 	StandardsControlARNToStandardsSubscriptionARN = standardsControlARNToStandardsSubscriptionARN
