@@ -155,6 +155,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get(names.AttrName).(string)
 	input := &kinesis.CreateStreamInput{
 		StreamName: aws.String(name),
+		Tags:       KeyValueTags(ctx, getTagsIn(ctx)).Map(),
 	}
 
 	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -238,10 +239,6 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (StartStreamEncryption): %s", name, err)
 			}
 		}
-	}
-
-	if err := createTags(ctx, conn, name, getTagsIn(ctx)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Kinesis Stream (%s) tags: %s", name, err)
 	}
 
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
