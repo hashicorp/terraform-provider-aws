@@ -460,7 +460,7 @@ The `expiration` configuration block supports the following arguments:
 The `filter` configuration block supports the following arguments:
 
 * `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates. [See below](#and). The Lifecycle Rule will apply to any object matching all the predicates configured inside the `and` block.
-* `object_size_greater_than` - (Optional) Minimum object size (in bytes) to which the rule applies.
+* `object_size_greater_than` - (Optional) Minimum object size (in bytes) to which the rule applies. Defaults to 128000.
 * `object_size_less_than` - (Optional) Maximum object size (in bytes) to which the rule applies.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies. Defaults to an empty string (`""`) if not specified.
 * `tag` - (Optional) Configuration block for specifying a tag key and value. [See below](#tag).
