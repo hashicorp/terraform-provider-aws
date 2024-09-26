@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -52,7 +51,7 @@ func (r *resourceTransitgatewayDefaultRouteTableAssociation) Metadata(_ context.
 func (r *resourceTransitgatewayDefaultRouteTableAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"original_route_table_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -67,7 +66,7 @@ func (r *resourceTransitgatewayDefaultRouteTableAssociation) Schema(ctx context.
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -174,9 +173,9 @@ func (r *resourceTransitgatewayDefaultRouteTableAssociation) Update(ctx context.
 
 	if !plan.RouteTableId.Equal(state.RouteTableId) {
 		in := &ec2.ModifyTransitGatewayInput{
-			TransitGatewayId: aws.String(state.ID.ValueString()),
+			TransitGatewayId: state.ID.ValueStringPointer(),
 			Options: &awstypes.ModifyTransitGatewayOptions{
-				AssociationDefaultRouteTableId: flex.StringFromFramework(ctx, plan.RouteTableId),
+				AssociationDefaultRouteTableId: plan.RouteTableId.ValueStringPointer(),
 			},
 		}
 
