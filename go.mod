@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.38
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.36
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.14
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.23
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.24
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.29.1
@@ -212,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/rum v1.20.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.160.0
