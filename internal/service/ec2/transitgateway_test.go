@@ -58,6 +58,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"DefaultRouteTablePropagation":                       testAccTransitGateway_DefaultRouteTablePropagation,
 			"Description":                                        testAccTransitGateway_Description,
 			"DnsSupport":                                         testAccTransitGateway_DNSSupport,
+			"SecurityGroupReferenceSupport":                      testAccTransitGateway_SecurityGroupReferenceSupport,
 			"VpnEcmpSupport":                                     testAccTransitGateway_VPNECMPSupport,
 		},
 		"MulticastDomain": {
@@ -572,6 +573,46 @@ func testAccTransitGateway_VPNECMPSupport(t *testing.T, semaphore tfsync.Semapho
 	})
 }
 
+func testAccTransitGateway_SecurityGroupReferenceSupport(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGateway1, transitGateway2 awstypes.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_securityGroupRefenceSupport(rName, string(awstypes.SecurityGroupReferencingSupportValueDisable)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueDisable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayConfig_securityGroupRefenceSupport(rName, string(awstypes.SecurityGroupReferencingSupportValueEnable)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway2),
+					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueEnable)),
+				),
+			},
+		},
+	})
+}
+
 func testAccTransitGateway_Description(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2 awstypes.TransitGateway
@@ -997,6 +1038,18 @@ resource "aws_ec2_transit_gateway" "test" {
   }
 }
 `, rName, vpnEcmpSupport)
+}
+
+func testAccTransitGatewayConfig_securityGroupRefenceSupport(rName, securityGroupRefenceSupport string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  security_group_referencing_support = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, securityGroupRefenceSupport)
 }
 
 func testAccTransitGatewayConfig_description(rName, description string) string {
