@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccStandardsControlAssociation_basic(t *testing.T) {
@@ -53,6 +52,7 @@ func testAccStandardsControlAssociation_basic(t *testing.T) {
 		},
 	})
 }
+
 func testAccCheckStandardsControlAssociationExists(ctx context.Context, name string, v *awstypes.StandardsControlAssociationSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
