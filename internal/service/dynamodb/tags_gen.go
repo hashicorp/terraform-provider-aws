@@ -205,7 +205,7 @@ func waitTagsPropagated(ctx context.Context, conn *dynamodb.Client, id string, t
 			output = output.IgnoreConfig(inContext.IgnoreConfig)
 		}
 
-		return output.Equal(tags), nil
+		return output.ContainsAll(tags), nil
 	}
 	opts := tfresource.WaitOpts{
 		ContinuousTargetOccurence: 2,
