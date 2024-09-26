@@ -103,7 +103,6 @@ func testAccCheckTransitGatewayDefaultRouteTableAssociationDestroy(ctx context.C
 			}
 
 			if *resp.Options.PropagationDefaultRouteTableId != *resp.Options.AssociationDefaultRouteTableId {
-
 				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameTransitGatewayDefaultRouteTableAssociation, rs.Primary.ID, errors.New("not destroyed"))
 			}
 		}

@@ -173,7 +173,6 @@ func (r *resourceTransitgatewayDefaultRouteTableAssociation) Update(ctx context.
 	}
 
 	if !plan.RouteTableId.Equal(state.RouteTableId) {
-
 		in := &ec2.ModifyTransitGatewayInput{
 			TransitGatewayId: aws.String(state.ID.ValueString()),
 			Options: &awstypes.ModifyTransitGatewayOptions{
