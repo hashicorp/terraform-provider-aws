@@ -184,13 +184,13 @@ func (r *resourceStandardsControlAssociation) Update(ctx context.Context, req re
 	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError("creating Standards Control Association", err.Error())
+		resp.Diagnostics.AddError("updating Standards Control Association", err.Error())
 
 		return
 	}
 
 	if len(output.UnprocessedAssociationUpdates) > 0 {
-		resp.Diagnostics.AddError("creating Standards Control Association", errors.New("unprocessed association updates").Error())
+		resp.Diagnostics.AddError("updating Standards Control Association", errors.New("unprocessed association updates").Error())
 
 		return
 	}
