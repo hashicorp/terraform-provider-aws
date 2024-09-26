@@ -155,7 +155,6 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get(names.AttrName).(string)
 	input := &kinesis.CreateStreamInput{
 		StreamName: aws.String(name),
-		Tags:       KeyValueTags(ctx, getTagsIn(ctx)).Map(),
 	}
 
 	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -164,6 +163,10 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if streamMode := getStreamMode(d); streamMode == types.StreamModeProvisioned {
 		input.ShardCount = aws.Int32(int32(d.Get("shard_count").(int)))
+	}
+
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
+		input.Tags = tags
 	}
 
 	_, err := conn.CreateStream(ctx, input)
