@@ -31,6 +31,7 @@ BUG FIXES:
 * resource/aws_alb_listener: Remove the limitation preventing setting both default_action.0.target_group_arn and default_action.0.forward to align with the AWS API which allows you to specify both a target group list and a top-level target group ARN if the ARNs match ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
 * resource/aws_db_instance: Allow replica database to be added to domain on create ([#39448](https://github.com/hashicorp/terraform-provider-aws/issues/39448))
 * resource/aws_db_instance_role_association: Fix intermittent failure when instance is not in an available state ([#39457](https://github.com/hashicorp/terraform-provider-aws/issues/39457))
+* resource/aws_dynamodb_tag: Fix propagation timeout when multiple tags exist ([#39491](https://github.com/hashicorp/terraform-provider-aws/issues/39491))
 * resource/aws_ecs_cluster: Fix validation error with `name` attribute. ([#38993](https://github.com/hashicorp/terraform-provider-aws/issues/38993))
 * resource/aws_ecs_cluster_capacity_providers: Fix validation error with `name` attribute. ([#38993](https://github.com/hashicorp/terraform-provider-aws/issues/38993))
 * resource/aws_iam_role: Retry `ConcurrentModificationException`s during role creation ([#39429](https://github.com/hashicorp/terraform-provider-aws/issues/39429))
