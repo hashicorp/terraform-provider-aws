@@ -41,17 +41,17 @@ resource "aws_standards_control_association" "cis_aws_foundations_benchmark_disa
 ```terraform
 resource "aws_securityhub_account" "example" {}
 
-data "aws_securityhub_standards_control_associations" "example" {
+data "aws_securityhub_standards_control_associations" "iam_1" {
   security_control_id = "IAM.1"
 
   depends_on = [aws_securityhub_account.example]
 }
 
-resource "aws_securityhub_standards_control_association" "example" {
-  for_each = toset(data.aws_securityhub_standards_control_associations.example.standards_control_associations[*].standards_arn)
+resource "aws_securityhub_standards_control_association" "iam_1" {
+  for_each = toset(data.aws_securityhub_standards_control_associations.iam_1.standards_control_associations[*].standards_arn)
 
   standards_arn       = each.key
-  security_control_id = "IAM.1"
+  security_control_id = data.aws_securityhub_standards_control_associations.iam_1.security_control_id
   association_status  = "DISABLED"
   updated_reason      = "Not needed"
 }
