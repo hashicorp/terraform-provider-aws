@@ -32,6 +32,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory: newResourceStandardsControlAssociation,
+			Name:    "Standards Control Association",
+		},
 	}
 }
 

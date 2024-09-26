@@ -8,16 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,7 +103,7 @@ func (d *dataSourceStandardsControlAssociations) Read(ctx context.Context, req d
 		SecurityControlId: data.SecurityControlID.ValueStringPointer(),
 	}
 
-	out, err := findStandardsControlAssociations(ctx, conn, input)
+	out, err := findStandardsControlAssociations(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StandardsControlAssociationSummary]())
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -135,28 +134,4 @@ type standardsControlAssociationData struct {
 	StandardsControlTitle       types.String                                   `tfsdk:"standards_control_title"`
 	UpdatedAt                   timetypes.RFC3339                              `tfsdk:"updated_at"`
 	UpdatedReason               types.String                                   `tfsdk:"updated_reason"`
-}
-
-func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput) ([]awstypes.StandardsControlAssociationSummary, error) {
-	var output []awstypes.StandardsControlAssociationSummary
-
-	pages := securityhub.NewListStandardsControlAssociationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.StandardsControlAssociationSummaries...)
-	}
-
-	return output, nil
 }
