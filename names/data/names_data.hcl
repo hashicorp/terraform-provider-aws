@@ -1801,34 +1801,6 @@ service "codecommit" {
   brand                    = "AWS"
 }
 
-service "codeconnections" {
-  cli_v2_command {
-    aws_cli_v2_command           = "codeconnections"
-    aws_cli_v2_command_no_dashes = "codeconnections"
-  }
-
-  sdk {
-    id = "CodeConnections"
-  }
-
-  names {
-    provider_name_upper = "CodeConnections"
-    human_friendly      = "CodeConnections"
-  }
-
-  endpoint_info {
-    endpoint_api_call = "ListConnections"
-  }
-
-  resource_prefix {
-    correct = "aws_codeconnections_"
-  }
-
-  provider_package_correct = "codeconnections"
-  doc_prefix               = ["codeconnections_"]
-  brand                    = "AWS"
-}
-
 service "deploy" {
   go_packages {
     v1_package = "codedeploy"

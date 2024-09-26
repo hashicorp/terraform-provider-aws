@@ -495,12 +495,6 @@ service/codecommit:
           - any-glob-to-any-file:
               - 'internal/service/codecommit/**/*'
               - 'website/**/codecommit_*'
-service/codeconnections:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'internal/service/codeconnections/**/*'
-              - 'website/**/codeconnections_*'
 service/codeguruprofiler:
   - any:
       - changed-files:

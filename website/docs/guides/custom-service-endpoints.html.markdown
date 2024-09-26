@@ -131,7 +131,6 @@ provider "aws" {
 |CodeBuild|`codebuild`|`AWS_ENDPOINT_URL_CODEBUILD`|`codebuild`|
 |CodeCatalyst|`codecatalyst`|`AWS_ENDPOINT_URL_CODECATALYST`|`codecatalyst`|
 |CodeCommit|`codecommit`|`AWS_ENDPOINT_URL_CODECOMMIT`|`codecommit`|
-|CodeConnections|`codeconnections`|`AWS_ENDPOINT_URL_CODECONNECTIONS`|`codeconnections`|
 |CodeGuru Profiler|`codeguruprofiler`|`AWS_ENDPOINT_URL_CODEGURUPROFILER`|`codeguruprofiler`|
 |CodeGuru Reviewer|`codegurureviewer`|`AWS_ENDPOINT_URL_CODEGURU_REVIEWER`|`codeguru_reviewer`|
 |CodePipeline|`codepipeline`|`AWS_ENDPOINT_URL_CODEPIPELINE`|`codepipeline`|

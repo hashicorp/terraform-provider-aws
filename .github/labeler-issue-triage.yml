@@ -153,8 +153,6 @@ service/codecatalyst:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
-service/codeconnections:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeconnections_'
 service/codeguruprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeguruprofiler_'
 service/codegurureviewer:
