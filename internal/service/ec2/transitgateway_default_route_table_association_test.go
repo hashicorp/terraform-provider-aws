@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccEC2TransitGatewayDefaultRouteTableAssociation_basic(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayDefaultRouteTableAssociation_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -53,7 +53,7 @@ func testAccEC2TransitGatewayDefaultRouteTableAssociation_basic(t *testing.T, se
 	})
 }
 
-func testAccEC2TransitGatewayDefaultRouteTableAssociation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayDefaultRouteTableAssociation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

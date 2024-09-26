@@ -47,8 +47,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},
 		"DefaultRouteTableAssociation": {
-			acctest.CtBasic:      testAccEC2TransitGatewayDefaultRouteTableAssociation_basic,
-			acctest.CtDisappears: testAccEC2TransitGatewayDefaultRouteTableAssociation_disappears,
+			acctest.CtBasic:      testAccTransitGatewayDefaultRouteTableAssociation_basic,
+			acctest.CtDisappears: testAccTransitGatewayDefaultRouteTableAssociation_disappears,
 		},
 		"Gateway": {
 			acctest.CtBasic:               testAccTransitGateway_basic,
