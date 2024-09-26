@@ -163,8 +163,8 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
 }
 
 resource "aws_ec2_transit_gateway_default_route_table_association" "test" {
-  transit_gateway_id                 = aws_ec2_transit_gateway.test.id
-  transit_gateway_route_table_id     = aws_ec2_transit_gateway_route_table.test.id
+  transit_gateway_id             = aws_ec2_transit_gateway.test.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
 `
 }
