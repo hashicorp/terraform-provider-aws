@@ -119,7 +119,6 @@ func resourceTransitGateway() *schema.Resource {
 			"security_group_referencing_support": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         true,
 				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
 				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
 			},
