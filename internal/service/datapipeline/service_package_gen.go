@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourcePipelineDefinition,
