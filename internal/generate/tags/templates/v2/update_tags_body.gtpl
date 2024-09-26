@@ -164,8 +164,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{ if .WaitForPropagation }}
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
-        check := checkFunc(ctx, conn, newTags, identifier, optFns...)
-		if err := {{ .WaitTagsPropagatedFunc }}(ctx, newTags, check); err != nil {
+		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags, optFns...); err != nil {
 			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
 		}
 	}

@@ -172,8 +172,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
-		check := checkFunc(ctx, conn, tags, d.Id())
-		if err := waitTagsPropagated(ctx, tags, check); err != nil {
+		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag update: %s", d.Id(), err)
 		}
 	}

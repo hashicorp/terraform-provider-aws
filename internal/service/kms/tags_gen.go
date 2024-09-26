@@ -156,8 +156,7 @@ func updateTags(ctx context.Context, conn *kms.Client, identifier string, oldTag
 	}
 
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
-		check := checkFunc(ctx, conn, newTags, identifier, optFns...)
-		if err := waitTagsPropagated(ctx, newTags, check); err != nil {
+		if err := waitTagsPropagated(ctx, conn, identifier, newTags, optFns...); err != nil {
 			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
 		}
 	}
@@ -174,22 +173,12 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier st
 // waitTagsPropagated waits for kms service tags to be propagated.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func waitTagsPropagated(ctx context.Context, tags tftags.KeyValueTags, checkFunc func() (bool, error)) error {
+func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags tftags.KeyValueTags, optFns ...func(*kms.Options)) error {
 	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
 		names.AttrTags: tags,
 	})
 
-	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 5,
-		MinTimeout:                1 * time.Second,
-	}
-
-	return tfresource.WaitUntil(ctx, 10*time.Minute, checkFunc, opts)
-}
-
-// checkFunc returns a function that checks if the tags are propagated.
-func checkFunc(ctx context.Context, conn *kms.Client, tags tftags.KeyValueTags, id string, optFns ...func(*kms.Options)) func() (bool, error) {
-	return func() (bool, error) {
+	checkFunc := func() (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -204,6 +193,13 @@ func checkFunc(ctx context.Context, conn *kms.Client, tags tftags.KeyValueTags, 
 			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
 			output = output.IgnoreConfig(inContext.IgnoreConfig)
 		}
+
 		return output.Equal(tags), nil
 	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(ctx, 10*time.Minute, checkFunc, opts)
 }

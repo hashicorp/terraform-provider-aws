@@ -31,8 +31,5 @@ var ServiceTagsSliceBody string
 //go:embed update_tags_body.gtpl
 var UpdateTagsBody string
 
-//go:embed update_tags_for_resource_body.gtpl
-var UpdateTagsForResourceBody string
-
 //go:embed wait_tags_propagated_body.gtpl
 var WaitTagsPropagatedBody string
