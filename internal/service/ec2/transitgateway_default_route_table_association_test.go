@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"context"
 	"errors"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -21,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2TransitGatewayDefaultRouteTableAssociation_basic(t *testing.T) {
+func testAccEC2TransitGatewayDefaultRouteTableAssociation_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -29,9 +30,11 @@ func TestAccEC2TransitGatewayDefaultRouteTableAssociation_basic(t *testing.T) {
 
 	var transitgateway types.TransitGateway
 	resourceName := "aws_ec2_transit_gateway_default_route_table_association.test"
+	resourceRouteTableName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -43,13 +46,14 @@ func TestAccEC2TransitGatewayDefaultRouteTableAssociation_basic(t *testing.T) {
 				Config: testAccTransitgatewayDefaultRouteTableAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayDefaultRouteTableAssociationExists(ctx, resourceName, &transitgateway),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", resourceRouteTableName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2TransitGatewayDefaultRouteTableAssociation_disappears(t *testing.T) {
+func testAccEC2TransitGatewayDefaultRouteTableAssociation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -60,6 +64,7 @@ func TestAccEC2TransitGatewayDefaultRouteTableAssociation_disappears(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
