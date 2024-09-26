@@ -192,7 +192,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 			// Try to find the Pipeline
-			pipelineDescription, err := tfdatapipeline.PipelineRetrieve(ctx, rs.Primary.ID, conn)
+			pipelineDescription, err := tfdatapipeline.FindPipeline(ctx, rs.Primary.ID, conn)
 			if errs.IsA[*awstypes.PipelineNotFoundException](err) {
 				continue
 			} else if errs.IsA[*awstypes.PipelineDeletedException](err) {
@@ -224,7 +224,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *awstypes.Pipel
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
 
-		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(ctx, rs.Primary.ID, conn)
+		pipelineDescription, err := tfdatapipeline.FindPipeline(ctx, rs.Primary.ID, conn)
 
 		if err != nil {
 			return err

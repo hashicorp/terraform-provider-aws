@@ -15,7 +15,7 @@ import (
 )
 
 // @SDKDataSource("aws_datapipeline_pipeline")
-func DataSourcePipeline() *schema.Resource {
+func dataSourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePipelineRead,
 
@@ -46,7 +46,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	pipelineId := d.Get("pipeline_id").(string)
 
-	v, err := PipelineRetrieve(ctx, pipelineId, conn)
+	v, err := findPipeline(ctx, pipelineId, conn)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing DataPipeline Pipeline (%s): %s", pipelineId, err)
 	}

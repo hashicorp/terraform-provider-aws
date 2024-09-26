@@ -25,7 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourcePipeline,
+			Factory:  dataSourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
 		},
 		{
@@ -38,7 +38,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourcePipeline,
+			Factory:  resourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
 			Name:     "Pipeline",
 			Tags: &types.ServicePackageResourceTags{
