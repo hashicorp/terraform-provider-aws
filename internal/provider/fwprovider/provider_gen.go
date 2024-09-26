@@ -381,6 +381,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// codeconnections
+
+				"codeconnections": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// codeguruprofiler
 
 				"codeguruprofiler": schema.StringAttribute{
