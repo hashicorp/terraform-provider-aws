@@ -319,23 +319,6 @@ func ServicePrincipalNameForPartition(service string, partition string) string {
 	return "amazonaws.com"
 }
 
-func IsOptInRegion(region string) bool {
-	switch region {
-	case AFSouth1RegionID,
-		APEast1RegionID, APSouth2RegionID,
-		APSoutheast3RegionID, APSoutheast4RegionID, APSoutheast5RegionID,
-		CAWest1RegionID,
-		EUCentral2RegionID,
-		EUSouth1RegionID, EUSouth2RegionID,
-		ILCentral1RegionID,
-		MECentral1RegionID,
-		MESouth1RegionID:
-		return true
-	default:
-		return false
-	}
-}
-
 // PartitionForRegion returns the partition ID for the given Region.
 // Returns "" if the Region is empty.
 // Returns "aws" if no known partition includes the Region.
