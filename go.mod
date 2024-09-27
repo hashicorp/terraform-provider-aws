@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/chatbot v1.6.2
+	github.com/aws/aws-sdk-go-v2/service/chatbot v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/chime v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.18.2
@@ -130,7 +130,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.48.2
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.27.2
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/iam v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.24.2
@@ -151,7 +151,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.36.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.61.2
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.48.2
@@ -179,12 +179,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.32.2
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.8.2
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.1.2
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.1.3
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.16.2
@@ -215,7 +215,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.160.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.161.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.33.2
