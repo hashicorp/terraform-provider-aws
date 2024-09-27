@@ -36,6 +36,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceEndpoint,
 			TypeName: "aws_dms_endpoint",
 			Name:     "Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "endpoint_arn",
+			},
 		},
 		{
 			Factory:  dataSourceReplicationInstance,
