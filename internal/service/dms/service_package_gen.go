@@ -28,6 +28,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceCertificate,
 			TypeName: "aws_dms_certificate",
 			Name:     "Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrCertificateARN,
+			},
 		},
 		{
 			Factory:  dataSourceEndpoint,
