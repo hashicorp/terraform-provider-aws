@@ -16,8 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -348,6 +351,8 @@ func resourceEventSourceMapping() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"topics": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -367,6 +372,10 @@ func resourceEventSourceMapping() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -378,6 +387,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	input := &lambda.CreateEventSourceMappingInput{
 		Enabled:      aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		FunctionName: aws.String(functionName),
+		Tags: getTagsIn(ctx),
 	}
 
 	var target string
@@ -468,7 +478,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 		input.StartingPositionTimestamp = aws.Time(t)
 	}
-
+	
 	if v, ok := d.GetOk("topics"); ok && v.(*schema.Set).Len() > 0 {
 		input.Topics = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -502,9 +512,14 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var tags tftags.KeyValueTags
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
+
+
 	output, err := findEventSourceMappingByID(ctx, conn, d.Id())
+
+	tags, err = listTags(ctx, conn, aws.ToString(output.EventSourceMappingArn))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Event Source Mapping (%s) not found, removing from state", d.Id())
@@ -595,6 +610,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrState, output.State)
 	d.Set("state_transition_reason", output.StateTransitionReason)
 	d.Set("topics", output.Topics)
+	setKeyValueTagsOut(ctx, tags)
 	d.Set("tumbling_window_in_seconds", output.TumblingWindowInSeconds)
 	d.Set("uuid", output.UUID)
 
