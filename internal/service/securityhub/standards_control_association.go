@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	autoflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -239,11 +238,12 @@ func (m *standardsControlAssociationResourceModel) InitFromID(ctx context.Contex
 }
 
 func (m *standardsControlAssociationResourceModel) setID() {
-	m.ID = types.StringValue(standardsControlAssociationCreateResourceID(m.SecurityControlID.ValueString(), m.StandardsARN.ValueString()))
+	id, _ := standardsControlAssociationCreateResourceID(m.SecurityControlID.ValueString(), m.StandardsARN.ValueString())
+	m.ID = types.StringValue(id)
 }
 
-func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) string {
-	return errs.Must(autoflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false))
+func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) (string, error) {
+	return autoflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
 }
 
 func findStandardsControlAssociationByTwoPartKey(ctx context.Context, conn *securityhub.Client, securityControlID string, standardsARN string) (*awstypes.StandardsControlAssociationSummary, error) {
@@ -300,7 +300,8 @@ func unprocessedAssociationUpdatesError(apiObjects []awstypes.UnprocessedStandar
 	for _, apiObject := range apiObjects {
 		err := unprocessedAssociationUpdateError(&apiObject)
 		if v := apiObject.StandardsControlAssociationUpdate; v != nil {
-			err = fmt.Errorf("%s: %w", standardsControlAssociationCreateResourceID(aws.ToString(v.SecurityControlId), aws.ToString(v.StandardsArn)), err)
+			id, _ := standardsControlAssociationCreateResourceID(aws.ToString(v.SecurityControlId), aws.ToString(v.StandardsArn))
+			err = fmt.Errorf("%s: %w", id, err)
 		}
 		errs = append(errs, err)
 	}
