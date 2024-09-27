@@ -27,6 +27,10 @@ The following arguments are required:
 * `transit_gateway_id` - (Required) ID of the Transit Gateway to change the default association route table on.
 * `transit_gateway_route_table_id` - (Required) ID of the Transit Gateway Route Table to be made the default association route table.
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
