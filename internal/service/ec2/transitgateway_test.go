@@ -148,10 +148,11 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"DnsSupport":                      testAccTransitGatewayVPCAttachment_DNSSupport,
 			"Ipv6Support":                     testAccTransitGatewayVPCAttachment_IPv6Support,
 			"SecurityGroupReferencingSupport": testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport,
-			"SecurityGroupReferencingSupportV5690Diff":   testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportV5690Diff,
-			"SharedTransitGateway":                       testAccTransitGatewayVPCAttachment_SharedTransitGateway,
-			"SubnetIds":                                  testAccTransitGatewayVPCAttachment_SubnetIDs,
-			"TransitGatewayDefaultRouteTableAssociation": testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociation,
+			"SecurityGroupReferencingSupportV5690Diff":                         testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportV5690Diff,
+			"SecurityGroupReferencingSupportExistingResource":                  testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportExistingResource,
+			"SharedTransitGateway":                                             testAccTransitGatewayVPCAttachment_SharedTransitGateway,
+			"SubnetIds":                                                        testAccTransitGatewayVPCAttachment_SubnetIDs,
+			"TransitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociation,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
 			"TransitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagation,
 		},
@@ -584,7 +585,7 @@ func testAccTransitGateway_SecurityGroupReferencingSupport(t *testing.T, semapho
 
 func testAccTransitGateway_SecurityGroupReferencingSupportExistingResource(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGateway awstypes.TransitGateway
+	var transitGateway1 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
@@ -613,7 +614,7 @@ func testAccTransitGateway_SecurityGroupReferencingSupportExistingResource(t *te
 					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("security_group_referencing_support")),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway),
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
 				),
 			},
 			{
@@ -631,7 +632,7 @@ func testAccTransitGateway_SecurityGroupReferencingSupportExistingResource(t *te
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("security_group_referencing_support"), knownvalue.StringExact(string(awstypes.SecurityGroupReferencingSupportValueDisable))),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway),
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
 				),
 			},
 		},
