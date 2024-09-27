@@ -45,11 +45,11 @@ func resourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_referencing_support": {
+			"ipv6_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ipv6_support": {
+			"security_group_referencing_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
