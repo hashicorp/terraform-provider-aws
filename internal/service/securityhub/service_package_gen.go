@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceStandardsControlAssociation,
+			Factory: newStandardsControlAssociationResource,
 			Name:    "Standards Control Association",
 		},
 	}

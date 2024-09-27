@@ -5,7 +5,6 @@ package securityhub_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,11 +51,11 @@ func testAccStandardsControlAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckStandardsControlAssociationExists(ctx context.Context, name string, v *awstypes.StandardsControlAssociationSummary) resource.TestCheckFunc {
+func testAccCheckStandardsControlAssociationExists(ctx context.Context, n string, v *awstypes.StandardsControlAssociationSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SecurityHub, create.ErrActionCheckingExistence, tfsecurityhub.ResNameStandardsControlAssociation, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
@@ -65,7 +63,7 @@ func testAccCheckStandardsControlAssociationExists(ctx context.Context, name str
 		output, err := tfsecurityhub.FindStandardsControlAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_control_id"], rs.Primary.Attributes["standards_arn"])
 
 		if err != nil {
-			return create.Error(names.SecurityHub, create.ErrActionCheckingExistence, tfsecurityhub.ResNameStandardsControlAssociation, fmt.Sprintf("%s/%s", rs.Primary.Attributes["security_control_id"], rs.Primary.Attributes["standards_arn"]), err)
+			return err
 		}
 
 		*v = *output

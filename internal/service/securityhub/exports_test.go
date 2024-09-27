@@ -18,6 +18,7 @@ var (
 	ResourceOrganizationConfiguration      = resourceOrganizationConfiguration
 	ResourceProductSubscription            = resourceProductSubscription
 	ResourceStandardsControl               = resourceStandardsControl
+	ResourceStandardsControlAssociation    = newStandardsControlAssociationResource
 	ResourceStandardsSubscription          = resourceStandardsSubscription
 
 	AccountHubARN                                 = accountHubARN

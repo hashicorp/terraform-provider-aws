@@ -33,27 +33,23 @@ import (
 )
 
 // @FrameworkResource("aws_securityhub_standards_control_association", name="Standards Control Association")
-func newResourceStandardsControlAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceStandardsControlAssociation{}
+func newStandardsControlAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &standardsControlAssociationResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameStandardsControlAssociation = "Standards Control Association"
-)
-
-type resourceStandardsControlAssociation struct {
+type standardsControlAssociationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoOpDelete
 }
 
-func (r *resourceStandardsControlAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_securityhub_standards_control_association"
+func (*standardsControlAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_securityhub_standards_control_association"
 }
 
-func (r *resourceStandardsControlAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *standardsControlAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"association_status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AssociationStatus](),
@@ -83,10 +79,10 @@ func (r *resourceStandardsControlAssociation) Schema(ctx context.Context, req re
 	}
 }
 
-func (r *resourceStandardsControlAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resourceStandardsControlAssociationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *standardsControlAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data standardsControlAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -106,13 +102,13 @@ func (r *resourceStandardsControlAssociation) Create(ctx context.Context, req re
 	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError("creating Standards Control Association", err.Error())
+		response.Diagnostics.AddError("creating Standards Control Association", err.Error())
 
 		return
 	}
 
 	if len(output.UnprocessedAssociationUpdates) > 0 {
-		resp.Diagnostics.AddError("creating Standards Control Association", errors.New("unprocessed association updates").Error())
+		response.Diagnostics.AddError("creating Standards Control Association", errors.New("unprocessed association updates").Error())
 
 		return
 	}
@@ -120,18 +116,18 @@ func (r *resourceStandardsControlAssociation) Create(ctx context.Context, req re
 	// Set values for unknowns.
 	data.setID()
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceStandardsControlAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resourceStandardsControlAssociationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *standardsControlAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data standardsControlAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if err := data.InitFromID(ctx); err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
 	}
@@ -142,29 +138,29 @@ func (r *resourceStandardsControlAssociation) Read(ctx context.Context, req reso
 	output, err := findStandardsControlAssociationByTwoPartKey(ctx, conn, securityControlID, standardsARN)
 
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Association (%s/%s)", securityControlID, standardsARN), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Association (%s/%s)", securityControlID, standardsARN), err.Error())
 
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceStandardsControlAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data resourceStandardsControlAssociationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *standardsControlAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var data standardsControlAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -184,24 +180,24 @@ func (r *resourceStandardsControlAssociation) Update(ctx context.Context, req re
 	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError("updating Standards Control Association", err.Error())
+		response.Diagnostics.AddError("updating Standards Control Association", err.Error())
 
 		return
 	}
 
 	if len(output.UnprocessedAssociationUpdates) > 0 {
-		resp.Diagnostics.AddError("updating Standards Control Association", errors.New("unprocessed association updates").Error())
+		response.Diagnostics.AddError("updating Standards Control Association", errors.New("unprocessed association updates").Error())
 
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceStandardsControlAssociation) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data resourceStandardsControlAssociationModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *standardsControlAssociationResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data standardsControlAssociationResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -213,7 +209,7 @@ func (r *resourceStandardsControlAssociation) ValidateConfig(ctx context.Context
 		return
 	}
 
-	resp.Diagnostics.Append(
+	response.Diagnostics.Append(
 		fwdiag.NewAttributeRequiredWhenError(
 			path.Root("updated_reason"),
 			path.Root("association_status"),
@@ -222,7 +218,7 @@ func (r *resourceStandardsControlAssociation) ValidateConfig(ctx context.Context
 	)
 }
 
-type resourceStandardsControlAssociationModel struct {
+type standardsControlAssociationResourceModel struct {
 	AssociationStatus fwtypes.StringEnum[awstypes.AssociationStatus] `tfsdk:"association_status"`
 	ID                types.String                                   `tfsdk:"id"`
 	SecurityControlID types.String                                   `tfsdk:"security_control_id"`
@@ -234,7 +230,7 @@ const (
 	standardsControlAssociationResourceIDPartCount = 2
 )
 
-func (m *resourceStandardsControlAssociationModel) InitFromID(ctx context.Context) error {
+func (m *standardsControlAssociationResourceModel) InitFromID(ctx context.Context) error {
 	parts, err := autoflex.ExpandResourceId(m.ID.ValueString(), standardsControlAssociationResourceIDPartCount, false)
 	if err != nil {
 		return err
@@ -246,7 +242,7 @@ func (m *resourceStandardsControlAssociationModel) InitFromID(ctx context.Contex
 	return nil
 }
 
-func (m *resourceStandardsControlAssociationModel) setID() {
+func (m *standardsControlAssociationResourceModel) setID() {
 	m.ID = types.StringValue(errs.Must(autoflex.FlattenResourceId([]string{m.SecurityControlID.ValueString(), m.StandardsARN.ValueString()}, standardsControlAssociationResourceIDPartCount, false)))
 }
 
