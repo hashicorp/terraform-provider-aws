@@ -258,9 +258,14 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 		input.ProcessingConfiguration = processingConfiguration
 	}
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric Ingestion Destination", err.Error())
+	}
+
 	// Additional fields.
 	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
-	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
+	input.ClientToken = aws.String(uuid)
 	input.IngestionIdentifier = data.IngestionARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
@@ -274,7 +279,12 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.IngestionDestination.Arn)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID AppFabric Ingestion Destination", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	if _, err := waitIngestionDestinationActive(ctx, conn, data.AppBundleARN.ValueString(), data.IngestionARN.ValueString(), data.ARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
@@ -561,8 +571,14 @@ func (m *ingestionDestinationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *ingestionDestinationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppBundleARN.ValueString(), m.IngestionARN.ValueString(), m.ARN.ValueString()}, ingestionDestinationResourceIDPartCount, false)))
+func (m *ingestionDestinationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppBundleARN.ValueString(),
+		m.IngestionARN.ValueString(),
+		m.ARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, ingestionDestinationResourceIDPartCount, false)
 }
 
 type destinationConfigurationModel struct {

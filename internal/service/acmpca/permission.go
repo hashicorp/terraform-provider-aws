@@ -81,7 +81,11 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	caARN := d.Get("certificate_authority_arn").(string)
 	principal := d.Get(names.AttrPrincipal).(string)
 	sourceAccount := d.Get("source_account").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &acmpca.CreatePermissionInput{
 		Actions:                 expandPermissionActions(d.Get(names.AttrActions).(*schema.Set)),
 		CertificateAuthorityArn: aws.String(caARN),
@@ -92,9 +96,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SourceAccount = aws.String(sourceAccount)
 	}
 
-	_, err := conn.CreatePermission(ctx, input)
-
-	if err != nil {
+	if _, err := conn.CreatePermission(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Permission (%s): %s", id, err)
 	}
 
