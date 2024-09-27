@@ -60,6 +60,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceReplicationTask,
 			TypeName: "aws_dms_replication_task",
 			Name:     "Replication Task",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_task_arn",
+			},
 		},
 	}
 }
