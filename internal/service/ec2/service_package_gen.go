@@ -58,10 +58,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
-			Factory: newResourceTransitGatewayDefaultRouteTableAssociation,
-			Name:    "Transit Gateway Default Route Table Association",
-		},
-		{
 			Factory: newResourceTransitGatewayDefaultRouteTablePropagation,
 			Name:    "Transit Gateway Default Route Table Propagation",
 		},
@@ -78,6 +74,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+		},
+		{
+			Factory: newTransitGatewayDefaultRouteTableAssociationResource,
+			Name:    "Transit Gateway Default Route Table Association",
 		},
 		{
 			Factory: newVPCEndpointPrivateDNSResource,

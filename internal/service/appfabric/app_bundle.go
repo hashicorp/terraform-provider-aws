@@ -75,8 +75,13 @@ func (r *appBundleResource) Create(ctx context.Context, request resource.CreateR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric App Bundle", err.Error())
+	}
+
 	input := &appfabric.CreateAppBundleInput{
-		ClientToken:                  aws.String(errs.Must(uuid.GenerateUUID())),
+		ClientToken:                  aws.String(uuid),
 		CustomerManagedKeyIdentifier: fwflex.StringFromFramework(ctx, data.CustomerManagedKeyARN),
 		Tags:                         getTagsIn(ctx),
 	}
