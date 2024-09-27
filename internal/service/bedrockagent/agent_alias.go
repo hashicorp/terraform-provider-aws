@@ -139,7 +139,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 	data.AgentAliasID = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
 	id, err := data.setID()
 	if err != nil {
-		response.Diagnostics.AddError("flattning resource ID Bedrock Agent Alias", err.Error())
+		response.Diagnostics.AddError("creating Bedrock Agent Alias", err.Error())
 		return
 	}
 	data.ID = types.StringValue(id)
