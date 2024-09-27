@@ -81,6 +81,7 @@ var (
 	ResourceTrafficMirrorSession                          = resourceTrafficMirrorSession
 	ResourceTrafficMirrorTarget                           = resourceTrafficMirrorTarget
 	ResourceTransitGatewayConnect                         = resourceTransitGatewayConnect
+	ResourceTransitGatewayDefaultRouteTableAssociation    = newTransitGatewayDefaultRouteTableAssociationResource
 	ResourceTransitGatewayMulticastDomain                 = resourceTransitGatewayMulticastDomain
 	ResourceTransitGatewayMulticastDomainAssociation      = resourceTransitGatewayMulticastDomainAssociation
 	ResourceTransitGatewayMulticastGroupMember            = resourceTransitGatewayMulticastGroupMember

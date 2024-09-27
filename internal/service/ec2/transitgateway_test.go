@@ -51,6 +51,11 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_insideCIDRBlocks,
 			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},
+		"DefaultRouteTableAssociation": {
+			acctest.CtBasic:            testAccTransitGatewayDefaultRouteTableAssociation_basic,
+			acctest.CtDisappears:       testAccTransitGatewayDefaultRouteTableAssociation_disappears,
+			"disappearsTransitGateway": testAccTransitGatewayDefaultRouteTableAssociation_Disappears_transitGateway,
+		},
 		"Gateway": {
 			acctest.CtBasic:               testAccTransitGateway_basic,
 			acctest.CtDisappears:          testAccTransitGateway_disappears,
