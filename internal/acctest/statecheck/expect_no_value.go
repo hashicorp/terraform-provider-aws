@@ -24,6 +24,8 @@ func (e expectNoValueCheck) CheckState(ctx context.Context, request statecheck.C
 
 	if _, err := tfjsonpath.Traverse(resource.AttributeValues, e.attributePath); err == nil {
 		response.Error = fmt.Errorf("value for attribute at path: %s.%s exists", resource.Address, e.attributePath.String())
+
+		return
 	}
 }
 
