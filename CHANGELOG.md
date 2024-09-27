@@ -1,4 +1,9 @@
 ## 5.70.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_securityhub_standards_control_association` ([#39511](https://github.com/hashicorp/terraform-provider-aws/issues/39511))
+
 ## 5.69.0 (September 26, 2024)
 
 NOTES:
