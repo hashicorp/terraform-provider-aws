@@ -62,6 +62,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Transit Gateway Default Route Table Association",
 		},
 		{
+			Factory: newResourceTransitGatewayDefaultRouteTablePropagation,
+			Name:    "Transit Gateway Default Route Table Propagation",
+		},
+		{
 			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{

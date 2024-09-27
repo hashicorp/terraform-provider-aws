@@ -50,6 +50,10 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:      testAccTransitGatewayDefaultRouteTableAssociation_basic,
 			acctest.CtDisappears: testAccTransitGatewayDefaultRouteTableAssociation_disappears,
 		},
+		"DefaultRouteTablePropagation": {
+			acctest.CtBasic:      testAccTransitGatewayDefaultRouteTablePropagation_basic,
+			acctest.CtDisappears: testAccTransitGatewayDefaultRouteTablePropagation_disappears,
+		},
 		"Gateway": {
 			acctest.CtBasic:               testAccTransitGateway_basic,
 			acctest.CtDisappears:          testAccTransitGateway_disappears,
