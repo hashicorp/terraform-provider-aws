@@ -101,14 +101,12 @@ func (r *standardsControlAssociationResource) Create(ctx context.Context, reques
 
 	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
 
-	if err != nil {
-		response.Diagnostics.AddError("creating Standards Control Association", err.Error())
-
-		return
+	if err == nil {
+		err = unprocessedAssociationUpdatesError(output.UnprocessedAssociationUpdates)
 	}
 
-	if len(output.UnprocessedAssociationUpdates) > 0 {
-		response.Diagnostics.AddError("creating Standards Control Association", errors.New("unprocessed association updates").Error())
+	if err != nil {
+		response.Diagnostics.AddError("creating Standards Control Association", err.Error())
 
 		return
 	}
@@ -179,14 +177,12 @@ func (r *standardsControlAssociationResource) Update(ctx context.Context, reques
 
 	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
 
-	if err != nil {
-		response.Diagnostics.AddError("updating Standards Control Association", err.Error())
-
-		return
+	if err == nil {
+		err = unprocessedAssociationUpdatesError(output.UnprocessedAssociationUpdates)
 	}
 
-	if len(output.UnprocessedAssociationUpdates) > 0 {
-		response.Diagnostics.AddError("updating Standards Control Association", errors.New("unprocessed association updates").Error())
+	if err != nil {
+		response.Diagnostics.AddError("updating Standards Control Association", err.Error())
 
 		return
 	}
@@ -243,7 +239,11 @@ func (m *standardsControlAssociationResourceModel) InitFromID(ctx context.Contex
 }
 
 func (m *standardsControlAssociationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(autoflex.FlattenResourceId([]string{m.SecurityControlID.ValueString(), m.StandardsARN.ValueString()}, standardsControlAssociationResourceIDPartCount, false)))
+	m.ID = types.StringValue(standardsControlAssociationCreateResourceID(m.SecurityControlID.ValueString(), m.StandardsARN.ValueString()))
+}
+
+func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) string {
+	return errs.Must(autoflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false))
 }
 
 func findStandardsControlAssociationByTwoPartKey(ctx context.Context, conn *securityhub.Client, securityControlID string, standardsARN string) (*awstypes.StandardsControlAssociationSummary, error) {
@@ -292,4 +292,26 @@ func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Cli
 	}
 
 	return output, nil
+}
+
+func unprocessedAssociationUpdatesError(apiObjects []awstypes.UnprocessedStandardsControlAssociationUpdate) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		err := unprocessedAssociationUpdateError(&apiObject)
+		if v := apiObject.StandardsControlAssociationUpdate; v != nil {
+			err = fmt.Errorf("%s: %w", standardsControlAssociationCreateResourceID(aws.ToString(v.SecurityControlId), aws.ToString(v.StandardsArn)), err)
+		}
+		errs = append(errs, err)
+	}
+
+	return errors.Join(errs...)
+}
+
+func unprocessedAssociationUpdateError(apiObject *awstypes.UnprocessedStandardsControlAssociationUpdate) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return fmt.Errorf("%s: %s", apiObject.ErrorCode, aws.ToString(apiObject.ErrorReason))
 }
