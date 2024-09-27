@@ -29,20 +29,23 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDelegatedAdminAccount,
+			Factory:  resourceDelegatedAdminAccount,
 			TypeName: "aws_inspector2_delegated_admin_account",
+			Name:     "Delegated Admin Account",
 		},
 		{
 			Factory:  ResourceEnabler,
 			TypeName: "aws_inspector2_enabler",
 		},
 		{
-			Factory:  ResourceMemberAssociation,
+			Factory:  resourceMemberAssociation,
 			TypeName: "aws_inspector2_member_association",
+			Name:     "Member Association",
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_inspector2_organization_configuration",
+			Name:     "Organization Configuration",
 		},
 	}
 }

@@ -44,6 +44,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T, semaphore tf
 					resource.TestCheckResourceAttr(resourceName, "dns_support", string(awstypes.DnsSupportValueEnable)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", string(awstypes.Ipv6SupportValueDisable)),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueDisable)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, vpcAttachmentName, names.AttrID),

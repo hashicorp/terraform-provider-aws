@@ -46,6 +46,7 @@ func testAccTransitGatewayVPCAttachment_basic(t *testing.T, semaphore tfsync.Sem
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", string(awstypes.DnsSupportValueEnable)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", string(awstypes.Ipv6SupportValueDisable)),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueDisable)),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", acctest.CtTrue),
@@ -206,6 +207,46 @@ func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T, semaphore tfsy
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", string(awstypes.Ipv6SupportValueDisable)),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 awstypes.TransitGatewayVpcAttachment
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGatewayVPCAttachment(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayVPCAttachmentConfig_securityGroupReferencingSupport(rName, string(awstypes.SecurityGroupReferencingSupportValueDisable)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueDisable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayVPCAttachmentConfig_securityGroupReferencingSupport(rName, string(awstypes.SecurityGroupReferencingSupportValueEnable)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
+					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueEnable)),
 				),
 			},
 		},
@@ -604,6 +645,21 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   }
 }
 `, rName, dnsSupport))
+}
+
+func testAccTransitGatewayVPCAttachmentConfig_securityGroupReferencingSupport(rName, securityGroupReferencingSupport string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  security_group_referencing_support = %[2]q
+  subnet_ids                         = aws_subnet.test[*].id
+  transit_gateway_id                 = aws_ec2_transit_gateway.test.id
+  vpc_id                             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, securityGroupReferencingSupport))
 }
 
 func testAccTransitGatewayVPCAttachmentConfig_ipv6Support(rName, ipv6Support string) string {

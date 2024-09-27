@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Access Policy)
 func newResourceAccessPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAccessPolicy{}, nil
 }
