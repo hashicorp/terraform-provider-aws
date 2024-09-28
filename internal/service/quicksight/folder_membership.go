@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Folder Membership")
+// @FrameworkResource("aws_quicksight_folder_membership", name="Folder Membership")
 func newFolderMembershipResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &folderMembershipResource{}, nil
 }

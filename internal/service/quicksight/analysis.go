@@ -32,6 +32,8 @@ import (
 
 // @SDKResource("aws_quicksight_analysis", name="Analysis")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Analysis")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceAnalysis() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalysisCreate,
