@@ -182,3 +182,37 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 		},
 	})
 }
+
+func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
+	{{- template "Init" . }}
+
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/data.tags_defaults/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+			},
+		},
+	})
+}
