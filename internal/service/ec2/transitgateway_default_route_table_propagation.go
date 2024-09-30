@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -95,7 +95,7 @@ func (r *transitGatewayDefaultRouteTablePropagationResource) Create(ctx context.
 
 	input := &ec2.ModifyTransitGatewayInput{
 		Options: &awstypes.ModifyTransitGatewayOptions{
-			PropagationDefaultRouteTableId: flex.StringFromFramework(ctx, data.RouteTableID),
+			PropagationDefaultRouteTableId: fwflex.StringFromFramework(ctx, data.RouteTableID),
 		},
 		TransitGatewayId: aws.String(tgwID),
 	}
@@ -109,8 +109,8 @@ func (r *transitGatewayDefaultRouteTablePropagationResource) Create(ctx context.
 	}
 
 	// Set unknowns.
-	data.ID = flex.StringValueToFramework(ctx, tgwID)
-	data.OriginalDefaultRouteTableID = flex.StringToFramework(ctx, tgw.Options.PropagationDefaultRouteTableId)
+	data.ID = fwflex.StringValueToFramework(ctx, tgwID)
+	data.OriginalDefaultRouteTableID = fwflex.StringToFramework(ctx, tgw.Options.PropagationDefaultRouteTableId)
 
 	if _, err := waitTransitGatewayUpdated(ctx, conn, tgwID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Transit Gateway Default Route Table Propagation (%s) create", tgwID), err.Error())
@@ -144,8 +144,8 @@ func (r *transitGatewayDefaultRouteTablePropagationResource) Read(ctx context.Co
 		return
 	}
 
-	data.RouteTableID = flex.StringToFramework(ctx, tgw.Options.PropagationDefaultRouteTableId)
-	data.TransitGatewayID = flex.StringToFramework(ctx, tgw.TransitGatewayId)
+	data.RouteTableID = fwflex.StringToFramework(ctx, tgw.Options.PropagationDefaultRouteTableId)
+	data.TransitGatewayID = fwflex.StringToFramework(ctx, tgw.TransitGatewayId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -165,9 +165,9 @@ func (r *transitGatewayDefaultRouteTablePropagationResource) Update(ctx context.
 
 	input := &ec2.ModifyTransitGatewayInput{
 		Options: &awstypes.ModifyTransitGatewayOptions{
-			PropagationDefaultRouteTableId: flex.StringFromFramework(ctx, new.RouteTableID),
+			PropagationDefaultRouteTableId: fwflex.StringFromFramework(ctx, new.RouteTableID),
 		},
-		TransitGatewayId: flex.StringFromFramework(ctx, new.TransitGatewayID),
+		TransitGatewayId: fwflex.StringFromFramework(ctx, new.TransitGatewayID),
 	}
 
 	_, err := conn.ModifyTransitGateway(ctx, input)
@@ -198,9 +198,9 @@ func (r *transitGatewayDefaultRouteTablePropagationResource) Delete(ctx context.
 
 	_, err := conn.ModifyTransitGateway(ctx, &ec2.ModifyTransitGatewayInput{
 		Options: &awstypes.ModifyTransitGatewayOptions{
-			PropagationDefaultRouteTableId: flex.StringFromFramework(ctx, data.OriginalDefaultRouteTableID),
+			PropagationDefaultRouteTableId: fwflex.StringFromFramework(ctx, data.OriginalDefaultRouteTableID),
 		},
-		TransitGatewayId: flex.StringFromFramework(ctx, data.TransitGatewayID),
+		TransitGatewayId: fwflex.StringFromFramework(ctx, data.TransitGatewayID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeIncorrectState) {
