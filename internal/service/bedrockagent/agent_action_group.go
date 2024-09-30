@@ -252,7 +252,12 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 	// Set values for unknowns.
 	data.ActionGroupID = fwflex.StringToFramework(ctx, output.AgentActionGroup.ActionGroupId)
 	data.ActionGroupState = fwtypes.StringEnumValue(output.AgentActionGroup.ActionGroupState)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Action Group", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -430,8 +435,14 @@ func (m *agentActionGroupResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentActionGroupResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.ActionGroupID.ValueString(), m.AgentID.ValueString(), m.AgentVersion.ValueString()}, agentActionGroupResourceIDPartCount, false)))
+func (m *agentActionGroupResourceModel) setID() (string, error) {
+	parts := []string{
+		m.ActionGroupID.ValueString(),
+		m.AgentID.ValueString(),
+		m.AgentVersion.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentActionGroupResourceIDPartCount, false)
 }
 
 type actionGroupExecutorModel struct {

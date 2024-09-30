@@ -1,16 +1,37 @@
-## 5.69.0 (Unreleased)
+## 5.70.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_transit_gateway_default_route_table_association` ([#39496](https://github.com/hashicorp/terraform-provider-aws/issues/39496))
+* **New Resource:** `aws_securityhub_standards_control_association` ([#39511](https://github.com/hashicorp/terraform-provider-aws/issues/39511))
+
+BUG FIXES:
+
+* resource/aws_ec2_transit_gateway_vpc_attachment: Remove default value for `security_group_referencing_support` argument and mark as Computed. This suppresses the diffs shown for resources created with v5.68.0 (or earlier) ([#39519](https://github.com/hashicorp/terraform-provider-aws/issues/39519))
+
+## 5.69.0 (September 26, 2024)
 
 NOTES:
 
+* provider: This release contains an upstream AWS SDK for Go v2 [change](https://github.com/aws/aws-sdk-go-v2/issues/2807) to DynamoDB service endpoints. The Terraform AWS Provider will now connect to a DynamoDB endpoint in the format [`(account-id).ddb.(region).amazonaws.com`](https://docs.aws.amazon.com/sdkref/latest/guide/feature-account-endpoints.html) instead of `dynamodb.(region).amazonaws.com`. If your network configuration blocks outgoing traffic to DynamoDB based on DNS names or endpoint URLs, you must adjust your configuration, because the service's DNS name will change. You may instead disable account-based endpoints for DynamoDB by setting `account_id_endpoint_mode = disabled` in a [shared config file](https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#ConfigFileSettings) or setting the `AWS_ACCOUNT_ID_ENDPOINT_MODE` [environment variable](https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#EVarSettings) to `disabled` ([#39505](https://github.com/hashicorp/terraform-provider-aws/issues/39505))
+* provider: Updates to Go `1.23.1`. The issue with AWS Network Firewall dropping TLS handshake `ClientHello` messages after the **v5.65.0** upgrade to Go `1.23.0`, temporarily resolved by the **v5.67.0** downgrade to Go `1.22.7`, has been addressed by removing the `X25519Kyber768Draft00` key exchange mechanism from the HTTP client used to make AWS API calls ([#39432](https://github.com/hashicorp/terraform-provider-aws/issues/39432))
 * resource/aws_alb_listener: When importing a listener that has either a default action top-level target group ARN or a default action defining a forward action defining a target group with an ARN, include both in the configuration to avoid import differences ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
 * resource/aws_lb_listener: When importing a listener that has either a default action top-level target group ARN or a default action defining a forward action defining a target group with an ARN, include both in the configuration to avoid import differences ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
 
 ENHANCEMENTS:
 
 * data-source/aws_connect_instance: Add `tags` attribute ([#39402](https://github.com/hashicorp/terraform-provider-aws/issues/39402))
+* data-source/aws_ec2_transit_gateway: Add `security_group_referencing_support` attribute ([#34542](https://github.com/hashicorp/terraform-provider-aws/issues/34542))
+* data-source/aws_ec2_transit_gateway_vpc_attachment: Add `security_group_referencing_support` attribute ([#34542](https://github.com/hashicorp/terraform-provider-aws/issues/34542))
+* data-source/aws_opensearchserverless_collection: Add `failure_code` and `failure_reason` attributes ([#38995](https://github.com/hashicorp/terraform-provider-aws/issues/38995))
 * resource/aws_bedrockagent_agent: Add `guardrail_configuration` argument ([#39440](https://github.com/hashicorp/terraform-provider-aws/issues/39440))
 * resource/aws_connect_instance: Add `tags` argument and `tags_all` attribute ([#39402](https://github.com/hashicorp/terraform-provider-aws/issues/39402))
+* resource/aws_ec2_transit_gateway: Add `security_group_referencing_support` argument ([#34542](https://github.com/hashicorp/terraform-provider-aws/issues/34542))
+* resource/aws_ec2_transit_gateway_vpc_attachment: Add `security_group_referencing_support` argument ([#34542](https://github.com/hashicorp/terraform-provider-aws/issues/34542))
+* resource/aws_ec2_transit_gateway_vpc_attachment_accepter: Add `security_group_referencing_support` argument ([#34542](https://github.com/hashicorp/terraform-provider-aws/issues/34542))
 * resource/aws_ecs_service: Add `volume_configuration.managed_ebs_volume.tag_specifications` attribute ([#38662](https://github.com/hashicorp/terraform-provider-aws/issues/38662))
+* resource/aws_identitystore_group: Allow `display_name` to be updated in-place ([#39416](https://github.com/hashicorp/terraform-provider-aws/issues/39416))
+* resource/aws_kinesis_stream: Tag on Create to support attribute-based access control (ABAC) ([#39504](https://github.com/hashicorp/terraform-provider-aws/issues/39504))
 * resource/aws_quicksight_data_source: Add `credentials.secret_arn` argument ([#29034](https://github.com/hashicorp/terraform-provider-aws/issues/29034))
 
 BUG FIXES:
@@ -21,13 +42,17 @@ BUG FIXES:
 * resource/aws_alb_listener: Remove the limitation preventing setting both default_action.0.target_group_arn and default_action.0.forward to align with the AWS API which allows you to specify both a target group list and a top-level target group ARN if the ARNs match ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
 * resource/aws_db_instance: Allow replica database to be added to domain on create ([#39448](https://github.com/hashicorp/terraform-provider-aws/issues/39448))
 * resource/aws_db_instance_role_association: Fix intermittent failure when instance is not in an available state ([#39457](https://github.com/hashicorp/terraform-provider-aws/issues/39457))
+* resource/aws_dynamodb_tag: Fix propagation timeout when multiple tags exist ([#39491](https://github.com/hashicorp/terraform-provider-aws/issues/39491))
 * resource/aws_ecs_cluster: Fix validation error with `name` attribute. ([#38993](https://github.com/hashicorp/terraform-provider-aws/issues/38993))
 * resource/aws_ecs_cluster_capacity_providers: Fix validation error with `name` attribute. ([#38993](https://github.com/hashicorp/terraform-provider-aws/issues/38993))
 * resource/aws_iam_role: Retry `ConcurrentModificationException`s during role creation ([#39429](https://github.com/hashicorp/terraform-provider-aws/issues/39429))
+* resource/aws_inspector2_enabler: Fix `AccessDeniedException: Lambda code scanning is not supported in ...` errors ([#38254](https://github.com/hashicorp/terraform-provider-aws/issues/38254))
+* resource/aws_inspector2_member_association: Improve handling of `AccessDeniedException` errors during creation ([#38254](https://github.com/hashicorp/terraform-provider-aws/issues/38254))
 * resource/aws_lb_listener: Fix several of the arguments to avoiding setting zero-values in situations where they shouldn't causing warnings and import differences ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
 * resource/aws_lb_listener: Remove the limitation preventing setting both default_action.0.target_group_arn and default_action.0.forward to align with the AWS API which allows you to specify both a target group list and a top-level target group ARN if the ARNs match ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
 * resource/aws_lb_listener_rule: Fix several of the arguments to avoiding setting zero-values in situations where they shouldn't causing warnings and import differences ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
 * resource/aws_lb_target_group: Fix several of the arguments to avoiding setting zero-values in situations where they shouldn't causing warnings and import differences ([#39413](https://github.com/hashicorp/terraform-provider-aws/issues/39413))
+* resource/aws_medialive_multiplex: Fix to properly handle read failures during delete operations which were previously ignored ([#39498](https://github.com/hashicorp/terraform-provider-aws/issues/39498))
 * resource/aws_opensearchserverless_vpc_endpoint: Change `name` and `vpc_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#39454](https://github.com/hashicorp/terraform-provider-aws/issues/39454))
 * resource/aws_opensearchserverless_vpc_endpoint: Correctly set `security_group_ids`. This requires a call to the EC2 `DescribeVpcEndpoints` API ([#39454](https://github.com/hashicorp/terraform-provider-aws/issues/39454))
 * resource/aws_rds_cluster_role_association: Fix intermittent failure when cluster is not in an available state ([#39457](https://github.com/hashicorp/terraform-provider-aws/issues/39457))
