@@ -196,14 +196,12 @@ func (r *transitGatewayDefaultRouteTableAssociationResource) Delete(ctx context.
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyTransitGatewayInput{
+	_, err := conn.ModifyTransitGateway(ctx, &ec2.ModifyTransitGatewayInput{
 		Options: &awstypes.ModifyTransitGatewayOptions{
 			AssociationDefaultRouteTableId: flex.StringFromFramework(ctx, data.OriginalDefaultRouteTableID),
 		},
 		TransitGatewayId: flex.StringFromFramework(ctx, data.TransitGatewayID),
-	}
-
-	_, err := conn.ModifyTransitGateway(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeIncorrectState) {
 		return
@@ -226,6 +224,6 @@ type transitGatewayDefaultRouteTableAssociationResourceModel struct {
 	ID                          types.String   `tfsdk:"id"`
 	OriginalDefaultRouteTableID types.String   `tfsdk:"original_default_route_table_id"`
 	RouteTableID                types.String   `tfsdk:"transit_gateway_route_table_id"`
-	TransitGatewayID            types.String   `tfsdk:"transit_gateway_id"`
 	Timeouts                    timeouts.Value `tfsdk:"timeouts"`
+	TransitGatewayID            types.String   `tfsdk:"transit_gateway_id"`
 }
