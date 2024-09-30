@@ -5,36 +5,36 @@ package datazone
 
 import (
 	"context"
-	"errors"
 	"time"
-
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_user_profile", name="User Profile")
 func newResourceUserProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceUserProfile{}
-
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -56,26 +56,47 @@ func (r *resourceUserProfile) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceUserProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"user_identifier": schema.StringAttribute{
-				Required: true,
-			},
-			"user_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.UserType](),
-				Optional:   true,
-			},
 			"domain_identifier": schema.StringAttribute{
 				Required: true,
 			},
 			"details": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[detailsData](ctx),
 				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.UserProfileStatus](),
+				Optional:   true,
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"user_identifier": schema.StringAttribute{
+				Required: true,
+			},
+			"type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.UserProfileType](),
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"user_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.UserType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -97,11 +118,11 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 
 	in := &datazone.CreateUserProfileInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	in.ClientToken = aws.String(id.UniqueId())
 	out, err := conn.CreateUserProfile(ctx, in)
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,25 +135,22 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 		)
 		return
 	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameUserProfile, plan.UserIdentifier.ValueString(), nil),
-			errors.New("failure when creating").Error(),
-		)
-		return
-	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	state := plan
+	resp.State.SetAttribute(ctx, path.Root(names.AttrID), state.ID) // set partial state to taint if wait fails
+
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitUserProfileCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), plan.UserType.ValueEnum(), createTimeout)
+	output, err := waitUserProfileCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), out.Type, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameUserProfile, plan.UserIdentifier.String(), err),
 			err.Error(),
 		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -147,7 +165,7 @@ func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	out, err := findUserProfileByID(ctx, conn, state.DomainIdentifier.ValueString(), state.UserIdentifier.ValueString(), state.UserType.ValueEnum())
+	out, err := findUserProfileByID(ctx, conn, state.DomainIdentifier.ValueString(), state.UserIdentifier.ValueString(), state.Type.ValueEnum())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -160,6 +178,7 @@ func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest
 		)
 		return
 	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -177,15 +196,17 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if plan.UserType != state.UserType {
+
+	if !plan.UserType.Equal(state.UserType) {
 		in := &datazone.UpdateUserProfileInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		createTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitUserProfileUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), plan.UserType.ValueEnum(), createTimeout)
+
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		out, err := waitUserProfileUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), plan.Type.ValueEnum(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameUserProfile, plan.UserIdentifier.String(), err),
@@ -194,30 +215,24 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameUserProfile, plan.Id.ValueString(), nil),
-				errors.New("empty output from user profile update").Error(),
-			)
-			return
-		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceUserProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func waitUserProfileCreated(ctx context.Context, conn *datazone.Client, domainId string, userId string, userType awstypes.UserType, timeout time.Duration) (*datazone.GetUserProfileOutput, error) {
+func waitUserProfileCreated(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType, timeout time.Duration) (*datazone.GetUserProfileOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice[awstypes.UserProfileStatus](awstypes.UserProfileStatusNotAssigned, awstypes.UserProfileStatusDeactivated),
-		Target:                    enum.Slice[awstypes.UserProfileStatus](awstypes.UserProfileStatusActivated, awstypes.UserProfileStatusActivated),
-		Refresh:                   statusUserProfile(ctx, conn, domainId, userId, userType),
+		Pending:                   enum.Slice(awstypes.UserProfileStatusNotAssigned, awstypes.UserProfileStatusDeactivated),
+		Target:                    enum.Slice(awstypes.UserProfileStatusActivated, awstypes.UserProfileStatusActivated),
+		Refresh:                   statusUserProfile(ctx, conn, domainId, userId, userProfileType),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -231,11 +246,11 @@ func waitUserProfileCreated(ctx context.Context, conn *datazone.Client, domainId
 	return nil, err
 }
 
-func waitUserProfileUpdated(ctx context.Context, conn *datazone.Client, domainId string, userId string, userType awstypes.UserType, timeout time.Duration) (*datazone.GetUserProfileOutput, error) {
+func waitUserProfileUpdated(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType, timeout time.Duration) (*datazone.GetUserProfileOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice[awstypes.UserProfileStatus](awstypes.UserProfileStatusNotAssigned, awstypes.UserProfileStatusDeactivated),
-		Target:                    enum.Slice[awstypes.UserProfileStatus](awstypes.UserProfileStatusActivated, awstypes.UserProfileStatusActivated),
-		Refresh:                   statusUserProfile(ctx, conn, domainId, userId, userType),
+		Pending:                   enum.Slice(awstypes.UserProfileStatusNotAssigned, awstypes.UserProfileStatusDeactivated),
+		Target:                    enum.Slice(awstypes.UserProfileStatusActivated, awstypes.UserProfileStatusActivated),
+		Refresh:                   statusUserProfile(ctx, conn, domainId, userId, userProfileType),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -249,9 +264,9 @@ func waitUserProfileUpdated(ctx context.Context, conn *datazone.Client, domainId
 	return nil, err
 }
 
-func statusUserProfile(ctx context.Context, conn *datazone.Client, domainId string, userId string, userType awstypes.UserType) retry.StateRefreshFunc {
+func statusUserProfile(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findUserProfileByID(ctx, conn, domainId, userId, userType)
+		out, err := findUserProfileByID(ctx, conn, domainId, userId, userProfileType)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -261,26 +276,27 @@ func statusUserProfile(ctx context.Context, conn *datazone.Client, domainId stri
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.Status)), nil
+		return out, string(out.Status), nil
 	}
 }
 
-func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId string, userId string, userType awstypes.UserType) (*datazone.GetUserProfileOutput, error) {
+func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType) (*datazone.GetUserProfileOutput, error) {
 	in := &datazone.GetUserProfileInput{
 		UserIdentifier:   aws.String(userId),
 		DomainIdentifier: aws.String(domainId),
-		Type:             awstypes.UserProfileType(userType),
+		Type:             userProfileType,
 	}
 
 	out, err := conn.GetUserProfile(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -292,12 +308,13 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 }
 
 type userProfileData struct {
-	UserIdentifier   types.String                                   `tfsdk:"user_identifier"`
-	UserType         fwtypes.StringEnum[awstypes.UserType]          `tfsdk:"user_type"`
 	DomainIdentifier types.String                                   `tfsdk:"domain_identifier"`
 	Details          fwtypes.ListNestedObjectValueOf[detailsData]   `tfsdk:"details"`
-	Id               types.String                                   `tfsdk:"id"`
+	ID               types.String                                   `tfsdk:"id"`
 	Status           fwtypes.StringEnum[awstypes.UserProfileStatus] `tfsdk:"status"`
+	UserIdentifier   types.String                                   `tfsdk:"user_identifier"`
+	Type             fwtypes.StringEnum[awstypes.UserProfileType]   `tfsdk:"user_profile_type"`
+	UserType         fwtypes.StringEnum[awstypes.UserType]          `tfsdk:"user_type"`
 	Timeouts         timeouts.Value                                 `tfsdk:"timeouts"`
 }
 

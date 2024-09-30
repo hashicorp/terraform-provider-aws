@@ -225,13 +225,12 @@ func testAccCheckUserProfileNotRecreated(before, after *datazone.GetUserProfileO
 }
 
 func testAccUserProfileConfig_iamUser(dName, uName string) string {
-	return acctest.ConfigCompose(testAccDomainConfig_domain(dName, uName), (`
-
+	return acctest.ConfigCompose(testAccDomainConfig_domain(dName, uName), `
 resource "aws_datazone_user_profile" "test" {
-	user_identifier = data.aws_caller_identity.test.account_id
-	domain_identifier = aws_datazone_domain.test.id
+  user_identifier   = data.aws_caller_identity.test.account_id
+  domain_identifier = aws_datazone_domain.test.id
 }
-`))
+`)
 }
 
 func testAccDomainConfig_domain(rName, uName string) string {
@@ -246,17 +245,16 @@ resource "aws_datazone_domain" "test" {
 	)
 }
 
-func testAccUserProfileIamUser(uName string) string {
-	return fmt.Sprintf(
-		`
-		resource "aws_iam_user" "test" {
-		name = %[1]q
-		}
-		`, uName)
+func testAccUserProfileIAMUser(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+}
+		`, rName)
 }
 
 func testAccDomainConfigUserProfileExecutionRole(rName, uName string) string {
-	return acctest.ConfigCompose(testAccUserProfileIamUser(uName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileIAMUser(uName), fmt.Sprintf(`
 data "aws_caller_identity" "test" {}
 
 resource "aws_iam_role" "domain_execution_role" {
@@ -278,7 +276,7 @@ resource "aws_iam_role" "domain_execution_role" {
           Service = "cloudformation.amazonaws.com"
         }
       },
-	  {
+      {
         Action = ["sts:AssumeRole", "sts:TagSession"]
         Effect = "Allow"
         Principal = {
@@ -307,6 +305,5 @@ resource "aws_iam_role" "domain_execution_role" {
     })
   }
 }
-
 `, rName))
 }
