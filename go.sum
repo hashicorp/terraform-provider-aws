@@ -318,8 +318,8 @@ github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.24.3 h1:BiqiG2YQgeCuhBi
 github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.24.3/go.mod h1:1mXTVF+BxmYnmaQ3Bsvs1AbzT8ghVEPVOhVLlD/h34M=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.30.3 h1:I1myinJwUU1sfLDzyi9kfWnPTahMAOTExI2q6sO9HGY=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.30.3/go.mod h1:4td+MQ/pTrH78aGbDs6zUo1MYNzmrmar5f30JqTt7cA=
-github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.26.2 h1:mH0snG5LZEfuYekSGDuZUR60eoEH5j89ZPeSJs2EeTc=
-github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.26.2/go.mod h1:YtckrYyj5bsqpiEoM9jyJGEouqAvRk1bfxEatQt9H90=
+github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.26.3 h1:B9LWfjWddJrryjhb6AM2mlGYlviJhT5XghXpJxnLJRA=
+github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.26.3/go.mod h1:YtckrYyj5bsqpiEoM9jyJGEouqAvRk1bfxEatQt9H90=
 github.com/aws/aws-sdk-go-v2/service/kms v1.36.2 h1:yERi4A+3+9emx/NKSQ5bf0QP7DHCGU0bjv3pxdpDcsg=
 github.com/aws/aws-sdk-go-v2/service/kms v1.36.2/go.mod h1:OHmlX4+o0XIlJAQGAHPIy0N9yZcYS/vNG+T7geSNcFw=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.36.2 h1:idwxi3c6nSjYsD65NGBY1oYx1bezjowlSfx3ixFX64Y=
