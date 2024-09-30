@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceRolePoliciesExclusive,
 			Name:    "Role Policies Exclusive",
 		},
+		{
+			Factory: newResourceUserPoliciesExclusive,
+			Name:    "User Policies Exclusive",
+		},
 	}
 }
 
