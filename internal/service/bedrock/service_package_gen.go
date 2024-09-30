@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceGuardrailVersion,
+			Factory: newGuardrailVersionResource,
 			Name:    "Guardrail Version",
 		},
 	}

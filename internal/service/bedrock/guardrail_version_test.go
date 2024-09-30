@@ -5,25 +5,18 @@ package bedrock_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockGuardrailVersion_basic(t *testing.T) {
@@ -48,10 +41,10 @@ func TestAccBedrockGuardrailVersion_basic(t *testing.T) {
 			{
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, acctest.Ct1, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
 					resource.TestCheckResourceAttr(resourceName, "version", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 				),
 			},
 			{
@@ -87,7 +80,7 @@ func TestAccBedrockGuardrailVersion_disappears(t *testing.T) {
 			{
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, acctest.Ct1, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceGuardrailVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,7 +106,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 			{
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, acctest.Ct1, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
@@ -121,7 +114,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 			{
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, acctest.Ct1, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
@@ -138,43 +131,39 @@ func testAccCheckGuardrailVersionDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			id := rs.Primary.Attributes["guardrail_identifier"]
-			version := rs.Primary.Attributes[names.AttrVersion]
-			_, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameGuardrailVersion, rs.Primary.ID, err)
+			_, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, rs.Primary.Attributes["guardrail_arn"], rs.Primary.Attributes[names.AttrVersion])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameGuardrailVersion, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Guardrail Version %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGuardrailVersionExists(ctx context.Context, name string, version string, guardrail *bedrock.GetGuardrailOutput) resource.TestCheckFunc {
+func testAccCheckGuardrailVersionExists(ctx context.Context, n string, v *bedrock.GetGuardrailOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("not found"))
-		}
-
-		id := rs.Primary.Attributes["guardrail_identifier"]
-		if id == "" {
-			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("guardrail_id not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-		out, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
+		output, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, rs.Primary.Attributes["guardrail_arn"], rs.Primary.Attributes[names.AttrVersion])
+
 		if err != nil {
-			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, rs.Primary.ID, err)
+			return err
 		}
 
-		*guardrail = *out
+		*v = *output
 
 		return nil
 	}
@@ -186,7 +175,7 @@ func testAccGuardrailVersionImportStateIDFunc(resourceName string) resource.Impo
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["guardrail_identifier"], rs.Primary.Attributes[names.AttrVersion]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["guardrail_arn"], rs.Primary.Attributes[names.AttrVersion]), nil
 	}
 }
 
@@ -209,8 +198,8 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 resource "aws_bedrock_guardrail_version" "test" {
-  description          = %[1]q
-  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
+  description   = %[1]q
+  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
 }
 `, rName)
 }
@@ -234,9 +223,9 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 resource "aws_bedrock_guardrail_version" "test" {
-  description          = %[1]q
-  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  skip_destroy 		   = true
+  description   = %[1]q
+  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
+  skip_destroy  = true
 }
 `, rName)
 }

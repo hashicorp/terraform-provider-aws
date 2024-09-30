@@ -15,9 +15,9 @@ Terraform resource for managing an AWS Bedrock Guardrail Version.
 
 ```terraform
 resource "aws_bedrock_guardrail_version" "example" {
-  description          = "example"
-  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  skip_destroy         = true
+  description   = "example"
+  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
+  skip_destroy  = true
 }
 ```
 
@@ -25,7 +25,7 @@ resource "aws_bedrock_guardrail_version" "example" {
 
 The following arguments are required:
 
-* `guardrail_identifier` - (Required) GuardrailArn for the guardrail.
+* `guardrail_arn` - (Required) Guardrail ARN.
 
 The following arguments are optional:
 
@@ -43,22 +43,21 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `5m`)
-* `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Bedrock Guardrail using a comma-delimited string of `guardrail_id` and `version`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Bedrock Guardrail using a comma-delimited string of `guardrail_arn` and `version`. For example:
 
 ```terraform
 import {
   to = aws_bedrock_guardrail.example
-  id = "guardrail-id-12345678,1"
+  id = "arn:aws:bedrock:us-west-2:123456789012:guardrail-id-12345678,1"
 }
 ```
 
-Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-delimited string of `guardrail_id` and `version`. For example:
+Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-delimited string of `guardrail_arn` and `version`. For example:
 
 ```console
-% terraform import aws_bedrock_guardrail.example guardrail-id-12345678,1
+% terraform import aws_bedrock_guardrail.example arn:aws:bedrock:us-west-2:123456789012:guardrail-id-12345678,1
 ```

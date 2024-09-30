@@ -5,9 +5,7 @@ package bedrock
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,41 +20,38 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrock_guardrail_version", name="Guardrail Version")
-func newResourceGuardrailVersion(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceGuardrailVersion{}
+func newGuardrailVersionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &guardrailVersionResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameGuardrailVersion = "Guardrail Version"
-)
-
-type resourceGuardrailVersion struct {
+type guardrailVersionResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[guardrailVersionResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceGuardrailVersion) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_guardrail_version"
+func (*guardrailVersionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_bedrock_guardrail_version"
 }
 
-func (r *resourceGuardrailVersion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *guardrailVersionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -64,17 +59,13 @@ func (r *resourceGuardrailVersion) Schema(ctx context.Context, req resource.Sche
 					stringvalidator.LengthBetween(0, 200),
 				},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			"guardrail_identifier": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtMost(2048),
-					stringvalidator.RegexMatches(regexp.MustCompile("^((arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:[0-9]{12}:guardrail/[a-z0-9]+))$"), ""),
-				},
-				PlanModifiers: []planmodifier.String{ /*START PLAN MODIFIERS*/
+			"guardrail_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
@@ -91,153 +82,129 @@ func (r *resourceGuardrailVersion) Schema(ctx context.Context, req resource.Sche
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
 	}
 }
 
-func (r *resourceGuardrailVersion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *guardrailVersionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data guardrailVersionResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	var plan resourceGuardrailVersionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	guardrailARN := data.GuardrailARN.ValueString()
+	input := &bedrock.CreateGuardrailVersionInput{
+		Description:         fwflex.StringFromFramework(ctx, data.Description),
+		GuardrailIdentifier: aws.String(guardrailARN),
 	}
 
-	in := &bedrock.CreateGuardrailVersionInput{
-		GuardrailIdentifier: aws.String(plan.GuardrailIdentifier.ValueString()),
-	}
+	output, err := conn.CreateGuardrailVersion(ctx, input)
 
-	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
-	}
-
-	out, err := conn.CreateGuardrailVersion(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameGuardrailVersion, "", err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Version == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameGuardrailVersion, "", nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Bedrock Guardrail Version (%s)", guardrailARN), err.Error())
+
 		return
 	}
 
-	plan.Version = flex.StringToFramework(ctx, out.Version)
+	data.Version = fwflex.StringToFramework(ctx, output.Version)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitGuardrailCreated(ctx, conn, plan.GuardrailIdentifier.ValueString(), plan.Version.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForCreation, ResNameGuardrailVersion, plan.Version.String(), err),
-			err.Error(),
-		)
+	if _, err := waitGuardrailCreated(ctx, conn, data.GuardrailARN.ValueString(), data.Version.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Guardrail (%s) Version (%s) create", data.GuardrailARN.ValueString(), data.Version.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceGuardrailVersion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
-	var state resourceGuardrailVersionData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *guardrailVersionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data guardrailVersionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findGuardrailByID(ctx, conn, state.GuardrailIdentifier.ValueString(), state.Version.ValueString())
+	conn := r.Meta().BedrockClient(ctx)
+
+	output, err := findGuardrailByTwoPartKey(ctx, conn, data.GuardrailARN.ValueString(), data.Version.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrailVersion, "", err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Guardrail (%s) Version (%s)", data.GuardrailARN.ValueString(), data.Version.ValueString()), err.Error())
+
 		return
 	}
 
-	state.Version = flex.StringToFramework(ctx, out.Version)
-	state.Description = flex.StringToFramework(ctx, out.Description)
+	data.Description = fwflex.StringToFramework(ctx, output.Description)
+	data.GuardrailARN = fwtypes.ARNValue(aws.ToString(output.GuardrailArn))
+	data.Version = fwflex.StringToFramework(ctx, output.Version)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// Update is a no-op
-func (r *resourceGuardrailVersion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data guardrailVersionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-}
-
-func (r *resourceGuardrailVersion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var state resourceGuardrailVersionData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	if data.SkipDestroy.ValueBool() {
 		return
 	}
 
-	if state.SkipDestroy.ValueBool() {
+	_, err := conn.DeleteGuardrail(ctx, &bedrock.DeleteGuardrailInput{
+		GuardrailIdentifier: aws.String(data.GuardrailARN.ValueString()),
+		GuardrailVersion:    aws.String(data.Version.ValueString()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	in := &bedrock.DeleteGuardrailInput{
-		GuardrailIdentifier: aws.String(state.GuardrailIdentifier.ValueString()),
-		GuardrailVersion:    aws.String(state.Version.ValueString()),
-	}
-
-	if _, err := conn.DeleteGuardrail(ctx, in); err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionDeleting, ResNameGuardrail, state.GuardrailIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	if _, err := waitGuardrailDeleted(ctx, conn, state.GuardrailIdentifier.ValueString(), state.Version.ValueString(), deleteTimeout); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForDeletion, ResNameGuardrail, state.GuardrailIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceGuardrailVersion) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, guardrailIDParts, false)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Guardrail (%s) Version (%s)", data.GuardrailARN.ValueString(), data.Version.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitGuardrailDeleted(ctx, conn, data.GuardrailARN.ValueString(), data.Version.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Guardrail (%s) Version (%s) delete", data.GuardrailARN.ValueString(), data.Version.ValueString()), err.Error())
+
+		return
+	}
+}
+
+func (r *guardrailVersionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	parts, err := flex.ExpandResourceId(request.ID, guardrailIDParts, false)
+	if err != nil {
+		response.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: guardrail_identifier,version. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: guardrail_identifier,version. Got: %q", request.ID),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("guardrail_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("guardrail_arn"), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
 }
 
-type resourceGuardrailVersionData struct {
-	Description         types.String   `tfsdk:"description"`
-	GuardrailIdentifier types.String   `tfsdk:"guardrail_identifier"`
-	Version             types.String   `tfsdk:"version"`
-	SkipDestroy         types.Bool     `tfsdk:"skip_destroy"`
-	Timeouts            timeouts.Value `tfsdk:"timeouts"`
+type guardrailVersionResourceModel struct {
+	Description  types.String   `tfsdk:"description"`
+	GuardrailARN fwtypes.ARN    `tfsdk:"guardrail_arn"`
+	SkipDestroy  types.Bool     `tfsdk:"skip_destroy"`
+	Timeouts     timeouts.Value `tfsdk:"timeouts"`
+	Version      types.String   `tfsdk:"version"`
 }
