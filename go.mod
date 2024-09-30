@@ -71,7 +71,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.25.3
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.26.2
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.38.2
