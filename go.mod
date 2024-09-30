@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.179.2
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.35.2
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/efs v1.32.2
