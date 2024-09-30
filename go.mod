@@ -164,7 +164,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.60.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.61.3
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.33.2
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.22.2
