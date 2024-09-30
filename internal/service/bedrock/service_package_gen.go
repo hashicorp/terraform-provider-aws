@@ -45,6 +45,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newGuardrailVersionResource,
+			Name:    "Guardrail Version",
+		},
+		{
 			Factory: newModelInvocationLoggingConfigurationResource,
 			Name:    "Model Invocation Logging Configuration",
 		},
@@ -61,10 +65,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "guardrail_arn",
 			},
-		},
-		{
-			Factory: newGuardrailVersionResource,
-			Name:    "Guardrail Version",
 		},
 	}
 }
