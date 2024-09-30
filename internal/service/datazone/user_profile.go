@@ -72,7 +72,7 @@ func (r *resourceUserProfile) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.UserProfileStatus](),
 				Optional:   true,
 				Computed:   true,
@@ -83,7 +83,7 @@ func (r *resourceUserProfile) Schema(ctx context.Context, req resource.SchemaReq
 			"user_identifier": schema.StringAttribute{
 				Required: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.UserProfileType](),
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
