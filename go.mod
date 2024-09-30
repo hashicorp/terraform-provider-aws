@@ -160,7 +160,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/location v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.16.3
-	github.com/aws/aws-sdk-go-v2/service/macie2 v1.42.2
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.60.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.61.2
