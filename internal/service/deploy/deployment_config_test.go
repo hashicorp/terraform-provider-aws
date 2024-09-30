@@ -240,6 +240,53 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 	})
 }
 
+func TestAccDeployDeploymentConfig_zonalConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var config1, config2 types.DeploymentConfigInfo
+	resourceName := "aws_codedeploy_deployment_config.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfigConfig_zonalConfig(rName, 10, "FLEET_PERCENT", 20, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
+					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.first_zone_monitor_duration_in_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.type", "FLEET_PERCENT"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.value", "20"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.monitor_duration_in_seconds", "10"),
+				),
+			},
+			{
+				Config: testAccDeploymentConfigConfig_zonalConfig(rName, 20, "HOST_COUNT", 2, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentConfigExists(ctx, resourceName, &config2),
+					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.first_zone_monitor_duration_in_seconds", "20"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.type", "HOST_COUNT"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.monitor_duration_in_seconds", "20"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDeploymentConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
@@ -357,4 +404,27 @@ resource "aws_codedeploy_deployment_config" "test" {
   }
 }
 `, rName, interval, percentage)
+}
+
+func testAccDeploymentConfigConfig_zonalConfig(rName string, first_zone_monitor_duration int, minimum_healthy_host_type string, minimum_healthy_host_value int, monitor_duration int) string {
+	return fmt.Sprintf(`
+resource "aws_codedeploy_deployment_config" "test" {
+  deployment_config_name = %[1]q
+  compute_platform       = "Server"
+
+  minimum_healthy_hosts {
+    type  = "HOST_COUNT"
+    value = 3
+  }
+
+  zonal_config {
+	first_zone_monitor_duration_in_seconds = %[2]d
+	minimum_healthy_hosts_per_zone {
+		type = %[3]q
+		value = %[4]d
+	}
+	monitor_duration_in_seconds = %[5]d
+  }
+}
+`, rName, first_zone_monitor_duration, minimum_healthy_host_type, minimum_healthy_host_value, monitor_duration)
 }
