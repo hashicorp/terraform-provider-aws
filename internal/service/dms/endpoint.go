@@ -812,6 +812,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MySQLSettings = &awstypes.MySQLSettings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
 				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
 			}
 		} else {
 			input.MySQLSettings = &awstypes.MySQLSettings{
@@ -1111,6 +1112,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 						input.MySQLSettings = &awstypes.MySQLSettings{
 							SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
 							SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+							DatabaseName:                aws.String(d.Get("database_name").(string)),
 						}
 					} else {
 						input.MySQLSettings = &awstypes.MySQLSettings{
