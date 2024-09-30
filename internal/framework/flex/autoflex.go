@@ -166,6 +166,13 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			})
 			continue
 		}
+		if toOpts.NoFlatten() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noflatten target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
 			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{

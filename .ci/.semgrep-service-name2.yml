@@ -3554,6 +3554,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Pinpoint"
     severity: WARNING
+  - id: pinpointsmsvoicev2-in-func-name
+    languages:
+      - go
+    message: Do not use "PinpointSMSVoiceV2" in func name inside pinpointsmsvoicev2 package
+    paths:
+      include:
+        - internal/service/pinpointsmsvoicev2
+      exclude:
+        - internal/service/pinpointsmsvoicev2/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PinpointSMSVoiceV2"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: pinpointsmsvoicev2-in-test-name
+    languages:
+      - go
+    message: Include "PinpointSMSVoiceV2" in test name
+    paths:
+      include:
+        - internal/service/pinpointsmsvoicev2/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccPinpointSMSVoiceV2"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: pinpointsmsvoicev2-in-const-name
+    languages:
+      - go
+    message: Do not use "PinpointSMSVoiceV2" in const name inside pinpointsmsvoicev2 package
+    paths:
+      include:
+        - internal/service/pinpointsmsvoicev2
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PinpointSMSVoiceV2"
+    severity: WARNING
+  - id: pinpointsmsvoicev2-in-var-name
+    languages:
+      - go
+    message: Do not use "PinpointSMSVoiceV2" in var name inside pinpointsmsvoicev2 package
+    paths:
+      include:
+        - internal/service/pinpointsmsvoicev2
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PinpointSMSVoiceV2"
+    severity: WARNING
   - id: pipes-in-func-name
     languages:
       - go
@@ -4218,32 +4279,4 @@ rules:
             - pattern-regex: "(?i)recyclebin"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: recyclebin-in-const-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in const name inside rbin package
-    paths:
-      include:
-        - internal/service/rbin
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
-    severity: WARNING
-  - id: recyclebin-in-var-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in var name inside rbin package
-    paths:
-      include:
-        - internal/service/rbin
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
     severity: WARNING

@@ -6,15 +6,16 @@ package ses_test
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,107 +31,64 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDKIMDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:ci.test-config-funcs-correct-form
-				Config: fmt.Sprintf(testAccDomainDKIMConfig, domain),
+			{
+				Config: testAccDomainDKIMConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainDKIMExists(ctx, resourceName),
-					testAccCheckDomainDKIMTokens(resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dkim_tokens"), knownvalue.ListSizeExact(3)),
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckDomainDKIMDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+func TestAccSESDomainDKIM_Disappears_identity(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ses_domain_dkim.test"
+	domain := acctest.RandomDomainName()
 
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_ses_domain_dkim" {
-				continue
-			}
-
-			domain := rs.Primary.ID
-			params := &ses.GetIdentityDkimAttributesInput{
-				Identities: []string{
-					domain,
-				},
-			}
-
-			resp, err := conn.GetIdentityDkimAttributes(ctx, params)
-
-			if err != nil {
-				return err
-			}
-
-			if _, exists := resp.DkimAttributes[domain]; exists {
-				return fmt.Errorf("SES Domain Dkim %s still exists.", domain)
-			}
-		}
-
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainDKIMConfig_basic(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainDKIMExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func testAccCheckDomainDKIMExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Domain Identity not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Domain Identity name not set")
-		}
-
-		domain := rs.Primary.ID
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		params := &ses.GetIdentityDkimAttributesInput{
-			Identities: []string{
-				domain,
-			},
-		}
+		_, err := tfses.FindIdentityDKIMAttributesByIdentity(ctx, conn, rs.Primary.ID)
 
-		response, err := conn.GetIdentityDkimAttributes(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		if _, exists := response.DkimAttributes[domain]; !exists {
-			return fmt.Errorf("SES Domain DKIM %s not found in AWS", domain)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccCheckDomainDKIMTokens(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-
-		expectedNum := 3
-		expectedFormat := regexache.MustCompile("[0-9a-z]{32}")
-
-		tokenNum, _ := strconv.Atoi(rs.Primary.Attributes["dkim_tokens.#"])
-		if expectedNum != tokenNum {
-			return fmt.Errorf("Incorrect number of DKIM tokens, expected: %d, got: %d", expectedNum, tokenNum)
-		}
-		for i := 0; i < expectedNum; i++ {
-			key := fmt.Sprintf("dkim_tokens.%d", i)
-			token := rs.Primary.Attributes[key]
-			if !expectedFormat.MatchString(token) {
-				return fmt.Errorf("Incorrect format of DKIM token: %v", token)
-			}
-		}
-
-		return nil
-	}
-}
-
-const testAccDomainDKIMConfig = `
+func testAccDomainDKIMConfig_basic(domain string) string {
+	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
   domain = %[1]q
 }
@@ -138,4 +96,5 @@ resource "aws_ses_domain_identity" "test" {
 resource "aws_ses_domain_dkim" "test" {
   domain = aws_ses_domain_identity.test.domain
 }
-`
+`, domain)
+}

@@ -165,6 +165,10 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ShardCount = aws.Int32(int32(d.Get("shard_count").(int)))
 	}
 
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
+		input.Tags = tags
+	}
+
 	_, err := conn.CreateStream(ctx, input)
 
 	if err != nil {
@@ -238,10 +242,6 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (StartStreamEncryption): %s", name, err)
 			}
 		}
-	}
-
-	if err := createTags(ctx, conn, name, getTagsIn(ctx)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Kinesis Stream (%s) tags: %s", name, err)
 	}
 
 	return append(diags, resourceStreamRead(ctx, d, meta)...)

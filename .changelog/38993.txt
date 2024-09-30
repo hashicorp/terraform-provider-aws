@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_cluster: Fix validation error with `name` attribute.
+```
+
+```release-note:bug
+resource/aws_ecs_cluster_capacity_providers: Fix validation error with `name` attribute.
+```

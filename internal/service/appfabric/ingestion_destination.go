@@ -258,10 +258,15 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 		input.ProcessingConfiguration = processingConfiguration
 	}
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric Ingestion Destination", err.Error())
+	}
+
 	// Additional fields.
-	input.AppBundleIdentifier = aws.String(data.AppBundleARN.ValueString())
-	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
-	input.IngestionIdentifier = aws.String(data.IngestionARN.ValueString())
+	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
+	input.ClientToken = aws.String(uuid)
+	input.IngestionIdentifier = data.IngestionARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIngestionDestination(ctx, input)
@@ -274,7 +279,12 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.IngestionDestination.Arn)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID AppFabric Ingestion Destination", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	if _, err := waitIngestionDestinationActive(ctx, conn, data.AppBundleARN.ValueString(), data.IngestionARN.ValueString(), data.ARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
@@ -384,9 +394,9 @@ func (r *ingestionDestinationResource) Update(ctx context.Context, request resou
 		}
 
 		// Additional fields.
-		input.AppBundleIdentifier = aws.String(new.AppBundleARN.ValueString())
-		input.IngestionDestinationIdentifier = aws.String(new.ARN.ValueString())
-		input.IngestionIdentifier = aws.String(new.IngestionARN.ValueString())
+		input.AppBundleIdentifier = new.AppBundleARN.ValueStringPointer()
+		input.IngestionDestinationIdentifier = new.ARN.ValueStringPointer()
+		input.IngestionIdentifier = new.IngestionARN.ValueStringPointer()
 
 		_, err := conn.UpdateIngestionDestination(ctx, input)
 
@@ -416,9 +426,9 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, request resou
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteIngestionDestination(ctx, &appfabric.DeleteIngestionDestinationInput{
-		AppBundleIdentifier:            aws.String(data.AppBundleARN.ValueString()),
-		IngestionDestinationIdentifier: aws.String(data.ARN.ValueString()),
-		IngestionIdentifier:            aws.String(data.IngestionARN.ValueString()),
+		AppBundleIdentifier:            data.AppBundleARN.ValueStringPointer(),
+		IngestionDestinationIdentifier: data.ARN.ValueStringPointer(),
+		IngestionIdentifier:            data.IngestionARN.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -561,8 +571,14 @@ func (m *ingestionDestinationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *ingestionDestinationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppBundleARN.ValueString(), m.IngestionARN.ValueString(), m.ARN.ValueString()}, ingestionDestinationResourceIDPartCount, false)))
+func (m *ingestionDestinationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppBundleARN.ValueString(),
+		m.IngestionARN.ValueString(),
+		m.ARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, ingestionDestinationResourceIDPartCount, false)
 }
 
 type destinationConfigurationModel struct {

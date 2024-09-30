@@ -402,7 +402,12 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	}
 
 	data.DataSourceID = fwflex.StringToFramework(ctx, outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource.DataSourceId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Data Source", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	ds, err := waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -497,8 +502,8 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	_, err := conn.DeleteDataSource(ctx, &bedrockagent.DeleteDataSourceInput{
-		DataSourceId:    aws.String(data.DataSourceID.ValueString()),
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
+		DataSourceId:    data.DataSourceID.ValueStringPointer(),
+		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -627,8 +632,13 @@ func (m *dataSourceResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *dataSourceResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.DataSourceID.ValueString(), m.KnowledgeBaseID.ValueString()}, dataSourceResourceIDPartCount, false)))
+func (m *dataSourceResourceModel) setID() (string, error) {
+	parts := []string{
+		m.DataSourceID.ValueString(),
+		m.KnowledgeBaseID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, dataSourceResourceIDPartCount, false)
 }
 
 type dataSourceConfigurationModel struct {

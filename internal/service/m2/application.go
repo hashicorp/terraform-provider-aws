@@ -314,7 +314,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().M2Client(ctx)
 
 	_, err := conn.DeleteApplication(ctx, &m2.DeleteApplicationInput{
-		ApplicationId: aws.String(data.ID.ValueString()),
+		ApplicationId: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

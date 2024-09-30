@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -111,7 +110,7 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateAccessGrantsLocation(ctx, input)
 	}, errCodeInvalidIAMRole)
 
@@ -125,7 +124,12 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 	output := outputRaw.(*s3control.CreateAccessGrantsLocationOutput)
 	data.AccessGrantsLocationARN = fwflex.StringToFramework(ctx, output.AccessGrantsLocationArn)
 	data.AccessGrantsLocationID = fwflex.StringToFramework(ctx, output.AccessGrantsLocationId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Location (%s)", data.LocationScope.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -205,7 +209,7 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
 			return conn.UpdateAccessGrantsLocation(ctx, input)
 		}, errCodeInvalidIAMRole)
 
@@ -244,7 +248,7 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 	}
 
 	// "AccessGrantsLocationNotEmptyError: Please delete access grants before deleting access grants location".
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteAccessGrantsLocation(ctx, input)
 	}, errCodeAccessGrantsLocationNotEmptyError)
 
@@ -318,6 +322,11 @@ func (data *accessGrantsLocationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *accessGrantsLocationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantsLocationID.ValueString()}, accessGrantsLocationResourceIDPartCount, false)))
+func (data *accessGrantsLocationResourceModel) setID() (string, error) {
+	parts := []string{
+		data.AccountID.ValueString(),
+		data.AccessGrantsLocationID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, accessGrantsLocationResourceIDPartCount, false)
 }

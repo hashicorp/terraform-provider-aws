@@ -989,35 +989,6 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.TableDescription
-	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTableConfig_tags(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					testAccCheckInitialTableConf(resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 // https://github.com/hashicorp/terraform/issues/13243
 func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2818,6 +2789,10 @@ func testAccCheckInitialTableExists(ctx context.Context, n string, v *awstypes.T
 	}
 }
 
+func testAccCheckTableExists(ctx context.Context, n string, v *awstypes.TableDescription) resource.TestCheckFunc {
+	return testAccCheckInitialTableExists(ctx, n, v)
+}
+
 func testAccCheckTableNotRecreated(i, j *awstypes.TableDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !i.CreationDateTime.Equal(aws.ToTime(j.CreationDateTime)) {
@@ -3294,59 +3269,6 @@ resource "aws_dynamodb_table" "test" {
   stream_view_type = %[3]s
 }
 `, rName, enabled, viewType)
-}
-
-func testAccTableConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name           = %[1]q
-  read_capacity  = 1
-  write_capacity = 2
-  hash_key       = "TestTableHashKey"
-  range_key      = "TestTableRangeKey"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name            = "InitialTestTableGSI"
-    hash_key        = "TestTableHashKey"
-    range_key       = "TestGSIRangeKey"
-    write_capacity  = 1
-    read_capacity   = 1
-    projection_type = "KEYS_ONLY"
-  }
-
-  tags = {
-    Name    = %[1]q
-    AccTest = "yes"
-    Testing = "absolutely"
-  }
-}
-`, rName)
 }
 
 func testAccTableConfig_gsiUpdate(rName string) string {
