@@ -515,8 +515,14 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	output, err := findEventSourceMappingByID(ctx, conn, d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "finding Lambda Event Source Mapping Config: %s", err)
+	}
 
 	tags, err = listTags(ctx, conn, aws.ToString(output.EventSourceMappingArn))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "finding Lambda Event Source Mapping Config: %s", err)
+	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Event Source Mapping (%s) not found, removing from state", d.Id())

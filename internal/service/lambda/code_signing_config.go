@@ -134,8 +134,14 @@ func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	output, err := findCodeSigningConfigByARN(ctx, conn, d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "finding Lambda Code Signing Config: %s", err)
+	}
 
 	tags, err = listTags(ctx, conn, aws.ToString(output.CodeSigningConfigArn))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "finding Lambda Code Signing Config: %s", err)
+	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Code Signing Config %s not found, removing from state", d.Id())
