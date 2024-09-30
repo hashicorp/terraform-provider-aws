@@ -515,8 +515,6 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	var tags tftags.KeyValueTags
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-
-
 	output, err := findEventSourceMappingByID(ctx, conn, d.Id())
 
 	tags, err = listTags(ctx, conn, aws.ToString(output.EventSourceMappingArn))

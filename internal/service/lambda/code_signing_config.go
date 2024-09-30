@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -88,7 +90,13 @@ func resourceCodeSigningConfig() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -99,6 +107,7 @@ func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData
 	input := &lambda.CreateCodeSigningConfigInput{
 		AllowedPublishers: expandAllowedPublishers(d.Get("allowed_publishers").([]interface{})),
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("policies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -121,9 +130,12 @@ func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var tags tftags.KeyValueTags
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	output, err := findCodeSigningConfigByARN(ctx, conn, d.Id())
+
+	tags, err = listTags(ctx, conn, aws.ToString(output.CodeSigningConfigArn))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Code Signing Config %s not found, removing from state", d.Id())
@@ -145,6 +157,7 @@ func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("policies", flattenCodeSigningPolicies(output.CodeSigningPolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policies: %s", err)
 	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

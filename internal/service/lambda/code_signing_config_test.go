@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,6 +47,31 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLambdaCodeSigningConfig_Tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_code_signing_config.code_signing_config"
+	signingProfile1 := "aws_signer_signing_profile.test1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var conf awstypes.CodeSigningConfig
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodeSigningConfigConfig_tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
+				),
 			},
 		},
 	})
@@ -220,6 +246,25 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 
   description = "Code Signing Config for test account"
 }`
+}
+
+func testAccCodeSigningConfigConfig_tags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_signer_signing_profile" "test1" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_lambda_code_signing_config" "code_signing_config" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      aws_signer_signing_profile.test1.version_arn,
+    ]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName)
 }
 
 func testAccCodeSigningConfigConfig_updatePublishers() string {

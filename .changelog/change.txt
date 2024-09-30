@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_event_source_mapping: Add tag support.
+```
+
+```release-note:enhancement
+resource/aws_lambda_code_signing_config: Add tag support.
+```
