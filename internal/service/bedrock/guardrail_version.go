@@ -166,8 +166,8 @@ func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.
 	}
 
 	_, err := conn.DeleteGuardrail(ctx, &bedrock.DeleteGuardrailInput{
-		GuardrailIdentifier: aws.String(data.GuardrailARN.ValueString()),
-		GuardrailVersion:    aws.String(data.Version.ValueString()),
+		GuardrailIdentifier: data.GuardrailARN.ValueStringPointer(),
+		GuardrailVersion:    data.Version.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
