@@ -179,7 +179,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.25.3
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/osis v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.13.2
