@@ -52,6 +52,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 			},
 		},
+		DeprecationMessage: `The aws_simpledb_domain resource has been deprecated and will be removed in a future version. Use Amazon DynamoDB instead.`,
 	}
 }
 
