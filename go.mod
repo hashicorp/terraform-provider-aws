@@ -243,7 +243,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/swf v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.28.3
-	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.4.2
+	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.51.2
