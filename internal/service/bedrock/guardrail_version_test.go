@@ -42,8 +42,8 @@ func TestAccBedrockGuardrailVersion_basic(t *testing.T) {
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					resource.TestCheckResourceAttr(resourceName, "version", acctest.Ct1),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 				),
 			},
@@ -52,7 +52,7 @@ func TestAccBedrockGuardrailVersion_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGuardrailVersionImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "version",
+				ImportStateVerifyIdentifierAttribute: names.AttrVersion,
 			},
 		},
 	})
