@@ -107,9 +107,9 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
+						"attachment_arn":                 "",
 						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
-						"attachment_arn":                 "",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
@@ -439,8 +439,9 @@ func TestAccGlobalAcceleratorEndpointGroup_crossAccountAttachment(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -456,8 +457,8 @@ func TestAccGlobalAcceleratorEndpointGroup_crossAccountAttachment(t *testing.T) 
 						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", "aws_lb.alt_test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.attachment_arn", "aws_globalaccelerator_cross_account_attachment.alt_test", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", "aws_lb.alt_test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.AlternateRegion()),
 				),
 			},
@@ -921,9 +922,8 @@ func testAccEndpointGroupConfig_crossAccountAttachement(rName string) string {
 		acctest.ConfigAlternateAccountAlternateRegionProvider(),
 		fmt.Sprintf(`
 ###############################################################################
-## alternate account setup
+## Alternate account setup.
 ###############################################################################
-
 data "aws_availability_zones" "alt_available" {
   provider = "awsalternate"
 
@@ -1022,11 +1022,9 @@ resource "aws_globalaccelerator_cross_account_attachment" "alt_test" {
   }
 }
 
-
 ###############################################################################
-## main account
+## Main account setup.
 ###############################################################################
-
 data "aws_caller_identity" "current" {}
 
 resource "aws_globalaccelerator_accelerator" "test" {
@@ -1057,6 +1055,5 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 
   endpoint_group_region = %[2]q
 }
-`, rName, acctest.AlternateRegion()),
-	)
+`, rName, acctest.AlternateRegion()))
 }
