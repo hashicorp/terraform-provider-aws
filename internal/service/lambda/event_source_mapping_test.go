@@ -47,7 +47,8 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_kinesisBatchSize(rName, "100"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					// arn not set in US GovCloud.
+					// resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
