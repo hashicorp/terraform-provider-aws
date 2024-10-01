@@ -100,12 +100,6 @@ func resourceCluster() *schema.Resource {
 											},
 										},
 									},
-									"custom_ami_id": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Optional:     true,
-										ValidateFunc: validCustomAMIID,
-									},
 									"ebs_config": {
 										Type:     schema.TypeSet,
 										Optional: true,
