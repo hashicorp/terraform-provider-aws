@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -105,7 +106,11 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	input := &route53profiles.CreateProfileInput{}
+	input := &route53profiles.CreateProfileInput{
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Name:        data.Name.ValueStringPointer(),
+		Tags:        getTagsIn(ctx),
+	}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 
 	var tags []awstypes.Tag
