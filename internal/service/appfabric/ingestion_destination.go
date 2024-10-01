@@ -391,18 +391,18 @@ func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, request r
 }
 
 func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) (*awstypes.IngestionDestination, error) {
-	in := &appfabric.GetIngestionDestinationInput{
+	input := &appfabric.GetIngestionDestinationInput{
 		AppBundleIdentifier:            aws.String(appBundleARN),
 		IngestionDestinationIdentifier: aws.String(arn),
 		IngestionIdentifier:            aws.String(ingestionARN),
 	}
 
-	output, err := conn.GetIngestionDestination(ctx, in)
+	output, err := conn.GetIngestionDestination(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -411,7 +411,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	}
 
 	if output == nil || output.IngestionDestination == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.IngestionDestination, nil
@@ -419,7 +419,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 
 func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
+		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -429,7 +429,7 @@ func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, app
 			return nil, "", err
 		}
 
-		return out, string(out.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
@@ -565,6 +565,77 @@ type auditLogDestinationConfigurationModel struct {
 type destinationModel struct {
 	FirehoseStream fwtypes.ListNestedObjectValueOf[firehoseStreamModel] `tfsdk:"firehose_stream"`
 	S3Bucket       fwtypes.ListNestedObjectValueOf[s3BucketModel]       `tfsdk:"s3_bucket"`
+}
+
+var (
+	_ fwflex.Expander  = destinationModel{}
+	_ fwflex.Flattener = &destinationModel{}
+)
+
+func (m destinationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.FirehoseStream.IsNull():
+		firehoseStreamData, d := m.FirehoseStream.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.DestinationMemberFirehoseStream
+		diags.Append(fwflex.Expand(ctx, firehoseStreamData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+
+	case !m.S3Bucket.IsNull():
+		s3BucketData, d := m.S3Bucket.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.DestinationMemberS3Bucket
+		diags.Append(fwflex.Expand(ctx, s3BucketData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+func (m *destinationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.DestinationMemberFirehoseStream:
+		var model firehoseStreamModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.FirehoseStream = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	case awstypes.DestinationMemberS3Bucket:
+		var model s3BucketModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.S3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+	}
+
+	return diags
 }
 
 type firehoseStreamModel struct {
