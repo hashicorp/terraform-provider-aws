@@ -225,39 +225,6 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 		return
 	}
 
-	// AutoFlEx doesn't yet handle union types.
-	if !data.DestinationConfiguration.IsNull() {
-		destinationConfigurationData, diags := data.DestinationConfiguration.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		destinationConfiguration, diags := expandDestinationConfiguration(ctx, destinationConfigurationData)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.DestinationConfiguration = destinationConfiguration
-	}
-
-	if !data.ProcessingConfiguration.IsNull() {
-		processingConfigurationData, diags := data.ProcessingConfiguration.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		processingConfiguration, diags := expandProcessingConfiguration(ctx, processingConfigurationData)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.ProcessingConfiguration = processingConfiguration
-	}
-
 	uuid, err := uuid.GenerateUUID()
 	if err != nil {
 		response.Diagnostics.AddError("creating AppFabric Ingestion Destination", err.Error())
@@ -332,27 +299,6 @@ func (r *ingestionDestinationResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	// AutoFlEx doesn't yet handle union types.
-	if output.DestinationConfiguration != nil {
-		destinationConfigurationData, diags := flattenDestinationConfiguration(ctx, output.DestinationConfiguration)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		data.DestinationConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, destinationConfigurationData)
-	}
-
-	if output.ProcessingConfiguration != nil {
-		processingConfigurationData, diags := flattenProcessingConfiguration(ctx, output.ProcessingConfiguration)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		data.ProcessingConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, processingConfigurationData)
-	}
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -374,23 +320,6 @@ func (r *ingestionDestinationResource) Update(ctx context.Context, request resou
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
-		}
-
-		// AutoFlEx doesn't yet handle union types.
-		if !new.DestinationConfiguration.IsNull() {
-			destinationConfigurationData, diags := new.DestinationConfiguration.ToPtr(ctx)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			destinationConfiguration, diags := expandDestinationConfiguration(ctx, destinationConfigurationData)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			input.DestinationConfiguration = destinationConfiguration
 		}
 
 		// Additional fields.
@@ -462,18 +391,18 @@ func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, request r
 }
 
 func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) (*awstypes.IngestionDestination, error) {
-	in := &appfabric.GetIngestionDestinationInput{
+	input := &appfabric.GetIngestionDestinationInput{
 		AppBundleIdentifier:            aws.String(appBundleARN),
 		IngestionDestinationIdentifier: aws.String(arn),
 		IngestionIdentifier:            aws.String(ingestionARN),
 	}
 
-	output, err := conn.GetIngestionDestination(ctx, in)
+	output, err := conn.GetIngestionDestination(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -482,7 +411,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	}
 
 	if output == nil || output.IngestionDestination == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.IngestionDestination, nil
@@ -490,7 +419,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 
 func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
+		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -500,7 +429,7 @@ func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, app
 			return nil, "", err
 		}
 
-		return out, string(out.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
@@ -585,6 +514,50 @@ type destinationConfigurationModel struct {
 	AuditLog fwtypes.ListNestedObjectValueOf[auditLogDestinationConfigurationModel] `tfsdk:"audit_log"`
 }
 
+var (
+	_ fwflex.Expander  = destinationConfigurationModel{}
+	_ fwflex.Flattener = &destinationConfigurationModel{}
+)
+
+func (m destinationConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.AuditLog.IsNull():
+		auditLogDestinationConfigurationData, d := m.AuditLog.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.DestinationConfigurationMemberAuditLog
+		diags.Append(fwflex.Expand(ctx, auditLogDestinationConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+func (m *destinationConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.DestinationConfigurationMemberAuditLog:
+		var model auditLogDestinationConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.AuditLog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+	}
+
+	return diags
+}
+
 type auditLogDestinationConfigurationModel struct {
 	Destination fwtypes.ListNestedObjectValueOf[destinationModel] `tfsdk:"destination"`
 }
@@ -592,6 +565,77 @@ type auditLogDestinationConfigurationModel struct {
 type destinationModel struct {
 	FirehoseStream fwtypes.ListNestedObjectValueOf[firehoseStreamModel] `tfsdk:"firehose_stream"`
 	S3Bucket       fwtypes.ListNestedObjectValueOf[s3BucketModel]       `tfsdk:"s3_bucket"`
+}
+
+var (
+	_ fwflex.Expander  = destinationModel{}
+	_ fwflex.Flattener = &destinationModel{}
+)
+
+func (m destinationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.FirehoseStream.IsNull():
+		firehoseStreamData, d := m.FirehoseStream.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.DestinationMemberFirehoseStream
+		diags.Append(fwflex.Expand(ctx, firehoseStreamData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+
+	case !m.S3Bucket.IsNull():
+		s3BucketData, d := m.S3Bucket.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.DestinationMemberS3Bucket
+		diags.Append(fwflex.Expand(ctx, s3BucketData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+func (m *destinationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.DestinationMemberFirehoseStream:
+		var model firehoseStreamModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.FirehoseStream = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	case awstypes.DestinationMemberS3Bucket:
+		var model s3BucketModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.S3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+	}
+
+	return diags
 }
 
 type firehoseStreamModel struct {
@@ -607,179 +651,51 @@ type processingConfigurationModel struct {
 	AuditLog fwtypes.ListNestedObjectValueOf[auditLogProcessingConfigurationModel] `tfsdk:"audit_log"`
 }
 
+var (
+	_ fwflex.Expander  = processingConfigurationModel{}
+	_ fwflex.Flattener = &processingConfigurationModel{}
+)
+
+func (m processingConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.AuditLog.IsNull():
+		auditLogProcessingConfigurationData, d := m.AuditLog.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ProcessingConfigurationMemberAuditLog
+		diags.Append(fwflex.Expand(ctx, auditLogProcessingConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+func (m *processingConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ProcessingConfigurationMemberAuditLog:
+		var model auditLogProcessingConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.AuditLog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+	}
+
+	return diags
+}
+
 type auditLogProcessingConfigurationModel struct {
 	Format fwtypes.StringEnum[awstypes.Format] `tfsdk:"format"`
 	Schema fwtypes.StringEnum[awstypes.Schema] `tfsdk:"schema"`
-}
-
-func expandDestinationConfiguration(ctx context.Context, destinationConfigurationData *destinationConfigurationModel) (awstypes.DestinationConfiguration, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if !destinationConfigurationData.AuditLog.IsNull() {
-		auditLogDestinationConfigurationData, d := destinationConfigurationData.AuditLog.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		destinationData, d := auditLogDestinationConfigurationData.Destination.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		destination, d := expandDestination(ctx, destinationData)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		apiObject := &awstypes.DestinationConfigurationMemberAuditLog{
-			Value: awstypes.AuditLogDestinationConfiguration{
-				Destination: destination,
-			},
-		}
-
-		return apiObject, diags
-	}
-
-	return nil, diags
-}
-
-func expandDestination(ctx context.Context, destinationData *destinationModel) (awstypes.Destination, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if !destinationData.FirehoseStream.IsNull() {
-		firehoseStreamData, d := destinationData.FirehoseStream.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		apiObject := &awstypes.DestinationMemberFirehoseStream{}
-		diags.Append(fwflex.Expand(ctx, firehoseStreamData, &apiObject.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		return apiObject, diags
-	}
-	if !destinationData.S3Bucket.IsNull() {
-		s3BucketData, d := destinationData.S3Bucket.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		apiObject := &awstypes.DestinationMemberS3Bucket{}
-		diags.Append(fwflex.Expand(ctx, s3BucketData, &apiObject.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		return apiObject, diags
-	}
-
-	return nil, diags
-}
-
-func expandProcessingConfiguration(ctx context.Context, processingConfigurationData *processingConfigurationModel) (awstypes.ProcessingConfiguration, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if !processingConfigurationData.AuditLog.IsNull() {
-		auditLogProcessingConfigurationData, d := processingConfigurationData.AuditLog.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		apiObject := &awstypes.ProcessingConfigurationMemberAuditLog{}
-		diags.Append(fwflex.Expand(ctx, auditLogProcessingConfigurationData, &apiObject.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		return apiObject, diags
-	}
-
-	return nil, diags
-}
-
-func flattenDestinationConfiguration(ctx context.Context, apiObject awstypes.DestinationConfiguration) (*destinationConfigurationModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var destinationConfigurationData *destinationConfigurationModel
-
-	switch v := apiObject.(type) {
-	case *awstypes.DestinationConfigurationMemberAuditLog:
-		destinationData, d := flattenDestination(ctx, v.Value.Destination)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		auditLogDestinationConfigurationData := &auditLogDestinationConfigurationModel{
-			Destination: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, destinationData),
-		}
-		destinationConfigurationData = &destinationConfigurationModel{
-			AuditLog: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, auditLogDestinationConfigurationData),
-		}
-	}
-
-	return destinationConfigurationData, diags
-}
-
-func flattenDestination(ctx context.Context, apiObject awstypes.Destination) (*destinationModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var destinationData *destinationModel
-
-	switch v := apiObject.(type) {
-	case *awstypes.DestinationMemberFirehoseStream:
-		var firehoseStreamData firehoseStreamModel
-		d := fwflex.Flatten(ctx, v.Value, &firehoseStreamData)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		destinationData = &destinationModel{
-			FirehoseStream: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &firehoseStreamData),
-			S3Bucket:       fwtypes.NewListNestedObjectValueOfNull[s3BucketModel](ctx),
-		}
-
-	case *awstypes.DestinationMemberS3Bucket:
-		var s3BucketData s3BucketModel
-		d := fwflex.Flatten(ctx, v.Value, &s3BucketData)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		destinationData = &destinationModel{
-			FirehoseStream: fwtypes.NewListNestedObjectValueOfNull[firehoseStreamModel](ctx),
-			S3Bucket:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3BucketData),
-		}
-	}
-
-	return destinationData, diags
-}
-
-func flattenProcessingConfiguration(ctx context.Context, apiObject awstypes.ProcessingConfiguration) (*processingConfigurationModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var processingConfigurationData *processingConfigurationModel
-
-	switch v := apiObject.(type) {
-	case *awstypes.ProcessingConfigurationMemberAuditLog:
-		var auditLogProcessingConfigurationData auditLogProcessingConfigurationModel
-		d := fwflex.Flatten(ctx, v.Value, &auditLogProcessingConfigurationData)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		processingConfigurationData = &processingConfigurationModel{
-			AuditLog: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &auditLogProcessingConfigurationData),
-		}
-	}
-
-	return processingConfigurationData, diags
 }
