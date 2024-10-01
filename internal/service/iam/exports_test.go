@@ -41,6 +41,7 @@ var (
 	FindAttachedUserPolicyByTwoPartKey  = findAttachedUserPolicyByTwoPartKey
 	FindEntitiesForPolicyByARN          = findEntitiesForPolicyByARN
 	FindGroupByName                     = findGroupByName
+	FindGroupPoliciesByName             = findGroupPoliciesByName
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
