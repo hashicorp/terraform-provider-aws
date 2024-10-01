@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -387,6 +388,12 @@ func resourceListener() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"tcp_idle_timeout_seconds": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				//  ValidateFunc: ## Validate in range of 60-6000
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -504,6 +511,19 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	// Listener attributes like TCP idle timeout are not supported on create
+	var attributes []awstypes.ListenerAttribute
+
+	attributes = append(attributes, listenerAttributes.expand(d, false)...)
+
+	if len(attributes) > 0 {
+		_, err := modifyListenerAttributes(ctx, conn, d.Id(), attributes)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
@@ -543,6 +563,16 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrPort, listener.Port)
 	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
+
+	// Get listener attributes with resource ID
+	attributes, err := findListenerAttributesByARN(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+	}
+
+	// Flatten attributes
+	listenerAttributes.flatten(d, attributes)
 
 	return diags
 }
@@ -615,6 +645,82 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN string) ([]awstypes.ListenerAttribute, error) {
+	input := &elasticloadbalancingv2.DescribeListenerAttributesInput{
+		ListenerArn: aws.String(listenerARN),
+	}
+
+	output, err := conn.DescribeListenerAttributes(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Attributes, nil
+}
+
+func modifyListenerAttributes(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN string, attributes []awstypes.ListenerAttribute) (*elasticloadbalancingv2.ModifyListenerAttributesOutput, error) {
+	input := &elasticloadbalancingv2.ModifyListenerAttributesInput{
+		ListenerArn: aws.String(listenerARN),
+		Attributes:  attributes,
+	}
+
+	return conn.ModifyListenerAttributes(ctx, input)
+}
+
+type listenerAttributeInfo struct {
+	apiAttributeKey string
+	tfType          schema.ValueType
+}
+
+type listenerAttributeMap map[string]listenerAttributeInfo
+
+var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
+	"tcp_idle_timeout_seconds": {
+		apiAttributeKey: "tcp.idle_timeout.seconds",
+		tfType:          schema.TypeInt,
+	},
+})
+
+func (m listenerAttributeMap) expand(d *schema.ResourceData, update bool) []awstypes.ListenerAttribute {
+	var attributes []awstypes.ListenerAttribute
+
+	for tfAttributeName, attributeInfo := range m {
+		if update && !d.HasChange(tfAttributeName) {
+			continue
+		}
+
+		if attributeInfo.tfType == schema.TypeInt {
+			v := (d.Get(tfAttributeName)).(int)
+			attributes = append(attributes, awstypes.ListenerAttribute{
+				Key:   aws.String(attributeInfo.apiAttributeKey),
+				Value: flex.IntValueToString(v),
+			})
+		}
+	}
+
+	return attributes
+}
+
+func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awstypes.ListenerAttribute) {
+	for tfAttributeName, attributeInfo := range m {
+		k := attributeInfo.apiAttributeKey
+		i := slices.IndexFunc(apiObjects, func(v awstypes.ListenerAttribute) bool {
+			return aws.ToString(v.Key) == k
+		})
+
+		if i == -1 {
+			continue
+		}
+
+		d.Set(tfAttributeName, flex.StringToIntValue(apiObjects[i].Value))
+	}
 }
 
 func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
