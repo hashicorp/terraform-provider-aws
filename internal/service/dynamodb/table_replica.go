@@ -37,6 +37,7 @@ const (
 
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
 // @Tags
+// @Testing(tagsTest=false)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

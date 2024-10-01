@@ -47,6 +47,7 @@ This resource supports the following arguments:
 * `vpcId` - (Required) Identifier of EC2 VPC.
 * `applianceModeSupport` - (Optional) Whether Appliance Mode support is enabled. If enabled, a traffic flow between a source and destination uses the same Availability Zone for the VPC attachment for the lifetime of that flow. Valid values: `disable`, `enable`. Default value: `disable`.
 * `dnsSupport` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
+* `securityGroupReferencingSupport` - (Optional) Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`. Default value: `disable`.
 * `ipv6Support` - (Optional) Whether IPv6 support is enabled. Valid values: `disable`, `enable`. Default value: `disable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway VPC Attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayDefaultRouteTableAssociation` - (Optional) Boolean whether the VPC Attachment should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.

@@ -1348,7 +1348,7 @@ func flattenFilterListControl(apiObject *awstypes.FilterListControl) []interface
 	}
 
 	if apiObject.CascadingControlConfiguration != nil {
-		tfMap["cacading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
+		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenListControlDisplayOptions(apiObject.DisplayOptions)

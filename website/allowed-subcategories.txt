@@ -54,6 +54,7 @@ CodeArtifact
 CodeBuild
 CodeCatalyst
 CodeCommit
+CodeConnections
 CodeDeploy
 CodeGuru Profiler
 CodeGuru Reviewer

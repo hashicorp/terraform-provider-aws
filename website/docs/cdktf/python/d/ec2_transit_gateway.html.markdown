@@ -80,6 +80,7 @@ This data source exports the following attributes in addition to the arguments a
 * `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table
 * `description` - Description of the EC2 Transit Gateway
 * `dns_support` - Whether DNS support is enabled
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled.
 * `multicast_support` - Whether Multicast support is enabled
 * `id` - EC2 Transit Gateway identifier
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway

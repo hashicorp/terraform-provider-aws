@@ -17,7 +17,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceStandardsControlAssociations,
+			Factory: newStandardsControlAssociationsDataSource,
 			Name:    "Standards Control Associations",
 		},
 	}
@@ -31,6 +31,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory: newStandardsControlAssociationResource,
+			Name:    "Standards Control Association",
 		},
 	}
 }

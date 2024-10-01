@@ -217,8 +217,13 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
+	}
+
 	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
-	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
+	input.ClientToken = aws.String(uuid)
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAppAuthorization(ctx, input)
@@ -229,9 +234,15 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
+
 	// Set values for unknowns.
 	data.AppAuthorizationARN = fwflex.StringToFramework(ctx, output.AppAuthorization.AppAuthorizationArn)
-	data.setID()
 
 	appAuthorization, err := waitAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -525,8 +536,13 @@ func (m *appAuthorizationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *appAuthorizationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppAuthorizationARN.ValueString(), m.AppBundleARN.ValueString()}, appAuthorizationResourceIDPartCount, false)))
+func (m *appAuthorizationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppAuthorizationARN.ValueString(),
+		m.AppBundleARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, appAuthorizationResourceIDPartCount, false)
 }
 
 var (

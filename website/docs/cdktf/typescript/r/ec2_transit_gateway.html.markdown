@@ -47,6 +47,7 @@ This resource supports the following arguments:
 * `defaultRouteTablePropagation` - (Optional) Whether resource attachments automatically propagate routes to the default propagation route table. Valid values: `disable`, `enable`. Default value: `enable`.
 * `description` - (Optional) Description of the EC2 Transit Gateway.
 * `dnsSupport` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
+* `securityGroupReferencingSupport` - (Optional) Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`. Default value: `disable`.
 * `multicastSupport` - (Optional) Whether Multicast support is enabled. Required to use `ec2_transit_gateway_multicast_domain`. Valid values: `disable`, `enable`. Default value: `disable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayCidrBlocks` - (Optional) One or more IPv4 or IPv6 CIDR blocks for the transit gateway. Must be a size /24 CIDR block or larger for IPv4, or a size /64 CIDR block or larger for IPv6.

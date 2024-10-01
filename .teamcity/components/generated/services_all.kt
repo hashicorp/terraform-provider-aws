@@ -49,6 +49,7 @@ val services = mapOf(
     "codebuild" to ServiceSpec("CodeBuild"),
     "codecatalyst" to ServiceSpec("CodeCatalyst"),
     "codecommit" to ServiceSpec("CodeCommit"),
+    "codeconnections" to ServiceSpec("CodeConnections"),
     "codeguruprofiler" to ServiceSpec("CodeGuru Profiler"),
     "codegurureviewer" to ServiceSpec("CodeGuru Reviewer"),
     "codepipeline" to ServiceSpec("CodePipeline"),

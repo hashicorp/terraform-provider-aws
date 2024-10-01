@@ -76,9 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket Object Lock configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
-
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an S3 bucket Object Lock Configuration using one of two forms. If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`. For example:
 
 ```terraform
 import {
@@ -87,22 +85,22 @@ import {
 }
 ```
 
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner`, separated by a comma (`,`). For example:
 
+```terraform
 import {
   to = aws_s3_bucket_object_lock_configuration.example
   id = "bucket-name,123456789012"
 }
+```
 
-**Using `terraform import` to import** S3 bucket Object Lock configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
-
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+**Using `terraform import`**, import an S3 bucket Object Lock Configuration using one of two forms. If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`. For example:
 
 ```console
 % terraform import aws_s3_bucket_object_lock_configuration.example bucket-name
 ```
 
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner`, separated by a comma (`,`). For example:
 
 ```console
 % terraform import aws_s3_bucket_object_lock_configuration.example bucket-name,123456789012

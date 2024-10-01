@@ -8,6 +8,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +35,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1504,7 +1504,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
+		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
 			input := &autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1521,7 +1521,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
+		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
 			input := &autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1545,7 +1545,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
 			input := &autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1562,7 +1562,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
 			input := &autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1586,7 +1586,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
 			input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1603,7 +1603,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
 			input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1864,7 +1864,7 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 		}
 	}
 	const batchSize = 50 // API limit.
-	for _, chunk := range tfslices.Chunks(instanceIDs, batchSize) {
+	for chunk := range slices.Chunk(instanceIDs, batchSize) {
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          chunk,

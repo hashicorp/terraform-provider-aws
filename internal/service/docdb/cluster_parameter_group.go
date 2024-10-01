@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -226,7 +226,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.Clie
 		clusterParameterGroupMaxParamsBulkEdit = 20
 	)
 	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
-	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
+	for chunk := range slices.Chunk(parameters, clusterParameterGroupMaxParamsBulkEdit) {
 		input := &docdb.ModifyDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: aws.String(name),
 			Parameters:                  chunk,

@@ -55,6 +55,12 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
+			"failure_message": schema.StringAttribute{
+				Computed: true,
+			},
+			"failure_code": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -160,6 +166,8 @@ type dataSourceCollectionData struct {
 	ARN                types.String `tfsdk:"arn"`
 	CollectionEndpoint types.String `tfsdk:"collection_endpoint"`
 	CreatedDate        types.String `tfsdk:"created_date"`
+	FailureMessage     types.String `tfsdk:"failure_message"`
+	FailureCode        types.String `tfsdk:"failure_code"`
 	DashboardEndpoint  types.String `tfsdk:"dashboard_endpoint"`
 	Description        types.String `tfsdk:"description"`
 	ID                 types.String `tfsdk:"id"`

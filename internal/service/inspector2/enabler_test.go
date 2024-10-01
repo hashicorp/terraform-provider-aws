@@ -251,6 +251,41 @@ func testAccEnabler_lambda(t *testing.T) {
 	})
 }
 
+func testAccEnabler_lambdaCode(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_inspector2_enabler.test"
+	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeLambda, types.ResourceScanTypeLambdaCode}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/inspector/latest/user/inspector_regions.html#ins-regional-feature-availability.
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnablerConfig_basic(resourceTypes),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerID(resourceName, resourceTypes),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambdaCode)),
+				),
+			},
+		},
+	})
+}
+
 func testAccEnabler_memberAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 

@@ -76,9 +76,6 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaR
 			},
 			"policy_version": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LifecyclePolicyType](),
@@ -187,6 +184,7 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 		}
 
 		in.ClientToken = aws.String(id.UniqueId())
+		in.PolicyVersion = state.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		out, err := conn.UpdateLifecyclePolicy(ctx, in)
 		if err != nil {

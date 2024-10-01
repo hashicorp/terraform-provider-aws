@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -194,7 +193,12 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	data.AccessGrantARN = fwflex.StringToFramework(ctx, output.AccessGrantArn)
 	data.AccessGrantID = fwflex.StringToFramework(ctx, output.AccessGrantId)
 	data.GrantScope = fwflex.StringToFramework(ctx, output.GrantScope)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating S3 Access Grant", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -381,8 +385,13 @@ func (data *accessGrantResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *accessGrantResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, accessGrantResourceIDPartCount, false)))
+func (data *accessGrantResourceModel) setID() (string, error) {
+	parts := []string{
+		data.AccountID.ValueString(),
+		data.AccessGrantID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, accessGrantResourceIDPartCount, false)
 }
 
 // API returns <AccessGrantsLocationConfiguration><S3SubPrefix></S3SubPrefix></AccessGrantsLocationConfiguration>.

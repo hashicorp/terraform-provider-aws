@@ -137,7 +137,12 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 
 	// Set values for unknowns.
 	data.AgentAliasID = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Bedrock Agent Alias", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	alias, err := waitAgentAliasCreated(ctx, conn, data.AgentAliasID.ValueString(), data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -376,8 +381,13 @@ func (m *agentAliasResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentAliasResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AgentAliasID.ValueString(), m.AgentID.ValueString()}, agentAliasResourceIDPartCount, false)))
+func (m *agentAliasResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AgentAliasID.ValueString(),
+		m.AgentID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentAliasResourceIDPartCount, false)
 }
 
 type agentAliasRoutingConfigurationListItemModel struct {

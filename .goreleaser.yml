@@ -78,4 +78,4 @@ signs:
     id: key-id
     signature: ${artifact}.72D7468F.sig
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
