@@ -181,7 +181,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)
 	d.Set(names.AttrState, snapshot.State)
-	d.Set("start_time", aws.ToTime(snapshot.StartTime).Format(time.RFC3339))
+	d.Set(names.AttrStartTime, aws.ToTime(snapshot.StartTime).Format(time.RFC3339))
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
