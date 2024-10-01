@@ -337,7 +337,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"uri": schema.StringAttribute{
+															names.AttrURI: schema.StringAttribute{
 																Required: true,
 																PlanModifiers: []planmodifier.String{
 																	stringplanmodifier.RequiresReplace(),
