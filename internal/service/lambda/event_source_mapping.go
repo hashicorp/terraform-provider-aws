@@ -33,6 +33,8 @@ import (
 )
 
 // @SDKResource("aws_lambda_event_source_mapping", name="Event Source Mapping")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSourceMappingCreate,
@@ -63,6 +65,10 @@ func resourceEventSourceMapping() *schema.Resource {
 						},
 					},
 				},
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"batch_size": {
 				Type:     schema.TypeInt,
@@ -511,18 +517,9 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var tags tftags.KeyValueTags
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	output, err := findEventSourceMappingByID(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding Lambda Event Source Mapping Config: %s", err)
-	}
-
-	tags, err = listTags(ctx, conn, aws.ToString(output.EventSourceMappingArn))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding Lambda Event Source Mapping Config: %s", err)
-	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Event Source Mapping (%s) not found, removing from state", d.Id())
@@ -541,6 +538,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("amazon_managed_kafka_event_source_config", nil)
 	}
+	d.Set(names.AttrARN, output.EventSourceMappingArn)
 	d.Set("batch_size", output.BatchSize)
 	d.Set("bisect_batch_on_function_error", output.BisectBatchOnFunctionError)
 	if output.DestinationConfig != nil {
@@ -613,7 +611,6 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrState, output.State)
 	d.Set("state_transition_reason", output.StateTransitionReason)
 	d.Set("topics", output.Topics)
-	setKeyValueTagsOut(ctx, tags)
 	d.Set("tumbling_window_in_seconds", output.TumblingWindowInSeconds)
 	d.Set("uuid", output.UUID)
 
@@ -634,100 +631,102 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	input := &lambda.UpdateEventSourceMappingInput{
-		UUID: aws.String(d.Id()),
-	}
-
-	if d.HasChange("batch_size") {
-		input.BatchSize = aws.Int32(int32(d.Get("batch_size").(int)))
-	}
-
-	if d.HasChange("bisect_batch_on_function_error") {
-		input.BisectBatchOnFunctionError = aws.Bool(d.Get("bisect_batch_on_function_error").(bool))
-	}
-
-	if d.HasChange("destination_config") {
-		if v, ok := d.GetOk("destination_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &lambda.UpdateEventSourceMappingInput{
+			UUID: aws.String(d.Id()),
 		}
-	}
 
-	if d.HasChange("document_db_event_source_config") {
-		if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChange("batch_size") {
+			input.BatchSize = aws.Int32(int32(d.Get("batch_size").(int)))
 		}
-	}
 
-	if d.HasChange(names.AttrEnabled) {
-		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
-	}
-
-	if d.HasChange("filter_criteria") {
-		if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.FilterCriteria = expandFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
-		} else {
-			// AWS ignores the removal if this is left as nil.
-			input.FilterCriteria = &awstypes.FilterCriteria{}
+		if d.HasChange("bisect_batch_on_function_error") {
+			input.BisectBatchOnFunctionError = aws.Bool(d.Get("bisect_batch_on_function_error").(bool))
 		}
-	}
 
-	if d.HasChange("function_name") {
-		input.FunctionName = aws.String(d.Get("function_name").(string))
-	}
-
-	if d.HasChange("function_response_types") {
-		input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](d.Get("function_response_types").(*schema.Set))
-	}
-
-	if d.HasChange(names.AttrKMSKeyARN) {
-		input.KMSKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
-	}
-
-	if d.HasChange("maximum_batching_window_in_seconds") {
-		input.MaximumBatchingWindowInSeconds = aws.Int32(int32(d.Get("maximum_batching_window_in_seconds").(int)))
-	}
-
-	if d.HasChange("maximum_record_age_in_seconds") {
-		input.MaximumRecordAgeInSeconds = aws.Int32(int32(d.Get("maximum_record_age_in_seconds").(int)))
-	}
-
-	if d.HasChange("maximum_retry_attempts") {
-		input.MaximumRetryAttempts = aws.Int32(int32(d.Get("maximum_retry_attempts").(int)))
-	}
-
-	if d.HasChange("parallelization_factor") {
-		input.ParallelizationFactor = aws.Int32(int32(d.Get("parallelization_factor").(int)))
-	}
-
-	if d.HasChange("scaling_config") {
-		if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
-		} else {
-			// AWS ignores the removal if this is left as nil.
-			input.ScalingConfig = &awstypes.ScalingConfig{}
+		if d.HasChange("destination_config") {
+			if v, ok := d.GetOk("destination_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
-	}
 
-	if d.HasChange("source_access_configuration") {
-		if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
-			input.SourceAccessConfigurations = expandSourceAccessConfigurations(v.(*schema.Set).List())
+		if d.HasChange("document_db_event_source_config") {
+			if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
-	}
 
-	if d.HasChange("tumbling_window_in_seconds") {
-		input.TumblingWindowInSeconds = aws.Int32(int32(d.Get("tumbling_window_in_seconds").(int)))
-	}
+		if d.HasChange(names.AttrEnabled) {
+			input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+		}
 
-	_, err := retryEventSourceMapping(ctx, func() (*lambda.UpdateEventSourceMappingOutput, error) {
-		return conn.UpdateEventSourceMapping(ctx, input)
-	})
+		if d.HasChange("filter_criteria") {
+			if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.FilterCriteria = expandFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				// AWS ignores the removal if this is left as nil.
+				input.FilterCriteria = &awstypes.FilterCriteria{}
+			}
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Lambda Event Source Mapping (%s): %s", d.Id(), err)
-	}
+		if d.HasChange("function_name") {
+			input.FunctionName = aws.String(d.Get("function_name").(string))
+		}
 
-	if _, err := waitEventSourceMappingUpdated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) update: %s", d.Id(), err)
+		if d.HasChange("function_response_types") {
+			input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](d.Get("function_response_types").(*schema.Set))
+		}
+
+		if d.HasChange(names.AttrKMSKeyARN) {
+			input.KMSKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
+		}
+
+		if d.HasChange("maximum_batching_window_in_seconds") {
+			input.MaximumBatchingWindowInSeconds = aws.Int32(int32(d.Get("maximum_batching_window_in_seconds").(int)))
+		}
+
+		if d.HasChange("maximum_record_age_in_seconds") {
+			input.MaximumRecordAgeInSeconds = aws.Int32(int32(d.Get("maximum_record_age_in_seconds").(int)))
+		}
+
+		if d.HasChange("maximum_retry_attempts") {
+			input.MaximumRetryAttempts = aws.Int32(int32(d.Get("maximum_retry_attempts").(int)))
+		}
+
+		if d.HasChange("parallelization_factor") {
+			input.ParallelizationFactor = aws.Int32(int32(d.Get("parallelization_factor").(int)))
+		}
+
+		if d.HasChange("scaling_config") {
+			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				// AWS ignores the removal if this is left as nil.
+				input.ScalingConfig = &awstypes.ScalingConfig{}
+			}
+		}
+
+		if d.HasChange("source_access_configuration") {
+			if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
+				input.SourceAccessConfigurations = expandSourceAccessConfigurations(v.(*schema.Set).List())
+			}
+		}
+
+		if d.HasChange("tumbling_window_in_seconds") {
+			input.TumblingWindowInSeconds = aws.Int32(int32(d.Get("tumbling_window_in_seconds").(int)))
+		}
+
+		_, err := retryEventSourceMapping(ctx, func() (*lambda.UpdateEventSourceMappingOutput, error) {
+			return conn.UpdateEventSourceMapping(ctx, input)
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Lambda Event Source Mapping (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitEventSourceMappingUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceEventSourceMappingRead(ctx, d, meta)...)
@@ -824,7 +823,7 @@ func findEventSourceMappingByID(ctx context.Context, conn *lambda.Client, uuid s
 	return findEventSourceMapping(ctx, conn, input)
 }
 
-func statusEventSourceMappingState(ctx context.Context, conn *lambda.Client, id string) retry.StateRefreshFunc {
+func statusEventSourceMapping(ctx context.Context, conn *lambda.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findEventSourceMappingByID(ctx, conn, id)
 
@@ -847,7 +846,7 @@ func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
-		Refresh: statusEventSourceMappingState(ctx, conn, id),
+		Refresh: statusEventSourceMapping(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -869,7 +868,7 @@ func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
-		Refresh: statusEventSourceMappingState(ctx, conn, id),
+		Refresh: statusEventSourceMapping(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -891,7 +890,7 @@ func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},
-		Refresh: statusEventSourceMappingState(ctx, conn, id),
+		Refresh: statusEventSourceMapping(ctx, conn, id),
 		Timeout: timeout,
 	}
 

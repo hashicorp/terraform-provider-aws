@@ -224,12 +224,13 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `function_arn` - The the ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
+* `arn` - The event source mapping ARN.
+* `function_arn` - The ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
 * `last_modified` - The date this resource was last modified.
 * `last_processing_result` - The result of the last AWS Lambda invocation of your Lambda function.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `state` - The state of the event source mapping.
 * `state_transition_reason` - The reason the event source mapping is in its current state.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The UUID of the created event source mapping.
 
 [1]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html

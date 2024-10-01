@@ -47,6 +47,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_kinesisBatchSize(rName, "100"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
@@ -114,11 +115,10 @@ func TestAccLambdaEventSourceMapping_KMSKeyARN(t *testing.T) {
 	})
 }
 
-func TestAccLambdaEventSourceMapping_Tags(t *testing.T) {
+func TestAccLambdaEventSourceMapping_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetEventSourceMappingOutput
 	resourceName := "aws_lambda_event_source_mapping.test"
-	functionResourceName := "aws_lambda_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,10 +128,33 @@ func TestAccLambdaEventSourceMapping_Tags(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_tags(rName),
+				Config: testAccEventSourceMappingConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventSourceMappingConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccEventSourceMappingConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -2176,7 +2199,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, batchSize))
 }
 
-func testAccEventSourceMappingConfig_tags(rName string) string {
+func testAccEventSourceMappingConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   enabled           = true
@@ -2185,10 +2208,26 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   tags = {
-    Name = %[1]q
+    %[2]q = %[3]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccEventSourceMappingConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled           = true
+  event_source_arn  = aws_kinesis_stream.test.arn
+  function_name     = aws_lambda_function.test.function_name
+  starting_position = "TRIM_HORIZON"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccEventSourceMappingConfig_kinesisUpdateFunctionName(rName string) string {
