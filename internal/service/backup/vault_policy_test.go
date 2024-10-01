@@ -362,7 +362,7 @@ resource "aws_backup_vault_policy" "test" {
       Sid    = "default"
       Effect = "Allow"
       Principal = {
-        AWS = "${aws_iam_role.test.arn}"
+        AWS = aws_iam_role.test.arn
       }
       Action = [
         "backup:DescribeBackupVault",
