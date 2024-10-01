@@ -553,7 +553,6 @@ func (m *destinationConfigurationModel) Flatten(ctx context.Context, v any) (dia
 		m.AuditLog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
-
 	}
 
 	return diags
@@ -620,7 +619,6 @@ func (m *processingConfigurationModel) Flatten(ctx context.Context, v any) (diag
 		m.AuditLog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
-
 	}
 
 	return diags
