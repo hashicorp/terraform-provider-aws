@@ -1,7 +1,7 @@
 ```release-note:enhancement
-resource/aws_lambda_event_source_mapping: Add tag support.
+resource/aws_lambda_event_source_mapping: Add `tags` argument and `tags_all` attribute
 ```
 
 ```release-note:enhancement
-resource/aws_lambda_code_signing_config: Add tag support.
+resource/aws_lambda_code_signing_config: Add `tags` argument and `tags_all` attribute
 ```
