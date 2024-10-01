@@ -22,9 +22,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	autoflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -146,7 +146,7 @@ func (r *standardsControlAssociationResource) Read(ctx context.Context, request 
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -226,7 +226,7 @@ const (
 )
 
 func (m *standardsControlAssociationResourceModel) InitFromID(ctx context.Context) error {
-	parts, err := autoflex.ExpandResourceId(m.ID.ValueString(), standardsControlAssociationResourceIDPartCount, false)
+	parts, err := flex.ExpandResourceId(m.ID.ValueString(), standardsControlAssociationResourceIDPartCount, false)
 	if err != nil {
 		return err
 	}
@@ -243,7 +243,7 @@ func (m *standardsControlAssociationResourceModel) setID() {
 }
 
 func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) (string, error) {
-	return autoflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
+	return flex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
 }
 
 func findStandardsControlAssociationByTwoPartKey(ctx context.Context, conn *securityhub.Client, securityControlID string, standardsARN string) (*awstypes.StandardsControlAssociationSummary, error) {

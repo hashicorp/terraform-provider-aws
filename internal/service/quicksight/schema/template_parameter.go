@@ -1097,7 +1097,7 @@ func flattenParameterListControl(apiObject *awstypes.ParameterListControl) []int
 	}
 
 	if apiObject.CascadingControlConfiguration != nil {
-		tfMap["cacading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
+		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenListControlDisplayOptions(apiObject.DisplayOptions)

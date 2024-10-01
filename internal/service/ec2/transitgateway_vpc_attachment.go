@@ -62,7 +62,7 @@ func resourceTransitGatewayVPCAttachment() *schema.Resource {
 			"security_group_referencing_support": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
+				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
 			},
 			names.AttrSubnetIDs: {
@@ -110,10 +110,9 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 	input := &ec2.CreateTransitGatewayVpcAttachmentInput{
 		Options: &awstypes.CreateTransitGatewayVpcAttachmentRequestOptions{
-			ApplianceModeSupport:            awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
-			DnsSupport:                      awstypes.DnsSupportValue(d.Get("dns_support").(string)),
-			Ipv6Support:                     awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
-			SecurityGroupReferencingSupport: awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string)),
+			ApplianceModeSupport: awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
+			DnsSupport:           awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+			Ipv6Support:          awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
 		},
 		SubnetIds:         flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
@@ -121,7 +120,10 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway VPC Attachment: %+v", input)
+	if v, ok := d.GetOk("security_group_referencing_support"); ok {
+		input.Options.SecurityGroupReferencingSupport = awstypes.SecurityGroupReferencingSupportValue(v.(string))
+	}
+
 	output, err := conn.CreateTransitGatewayVpcAttachment(ctx, input)
 
 	if err != nil {

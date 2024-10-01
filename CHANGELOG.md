@@ -1,4 +1,22 @@
 ## 5.70.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_simpledb_domain: The `aws_simpledb_domain` resource has been deprecated and will be removed in a future version. Use Amazon DynamoDB instead ([#39536](https://github.com/hashicorp/terraform-provider-aws/issues/39536))
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_transit_gateway_default_route_table_association` ([#39496](https://github.com/hashicorp/terraform-provider-aws/issues/39496))
+* **New Resource:** `aws_ec2_transit_gateway_default_route_table_propagation` ([#39517](https://github.com/hashicorp/terraform-provider-aws/issues/39517))
+* **New Resource:** `aws_securityhub_standards_control_association` ([#39511](https://github.com/hashicorp/terraform-provider-aws/issues/39511))
+
+BUG FIXES:
+
+* resource/aws_ec2_transit_gateway_vpc_attachment: Remove default value for `security_group_referencing_support` argument and mark as Computed. This suppresses the diffs shown for resources created with v5.68.0 (or earlier) ([#39519](https://github.com/hashicorp/terraform-provider-aws/issues/39519))
+* resource/aws_opensearchserverless_lifecycle_policy: Fix "Provider produced inconsistent result after apply" error on update due to `policy_version` computed attribute changing ([#39528](https://github.com/hashicorp/terraform-provider-aws/issues/39528))
+* resource/aws_opensearchserverless_security_policy: Fix "Provider produced inconsistent result after apply" error on update due to `policy_version` computed attribute changing ([#39528](https://github.com/hashicorp/terraform-provider-aws/issues/39528))
+* resource/aws_quicksight_dashboard: Fix mapping of `sheets.filter_controls.list.cascading_control_configuration` and `sheets.parameter_controls.list.cascading_control_configuration` attributes ([#39453](https://github.com/hashicorp/terraform-provider-aws/issues/39453))
+
 ## 5.69.0 (September 26, 2024)
 
 NOTES:
