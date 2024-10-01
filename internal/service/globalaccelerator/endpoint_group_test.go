@@ -1013,9 +1013,9 @@ resource "aws_internet_gateway" "alt_test" {
 
 resource "aws_globalaccelerator_cross_account_attachment" "alt_test" {
   provider = "awsalternate"
-	
+
   name       = %[1]q
-	principals = [ data.aws_caller_identity.current.account_id ]
+  principals = [ data.aws_caller_identity.current.account_id ]
 
   resource {
     endpoint_id = aws_lb.alt_test.arn
@@ -1045,7 +1045,7 @@ resource "aws_globalaccelerator_listener" "test" {
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
   listener_arn = aws_globalaccelerator_listener.test.id
-  
+
   endpoint_configuration {
     endpoint_id                    = aws_lb.alt_test.arn
     attachment_arn                 = aws_globalaccelerator_cross_account_attachment.alt_test.arn
