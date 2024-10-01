@@ -569,7 +569,7 @@ func listAllCrossAccountResourcesByOwner(ctx context.Context, conn *globalaccele
 	return accountOwnerResources, nil
 }
 
-// getCrossAccountAttachementsFromResources returns a map[endpointId]attachmentARN
+// getCrossAccountAttachementsFromResources returns a map[endpointId]attachmentARN (may include unused endpointId/attachmentARN)
 func getCrossAccountAttachementsFromResources(ctx context.Context, conn *globalaccelerator.Client, egDescriptions []awstypes.EndpointDescription) (map[string]string, error) {
 	tmpErrors := []error{}
 
@@ -580,25 +580,25 @@ func getCrossAccountAttachementsFromResources(ctx context.Context, conn *globala
 		return result, nil
 	}
 
-	queriedAccounts := map[string][]awstypes.CrossAccountResource{} // cache
+	queriedAccounts := map[string]bool{} // cache
 	for _, egDescription := range egDescriptions {
 		arn, err := arn.Parse(*egDescription.EndpointId)
 		if err != nil {
 			continue // not an arn, not a crossAccountResource
 		}
 
-		if _, ok := queriedAccounts[arn.AccountID]; !ok {
-			queriedAccounts[arn.AccountID], err = listAllCrossAccountResourcesByOwner(ctx, conn, arn.AccountID)
-			if err != nil {
-				tmpErrors = append(tmpErrors, fmt.Errorf("failed to ListCrossAccountResources for account %q: %w", arn.AccountID, err))
-			}
+		if queriedAccounts[arn.AccountID] {
+			continue
+		}
+		queriedAccounts[arn.AccountID] = true
+
+		accountResourcesResult, err := listAllCrossAccountResourcesByOwner(ctx, conn, arn.AccountID)
+		if err != nil {
+			tmpErrors = append(tmpErrors, fmt.Errorf("failed to ListCrossAccountResources for account %q: %w", arn.AccountID, err))
 		}
 
-		for _, crossAccResource := range queriedAccounts[arn.AccountID] {
-			if *crossAccResource.EndpointId == *egDescription.EndpointId {
-				result[*crossAccResource.EndpointId] = *crossAccResource.AttachmentArn
-				break
-			}
+		for _, crossAccResource := range accountResourcesResult {
+			result[*crossAccResource.EndpointId] = *crossAccResource.AttachmentArn
 		}
 	}
 
