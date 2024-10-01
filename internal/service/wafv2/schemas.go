@@ -5,6 +5,7 @@ package wafv2
 
 import (
 	"math"
+	"sync"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -15,20 +16,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var listOfEmptyObjectSchema *schema.Schema = &schema.Schema{
-	Type:     schema.TypeList,
-	Optional: true,
-	MaxItems: 1,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{},
-	},
-}
+var emptySchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{},
+		},
+	}
+})
 
-func emptySchema() *schema.Schema {
-	return listOfEmptyObjectSchema
-}
-
-func ruleLabelsSchema() *schema.Schema {
+var ruleLabelsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -45,7 +44,7 @@ func ruleLabelsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func ruleGroupRootStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
@@ -133,7 +132,7 @@ func statementSchema(level int) *schema.Schema {
 	}
 }
 
-func byteMatchStatementSchema() *schema.Schema {
+var byteMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -155,9 +154,9 @@ func byteMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func geoMatchStatementSchema() *schema.Schema {
+var geoMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -174,9 +173,9 @@ func geoMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func ipSetReferenceStatementSchema() *schema.Schema {
+var ipSetReferenceStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -218,9 +217,9 @@ func ipSetReferenceStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func labelMatchStatementSchema() *schema.Schema {
+var labelMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -243,9 +242,9 @@ func labelMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func regexMatchStatementSchema() *schema.Schema {
+var regexMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -265,9 +264,9 @@ func regexMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func regexPatternSetReferenceStatementSchema() *schema.Schema {
+var regexPatternSetReferenceStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -284,9 +283,9 @@ func regexPatternSetReferenceStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sizeConstraintSchema() *schema.Schema {
+var sizeConstraintSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -308,9 +307,9 @@ func sizeConstraintSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sqliMatchStatementSchema() *schema.Schema {
+var sqliMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -327,9 +326,9 @@ func sqliMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func xssMatchStatementSchema() *schema.Schema {
+var xssMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -341,9 +340,9 @@ func xssMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func fieldToMatchBaseSchema() *schema.Resource {
+var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
@@ -396,18 +395,18 @@ func fieldToMatchBaseSchema() *schema.Resource {
 			"uri_path": emptySchema(),
 		},
 	}
-}
+})
 
-func fieldToMatchSchema() *schema.Schema {
+var fieldToMatchSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem:     fieldToMatchBaseSchema(),
 	}
-}
+})
 
-func jsonBodySchema() *schema.Schema {
+var jsonBodySchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -425,13 +424,13 @@ func jsonBodySchema() *schema.Schema {
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.JsonMatchScope](),
 				},
-				"oversize_handling": oversizeHandlingOptionalSchema(string(awstypes.OversizeHandlingContinue)),
+				"oversize_handling": oversizeHandlingOptionalDefaultContinueSchema(),
 			},
 		},
 	}
-}
+})
 
-func jsonBodyMatchPatternSchema() *schema.Schema {
+var jsonBodyMatchPatternSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -453,9 +452,9 @@ func jsonBodyMatchPatternSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func forwardedIPConfigSchema() *schema.Schema {
+var forwardedIPConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -474,9 +473,9 @@ func forwardedIPConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func textTransformationSchema() *schema.Schema {
+var textTransformationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
@@ -495,9 +494,9 @@ func textTransformationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func visibilityConfigSchema() *schema.Schema {
+var visibilityConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -523,9 +522,9 @@ func visibilityConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func associationConfigSchema() *schema.Schema {
+var associationConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -536,85 +535,42 @@ func associationConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func requestBodySchema() *schema.Schema {
+var requestBodySchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"api_gateway": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"default_size_inspection_limit": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
-							},
-						},
-					},
-				},
-				"app_runner_service": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"default_size_inspection_limit": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
-							},
-						},
-					},
-				},
-				"cloudfront": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"default_size_inspection_limit": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
-							},
-						},
-					},
-				},
-				"cognito_user_pool": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"default_size_inspection_limit": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
-							},
-						},
-					},
-				},
-				"verified_access_instance": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"default_size_inspection_limit": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
-							},
-						},
-					},
+				"api_gateway":              requestBodyAssociatedResourceTypeSchema(),
+				"app_runner_service":       requestBodyAssociatedResourceTypeSchema(),
+				"cloudfront":               requestBodyAssociatedResourceTypeSchema(),
+				"cognito_user_pool":        requestBodyAssociatedResourceTypeSchema(),
+				"verified_access_instance": requestBodyAssociatedResourceTypeSchema(),
+			},
+		},
+	}
+})
+
+var requestBodyAssociatedResourceTypeSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"default_size_inspection_limit": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
 				},
 			},
 		},
 	}
-}
+})
 
-func allowConfigSchema() *schema.Schema {
+var allowConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -625,9 +581,9 @@ func allowConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func captchaConfigSchema() *schema.Schema {
+var captchaConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -638,9 +594,9 @@ func captchaConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func outerCaptchaConfigSchema() *schema.Schema {
+var outerCaptchaConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -663,9 +619,9 @@ func outerCaptchaConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func challengeConfigSchema() *schema.Schema {
+var challengeConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -676,9 +632,9 @@ func challengeConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func outerChallengeConfigSchema() *schema.Schema {
+var outerChallengeConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -701,9 +657,9 @@ func outerChallengeConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func countConfigSchema() *schema.Schema {
+var countConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -714,9 +670,9 @@ func countConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func blockConfigSchema() *schema.Schema {
+var blockConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -727,9 +683,9 @@ func blockConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func customRequestHandlingSchema() *schema.Schema {
+var customRequestHandlingSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -761,9 +717,9 @@ func customRequestHandlingSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func customResponseSchema() *schema.Schema {
+var customResponseSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -807,9 +763,9 @@ func customResponseSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func customResponseBodySchema() *schema.Schema {
+var customResponseBodySchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -836,7 +792,7 @@ func customResponseBodySchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func cookiesSchema() *schema.Schema {
 	return &schema.Schema{
@@ -899,36 +855,36 @@ func bodySchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingOptionalSchema(string(awstypes.OversizeHandlingContinue)),
+				"oversize_handling": oversizeHandlingOptionalDefaultContinueSchema(),
 			},
 		},
 	}
 }
 
-func oversizeHandlingOptionalSchema(defaultValue string) *schema.Schema {
+var oversizeHandlingOptionalDefaultContinueSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          defaultValue,
+		Default:          string(awstypes.OversizeHandlingContinue),
 		ValidateDiagFunc: enum.Validate[awstypes.OversizeHandling](),
 	}
-}
+})
 
-func oversizeHandlingRequiredSchema() *schema.Schema {
+var oversizeHandlingRequiredSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: enum.Validate[awstypes.OversizeHandling](),
 	}
-}
+})
 
-func matchScopeSchema() *schema.Schema {
+var matchScopeSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: enum.Validate[awstypes.MapMatchScope](),
 	}
-}
+})
 
 func headerOrderSchema() *schema.Schema {
 	return &schema.Schema{
@@ -968,7 +924,7 @@ func headersSchema() *schema.Schema {
 	}
 }
 
-func headersMatchPatternBaseSchema() *schema.Schema {
+var headersMatchPatternBaseSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -982,7 +938,7 @@ func headersMatchPatternBaseSchema() *schema.Schema {
 			),
 		},
 	}
-}
+})
 
 func webACLRootStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
@@ -1191,7 +1147,7 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func ruleActionOverrideSchema() *schema.Schema {
+var ruleActionOverrideSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1207,7 +1163,7 @@ func ruleActionOverrideSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func managedRuleGroupConfigSchema() *schema.Schema {
 	return &schema.Schema{
@@ -1526,7 +1482,7 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 	}
 }
 
-func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
+var managedRuleGroupConfigATPResponseInspectionSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1628,4 +1584,4 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
