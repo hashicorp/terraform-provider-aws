@@ -52,31 +52,6 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCodeSigningConfig_Tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_code_signing_config.code_signing_config"
-	signingProfile1 := "aws_signer_signing_profile.test1"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var conf awstypes.CodeSigningConfig
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCodeSigningConfigConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccLambdaCodeSigningConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
@@ -95,6 +70,52 @@ func TestAccLambdaCodeSigningConfig_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceCodeSigningConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccLambdaCodeSigningConfig_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_code_signing_config.code_signing_config"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var conf awstypes.CodeSigningConfig
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodeSigningConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodeSigningConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccCodeSigningConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -248,23 +269,45 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 }`
 }
 
-func testAccCodeSigningConfigConfig_tags(rName string) string {
+func testAccCodeSigningConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_signer_signing_profile" "test1" {
+resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"
 }
 
 resource "aws_lambda_code_signing_config" "code_signing_config" {
   allowed_publishers {
     signing_profile_version_arns = [
-      aws_signer_signing_profile.test1.version_arn,
+      aws_signer_signing_profile.test.version_arn,
     ]
   }
 
   tags = {
-    Name = %[1]q
+    %[2]q = %[3]q
   }
-}`, rName)
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccCodeSigningConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_signer_signing_profile" "test" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_lambda_code_signing_config" "code_signing_config" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      aws_signer_signing_profile.test.version_arn,
+    ]
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccCodeSigningConfigConfig_updatePublishers() string {
