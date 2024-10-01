@@ -108,7 +108,11 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &controltower.EnableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),

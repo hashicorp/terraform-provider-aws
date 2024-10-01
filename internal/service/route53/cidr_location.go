@@ -113,7 +113,12 @@ func (r *cidrLocationResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Route 53 CIDR Location (%s)", name), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -302,8 +307,13 @@ func (data *cidrLocationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *cidrLocationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.CIDRCollectionID.ValueString(), data.Name.ValueString()}, cidrLocationResourceIDPartCount, false)))
+func (data *cidrLocationResourceModel) setID() (string, error) {
+	parts := []string{
+		data.CIDRCollectionID.ValueString(),
+		data.Name.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, cidrLocationResourceIDPartCount, false)
 }
 
 func findCIDRLocationByTwoPartKey(ctx context.Context, conn *route53.Client, collectionID, locationName string) ([]string, error) {

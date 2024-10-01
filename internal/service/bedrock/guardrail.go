@@ -389,7 +389,7 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	output, err := findGuardrailByID(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+	output, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
@@ -410,7 +410,7 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	out, err := findGuardrailByID(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString())
+	out, err := findGuardrailByTwoPartKey(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -487,7 +487,7 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 
-		output, err := findGuardrailByID(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+		output, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
@@ -552,7 +552,7 @@ func (r *resourceGuardrail) ModifyPlan(ctx context.Context, req resource.ModifyP
 	r.SetTagsAll(ctx, req, resp)
 }
 
-func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
+func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),
 		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
@@ -588,7 +588,7 @@ func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, 
 	return nil, err
 }
 
-func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
+func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GuardrailStatusDeleting, awstypes.GuardrailStatusReady),
 		Target:  []string{},
@@ -604,9 +604,9 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 	return nil, err
 }
 
-func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string, version string) retry.StateRefreshFunc {
+func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findGuardrailByID(ctx, conn, id, version)
+		out, err := findGuardrailByTwoPartKey(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -619,29 +619,30 @@ func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string, versi
 	}
 }
 
-func findGuardrailByID(ctx context.Context, conn *bedrock.Client, id string, version string) (*bedrock.GetGuardrailOutput, error) {
-	in := &bedrock.GetGuardrailInput{
+func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, version string) (*bedrock.GetGuardrailOutput, error) {
+	input := &bedrock.GetGuardrailInput{
 		GuardrailIdentifier: aws.String(id),
 		GuardrailVersion:    aws.String(version),
 	}
 
-	out, err := conn.GetGuardrail(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	output, err := conn.GetGuardrail(ctx, input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 type resourceGuardrailData struct {

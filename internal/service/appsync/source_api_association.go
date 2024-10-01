@@ -192,7 +192,15 @@ func (r *sourceAPIAssociationResource) Create(ctx context.Context, request resou
 
 	plan.AssociationId = flex.StringToFramework(ctx, out.SourceApiAssociation.AssociationId)
 	plan.MergedAPIId = flex.StringToFramework(ctx, out.SourceApiAssociation.MergedApiId)
-	plan.setID()
+	id, err := plan.setID()
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionFlatteningResourceId, resNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.ID = types.StringValue(id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitSourceAPIAssociationCreated(ctx, conn, plan.AssociationId.ValueString(), aws.ToString(out.SourceApiAssociation.MergedApiArn), createTimeout)
@@ -485,6 +493,11 @@ func (m *sourceAPIAssociationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *sourceAPIAssociationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(autoflex.FlattenResourceId([]string{m.MergedAPIId.ValueString(), m.AssociationId.ValueString()}, sourceAPIAssociationIDPartCount, false)))
+func (m *sourceAPIAssociationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.MergedAPIId.ValueString(),
+		m.AssociationId.ValueString(),
+	}
+
+	return autoflex.FlattenResourceId(parts, sourceAPIAssociationIDPartCount, false)
 }
