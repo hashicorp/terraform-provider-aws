@@ -120,7 +120,7 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
-	reportPlan, err := FindReportPlanByName(ctx, conn, name)
+	reportPlan, err := findReportPlanByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Backup Report Plan (%s): %s", name, err)

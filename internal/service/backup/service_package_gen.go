@@ -86,7 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Region Settings",
 		},
 		{
-			Factory:  ResourceReportPlan,
+			Factory:  resourceReportPlan,
 			TypeName: "aws_backup_report_plan",
 			Name:     "Report Plan",
 			Tags: &types.ServicePackageResourceTags{

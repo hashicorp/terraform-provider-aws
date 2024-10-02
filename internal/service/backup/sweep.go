@@ -115,7 +115,7 @@ func sweepReportPlan(region string) error {
 		}
 
 		for _, v := range page.ReportPlans {
-			r := ResourceReportPlan()
+			r := resourceReportPlan()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.ReportPlanName))
 

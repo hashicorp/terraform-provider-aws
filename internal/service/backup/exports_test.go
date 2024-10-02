@@ -10,6 +10,7 @@ var (
 	ResourceLogicallyAirGappedVault = newLogicallyAirGappedVaultResource
 	ResourcePlan                    = resourcePlan
 	ResourceRegionSettings          = resourceRegionSettings
+	ResourceReportPlan              = resourceReportPlan
 
 	FindBackupVaultByName                   = findBackupVaultByName
 	FindFrameworkByName                     = findFrameworkByName
@@ -17,5 +18,6 @@ var (
 	FindLogicallyAirGappedBackupVaultByName = findLogicallyAirGappedBackupVaultByName
 	FindPlanByID                            = findPlanByID
 	FindRegionSettings                      = findRegionSettings
+	FindReportPlanByName                    = findReportPlanByName
 	FindVaultAccessPolicyByName             = findVaultAccessPolicyByName
 )
