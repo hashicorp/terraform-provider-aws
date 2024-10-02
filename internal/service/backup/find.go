@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,31 +48,6 @@ func findRecoveryPointByTwoPartKey(ctx context.Context, conn *backup.Client, bac
 	output, err := conn.DescribeRecoveryPoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func findVaultAccessPolicyByName(ctx context.Context, conn *backup.Client, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {
-	input := &backup.GetBackupVaultAccessPolicyInput{
-		BackupVaultName: aws.String(name),
-	}
-
-	output, err := conn.GetBackupVaultAccessPolicy(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

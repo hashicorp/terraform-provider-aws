@@ -14,6 +14,7 @@ var (
 	ResourceSelection               = resourceSelection
 	ResourceVaultLockConfiguration  = resourceVaultLockConfiguration
 	ResourceVaultNotifications      = resourceVaultNotifications
+	ResourceVaultPolicy             = resourceVaultPolicy
 
 	FindBackupVaultByName                   = findBackupVaultByName
 	FindFrameworkByName                     = findFrameworkByName

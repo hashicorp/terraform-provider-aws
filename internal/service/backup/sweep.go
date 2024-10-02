@@ -232,7 +232,7 @@ func sweepVaultPolicies(region string) error {
 		}
 
 		for _, v := range page.BackupVaultList {
-			r := ResourceVaultPolicy()
+			r := resourceVaultPolicy()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.BackupVaultName))
 
