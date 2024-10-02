@@ -90,24 +90,3 @@ func findVaultAccessPolicyByName(ctx context.Context, conn *backup.Client, name 
 
 	return output, nil
 }
-
-func findFrameworkByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeFrameworkOutput, error) {
-	input := &backup.DescribeFrameworkInput{
-		FrameworkName: aws.String(name),
-	}
-
-	output, err := conn.DescribeFramework(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}

@@ -5,9 +5,11 @@ package backup
 
 // Exports for use in tests only.
 var (
+	ResourceFramework               = resourceFramework
 	ResourceLogicallyAirGappedVault = newLogicallyAirGappedVaultResource
 
 	FindBackupVaultByName                   = findBackupVaultByName
+	FindFrameworkByName                     = findFrameworkByName
 	FindLogicallyAirGappedBackupVaultByName = findLogicallyAirGappedBackupVaultByName
 	FindVaultAccessPolicyByName             = findVaultAccessPolicyByName
 )

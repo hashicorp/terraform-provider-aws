@@ -10,14 +10,6 @@ const (
 )
 
 const (
-	frameworkStatusCompleted          = "COMPLETED"
-	frameworkStatusCreationInProgress = "CREATE_IN_PROGRESS"
-	frameworkStatusDeletionInProgress = "DELETE_IN_PROGRESS"
-	frameworkStatusFailed             = "FAILED"
-	frameworkStatusUpdateInProgress   = "UPDATE_IN_PROGRESS"
-)
-
-const (
 	reportPlanDeploymentStatusCompleted        = "COMPLETED"
 	reportPlanDeploymentStatusCreateInProgress = "CREATE_IN_PROGRESS"
 	reportPlanDeploymentStatusDeleteInProgress = "DELETE_IN_PROGRESS"

@@ -40,57 +40,6 @@ func WaitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeo
 	return nil, err
 }
 
-func waitFrameworkCreated(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{frameworkStatusCreationInProgress},
-		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
-		Refresh: statusFramework(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*backup.DescribeFrameworkOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{frameworkStatusUpdateInProgress},
-		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
-		Refresh: statusFramework(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*backup.DescribeFrameworkOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitFrameworkDeleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{frameworkStatusDeletionInProgress},
-		Target:  []string{},
-		Refresh: statusFramework(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*backup.DescribeFrameworkOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RecoveryPointStatusDeleting),

@@ -58,7 +58,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceFramework,
+			Factory:  resourceFramework,
 			TypeName: "aws_backup_framework",
 			Name:     "Framework",
 			Tags: &types.ServicePackageResourceTags{
