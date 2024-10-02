@@ -33,8 +33,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceFramework,
+			Factory:  dataSourceFramework,
 			TypeName: "aws_backup_framework",
+			Name:     "Framework",
 		},
 		{
 			Factory:  DataSourcePlan,

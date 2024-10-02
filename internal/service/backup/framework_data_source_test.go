@@ -100,20 +100,15 @@ func testAccFrameworkDataSource_controlScopeTag(t *testing.T) {
 }
 
 func testAccFrameworkDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
   size              = 1
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_backup_framework" "test" {
@@ -171,14 +166,14 @@ resource "aws_backup_framework" "test" {
   }
 
   tags = {
-    "Name" = "Test Framework"
+    Name = %[1]q
   }
 }
 
 data "aws_backup_framework" "test" {
   name = aws_backup_framework.test.name
 }
-`, rName)
+`, rName))
 }
 
 func testAccFrameworkDataSourceConfig_controlScopeTag(rName string) string {
@@ -198,7 +193,7 @@ resource "aws_backup_framework" "test" {
   }
 
   tags = {
-    "Name" = "Test Framework"
+    Name = %[1]q
   }
 }
 
