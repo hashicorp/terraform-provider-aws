@@ -16,6 +16,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ebs_snapshot: Add `start_time` attribute ([#39557](https://github.com/hashicorp/terraform-provider-aws/issues/39557))
+* resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.custom_transformation_configuration` argument ([#39556](https://github.com/hashicorp/terraform-provider-aws/issues/39556))
 * resource/aws_globalaccelerator_endpoint_group: Add `endpoint_configuration.attachment_arn` argument ([#39507](https://github.com/hashicorp/terraform-provider-aws/issues/39507))
 * resource/aws_lambda_code_signing_config: Add `tags` argument and `tags_all` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
 * resource/aws_lambda_event_source_mapping: Add `arn` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
