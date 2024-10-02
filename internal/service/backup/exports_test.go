@@ -17,10 +17,10 @@ var (
 	ResourceVaultNotifications      = resourceVaultNotifications
 	ResourceVaultPolicy             = resourceVaultPolicy
 
-	FindBackupVaultByName                   = findBackupVaultByName
+	FindBackupVaultByName                   = findBackupVaultByName // nosemgrep:ci.backup-in-var-name
 	FindFrameworkByName                     = findFrameworkByName
 	FindGlobalSettings                      = findGlobalSettings
-	FindLogicallyAirGappedBackupVaultByName = findLogicallyAirGappedBackupVaultByName
+	FindLogicallyAirGappedBackupVaultByName = findLogicallyAirGappedBackupVaultByName // nosemgrep:ci.backup-in-var-name
 	FindPlanByID                            = findPlanByID
 	FindRegionSettings                      = findRegionSettings
 	FindReportPlanByName                    = findReportPlanByName

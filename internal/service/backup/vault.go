@@ -201,7 +201,7 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
+func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) { // nosemgrep:ci.backup-in-func-name
 	return findVaultByNameAndType(ctx, conn, name, awstypes.VaultTypeBackupVault)
 }
 
