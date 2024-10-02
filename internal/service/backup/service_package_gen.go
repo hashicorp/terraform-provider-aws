@@ -38,8 +38,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Framework",
 		},
 		{
-			Factory:  DataSourcePlan,
+			Factory:  dataSourcePlan,
 			TypeName: "aws_backup_plan",
+			Name:     "Plan",
 		},
 		{
 			Factory:  DataSourceReportPlan,
