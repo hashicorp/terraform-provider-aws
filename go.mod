@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.31.3
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.39.3
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/athena v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.36.3
@@ -212,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.20.3
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/rum v1.20.3
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.3
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.161.1
@@ -254,7 +254,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.53.3
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.47.3
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/xray v1.28.3
 	github.com/aws/smithy-go v1.21.0

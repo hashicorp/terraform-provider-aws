@@ -78,8 +78,8 @@ github.com/aws/aws-sdk-go-v2/service/appmesh v1.28.3 h1:quo29EEIlgHo/byYxcLJr2yj
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.28.3/go.mod h1:EFX0QOb5sy2bc7qLrCtaWBCAphAsF2H7q6vzTklMXds=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.31.3 h1:hdQfWnxHMrpklcOrO/JY4elSBoZUJyHSyNp1fO+xIJ0=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.31.3/go.mod h1:6VHD8l7WdVP6s6haYvfXpO632tCCvKI9etO9sbwSBOs=
-github.com/aws/aws-sdk-go-v2/service/appstream v1.39.3 h1:yuDprOWPHZ5JYL5Y8TBRbQkjuL8XWhoO78XHu3LOA4s=
-github.com/aws/aws-sdk-go-v2/service/appstream v1.39.3/go.mod h1:swGQlfkXcvKPFgrRJINANYvHb2u+NH88mPyhvNqU2Pw=
+github.com/aws/aws-sdk-go-v2/service/appstream v1.40.0 h1:RN3oDNLc+MLc33AudwZOQW6mPzo8PJJPGMfZ0UBon0E=
+github.com/aws/aws-sdk-go-v2/service/appstream v1.40.0/go.mod h1:swGQlfkXcvKPFgrRJINANYvHb2u+NH88mPyhvNqU2Pw=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.37.3 h1:9Q0TQPkEvQL7gq3lzdEEFOpuLwTP/DmRNmGUI8uH3Xs=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.37.3/go.mod h1:MWfGPdl5m3phNVRgLU3fIgPnzTgrFwONX/T8/DK6eoE=
 github.com/aws/aws-sdk-go-v2/service/athena v1.46.2 h1:Lno9/wGrQ3BWQG9CU6s+rAEPavX7/4+VMnaYIqF6wzU=
@@ -446,8 +446,8 @@ github.com/aws/aws-sdk-go-v2/service/route53resolver v1.31.3 h1:kKooBzPdbErEYGYt
 github.com/aws/aws-sdk-go-v2/service/route53resolver v1.31.3/go.mod h1:1t0dDWBVPyLQWH3uVw2PBZymRKPUQIlwyHWBbElvjcs=
 github.com/aws/aws-sdk-go-v2/service/rum v1.20.3 h1:VxTXw2c88eLea/lxR/cWmJfw4jr+IwIIrs2eJPSFjlI=
 github.com/aws/aws-sdk-go-v2/service/rum v1.20.3/go.mod h1:lIWasXEvGg7zyUAP7fe4v/BIXotheS4nIneDPeRayYs=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.63.3 h1:3zt8qqznMuAZWDTDpcwv9Xr11M/lVj2FsRR7oYBt0OA=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.63.3/go.mod h1:NLTqRLe3pUNu3nTEHI6XlHLKYmc8fbHUdMxAB6+s41Q=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.64.0 h1:I0p8knB/IDYSQ3dbanaCr4UhiYQ96bvKRhGYxvLyiD8=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.64.0/go.mod h1:NLTqRLe3pUNu3nTEHI6XlHLKYmc8fbHUdMxAB6+s41Q=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.48.3 h1:+EM+FAM1dlhX0TuKlR7tWSTiazcwQNU/lG6RNBunMyo=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.48.3/go.mod h1:OnvclTFylYBzFuko7L/GofARC4xh85D359PjECSqKZM=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.27.3 h1:yAmKP/XEmSWIgy9x+nVW3tZAHic+KiOv+bzi4oEGv+E=
@@ -532,8 +532,8 @@ github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.33.3 h1:T2WVijuvP15I8p//
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.33.3/go.mod h1:IkH2gyryAJK8njc9MRimGL+MnlEEHCKuCjsRAUlq8s8=
 github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2 h1:VN3Qydtdl3UlJRHVxQxSP1d8I5gtvT5zdaCCAfZST7Y=
 github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2/go.mod h1:Z3RLpIq4q49syd921XdsKeD584kPu89iKTEjluh7908=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.47.3 h1:FODo7JQFLCDryBJ4HaShvPttwtkZLt/1I/OBkvw8Btw=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.47.3/go.mod h1:Zq4TZVjZyNoOuTxTNbalgkA/TNaVBCLwssgOJt52xHM=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.47.4 h1:4nirE18+4BAJSNamigYUvQnOBpS2gQZyYpvaa0xeESI=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.47.4/go.mod h1:Zq4TZVjZyNoOuTxTNbalgkA/TNaVBCLwssgOJt52xHM=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.23.3 h1:FtHgnpI+R5hN0apmsNN5qBmRGhJ75IsMRb0Eyr85hrI=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.23.3/go.mod h1:bQTPvaKCwGs+b6+vlzdIsPIsvTYVMCJf48iQGjmFTTs=
 github.com/aws/aws-sdk-go-v2/service/xray v1.28.3 h1:6Hllmb0W8MvCLVzruBJ8+wkisUXu9zcjtsixNqgHOx8=
