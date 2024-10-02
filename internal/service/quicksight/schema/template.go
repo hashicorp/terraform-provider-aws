@@ -5,6 +5,7 @@ package schema
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -148,6 +149,22 @@ func stringSchema(required bool, validateFunc any) *schema.Schema {
 		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
 	}
 }
+
+var arnStringOptionalSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: verify.ValidARN,
+	}
+})
+
+var arnStringRequiredSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: verify.ValidARN,
+	}
+})
 
 func intSchema(required bool, validateFunc any) *schema.Schema {
 	switch v := validateFunc.(type) {
@@ -384,11 +401,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN:         arnStringRequiredSchema(),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
@@ -400,11 +413,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN: arnStringRequiredSchema(),
 						},
 					},
 				},

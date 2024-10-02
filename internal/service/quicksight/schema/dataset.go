@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,7 +19,7 @@ func dataSetIdentifierDeclarationsSchema() *schema.Schema {
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn":       stringSchema(false, verify.ValidARN),
+				"data_set_arn":       arnStringOptionalSchema(),
 				names.AttrIdentifier: stringSchema(false, validation.StringLenBetween(1, 2048)),
 			},
 		},
@@ -34,11 +33,7 @@ func dataSetReferencesSchema() *schema.Schema {
 		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
+				"data_set_arn": arnStringRequiredSchema(),
 				"data_set_placeholder": {
 					Type:     schema.TypeString,
 					Required: true,

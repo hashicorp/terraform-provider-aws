@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -505,11 +504,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 									},
 								},
 							},
-							"data_source_arn": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							"data_source_arn": arnStringRequiredSchema(),
 							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
@@ -538,11 +533,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 256),
 							},
-							"data_source_arn": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							"data_source_arn": arnStringRequiredSchema(),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Required: true,
@@ -582,11 +573,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_source_arn": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							"data_source_arn": arnStringRequiredSchema(),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Required: true,
@@ -671,11 +658,7 @@ func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrARN: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
+				names.AttrARN: arnStringRequiredSchema(),
 				"format_version": {
 					Type:             schema.TypeString,
 					Optional:         true,
