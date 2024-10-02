@@ -279,7 +279,7 @@ func sweepVaults(region string) error {
 				continue
 			}
 
-			r := ResourceVault()
+			r := resourceVault()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set(names.AttrForceDestroy, true)

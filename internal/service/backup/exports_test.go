@@ -12,6 +12,7 @@ var (
 	ResourceRegionSettings          = resourceRegionSettings
 	ResourceReportPlan              = resourceReportPlan
 	ResourceSelection               = resourceSelection
+	ResourceVault                   = resourceVault
 	ResourceVaultLockConfiguration  = resourceVaultLockConfiguration
 	ResourceVaultNotifications      = resourceVaultNotifications
 	ResourceVaultPolicy             = resourceVaultPolicy
