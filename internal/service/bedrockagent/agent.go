@@ -291,6 +291,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !new.AgentName.Equal(old.AgentName) ||
+		!new.AgentResourceRoleARN.Equal(old.AgentResourceRoleARN) ||
 		!new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
 		!new.Description.Equal(old.Description) ||
 		!new.Instruction.Equal(old.Instruction) ||
