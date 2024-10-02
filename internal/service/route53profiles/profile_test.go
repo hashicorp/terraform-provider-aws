@@ -5,6 +5,7 @@ package route53profiles_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -14,15 +15,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfroute53profiles "github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ProfilesProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	var profile awstypes.Profile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53profiles_profile.test"
-	var v awstypes.Profile
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -35,7 +38,7 @@ func TestAccRoute53ProfilesProfile_basic(t *testing.T) {
 			{
 				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProfileExists(ctx, resourceName, &v),
+					testAccCheckProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
@@ -131,17 +134,21 @@ func testAccCheckProfileExists(ctx context.Context, name string, r *awstypes.Pro
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("not found: %s", name)
+			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfroute53profiles.ResNameProfile, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfroute53profiles.ResNameProfile, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ProfilesClient(ctx)
 
-		output, err := tfroute53profiles.FindProfileByID(ctx, conn, rs.Primary.ID)
+		out, err := tfroute53profiles.FindProfileByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return err
+			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfroute53profiles.ResNameProfile, rs.Primary.ID, err)
 		}
 
-		*r = *output
+		*r = *out
 
 		return nil
 	}

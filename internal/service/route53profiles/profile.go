@@ -5,7 +5,6 @@ package route53profiles
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -111,26 +109,18 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 		Name:        data.Name.ValueStringPointer(),
 		Tags:        getTagsIn(ctx),
 	}
+
 	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-
-	var tags []awstypes.Tag
-
-	// Even tough the tags are Map based, CreateProfile expects a slice of tags
-	for k, v := range getTagsIn(ctx) {
-		k := k
-		v := v
-		tags = append(tags, awstypes.Tag{Key: &k, Value: &v})
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Additional fields
-	input.ClientToken = aws.String(id.UniqueId())
-	input.Tags = tags
-
 	output, err := conn.CreateProfile(ctx, input)
-	name := data.Name
-
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("creating route53 profile: (%s)", name), err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameProfile, data.Name.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -138,7 +128,10 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 
 	profile, err := waitProfileCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("waiting for route53 profile (%s) created", name), err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameProfile, data.Name.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -160,7 +153,6 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	out, err := findProfileByID(ctx, conn, state.ID.ValueString())
-
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -179,28 +171,6 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var oldProfile, newProfile resourceProfileData
-	resp.Diagnostics.Append(req.State.Get(ctx, &oldProfile)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &newProfile)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Update is only called when `tags` are updated
-	// Set unknown values on newProfile to oldProfile
-	newProfile.OwnerId = oldProfile.OwnerId
-	newProfile.ShareStatus = oldProfile.ShareStatus
-	newProfile.Status = oldProfile.Status
-	newProfile.StatusMessage = oldProfile.StatusMessage
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &newProfile)...)
 }
 
 func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
