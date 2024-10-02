@@ -6,6 +6,7 @@ package bedrockagent_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -33,8 +34,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v1"
 
@@ -53,7 +53,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_basicRDS(rName1, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel, ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -65,7 +65,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "RDS"),
@@ -84,7 +84,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKnowledgeBaseConfig_basicRDS(rName2, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel, "test description"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -92,11 +92,11 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "RDS"),
@@ -142,7 +142,7 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceKnowledgeBase, resourceName),
@@ -223,7 +223,7 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, acctest.CtKey2, acctest.CtValue2),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -567,11 +567,19 @@ resource "null_resource" "db_setup" {
 `, rName, model))
 }
 
-func testAccKnowledgeBaseConfig_basicRDS(rName, model string) string {
+func testAccKnowledgeBaseConfig_basicRDS(rName, model, description string) string {
+	if description == "" {
+		description = "null"
+	} else {
+		description = strconv.Quote(description)
+	}
+
 	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
+
+  description = %[3]s
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
@@ -598,7 +606,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
 }
-`, rName, model))
+`, rName, model, description))
 }
 
 func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
