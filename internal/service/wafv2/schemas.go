@@ -960,7 +960,7 @@ var headersMatchPatternBaseSchema = sync.OnceValue(func() *schema.Schema {
 			Type: schema.TypeString,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(1, 64),
-				validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+				validation.StringIsNotWhiteSpace,
 			),
 		},
 	}
@@ -1213,7 +1213,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 							"registration_page_path": {
@@ -1221,7 +1221,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 							"request_inspection":  managedRuleGroupConfigACFPRequestInspectionSchema(),
@@ -1245,7 +1245,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
@@ -1277,7 +1277,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 256),
-						validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+						validation.StringIsNotWhiteSpace,
 					),
 				},
 				"password_field": {
@@ -1291,7 +1291,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1313,7 +1313,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1392,7 +1392,7 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1409,7 +1409,7 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1446,7 +1446,7 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1475,7 +1475,7 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1497,7 +1497,7 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`^\S+$`), "must not contain any white-space characters"),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
