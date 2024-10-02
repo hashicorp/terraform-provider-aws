@@ -561,7 +561,7 @@ func testAccCheckDataSourceExists(ctx context.Context, n string, v *types.DataSo
 }
 
 func testAccDataSourceConfig_base(rName, embeddingModel string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel, ""), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
