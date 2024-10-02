@@ -529,9 +529,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !new.Description.Equal(old.Description) ||
-		!new.KnowledgeBaseConfiguration.Equal(old.KnowledgeBaseConfiguration) ||
-		!new.Name.Equal(old.Name) ||
-		!new.StorageConfiguration.Equal(old.StorageConfiguration) {
+		!new.Name.Equal(old.Name) {
 		input := &bedrockagent.UpdateKnowledgeBaseInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
