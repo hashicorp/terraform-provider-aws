@@ -20,7 +20,7 @@ func insightVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
 				"visual_id":           idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
@@ -238,7 +238,7 @@ func insightVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"narrative": stringSchema(true, validation.StringLenBetween(1, 150000)),
+										"narrative": stringLenBetweenSchema(true, 1, 150000),
 									},
 								},
 							},

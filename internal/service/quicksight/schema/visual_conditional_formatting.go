@@ -57,7 +57,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 						},
 					},
 				},
@@ -69,7 +69,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 						},
 					},
 				},
@@ -94,7 +94,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
 								Type:     schema.TypeList,
 								Required: true,
@@ -127,7 +127,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 							"icon_set_type":      stringSchema(false, enum.Validate[awstypes.ConditionalFormattingIconSetType]()),
 						},
 					},

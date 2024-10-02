@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -84,10 +83,10 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Computed:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.SheetContentType](),
 							},
-							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							names.AttrDescription:   stringLenBetweenSchema(false, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringLenBetweenSchema(false, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -98,11 +97,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringLenBetweenSchema(false, 1, 150000),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"title":   stringLenBetweenSchema(false, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},

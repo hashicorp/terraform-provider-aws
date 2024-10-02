@@ -126,7 +126,7 @@ func tooltipOptionsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id": stringLenBetweenSchema(true, 1, 512),
 													"label": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -184,8 +184,8 @@ func dataPathValueSchema(maxItems int) *schema.Schema {
 		MaxItems: maxItems,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_id":    stringSchema(true, validation.StringLenBetween(1, 512)),
-				"field_value": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"field_id":    stringLenBetweenSchema(true, 1, 512),
+				"field_value": stringLenBetweenSchema(true, 1, 2048),
 			},
 		},
 	}
@@ -206,7 +206,7 @@ func columnHierarchiesSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"hierarchy_id":       stringSchema(true, validation.StringLenBetween(1, 512)),
+							"hierarchy_id":       stringLenBetweenSchema(true, 1, 512),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -225,12 +225,12 @@ func columnHierarchiesSchema() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-										"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+										"column_name":         stringLenBetweenSchema(true, 1, 128),
+										"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
 									},
 								},
 							},
-							"hierarchy_id":       stringSchema(true, validation.StringLenBetween(1, 512)),
+							"hierarchy_id":       stringLenBetweenSchema(true, 1, 512),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -249,12 +249,12 @@ func columnHierarchiesSchema() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-										"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+										"column_name":         stringLenBetweenSchema(true, 1, 128),
+										"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
 									},
 								},
 							},
-							"hierarchy_id":       stringSchema(true, validation.StringLenBetween(1, 512)),
+							"hierarchy_id":       stringLenBetweenSchema(true, 1, 512),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -288,16 +288,8 @@ func longFormatTextSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"plain_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 1024),
-				},
-				"rich_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 2048),
-				},
+				"plain_text": stringLenBetweenSchema(false, 1, 1024),
+				"rich_text":  stringLenBetweenSchema(false, 1, 2048),
 			},
 		},
 	}
@@ -311,16 +303,8 @@ func shortFormatTextSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"plain_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 512),
-				},
-				"rich_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 1024),
-				},
+				"plain_text": stringLenBetweenSchema(false, 1, 512),
+				"rich_text":  stringLenBetweenSchema(false, 1, 1024),
 			},
 		},
 	}
@@ -435,8 +419,8 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":    stringSchema(false, validation.StringLenBetween(1, 512)),
-										"field_value": stringSchema(false, validation.StringLenBetween(1, 2048)),
+										"field_id":    stringLenBetweenSchema(false, 1, 512),
+										"field_value": stringLenBetweenSchema(false, 1, 2048),
 										"visibility":  stringSchema(false, enum.Validate[awstypes.Visibility]()),
 									},
 								},
@@ -448,7 +432,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":   stringSchema(false, validation.StringLenBetween(1, 512)),
+										"field_id":   stringLenBetweenSchema(false, 1, 512),
 										"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
 									},
 								},

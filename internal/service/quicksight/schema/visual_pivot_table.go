@@ -53,8 +53,8 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 20,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"field_id":    stringSchema(true, validation.StringLenBetween(1, 512)),
-																"field_value": stringSchema(true, validation.StringLenBetween(1, 2048)),
+																"field_id":    stringLenBetweenSchema(true, 1, 512),
+																"field_value": stringLenBetweenSchema(true, 1, 2048),
 															},
 														},
 													},
@@ -72,8 +72,8 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":     stringSchema(true, validation.StringLenBetween(1, 512)),
-													"custom_label": stringSchema(false, validation.StringLenBetween(1, 2048)),
+													"field_id":     stringLenBetweenSchema(true, 1, 512),
+													"custom_label": stringLenBetweenSchema(false, 1, 2048),
 													"visibility":   stringSchema(false, enum.Validate[awstypes.Visibility]()),
 												},
 											},
@@ -131,7 +131,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 200,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id": stringLenBetweenSchema(true, 1, 512),
 													"sort_by": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortBy.html
 														Type:     schema.TypeList,
 														Required: true,
@@ -220,7 +220,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id": stringLenBetweenSchema(true, 1, 512),
 													names.AttrScope: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -332,7 +332,7 @@ func subtotalOptionsSchema() *schema.Schema {
 					MaxItems: 100,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_id": stringSchema(false, validation.StringLenBetween(1, 512)),
+							"field_id": stringLenBetweenSchema(false, 1, 512),
 						},
 					},
 				},

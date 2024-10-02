@@ -32,9 +32,9 @@ func numericFormatConfigurationSchema() *schema.Schema {
 							"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 							"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
 							"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
-							names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+							names.AttrPrefix:                  stringLenBetweenSchema(false, 1, 128),
 							"separator_configuration":         separatorConfigurationSchema(),
-							"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+							"suffix":                          stringLenBetweenSchema(false, 1, 128),
 							"symbol":                          stringSchema(false, validation.StringMatch(regexache.MustCompile(`[A-Z]{3}`), "must be a 3 character currency symbol")),
 						},
 					},
@@ -54,7 +54,7 @@ func dateTimeFormatConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"date_time_format":                stringSchema(false, validation.StringLenBetween(1, 128)),
+				"date_time_format":                stringLenBetweenSchema(false, 1, 128),
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
 				"numeric_format_configuration":    numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
 			},
@@ -74,9 +74,9 @@ func numberDisplayFormatConfigurationSchema() *schema.Schema {
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
 				"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
-				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+				names.AttrPrefix:                  stringLenBetweenSchema(false, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
-				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				"suffix":                          stringLenBetweenSchema(false, 1, 128),
 			},
 		},
 	}
@@ -93,9 +93,9 @@ func percentageDisplayFormatConfigurationSchema() *schema.Schema {
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+				names.AttrPrefix:                  stringLenBetweenSchema(false, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
-				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				"suffix":                          stringLenBetweenSchema(false, 1, 128),
 			},
 		},
 	}
@@ -170,7 +170,7 @@ func nullValueConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"null_string": stringSchema(true, validation.StringLenBetween(1, 128)),
+				"null_string": stringLenBetweenSchema(true, 1, 128),
 			},
 		},
 	}

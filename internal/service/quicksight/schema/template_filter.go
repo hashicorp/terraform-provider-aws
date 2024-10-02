@@ -62,11 +62,7 @@ func categoryFilterSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"match_operator": stringSchema(true, enum.Validate[awstypes.CategoryFilterMatchOperator]()),
 										"null_option":    stringSchema(true, enum.Validate[awstypes.FilterNullOption]()),
-										"category_value": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringLenBetween(1, 512),
-										},
+										"category_value": stringLenBetweenSchema(false, 1, 512),
 										"parameter_name": {
 											Type:     schema.TypeString,
 											Optional: true,

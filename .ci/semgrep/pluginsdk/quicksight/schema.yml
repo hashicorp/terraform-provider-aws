@@ -1,0 +1,34 @@
+rules:
+  - id: quicksight-schema-string-len-between-required
+    languages: [go]
+    message: String attributes with length validation should use stringLenBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type: schema.TypeString,
+            Required: true,
+            ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+          }
+    fix: stringLenBetweenSchema(true, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-string-len-between-optional
+    languages: [go]
+    message: String attributes with length validation should use stringLenBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type: schema.TypeString,
+            Optional: true,
+            ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+          }
+    fix: stringLenBetweenSchema(false, $MIN, $MAX)
+    severity: WARNING

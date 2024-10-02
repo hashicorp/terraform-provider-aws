@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
@@ -53,7 +52,7 @@ func fieldSortSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"direction": stringSchema(true, enum.Validate[awstypes.SortDirection]()),
-				"field_id":  stringSchema(true, validation.StringLenBetween(1, 512)),
+				"field_id":  stringLenBetweenSchema(true, 1, 512),
 			},
 		},
 	}

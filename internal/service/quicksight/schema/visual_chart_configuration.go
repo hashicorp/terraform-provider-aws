@@ -213,7 +213,7 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"column":   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+										"field_id": stringLenBetweenSchema(true, 1, 512),
 									},
 								},
 							},
@@ -265,12 +265,12 @@ func contributionAnalysisDefaultsSchema() *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"column_name":         stringLenBetweenSchema(true, 1, 128),
+							"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
 						},
 					},
 				},
-				"measure_field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+				"measure_field_id": stringLenBetweenSchema(true, 1, 512),
 			},
 		},
 	}

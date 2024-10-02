@@ -88,10 +88,10 @@ func TemplateDefinitionSchema() *schema.Schema {
 								Computed:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.SheetContentType](),
 							},
-							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							names.AttrDescription:   stringLenBetweenSchema(false, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringLenBetweenSchema(false, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -102,11 +102,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringLenBetweenSchema(false, 1, 150000),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"title":   stringLenBetweenSchema(false, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -165,6 +165,58 @@ var arnStringRequiredSchema = sync.OnceValue(func() *schema.Schema {
 		ValidateFunc: verify.ValidARN,
 	}
 })
+
+type stringLenBetweenIdentity struct {
+	required bool
+	min, max int
+}
+
+var stringLenBetweenSchemaCache syncMap[stringLenBetweenIdentity, *schema.Schema]
+
+func stringLenBetweenSchema(required bool, min, max int) *schema.Schema {
+	id := stringLenBetweenIdentity{
+		required: required,
+		min:      min,
+		max:      max,
+	}
+
+	s, ok := stringLenBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = stringLenBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     required,
+			Optional:     !required,
+			ValidateFunc: validation.StringLenBetween(min, max),
+		},
+	)
+	return s
+}
+
+// syncMap is a type-safe wrapper around `sync.Map`
+type syncMap[K comparable, V any] struct {
+	m sync.Map
+}
+
+func (m *syncMap[K, V]) Load(k K) (V, bool) {
+	if a, b := m.m.Load(k); b {
+		return a.(V), true
+	} else {
+		var zero V
+		return zero, false
+	}
+}
+
+func (m *syncMap[K, V]) LoadOrStore(k K, v V) (V, bool) {
+	a, b := m.m.LoadOrStore(k, v)
+	return a.(V), b
+}
 
 func intSchema(required bool, validateFunc any) *schema.Schema {
 	switch v := validateFunc.(type) {
@@ -227,9 +279,9 @@ func calculatedFieldsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-				names.AttrExpression:  stringSchema(true, validation.StringLenBetween(1, 32000)),
-				names.AttrName:        stringSchema(true, validation.StringLenBetween(1, 128)),
+				"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
+				names.AttrExpression:  stringLenBetweenSchema(true, 1, 32000),
+				names.AttrName:        stringLenBetweenSchema(true, 1, 128),
 			},
 		},
 	}
@@ -285,8 +337,8 @@ func columnSchema(required bool) *schema.Schema {
 		Optional: !required,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"column_name":         stringLenBetweenSchema(true, 1, 128),
+				"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
 			},
 		},
 	}
@@ -376,8 +428,8 @@ func rollingDateConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(false, validation.StringLenBetween(1, 2048)),
-				names.AttrExpression:  stringSchema(true, validation.StringLenBetween(1, 4096)),
+				"data_set_identifier": stringLenBetweenSchema(false, 1, 2048),
+				names.AttrExpression:  stringLenBetweenSchema(true, 1, 4096),
 			},
 		},
 	}

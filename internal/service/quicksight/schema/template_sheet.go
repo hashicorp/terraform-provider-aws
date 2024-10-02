@@ -508,7 +508,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 						},
 					},
 				},

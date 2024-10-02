@@ -43,11 +43,7 @@ func DataSetColumnGroupsSchema() *schema.Schema {
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.GeoSpatialCountryCode](),
 							},
-							names.AttrName: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 64),
-							},
+							names.AttrName: stringLenBetweenSchema(true, 1, 64),
 						},
 					},
 				},
@@ -133,11 +129,7 @@ func DataSetFieldFoldersSchema() *schema.Schema {
 					MaxItems: 5000,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrDescription: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(0, 500),
-				},
+				names.AttrDescription: stringLenBetweenSchema(false, 0, 500),
 			},
 		},
 	}
@@ -151,11 +143,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 	logicalTableMapSchema := func() *schema.Resource {
 		return &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrAlias: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 64),
-				},
+				names.AttrAlias: stringLenBetweenSchema(true, 1, 64),
 				"data_transforms": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -171,11 +159,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
+										"column_name": stringLenBetweenSchema(true, 1, 128),
 										names.AttrFormat: {
 											Type:         schema.TypeString,
 											Computed:     true,
@@ -204,21 +188,9 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 											MaxItems: 128,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column_id": {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringLenBetween(1, 64),
-													},
-													"column_name": {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringLenBetween(1, 128),
-													},
-													names.AttrExpression: {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringLenBetween(1, 4096),
-													},
+													"column_id":          stringLenBetweenSchema(true, 1, 64),
+													"column_name":        stringLenBetweenSchema(true, 1, 128),
+													names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 												},
 											},
 										},
@@ -232,11 +204,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"condition_expression": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 4096),
-										},
+										"condition_expression": stringLenBetweenSchema(true, 1, 4096),
 									},
 								},
 							},
@@ -264,16 +232,8 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
-										"new_column_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
+										"column_name":     stringLenBetweenSchema(true, 1, 128),
+										"new_column_name": stringLenBetweenSchema(true, 1, 128),
 									},
 								},
 							},
@@ -284,11 +244,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
+										"column_name": stringLenBetweenSchema(true, 1, 128),
 										names.AttrTags: {
 											Type:     schema.TypeList,
 											Required: true,
@@ -331,11 +287,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
+										"column_name": stringLenBetweenSchema(true, 1, 128),
 										"tag_names": {
 											Type:     schema.TypeList,
 											Required: true,
@@ -387,16 +339,8 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 												},
 											},
 										},
-										"left_operand": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 64),
-										},
-										"on_clause": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 512),
-										},
+										"left_operand": stringLenBetweenSchema(true, 1, 64),
+										"on_clause":    stringLenBetweenSchema(true, 1, 512),
 										"right_join_key_properties": {
 											Type:     schema.TypeList,
 											Computed: true,
@@ -412,11 +356,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 												},
 											},
 										},
-										"right_operand": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 64),
-										},
+										"right_operand": stringLenBetweenSchema(true, 1, 64),
 										names.AttrType: {
 											Type:             schema.TypeString,
 											Required:         true,
@@ -491,11 +431,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								MaxItems: 2048,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
+										names.AttrName: stringLenBetweenSchema(true, 1, 128),
 										names.AttrType: {
 											Type:             schema.TypeString,
 											Required:         true,
@@ -505,16 +441,8 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								},
 							},
 							"data_source_arn": arnStringRequiredSchema(),
-							names.AttrName: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 64),
-							},
-							"sql_query": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 65536),
-							},
+							names.AttrName:    stringLenBetweenSchema(true, 1, 64),
+							"sql_query":       stringLenBetweenSchema(true, 1, 65536),
 						},
 					},
 				},
@@ -528,11 +456,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"catalog": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(0, 256),
-							},
+							"catalog":         stringLenBetweenSchema(false, 0, 256),
 							"data_source_arn": arnStringRequiredSchema(),
 							"input_columns": {
 								Type:     schema.TypeList,
@@ -541,11 +465,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								MaxItems: 2048,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
+										names.AttrName: stringLenBetweenSchema(true, 1, 128),
 										names.AttrType: {
 											Type:             schema.TypeString,
 											Required:         true,
@@ -554,11 +474,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrName: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 64),
-							},
+							names.AttrName: stringLenBetweenSchema(true, 1, 64),
 							names.AttrSchema: {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -581,11 +497,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								MaxItems: 2048,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
+										names.AttrName: stringLenBetweenSchema(true, 1, 128),
 										names.AttrType: {
 											Type:             schema.TypeString,
 											Required:         true,
@@ -664,11 +576,7 @@ func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.RowLevelPermissionFormatVersion](),
 				},
-				names.AttrNamespace: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(0, 64),
-				},
+				names.AttrNamespace: stringLenBetweenSchema(false, 0, 64),
 				"permission_policy": {
 					Type:             schema.TypeString,
 					Required:         true,
@@ -712,21 +620,9 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"match_all_value": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 256),
-							},
-							"tag_key": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 128),
-							},
-							"tag_multi_value_delimiter": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 10),
-							},
+							"match_all_value":           stringLenBetweenSchema(false, 1, 256),
+							"tag_key":                   stringLenBetweenSchema(true, 1, 128),
+							"tag_multi_value_delimiter": stringLenBetweenSchema(false, 1, 10),
 						},
 					},
 				},

@@ -208,7 +208,7 @@ func lineChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": stringSchema(true, enum.Validate[awstypes.AxisBinding]()),
-													"field_id":     stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id":     stringLenBetweenSchema(true, 1, 512),
 													"field_value": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -236,7 +236,7 @@ func lineChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": stringSchema(true, enum.Validate[awstypes.AxisBinding]()),
-													"field_id":     stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id":     stringLenBetweenSchema(true, 1, 512),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
 														Optional: true,

@@ -4,14 +4,15 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func dataSetIdentifierDeclarationsSchema() *schema.Schema {
+var dataSetIdentifierDeclarationsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -20,13 +21,13 @@ func dataSetIdentifierDeclarationsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_set_arn":       arnStringOptionalSchema(),
-				names.AttrIdentifier: stringSchema(false, validation.StringLenBetween(1, 2048)),
+				names.AttrIdentifier: stringLenBetweenSchema(false, 1, 2048),
 			},
 		},
 	}
-}
+})
 
-func dataSetReferencesSchema() *schema.Schema {
+var dataSetReferencesSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -41,7 +42,7 @@ func dataSetReferencesSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandDataSetIdentifierDeclarations(tfList []interface{}) []awstypes.DataSetIdentifierDeclaration {
 	if len(tfList) == 0 {
