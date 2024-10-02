@@ -5,26 +5,32 @@ package backup
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,40 +38,30 @@ import (
 
 // @FrameworkResource("aws_backup_logically_air_gapped_vault", name="Logically Air Gapped Vault")
 // @Tags(identifierAttribute="arn")
-func newResourceLogicallyAirGappedVault(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceLogicallyAirGappedVault{}
+func newLogicallyAirGappedVaultResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &logicallyAirGappedVaultResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameLogicallyAirGappedVault = "Logically Air Gapped Vault"
-)
-
-type resourceLogicallyAirGappedVault struct {
+type logicallyAirGappedVaultResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[logicallyAirGappedVaultResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceLogicallyAirGappedVault) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_backup_logically_air_gapped_vault"
+func (*logicallyAirGappedVaultResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_backup_logically_air_gapped_vault"
 }
 
-func (r *resourceLogicallyAirGappedVault) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"max_retention_days": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
@@ -74,8 +70,20 @@ func (r *resourceLogicallyAirGappedVault) Schema(ctx context.Context, req resour
 			},
 			"min_retention_days": schema.Int64Attribute{
 				Required: true,
+				Validators: []validator.Int64{
+					int64validator.AtLeast(7),
+				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-\_]{2,50}$`), ""),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -84,172 +92,133 @@ func (r *resourceLogicallyAirGappedVault) Schema(ctx context.Context, req resour
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
-				Delete: true,
 			}),
 		},
 	}
 }
 
-func (r *resourceLogicallyAirGappedVault) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *logicallyAirGappedVaultResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data logicallyAirGappedVaultResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BackupClient(ctx)
 
-	var plan resourceLogicallyAirGappedVaultData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := data.BackupVaultName.ValueString()
+	input := &backup.CreateLogicallyAirGappedBackupVaultInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &backup.CreateLogicallyAirGappedBackupVaultInput{
-		BackupVaultName:  plan.BackupVaultName.ValueStringPointer(),
-		MaxRetentionDays: plan.MaxRetentionDays.ValueInt64Pointer(),
-		MinRetentionDays: plan.MinRetentionDays.ValueInt64Pointer(),
-		BackupVaultTags:  getTagsIn(ctx),
-	}
+	// Additional fields.
+	input.BackupVaultTags = getTagsIn(ctx)
+	input.CreatorRequestId = aws.String(sdkid.UniqueId())
 
-	out, err := conn.CreateLogicallyAirGappedBackupVault(ctx, in)
+	output, err := conn.CreateLogicallyAirGappedBackupVault(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionCreating, ResNameLogicallyAirGappedVault, plan.BackupVaultName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionCreating, ResNameLogicallyAirGappedVault, plan.BackupVaultName.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Backup Logically Air Gapped Vault (%s)", name), err.Error())
+
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.BackupVaultName)
-	plan.ARN = flex.StringToFramework(ctx, out.BackupVaultArn)
+	// Set values for unknowns.
+	data.BackupVaultARN = fwflex.StringToFramework(ctx, output.BackupVaultArn)
+	data.ID = fwflex.StringToFramework(ctx, output.BackupVaultName)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitLogicallyAirGappedVaultCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForCreation, ResNameLogicallyAirGappedVault, plan.BackupVaultName.String(), err),
-			err.Error(),
-		)
+	if _, err := waitLogicallyAirGappedVaultCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Backup Logically Air Gapped Vault (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceLogicallyAirGappedVault) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BackupClient(ctx)
-
-	var state resourceLogicallyAirGappedVaultData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *logicallyAirGappedVaultResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data logicallyAirGappedVaultResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findVaultByName(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().BackupClient(ctx)
+
+	output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionSetting, ResNameLogicallyAirGappedVault, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Backup Logically Air Gapped Vault (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.BackupVaultArn)
-	state.BackupVaultName = flex.StringToFramework(ctx, out.BackupVaultName)
-	state.MaxRetentionDays = flex.Int64ToFramework(ctx, out.MaxRetentionDays)
-	state.MinRetentionDays = flex.Int64ToFramework(ctx, out.MinRetentionDays)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceLogicallyAirGappedVault) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceLogicallyAirGappedVaultData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Tags only.
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceLogicallyAirGappedVault) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data logicallyAirGappedVaultResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BackupClient(ctx)
 
-	var state resourceLogicallyAirGappedVaultData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	_, err := conn.DeleteBackupVault(ctx, &backup.DeleteBackupVaultInput{
+		BackupVaultName: aws.String(data.ID.ValueString()),
+	})
 
-	in := &backup.DeleteBackupVaultInput{
-		BackupVaultName: aws.String(state.ID.ValueString()),
-	}
-
-	_, err := conn.DeleteBackupVault(ctx, in)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionDeleting, ResNameLogicallyAirGappedVault, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Backup Logically Air Gapped Vault (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceLogicallyAirGappedVault) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *logicallyAirGappedVaultResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceLogicallyAirGappedVault) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-type resourceLogicallyAirGappedVaultData struct {
-	ARN              types.String   `tfsdk:"arn"`
+type logicallyAirGappedVaultResourceModel struct {
+	BackupVaultARN   types.String   `tfsdk:"arn"`
+	BackupVaultName  types.String   `tfsdk:"name"`
 	ID               types.String   `tfsdk:"id"`
 	MaxRetentionDays types.Int64    `tfsdk:"max_retention_days"`
 	MinRetentionDays types.Int64    `tfsdk:"min_retention_days"`
-	BackupVaultName  types.String   `tfsdk:"name"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	Tags             types.Map      `tfsdk:"tags"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
+	Tags             tftags.Map     `tfsdk:"tags"`
+	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 }
 
-func waitLogicallyAirGappedVaultCreated(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeBackupVaultOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VaultStateCreating),
-		Target:                    enum.Slice(awstypes.VaultStateAvailable),
-		Refresh:                   statusLogicallyAirGappedVault(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*backup.DescribeBackupVaultOutput); ok {
-		return out, err
-	}
-
-	return nil, err
+func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
+	return findVaultByNameAndType(ctx, conn, name, awstypes.VaultTypeLogicallyAirGappedBackupVault)
 }
 
-func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
+func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findVaultByName(ctx, conn, id)
+		output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, name)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -258,6 +227,24 @@ func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, id 
 			return nil, "", err
 		}
 
-		return out, string(out.VaultState), nil
+		return output, string(output.VaultState), nil
 	}
+}
+
+func waitLogicallyAirGappedVaultCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeBackupVaultOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VaultStateCreating),
+		Target:                    enum.Slice(awstypes.VaultStateAvailable),
+		Refresh:                   statusLogicallyAirGappedVault(ctx, conn, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*backup.DescribeBackupVaultOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

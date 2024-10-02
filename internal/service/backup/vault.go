@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -111,7 +112,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	output, err := findVaultByName(ctx, conn, d.Id())
+	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault (%s) not found, removing from state", d.Id())
@@ -198,4 +199,47 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
+	return findVaultByNameAndType(ctx, conn, name, awstypes.VaultTypeBackupVault)
+}
+
+func findVaultByNameAndType(ctx context.Context, conn *backup.Client, name string, vaultType awstypes.VaultType) (*backup.DescribeBackupVaultOutput, error) {
+	input := &backup.DescribeBackupVaultInput{
+		BackupVaultName: aws.String(name),
+	}
+
+	output, err := findVault(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.VaultType != vaultType {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeBackupVaultInput) (*backup.DescribeBackupVaultOutput, error) {
+	output, err := conn.DescribeBackupVault(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

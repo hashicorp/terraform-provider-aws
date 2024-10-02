@@ -91,31 +91,6 @@ func findVaultAccessPolicyByName(ctx context.Context, conn *backup.Client, name 
 	return output, nil
 }
 
-func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
-	input := &backup.DescribeBackupVaultInput{
-		BackupVaultName: aws.String(name),
-	}
-
-	output, err := conn.DescribeBackupVault(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func findFrameworkByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeFrameworkOutput, error) {
 	input := &backup.DescribeFrameworkInput{
 		FrameworkName: aws.String(name),

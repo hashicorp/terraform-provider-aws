@@ -229,7 +229,7 @@ func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+			_, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -255,7 +255,7 @@ func testAccCheckVaultExists(ctx context.Context, n string, v *backup.DescribeBa
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+		output, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
