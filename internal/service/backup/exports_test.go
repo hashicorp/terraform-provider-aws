@@ -8,12 +8,14 @@ var (
 	ResourceFramework               = resourceFramework
 	ResourceGlobalSettings          = resourceGlobalSettings
 	ResourceLogicallyAirGappedVault = newLogicallyAirGappedVaultResource
+	ResourcePlan                    = resourcePlan
 	ResourceRegionSettings          = resourceRegionSettings
 
 	FindBackupVaultByName                   = findBackupVaultByName
 	FindFrameworkByName                     = findFrameworkByName
 	FindGlobalSettings                      = findGlobalSettings
 	FindLogicallyAirGappedBackupVaultByName = findLogicallyAirGappedBackupVaultByName
+	FindPlanByID                            = findPlanByID
 	FindRegionSettings                      = findRegionSettings
 	FindVaultAccessPolicyByName             = findVaultAccessPolicyByName
 )

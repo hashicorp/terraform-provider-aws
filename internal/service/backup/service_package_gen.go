@@ -72,7 +72,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Global Settings",
 		},
 		{
-			Factory:  ResourcePlan,
+			Factory:  resourcePlan,
 			TypeName: "aws_backup_plan",
 			Name:     "Plan",
 			Tags: &types.ServicePackageResourceTags{
