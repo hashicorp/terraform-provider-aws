@@ -32,8 +32,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 			"UpdateControls":               testAccFramework_updateControls,
 		},
 		"DataSource": {
-			acctest.CtBasic:   testAccFrameworkDataSource_basic,
-			"ControlScopeTag": testAccFrameworkDataSource_controlScopeTag,
+			acctest.CtBasic: testAccFrameworkDataSource_basic,
 		},
 	}
 

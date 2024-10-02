@@ -465,6 +465,7 @@ func flattenFrameworkControls(ctx context.Context, apiObjects []awstypes.Framewo
 
 		tfList = append(tfList, tfMap)
 	}
+
 	return tfList
 }
 
