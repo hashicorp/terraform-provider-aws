@@ -114,8 +114,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Vault Lock Configuration",
 		},
 		{
-			Factory:  ResourceVaultNotifications,
+			Factory:  resourceVaultNotifications,
 			TypeName: "aws_backup_vault_notifications",
+			Name:     "Vault Notifications",
 		},
 		{
 			Factory:  ResourceVaultPolicy,

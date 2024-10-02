@@ -13,6 +13,7 @@ var (
 	ResourceReportPlan              = resourceReportPlan
 	ResourceSelection               = resourceSelection
 	ResourceVaultLockConfiguration  = resourceVaultLockConfiguration
+	ResourceVaultNotifications      = resourceVaultNotifications
 
 	FindBackupVaultByName                   = findBackupVaultByName
 	FindFrameworkByName                     = findFrameworkByName
@@ -23,4 +24,5 @@ var (
 	FindReportPlanByName                    = findReportPlanByName
 	FindSelectionByTwoPartKey               = findSelectionByTwoPartKey
 	FindVaultAccessPolicyByName             = findVaultAccessPolicyByName
+	FindVaultNotificationsByName            = findVaultNotificationsByName
 )
