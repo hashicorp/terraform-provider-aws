@@ -331,7 +331,9 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 				return
 			}
 
-			input.PromptOverrideConfiguration = promptOverrideConfiguration
+			if len(promptOverrideConfiguration.PromptConfigurations) > 0 {
+				input.PromptOverrideConfiguration = promptOverrideConfiguration
+			}
 		}
 
 		_, err := conn.UpdateAgent(ctx, input)
