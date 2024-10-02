@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_appmesh_virtual_node" "test" {
   name      = aws_appmesh_virtual_node.test.name
   mesh_name = aws_appmesh_mesh.test.name
@@ -16,7 +17,7 @@ resource "aws_appmesh_virtual_node" "test" {
 }
 
 resource "aws_appmesh_mesh" "test" {
-  name =var.rName
+  name = var.rName
 }
 
 variable "rName" {

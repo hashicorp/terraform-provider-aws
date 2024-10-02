@@ -47,8 +47,9 @@ provider "null" {}
 
 {{ end -}}
 
-{{ if eq .Tags "data.tags" }}
-{{- template "data_source" }}
+{{ if eq .Tags "data.tags" -}}
+# tflint-ignore: terraform_unused_declarations
+{{ template "data_source" }}
 {{ end }}
 
 {{- block "body" .Tags }}

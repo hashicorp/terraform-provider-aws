@@ -21,6 +21,7 @@ import (
 )
 
 // @SDKDataSource("aws_sns_topic")
+// @Testing(tagsTest=true)
 func dataSourceTopic() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTopicRead,

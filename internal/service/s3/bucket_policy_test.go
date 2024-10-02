@@ -603,7 +603,7 @@ resource "aws_iam_role" "test1" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "${data.aws_service_principal.current.name}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -618,7 +618,7 @@ resource "aws_iam_role" "test2" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "${data.aws_service_principal.current.name}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -633,7 +633,7 @@ resource "aws_iam_role" "test3" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "${data.aws_service_principal.current.name}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -648,7 +648,7 @@ resource "aws_iam_role" "test4" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "${data.aws_service_principal.current.name}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -663,7 +663,7 @@ resource "aws_iam_role" "test5" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "${data.aws_service_principal.current.name}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"

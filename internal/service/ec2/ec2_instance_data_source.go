@@ -27,6 +27,7 @@ import (
 
 // @SDKDataSource("aws_instance", name="Instance")
 // @Tags
+// @Testing(generator=false)
 func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
