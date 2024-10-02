@@ -26,7 +26,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 		"Resource": {
 			acctest.CtBasic:                testAccFramework_basic,
 			acctest.CtDisappears:           testAccFramework_disappears,
-			"UpdateTags":                   testAccFramework_updateTags,
+			"tags":                         testAccFramework_tags,
 			"UpdateControlScope":           testAccFramework_updateControlScope,
 			"UpdateControlInputParameters": testAccFramework_updateControlInputParameters,
 			"UpdateControls":               testAccFramework_updateControls,
@@ -99,7 +99,7 @@ func testAccFramework_basic(t *testing.T) {
 	})
 }
 
-func testAccFramework_updateTags(t *testing.T) {
+func testAccFramework_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework backup.DescribeFrameworkOutput
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -113,22 +113,11 @@ func testAccFramework_updateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFrameworkConfig_basic(rName, description),
+				Config: testAccFrameworkConfig_tags1(rName, description, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -137,23 +126,12 @@ func testAccFramework_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFrameworkConfig_tags(rName, description),
+				Config: testAccFrameworkConfig_tags2(rName, description, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -162,24 +140,11 @@ func testAccFramework_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFrameworkConfig_tagsUpdated(rName, description),
+				Config: testAccFrameworkConfig_tags1(rName, description, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -216,8 +181,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -243,7 +207,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -267,7 +231,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -291,7 +255,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -339,7 +303,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -373,7 +337,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -408,8 +372,7 @@ func testAccFramework_updateControls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -451,7 +414,7 @@ func testAccFramework_updateControls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -562,7 +525,7 @@ resource "aws_backup_framework" "test" {
 `, rName, label)
 }
 
-func testAccFrameworkConfig_tags(rName, label string) string {
+func testAccFrameworkConfig_tags1(rName, label, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q
@@ -579,14 +542,13 @@ resource "aws_backup_framework" "test" {
   }
 
   tags = {
-    "Name" = "Test Framework"
-    "Key2" = "Value2a"
+    %[3]q = %[4]q
   }
 }
-`, rName, label)
+`, rName, label, tagKey1, tagValue1)
 }
 
-func testAccFrameworkConfig_tagsUpdated(rName, label string) string {
+func testAccFrameworkConfig_tags2(rName, label, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q
@@ -603,12 +565,11 @@ resource "aws_backup_framework" "test" {
   }
 
   tags = {
-    "Name" = "Test Framework"
-    "Key2" = "Value2b"
-    "Key3" = "Value3"
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 }
-`, rName, label)
+`, rName, label, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccFrameworkConfig_controlScopeComplianceResourceID(rName, label string) string {
