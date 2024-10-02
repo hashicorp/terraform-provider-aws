@@ -415,6 +415,13 @@ func statusReportPlan(ctx context.Context, conn *backup.Client, name string) ret
 	}
 }
 
+const (
+	reportPlanDeploymentStatusCompleted        = "COMPLETED"
+	reportPlanDeploymentStatusCreateInProgress = "CREATE_IN_PROGRESS"
+	reportPlanDeploymentStatusDeleteInProgress = "DELETE_IN_PROGRESS"
+	reportPlanDeploymentStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+)
+
 func waitReportPlanCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*awstypes.ReportPlan, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusCreateInProgress},
