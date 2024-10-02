@@ -95,8 +95,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSelection,
+			Factory:  resourceSelection,
 			TypeName: "aws_backup_selection",
+			Name:     "Selection",
 		},
 		{
 			Factory:  ResourceVault,

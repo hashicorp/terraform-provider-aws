@@ -11,6 +11,7 @@ var (
 	ResourcePlan                    = resourcePlan
 	ResourceRegionSettings          = resourceRegionSettings
 	ResourceReportPlan              = resourceReportPlan
+	ResourceSelection               = resourceSelection
 
 	FindBackupVaultByName                   = findBackupVaultByName
 	FindFrameworkByName                     = findFrameworkByName
@@ -19,5 +20,6 @@ var (
 	FindPlanByID                            = findPlanByID
 	FindRegionSettings                      = findRegionSettings
 	FindReportPlanByName                    = findReportPlanByName
+	FindSelectionByTwoPartKey               = findSelectionByTwoPartKey
 	FindVaultAccessPolicyByName             = findVaultAccessPolicyByName
 )
