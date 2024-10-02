@@ -67,8 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalSettings,
+			Factory:  resourceGlobalSettings,
 			TypeName: "aws_backup_global_settings",
+			Name:     "Global Settings",
 		},
 		{
 			Factory:  ResourcePlan,
