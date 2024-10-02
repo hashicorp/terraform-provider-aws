@@ -154,7 +154,7 @@ func sweepVaultLockConfiguration(region string) error {
 		}
 
 		for _, v := range page.BackupVaultList {
-			r := ResourceVaultLockConfiguration()
+			r := resourceVaultLockConfiguration()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.BackupVaultName))
 

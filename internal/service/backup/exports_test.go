@@ -12,6 +12,7 @@ var (
 	ResourceRegionSettings          = resourceRegionSettings
 	ResourceReportPlan              = resourceReportPlan
 	ResourceSelection               = resourceSelection
+	ResourceVaultLockConfiguration  = resourceVaultLockConfiguration
 
 	FindBackupVaultByName                   = findBackupVaultByName
 	FindFrameworkByName                     = findFrameworkByName

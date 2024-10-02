@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_backup_vault_lock_configuration")
-func ResourceVaultLockConfiguration() *schema.Resource {
+// @SDKResource("aws_backup_vault_lock_configuration", name="Vault Lock Configuration")
+func resourceVaultLockConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultLockConfigurationCreate,
 		ReadWithoutTimeout:   resourceVaultLockConfigurationRead,
 		DeleteWithoutTimeout: resourceVaultLockConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
