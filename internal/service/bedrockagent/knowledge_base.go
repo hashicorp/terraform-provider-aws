@@ -110,6 +110,9 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -120,11 +123,17 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"embedding_model_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -146,6 +155,9 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -154,17 +166,29 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"connection_string": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"credentials_secret_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrNamespace: schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -173,13 +197,22 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -192,21 +225,36 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_secret_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrDatabaseName: schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrResourceARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrTableName: schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -215,19 +263,34 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"primary_key_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"vector_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -240,17 +303,29 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_secret_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrEndpoint: schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"vector_index_name": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -259,16 +334,28 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"vector_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -281,14 +368,23 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"collection_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"vector_index_name": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -297,16 +393,28 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"vector_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
