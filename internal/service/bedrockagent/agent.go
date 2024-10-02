@@ -324,15 +324,13 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			input.GuardrailConfiguration = guardrailConfiguration
 		}
 
-		if !new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
-			promptOverrideConfiguration := &awstypes.PromptOverrideConfiguration{}
-			response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, promptOverrideConfiguration)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			input.PromptOverrideConfiguration = promptOverrideConfiguration
+		promptOverrideConfiguration := &awstypes.PromptOverrideConfiguration{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, promptOverrideConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
+
+		input.PromptOverrideConfiguration = promptOverrideConfiguration
 
 		_, err := conn.UpdateAgent(ctx, input)
 
