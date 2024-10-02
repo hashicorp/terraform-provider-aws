@@ -246,15 +246,11 @@ func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVaultExists(ctx context.Context, name string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultExists(ctx context.Context, n string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Vault ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)

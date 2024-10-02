@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.49.3
-	github.com/aws/aws-sdk-go-v2/service/connect v1.110.3
+	github.com/aws/aws-sdk-go-v2/service/connect v1.111.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.20.3
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.27.3
@@ -189,7 +189,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/polly v1.44.3
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.31.3
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.74.0
@@ -202,7 +202,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.14.2
-	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.44.3
@@ -243,11 +243,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/swf v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.28.3
-	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.4.3
+	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.51.3
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.18.3
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/waf v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.24.3

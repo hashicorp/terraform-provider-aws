@@ -66,7 +66,7 @@ jobs:
           verbose: "yes"
           config: ".ci/.markdownlinkcheck.json"
           directory: "website/docs"
-          # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.md.
+          # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.markdown.
           depth: 2
           extension: ".md"
           # Checking only modified files in the PR does not respect 'mex-depth'.
@@ -150,7 +150,6 @@ jobs:
           # Do not disable *_invalid_name rules, since these are good checks for e.g. "%s" formatting verbs
           # being carried over from test cases.
           shared_rules=(
-              "--enable-rule=terraform_comment_syntax"
               "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
               "--disable-rule=aws_db_instance_default_parameter_group"
               "--disable-rule=aws_elasticache_cluster_default_parameter_group"
@@ -167,21 +166,20 @@ jobs:
               "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
               "--disable-rule=aws_transfer_ssh_key_invalid_body"
               "--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate"
-              "--disable-rule=terraform_required_providers"
               "--disable-rule=terraform_unused_declarations"
               "--disable-rule=terraform_typed_variables"
           )
           while read -r filename; do
             rules=("${shared_rules[@]}")
-            if [[ "$filename" == "./website/docs/guides/version-2-upgrade.html.md" ]]; then
-                # ./website/docs/guides/version-2-upgrade.html.md should still include pre-0.12 syntax,
+            if [[ "$filename" == "./website/docs/guides/version-2-upgrade.html.markdown" ]]; then
+                # ./website/docs/guides/version-2-upgrade.html.markdown should still include pre-0.12 syntax,
                 # since v1.0 does not support Terraform 0.12.
                 rules+=(
                 "--disable-rule=terraform_deprecated_index"
                 "--disable-rule=terraform_deprecated_interpolation"
                 )
-            elif [[ "$filename" == "./website/docs/guides/version-3-upgrade.html.md" ]]; then
-                # ./website/docs/guides/version-3-upgrade.html.md has one example showing migration from
+            elif [[ "$filename" == "./website/docs/guides/version-3-upgrade.html.markdown" ]]; then
+                # ./website/docs/guides/version-3-upgrade.html.markdown has one example showing migration from
                 # pre-0.12 syntax to 0.12 syntax. We can't customize rules per block, and adding a
                 # tflint-ignore directive to documentation is not ideal.
                 rules+=(
@@ -199,6 +197,6 @@ jobs:
             set +e
             ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}" || exit_code=1
             set -e
-          done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u)
+          done < <(find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | sort -u)
 
           exit $exit_code

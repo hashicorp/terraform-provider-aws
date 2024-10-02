@@ -196,10 +196,12 @@ func (r *resourceLogicallyAirGappedVault) Delete(ctx context.Context, req resour
 	}
 
 	_, err := conn.DeleteBackupVault(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.MessageContains(err, "AccessDeniedException", "Insufficient privileges to perform this action") {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Backup, create.ErrActionDeleting, ResNameLogicallyAirGappedVault, state.ID.String(), err),
 			err.Error(),

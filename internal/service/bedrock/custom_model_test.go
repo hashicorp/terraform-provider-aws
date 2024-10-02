@@ -426,9 +426,9 @@ resource "aws_iam_policy" "training" {
         "s3:ListBucket"
       ],
       "Resource" : [
-        "${aws_s3_bucket.training.arn}",
+        aws_s3_bucket.training.arn,
         "${aws_s3_bucket.training.arn}/*",
-        "${aws_s3_bucket.validation.arn}",
+        aws_s3_bucket.validation.arn,
         "${aws_s3_bucket.validation.arn}/*"
       ]
     }]
@@ -448,7 +448,7 @@ resource "aws_iam_policy" "output" {
         "s3:ListBucket"
       ],
       "Resource" : [
-        "${aws_s3_bucket.output.arn}",
+        aws_s3_bucket.output.arn,
         "${aws_s3_bucket.output.arn}/*"
       ]
     }]
