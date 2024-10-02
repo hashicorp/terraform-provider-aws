@@ -80,8 +80,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRegionSettings,
+			Factory:  resourceRegionSettings,
 			TypeName: "aws_backup_region_settings",
+			Name:     "Region Settings",
 		},
 		{
 			Factory:  ResourceReportPlan,
