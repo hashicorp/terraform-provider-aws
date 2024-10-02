@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -102,6 +103,9 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
@@ -134,6 +138,9 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
