@@ -294,17 +294,19 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
 		!new.Description.Equal(old.Description) ||
 		!new.Instruction.Equal(old.Instruction) ||
+		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
 		input := &bedrockagent.UpdateAgentInput{
-			AgentId:                 fwflex.StringFromFramework(ctx, new.AgentID),
-			AgentName:               fwflex.StringFromFramework(ctx, new.AgentName),
-			AgentResourceRoleArn:    fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
-			Description:             fwflex.StringFromFramework(ctx, new.Description),
-			FoundationModel:         fwflex.StringFromFramework(ctx, new.FoundationModel),
-			IdleSessionTTLInSeconds: fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds),
-			Instruction:             fwflex.StringFromFramework(ctx, new.Instruction),
+			AgentId:                  fwflex.StringFromFramework(ctx, new.AgentID),
+			AgentName:                fwflex.StringFromFramework(ctx, new.AgentName),
+			AgentResourceRoleArn:     fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
+			CustomerEncryptionKeyArn: fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN),
+			Description:              fwflex.StringFromFramework(ctx, new.Description),
+			FoundationModel:          fwflex.StringFromFramework(ctx, new.FoundationModel),
+			IdleSessionTTLInSeconds:  fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds),
+			Instruction:              fwflex.StringFromFramework(ctx, new.Instruction),
 		}
 
 		if !new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) {
