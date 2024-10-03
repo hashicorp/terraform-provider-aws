@@ -367,7 +367,7 @@ This resource supports the following arguments:
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `expected_bucket_owner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
 * `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
-* `transition_default_minimum_object_size` - (Optional) Which default minimum object size behavior is applied to the lifecycle configuration. Valid values: `all_storage_classes_128K`, `varies_by_storage_class`. To customize the minimum object size for any transition you can add a `filter` that specifies a custom `object_size_greater_than` or `object_size_less_than` value. Custom filters always take precedence over the default transition behavior.
+* `transition_default_minimum_object_size` - (Optional) The default minimum object size behavior applied to the lifecycle configuration. Valid values: `all_storage_classes_128K` (default), `varies_by_storage_class`. To customize the minimum object size for any transition you can add a `filter` that specifies a custom `object_size_greater_than` or `object_size_less_than` value. Custom filters always take precedence over the default transition behavior.
 
 ### rule
 
@@ -445,7 +445,7 @@ The `transition` configuration block supports the following arguments:
 
 The `and` configuration block supports the following arguments:
 
-* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified. Defaults to 128000.
+* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified. Defaults to 128000 (128 KB) for all `storage_class` values unless `transition_default_minimum_object_size` specifies otherwise.
 * `object_size_less_than` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
 * `tags` - (Optional) Key-value map of resource tags. All of these tags must exist in the object's tag set in order for the rule to apply.
