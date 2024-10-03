@@ -1068,6 +1068,60 @@ func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketLifecycleConfiguration_basicTransitionDefaultMinimumObjectSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_basicTransitionDefaultMinimumObjectSize(rName, "varies_by_storage_class"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":      acctest.Ct1,
+						"expiration.0.days": "365",
+						"filter.#":          acctest.Ct1,
+						"filter.0.prefix":   "",
+						names.AttrID:        rName,
+						names.AttrStatus:    tfs3.LifecycleRuleStatusEnabled,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transition_default_minimum_object_size", "varies_by_storage_class"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_basicTransitionDefaultMinimumObjectSize(rName, "all_storage_classes_128K"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":      acctest.Ct1,
+						"expiration.0.days": "365",
+						"filter.#":          acctest.Ct1,
+						"filter.0.prefix":   "",
+						names.AttrID:        rName,
+						names.AttrStatus:    tfs3.LifecycleRuleStatusEnabled,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transition_default_minimum_object_size", "all_storage_classes_128K"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -1797,4 +1851,26 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   }
 }
 `, rName))
+}
+
+func testAccBucketLifecycleConfigurationConfig_basicTransitionDefaultMinimumObjectSize(rName, transitionDefaultMinimumObjectSize string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      days = 365
+    }
+  }
+
+  transition_default_minimum_object_size = %[2]q
+}
+`, rName, transitionDefaultMinimumObjectSize)
 }
