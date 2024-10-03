@@ -38,11 +38,7 @@ func DataSetColumnGroupsSchema() *schema.Schema {
 									ValidateFunc: validation.StringLenBetween(1, 128),
 								},
 							},
-							"country_code": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.GeoSpatialCountryCode](),
-							},
+							"country_code": stringEnumSchema[awstypes.GeoSpatialCountryCode](true),
 							names.AttrName: stringLenBetweenSchema(true, 1, 64),
 						},
 					},
@@ -166,11 +162,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(0, 32),
 										},
-										"new_column_type": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: enum.Validate[awstypes.ColumnDataType](),
-										},
+										"new_column_type": stringEnumSchema[awstypes.ColumnDataType](true),
 									},
 								},
 							},
@@ -357,11 +349,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 											},
 										},
 										"right_operand": stringLenBetweenSchema(true, 1, 64),
-										names.AttrType: {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: enum.Validate[awstypes.JoinType](),
-										},
+										names.AttrType:  stringEnumSchema[awstypes.JoinType](true),
 									},
 								},
 							},
@@ -432,11 +420,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: stringLenBetweenSchema(true, 1, 128),
-										names.AttrType: {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: enum.Validate[awstypes.InputColumnDataType](),
-										},
+										names.AttrType: stringEnumSchema[awstypes.InputColumnDataType](true),
 									},
 								},
 							},
@@ -466,11 +450,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: stringLenBetweenSchema(true, 1, 128),
-										names.AttrType: {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: enum.Validate[awstypes.InputColumnDataType](),
-										},
+										names.AttrType: stringEnumSchema[awstypes.InputColumnDataType](true),
 									},
 								},
 							},
@@ -498,11 +478,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: stringLenBetweenSchema(true, 1, 128),
-										names.AttrType: {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: enum.Validate[awstypes.InputColumnDataType](),
-										},
+										names.AttrType: stringEnumSchema[awstypes.InputColumnDataType](true),
 									},
 								},
 							},
@@ -570,23 +546,11 @@ func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrARN: arnStringRequiredSchema(),
-				"format_version": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.RowLevelPermissionFormatVersion](),
-				},
+				names.AttrARN:       arnStringRequiredSchema(),
+				"format_version":    stringEnumSchema[awstypes.RowLevelPermissionFormatVersion](false),
 				names.AttrNamespace: stringLenBetweenSchema(false, 0, 64),
-				"permission_policy": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.RowLevelPermissionPolicy](),
-				},
-				names.AttrStatus: {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.Status](),
-				},
+				"permission_policy": stringEnumSchema[awstypes.RowLevelPermissionPolicy](true),
+				names.AttrStatus:    stringEnumSchema[awstypes.Status](false),
 			},
 		},
 	}
@@ -603,11 +567,7 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrStatus: {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.Status](),
-				},
+				names.AttrStatus: stringEnumSchema[awstypes.Status](false),
 				"tag_rules": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -668,11 +628,7 @@ func DataSetRefreshPropertiesSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
-													"size_unit": {
-														Type:             schema.TypeString,
-														Required:         true,
-														ValidateDiagFunc: enum.Validate[awstypes.LookbackWindowSizeUnit](),
-													},
+													"size_unit": stringEnumSchema[awstypes.LookbackWindowSizeUnit](true),
 												},
 											},
 										},

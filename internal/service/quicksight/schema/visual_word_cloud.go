@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -73,12 +72,12 @@ func wordCloudVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringSchema(false, enum.Validate[awstypes.WordCloudCloudLayout]()),
+										"cloud_layout":          stringEnumSchema[awstypes.WordCloudCloudLayout](false),
 										"maximum_string_length": intSchema(false, validation.IntBetween(1, 100)),
-										"word_casing":           stringSchema(false, enum.Validate[awstypes.WordCloudWordCasing]()),
-										"word_orientation":      stringSchema(false, enum.Validate[awstypes.WordCloudWordOrientation]()),
-										"word_padding":          stringSchema(false, enum.Validate[awstypes.WordCloudWordPadding]()),
-										"word_scaling":          stringSchema(false, enum.Validate[awstypes.WordCloudWordScaling]()),
+										"word_casing":           stringEnumSchema[awstypes.WordCloudWordCasing](false),
+										"word_orientation":      stringEnumSchema[awstypes.WordCloudWordOrientation](false),
+										"word_padding":          stringEnumSchema[awstypes.WordCloudWordPadding](false),
+										"word_scaling":          stringEnumSchema[awstypes.WordCloudWordScaling](false),
 									},
 								},
 							},

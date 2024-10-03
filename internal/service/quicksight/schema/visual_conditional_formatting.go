@@ -4,12 +4,9 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,7 +43,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Required: true,
 													},
-													"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+													"color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 													"data_value": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -68,7 +65,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color":              stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 						},
 					},
@@ -93,7 +90,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color":              stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
 								Type:     schema.TypeList,
@@ -102,8 +99,8 @@ func conditionalFormattingIconSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon":         stringSchema(false, enum.Validate[awstypes.Icon]()),
-										"unicode_icon": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^[^\\u0000-\\u00FF]$`), "")),
+										"icon":         stringEnumSchema[awstypes.Icon](false),
+										"unicode_icon": stringMatchSchema(false, `^[^\\u0000-\\u00FF]$`, ""),
 									},
 								},
 							},
@@ -114,7 +111,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon_display_option": stringSchema(false, enum.Validate[awstypes.ConditionalFormattingIconDisplayOption]())},
+										"icon_display_option": stringEnumSchema[awstypes.ConditionalFormattingIconDisplayOption](false)},
 								},
 							},
 						},
@@ -128,7 +125,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
-							"icon_set_type":      stringSchema(false, enum.Validate[awstypes.ConditionalFormattingIconSetType]()),
+							"icon_set_type":      stringEnumSchema[awstypes.ConditionalFormattingIconSetType](false),
 						},
 					},
 				},

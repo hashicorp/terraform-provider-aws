@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,7 +45,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringSchema(false, enum.Validate[awstypes.ArcThicknessOptions]()),
+													"arc_thickness": stringEnumSchema[awstypes.ArcThicknessOptions](false),
 												},
 											},
 										},
@@ -57,7 +56,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"label_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"label_visibility": stringEnumSchema[awstypes.Visibility](false),
 												},
 											},
 										},

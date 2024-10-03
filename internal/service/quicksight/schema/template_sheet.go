@@ -4,12 +4,10 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,7 +29,7 @@ func analysisDefaultSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"interactive_layout_configuration": interactiveLayoutConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultInteractiveLayoutConfiguration.html
 							"paginated_layout_configuration":   paginatedLayoutConfigurationSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultPaginatedLayoutConfiguration.html,
-							"sheet_content_type":               stringSchema(false, enum.Validate[awstypes.SheetContentType]()),
+							"sheet_content_type":               stringEnumSchema[awstypes.SheetContentType](false),
 						},
 					},
 				},
@@ -107,7 +105,7 @@ func interactiveLayoutConfigurationSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"resize_option": stringSchema(true, enum.Validate[awstypes.ResizeOption]()),
+													"resize_option": stringEnumSchema[awstypes.ResizeOption](true),
 												},
 											},
 										},
@@ -165,8 +163,8 @@ func paperCanvasSizeOptionsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"paper_margin":      spacingSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Spacing.html
-				"paper_orientation": stringSchema(false, enum.Validate[awstypes.PaperOrientation]()),
-				"paper_size":        stringSchema(false, enum.Validate[awstypes.PaperSize]()),
+				"paper_orientation": stringEnumSchema[awstypes.PaperOrientation](false),
+				"paper_size":        stringEnumSchema[awstypes.PaperSize](false),
 			},
 		},
 	}
@@ -288,7 +286,7 @@ func layoutSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			names.AttrStatus: stringSchema(false, enum.Validate[awstypes.Status]()),
+																			names.AttrStatus: stringEnumSchema[awstypes.Status](false),
 																		},
 																	},
 																},
@@ -346,7 +344,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 								ValidateFunc: validation.IntBetween(1, 36),
 							},
 							"element_id":   idSchema(),
-							"element_type": stringSchema(true, enum.Validate[awstypes.LayoutElementType]()),
+							"element_type": stringEnumSchema[awstypes.LayoutElementType](true),
 							"row_span": {
 								Type:         schema.TypeInt,
 								Required:     true,
@@ -383,7 +381,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"resize_option": stringSchema(true, enum.Validate[awstypes.ResizeOption]()),
+										"resize_option": stringEnumSchema[awstypes.ResizeOption](true),
 									},
 								},
 							},
@@ -438,7 +436,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"element_id":   idSchema(),
-				"element_type": stringSchema(true, enum.Validate[awstypes.LayoutElementType]()),
+				"element_type": stringEnumSchema[awstypes.LayoutElementType](true),
 				"height": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -462,8 +460,8 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"color":      stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](false),
 						},
 					},
 				},
@@ -474,8 +472,8 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"color":      stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](false),
 						},
 					},
 				},
@@ -486,7 +484,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"visibility": stringEnumSchema[awstypes.Visibility](false),
 						},
 					},
 				},
@@ -504,7 +502,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"visibility": stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
@@ -519,12 +517,12 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"color":      stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](false),
 						},
 					},
 				},
-				"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"visibility": stringEnumSchema[awstypes.Visibility](false),
 			},
 		},
 	}

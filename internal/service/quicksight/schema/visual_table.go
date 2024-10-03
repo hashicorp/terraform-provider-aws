@@ -4,12 +4,10 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -76,7 +74,7 @@ func tableVisualSchema() *schema.Schema {
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"table_cell_image_scaling_configuration": stringSchema(false, enum.Validate[awstypes.TableCellImageScalingConfiguration]()),
+																						"table_cell_image_scaling_configuration": stringEnumSchema[awstypes.TableCellImageScalingConfiguration](false),
 																					},
 																				},
 																			},
@@ -104,7 +102,7 @@ func tableVisualSchema() *schema.Schema {
 																							MaxItems: 1,
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
-																									"icon": stringSchema(false, enum.Validate[awstypes.TableFieldIconSetType]()),
+																									"icon": stringEnumSchema[awstypes.TableFieldIconSetType](false),
 																								},
 																							},
 																						},
@@ -126,14 +124,14 @@ func tableVisualSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			names.AttrTarget: stringSchema(false, enum.Validate[awstypes.URLTargetConfiguration]()),
+																			names.AttrTarget: stringEnumSchema[awstypes.URLTargetConfiguration](false),
 																		},
 																	},
 																},
 															},
 														},
 													},
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](false),
 													"width": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -196,8 +194,8 @@ func tableVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"overflow_column_header_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"vertical_overflow_visibility":      stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"overflow_column_header_visibility": stringEnumSchema[awstypes.Visibility](false),
+										"vertical_overflow_visibility":      stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
@@ -243,8 +241,8 @@ func tableVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"field_id":       stringLenBetweenSchema(true, 1, 512),
-													"negative_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-													"positive_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+													"negative_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+													"positive_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 												},
 											},
 										},
@@ -260,7 +258,7 @@ func tableVisualSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"cell_style":                  tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 										"header_style":                tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"orientation":                 stringSchema(false, enum.Validate[awstypes.TableOrientation]()),
+										"orientation":                 stringEnumSchema[awstypes.TableOrientation](false),
 										"row_alternate_color_options": rowAlternateColorOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RowAlternateColorOptions.html
 									},
 								},
@@ -276,10 +274,10 @@ func tableVisualSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"placement":         stringSchema(false, enum.Validate[awstypes.TableTotalsPlacement]()),
-										"scroll_status":     stringSchema(false, enum.Validate[awstypes.TableTotalsScrollStatus]()),
+										"placement":         stringEnumSchema[awstypes.TableTotalsPlacement](false),
+										"scroll_status":     stringEnumSchema[awstypes.TableTotalsScrollStatus](false),
 										"total_cell_style":  tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"totals_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"totals_visibility": stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},

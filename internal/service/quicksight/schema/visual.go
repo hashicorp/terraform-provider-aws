@@ -6,11 +6,9 @@ package schema
 import (
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -67,9 +65,9 @@ func legendOptionsSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"position":   stringSchema(false, enum.Validate[awstypes.LegendPosition]()),
+				"position":   stringEnumSchema[awstypes.LegendPosition](false),
 				"title":      labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
-				"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"visibility": stringEnumSchema[awstypes.Visibility](false),
 				"width": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -94,7 +92,7 @@ func tooltipOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"aggregation_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"aggregation_visibility": stringEnumSchema[awstypes.Visibility](false),
 							"tooltip_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipItem.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -115,7 +113,7 @@ func tooltipOptionsSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](false),
 												},
 											},
 										},
@@ -131,19 +129,19 @@ func tooltipOptionsSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](false),
 												},
 											},
 										},
 									},
 								},
 							},
-							"tooltip_title_type": stringSchema(false, enum.Validate[awstypes.TooltipTitleType]()),
+							"tooltip_title_type": stringEnumSchema[awstypes.TooltipTitleType](false),
 						},
 					},
 				},
-				"selected_tooltip_type": stringSchema(false, enum.Validate[awstypes.SelectedTooltipType]()),
-				"tooltip_visibility":    stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"selected_tooltip_type": stringEnumSchema[awstypes.SelectedTooltipType](false),
+				"tooltip_visibility":    stringEnumSchema[awstypes.Visibility](false),
 			},
 		},
 	}
@@ -157,7 +155,7 @@ func visualPaletteSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"chart_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+				"chart_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 				"color_map": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathColor.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -165,9 +163,9 @@ func visualPaletteSchema() *schema.Schema {
 					MaxItems: 5000,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":            stringSchema(true, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color":            stringMatchSchema(true, `^#[0-9A-F]{6}$`, ""),
 							"element":          dataPathValueSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
-							"time_granularity": stringSchema(false, enum.Validate[awstypes.TimeGranularity]()),
+							"time_granularity": stringEnumSchema[awstypes.TimeGranularity](false),
 						},
 					},
 				},
@@ -346,7 +344,7 @@ func comparisonConfigurationSchema() *schema.Schema {
 						},
 					},
 				},
-				"comparison_method": stringSchema(false, enum.Validate[awstypes.ComparisonMethod]()),
+				"comparison_method": stringEnumSchema[awstypes.ComparisonMethod](false),
 			},
 		},
 	}
@@ -360,7 +358,7 @@ func colorScaleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color_fill_type": stringSchema(true, enum.Validate[awstypes.ColorFillType]()),
+				"color_fill_type": stringEnumSchema[awstypes.ColorFillType](true),
 				"colors": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColor.html
 					Type:     schema.TypeList,
 					Required: true,
@@ -368,7 +366,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 3,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -383,7 +381,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -404,7 +402,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"category_label_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"category_label_visibility": stringEnumSchema[awstypes.Visibility](false),
 				"data_label_types": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelType.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -421,7 +419,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"field_id":    stringLenBetweenSchema(false, 1, 512),
 										"field_value": stringLenBetweenSchema(false, 1, 2048),
-										"visibility":  stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"visibility":  stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
@@ -433,7 +431,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"field_id":   stringLenBetweenSchema(false, 1, 512),
-										"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"visibility": stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
@@ -444,7 +442,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"visibility": stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
@@ -455,7 +453,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"visibility": stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
@@ -466,20 +464,20 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"visibility": stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
 						},
 					},
 				},
-				"label_color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-				"label_content":            stringSchema(false, enum.Validate[awstypes.DataLabelContent]()),
+				"label_color":              stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"label_content":            stringEnumSchema[awstypes.DataLabelContent](false),
 				"label_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"measure_label_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-				"overlap":                  stringSchema(false, enum.Validate[awstypes.DataLabelOverlap]()),
-				"position":                 stringSchema(false, enum.Validate[awstypes.DataLabelPosition]()),
-				"visibility":               stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"measure_label_visibility": stringEnumSchema[awstypes.Visibility](false),
+				"overlap":                  stringEnumSchema[awstypes.DataLabelOverlap](false),
+				"position":                 stringEnumSchema[awstypes.DataLabelPosition](false),
+				"visibility":               stringEnumSchema[awstypes.Visibility](false),
 			},
 		},
 	}

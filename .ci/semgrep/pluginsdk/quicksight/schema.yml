@@ -9,8 +9,8 @@ rules:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
           {
-            Type: schema.TypeString,
-            Required: true,
+            Type:         schema.TypeString,
+            Required:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
     fix: stringLenBetweenSchema(true, $MIN, $MAX)
@@ -26,9 +26,32 @@ rules:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
           {
-            Type: schema.TypeString,
-            Optional: true,
+            Type:         schema.TypeString,
+            Optional:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
     fix: stringLenBetweenSchema(false, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-string-enum
+    languages: [go]
+    message: String attributes with enum validation should use stringEnumSchema[<type>](<required>)
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:             schema.TypeString,
+            $REQOPT:          true,
+            ValidateDiagFunc: $FUNC(),
+          }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: enum\.Validate # Semgrep doesn't seem to recognize the type specification
+      - metavariable-regex:
+          metavariable: $REQOPT
+          regex: 'Required|Optional'
+    # Cannot be auto-fixed
     severity: WARNING

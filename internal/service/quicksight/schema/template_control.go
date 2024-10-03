@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +30,7 @@ func filterControlsSchema() *schema.Schema {
 							"source_filter_id":  idSchema(),
 							"title":             stringLenBetweenSchema(true, 1, 2048),
 							"display_options":   dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
-							names.AttrType:      stringSchema(false, enum.Validate[awstypes.SheetControlDateTimePickerType]()),
+							names.AttrType:      stringEnumSchema[awstypes.SheetControlDateTimePickerType](false),
 						},
 					},
 				},
@@ -48,7 +47,7 @@ func filterControlsSchema() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringSchema(false, enum.Validate[awstypes.SheetControlListType]()),
+							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](false),
 						},
 					},
 				},
@@ -65,7 +64,7 @@ func filterControlsSchema() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringSchema(false, enum.Validate[awstypes.SheetControlListType]()),
+							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](false),
 						},
 					},
 				},
@@ -117,7 +116,7 @@ func filterControlsSchema() *schema.Schema {
 								Required: true,
 							},
 							"display_options": sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							names.AttrType:    stringSchema(false, enum.Validate[awstypes.SheetControlSliderType]()),
+							names.AttrType:    stringEnumSchema[awstypes.SheetControlSliderType](false),
 						},
 					},
 				},
@@ -229,7 +228,7 @@ func listControlDisplayOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"visibility": stringEnumSchema[awstypes.Visibility](false),
 						},
 					},
 				},
@@ -276,7 +275,7 @@ func selectAllOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"visibility": stringEnumSchema[awstypes.Visibility](false),
 			},
 		},
 	}
@@ -305,7 +304,7 @@ func placeholderOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"visibility": stringEnumSchema[awstypes.Visibility](false),
 			},
 		},
 	}

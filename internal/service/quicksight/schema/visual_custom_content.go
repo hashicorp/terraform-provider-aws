@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,9 +30,9 @@ func customContentVisualSchema() *schema.Schema {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrContentType: stringSchema(false, enum.Validate[awstypes.CustomContentType]()),
+							names.AttrContentType: stringEnumSchema[awstypes.CustomContentType](false),
 							"content_url":         stringLenBetweenSchema(false, 1, 2048),
-							"image_scaling":       stringSchema(false, enum.Validate[awstypes.CustomContentImageScalingConfiguration]()),
+							"image_scaling":       stringEnumSchema[awstypes.CustomContentImageScalingConfiguration](false),
 						},
 					},
 				},

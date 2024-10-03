@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,8 +36,8 @@ func boxPlotVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"all_data_points_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"outlier_visibility":         stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"all_data_points_visibility": stringEnumSchema[awstypes.Visibility](false),
+										"outlier_visibility":         stringEnumSchema[awstypes.Visibility](false),
 										"style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotStyleOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
@@ -46,7 +45,7 @@ func boxPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"fill_style": stringSchema(false, enum.Validate[awstypes.BoxPlotFillStyle]()),
+													"fill_style": stringEnumSchema[awstypes.BoxPlotFillStyle](false),
 												},
 											},
 										},

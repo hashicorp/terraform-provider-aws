@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func geospatialMapStyleOptionsSchema() *schema.Schema {
@@ -19,7 +18,7 @@ func geospatialMapStyleOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": stringSchema(false, enum.Validate[awstypes.BaseMapStyleType]()),
+				"base_map_style": stringEnumSchema[awstypes.BaseMapStyleType](false),
 			},
 		},
 	}
@@ -63,7 +62,7 @@ func geospatialWindowOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"map_zoom_mode": stringSchema(false, enum.Validate[awstypes.MapZoomMode]()),
+				"map_zoom_mode": stringEnumSchema[awstypes.MapZoomMode](false),
 			},
 		},
 	}

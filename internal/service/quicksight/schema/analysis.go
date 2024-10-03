@@ -36,7 +36,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringSchema(false, enum.Validate[awstypes.ColumnRole]()),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](false),
 						},
 					},
 				},
@@ -47,11 +47,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, enum.Validate[awstypes.CrossDatasetTypes]()),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](true),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringSchema(false, enum.Validate[awstypes.Status]()),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](false),
 						},
 					},
 				},

@@ -4,12 +4,10 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,11 +29,11 @@ func numericFormatConfigurationSchema() *schema.Schema {
 							"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 							"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 							"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-							"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
+							"number_scale":                    stringEnumSchema[awstypes.NumberScale](false),
 							names.AttrPrefix:                  stringLenBetweenSchema(false, 1, 128),
 							"separator_configuration":         separatorConfigurationSchema(),
 							"suffix":                          stringLenBetweenSchema(false, 1, 128),
-							"symbol":                          stringSchema(false, validation.StringMatch(regexache.MustCompile(`[A-Z]{3}`), "must be a 3 character currency symbol")),
+							"symbol":                          stringMatchSchema(false, `[A-Z]{3}`, "must be a 3 character currency symbol"),
 						},
 					},
 				},
@@ -73,7 +71,7 @@ func numberDisplayFormatConfigurationSchema() *schema.Schema {
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
+				"number_scale":                    stringEnumSchema[awstypes.NumberScale](false),
 				names.AttrPrefix:                  stringLenBetweenSchema(false, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
 				"suffix":                          stringLenBetweenSchema(false, 1, 128),
@@ -156,7 +154,7 @@ func negativeValueConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"display_mode": stringSchema(true, enum.Validate[awstypes.NegativeValueDisplayMode]()),
+				"display_mode": stringEnumSchema[awstypes.NegativeValueDisplayMode](true),
 			},
 		},
 	}
@@ -184,7 +182,7 @@ func separatorConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_separator": stringSchema(false, enum.Validate[awstypes.NumericSeparatorSymbol]()),
+				"decimal_separator": stringEnumSchema[awstypes.NumericSeparatorSymbol](false),
 				"thousands_separator": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThousandSeparatorOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -192,8 +190,8 @@ func separatorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"symbol":     stringSchema(false, enum.Validate[awstypes.NumericSeparatorSymbol]()),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"symbol":     stringEnumSchema[awstypes.NumericSeparatorSymbol](false),
+							"visibility": stringEnumSchema[awstypes.Visibility](false),
 						},
 					},
 				},
@@ -215,7 +213,7 @@ func labelOptionsSchema() *schema.Schema {
 					Optional: true,
 				},
 				"font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"visibility":         stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"visibility":         stringEnumSchema[awstypes.Visibility](false),
 			},
 		},
 	}
@@ -229,26 +227,26 @@ func fontConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"font_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-				"font_decoration": stringSchema(false, enum.Validate[awstypes.FontDecoration]()),
+				"font_color":      stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"font_decoration": stringEnumSchema[awstypes.FontDecoration](false),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"relative": stringSchema(false, enum.Validate[awstypes.RelativeFontSize]()),
+							"relative": stringEnumSchema[awstypes.RelativeFontSize](false),
 						},
 					},
 				},
-				"font_style": stringSchema(false, enum.Validate[awstypes.FontStyle]()),
+				"font_style": stringEnumSchema[awstypes.FontStyle](false),
 				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(false, enum.Validate[awstypes.FontWeightName]()),
+							names.AttrName: stringEnumSchema[awstypes.FontWeightName](false),
 						},
 					},
 				},

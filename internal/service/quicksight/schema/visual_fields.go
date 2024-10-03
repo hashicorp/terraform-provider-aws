@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,7 +49,7 @@ func dimensionFieldSchema(maxItems int) *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringLenBetweenSchema(true, 1, 512),
-							"date_granularity":     stringSchema(false, enum.Validate[awstypes.TimeGranularity]()),
+							"date_granularity":     stringEnumSchema[awstypes.TimeGranularity](false),
 							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
 							"hierarchy_id":         stringLenBetweenSchema(false, 1, 512),
 						},
@@ -104,7 +103,7 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringLenBetweenSchema(true, 1, 512),
-							"aggregation_function": stringSchema(false, enum.Validate[awstypes.CategoricalAggregationFunction]()),
+							"aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](false),
 							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
 						},
 					},
@@ -118,7 +117,7 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringLenBetweenSchema(true, 1, 512),
-							"aggregation_function": stringSchema(false, enum.Validate[awstypes.DateAggregationFunction]()),
+							"aggregation_function": stringEnumSchema[awstypes.DateAggregationFunction](false),
 							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
 						},
 					},

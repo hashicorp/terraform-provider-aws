@@ -5,6 +5,7 @@ package schema
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/YakDriver/regexache"
@@ -41,7 +42,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringSchema(false, enum.Validate[awstypes.ColumnRole]()),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](false),
 						},
 					},
 				},
@@ -52,11 +53,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, enum.Validate[awstypes.CrossDatasetTypes]()),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](true),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringSchema(false, enum.Validate[awstypes.Status]()),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](false),
 						},
 					},
 				},
@@ -199,6 +200,71 @@ func stringLenBetweenSchema(required bool, min, max int) *schema.Schema {
 	return s
 }
 
+type stringMatchIdentity struct {
+	required    bool
+	re, message string
+}
+
+var stringMatchSchemaCache syncMap[stringMatchIdentity, *schema.Schema]
+
+func stringMatchSchema(required bool, re, message string) *schema.Schema {
+	id := stringMatchIdentity{
+		required: required,
+		re:       re,
+		message:  message,
+	}
+
+	s, ok := stringMatchSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = stringMatchSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     required,
+			Optional:     !required,
+			ValidateFunc: validation.StringMatch(regexache.MustCompile(re), message),
+		},
+	)
+	return s
+}
+
+type stringEnumIdentity struct {
+	required bool
+	typ      reflect.Type
+}
+
+var stringEnumSchemaCache syncMap[stringEnumIdentity, *schema.Schema]
+
+func stringEnumSchema[T enum.Valueser[T]](required bool) *schema.Schema {
+	id := stringEnumIdentity{
+		required: required,
+		typ:      reflect.TypeFor[T](),
+	}
+
+	s, ok := stringEnumSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = stringEnumSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:             schema.TypeString,
+			Required:         required,
+			Optional:         !required,
+			ValidateDiagFunc: enum.Validate[T](),
+		},
+	)
+	return s
+}
+
 // syncMap is a type-safe wrapper around `sync.Map`
 type syncMap[K comparable, V any] struct {
 	m sync.Map
@@ -263,8 +329,8 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"categorical_aggregation_function": stringSchema(false, enum.Validate[awstypes.CategoricalAggregationFunction]()),
-				"date_aggregation_function":        stringSchema(false, enum.Validate[awstypes.DateAggregationFunction]()),
+				"categorical_aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](false),
+				"date_aggregation_function":        stringEnumSchema[awstypes.DateAggregationFunction](false),
 				"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 			},
 		},
@@ -311,7 +377,7 @@ func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 						},
 					},
 				},
-				"simple_numerical_aggregation": stringSchema(false, enum.Validate[awstypes.SimpleNumericalAggregationFunction]()),
+				"simple_numerical_aggregation": stringEnumSchema[awstypes.SimpleNumericalAggregationFunction](false),
 			},
 		},
 	}

@@ -4,12 +4,9 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,13 +36,13 @@ func funnelChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_label_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"label_color":               stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+										"category_label_visibility": stringEnumSchema[awstypes.Visibility](false),
+										"label_color":               stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 										"label_font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"measure_data_label_style":  stringSchema(false, enum.Validate[awstypes.FunnelChartMeasureDataLabelStyle]()),
-										"measure_label_visibility":  stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"position":                  stringSchema(false, enum.Validate[awstypes.DataLabelPosition]()),
-										"visibility":                stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"measure_data_label_style":  stringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](false),
+										"measure_label_visibility":  stringEnumSchema[awstypes.Visibility](false),
+										"position":                  stringEnumSchema[awstypes.DataLabelPosition](false),
+										"visibility":                stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},

@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const fieldSortOptionsMaxItems100 = 100
@@ -35,7 +34,7 @@ func columnSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringSchema(true, enum.Validate[awstypes.SortDirection]()),
+				"direction":            stringEnumSchema[awstypes.SortDirection](true),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
@@ -51,7 +50,7 @@ func fieldSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringSchema(true, enum.Validate[awstypes.SortDirection]()),
+				"direction": stringEnumSchema[awstypes.SortDirection](true),
 				"field_id":  stringLenBetweenSchema(true, 1, 512),
 			},
 		},

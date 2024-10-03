@@ -4,12 +4,10 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,7 +19,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"axis_line_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"axis_line_visibility": stringEnumSchema[awstypes.Visibility](false),
 				"axis_offset": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -40,7 +38,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"missing_date_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"missing_date_visibility": stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},
@@ -136,7 +134,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"grid_line_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"grid_line_visibility": stringEnumSchema[awstypes.Visibility](false),
 				"scrollbar_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScrollBarOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -144,7 +142,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"visibility": stringEnumSchema[awstypes.Visibility](false),
 							"visible_range": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisibleRangeOptions.html
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -225,8 +223,8 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"sort_icon_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-				"visibility":           stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"sort_icon_visibility": stringEnumSchema[awstypes.Visibility](false),
+				"visibility":           stringEnumSchema[awstypes.Visibility](false),
 			},
 		},
 	}
@@ -244,7 +242,7 @@ func itemsLimitConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
-				"other_categories": stringSchema(true, enum.Validate[awstypes.OtherCategories]()),
+				"other_categories": stringEnumSchema[awstypes.OtherCategories](true),
 			},
 		},
 	}
@@ -291,7 +289,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"axis_binding": stringSchema(false, enum.Validate[awstypes.AxisBinding]()),
+							"axis_binding": stringEnumSchema[awstypes.AxisBinding](false),
 							"dynamic_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDynamicDataConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -336,13 +334,13 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+										"custom_label": stringMatchSchema(true, `.*\S.*`, ""),
 									},
 								},
 							},
-							"font_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"font_color":          stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
 							"font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-							"horizontal_position": stringSchema(false, enum.Validate[awstypes.ReferenceLineLabelHorizontalPosition]()),
+							"horizontal_position": stringEnumSchema[awstypes.ReferenceLineLabelHorizontalPosition](false),
 							"value_label_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineValueLabelConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -351,15 +349,15 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"format_configuration": numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
-										"relative_position":    stringSchema(false, enum.Validate[awstypes.ReferenceLineValueLabelRelativePosition]()),
+										"relative_position":    stringEnumSchema[awstypes.ReferenceLineValueLabelRelativePosition](false),
 									},
 								},
 							},
-							"vertical_position": stringSchema(false, enum.Validate[awstypes.ReferenceLineLabelVerticalPosition]()),
+							"vertical_position": stringEnumSchema[awstypes.ReferenceLineLabelVerticalPosition](false),
 						},
 					},
 				},
-				names.AttrStatus: stringSchema(false, enum.Validate[awstypes.Status]()),
+				names.AttrStatus: stringEnumSchema[awstypes.Status](false),
 				"style_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineStyleConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -367,8 +365,8 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							"pattern": stringSchema(false, enum.Validate[awstypes.ReferenceLinePatternType]()),
+							"color":   stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"pattern": stringEnumSchema[awstypes.ReferenceLinePatternType](false),
 						},
 					},
 				},
@@ -402,20 +400,20 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"background_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"background_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-							"border_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"border_style":          stringSchema(false, enum.Validate[awstypes.PanelBorderStyle]()),
+							"background_color":      stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"background_visibility": stringEnumSchema[awstypes.Visibility](false),
+							"border_color":          stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"border_style":          stringEnumSchema[awstypes.PanelBorderStyle](false),
 							"border_thickness": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"border_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"border_visibility": stringEnumSchema[awstypes.Visibility](false),
 							"gutter_spacing": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"gutter_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"gutter_visibility": stringEnumSchema[awstypes.Visibility](false),
 							"title": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelTitleOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -424,8 +422,8 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"horizontal_text_alignment": stringSchema(false, enum.Validate[awstypes.HorizontalTextAlignment]()),
-										"visibility":                stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"horizontal_text_alignment": stringEnumSchema[awstypes.HorizontalTextAlignment](false),
+										"visibility":                stringEnumSchema[awstypes.Visibility](false),
 									},
 								},
 							},

@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -58,7 +57,7 @@ func insightVisualSchema() *schema.Schema {
 													"periods_backward":    intSchema(false, validation.IntBetween(0, 1000)),
 													"periods_forward":     intSchema(false, validation.IntBetween(1, 1000)),
 													"prediction_interval": intSchema(false, validation.IntBetween(50, 95)),
-													"seasonality":         stringSchema(true, enum.Validate[awstypes.ForecastComputationSeasonality]()),
+													"seasonality":         stringEnumSchema[awstypes.ForecastComputationSeasonality](true),
 													"upper_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -94,7 +93,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id": idSchema(),
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringSchema(true, enum.Validate[awstypes.MaximumMinimumComputationType]()),
+													names.AttrType:   stringEnumSchema[awstypes.MaximumMinimumComputationType](true),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -151,7 +150,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_time_granularity": stringSchema(true, enum.Validate[awstypes.TimeGranularity]()),
+													"period_time_granularity": stringEnumSchema[awstypes.TimeGranularity](true),
 													names.AttrValue:           measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -166,9 +165,9 @@ func insightVisualSchema() *schema.Schema {
 													"computation_id": idSchema(),
 													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringSchema(true, enum.Validate[awstypes.TopBottomComputationType]()),
+													names.AttrType:   stringEnumSchema[awstypes.TopBottomComputationType](true),
 													"mover_size":     intSchema(false, validation.IntBetween(1, 20)),
-													"sort_order":     stringSchema(true, enum.Validate[awstypes.TopBottomSortOrder]()),
+													"sort_order":     stringEnumSchema[awstypes.TopBottomSortOrder](true),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -191,7 +190,7 @@ func insightVisualSchema() *schema.Schema {
 														Optional: true,
 													},
 													"result_size":   intSchema(false, validation.IntBetween(1, 20)),
-													names.AttrType:  stringSchema(true, enum.Validate[awstypes.TopBottomComputationType]()),
+													names.AttrType:  stringEnumSchema[awstypes.TopBottomComputationType](true),
 													names.AttrValue: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
