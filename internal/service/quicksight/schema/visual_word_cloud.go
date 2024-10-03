@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -73,7 +72,7 @@ func wordCloudVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cloud_layout":          stringEnumSchema[awstypes.WordCloudCloudLayout](attrOptional),
-										"maximum_string_length": intSchema(false, validation.IntBetween(1, 100)),
+										"maximum_string_length": intBetweenSchema(attrOptional, 1, 100),
 										"word_casing":           stringEnumSchema[awstypes.WordCloudWordCasing](attrOptional),
 										"word_orientation":      stringEnumSchema[awstypes.WordCloudWordOrientation](attrOptional),
 										"word_padding":          stringEnumSchema[awstypes.WordCloudWordPadding](attrOptional),

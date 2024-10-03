@@ -57,11 +57,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bin_count_limit": {
-														Type:         schema.TypeInt,
-														Optional:     true,
-														ValidateFunc: validation.IntBetween(0, 1000),
-													},
+													"bin_count_limit": intBetweenSchema(attrOptional, 0, 1000),
 													names.AttrValue: {
 														Type:         schema.TypeFloat,
 														Optional:     true,

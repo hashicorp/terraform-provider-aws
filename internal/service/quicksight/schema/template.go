@@ -300,22 +300,65 @@ func (m *syncMap[K, V]) LoadOrStore(k K, v V) (V, bool) {
 	return a.(V), b
 }
 
-func intSchema(required bool, validateFunc any) *schema.Schema {
-	switch v := validateFunc.(type) {
-	case schema.SchemaValidateDiagFunc:
-		return &schema.Schema{
-			Type:             schema.TypeInt,
-			Required:         required,
-			Optional:         !required,
-			ValidateDiagFunc: v,
-		}
-	case schema.SchemaValidateFunc:
-		return intSchema(required, validation.ToDiagFunc(v))
-	case func(interface{}, string) ([]string, []error):
-		return intSchema(required, schema.SchemaValidateFunc(v))
-	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
+type intBetweenIdentity struct {
+	handling attrHandling
+	min, max int
+}
+
+var intBetweenSchemaCache syncMap[intBetweenIdentity, *schema.Schema]
+
+func intBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
+	id := intBetweenIdentity{
+		handling: handling,
+		min:      min,
+		max:      max,
 	}
+
+	s, ok := intBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = intBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.IntBetween(min, max),
+		},
+	)
+	return s
+}
+
+func intAtLeastSchema(handling attrHandling, min int) *schema.Schema {
+	id := intBetweenIdentity{
+		handling: handling,
+		min:      min,
+		max:      -1,
+	}
+
+	s, ok := intBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = intBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.IntAtLeast(min),
+		},
+	)
+	return s
 }
 
 func floatSchema(required bool, validateFunc any) *schema.Schema {
@@ -388,7 +431,7 @@ func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 							"percentile_value": {
 								Type:         schema.TypeFloat,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 100),
+								ValidateFunc: validation.FloatBetween(0, 100),
 							},
 						},
 					},

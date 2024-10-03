@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -88,10 +87,10 @@ func lineChartVisualSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Optional: true,
 													},
-													"periods_backward":    intSchema(false, validation.IntBetween(0, 1000)),
-													"periods_forward":     intSchema(false, validation.IntBetween(1, 1000)),
-													"prediction_interval": intSchema(false, validation.IntBetween(50, 95)),
-													"seasonality":         intSchema(false, validation.IntBetween(1, 180)),
+													"periods_backward":    intBetweenSchema(attrOptional, 0, 1000),
+													"periods_forward":     intBetweenSchema(attrOptional, 1, 1000),
+													"prediction_interval": intBetweenSchema(attrOptional, 50, 95),
+													"seasonality":         intBetweenSchema(attrOptional, 1, 180),
 													"upper_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,

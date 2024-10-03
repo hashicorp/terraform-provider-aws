@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -338,18 +337,10 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 					MaxItems: 430,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_span": {
-								Type:         schema.TypeInt,
-								Required:     true,
-								ValidateFunc: validation.IntBetween(1, 36),
-							},
+							"column_span":  intBetweenSchema(attrRequired, 1, 36),
 							"element_id":   idSchema(),
 							"element_type": stringEnumSchema[awstypes.LayoutElementType](attrRequired),
-							"row_span": {
-								Type:         schema.TypeInt,
-								Required:     true,
-								ValidateFunc: validation.IntBetween(1, 21),
-							},
+							"row_span":     intBetweenSchema(attrRequired, 1, 21),
 							"column_index": {
 								Type:         nullable.TypeNullableInt,
 								Optional:     true,

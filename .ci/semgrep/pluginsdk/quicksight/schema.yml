@@ -96,3 +96,37 @@ rules:
           regex: enum\.Validate # Semgrep doesn't seem to recognize the type specification
     # Cannot be auto-fixed
     severity: WARNING
+
+  - id: quicksight-schema-int-between-required
+    languages: [go]
+    message: Int attributes with between validation should use intBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeInt,
+            Required:     true,
+            ValidateFunc: validation.IntBetween($MIN, $MAX),
+          }
+    fix: intBetweenSchema(attrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-int-between-optional
+    languages: [go]
+    message: Int attributes with between validation should use intBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeInt,
+            Optional:     true,
+            ValidateFunc: validation.IntBetween($MIN, $MAX),
+          }
+    fix: intBetweenSchema(attrOptional, $MIN, $MAX)
+    severity: WARNING

@@ -258,7 +258,7 @@ func tableBorderOptionsSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"color":     hexColorSchema(attrOptional),
 				"style":     stringEnumSchema[awstypes.TableBorderStyle](attrOptional),
-				"thickness": intSchema(false, validation.IntBetween(1, 4)),
+				"thickness": intBetweenSchema(attrOptional, 1, 4),
 			},
 		},
 	}
@@ -301,7 +301,7 @@ func tableCellStyleSchema() *schema.Schema {
 					},
 				},
 				"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"height":                    intSchema(false, validation.IntBetween(8, 500)),
+				"height":                    intBetweenSchema(attrOptional, 8, 500),
 				"horizontal_text_alignment": stringEnumSchema[awstypes.HorizontalTextAlignment](attrOptional),
 				"text_wrap":                 stringEnumSchema[awstypes.TextWrap](attrOptional),
 				"vertical_text_alignment":   stringEnumSchema[awstypes.VerticalTextAlignment](attrOptional),

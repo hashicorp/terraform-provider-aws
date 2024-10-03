@@ -214,7 +214,7 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"page_number": intSchema(true, validation.IntAtLeast(1)),
+													"page_number": intAtLeastSchema(attrRequired, 1),
 													"page_size": {
 														Type:     schema.TypeInt,
 														Required: true,
