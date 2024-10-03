@@ -136,7 +136,7 @@ func testAccCheckRestoreTestingPlanSelection(ctx context.Context) resource.TestC
 			}
 
 			if rs.Primary.Attributes["name"] == "" {
-				return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, "unknown", errors.New("not set"))
+				return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingSelection, "unknown", errors.New("not set"))
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
@@ -145,10 +145,10 @@ func testAccCheckRestoreTestingPlanSelection(ctx context.Context) resource.TestC
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.Backup, create.ErrActionCheckingDestroyed, tfbackup.ResNameRestoreTestingPlan, rs.Primary.Attributes["name"], err)
+				return create.Error(names.Backup, create.ErrActionCheckingDestroyed, tfbackup.ResNameRestoreTestingSelection, rs.Primary.Attributes["name"], err)
 			}
 
-			return create.Error(names.Backup, create.ErrActionCheckingDestroyed, tfbackup.ResNameRestoreTestingPlan, rs.Primary.Attributes["name"], errors.New("not destroyed"))
+			return create.Error(names.Backup, create.ErrActionCheckingDestroyed, tfbackup.ResNameRestoreTestingSelection, rs.Primary.Attributes["name"], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -159,18 +159,18 @@ func testAccCheckRestoreTestingSelectionExists(ctx context.Context, name string,
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, name, errors.New("not found"))
+			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingSelection, name, errors.New("not found"))
 		}
 
 		if rs.Primary.Attributes["name"] == "" {
-			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, name, errors.New("not set"))
+			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingSelection, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		resp, err := tfbackup.FindRestoreTestingSelectionByName(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["restore_testing_plan_name"])
 
 		if err != nil {
-			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, name, err)
+			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingSelection, name, err)
 		}
 
 		*restoretestingplan = *resp

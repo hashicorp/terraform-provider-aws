@@ -12,7 +12,7 @@ var (
 	ResourceRegionSettings          = resourceRegionSettings
 	ResourceReportPlan              = resourceReportPlan
 	ResourceSelection               = resourceSelection
-	RestoreTestingPlanResource      = newResourceRestoreTestingPlan
+	ResourceRestoreTestingPlan      = newRestoreTestingPlanResource
 	RestoreTestingSelectionResource = newResourceRestoreTestingSelection
 	ResourceVault                   = resourceVault
 	ResourceVaultLockConfiguration  = resourceVaultLockConfiguration

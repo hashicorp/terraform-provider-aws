@@ -184,7 +184,7 @@ func (r *resourceRestoreTestingSelection) Create(ctx context.Context, req resour
 	created, err := waitRestoreTestingSelectionLatest(ctx, conn, plan.RestoreTestingSelectionName.ValueString(), plan.RestoreTestingPlanName.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForCreation, ResNameRestoreTestingPlan, "", err),
+			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForCreation, ResNameRestoreTestingSelection, "", err),
 			err.Error(),
 		)
 		return
@@ -243,7 +243,7 @@ func (r *resourceRestoreTestingSelection) Update(ctx context.Context, req resour
 
 	if !state.RestoreTestingPlanName.Equal(plan.RestoreTestingPlanName) {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingPlan, plan.RestoreTestingPlanName.ValueString(), errors.New("name changes are not supported")),
+			create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingSelection, plan.RestoreTestingPlanName.ValueString(), errors.New("name changes are not supported")),
 			"changing the name of a restore testing plan is not supported",
 		)
 		return
@@ -323,7 +323,7 @@ func (r *resourceRestoreTestingSelection) Delete(ctx context.Context, req resour
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionDeleting, ResNameRestoreTestingPlan, state.RestoreTestingSelectionName.String(), err),
+			create.ProblemStandardMessage(names.Backup, create.ErrActionDeleting, ResNameRestoreTestingSelection, state.RestoreTestingSelectionName.String(), err),
 			err.Error(),
 		)
 		return
@@ -331,7 +331,7 @@ func (r *resourceRestoreTestingSelection) Delete(ctx context.Context, req resour
 
 	if _, err := waitRestoreTestingSelectionDeleted(ctx, conn, state.RestoreTestingSelectionName.ValueString(), state.RestoreTestingPlanName.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForDeletion, ResNameRestoreTestingPlan, state.RestoreTestingSelectionName.String(), err),
+			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForDeletion, ResNameRestoreTestingSelection, state.RestoreTestingSelectionName.String(), err),
 			err.Error(),
 		)
 		return
@@ -372,6 +372,11 @@ func findRestoreTestingSelectionByName(ctx context.Context, conn *backup.Client,
 
 	return out, nil
 }
+
+const (
+	stateNormal   = "NORMAL"
+	stateNotFound = "NOT_FOUND"
+)
 
 func statusRestoreSelection(ctx context.Context, conn *backup.Client, name, restoreTestingPlanName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {

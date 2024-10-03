@@ -5,14 +5,12 @@ package backup
 
 import (
 	"context"
-	"errors"
-	"time"
+	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -26,11 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,30 +38,22 @@ import (
 
 // @FrameworkResource(name="Restore Testing Plan")
 // @Tags(identifierAttribute="arn")
-func newResourceRestoreTestingPlan(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newRestoreTestingPlanResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &restoreTestingPlanResource{}
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
+
 	return r, nil
 }
 
-const (
-	ResNameRestoreTestingPlan = "Restore Testing Plan"
-)
-
 type restoreTestingPlanResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
-	framework.WithTimeouts
 }
 
-func (r *restoreTestingPlanResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_backup_restore_testing_plan"
+func (*restoreTestingPlanResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_backup_restore_testing_plan"
 }
 
-func (r *restoreTestingPlanResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrName: schema.StringAttribute{
@@ -89,7 +80,7 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				Validators: []validator.Int64{
-					int64validator.Between(1, 168),
+					int64validator.Between(0, 168),
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
@@ -102,38 +93,15 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, req resource.Sc
 			"recovery_point_selection": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[restoreRecoveryPointSelectionModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"algorithm": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("RANDOM_WITHIN_WINDOW", "LATEST_WITHIN_WINDOW"),
-							},
-						},
-						"include_vaults": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
-							Validators: []validator.Set{
-								setvalidator.SizeAtLeast(1),
-								setvalidator.ValueStringsAre(
-									stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:backup:\w+(?:-\w+)+:\d{12}:backup-vault:[A-Za-z0-9_\-\*]+|\*$`), "must be either an AWS ARN for a backup vault or a *"),
-								),
-							},
-						},
-						"recovery_point_types": schema.SetAttribute{
-							Required:    true,
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Validators: []validator.Set{
-								setvalidator.SizeAtLeast(1),
-								setvalidator.ValueStringsAre(
-									stringvalidator.OneOf("CONTINUOUS", "SNAPSHOT"),
-								),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.RestoreTestingRecoveryPointSelectionAlgorithm](),
+							Required:   true,
 						},
 						"exclude_vaults": schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
@@ -149,6 +117,21 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, req resource.Sc
 								setplanmodifier.UseStateForUnknown(),
 							},
 						},
+						"include_vaults": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+							Validators: []validator.Set{
+								setvalidator.ValueStringsAre(
+									stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:backup:\w+(?:-\w+)+:\d{12}:backup-vault:[A-Za-z0-9_\-\*]+|\*$`), "must be either an AWS ARN for a backup vault or a *"),
+								),
+							},
+						},
+						"recovery_point_types": schema.SetAttribute{
+							CustomType:  fwtypes.NewSetTypeOf[fwtypes.StringEnum[awstypes.RestoreTestingRecoveryPointType]](ctx),
+							Required:    true,
+							ElementType: fwtypes.StringEnumType[awstypes.RestoreTestingRecoveryPointType](),
+						},
 						"selection_window_days": schema.Int64Attribute{
 							Optional: true,
 							Computed: true,
@@ -162,214 +145,149 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Delete: true,
-			}),
 		},
 	}
 }
 
-func (r *restoreTestingPlanResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *restoreTestingPlanResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data restoreTestingPlanResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BackupClient(ctx)
 
-	var plan restoreTestingPlanResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := data.RestoreTestingPlanName.ValueString()
+	input := &backup.CreateRestoreTestingPlanInput{
+		CreatorRequestId:   aws.String(sdkid.UniqueId()),
+		RestoreTestingPlan: &awstypes.RestoreTestingPlanForCreate{},
+		Tags:               getTagsIn(ctx),
+	}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input.RestoreTestingPlan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &awstypes.RestoreTestingPlanForCreate{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tags := make(map[string]string)
-	for k, v := range getTagsIn(ctx) {
-		tags[k] = v
-	}
-
-	out, err := conn.CreateRestoreTestingPlan(ctx, &backup.CreateRestoreTestingPlanInput{
-		RestoreTestingPlan: in,
-		Tags:               tags,
-	})
+	_, err := conn.CreateRestoreTestingPlan(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionCreating, ResNameRestoreTestingPlan, plan.RestoreTestingPlanName.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.RestoreTestingPlanName == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionCreating, ResNameRestoreTestingPlan, plan.RestoreTestingPlanName.ValueString(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Backup Restore Testing Plan (%s)", name), err.Error())
+
 		return
 	}
 
-	plan.RestoreTestingPlanArn = flex.StringToFramework(ctx, out.RestoreTestingPlanArn)
+	// Set values for unknowns.
+	restoreTestingPlan, err := findRestoreTestingPlanByName(ctx, conn, name)
 
-	// "wait" for creation.. this is to get the _optional_ values
-	created, err := waitRestoreTestingPlanLatest(ctx, conn, plan.RestoreTestingPlanName.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForCreation, ResNameRestoreTestingPlan, "", err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Backup Restore Testing Plan (%s)", name), err.Error())
+
 		return
 	}
 
-	// var state restoreTestingSelectionResourceModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, created.RestoreTestingPlan, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, restoreTestingPlan, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *restoreTestingPlanResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BackupClient(ctx)
-
-	var state restoreTestingPlanResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *restoreTestingPlanResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data restoreTestingPlanResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findRestoreTestingPlanByName(ctx, conn, state.RestoreTestingPlanName.ValueString())
+	conn := r.Meta().BackupClient(ctx)
+
+	name := data.RestoreTestingPlanName.ValueString()
+	restoreTestingPlan, err := findRestoreTestingPlanByName(ctx, conn, name)
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionSetting, ResNameRestoreTestingPlan, state.RestoreTestingPlanName.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Backup Restore Testing Plan (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.RestoreTestingPlan, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, restoreTestingPlan, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if ok := out.ResultMetadata.Has("Tags"); ok {
-		v := out.ResultMetadata.Get("Tags")
-		setTagsOut(ctx, v.(map[string]string))
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *restoreTestingPlanResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *restoreTestingPlanResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new restoreTestingPlanResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BackupClient(ctx)
 
-	var state, plan restoreTestingPlanResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !state.RestoreTestingPlanName.Equal(plan.RestoreTestingPlanName) {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingPlan, plan.RestoreTestingPlanName.ValueString(), errors.New("name changes are not supported")),
-			"changing the name of a restore testing plan is not supported",
-		)
-		return
-	}
-
-	if !state.RecoveryPointSelection.Equal(plan.RecoveryPointSelection) ||
-		!state.ScheduleExpression.Equal(plan.ScheduleExpression) ||
-		!state.ScheduleExpressionTimezone.Equal(plan.ScheduleExpressionTimezone) ||
-		!state.StartWindowHours.Equal(plan.StartWindowHours) {
-
-		in := &awstypes.RestoreTestingPlanForUpdate{}
-		resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
-		if resp.Diagnostics.HasError() {
+	if !old.RecoveryPointSelection.Equal(new.RecoveryPointSelection) ||
+		!old.ScheduleExpression.Equal(new.ScheduleExpression) ||
+		!old.ScheduleExpressionTimezone.Equal(new.ScheduleExpressionTimezone) ||
+		!old.StartWindowHours.Equal(new.StartWindowHours) {
+		name := new.RestoreTestingPlanName.ValueString()
+		input := &backup.UpdateRestoreTestingPlanInput{
+			RestoreTestingPlan:     &awstypes.RestoreTestingPlanForUpdate{},
+			RestoreTestingPlanName: aws.String(name),
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input.RestoreTestingPlan)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateRestoreTestingPlan(ctx, &backup.UpdateRestoreTestingPlanInput{
-			RestoreTestingPlanName: aws.String(plan.RestoreTestingPlanName.ValueString()),
-			RestoreTestingPlan:     in,
-		})
+		_, err := conn.UpdateRestoreTestingPlan(ctx, input)
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingPlan, plan.RestoreTestingPlanName.ValueString(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Backup Restore Testing Plan (%s)", name), err.Error())
+
 			return
 		}
-		if out == nil || out.RestoreTestingPlanName == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingPlan, plan.RestoreTestingPlanName.ValueString(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		plan.RestoreTestingPlanArn = flex.StringToFramework(ctx, out.RestoreTestingPlanArn)
-
-		// "wait" for update.. this is to get the _optional_ values
-		created, err := waitRestoreTestingPlanLatest(ctx, conn, plan.RestoreTestingPlanName.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForUpdate, ResNameRestoreTestingPlan, "", err),
-				err.Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, created.RestoreTestingPlan, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *restoreTestingPlanResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BackupClient(ctx)
-
-	var state restoreTestingPlanResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data restoreTestingPlanResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &backup.DeleteRestoreTestingPlanInput{
-		RestoreTestingPlanName: state.RestoreTestingPlanName.ValueStringPointer(),
-	}
+	conn := r.Meta().BackupClient(ctx)
 
-	_, err := conn.DeleteRestoreTestingPlan(ctx, in)
+	name := data.RestoreTestingPlanName.ValueString()
+	_, err := conn.DeleteRestoreTestingPlan(ctx, &backup.DeleteRestoreTestingPlanInput{
+		RestoreTestingPlanName: aws.String(name),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionDeleting, ResNameRestoreTestingPlan, state.RestoreTestingPlanName.String(), err),
-			err.Error(),
-		)
-		return
-	}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Backup Restore Testing Plan (%s)", name), err.Error())
 
-	if _, err := waitRestoreTestingPlanDeleted(ctx, conn, state.RestoreTestingPlanName.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForDeletion, ResNameRestoreTestingPlan, state.RestoreTestingPlanName.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
@@ -378,102 +296,54 @@ func (r *restoreTestingPlanResource) ModifyPlan(ctx context.Context, request res
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *restoreTestingPlanResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), req.ID)...)
+func (r *restoreTestingPlanResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), request.ID)...)
 }
 
-func findRestoreTestingPlanByName(ctx context.Context, conn *backup.Client, name string) (*backup.GetRestoreTestingPlanOutput, error) {
-	in := &backup.GetRestoreTestingPlanInput{
+func findRestoreTestingPlanByName(ctx context.Context, conn *backup.Client, name string) (*awstypes.RestoreTestingPlanForGet, error) {
+	input := &backup.GetRestoreTestingPlanInput{
 		RestoreTestingPlanName: aws.String(name),
 	}
 
-	out, err := conn.GetRestoreTestingPlan(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	return findRestoreTestingPlan(ctx, conn, input)
+}
 
+func findRestoreTestingPlan(ctx context.Context, conn *backup.Client, input *backup.GetRestoreTestingPlanInput) (*awstypes.RestoreTestingPlanForGet, error) {
+	output, err := conn.GetRestoreTestingPlan(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.RestoreTestingPlan == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.RestoreTestingPlan == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
-}
-
-func statusRestorePlan(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findRestoreTestingPlanByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, stateNormal, nil
-	}
-}
-
-const (
-	stateNormal   = "NORMAL"
-	stateNotFound = "NOT_FOUND"
-)
-
-func waitRestoreTestingPlanDeleted(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.GetRestoreTestingPlanOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{stateNormal},
-		Target:  []string{},
-		Refresh: statusRestorePlan(ctx, conn, name),
-		Timeout: timeout,
-	}
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if out, ok := outputRaw.(*backup.GetRestoreTestingPlanOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitRestoreTestingPlanLatest(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.GetRestoreTestingPlanOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{stateNormal},
-		Refresh: statusRestorePlan(ctx, conn, name),
-		Timeout: timeout,
-	}
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if out, ok := outputRaw.(*backup.GetRestoreTestingPlanOutput); ok {
-		return out, err
-	}
-
-	return nil, err
+	return output.RestoreTestingPlan, nil
 }
 
 type restoreTestingPlanResourceModel struct {
-	RestoreTestingPlanArn      types.String                                                        `tfsdk:"arn"`
+	RecoveryPointSelection     fwtypes.ListNestedObjectValueOf[restoreRecoveryPointSelectionModel] `tfsdk:"recovery_point_selection"`
+	RestoreTestingPlanARN      types.String                                                        `tfsdk:"arn"`
 	RestoreTestingPlanName     types.String                                                        `tfsdk:"name"`
 	ScheduleExpression         types.String                                                        `tfsdk:"schedule_expression"`
 	ScheduleExpressionTimezone types.String                                                        `tfsdk:"schedule_expression_timezone"`
 	StartWindowHours           types.Int64                                                         `tfsdk:"start_window_hours"`
-	RecoveryPointSelection     fwtypes.ListNestedObjectValueOf[restoreRecoveryPointSelectionModel] `tfsdk:"recovery_point_selection"`
-	Tags                       types.Map                                                           `tfsdk:"tags"`
-	TagsAll                    types.Map                                                           `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value                                                      `tfsdk:"timeouts"`
+	Tags                       tftags.Map                                                          `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                          `tfsdk:"tags_all"`
 }
 
 type restoreRecoveryPointSelectionModel struct {
-	Algorithm           types.String                     `tfsdk:"algorithm"`
-	IncludeVaults       fwtypes.SetValueOf[types.String] `tfsdk:"include_vaults"`
-	RecoveryPointTypes  fwtypes.SetValueOf[types.String] `tfsdk:"recovery_point_types"`
-	ExcludeVaults       fwtypes.SetValueOf[types.String] `tfsdk:"exclude_vaults"`
-	SelectionWindowDays types.Int64                      `tfsdk:"selection_window_days"`
+	Algorithm           fwtypes.StringEnum[awstypes.RestoreTestingRecoveryPointSelectionAlgorithm]       `tfsdk:"algorithm"`
+	ExcludeVaults       fwtypes.SetValueOf[types.String]                                                 `tfsdk:"exclude_vaults"`
+	IncludeVaults       fwtypes.SetValueOf[types.String]                                                 `tfsdk:"include_vaults"`
+	RecoveryPointTypes  fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.RestoreTestingRecoveryPointType]] `tfsdk:"recovery_point_types"`
+	SelectionWindowDays types.Int64                                                                      `tfsdk:"selection_window_days"`
 }

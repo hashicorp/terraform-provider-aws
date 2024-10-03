@@ -5,30 +5,27 @@ package backup_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/backup"
-	"github.com/aws/aws-sdk-go-v2/service/backup/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupRestoreTestingPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restoretestingplan backup.GetRestoreTestingPlanOutput
+	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -57,7 +54,6 @@ func TestAccBackupRestoreTestingPlan_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -65,9 +61,10 @@ func TestAccBackupRestoreTestingPlan_basic(t *testing.T) {
 
 func TestAccBackupRestoreTestingPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restoretestingplan backup.GetRestoreTestingPlanOutput
+	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -81,7 +78,7 @@ func TestAccBackupRestoreTestingPlan_disappears(t *testing.T) {
 				Config: testAccRestoreTestingPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.RestoreTestingPlanResource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceRestoreTestingPlan, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +88,7 @@ func TestAccBackupRestoreTestingPlan_disappears(t *testing.T) {
 
 func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restoretestingplan backup.GetRestoreTestingPlanOutput
+	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resource.ParallelTest(t, resource.TestCase{
@@ -104,17 +101,11 @@ func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestoreTestingPlanConfig_tags("Name", "RestoreTestingPlan", rName),
+				Config: testAccRestoreTestingPlanConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "RestoreTestingPlan"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -123,20 +114,22 @@ func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
 			{
-				Config: testAccRestoreTestingPlanConfig_tags("Name", "Testing1", rName),
+				Config: testAccRestoreTestingPlanConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Testing1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccRestoreTestingPlanConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -145,7 +138,7 @@ func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 
 func TestAccBackupRestoreTestingPlan_includeVaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restoretestingplan backup.GetRestoreTestingPlanOutput
+	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resource.ParallelTest(t, resource.TestCase{
@@ -176,7 +169,6 @@ func TestAccBackupRestoreTestingPlan_includeVaults(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -184,7 +176,7 @@ func TestAccBackupRestoreTestingPlan_includeVaults(t *testing.T) {
 
 func TestAccBackupRestoreTestingPlan_excludeVaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restoretestingplan backup.GetRestoreTestingPlanOutput
+	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resource.ParallelTest(t, resource.TestCase{
@@ -215,7 +207,6 @@ func TestAccBackupRestoreTestingPlan_excludeVaults(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -223,7 +214,7 @@ func TestAccBackupRestoreTestingPlan_excludeVaults(t *testing.T) {
 
 func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restoretestingplan backup.GetRestoreTestingPlanOutput
+	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resource.ParallelTest(t, resource.TestCase{
@@ -256,15 +247,14 @@ func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
 		},
 	})
 }
 
-func TestAccBackupRestoreTestingPlan_additionalwithupdates(t *testing.T) {
+func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restoretestingplan backup.GetRestoreTestingPlanOutput
+	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resource.ParallelTest(t, resource.TestCase{
@@ -297,7 +287,6 @@ func TestAccBackupRestoreTestingPlan_additionalwithupdates(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
 			{
 				Config: testAccRestoreTestingPlanConfig_additionals("1", "cron(0 12 ? * * *)", rName),
@@ -308,12 +297,10 @@ func TestAccBackupRestoreTestingPlan_additionalwithupdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression_timezone", "Europe/London"),
-					resource.TestCheckResourceAttr(resourceName, "start_window_hours", "12"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "RestoreTestingPlan"),
+					resource.TestCheckResourceAttr(resourceName, "start_window_hours", "168"),
 				),
 			},
 		},
@@ -322,72 +309,55 @@ func TestAccBackupRestoreTestingPlan_additionalwithupdates(t *testing.T) {
 
 func testAccCheckRestoreTestingPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_restore_testing_plan" {
 				continue
 			}
 
-			if rs.Primary.Attributes["name"] == "" {
-				return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, "unknown", errors.New("not set"))
-			}
-
-			conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 			_, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes["name"])
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Backup, create.ErrActionCheckingDestroyed, tfbackup.ResNameRestoreTestingPlan, rs.Primary.Attributes["name"], err)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.Backup, create.ErrActionCheckingDestroyed, tfbackup.ResNameRestoreTestingPlan, rs.Primary.Attributes["name"], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Backup Restore Testing Plan %s still exists", rs.Primary.Attributes["name"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRestoreTestingPlanExists(ctx context.Context, name string, restoretestingplan *backup.GetRestoreTestingPlanOutput) resource.TestCheckFunc {
+func testAccCheckRestoreTestingPlanExists(ctx context.Context, n string, v *awstypes.RestoreTestingPlanForGet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes["name"] == "" {
-			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
-		resp, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes["name"])
+
+		output, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes["name"])
 
 		if err != nil {
-			return create.Error(names.Backup, create.ErrActionCheckingExistence, tfbackup.ResNameRestoreTestingPlan, name, err)
+			return err
 		}
 
-		*restoretestingplan = *resp
+		*v = *output
 
 		return nil
 	}
-}
-
-func testAccRestoreTestingPlanConfig_base(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  enable_key_rotation = true
-}
-
-resource "aws_backup_vault" "test" {
-  name        = "%[1]s"
-  kms_key_arn = aws_kms_key.test.arn
-}
-`, rName)
 }
 
 func testAccRestoreTestingPlanConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_restore_testing_plan" "test" {
-  name = "%[1]s"
+  name = %[1]q
 
   recovery_point_selection {
     algorithm            = "LATEST_WITHIN_WINDOW"
@@ -400,10 +370,10 @@ resource "aws_backup_restore_testing_plan" "test" {
 `, rName)
 }
 
-func testAccRestoreTestingPlanConfig_tags(tagName, tagValue, rName string) string {
+func testAccRestoreTestingPlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_restore_testing_plan" "test" {
-  name = "%[3]s"
+  name = %[1]q
 
   recovery_point_selection {
     algorithm            = "LATEST_WITHIN_WINDOW"
@@ -414,16 +384,37 @@ resource "aws_backup_restore_testing_plan" "test" {
   schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
 
   tags = {
-    "%[1]s" = "%[2]s"
+    %[2]q = %[3]q
   }
 }
-`, tagName, tagValue, rName)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccRestoreTestingPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_restore_testing_plan" "test" {
+  name = %[1]q
+
+  recovery_point_selection {
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = ["*"]
+    recovery_point_types = ["CONTINUOUS"]
+  }
+
+  schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccRestoreTestingPlanConfig_additionals(selectionWindowDays, scheduleExpression, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_restore_testing_plan" "test" {
-  name = "%[3]s"
+  name = %[3]q
 
   recovery_point_selection {
     algorithm             = "LATEST_WITHIN_WINDOW"
@@ -432,18 +423,33 @@ resource "aws_backup_restore_testing_plan" "test" {
     selection_window_days = %[1]s
   }
 
-  schedule_expression = "%[2]s"
+  schedule_expression = %[2]q
   start_window_hours  = 168
 }
 `, selectionWindowDays, scheduleExpression, rName)
 }
 
+func testAccRestoreTestingPlanConfig_baseVaults(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  enable_key_rotation     = true
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_backup_vault" "test" {
+  name        = %[1]q
+  kms_key_arn = aws_kms_key.test.arn
+}
+`, rName)
+}
+
 func testAccRestoreTestingPlanConfig_includeVaults(rName string) string {
 	return acctest.ConfigCompose(
-		testAccRestoreTestingPlanConfig_base(rName),
+		testAccRestoreTestingPlanConfig_baseVaults(rName),
 		fmt.Sprintf(`
 resource "aws_backup_restore_testing_plan" "test" {
-  name = "%[1]s"
+  name = %[1]q
 
   recovery_point_selection {
     algorithm            = "LATEST_WITHIN_WINDOW"
@@ -453,16 +459,15 @@ resource "aws_backup_restore_testing_plan" "test" {
 
   schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
 }
-`, rName),
-	)
+`, rName))
 }
 
 func testAccRestoreTestingPlanConfig_excludeVaults(rName string) string {
 	return acctest.ConfigCompose(
-		testAccRestoreTestingPlanConfig_base(rName),
+		testAccRestoreTestingPlanConfig_baseVaults(rName),
 		fmt.Sprintf(`
 resource "aws_backup_restore_testing_plan" "test" {
-  name = "%[1]s"
+  name = %[1]q
 
   recovery_point_selection {
     algorithm            = "LATEST_WITHIN_WINDOW"
@@ -473,6 +478,5 @@ resource "aws_backup_restore_testing_plan" "test" {
 
   schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
 }
-`, rName),
-	)
+`, rName))
 }
