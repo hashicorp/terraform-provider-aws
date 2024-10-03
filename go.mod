@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.39
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.37
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.14
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.25
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.26
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.20.3
 	github.com/aws/aws-sdk-go-v2/service/acm v1.29.3
@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.6.3
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.19.2
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.7.1
@@ -118,7 +118,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.27.3
-	github.com/aws/aws-sdk-go-v2/service/firehose v1.33.3
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/fis v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/fms v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.48.3
@@ -215,7 +215,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.27.3
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.161.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.162.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.33.3
