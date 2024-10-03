@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -18,7 +17,6 @@ import (
 func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,7 +26,6 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -46,7 +43,6 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 func TestAccEC2InstanceDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -56,7 +52,6 @@ func TestAccEC2InstanceDataSource_tags_NullMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -70,7 +65,6 @@ func TestAccEC2InstanceDataSource_tags_NullMap(t *testing.T) {
 func TestAccEC2InstanceDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -80,7 +74,6 @@ func TestAccEC2InstanceDataSource_tags_EmptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
