@@ -45,7 +45,7 @@ var (
 	FindCORSRules                         = findCORSRules
 	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
 	FindInventoryConfiguration            = findInventoryConfiguration
-	FindLifecycleRules                    = findLifecycleRules
+	FindLifecycleRules                    = findBucketLifecycleConfiguration
 	FindLoggingEnabled                    = findLoggingEnabled
 	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey

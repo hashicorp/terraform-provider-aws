@@ -46,6 +46,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 						names.AttrID:        rName,
 						names.AttrStatus:    tfs3.LifecycleRuleStatusEnabled,
 					}),
+					resource.TestCheckResourceAttr(resourceName, "transition_default_minimum_object_size", "all_storage_classes_128K"),
 				),
 			},
 			{
