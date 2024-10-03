@@ -1136,7 +1136,7 @@ func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resour
 				return err
 			}
 
-			_, err = tfs3.FindLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+			_, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1167,7 +1167,7 @@ func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n strin
 			return err
 		}
 
-		_, err = tfs3.FindLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		_, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 		return err
 	}
