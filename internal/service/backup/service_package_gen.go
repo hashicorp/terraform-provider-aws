@@ -28,15 +28,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceRestoreTestingSelection,
-			Name:    "Restore Testing Plan Selection",
-		},
-		{
 			Factory: newRestoreTestingPlanResource,
 			Name:    "Restore Testing Plan",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory: newRestoreTestingSelectionResource,
+			Name:    "Restore Testing Plan Selection",
 		},
 	}
 }

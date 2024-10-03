@@ -5,67 +5,60 @@ package backup
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Restore Testing Plan Selection")
-func newResourceRestoreTestingSelection(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRestoreTestingSelection{}
-
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
+func newRestoreTestingSelectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &restoreTestingSelectionResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameRestoreTestingSelection = "Restore Testing Selection"
-)
-
-type resourceRestoreTestingSelection struct {
+type restoreTestingSelectionResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
-func (r *resourceRestoreTestingSelection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_backup_restore_testing_selection"
+func (*restoreTestingSelectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_backup_restore_testing_selection"
 }
 
-func (r *resourceRestoreTestingSelection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"iam_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -76,11 +69,10 @@ func (r *resourceRestoreTestingSelection) Schema(ctx context.Context, req resour
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric characters, and underscores"),
 				},
 			},
-			"restore_testing_plan_name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+			"protected_resource_arns": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfARNType,
+				ElementType: fwtypes.ARNType,
+				Optional:    true,
 			},
 			"protected_resource_type": schema.StringAttribute{
 				Required: true,
@@ -88,13 +80,19 @@ func (r *resourceRestoreTestingSelection) Schema(ctx context.Context, req resour
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"iam_role_arn": schema.StringAttribute{
-				Required: true,
-			},
 			"restore_metadata_overrides": schema.MapAttribute{
+				CustomType: fwtypes.NewMapTypeOf[types.String](ctx),
 				Optional:   true,
 				Computed:   true,
-				CustomType: fwtypes.NewMapTypeOf[types.String](ctx),
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"restore_testing_plan_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"validation_window_hours": schema.Int64Attribute{
 				Optional: true,
@@ -108,342 +106,261 @@ func (r *resourceRestoreTestingSelection) Schema(ctx context.Context, req resour
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"protected_resource_conditions": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[protectedResourceConditionsModel](ctx),
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
+			"protected_resource_conditions": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[protectedResourceConditionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
-				},
-				Attributes: map[string]schema.Attribute{
-					"string_equals": schema.ListAttribute{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueMap](ctx),
-						Optional:   true,
-						Computed:   true,
-						PlanModifiers: []planmodifier.List{
-							listplanmodifier.UseStateForUnknown(),
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"string_equals": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"key": schema.StringAttribute{
+										Required: true,
+									},
+									"value": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
 						},
-					},
-					"string_not_equals": schema.ListAttribute{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueMap](ctx),
-						Optional:   true,
-						Computed:   true,
-						PlanModifiers: []planmodifier.List{
-							listplanmodifier.UseStateForUnknown(),
+						"string_not_equals": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"key": schema.StringAttribute{
+										Required: true,
+									},
+									"value": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
 
-func (r *resourceRestoreTestingSelection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *restoreTestingSelectionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data restoreTestingSelectionResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BackupClient(ctx)
 
-	var plan restoreTestingSelectionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	requestBody := &awstypes.RestoreTestingSelectionForCreate{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, requestBody)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	restoreTestingPlanName := data.RestoreTestingPlanName.ValueString()
+	name := data.RestoreTestingSelectionName.ValueString()
 	input := &backup.CreateRestoreTestingSelectionInput{
-		RestoreTestingSelection: requestBody,
-		RestoreTestingPlanName:  plan.RestoreTestingPlanName.ValueStringPointer(),
+		CreatorRequestId:        aws.String(sdkid.UniqueId()),
+		RestoreTestingPlanName:  aws.String(restoreTestingPlanName),
+		RestoreTestingSelection: &awstypes.RestoreTestingSelectionForCreate{},
+	}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input.RestoreTestingSelection)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := conn.CreateRestoreTestingSelection(ctx, input)
+	_, err := conn.CreateRestoreTestingSelection(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionCreating, ResNameRestoreTestingSelection, plan.RestoreTestingSelectionName.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.CreationTime == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionCreating, ResNameRestoreTestingSelection, plan.RestoreTestingSelectionName.ValueString(), err),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Backup Restore Testing Selection (%s)", name), err.Error())
+
 		return
 	}
 
-	// "wait" for creation.. this is to get the _optional_ values
-	created, err := waitRestoreTestingSelectionLatest(ctx, conn, plan.RestoreTestingSelectionName.ValueString(), plan.RestoreTestingPlanName.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	// Set values for unknowns.
+	restoreTestingSelection, err := findRestoreTestingSelectionByTwoPartKey(ctx, conn, restoreTestingPlanName, name)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForCreation, ResNameRestoreTestingSelection, "", err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Backup Restore Testing Selection (%s)", name), err.Error())
+
 		return
 	}
 
-	// var state restoreTestingSelectionResourceModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, created.RestoreTestingSelection, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, restoreTestingSelection, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceRestoreTestingSelection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BackupClient(ctx)
-
-	var state restoreTestingSelectionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *restoreTestingSelectionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data restoreTestingSelectionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findRestoreTestingSelectionByName(ctx, conn, state.RestoreTestingSelectionName.ValueString(), state.RestoreTestingPlanName.ValueString())
+	conn := r.Meta().BackupClient(ctx)
+
+	restoreTestingPlanName := data.RestoreTestingPlanName.ValueString()
+	name := data.RestoreTestingSelectionName.ValueString()
+	restoreTestingSelection, err := findRestoreTestingSelectionByTwoPartKey(ctx, conn, restoreTestingPlanName, name)
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionSetting, ResNameRestoreTestingSelection, state.RestoreTestingSelectionName.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Backup Restore Testing Selection (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.RestoreTestingSelection, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, restoreTestingSelection, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceRestoreTestingSelection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *restoreTestingSelectionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new restoreTestingSelectionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BackupClient(ctx)
 
-	var state, plan restoreTestingSelectionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !state.RestoreTestingPlanName.Equal(plan.RestoreTestingPlanName) {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingSelection, plan.RestoreTestingPlanName.ValueString(), errors.New("name changes are not supported")),
-			"changing the name of a restore testing plan is not supported",
-		)
-		return
-	}
-
-	if !state.RestoreMetadataOverrides.Equal(plan.RestoreMetadataOverrides) ||
-		!state.ValidationWindowHours.Equal(plan.ValidationWindowHours) ||
-		!state.IamRoleArn.Equal(plan.IamRoleArn) ||
-		!state.ProtectedResourceConditions.Equal(plan.ProtectedResourceConditions) {
-
-		in := &awstypes.RestoreTestingSelectionForUpdate{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-		if resp.Diagnostics.HasError() {
+	if !old.IAMRoleARN.Equal(new.IAMRoleARN) ||
+		!old.ProtectedResourceConditions.Equal(new.ProtectedResourceConditions) ||
+		!old.RestoreMetadataOverrides.Equal(new.RestoreMetadataOverrides) ||
+		!old.ValidationWindowHours.Equal(new.ValidationWindowHours) {
+		restoreTestingPlanName := new.RestoreTestingPlanName.ValueString()
+		name := new.RestoreTestingSelectionName.ValueString()
+		input := &backup.UpdateRestoreTestingSelectionInput{
+			RestoreTestingPlanName:      aws.String(restoreTestingPlanName),
+			RestoreTestingSelection:     &awstypes.RestoreTestingSelectionForUpdate{},
+			RestoreTestingSelectionName: aws.String(name),
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input.RestoreTestingSelection)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateRestoreTestingSelection(ctx, &backup.UpdateRestoreTestingSelectionInput{
-			RestoreTestingSelectionName: plan.RestoreTestingSelectionName.ValueStringPointer(),
-			RestoreTestingPlanName:      plan.RestoreTestingPlanName.ValueStringPointer(),
-			RestoreTestingSelection:     in,
-		})
+		_, err := conn.UpdateRestoreTestingSelection(ctx, input)
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingSelection, plan.RestoreTestingPlanName.ValueString(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.RestoreTestingPlanName == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Backup, create.ErrActionUpdating, ResNameRestoreTestingSelection, plan.RestoreTestingPlanName.ValueString(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+			response.Diagnostics.AddError(fmt.Sprintf("updating Backup Restore Testing Selection (%s)", name), err.Error())
 
-		// "wait" for update.. this is to get the _optional_ values
-		created, err := waitRestoreTestingSelectionLatest(ctx, conn, plan.RestoreTestingSelectionName.ValueString(), plan.RestoreTestingPlanName.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForUpdate, ResNameRestoreTestingSelection, "", err),
-				err.Error(),
-			)
 			return
 		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, created.RestoreTestingSelection, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceRestoreTestingSelection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *restoreTestingSelectionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data restoreTestingSelectionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BackupClient(ctx)
 
-	var state restoreTestingSelectionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := &backup.DeleteRestoreTestingSelectionInput{
-		RestoreTestingSelectionName: state.RestoreTestingSelectionName.ValueStringPointer(),
-		RestoreTestingPlanName:      state.RestoreTestingPlanName.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteRestoreTestingSelection(ctx, in)
-
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionDeleting, ResNameRestoreTestingSelection, state.RestoreTestingSelectionName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	if _, err := waitRestoreTestingSelectionDeleted(ctx, conn, state.RestoreTestingSelectionName.ValueString(), state.RestoreTestingPlanName.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Backup, create.ErrActionWaitingForDeletion, ResNameRestoreTestingSelection, state.RestoreTestingSelectionName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceRestoreTestingSelection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "RestoreTestingSelectionName:RestoreTestingPlanName"`, req.ID))
-		return
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("restore_testing_plan_name"), parts[1])...)
-}
-
-func findRestoreTestingSelectionByName(ctx context.Context, conn *backup.Client, name string, restoreTestingPlanName string) (*backup.GetRestoreTestingSelectionOutput, error) {
-	in := &backup.GetRestoreTestingSelectionInput{
+	restoreTestingPlanName := data.RestoreTestingPlanName.ValueString()
+	name := data.RestoreTestingSelectionName.ValueString()
+	_, err := conn.DeleteRestoreTestingSelection(ctx, &backup.DeleteRestoreTestingSelectionInput{
 		RestoreTestingPlanName:      aws.String(restoreTestingPlanName),
 		RestoreTestingSelectionName: aws.String(name),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	out, err := conn.GetRestoreTestingSelection(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Backup Restore Testing Selection (%s)", name), err.Error())
 
+		return
+	}
+}
+
+func (r *restoreTestingSelectionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	parts := strings.Split(request.ID, ":")
+	if len(parts) != 2 {
+		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "RestoreTestingSelectionName:RestoreTestingPlanName"`, request.ID))
+		return
+	}
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("restore_testing_plan_name"), parts[1])...)
+}
+
+func (r *restoreTestingSelectionResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("protected_resource_arns"),
+			path.MatchRoot("protected_resource_conditions"),
+		),
+	}
+}
+
+func findRestoreTestingSelectionByTwoPartKey(ctx context.Context, conn *backup.Client, restoreTestingPlanName, restoreTestingSelectionName string) (*awstypes.RestoreTestingSelectionForGet, error) {
+	input := &backup.GetRestoreTestingSelectionInput{
+		RestoreTestingPlanName:      aws.String(restoreTestingPlanName),
+		RestoreTestingSelectionName: aws.String(restoreTestingSelectionName),
+	}
+
+	return findRestoreTestingSelection(ctx, conn, input)
+}
+
+func findRestoreTestingSelection(ctx context.Context, conn *backup.Client, input *backup.GetRestoreTestingSelectionInput) (*awstypes.RestoreTestingSelectionForGet, error) {
+	output, err := conn.GetRestoreTestingSelection(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.RestoreTestingSelection == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.RestoreTestingSelection == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
-}
-
-const (
-	stateNormal   = "NORMAL"
-	stateNotFound = "NOT_FOUND"
-)
-
-func statusRestoreSelection(ctx context.Context, conn *backup.Client, name, restoreTestingPlanName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findRestoreTestingSelectionByName(ctx, conn, name, restoreTestingPlanName)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, stateNormal, nil
-	}
-}
-
-func waitRestoreTestingSelectionLatest(ctx context.Context, conn *backup.Client, name string, restoreTestingPlanName string, timeout time.Duration) (*backup.GetRestoreTestingSelectionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{stateNormal},
-		Refresh: statusRestoreSelection(ctx, conn, name, restoreTestingPlanName),
-		Timeout: timeout,
-	}
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if out, ok := outputRaw.(*backup.GetRestoreTestingSelectionOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-
-}
-
-func waitRestoreTestingSelectionDeleted(ctx context.Context, conn *backup.Client, name string, restoreTestingPlanName string, timeout time.Duration) (*backup.GetRestoreTestingSelectionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{stateNormal},
-		Target:  []string{},
-		Refresh: statusRestoreSelection(ctx, conn, name, restoreTestingPlanName),
-		Timeout: timeout,
-	}
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if out, ok := outputRaw.(*backup.GetRestoreTestingSelectionOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-
+	return output.RestoreTestingSelection, nil
 }
 
 type restoreTestingSelectionResourceModel struct {
-	RestoreTestingSelectionName types.String                                            `tfsdk:"name"`
-	RestoreTestingPlanName      types.String                                            `tfsdk:"restore_testing_plan_name"`
-	ProtectedResourceConditions fwtypes.ObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`
-	IamRoleArn                  types.String                                            `tfsdk:"iam_role_arn"`
-	ValidationWindowHours       types.Int64                                             `tfsdk:"validation_window_hours"`
-	ProtectedResourceType       types.String                                            `tfsdk:"protected_resource_type"`
-	RestoreMetadataOverrides    fwtypes.MapValueOf[basetypes.StringValue]               `tfsdk:"restore_metadata_overrides"`
-	Timeouts                    timeouts.Value                                          `tfsdk:"timeouts"`
+	IAMRoleARN                  fwtypes.ARN                                                       `tfsdk:"iam_role_arn"`
+	ProtectedResourceARNs       fwtypes.ListValueOf[fwtypes.ARN]                                  `tfsdk:"protected_resource_arns"`
+	ProtectedResourceConditions fwtypes.ListNestedObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`
+	ProtectedResourceType       types.String                                                      `tfsdk:"protected_resource_type"`
+	RestoreMetadataOverrides    fwtypes.MapValueOf[basetypes.StringValue]                         `tfsdk:"restore_metadata_overrides"`
+	RestoreTestingSelectionName types.String                                                      `tfsdk:"name"`
+	RestoreTestingPlanName      types.String                                                      `tfsdk:"restore_testing_plan_name"`
+	ValidationWindowHours       types.Int64                                                       `tfsdk:"validation_window_hours"`
 }
 
 type protectedResourceConditionsModel struct {
-	StringEquals    fwtypes.ListNestedObjectValueOf[keyValueMap] `tfsdk:"string_equals"`
-	StringNotEquals fwtypes.ListNestedObjectValueOf[keyValueMap] `tfsdk:"string_not_equals"`
+	StringEquals    fwtypes.ListNestedObjectValueOf[keyValueModel] `tfsdk:"string_equals"`
+	StringNotEquals fwtypes.ListNestedObjectValueOf[keyValueModel] `tfsdk:"string_not_equals"`
 }
 
-type keyValueMap struct {
+type keyValueModel struct {
 	Key   types.String `tfsdk:"key"`
 	Value types.String `tfsdk:"value"`
 }
