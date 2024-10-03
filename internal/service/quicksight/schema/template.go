@@ -424,7 +424,7 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 	return s
 }
 
-func calculatedFieldsSchema() *schema.Schema {
+var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 		Type:     schema.TypeSet,
 		MinItems: 1,
@@ -438,35 +438,48 @@ func calculatedFieldsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
+
+var numericalAggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
 
 func numericalAggregationFunctionSchema(required bool) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-		Type:     schema.TypeList,
-		Required: required,
-		Optional: !required,
-		MinItems: 1,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"percentile_aggregation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentileAggregation.html
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"percentile_value": floatBetweenSchema(attrOptional, 0, 100),
+	s, ok := numericalAggregationFunctionSchemaCache.Load(required)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = numericalAggregationFunctionSchemaCache.LoadOrStore(
+		required,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+			Type:     schema.TypeList,
+			Required: required,
+			Optional: !required,
+			MinItems: 1,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"percentile_aggregation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentileAggregation.html
+						Type:     schema.TypeList,
+						Optional: true,
+						MinItems: 1,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"percentile_value": floatBetweenSchema(attrOptional, 0, 100),
+							},
 						},
 					},
+					"simple_numerical_aggregation": stringEnumSchema[awstypes.SimpleNumericalAggregationFunction](attrOptional),
 				},
-				"simple_numerical_aggregation": stringEnumSchema[awstypes.SimpleNumericalAggregationFunction](attrOptional),
 			},
 		},
-	}
+	)
+	return s
 }
 
-func idSchema() *schema.Schema {
+var idSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
@@ -475,22 +488,35 @@ func idSchema() *schema.Schema {
 			validation.StringMatch(regexache.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
 		),
 	}
-}
+})
+
+var columnSchemaCache syncMap[bool, *schema.Schema]
 
 func columnSchema(required bool) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-		Type:     schema.TypeList,
-		MinItems: 1,
-		MaxItems: 1,
-		Required: required,
-		Optional: !required,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+	s, ok := columnSchemaCache.Load(required)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = columnSchemaCache.LoadOrStore(
+		required,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+			Type:     schema.TypeList,
+			MinItems: 1,
+			MaxItems: 1,
+			Required: required,
+			Optional: !required,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
+					"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				},
 			},
 		},
-	}
+	)
+	return s
 }
 
 func dataSetConfigurationSchema() *schema.Schema {
@@ -569,7 +595,7 @@ func dataSetConfigurationSchema() *schema.Schema {
 	}
 }
 
-func rollingDateConfigurationSchema() *schema.Schema {
+var rollingDateConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RollingDateConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -582,7 +608,7 @@ func rollingDateConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func TemplateSourceEntitySchema() *schema.Schema {
 	return &schema.Schema{
