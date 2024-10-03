@@ -605,6 +605,8 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
+	var attributes []awstypes.ListenerAttribute
+
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticloadbalancingv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
@@ -641,6 +643,14 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("ssl_policy"); ok {
 			input.SslPolicy = aws.String(v.(string))
+		}
+
+		attributes = append(attributes, listenerAttributes.expand(d, awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), true)...)
+
+		if len(attributes) > 0 {
+			if _, err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
 		}
 
 		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
