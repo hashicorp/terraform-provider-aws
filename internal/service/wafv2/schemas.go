@@ -117,7 +117,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 		}
 
 		// Initialize the rest of the elements
-		var previous *schema.Schema = &c.values[0]
+		previous := &c.values[0]
 		for i := 1; i < statementSchemaCacheSize; i++ {
 			c.values[i] = schema.Schema{
 				Type:     schema.TypeList,
