@@ -2,6 +2,7 @@
 
 NOTES:
 
+* resource/aws_s3_bucket_lifecycle_configuration: Amazon S3 now applies a default minimum object size of 128 KB for S3 Lifecycle transition rules to any S3 storage class. This new default behavior will be applied to any new or modified S3 Lifecycle configuration. You can override this new default and customize the minimum object size for S3 Lifecycle transition rules to any value ([#39578](https://github.com/hashicorp/terraform-provider-aws/issues/39578))
 * resource/aws_simpledb_domain: The `aws_simpledb_domain` resource has been deprecated and will be removed in a future version. Use Amazon DynamoDB instead ([#39536](https://github.com/hashicorp/terraform-provider-aws/issues/39536))
 * resource/aws_worklink_fleet: The `aws_worklink_fleet` resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead ([#39538](https://github.com/hashicorp/terraform-provider-aws/issues/39538))
 * resource/aws_worklink_website_certificate_authority_association: The `aws_worklink_website_certificate_authority_association` resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead ([#39538](https://github.com/hashicorp/terraform-provider-aws/issues/39538))
@@ -18,11 +19,13 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ebs_snapshot: Add `start_time` attribute ([#39557](https://github.com/hashicorp/terraform-provider-aws/issues/39557))
+* resource/aws_bedrockagent_agent_action_group: Add `prepare_agent` argument ([#39486](https://github.com/hashicorp/terraform-provider-aws/issues/39486))
 * resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.custom_transformation_configuration` argument ([#39556](https://github.com/hashicorp/terraform-provider-aws/issues/39556))
 * resource/aws_globalaccelerator_endpoint_group: Add `endpoint_configuration.attachment_arn` argument ([#39507](https://github.com/hashicorp/terraform-provider-aws/issues/39507))
 * resource/aws_lambda_code_signing_config: Add `tags` argument and `tags_all` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
 * resource/aws_lambda_event_source_mapping: Add `arn` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
 * resource/aws_lambda_event_source_mapping: Add `tags` argument and `tags_all` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
+* resource/aws_s3_bucket_lifecycle_configuration: Add `transition_default_minimum_object_size` argument ([#39578](https://github.com/hashicorp/terraform-provider-aws/issues/39578))
 
 BUG FIXES:
 
