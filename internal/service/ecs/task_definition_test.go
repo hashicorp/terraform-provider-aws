@@ -131,6 +131,34 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccTaskDefinitionConfig_basic(rName),
+				Check:  resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2), // should get re-created
+			},
+		},
+	})
+}
+
 // Regression for https://github.com/hashicorp/terraform/issues/2370
 func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1018,35 +1046,6 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
-			},
-		},
-	})
-}
-
-// Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
-func TestAccECSTaskDefinition_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var def awstypes.TaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_task_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check:  resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2), // should get re-created
 			},
 		},
 	})
