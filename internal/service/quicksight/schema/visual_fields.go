@@ -34,9 +34,9 @@ func dimensionFieldSchema(maxItems int) *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringLenBetweenSchema(true, 1, 512),
+							"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
 							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
-							"hierarchy_id":         stringLenBetweenSchema(false, 1, 512),
+							"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
 						},
 					},
 				},
@@ -48,10 +48,10 @@ func dimensionFieldSchema(maxItems int) *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringLenBetweenSchema(true, 1, 512),
-							"date_granularity":     stringEnumSchema[awstypes.TimeGranularity](false),
+							"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+							"date_granularity":     stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
-							"hierarchy_id":         stringLenBetweenSchema(false, 1, 512),
+							"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
 						},
 					},
 				},
@@ -63,9 +63,9 @@ func dimensionFieldSchema(maxItems int) *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringLenBetweenSchema(true, 1, 512),
+							"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
 							"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
-							"hierarchy_id":         stringLenBetweenSchema(false, 1, 512),
+							"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
 						},
 					},
 				},
@@ -89,8 +89,8 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
-							"field_id":           stringLenBetweenSchema(true, 1, 512),
+							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
+							"field_id":           stringLenBetweenSchema(attrRequired, 1, 512),
 						},
 					},
 				},
@@ -102,8 +102,8 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringLenBetweenSchema(true, 1, 512),
-							"aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](false),
+							"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+							"aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
 							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
 						},
 					},
@@ -116,8 +116,8 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringLenBetweenSchema(true, 1, 512),
-							"aggregation_function": stringEnumSchema[awstypes.DateAggregationFunction](false),
+							"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+							"aggregation_function": stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
 							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
 						},
 					},
@@ -130,7 +130,7 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringLenBetweenSchema(true, 1, 512),
+							"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
 							"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 							"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 						},

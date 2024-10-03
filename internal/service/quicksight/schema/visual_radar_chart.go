@@ -29,9 +29,9 @@ func radarChartVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"alternate_band_colors_visibility": stringEnumSchema[awstypes.Visibility](false),
-							"alternate_band_even_color":        hexColorSchema(false),
-							"alternate_band_odd_color":         hexColorSchema(false),
+							"alternate_band_colors_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							"alternate_band_even_color":        hexColorSchema(attrOptional),
+							"alternate_band_odd_color":         hexColorSchema(attrOptional),
 							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -46,7 +46,7 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumSchema[awstypes.Visibility](false),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -81,7 +81,7 @@ func radarChartVisualSchema() *schema.Schema {
 								},
 							},
 							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"shape":  stringEnumSchema[awstypes.RadarChartShape](false),
+							"shape":  stringEnumSchema[awstypes.RadarChartShape](attrOptional),
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,

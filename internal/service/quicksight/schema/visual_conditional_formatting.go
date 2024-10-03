@@ -43,7 +43,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Required: true,
 													},
-													"color": hexColorSchema(false),
+													"color": hexColorSchema(attrOptional),
 													"data_value": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -54,7 +54,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
+							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 						},
 					},
 				},
@@ -65,8 +65,8 @@ func conditionalFormattingColorSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              hexColorSchema(false),
-							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
+							"color":              hexColorSchema(attrOptional),
+							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 						},
 					},
 				},
@@ -90,8 +90,8 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              hexColorSchema(false),
-							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
+							"color":              hexColorSchema(attrOptional),
+							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
 								Type:     schema.TypeList,
 								Required: true,
@@ -99,8 +99,8 @@ func conditionalFormattingIconSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon":         stringEnumSchema[awstypes.Icon](false),
-										"unicode_icon": stringMatchSchema(false, `^[^\\u0000-\\u00FF]$`, ""),
+										"icon":         stringEnumSchema[awstypes.Icon](attrOptional),
+										"unicode_icon": stringMatchSchema(attrOptional, `^[^\\u0000-\\u00FF]$`, ""),
 									},
 								},
 							},
@@ -111,7 +111,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon_display_option": stringEnumSchema[awstypes.ConditionalFormattingIconDisplayOption](false)},
+										"icon_display_option": stringEnumSchema[awstypes.ConditionalFormattingIconDisplayOption](attrOptional)},
 								},
 							},
 						},
@@ -124,8 +124,8 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
-							"icon_set_type":      stringEnumSchema[awstypes.ConditionalFormattingIconSetType](false),
+							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
+							"icon_set_type":      stringEnumSchema[awstypes.ConditionalFormattingIconSetType](attrOptional),
 						},
 					},
 				},

@@ -34,7 +34,7 @@ func columnSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringEnumSchema[awstypes.SortDirection](true),
+				"direction":            stringEnumSchema[awstypes.SortDirection](attrRequired),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
@@ -50,8 +50,8 @@ func fieldSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringEnumSchema[awstypes.SortDirection](true),
-				"field_id":  stringLenBetweenSchema(true, 1, 512),
+				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
+				"field_id":  stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}

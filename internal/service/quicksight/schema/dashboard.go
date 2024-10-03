@@ -35,7 +35,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](false),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -46,11 +46,11 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](true),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringEnumSchema[awstypes.Status](false),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](attrOptional),
 						},
 					},
 				},
@@ -75,17 +75,12 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id": idSchema(),
-							names.AttrContentType: {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Computed:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SheetContentType](),
-							},
-							names.AttrDescription:   stringLenBetweenSchema(false, 1, 1024),
+							"sheet_id":              idSchema(),
+							names.AttrContentType:   stringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
+							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringLenBetweenSchema(false, 1, 2048),
+							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -96,11 +91,11 @@ func DashboardDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringLenBetweenSchema(false, 1, 150000),
+										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(false, 1, 1024),
+							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -282,7 +277,7 @@ func DashboardSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN:         arnStringRequiredSchema(),
+							names.AttrARN:         arnStringSchema(attrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},

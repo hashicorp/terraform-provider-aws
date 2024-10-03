@@ -51,8 +51,8 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":     stringLenBetweenSchema(true, 1, 512),
-													"custom_label": stringLenBetweenSchema(false, 1, 2048),
+													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
+													"custom_label": stringLenBetweenSchema(attrOptional, 1, 2048),
 													"url_styling": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldURLConfiguration.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -74,7 +74,7 @@ func tableVisualSchema() *schema.Schema {
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"table_cell_image_scaling_configuration": stringEnumSchema[awstypes.TableCellImageScalingConfiguration](false),
+																						"table_cell_image_scaling_configuration": stringEnumSchema[awstypes.TableCellImageScalingConfiguration](attrOptional),
 																					},
 																				},
 																			},
@@ -102,7 +102,7 @@ func tableVisualSchema() *schema.Schema {
 																							MaxItems: 1,
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
-																									"icon": stringEnumSchema[awstypes.TableFieldIconSetType](false),
+																									"icon": stringEnumSchema[awstypes.TableFieldIconSetType](attrOptional),
 																								},
 																							},
 																						},
@@ -124,14 +124,14 @@ func tableVisualSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			names.AttrTarget: stringEnumSchema[awstypes.URLTargetConfiguration](false),
+																			names.AttrTarget: stringEnumSchema[awstypes.URLTargetConfiguration](attrOptional),
 																		},
 																	},
 																},
 															},
 														},
 													},
-													"visibility": stringEnumSchema[awstypes.Visibility](false),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 													"width": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -176,7 +176,7 @@ func tableVisualSchema() *schema.Schema {
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-																"field_id":             stringLenBetweenSchema(true, 1, 512),
+																"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
 																"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 															},
 														},
@@ -194,8 +194,8 @@ func tableVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"overflow_column_header_visibility": stringEnumSchema[awstypes.Visibility](false),
-										"vertical_overflow_visibility":      stringEnumSchema[awstypes.Visibility](false),
+										"overflow_column_header_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"vertical_overflow_visibility":      stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -240,9 +240,9 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":       stringLenBetweenSchema(true, 1, 512),
-													"negative_color": hexColorSchema(false),
-													"positive_color": hexColorSchema(false),
+													"field_id":       stringLenBetweenSchema(attrRequired, 1, 512),
+													"negative_color": hexColorSchema(attrOptional),
+													"positive_color": hexColorSchema(attrOptional),
 												},
 											},
 										},
@@ -258,7 +258,7 @@ func tableVisualSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"cell_style":                  tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 										"header_style":                tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"orientation":                 stringEnumSchema[awstypes.TableOrientation](false),
+										"orientation":                 stringEnumSchema[awstypes.TableOrientation](attrOptional),
 										"row_alternate_color_options": rowAlternateColorOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RowAlternateColorOptions.html
 									},
 								},
@@ -274,10 +274,10 @@ func tableVisualSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"placement":         stringEnumSchema[awstypes.TableTotalsPlacement](false),
-										"scroll_status":     stringEnumSchema[awstypes.TableTotalsScrollStatus](false),
+										"placement":         stringEnumSchema[awstypes.TableTotalsPlacement](attrOptional),
+										"scroll_status":     stringEnumSchema[awstypes.TableTotalsScrollStatus](attrOptional),
 										"total_cell_style":  tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"totals_visibility": stringEnumSchema[awstypes.Visibility](false),
+										"totals_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -305,7 +305,7 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":    stringLenBetweenSchema(true, 1, 512),
+													"field_id":    stringLenBetweenSchema(attrRequired, 1, 512),
 													"text_format": textConditionalFormatSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextConditionalFormat.html
 												},
 											},

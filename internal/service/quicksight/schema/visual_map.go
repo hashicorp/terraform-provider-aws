@@ -18,7 +18,7 @@ func geospatialMapStyleOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": stringEnumSchema[awstypes.BaseMapStyleType](false),
+				"base_map_style": stringEnumSchema[awstypes.BaseMapStyleType](attrOptional),
 			},
 		},
 	}
@@ -62,7 +62,7 @@ func geospatialWindowOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"map_zoom_mode": stringEnumSchema[awstypes.MapZoomMode](false),
+				"map_zoom_mode": stringEnumSchema[awstypes.MapZoomMode](attrOptional),
 			},
 		},
 	}

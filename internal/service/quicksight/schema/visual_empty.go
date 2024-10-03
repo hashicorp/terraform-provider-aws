@@ -18,7 +18,7 @@ func emptyVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
+				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 				"visual_id":           idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},

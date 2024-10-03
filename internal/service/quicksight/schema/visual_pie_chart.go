@@ -45,7 +45,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringEnumSchema[awstypes.ArcThicknessOptions](false),
+													"arc_thickness": stringEnumSchema[awstypes.ArcThicknessOptions](attrOptional),
 												},
 											},
 										},
@@ -56,7 +56,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"label_visibility": stringEnumSchema[awstypes.Visibility](false),
+													"label_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},

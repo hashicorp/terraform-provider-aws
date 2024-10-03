@@ -13,7 +13,7 @@ rules:
             Required:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
-    fix: stringLenBetweenSchema(true, $MIN, $MAX)
+    fix: stringLenBetweenSchema(attrRequired, $MIN, $MAX)
     severity: WARNING
 
   - id: quicksight-schema-string-len-between-optional
@@ -30,7 +30,33 @@ rules:
             Optional:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
-    fix: stringLenBetweenSchema(false, $MIN, $MAX)
+    fix: stringLenBetweenSchema(attrOptional, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-string-len-between-optionalcomputed
+    languages: [go]
+    message: String attributes with length validation should use stringLenBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern-either:
+          - pattern: |
+              {
+                Type:         schema.TypeString,
+                Optional:     true,
+                Computed:     true,
+                ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+              }
+          - pattern: |
+              {
+                Type:         schema.TypeString,
+                Computed:     true,
+                Optional:     true,
+                ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+              }
+    fix: stringLenBetweenSchema(attrOptionalComputed, $MIN, $MAX)
     severity: WARNING
 
   - id: quicksight-schema-string-enum
@@ -41,17 +67,32 @@ rules:
         - internal/service/quicksight/schema
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
-      - pattern: |
-          {
-            Type:             schema.TypeString,
-            $REQOPT:          true,
-            ValidateDiagFunc: $FUNC(),
-          }
-      - metavariable-regex:
-          metavariable: $FUNC
-          regex: enum\.Validate # Semgrep doesn't seem to recognize the type specification
+      - pattern-either:
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                $REQOPT:          true,
+                ValidateDiagFunc: $FUNC(),
+              }
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                Computed:         true,
+                $REQOPT:          true,
+                ValidateDiagFunc: $FUNC(),
+              }
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                $REQOPT:          true,
+                Computed:         true,
+                ValidateDiagFunc: $FUNC(),
+              }
       - metavariable-regex:
           metavariable: $REQOPT
           regex: 'Required|Optional'
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: enum\.Validate # Semgrep doesn't seem to recognize the type specification
     # Cannot be auto-fixed
     severity: WARNING

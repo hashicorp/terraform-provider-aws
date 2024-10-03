@@ -72,12 +72,12 @@ func wordCloudVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringEnumSchema[awstypes.WordCloudCloudLayout](false),
+										"cloud_layout":          stringEnumSchema[awstypes.WordCloudCloudLayout](attrOptional),
 										"maximum_string_length": intSchema(false, validation.IntBetween(1, 100)),
-										"word_casing":           stringEnumSchema[awstypes.WordCloudWordCasing](false),
-										"word_orientation":      stringEnumSchema[awstypes.WordCloudWordOrientation](false),
-										"word_padding":          stringEnumSchema[awstypes.WordCloudWordPadding](false),
-										"word_scaling":          stringEnumSchema[awstypes.WordCloudWordScaling](false),
+										"word_casing":           stringEnumSchema[awstypes.WordCloudWordCasing](attrOptional),
+										"word_orientation":      stringEnumSchema[awstypes.WordCloudWordOrientation](attrOptional),
+										"word_padding":          stringEnumSchema[awstypes.WordCloudWordPadding](attrOptional),
+										"word_scaling":          stringEnumSchema[awstypes.WordCloudWordScaling](attrOptional),
 									},
 								},
 							},

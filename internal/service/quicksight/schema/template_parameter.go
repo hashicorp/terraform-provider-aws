@@ -54,7 +54,7 @@ func dateTimeParameterDeclarationSchema() *schema.Schema {
 						},
 					},
 				},
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](false),
+				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 				"values_when_unset": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeValueWhenUnsetConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -67,7 +67,7 @@ func dateTimeParameterDeclarationSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: verify.ValidUTCTimestamp,
 							},
-							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](false),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
@@ -92,7 +92,7 @@ func decimalParameterDeclarationSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
-				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](true),
+				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](attrRequired),
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalDefaultValues.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -124,7 +124,7 @@ func decimalParameterDeclarationSchema() *schema.Schema {
 								Type:     schema.TypeFloat,
 								Optional: true,
 							},
-							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](false),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
@@ -149,7 +149,7 @@ func integerParameterDeclarationSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
-				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](true),
+				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](attrRequired),
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerDefaultValues.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -181,7 +181,7 @@ func integerParameterDeclarationSchema() *schema.Schema {
 								Type:     schema.TypeInt,
 								Optional: true,
 							},
-							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](false),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
@@ -206,7 +206,7 @@ func stringParameterDeclarationSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
-				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](true),
+				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](attrRequired),
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringDefaultValues.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -238,7 +238,7 @@ func stringParameterDeclarationSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](false),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
@@ -280,7 +280,7 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(true, 1, 2048),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
 						},
 					},
@@ -294,11 +294,11 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":            idSchema(),
 							"source_parameter_name":           parameterNameSchema(true),
-							"title":                           stringLenBetweenSchema(true, 1, 2048),
+							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
-							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](false),
+							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
 					},
 				},
@@ -311,11 +311,11 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":            idSchema(),
 							"source_parameter_name":           parameterNameSchema(true),
-							"title":                           stringLenBetweenSchema(true, 1, 2048),
+							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
-							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](false),
+							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
 					},
 				},
@@ -328,7 +328,7 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(true, 1, 2048),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
 							"maximum_value": {
 								Type:     schema.TypeFloat,
@@ -354,9 +354,9 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(true, 1, 2048),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       textAreaControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
-							"delimiter":             stringLenBetweenSchema(false, 1, 2048),
+							"delimiter":             stringLenBetweenSchema(attrOptional, 1, 2048),
 						},
 					},
 				},
@@ -369,7 +369,7 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(true, 1, 2048),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       textFieldControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 						},
 					},

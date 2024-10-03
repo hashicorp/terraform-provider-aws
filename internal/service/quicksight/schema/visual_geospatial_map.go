@@ -80,7 +80,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": hexColorSchema(false),
+																			"color": hexColorSchema(attrOptional),
 																		},
 																	},
 																},
@@ -90,7 +90,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_point_style": stringEnumSchema[awstypes.GeospatialSelectedPointStyle](false),
+										"selected_point_style": stringEnumSchema[awstypes.GeospatialSelectedPointStyle](attrOptional),
 									},
 								},
 							},

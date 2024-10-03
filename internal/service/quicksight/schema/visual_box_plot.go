@@ -36,8 +36,8 @@ func boxPlotVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"all_data_points_visibility": stringEnumSchema[awstypes.Visibility](false),
-										"outlier_visibility":         stringEnumSchema[awstypes.Visibility](false),
+										"all_data_points_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"outlier_visibility":         stringEnumSchema[awstypes.Visibility](attrOptional),
 										"style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotStyleOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
@@ -45,7 +45,7 @@ func boxPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"fill_style": stringEnumSchema[awstypes.BoxPlotFillStyle](false),
+													"fill_style": stringEnumSchema[awstypes.BoxPlotFillStyle](attrOptional),
 												},
 											},
 										},

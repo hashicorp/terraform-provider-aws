@@ -10,7 +10,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,7 +40,7 @@ func lineChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"axis_binding":          stringEnumSchema[awstypes.AxisBinding](false),
+										"axis_binding":          stringEnumSchema[awstypes.AxisBinding](attrOptional),
 										"line_style_settings":   lineChartLineStyleSettingsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartLineStyleSettings.html
 										"marker_style_settings": lineChartMarkerStyleSettingsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartMarkerStyleSettings.html
 									},
@@ -114,7 +113,7 @@ func lineChartVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"date": stringSchema(true, verify.ValidUTCTimestamp),
+																"date": utcTimestampStringSchema(attrRequired),
 																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
@@ -129,8 +128,8 @@ func lineChartVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"end_date":   stringSchema(true, verify.ValidUTCTimestamp),
-																"start_date": stringSchema(true, verify.ValidUTCTimestamp),
+																"end_date":   utcTimestampStringSchema(attrRequired),
+																"start_date": utcTimestampStringSchema(attrRequired),
 																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
@@ -160,7 +159,7 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"treatment_option": stringEnumSchema[awstypes.MissingDataTreatmentOption](false),
+													"treatment_option": stringEnumSchema[awstypes.MissingDataTreatmentOption](attrOptional),
 												},
 											},
 										},
@@ -184,7 +183,7 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"treatment_option": stringEnumSchema[awstypes.MissingDataTreatmentOption](false),
+													"treatment_option": stringEnumSchema[awstypes.MissingDataTreatmentOption](attrOptional),
 												},
 											},
 										},
@@ -206,8 +205,8 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"axis_binding": stringEnumSchema[awstypes.AxisBinding](true),
-													"field_id":     stringLenBetweenSchema(true, 1, 512),
+													"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrRequired),
+													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
 													"field_value": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -234,8 +233,8 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"axis_binding": stringEnumSchema[awstypes.AxisBinding](true),
-													"field_id":     stringLenBetweenSchema(true, 1, 512),
+													"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrRequired),
+													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -272,7 +271,7 @@ func lineChartVisualSchema() *schema.Schema {
 								},
 							},
 							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							names.AttrType:           stringOptionalComputedSchema(enum.Validate[awstypes.LineChartType]()),
+							names.AttrType:           stringEnumSchema[awstypes.LineChartType](attrOptionalComputed),
 							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -295,9 +294,9 @@ func lineChartLineStyleSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"line_interpolation": stringEnumSchema[awstypes.LineInterpolation](false),
-				"line_style":         stringEnumSchema[awstypes.LineChartLineStyle](false),
-				"line_visibility":    stringEnumSchema[awstypes.Visibility](false),
+				"line_interpolation": stringEnumSchema[awstypes.LineInterpolation](attrOptional),
+				"line_style":         stringEnumSchema[awstypes.LineChartLineStyle](attrOptional),
+				"line_visibility":    stringEnumSchema[awstypes.Visibility](attrOptional),
 				"line_width": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -315,13 +314,13 @@ func lineChartMarkerStyleSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"marker_color": hexColorSchema(false),
-				"marker_shape": stringEnumSchema[awstypes.LineChartMarkerShape](false),
+				"marker_color": hexColorSchema(attrOptional),
+				"marker_shape": stringEnumSchema[awstypes.LineChartMarkerShape](attrOptional),
 				"marker_size": {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"marker_visibility": stringEnumSchema[awstypes.Visibility](false),
+				"marker_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}

@@ -42,7 +42,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](false),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -53,11 +53,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](true),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringEnumSchema[awstypes.Status](false),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](attrOptional),
 						},
 					},
 				},
@@ -82,17 +82,12 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id": idSchema(),
-							names.AttrContentType: {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Computed:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SheetContentType](),
-							},
-							names.AttrDescription:   stringLenBetweenSchema(false, 1, 1024),
+							"sheet_id":              idSchema(),
+							names.AttrContentType:   stringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
+							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringLenBetweenSchema(false, 1, 2048),
+							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -103,11 +98,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringLenBetweenSchema(false, 1, 150000),
+										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(false, 1, 1024),
+							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -117,66 +112,84 @@ func TemplateDefinitionSchema() *schema.Schema {
 	}
 }
 
-func stringOptionalComputedSchema(validateFunc any) *schema.Schema {
-	switch v := validateFunc.(type) {
-	case schema.SchemaValidateDiagFunc:
-		return &schema.Schema{
-			Type:             schema.TypeString,
-			Optional:         true,
-			Computed:         true,
-			ValidateDiagFunc: v,
-		}
-	case schema.SchemaValidateFunc:
-		return stringOptionalComputedSchema(validation.ToDiagFunc(v))
-	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
-	}
+type attrHandling int
+
+const (
+	attrElem     attrHandling = 0
+	attrRequired attrHandling = 1 << iota
+	attrOptional
+	attrComputed
+	attrOptionalComputed = attrOptional | attrComputed
+)
+
+func (x attrHandling) isRequired() bool {
+	return x&attrRequired != 0
 }
 
-func stringSchema(required bool, validateFunc any) *schema.Schema {
-	switch v := validateFunc.(type) {
-	case schema.SchemaValidateDiagFunc:
-		return &schema.Schema{
-			Type:             schema.TypeString,
-			Required:         required,
-			Optional:         !required,
-			ValidateDiagFunc: v,
-		}
-	case schema.SchemaValidateFunc:
-		return stringSchema(required, validation.ToDiagFunc(v))
-	case func(interface{}, string) ([]string, []error):
-		return stringSchema(required, schema.SchemaValidateFunc(v))
-	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
-	}
+func (x attrHandling) isOptional() bool {
+	return x&attrOptional != 0
 }
 
-var arnStringOptionalSchema = sync.OnceValue(func() *schema.Schema {
-	return &schema.Schema{
-		Type:         schema.TypeString,
-		Optional:     true,
-		ValidateFunc: verify.ValidARN,
-	}
-})
+func (x attrHandling) isComputed() bool {
+	return x&attrComputed != 0
+}
 
-var arnStringRequiredSchema = sync.OnceValue(func() *schema.Schema {
-	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: verify.ValidARN,
+var arnStringSchemaCache syncMap[attrHandling, *schema.Schema]
+
+func arnStringSchema(handling attrHandling) *schema.Schema {
+	s, ok := arnStringSchemaCache.Load(handling)
+	if ok {
+		return s
 	}
-})
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = arnStringSchemaCache.LoadOrStore(
+		handling,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: verify.ValidARN,
+		},
+	)
+	return s
+}
+
+var utcTimestampStringSchemaCache syncMap[attrHandling, *schema.Schema]
+
+func utcTimestampStringSchema(handling attrHandling) *schema.Schema {
+	s, ok := utcTimestampStringSchemaCache.Load(handling)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = utcTimestampStringSchemaCache.LoadOrStore(
+		handling,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: verify.ValidUTCTimestamp,
+		},
+	)
+	return s
+}
 
 type stringLenBetweenIdentity struct {
-	required bool
+	handling attrHandling
 	min, max int
 }
 
 var stringLenBetweenSchemaCache syncMap[stringLenBetweenIdentity, *schema.Schema]
 
-func stringLenBetweenSchema(required bool, min, max int) *schema.Schema {
+func stringLenBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
 	id := stringLenBetweenIdentity{
-		required: required,
+		handling: handling,
 		min:      min,
 		max:      max,
 	}
@@ -192,8 +205,9 @@ func stringLenBetweenSchema(required bool, min, max int) *schema.Schema {
 		id,
 		&schema.Schema{
 			Type:         schema.TypeString,
-			Required:     required,
-			Optional:     !required,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
 			ValidateFunc: validation.StringLenBetween(min, max),
 		},
 	)
@@ -201,15 +215,15 @@ func stringLenBetweenSchema(required bool, min, max int) *schema.Schema {
 }
 
 type stringMatchIdentity struct {
-	required    bool
+	handling    attrHandling
 	re, message string
 }
 
 var stringMatchSchemaCache syncMap[stringMatchIdentity, *schema.Schema]
 
-func stringMatchSchema(required bool, re, message string) *schema.Schema {
+func stringMatchSchema(handling attrHandling, re, message string) *schema.Schema {
 	id := stringMatchIdentity{
-		required: required,
+		handling: handling,
 		re:       re,
 		message:  message,
 	}
@@ -225,8 +239,9 @@ func stringMatchSchema(required bool, re, message string) *schema.Schema {
 		id,
 		&schema.Schema{
 			Type:         schema.TypeString,
-			Required:     required,
-			Optional:     !required,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
 			ValidateFunc: validation.StringMatch(regexache.MustCompile(re), message),
 		},
 	)
@@ -234,15 +249,15 @@ func stringMatchSchema(required bool, re, message string) *schema.Schema {
 }
 
 type stringEnumIdentity struct {
-	required bool
+	handling attrHandling
 	typ      reflect.Type
 }
 
 var stringEnumSchemaCache syncMap[stringEnumIdentity, *schema.Schema]
 
-func stringEnumSchema[T enum.Valueser[T]](required bool) *schema.Schema {
+func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema {
 	id := stringEnumIdentity{
-		required: required,
+		handling: handling,
 		typ:      reflect.TypeFor[T](),
 	}
 
@@ -257,8 +272,9 @@ func stringEnumSchema[T enum.Valueser[T]](required bool) *schema.Schema {
 		id,
 		&schema.Schema{
 			Type:             schema.TypeString,
-			Required:         required,
-			Optional:         !required,
+			Required:         handling.isRequired(),
+			Optional:         handling.isOptional(),
+			Computed:         handling.isComputed(),
 			ValidateDiagFunc: enum.Validate[T](),
 		},
 	)
@@ -329,8 +345,8 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"categorical_aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](false),
-				"date_aggregation_function":        stringEnumSchema[awstypes.DateAggregationFunction](false),
+				"categorical_aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
+				"date_aggregation_function":        stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
 				"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 			},
 		},
@@ -345,9 +361,9 @@ func calculatedFieldsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
-				names.AttrExpression:  stringLenBetweenSchema(true, 1, 32000),
-				names.AttrName:        stringLenBetweenSchema(true, 1, 128),
+				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 32000),
+				names.AttrName:        stringLenBetweenSchema(attrRequired, 1, 128),
 			},
 		},
 	}
@@ -377,7 +393,7 @@ func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 						},
 					},
 				},
-				"simple_numerical_aggregation": stringEnumSchema[awstypes.SimpleNumericalAggregationFunction](false),
+				"simple_numerical_aggregation": stringEnumSchema[awstypes.SimpleNumericalAggregationFunction](attrOptional),
 			},
 		},
 	}
@@ -403,8 +419,8 @@ func columnSchema(required bool) *schema.Schema {
 		Optional: !required,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column_name":         stringLenBetweenSchema(true, 1, 128),
-				"data_set_identifier": stringLenBetweenSchema(true, 1, 2048),
+				"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
+				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 			},
 		},
 	}
@@ -494,8 +510,8 @@ func rollingDateConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(false, 1, 2048),
-				names.AttrExpression:  stringLenBetweenSchema(true, 1, 4096),
+				"data_set_identifier": stringLenBetweenSchema(attrOptional, 1, 2048),
+				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 4096),
 			},
 		},
 	}
@@ -519,7 +535,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN:         arnStringRequiredSchema(),
+							names.AttrARN:         arnStringSchema(attrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
@@ -531,7 +547,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: arnStringRequiredSchema(),
+							names.AttrARN: arnStringSchema(attrRequired),
 						},
 					},
 				},

@@ -44,7 +44,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 											Required: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"selected_field_option": stringEnumSchema[awstypes.SelectedFieldOptions](false),
+													"selected_field_option": stringEnumSchema[awstypes.SelectedFieldOptions](attrOptional),
 													"selected_fields": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -72,7 +72,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"target_visual_option": stringEnumSchema[awstypes.TargetVisualOptions](false),
+																"target_visual_option": stringEnumSchema[awstypes.TargetVisualOptions](attrOptional),
 																"target_visuals": {
 																	Type:     schema.TypeSet,
 																	Optional: true,
@@ -193,8 +193,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 																		},
 																	},
 																},
-																"select_all_value_options": stringEnumSchema[awstypes.SelectAllValueOptions](false),
-																"source_field":             stringLenBetweenSchema(false, 1, 2048),
+																"select_all_value_options": stringEnumSchema[awstypes.SelectAllValueOptions](attrOptional),
+																"source_field":             stringLenBetweenSchema(attrOptional, 1, 2048),
 																"source_parameter_name": {
 																	Type:     schema.TypeString,
 																	Optional: true,
@@ -215,8 +215,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"url_target":   stringEnumSchema[awstypes.URLTargetConfiguration](true),
-										"url_template": stringLenBetweenSchema(true, 1, 2048),
+										"url_target":   stringEnumSchema[awstypes.URLTargetConfiguration](attrRequired),
+										"url_template": stringLenBetweenSchema(attrRequired, 1, 2048),
 									},
 								},
 							},
@@ -224,9 +224,9 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 					},
 				},
 				"custom_action_id": idSchema(),
-				names.AttrName:     stringLenBetweenSchema(true, 1, 256),
-				"trigger":          stringEnumSchema[awstypes.VisualCustomActionTrigger](true),
-				names.AttrStatus:   stringEnumSchema[awstypes.Status](true),
+				names.AttrName:     stringLenBetweenSchema(attrRequired, 1, 256),
+				"trigger":          stringEnumSchema[awstypes.VisualCustomActionTrigger](attrRequired),
+				names.AttrStatus:   stringEnumSchema[awstypes.Status](attrRequired),
 			},
 		},
 	}

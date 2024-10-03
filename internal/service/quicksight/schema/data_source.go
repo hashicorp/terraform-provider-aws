@@ -591,7 +591,7 @@ func VPCConnectionPropertiesSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"vpc_connection_arn": arnStringRequiredSchema(),
+				"vpc_connection_arn": arnStringSchema(attrRequired),
 			},
 		},
 	}

@@ -29,7 +29,7 @@ func analysisDefaultSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"interactive_layout_configuration": interactiveLayoutConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultInteractiveLayoutConfiguration.html
 							"paginated_layout_configuration":   paginatedLayoutConfigurationSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultPaginatedLayoutConfiguration.html,
-							"sheet_content_type":               stringEnumSchema[awstypes.SheetContentType](false),
+							"sheet_content_type":               stringEnumSchema[awstypes.SheetContentType](attrOptional),
 						},
 					},
 				},
@@ -105,7 +105,7 @@ func interactiveLayoutConfigurationSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"resize_option": stringEnumSchema[awstypes.ResizeOption](true),
+													"resize_option": stringEnumSchema[awstypes.ResizeOption](attrRequired),
 												},
 											},
 										},
@@ -163,8 +163,8 @@ func paperCanvasSizeOptionsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"paper_margin":      spacingSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Spacing.html
-				"paper_orientation": stringEnumSchema[awstypes.PaperOrientation](false),
-				"paper_size":        stringEnumSchema[awstypes.PaperSize](false),
+				"paper_orientation": stringEnumSchema[awstypes.PaperOrientation](attrOptional),
+				"paper_size":        stringEnumSchema[awstypes.PaperSize](attrOptional),
 			},
 		},
 	}
@@ -286,7 +286,7 @@ func layoutSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			names.AttrStatus: stringEnumSchema[awstypes.Status](false),
+																			names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
 																		},
 																	},
 																},
@@ -344,7 +344,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 								ValidateFunc: validation.IntBetween(1, 36),
 							},
 							"element_id":   idSchema(),
-							"element_type": stringEnumSchema[awstypes.LayoutElementType](true),
+							"element_type": stringEnumSchema[awstypes.LayoutElementType](attrRequired),
 							"row_span": {
 								Type:         schema.TypeInt,
 								Required:     true,
@@ -381,7 +381,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"resize_option": stringEnumSchema[awstypes.ResizeOption](true),
+										"resize_option": stringEnumSchema[awstypes.ResizeOption](attrRequired),
 									},
 								},
 							},
@@ -436,7 +436,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"element_id":   idSchema(),
-				"element_type": stringEnumSchema[awstypes.LayoutElementType](true),
+				"element_type": stringEnumSchema[awstypes.LayoutElementType](attrRequired),
 				"height": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -460,8 +460,8 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							"visibility": stringEnumSchema[awstypes.Visibility](false),
+							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -472,8 +472,8 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							"visibility": stringEnumSchema[awstypes.Visibility](false),
+							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -484,7 +484,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringEnumSchema[awstypes.Visibility](false),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -502,11 +502,11 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringEnumSchema[awstypes.Visibility](false),
+										"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
-							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
+							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 						},
 					},
 				},
@@ -517,12 +517,12 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringMatchSchema(false, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							"visibility": stringEnumSchema[awstypes.Visibility](false),
+							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
-				"visibility": stringEnumSchema[awstypes.Visibility](false),
+				"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}

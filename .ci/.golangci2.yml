@@ -78,6 +78,8 @@ linters-settings:
       - retry.RetryContext
       - schema.DefaultTimeout
       - validation.*
+      # QuickSight schema
+      - stringLenBetweenSchema
       # Terraform Plugin Framework
       - int32validator.*
       - int64validator.*

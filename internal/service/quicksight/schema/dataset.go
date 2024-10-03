@@ -20,8 +20,8 @@ var dataSetIdentifierDeclarationsSchema = sync.OnceValue(func() *schema.Schema {
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn":       arnStringOptionalSchema(),
-				names.AttrIdentifier: stringLenBetweenSchema(false, 1, 2048),
+				"data_set_arn":       arnStringSchema(attrOptional),
+				names.AttrIdentifier: stringLenBetweenSchema(attrOptional, 1, 2048),
 			},
 		},
 	}
@@ -34,7 +34,7 @@ var dataSetReferencesSchema = sync.OnceValue(func() *schema.Schema {
 		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn": arnStringRequiredSchema(),
+				"data_set_arn": arnStringSchema(attrRequired),
 				"data_set_placeholder": {
 					Type:     schema.TypeString,
 					Required: true,

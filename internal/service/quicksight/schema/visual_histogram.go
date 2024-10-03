@@ -70,7 +70,7 @@ func histogramVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_bin_type": stringEnumSchema[awstypes.HistogramBinType](false),
+										"selected_bin_type": stringEnumSchema[awstypes.HistogramBinType](attrOptional),
 										"start_value": {
 											Type:     schema.TypeFloat,
 											Optional: true,

@@ -59,9 +59,9 @@ func categoryFilterSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](true),
-										"null_option":    stringEnumSchema[awstypes.FilterNullOption](true),
-										"category_value": stringLenBetweenSchema(false, 1, 512),
+										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
+										"null_option":    stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+										"category_value": stringLenBetweenSchema(attrOptional, 1, 512),
 										"parameter_name": {
 											Type:     schema.TypeString,
 											Optional: true,
@@ -70,7 +70,7 @@ func categoryFilterSchema() *schema.Schema {
 												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+`), ""),
 											),
 										},
-										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](false),
+										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
 									},
 								},
 							},
@@ -81,8 +81,8 @@ func categoryFilterSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](true),
-										"null_option":    stringEnumSchema[awstypes.FilterNullOption](true),
+										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
+										"null_option":    stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 										"category_values": {
 											Type:     schema.TypeList,
 											Optional: true,
@@ -93,7 +93,7 @@ func categoryFilterSchema() *schema.Schema {
 												ValidateFunc: validation.StringLenBetween(1, 512),
 											},
 										},
-										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](false),
+										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
 									},
 								},
 							},
@@ -104,7 +104,7 @@ func categoryFilterSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](true),
+										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
 										"category_values": {
 											Type:     schema.TypeList,
 											Optional: true,
@@ -115,7 +115,7 @@ func categoryFilterSchema() *schema.Schema {
 												ValidateFunc: validation.StringLenBetween(1, 512),
 											},
 										},
-										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](false),
+										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
 									},
 								},
 							},
@@ -138,11 +138,11 @@ func numericEqualityFilterSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"filter_id":            idSchema(),
-				"match_operator":       stringEnumSchema[awstypes.CategoryFilterMatchOperator](true),
-				"null_option":          stringEnumSchema[awstypes.FilterNullOption](true),
+				"match_operator":       stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
+				"null_option":          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 				"parameter_name":       parameterNameSchema(false),
-				"select_all_options":   stringEnumSchema[awstypes.NumericFilterSelectAllOptions](false),
+				"select_all_options":   stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
 				names.AttrValue: {
 					Type:     schema.TypeFloat,
 					Optional: true,
@@ -162,7 +162,7 @@ func numericRangeFilterSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"filter_id":            idSchema(),
-				"null_option":          stringEnumSchema[awstypes.FilterNullOption](true),
+				"null_option":          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 				"include_maximum": {
 					Type:     schema.TypeBool,
@@ -174,7 +174,7 @@ func numericRangeFilterSchema() *schema.Schema {
 				},
 				"range_maximum":      numericRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
 				"range_minimum":      numericRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
-				"select_all_options": stringEnumSchema[awstypes.NumericFilterSelectAllOptions](false),
+				"select_all_options": stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
 			},
 		},
 	}
@@ -195,18 +195,18 @@ func relativeDatesFilterSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"anchor_option":  stringEnumSchema[awstypes.AnchorOption](false),
+							"anchor_option":  stringEnumSchema[awstypes.AnchorOption](attrOptional),
 							"parameter_name": parameterNameSchema(false),
 						},
 					},
 				},
 				"column":                       columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"filter_id":                    idSchema(),
-				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](true),
-				"relative_date_type":           stringEnumSchema[awstypes.RelativeDateType](true),
-				"time_granularity":             stringEnumSchema[awstypes.TimeGranularity](true),
+				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				"relative_date_type":           stringEnumSchema[awstypes.RelativeDateType](attrRequired),
+				"time_granularity":             stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 				"exclude_period_configuration": excludePeriodConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
-				"minimum_granularity":          stringEnumSchema[awstypes.TimeGranularity](true),
+				"minimum_granularity":          stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 				"parameter_name":               parameterNameSchema(false),
 				"relative_date_value": {
 					Type:     schema.TypeInt,
@@ -227,7 +227,7 @@ func timeEqualityFilterSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"column":           columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"filter_id":        idSchema(),
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](true),
+				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 				"parameter_name":   parameterNameSchema(false),
 				names.AttrValue: {
 					Type:         schema.TypeString,
@@ -249,7 +249,7 @@ func timeRangeFilterSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"column":                       columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"filter_id":                    idSchema(),
-				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](true),
+				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 				"exclude_period_configuration": excludePeriodConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
 				"include_maximum": {
 					Type:     schema.TypeBool,
@@ -261,7 +261,7 @@ func timeRangeFilterSchema() *schema.Schema {
 				},
 				"range_maximum_value": timeRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
 				"range_minimum_value": timeRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
-				"time_granularity":    stringEnumSchema[awstypes.TimeGranularity](true),
+				"time_granularity":    stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 			},
 		},
 	}
@@ -284,7 +284,7 @@ func topBottomFilterSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"aggregation_function": aggregationFunctionSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 							"column":               columnSchema(true),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"sort_direction":       stringEnumSchema[awstypes.SortDirection](true),
+							"sort_direction":       stringEnumSchema[awstypes.SortDirection](attrRequired),
 						},
 					},
 				},
@@ -295,7 +295,7 @@ func topBottomFilterSchema() *schema.Schema {
 					Optional: true,
 				},
 				"parameter_name":   parameterNameSchema(false),
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](true),
+				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 			},
 		},
 	}
@@ -313,8 +313,8 @@ func excludePeriodConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeInt,
 					Required: true,
 				},
-				"granularity":    stringEnumSchema[awstypes.TimeGranularity](true),
-				names.AttrStatus: stringEnumSchema[awstypes.Status](false),
+				"granularity":    stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
 			},
 		},
 	}
@@ -362,7 +362,7 @@ func timeRangeFilterValueSchema() *schema.Schema {
 					),
 				},
 				"rolling_date": rollingDateConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RollingDateConfiguration.html,
-				"static_value": stringSchema(false, verify.ValidUTCTimestamp),
+				"static_value": utcTimestampStringSchema(attrOptional),
 			},
 		},
 	}
@@ -420,9 +420,9 @@ func drillDownFilterSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column":           columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"range_maximum":    stringSchema(true, verify.ValidUTCTimestamp),
-							"range_minimum":    stringSchema(true, verify.ValidUTCTimestamp),
-							"time_granularity": stringEnumSchema[awstypes.TimeGranularity](true),
+							"range_maximum":    utcTimestampStringSchema(attrRequired),
+							"range_minimum":    utcTimestampStringSchema(attrRequired),
+							"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 						},
 					},
 				},
@@ -475,7 +475,7 @@ func filterScopeConfigurationSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrScope: stringEnumSchema[awstypes.FilterVisualScope](true),
+										names.AttrScope: stringEnumSchema[awstypes.FilterVisualScope](attrRequired),
 										"sheet_id":      idSchema(),
 										"visual_ids": {
 											Type:     schema.TypeSet,

@@ -36,13 +36,13 @@ func funnelChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_label_visibility": stringEnumSchema[awstypes.Visibility](false),
-										"label_color":               hexColorSchema(false),
+										"category_label_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"label_color":               hexColorSchema(attrOptional),
 										"label_font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"measure_data_label_style":  stringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](false),
-										"measure_label_visibility":  stringEnumSchema[awstypes.Visibility](false),
-										"position":                  stringEnumSchema[awstypes.DataLabelPosition](false),
-										"visibility":                stringEnumSchema[awstypes.Visibility](false),
+										"measure_data_label_style":  stringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](attrOptional),
+										"measure_label_visibility":  stringEnumSchema[awstypes.Visibility](attrOptional),
+										"position":                  stringEnumSchema[awstypes.DataLabelPosition](attrOptional),
+										"visibility":                stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},

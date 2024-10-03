@@ -26,7 +26,7 @@ func PermissionsSchema() *schema.Schema {
 					MaxItems: 20,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrPrincipal: stringLenBetweenSchema(true, 1, 256),
+				names.AttrPrincipal: stringLenBetweenSchema(attrRequired, 1, 256),
 			},
 		},
 	}
