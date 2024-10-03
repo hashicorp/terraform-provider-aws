@@ -39,9 +39,9 @@ import (
 // @FrameworkResource(name="Agent Action Group")
 func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentActionGroupResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(120 * time.Minute)
 
 	return r, nil
 }
@@ -235,7 +235,6 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
-				Delete: true,
 			}),
 		},
 	}
@@ -275,10 +274,9 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 	data.ID = types.StringValue(id)
 
 	if data.PrepareAgent.ValueBool() {
-		_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
-		if err != nil {
+		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 			response.Diagnostics.AddError("preparing Agent", err.Error())
+
 			return
 		}
 	}
@@ -367,10 +365,9 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 	}
 
 	if new.PrepareAgent.ValueBool() {
-		_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
-
-		if err != nil {
+		if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("preparing Agent", err.Error())
+
 			return
 		}
 	}
