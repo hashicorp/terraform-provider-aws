@@ -209,6 +209,71 @@ diags := flex.Expand(ctx, source, &target, flex.WithNoIgnoredFieldNames())
 
 AutoFlex is able to convert single-element lists from Terraform blocks into single struct or pointer values in AWS API structs.
 
+#### Customizing Struct Field Flexing
+
+The flexing of individual struct fields can be customized by using Go struct tags, with the namespace `autoflex`.
+
+Tag values are comma-separated lists of options, with a leading comma.
+
+The option `legacy` can be used when migrating a resource or data source from the Terraform Plugin SDK to the Terraform Plugin Framework.
+This will preserve certain behaviors from the Plugin SDK, such as treating zero-values, i.e. the empty string or a numeric zero, equivalently to `null` values.
+This is equivalent to calling the `fwflex.<Type><To/From>FrameworkLegacy` functions.
+
+For example, from the struct `resourceManagedUserPoolClientModel` for the Cognito IDP Managed User Pool Client:
+
+```go
+type resourceManagedUserPoolClientModel struct {
+	AccessTokenValidity                      types.Int64  `tfsdk:"access_token_validity" autoflex:",legacy"`
+	AllowedOauthFlows                        types.Set    `tfsdk:"allowed_oauth_flows"`
+	...
+	ClientSecret                             types.String `tfsdk:"client_secret"`
+	DefaultRedirectUri                       types.String `tfsdk:"default_redirect_uri" autoflex:",legacy"`
+	...
+	ID                                       types.String `tfsdk:"id"`
+	IdTokenValidity                          types.Int64  `tfsdk:"id_token_validity" autoflex:",legacy"`
+	LogoutUrls                               types.Set    `tfsdk:"logout_urls"`
+	...
+}
+```
+
+The option `omitempty` can be used with `string` values to store a `null` value when an empty string is returned.
+
+For example, from the struct `refreshOnDayModel` for the QuickSight Refresh Schedule:
+
+```go
+type refreshOnDayModel struct {
+	DayOfMonth types.String `tfsdk:"day_of_month"`
+	DayOfWeek  types.String `tfsdk:"day_of_week" autoflex:",omitempty"`
+}
+```
+
+To completely ignore a field, use the tag value `-`.
+
+For example, from the struct `scheduleModel` for the QuickSight Refresh Schedule:
+
+```go
+type scheduleModel struct {
+	RefreshType        types.String                                           `tfsdk:"refresh_type"`
+	ScheduleFrequency  fwtypes.ListNestedObjectValueOf[refreshFrequencyModel] `tfsdk:"schedule_frequency"`
+	StartAfterDateTime types.String                                           `tfsdk:"start_after_date_time" autoflex:"-"`
+}
+```
+
+To ignore a field when flattening, but include it when expanding, use the option `noflatten`.
+
+For example, from the struct `dataSourceReservedCacheNodeOfferingModel` for the ElastiCache Reserved Cache Node Offering:
+
+```go
+type dataSourceReservedCacheNodeOfferingModel struct {
+	CacheNodeType      types.String            `tfsdk:"cache_node_type"`
+	Duration           fwtypes.RFC3339Duration `tfsdk:"duration" autoflex:",noflatten"`
+	FixedPrice         types.Float64           `tfsdk:"fixed_price"`
+	OfferingID         types.String            `tfsdk:"offering_id"`
+	OfferingType       types.String            `tfsdk:"offering_type"`
+	ProductDescription types.String            `tfsdk:"product_description"`
+}
+```
+
 #### Overriding Default Behavior
 
 In some cases, flattening and expanding need conditional handling.
@@ -564,7 +629,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
 
     ```go
     input := service.ExampleOperationInput{
-        AttributeName: aws.String(plan.AttributeName.ValueBool())
+        AttributeName: plan.AttributeName.ValueBoolPointer()
     }
     ```
     
@@ -584,7 +649,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsUnknown() && !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.Bool(plan.AttributeName.ValueBool())
+        input.AttributeName = plan.AttributeName.ValueBoolPointer()
     }
     ```
     
@@ -628,7 +693,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.Float64(plan.AttributeName.ValueFloat64())
+        input.AttributeName = plan.AttributeName.ValueFloat64Pointer()
     }
     ```
     
@@ -664,7 +729,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.Int64(plan.AttributeName.ValueInt64())
+        input.AttributeName = plan.AttributeName.ValueInt64Pointer()
     }
     ```
     
@@ -953,7 +1018,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.String(plan.AttributeName.ValueString())
+        input.AttributeName = plan.AttributeName.ValueStringPointer()
     }
     ```
     
@@ -1045,7 +1110,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     func expandStructure(tfList []structureData) *service.Structure {
         // ...
 
-        apiObject.NestedAttributeName = aws.Bool(tfObj.NestedAttributeName.ValueBool())
+        apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueBoolPointer()
 
         // ...
     }
@@ -1058,7 +1123,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.Bool(tfObj.NestedAttributeName.ValueBool())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueBoolPointer()
         }
 
         // ...
@@ -1131,7 +1196,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.Float64(tfObj.NestedAttributeName.ValueFloat64())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueFloat64Pointer()
         }
 
         // ...
@@ -1190,7 +1255,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.Int64(tfObj.NestedAttributeName.ValueInt64())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueInt64Pointer()
         }
 
         // ...
@@ -1605,7 +1670,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.String(tfObj.NestedAttributeName.ValueString())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueStringPointer()
         }
 
         // ...

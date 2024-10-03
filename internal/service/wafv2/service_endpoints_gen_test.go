@@ -236,8 +236,6 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			testEndpointCase(t, providerRegion, testcase, callService)
 		})

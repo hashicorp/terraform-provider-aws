@@ -434,7 +434,6 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 
 	var g multierror.Group
 	for _, v := range versions {
-		v := v
 		g.Go(func() error {
 			_, err = conn.DeleteEntityRecognizer(ctx, &comprehend.DeleteEntityRecognizerInput{
 				EntityRecognizerArn: v.EntityRecognizerArn,
@@ -461,7 +460,6 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 			}
 
 			for _, v := range networkInterfaces {
-				v := v
 				g.Go(func() error {
 					networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 

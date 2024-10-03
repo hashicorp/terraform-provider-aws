@@ -86,8 +86,8 @@ The `option` blocks support the following arguments:
 
 The `option_settings` blocks support the following arguments:
 
-* `name` - (Optional) Name of the setting.
-* `value` - (Optional) Value of the setting.
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
 ## Attribute Reference
 

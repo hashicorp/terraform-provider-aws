@@ -20,6 +20,8 @@ func testAccAppMeshServiceMeshDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccAppMeshServiceMeshDataSource_tags,
+		"NullMap":       testAccAppMeshServiceMeshDataSource_tags_NullMap,
+		"EmptyMap":      testAccAppMeshServiceMeshDataSource_tags_EmptyMap,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -47,6 +49,54 @@ func testAccAppMeshServiceMeshDataSource_tags(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+				},
+			},
+		},
+	})
+}
+
+func testAccAppMeshServiceMeshDataSource_tags_NullMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_appmesh_mesh.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ServiceMesh/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
+
+func testAccAppMeshServiceMeshDataSource_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_appmesh_mesh.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ServiceMesh/data.tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 		},

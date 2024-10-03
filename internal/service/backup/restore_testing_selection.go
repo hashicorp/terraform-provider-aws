@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -347,7 +348,46 @@ func (r *resourceRestoreTestingSelection) ImportState(ctx context.Context, req r
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("restore_testing_plan_name"), parts[1])...)
 }
 
-// ==== WAITERS ==== //
+func findRestoreTestingSelectionByName(ctx context.Context, conn *backup.Client, name string, restoreTestingPlanName string) (*backup.GetRestoreTestingSelectionOutput, error) {
+	in := &backup.GetRestoreTestingSelectionInput{
+		RestoreTestingPlanName:      aws.String(restoreTestingPlanName),
+		RestoreTestingSelectionName: aws.String(name),
+	}
+
+	out, err := conn.GetRestoreTestingSelection(ctx, in)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.RestoreTestingSelection == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
+func statusRestoreSelection(ctx context.Context, conn *backup.Client, name, restoreTestingPlanName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findRestoreTestingSelectionByName(ctx, conn, name, restoreTestingPlanName)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, stateNormal, nil
+	}
+}
+
 func waitRestoreTestingSelectionLatest(ctx context.Context, conn *backup.Client, name string, restoreTestingPlanName string, timeout time.Duration) (*backup.GetRestoreTestingSelectionOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
@@ -380,21 +420,6 @@ func waitRestoreTestingSelectionDeleted(ctx context.Context, conn *backup.Client
 
 	return nil, err
 
-}
-
-func statusRestoreSelection(ctx context.Context, conn *backup.Client, name, restoreTestingPlanName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findRestoreTestingSelectionByName(ctx, conn, name, restoreTestingPlanName)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, stateNormal, nil
-	}
 }
 
 type restoreTestingSelectionResourceModel struct {

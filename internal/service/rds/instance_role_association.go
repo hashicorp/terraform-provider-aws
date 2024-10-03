@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,6 +41,11 @@ func resourceInstanceRoleAssociation() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,9 +82,22 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 		RoleArn:              aws.String(roleARN),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.AddRoleToDBInstance(ctx, input)
-	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+	_, err := conn.AddRoleToDBInstance(ctx, input)
+
+	// check if the instance is in a valid state to add the role association
+	if errs.IsA[*types.InvalidDBInstanceStateFault](err) {
+		if _, err := waitDBInstanceAvailable(ctx, conn, dbInstanceIdentifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) available: %s", dbInstanceIdentifier, err)
+		}
+
+		_, err = conn.AddRoleToDBInstance(ctx, input)
+	}
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.AddRoleToDBInstance(ctx, input)
+		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance IAM Role Association (%s): %s", id, err)
@@ -86,10 +105,7 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(id)
 
-	const (
-		timeout = 10 * time.Minute
-	)
-	if _, err := waitDBInstanceRoleAssociationCreated(ctx, conn, dbInstanceIdentifier, roleARN, timeout); err != nil {
+	if _, err := waitDBInstanceRoleAssociationCreated(ctx, conn, dbInstanceIdentifier, roleARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance IAM Role Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -148,10 +164,7 @@ func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance IAM Role Association (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 10 * time.Minute
-	)
-	if _, err := waitDBInstanceRoleAssociationDeleted(ctx, conn, dbInstanceIdentifier, roleARN, timeout); err != nil {
+	if _, err := waitDBInstanceRoleAssociationDeleted(ctx, conn, dbInstanceIdentifier, roleARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance IAM Role Association (%s) delete: %s", d.Id(), err)
 	}
 
@@ -178,7 +191,7 @@ func instanceRoleAssociationParseResourceID(id string) (string, string, error) {
 }
 
 func findDBInstanceRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbInstanceIdentifier, roleARN string) (*types.DBInstanceRole, error) {
-	dbInstance, err := findDBInstanceByIDSDKv2(ctx, conn, dbInstanceIdentifier)
+	dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceIdentifier)
 
 	if err != nil {
 		return nil, err

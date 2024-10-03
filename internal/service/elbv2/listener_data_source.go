@@ -330,17 +330,17 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.ToString(listener.ListenerArn))
-	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
+	if len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
-	if listener.Certificates != nil && len(listener.Certificates) == 1 {
+	if len(listener.Certificates) == 1 {
 		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
 	})
-	if err := d.Set(names.AttrDefaultAction, flattenLbListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)

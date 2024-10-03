@@ -114,7 +114,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		DBClusterParameterGroupName: aws.String(name),
 		DBParameterGroupFamily:      aws.String(d.Get(names.AttrFamily).(string)),
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
-		Tags:                        getTagsInV2(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBClusterParameterGroup(ctx, input)
@@ -208,7 +208,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		for _, chunk := range tfslices.Chunks(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
+		for chunk := range slices.Chunk(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
 			input := &rds.ModifyDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,
@@ -236,7 +236,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		// Reset parameters that have been removed.
-		for _, chunk := range tfslices.Chunks(maps.Values(toRemove), maxParamModifyChunk) {
+		for chunk := range slices.Chunk(maps.Values(toRemove), maxParamModifyChunk) {
 			input := &rds.ResetDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,

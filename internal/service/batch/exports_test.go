@@ -11,6 +11,7 @@ var (
 	ResourceSchedulingPolicy   = resourceSchedulingPolicy
 
 	EquivalentContainerPropertiesJSON       = equivalentContainerPropertiesJSON
+	EquivalentECSPropertiesJSON             = equivalentECSPropertiesJSON
 	EquivalentNodePropertiesJSON            = equivalentNodePropertiesJSON
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate

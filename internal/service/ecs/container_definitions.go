@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -50,11 +51,28 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 	cd.orderEnvironmentVariables()
 	cd.orderSecrets()
 
+	// Compact any sparse lists.
+	cd.compactArrays()
+
+	// Deal with special fields which have defaults.
+	// See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#container_definitions.
 	for i, def := range cd {
-		// Deal with special fields which have defaults.
 		if def.Essential == nil {
 			cd[i].Essential = aws.Bool(true)
 		}
+
+		if hc := def.HealthCheck; hc != nil {
+			if hc.Interval == nil {
+				hc.Interval = aws.Int32(30)
+			}
+			if hc.Retries == nil {
+				hc.Retries = aws.Int32(3)
+			}
+			if hc.Timeout == nil {
+				hc.Timeout = aws.Int32(5)
+			}
+		}
+
 		for j, pm := range def.PortMappings {
 			if pm.Protocol == awstypes.TransportProtocolTcp {
 				cd[i].PortMappings[j].Protocol = ""
@@ -149,6 +167,33 @@ func (cd containerDefinitions) orderContainers() {
 	})
 }
 
+// compactArrays removes any zero values from the object arrays in the container definitions.
+func (cd containerDefinitions) compactArrays() {
+	for i, def := range cd {
+		cd[i].DependsOn = compactArray(def.DependsOn)
+		cd[i].Environment = compactArray(def.Environment)
+		cd[i].EnvironmentFiles = compactArray(def.EnvironmentFiles)
+		cd[i].ExtraHosts = compactArray(def.ExtraHosts)
+		cd[i].MountPoints = compactArray(def.MountPoints)
+		cd[i].PortMappings = compactArray(def.PortMappings)
+		cd[i].ResourceRequirements = compactArray(def.ResourceRequirements)
+		cd[i].Secrets = compactArray(def.Secrets)
+		cd[i].SystemControls = compactArray(def.SystemControls)
+		cd[i].Ulimits = compactArray(def.Ulimits)
+		cd[i].VolumesFrom = compactArray(def.VolumesFrom)
+	}
+}
+
+func compactArray[S ~[]E, E any](s S) S {
+	if len(s) == 0 {
+		return s
+	}
+
+	return tfslices.Filter(s, func(e E) bool {
+		return !itypes.IsZero(&e)
+	})
+}
+
 // Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
 // Reach down into the SDK and use the same serialization function that the SDK uses.
 //
@@ -178,6 +223,8 @@ func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition
 			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
 		}
 	}
+
+	containerDefinitions(apiObjects).compactArrays()
 
 	return apiObjects, nil
 }

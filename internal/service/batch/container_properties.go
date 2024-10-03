@@ -15,6 +15,10 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
+const (
+	fargatePlatformVersionLatest = "LATEST"
+)
+
 type containerProperties awstypes.ContainerProperties
 
 func (cp *containerProperties) reduce() {
@@ -40,7 +44,7 @@ func (cp *containerProperties) reduce() {
 
 	// Prevent difference of API response that contains the default Fargate platform configuration.
 	if cp.FargatePlatformConfiguration != nil {
-		if aws.ToString(cp.FargatePlatformConfiguration.PlatformVersion) == "LATEST" {
+		if aws.ToString(cp.FargatePlatformConfiguration.PlatformVersion) == fargatePlatformVersionLatest {
 			cp.FargatePlatformConfiguration = nil
 		}
 	}

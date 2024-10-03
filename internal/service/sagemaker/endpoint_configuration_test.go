@@ -510,7 +510,6 @@ func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -762,9 +761,44 @@ func TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess(t *testing.T
 	})
 }
 
+func TestAccSageMakerEndpointConfiguration_productionVariantsManagedInstanceScaling(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_productionVariantsManagedInstanceScaling(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.g5.4xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.min_instance_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.max_instance_count", acctest.Ct2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_endpoint_configuration" {
@@ -799,7 +833,7 @@ func testAccCheckEndpointConfigurationExists(ctx context.Context, n string) reso
 			return fmt.Errorf("no SageMaker endpoint config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		_, err := tfsagemaker.FindEndpointConfigByName(ctx, conn, rs.Primary.ID)
 
 		return err
@@ -1392,6 +1426,134 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
       memory_size_in_mb       = 5120
       provisioned_concurrency = 100
     }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_productionVariantsManagedInstanceScaling(rName string) string {
+	return acctest.ConfigCompose(fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+data "aws_sagemaker_prebuilt_ecr_image" "managed_instance_scaling_test" {
+  repository_name = "djl-inference"
+  image_tag       = "0.27.0-deepspeed0.12.6-cu121"
+}
+
+data "aws_iam_policy_document" "managed_instance_scaling_test_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "cloudwatch:PutMetricData",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:CreateLogGroup",
+      "logs:DescribeLogStreams",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      aws_s3_bucket.managed_instance_scaling_test.arn,
+      "${aws_s3_bucket.managed_instance_scaling_test.arn}/*",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "managed_instance_scaling_test" {
+  name        = %[1]q
+  description = "Allow SageMaker to create model"
+  policy      = data.aws_iam_policy_document.managed_instance_scaling_test_policy.json
+}
+
+resource "aws_iam_role" "managed_instance_scaling_test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "managed_instance_scaling_test" {
+  role       = aws_iam_role.managed_instance_scaling_test.name
+  policy_arn = aws_iam_policy.managed_instance_scaling_test.arn
+}
+
+resource "aws_s3_bucket" "managed_instance_scaling_test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "managed_instance_scaling_test" {
+  bucket  = aws_s3_bucket.managed_instance_scaling_test.bucket
+  key     = "model/inference.py"
+  content = "some-data"
+}
+
+resource "aws_sagemaker_model" "managed_instance_scaling_test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.managed_instance_scaling_test.arn
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.managed_instance_scaling_test.registry_path
+    model_data_source {
+      s3_data_source {
+        s3_data_type     = "S3Prefix"
+        s3_uri           = "s3://${aws_s3_object.managed_instance_scaling_test.bucket}/model/"
+        compression_type = "None"
+      }
+    }
+  }
+  depends_on = [
+    aws_iam_role_policy_attachment.managed_instance_scaling_test
+  ]
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.managed_instance_scaling_test.name
+    initial_instance_count = 1
+    instance_type          = "ml.g5.4xlarge"
+
+    managed_instance_scaling {
+      status             = "ENABLED"
+      min_instance_count = 1
+      max_instance_count = 2
+    }
+
+    routing_config {
+      routing_strategy = "LEAST_OUTSTANDING_REQUESTS"
+    }
+
+    model_data_download_timeout_in_seconds            = 60
+    container_startup_health_check_timeout_in_seconds = 60
   }
 }
 `, rName))

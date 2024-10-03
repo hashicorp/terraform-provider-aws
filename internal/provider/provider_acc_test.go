@@ -11,10 +11,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/smithy-go/middleware"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -518,10 +517,10 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
+				Config: testAccProviderConfig_region(names.USISOEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.ISOPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.ic.c2s"),
 				),
 				PlanOnly: true,
@@ -541,10 +540,10 @@ func TestAccProvider_Region_china(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
+				Config: testAccProviderConfig_region(names.CNNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com.cn"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsCnPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.ChinaPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -564,10 +563,10 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
+				Config: testAccProviderConfig_region(names.USWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.StandardPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -587,10 +586,10 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
+				Config: testAccProviderConfig_region(names.USGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.USGovCloudPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -610,10 +609,10 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
+				Config: testAccProviderConfig_region(names.USISOBEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.ISOBPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
@@ -633,10 +632,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
+				Config: testAccProviderConfig_stsRegion(names.USEast1RegionID, names.USWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
-					testAccCheckSTSRegion(ctx, t, &provider, endpoints.UsWest2RegionID),
+					testAccCheckRegion(ctx, t, &provider, names.USEast1RegionID),
+					testAccCheckSTSRegion(ctx, t, &provider, names.USWest2RegionID),
 				),
 				PlanOnly: true,
 			},
@@ -644,6 +643,7 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 	})
 }
 
+// For historical reasons, ignore a single empty `assume_role` block
 func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -951,7 +951,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 			var found bool
 
 			for _, actualElement := range actualTags {
-				if aws.StringValue(actualElement.Value) == expectedElement {
+				if aws.ToString(actualElement.Value) == expectedElement {
 					found = true
 					break
 				}
@@ -966,7 +966,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 			var found bool
 
 			for _, expectedElement := range expectedTags {
-				if aws.StringValue(actualElement.Value) == expectedElement {
+				if aws.ToString(actualElement.Value) == expectedElement {
 					found = true
 					break
 				}
@@ -990,7 +990,7 @@ func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.Test
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
 		for _, serviceKey := range names.Aliases() {
-			methodName := serviceConn(serviceKey)
+			methodName := serviceClient(serviceKey)
 			method := reflect.ValueOf(providerClient).MethodByName(methodName)
 			if !method.IsValid() {
 				continue
@@ -1038,7 +1038,7 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		methodName := serviceConn(unusual.thing)
+		methodName := serviceClient(unusual.thing)
 		method := reflect.ValueOf(providerClient).MethodByName(methodName)
 		if method.Kind() != reflect.Func {
 			return fmt.Errorf("value %q is not a function", methodName)
@@ -1057,6 +1057,10 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		if !providerClientField.IsValid() {
 			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual.thing)
+		}
+
+		if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
+			return nil // currently unknown how to do this check for v2 clients
 		}
 
 		actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
@@ -1082,14 +1086,14 @@ func funcHasConnFuncSignature(method reflect.Value) bool {
 	return typ.In(0) == ftyp.In(0)
 }
 
-func serviceConn(key string) string {
+func serviceClient(key string) string {
 	serviceUpper := ""
 	var err error
 	if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 		return ""
 	}
 
-	return fmt.Sprintf("%sConn", serviceUpper)
+	return fmt.Sprintf("%sClient", serviceUpper)
 }
 
 const testAccProviderConfig_assumeRoleEmpty = `

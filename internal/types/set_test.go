@@ -49,8 +49,6 @@ func TestSetDifference_ints(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -100,7 +98,6 @@ func TestSetDifference_strings(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

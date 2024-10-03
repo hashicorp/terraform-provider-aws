@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,16 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_backup_plan")
-func DataSourcePlan() *schema.Resource {
+// @SDKDataSource("aws_backup_plan", name="Plan")
+func dataSourcePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlanRead,
 
 		Schema: map[string]*schema.Schema{
-			"plan_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -33,6 +28,10 @@ func DataSourcePlan() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"plan_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			names.AttrRule: {
 				Type:     schema.TypeSet,
@@ -118,7 +117,6 @@ func DataSourcePlan() *schema.Resource {
 						},
 					},
 				},
-				Set: planHash,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			names.AttrVersion: {
@@ -135,26 +133,26 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("plan_id").(string)
+	output, err := findPlanByID(ctx, conn, id)
 
-	resp, err := conn.GetBackupPlan(ctx, &backup.GetBackupPlanInput{
-		BackupPlanId: aws.String(id),
-	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Backup Plan: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Plan (%s): %s", id, err)
 	}
 
-	d.SetId(aws.ToString(resp.BackupPlanId))
-	d.Set(names.AttrARN, resp.BackupPlanArn)
-	d.Set(names.AttrName, resp.BackupPlan.BackupPlanName)
-	d.Set(names.AttrVersion, resp.VersionId)
-	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, resp.BackupPlan.Rules)); err != nil {
+	d.SetId(aws.ToString(output.BackupPlanId))
+	d.Set(names.AttrARN, output.BackupPlanArn)
+	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
+	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
+	d.Set(names.AttrVersion, output.VersionId)
 
-	tags, err := listTags(ctx, conn, aws.ToString(resp.BackupPlanArn))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", d.Id(), err)
 	}
+
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

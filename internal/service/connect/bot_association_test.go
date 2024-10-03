@@ -31,7 +31,7 @@ func testAccBotAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
+				Config: testAccBotAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -63,7 +63,7 @@ func testAccBotAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
+				Config: testAccBotAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
@@ -74,35 +74,18 @@ func testAccBotAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBotAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckBotAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Connect Bot Association not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect Bot Association ID not set")
-		}
-		instanceID, name, region, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
-		if err != nil {
-			return err
-		}
+		_, err := tfconnect.FindBotAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["lex_bot.0.name"], rs.Primary.Attributes["lex_bot.0.lex_region"])
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
-
-		lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
-
-		if err != nil {
-			return fmt.Errorf("error finding Connect Bot Association (%s): %w", rs.Primary.ID, err)
-		}
-
-		if lexBot == nil {
-			return fmt.Errorf("error finding Connect Bot Association (%s): not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -113,36 +96,26 @@ func testAccCheckBotAssociationDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			if rs.Primary.ID == "" {
-				return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
-			}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
-			instanceID, name, region, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
-
-			lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
+			_, err := tfconnect.FindBotAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["lex_bot.0.name"], rs.Primary.Attributes["lex_bot.0.lex_region"])
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error finding Connect Bot Association (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if lexBot != nil {
-				return fmt.Errorf("Connect Bot Association (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Connect Bot Association %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccBotV1AssociationConfigBase(rName, rName2 string) string {
+func testAccBotAssociationConfig_base(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   create_version = true
@@ -187,10 +160,8 @@ resource "aws_connect_instance" "test" {
   `, rName, rName2)
 }
 
-func testAccBotAssociationConfig_v1Basic(rName, rName2 string) string {
-	return acctest.ConfigCompose(
-		testAccBotV1AssociationConfigBase(rName, rName2),
-		`
+func testAccBotAssociationConfig_basic(rName, rName2 string) string {
+	return acctest.ConfigCompose(testAccBotAssociationConfig_base(rName, rName2), `
 resource "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {

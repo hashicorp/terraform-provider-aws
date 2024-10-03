@@ -382,6 +382,45 @@ func (r *restoreTestingPlanResource) ImportState(ctx context.Context, req resour
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), req.ID)...)
 }
 
+func findRestoreTestingPlanByName(ctx context.Context, conn *backup.Client, name string) (*backup.GetRestoreTestingPlanOutput, error) {
+	in := &backup.GetRestoreTestingPlanInput{
+		RestoreTestingPlanName: aws.String(name),
+	}
+
+	out, err := conn.GetRestoreTestingPlan(ctx, in)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.RestoreTestingPlan == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
+func statusRestorePlan(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findRestoreTestingPlanByName(ctx, conn, name)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, stateNormal, nil
+	}
+}
+
 const (
 	stateNormal   = "NORMAL"
 	stateNotFound = "NOT_FOUND"
@@ -417,21 +456,6 @@ func waitRestoreTestingPlanLatest(ctx context.Context, conn *backup.Client, name
 	}
 
 	return nil, err
-}
-
-func statusRestorePlan(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findRestoreTestingPlanByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, stateNormal, nil
-	}
 }
 
 type restoreTestingPlanResourceModel struct {

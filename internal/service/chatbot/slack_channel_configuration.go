@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chatbot/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -268,7 +268,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 	})
 
 	input := &chatbot.DeleteSlackChannelConfigurationInput{
-		ChatConfigurationArn: aws.String(data.ChatConfigurationARN.ValueString()),
+		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
@@ -408,8 +408,8 @@ type slackChannelConfigurationResourceModel struct {
 	SlackTeamID               types.String                     `tfsdk:"slack_team_id"`
 	SlackTeamName             types.String                     `tfsdk:"slack_team_name"`
 	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
-	Tags                      types.Map                        `tfsdk:"tags"`
-	TagsAll                   types.Map                        `tfsdk:"tags_all"`
+	Tags                      tftags.Map                       `tfsdk:"tags"`
+	TagsAll                   tftags.Map                       `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
 	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
 }

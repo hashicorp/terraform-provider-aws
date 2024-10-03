@@ -52,6 +52,7 @@ var (
 // @SDKResource("aws_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
+// @Testing(generator=false)
 func resourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

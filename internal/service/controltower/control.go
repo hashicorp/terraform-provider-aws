@@ -108,7 +108,11 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &controltower.EnableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
@@ -340,11 +344,11 @@ func findEnabledControl(ctx context.Context, conn *controltower.Client, input *c
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]*types.EnabledControlSummary, error) {
-	var output []*types.EnabledControlSummary
+func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]types.EnabledControlSummary, error) {
+	var output []types.EnabledControlSummary
 
 	pages := controltower.NewListEnabledControlsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -362,8 +366,7 @@ func findEnabledControls(ctx context.Context, conn *controltower.Client, input *
 		}
 
 		for _, v := range page.EnabledControls {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

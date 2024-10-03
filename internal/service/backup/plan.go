@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_backup_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
-func ResourcePlan() *schema.Resource {
+func resourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,
 		ReadWithoutTimeout:   resourcePlanRead,
@@ -215,7 +215,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	output, err := FindPlanByID(ctx, conn, d.Id())
+	output, err := findPlanByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Plan (%s) not found, removing from state", d.Id())
@@ -248,12 +248,12 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChanges(names.AttrRule, "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
-			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &awstypes.BackupPlanInput{
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 				BackupPlanName:         aws.String(d.Get(names.AttrName).(string)),
 				Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 			},
+			BackupPlanId: aws.String(d.Id()),
 		}
 
 		_, err := conn.UpdateBackupPlan(ctx, input)
@@ -291,11 +291,15 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func FindPlanByID(ctx context.Context, conn *backup.Client, id string) (*backup.GetBackupPlanOutput, error) {
+func findPlanByID(ctx context.Context, conn *backup.Client, id string) (*backup.GetBackupPlanOutput, error) {
 	input := &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(id),
 	}
 
+	return findPlan(ctx, conn, input)
+}
+
+func findPlan(ctx context.Context, conn *backup.Client, input *backup.GetBackupPlanInput) (*backup.GetBackupPlanOutput, error) {
 	output, err := conn.GetBackupPlan(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

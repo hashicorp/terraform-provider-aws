@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbClusterSnapshot neptune.DBClusterSnapshot
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_snapshot.test"
 
@@ -62,7 +62,7 @@ func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 
 func TestAccNeptuneClusterSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbClusterSnapshot neptune.DBClusterSnapshot
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_snapshot.test"
 
@@ -86,7 +86,7 @@ func TestAccNeptuneClusterSnapshot_disappears(t *testing.T) {
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster_snapshot" {
@@ -110,7 +110,7 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *neptune.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstypes.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -121,7 +121,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *neptune
 			return fmt.Errorf("No Neptune Cluster Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 

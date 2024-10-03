@@ -97,7 +97,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 		DBClusterEndpointIdentifier: aws.String(endpointID),
 		DBClusterIdentifier:         aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		EndpointType:                aws.String(d.Get("custom_endpoint_type").(string)),
-		Tags:                        getTagsInV2(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("excluded_members"); ok && v.(*schema.Set).Len() > 0 {

@@ -530,7 +530,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 				errParts = append(errParts, fmt.Sprintf("%s: %s", snapshotId, err))
 			}
 			errParts = append(errParts, "These are no longer managed by Terraform and must be deleted manually.")
-			return sdkdiag.AppendErrorf(diags, strings.Join(errParts, "\n"))
+			return sdkdiag.AppendErrorf(diags, "%s", strings.Join(errParts, "\n"))
 		}
 	}
 

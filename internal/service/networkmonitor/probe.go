@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Probe")
+// @FrameworkResource("aws_networkmonitor_probe", name="Probe")
 // @Tags(identifierAttribute="arn")
 func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &probeResource{}, nil
@@ -153,7 +153,12 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 	// Set values for unknowns.
 	data.ProbeARN = fwflex.StringToFramework(ctx, outputCP.ProbeArn)
 	data.ProbeID = fwflex.StringToFramework(ctx, outputCP.ProbeId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating CloudWatch Network Monitor Probe (%s)", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	outputGP, err := waitProbeReady(ctx, conn, data.MonitorName.ValueString(), data.ProbeID.ValueString())
 
@@ -404,8 +409,8 @@ type probeResourceModel struct {
 	ProbeID         types.String                               `tfsdk:"probe_id"`
 	Protocol        fwtypes.StringEnum[awstypes.Protocol]      `tfsdk:"protocol"`
 	SourceARN       fwtypes.ARN                                `tfsdk:"source_arn"`
-	Tags            types.Map                                  `tfsdk:"tags"`
-	TagsAll         types.Map                                  `tfsdk:"tags_all"`
+	Tags            tftags.Map                                 `tfsdk:"tags"`
+	TagsAll         tftags.Map                                 `tfsdk:"tags_all"`
 	VpcID           types.String                               `tfsdk:"vpc_id"`
 }
 
@@ -427,6 +432,11 @@ func (m *probeResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *probeResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.MonitorName.ValueString(), m.ProbeID.ValueString()}, probeResourceIDPartCount, false)))
+func (m *probeResourceModel) setID() (string, error) {
+	parts := []string{
+		m.MonitorName.ValueString(),
+		m.ProbeID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, probeResourceIDPartCount, false)
 }

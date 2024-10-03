@@ -2556,6 +2556,13 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
 				),
 			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpoint(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
 		},
 	})
 }
@@ -2574,6 +2581,20 @@ func TestAccRDSCluster_enableHTTPEndpointProvisioned(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
+				),
+			},
 			{
 				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
 				Check: resource.ComposeTestCheckFunc(

@@ -23,6 +23,7 @@ func testAccAppMeshGatewayRoute_tagsSerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshGatewayRoute_tags,
 		"null":                                      testAccAppMeshGatewayRoute_tags_null,
+		"EmptyMap":                                  testAccAppMeshGatewayRoute_tags_EmptyMap,
 		"AddOnUpdate":                               testAccAppMeshGatewayRoute_tags_AddOnUpdate,
 		"EmptyTag_OnCreate":                         testAccAppMeshGatewayRoute_tags_EmptyTag_OnCreate,
 		"EmptyTag_OnUpdate_Add":                     testAccAppMeshGatewayRoute_tags_EmptyTag_OnUpdate_Add,
@@ -70,6 +71,9 @@ func testAccAppMeshGatewayRoute_tags(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -110,6 +114,10 @@ func testAccAppMeshGatewayRoute_tags(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
@@ -157,6 +165,9 @@ func testAccAppMeshGatewayRoute_tags(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -194,6 +205,7 @@ func testAccAppMeshGatewayRoute_tags(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -243,6 +255,7 @@ func testAccAppMeshGatewayRoute_tags_null(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -260,6 +273,64 @@ func testAccAppMeshGatewayRoute_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayRoute/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func testAccAppMeshGatewayRoute_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.GatewayRouteData
+	resourceName := "aws_appmesh_gateway_route.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayRoute/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayRoute/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -302,6 +373,7 @@ func testAccAppMeshGatewayRoute_tags_AddOnUpdate(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -325,6 +397,9 @@ func testAccAppMeshGatewayRoute_tags_AddOnUpdate(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -384,6 +459,9 @@ func testAccAppMeshGatewayRoute_tags_EmptyTag_OnCreate(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -420,6 +498,7 @@ func testAccAppMeshGatewayRoute_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -471,6 +550,9 @@ func testAccAppMeshGatewayRoute_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -498,6 +580,10 @@ func testAccAppMeshGatewayRoute_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(""),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2: knownvalue.StringExact(""),
 					})),
@@ -541,6 +627,9 @@ func testAccAppMeshGatewayRoute_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -600,6 +689,9 @@ func testAccAppMeshGatewayRoute_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -626,6 +718,9 @@ func testAccAppMeshGatewayRoute_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
 				},
@@ -1639,6 +1734,7 @@ func testAccAppMeshGatewayRoute_tags_ComputedTag_OnCreate(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(1)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1697,6 +1793,9 @@ func testAccAppMeshGatewayRoute_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1726,6 +1825,10 @@ func testAccAppMeshGatewayRoute_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(2)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapPartial(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapPartial(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -1788,6 +1891,9 @@ func testAccAppMeshGatewayRoute_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1814,6 +1920,7 @@ func testAccAppMeshGatewayRoute_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(1)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

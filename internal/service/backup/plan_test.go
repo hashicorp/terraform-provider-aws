@@ -702,12 +702,12 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckPlanExists(ctx context.Context, n string, v *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		output, err := tfbackup.FindPlanByID(ctx, conn, rs.Primary.ID)
 

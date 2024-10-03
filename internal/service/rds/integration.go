@@ -135,7 +135,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.Tags = getTagsInV2(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIntegration(ctx, input)
 
@@ -207,7 +207,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 		data.AdditionalEncryptionContext = prevAdditionalEncryptionContext
 	}
 
-	setTagsOutV2(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -222,7 +222,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().RDSClient(ctx)
 
 	_, err := conn.DeleteIntegration(ctx, &rds.DeleteIntegrationInput{
-		IntegrationIdentifier: aws.String(data.ID.ValueString()),
+		IntegrationIdentifier: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
@@ -357,8 +357,8 @@ type integrationResourceModel struct {
 	IntegrationName             types.String                     `tfsdk:"integration_name"`
 	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
 	SourceARN                   fwtypes.ARN                      `tfsdk:"source_arn"`
-	Tags                        types.Map                        `tfsdk:"tags"`
-	TagsAll                     types.Map                        `tfsdk:"tags_all"`
+	Tags                        tftags.Map                       `tfsdk:"tags"`
+	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
 	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
 	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
 }

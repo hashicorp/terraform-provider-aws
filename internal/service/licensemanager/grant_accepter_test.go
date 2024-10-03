@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -102,36 +102,24 @@ func testAccCheckGrantAccepterExists(ctx context.Context, n string, providerF fu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No License Manager License Configuration ID is set")
-		}
+		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
-		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
+		_, err := tflicensemanager.FindReceivedGrantByARN(ctx, conn, rs.Primary.ID)
 
-		out, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		if out == nil {
-			return fmt.Errorf("GrantAccepter %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
+		conn := provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant_accepter" {
 				continue
 			}
 
-			_, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
+			_, err := tflicensemanager.FindReceivedGrantByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -141,7 +129,7 @@ func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.T
 				return err
 			}
 
-			return fmt.Errorf("License Manager GrantAccepter %s still exists", rs.Primary.ID)
+			return fmt.Errorf("License Manager Grant Accepter %s still exists", rs.Primary.ID)
 		}
 
 		return nil

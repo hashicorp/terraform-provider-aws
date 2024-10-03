@@ -26,11 +26,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceAssetType,
+			Name:    "Asset Type",
+		},
+		{
 			Factory: newResourceDomain,
 			Name:    "Domain",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory: newResourceEnvironment,
+			Name:    "Environment",
 		},
 		{
 			Factory: newResourceEnvironmentBlueprintConfiguration,
@@ -41,8 +49,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Environment Profile",
 		},
 		{
+			Factory: newResourceFormType,
+			Name:    "Form Type",
+		},
+		{
 			Factory: newResourceGlossary,
 			Name:    "Glossary",
+		},
+		{
+			Factory: newResourceGlossaryTerm,
+			Name:    "Glossary Term",
 		},
 		{
 			Factory: newResourceProject,

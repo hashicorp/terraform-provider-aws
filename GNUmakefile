@@ -124,9 +124,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint preferred-lib provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
+ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -203,7 +203,7 @@ docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -240,24 +240,11 @@ docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
 	@misspell -error -source text docs/
 
-examples-tflint: ## [CI] Examples Checks / tflint
+examples-tflint: tflint-init ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
-	@tflint --config .ci/.tflint.hcl --init
-	@exit_code=0 ; \
-	TFLINT_CONFIG="`pwd -P`/.ci/.tflint.hcl" ; \
-	for DIR in `find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u`; do \
-		pushd "$$DIR" ; \
-		tflint --config="$$TFLINT_CONFIG" \
-			--enable-rule=terraform_comment_syntax \
-			--enable-rule=terraform_deprecated_index \
-			--enable-rule=terraform_deprecated_interpolation \
-			--enable-rule=terraform_required_version \
-			--disable-rule=terraform_required_providers \
-			--disable-rule=terraform_typed_variables \
-			|| exit_code=1 ; \
-		popd ; \
-	done ; \
-	exit $$exit_code
+	TFLINT_CONFIG="$(PWD)/.ci/.tflint.hcl" ; \
+	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
+		--disable-rule=terraform_typed_variables
 
 fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
@@ -308,18 +295,24 @@ go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
 	@misspell -error -source auto -i "littel,ceasar" internal/
 
-golangci-lint: golangci-lint1 golangci-lint2 ## [CI] All golangci-lint Checks
+golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 ## [CI] All golangci-lint Checks
 
-golangci-lint1: ## [CI] golangci-lint Checks / 1 of 2
-	@echo "make: golangci-lint Checks / 1 of 2..."
+golangci-lint1: ## [CI] golangci-lint Checks / 1 of 3
+	@echo "make: golangci-lint Checks / 1 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
 		$(TEST)
 
-golangci-lint2: ## [CI] golangci-lint Checks / 2 of 2
-	@echo "make: golangci-lint Checks / 2 of 2..."
+golangci-lint2: ## [CI] golangci-lint Checks / 2 of 3
+	@echo "make: golangci-lint Checks / 2 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci2.yml \
+		$(TEST)
+
+golangci-lint3: ## [CI] golangci-lint Checks / 3 of 3
+	@echo "make: golangci-lint Checks / 3 of 3..."
+	@golangci-lint run \
+		--config .ci/.golangci3.yml \
 		$(TEST)
 
 help: ## Display this help
@@ -336,14 +329,6 @@ lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test, website, and docs linter findings
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
-
-preferred-lib: ## [CI] Preferred Library Version Check / diffgrep
-	@echo "make: Preferred Library Version Check / diffgrep..."
-	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
-	if [ "$$found" != "" ] ; then \
-		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
-		exit 1 ; \
-	fi
 
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
@@ -462,7 +447,6 @@ semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--exclude .ci/semgrep/**/*.go \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -485,7 +469,6 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--exclude .ci/semgrep/**/*.go \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -514,7 +497,6 @@ semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--exclude .ci/semgrep/**/*.go \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -658,11 +640,27 @@ testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-testacc-tflint: ## [CI] Acceptance Test Linting / tflint
-	@echo "make: Acceptance Test Linting / tflint..."
-	@tflint --config .ci/.tflint.hcl --init
+testacc-tflint: testacc-tflint-dir testacc-tflint-embedded ## [CI] Acceptance Test Linting / tflint
+
+testacc-tflint-dir: tflint-init ## Run tflint on Terraform directories
+	@echo "make: Acceptance Test Linting (standalone) / tflint..."
+	@# tflint always resolves config flies relative to the working directory when using --recursive
+	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
+	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
+
+testacc-tflint-dir-fix: tflint-init ## fix Terraform directory linter findings
+	@echo "make: Acceptance Test Linting (standalone) / tflint..."
+	@# tflint always resolves config flies relative to the working directory when using --recursive
+	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
+	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
+
+testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
+	@echo "make: Acceptance Test Linting (embedded) / tflint..."
 	@find $(SVC_DIR) -type f -name '*_test.go' \
 		| .ci/scripts/validate-terraform.sh
+
+tflint-init: ## Initialize tflint
+	@tflint --config .ci/.tflint.hcl --init
 
 tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 	@echo "make: Provider Checks / tfproviderdocs..."
@@ -717,7 +715,7 @@ website-link-check-markdown: ## [CI] Website Checks / markdown-link-check-a-z-ma
 	@echo "make: Website Checks / markdown-link-check-a-z-markdown..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -729,7 +727,7 @@ website-link-check-md: ## [CI] Website Checks / markdown-link-check-md
 	@echo "make: Website Checks / markdown-link-check-md..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -777,12 +775,10 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
 	@terrafmt diff ./website --check --pattern '*.markdown'
 
-website-tflint: ## [CI] Website Checks / tflint
+website-tflint: tflint-init ## [CI] Website Checks / tflint
 	@echo "make: Website Checks / tflint..."
-	@tflint --config .ci/.tflint.hcl --init
 	@exit_code=0 ; \
 	shared_rules=( \
-		"--enable-rule=terraform_comment_syntax" \
 		"--disable-rule=aws_cloudwatch_event_target_invalid_arn" \
 		"--disable-rule=aws_db_instance_default_parameter_group" \
 		"--disable-rule=aws_elasticache_cluster_default_parameter_group" \
@@ -799,18 +795,17 @@ website-tflint: ## [CI] Website Checks / tflint
 		"--disable-rule=aws_servicecatalog_portfolio_share_invalid_type" \
 		"--disable-rule=aws_transfer_ssh_key_invalid_body" \
 		"--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate" \
-		"--disable-rule=terraform_required_providers" \
 		"--disable-rule=terraform_unused_declarations" \
 		"--disable-rule=terraform_typed_variables" \
 	) ; \
 	while read -r filename; do \
 		rules=("$${shared_rules[@]}") ; \
-		if [[ "$$filename" == "./website/docs/guides/version-2-upgrade.html.md" ]] ; then \
+		if [[ "$$filename" == "./website/docs/guides/version-2-upgrade.html.markdown" ]] ; then \
 			rules+=( \
 			"--disable-rule=terraform_deprecated_index" \
 			"--disable-rule=terraform_deprecated_interpolation" \
 			) ; \
-		elif [[ "$$filename" == "./website/docs/guides/version-3-upgrade.html.md" ]]; then \
+		elif [[ "$$filename" == "./website/docs/guides/version-3-upgrade.html.markdown" ]]; then \
 			rules+=( \
 			"--enable-rule=terraform_deprecated_index" \
 			"--disable-rule=terraform_deprecated_interpolation" \
@@ -824,7 +819,7 @@ website-tflint: ## [CI] Website Checks / tflint
 		set +e ; \
 		./.ci/scripts/validate-terraform-file.sh "$$filename" "$${rules[@]}" || exit_code=1 ; \
 		set -e ; \
-	done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u) ; \
+	done < <(find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | sort -u) ; \
 	exit $$exit_code
 
 yamllint: ## [CI] YAML Linting / yamllint
@@ -869,6 +864,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	go-misspell \
 	golangci-lint1 \
 	golangci-lint2 \
+	golangci-lint3 \
 	golangci-lint \
 	help \
 	import-lint \
@@ -876,7 +872,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	lint-fix \
 	lint \
 	misspell \
-	preferred-lib \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
@@ -906,7 +901,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-lint \
 	testacc-short \
 	testacc-tflint \
+	testacc-tflint-dir \
+	testacc-tflint-embedded \
 	testacc \
+	tflint-init \
 	tfproviderdocs \
 	tfsdk2fw \
 	tools \

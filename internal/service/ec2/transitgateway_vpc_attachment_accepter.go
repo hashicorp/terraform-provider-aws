@@ -49,6 +49,10 @@ func resourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_group_referencing_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -183,6 +187,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(ctx context.Context, d *sch
 
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
+	d.Set("security_group_referencing_support", transitGatewayVPCAttachment.Options.SecurityGroupReferencingSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
 	d.Set(names.AttrSubnetIDs, transitGatewayVPCAttachment.SubnetIds)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayVPCAttachment.TransitGatewayAttachmentId)
