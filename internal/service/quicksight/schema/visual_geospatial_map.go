@@ -80,7 +80,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+																			"color": hexColorSchema(false),
 																		},
 																	},
 																},

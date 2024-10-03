@@ -227,7 +227,7 @@ func fontConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"font_color":      stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"font_color":      hexColorSchema(false),
 				"font_decoration": stringEnumSchema[awstypes.FontDecoration](false),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,

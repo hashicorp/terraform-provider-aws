@@ -43,7 +43,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Required: true,
 													},
-													"color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+													"color": hexColorSchema(false),
 													"data_value": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -65,7 +65,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"color":              hexColorSchema(false),
 							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 						},
 					},
@@ -90,7 +90,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"color":              hexColorSchema(false),
 							names.AttrExpression: stringLenBetweenSchema(true, 1, 4096),
 							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
 								Type:     schema.TypeList,

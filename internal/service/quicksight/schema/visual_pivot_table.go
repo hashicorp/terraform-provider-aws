@@ -256,7 +256,7 @@ func tableBorderOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color":     stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"color":     hexColorSchema(false),
 				"style":     stringEnumSchema[awstypes.TableBorderStyle](false),
 				"thickness": intSchema(false, validation.IntBetween(1, 4)),
 			},
@@ -272,7 +272,7 @@ func tableCellStyleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"background_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"background_color": hexColorSchema(false),
 				"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GlobalTableBorderOptions.html
 					Type:     schema.TypeList,
 					Optional: true,

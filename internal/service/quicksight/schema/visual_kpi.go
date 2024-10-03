@@ -81,7 +81,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"color":              stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+													"color":              hexColorSchema(false),
 													"tooltip_visibility": stringEnumSchema[awstypes.Visibility](false),
 													names.AttrType:       stringEnumSchema[awstypes.KPISparklineType](true),
 													"visibility":         stringEnumSchema[awstypes.Visibility](false),

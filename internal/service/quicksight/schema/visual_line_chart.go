@@ -315,7 +315,7 @@ func lineChartMarkerStyleSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"marker_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"marker_color": hexColorSchema(false),
 				"marker_shape": stringEnumSchema[awstypes.LineChartMarkerShape](false),
 				"marker_size": {
 					Type:     schema.TypeString,

@@ -37,7 +37,7 @@ func funnelChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_label_visibility": stringEnumSchema[awstypes.Visibility](false),
-										"label_color":               stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+										"label_color":               hexColorSchema(false),
 										"label_font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 										"measure_data_label_style":  stringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](false),
 										"measure_label_visibility":  stringEnumSchema[awstypes.Visibility](false),

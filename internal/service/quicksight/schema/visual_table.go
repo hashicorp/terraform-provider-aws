@@ -241,8 +241,8 @@ func tableVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"field_id":       stringLenBetweenSchema(true, 1, 512),
-													"negative_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
-													"positive_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+													"negative_color": hexColorSchema(false),
+													"positive_color": hexColorSchema(false),
 												},
 											},
 										},

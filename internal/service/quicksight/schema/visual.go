@@ -155,7 +155,7 @@ func visualPaletteSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"chart_color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"chart_color": hexColorSchema(false),
 				"color_map": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathColor.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -163,7 +163,7 @@ func visualPaletteSchema() *schema.Schema {
 					MaxItems: 5000,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":            stringMatchSchema(true, `^#[0-9A-F]{6}$`, ""),
+							"color":            hexColorSchema(true),
 							"element":          dataPathValueSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
 							"time_granularity": stringEnumSchema[awstypes.TimeGranularity](false),
 						},
@@ -366,7 +366,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 3,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"color": hexColorSchema(false),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -381,7 +381,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"color": hexColorSchema(false),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -471,7 +471,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"label_color":              stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+				"label_color":              hexColorSchema(false),
 				"label_content":            stringEnumSchema[awstypes.DataLabelContent](false),
 				"label_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 				"measure_label_visibility": stringEnumSchema[awstypes.Visibility](false),
@@ -481,6 +481,10 @@ func dataLabelOptionsSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func hexColorSchema(required bool) *schema.Schema {
+	return stringMatchSchema(required, `^#[0-9A-F]{6}$`, "")
 }
 
 func expandVisual(tfMap map[string]interface{}) *awstypes.Visual {

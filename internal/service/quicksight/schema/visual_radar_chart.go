@@ -30,8 +30,8 @@ func radarChartVisualSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"alternate_band_colors_visibility": stringEnumSchema[awstypes.Visibility](false),
-							"alternate_band_even_color":        stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
-							"alternate_band_odd_color":         stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"alternate_band_even_color":        hexColorSchema(false),
+							"alternate_band_odd_color":         hexColorSchema(false),
 							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,

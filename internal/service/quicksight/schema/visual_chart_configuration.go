@@ -338,7 +338,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 									},
 								},
 							},
-							"font_color":          stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"font_color":          hexColorSchema(false),
 							"font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 							"horizontal_position": stringEnumSchema[awstypes.ReferenceLineLabelHorizontalPosition](false),
 							"value_label_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineValueLabelConfiguration.html
@@ -365,7 +365,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   stringMatchSchema(false, `^#[0-9A-F]{6}$`, ""),
+							"color":   hexColorSchema(false),
 							"pattern": stringEnumSchema[awstypes.ReferenceLinePatternType](false),
 						},
 					},
