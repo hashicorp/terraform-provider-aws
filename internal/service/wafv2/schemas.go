@@ -38,7 +38,10 @@ var ruleLabelsSchema = sync.OnceValue(func() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
+						validation.StringMatch(
+							regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`),
+							"must contain only alphanumeric, underscore, hyphen, and colon characters",
+						),
 					),
 				},
 			},
@@ -85,65 +88,65 @@ type schemaCache struct {
 
 func (c *schemaCache) get(level int) *schema.Schema {
 	c.once.Do(func() {
-		var previous *schema.Schema
-		for i := range statementSchemaCacheSize {
-			if i == 0 {
-				c.values[0] = schema.Schema{
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"statement": {
-								Type:     schema.TypeList,
-								Required: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"byte_match_statement":                  byteMatchStatementSchema(),
-										"geo_match_statement":                   geoMatchStatementSchema(),
-										"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-										"label_match_statement":                 labelMatchStatementSchema(),
-										"regex_match_statement":                 regexMatchStatementSchema(),
-										"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-										"size_constraint_statement":             sizeConstraintSchema(),
-										"sqli_match_statement":                  sqliMatchStatementSchema(),
-										"xss_match_statement":                   xssMatchStatementSchema(),
-									},
+		// Initialize the first element
+		c.values[0] = schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"statement": {
+						Type:     schema.TypeList,
+						Required: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"byte_match_statement":                  byteMatchStatementSchema(),
+								"geo_match_statement":                   geoMatchStatementSchema(),
+								"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
+								"label_match_statement":                 labelMatchStatementSchema(),
+								"regex_match_statement":                 regexMatchStatementSchema(),
+								"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+								"size_constraint_statement":             sizeConstraintSchema(),
+								"sqli_match_statement":                  sqliMatchStatementSchema(),
+								"xss_match_statement":                   xssMatchStatementSchema(),
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// Initialize the rest of the elements
+		var previous *schema.Schema = &c.values[0]
+		for i := 1; i < statementSchemaCacheSize; i++ {
+			c.values[i] = schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"statement": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"and_statement":                         previous,
+									"byte_match_statement":                  byteMatchStatementSchema(),
+									"geo_match_statement":                   geoMatchStatementSchema(),
+									"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
+									"label_match_statement":                 labelMatchStatementSchema(),
+									"not_statement":                         previous,
+									"or_statement":                          previous,
+									"regex_match_statement":                 regexMatchStatementSchema(),
+									"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+									"size_constraint_statement":             sizeConstraintSchema(),
+									"sqli_match_statement":                  sqliMatchStatementSchema(),
+									"xss_match_statement":                   xssMatchStatementSchema(),
 								},
 							},
 						},
 					},
-				}
-			} else {
-				c.values[i] = schema.Schema{
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"statement": {
-								Type:     schema.TypeList,
-								Required: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"and_statement":                         previous,
-										"byte_match_statement":                  byteMatchStatementSchema(),
-										"geo_match_statement":                   geoMatchStatementSchema(),
-										"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-										"label_match_statement":                 labelMatchStatementSchema(),
-										"not_statement":                         previous,
-										"or_statement":                          previous,
-										"regex_match_statement":                 regexMatchStatementSchema(),
-										"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-										"size_constraint_statement":             sizeConstraintSchema(),
-										"sqli_match_statement":                  sqliMatchStatementSchema(),
-										"xss_match_statement":                   xssMatchStatementSchema(),
-									},
-								},
-							},
-						},
-					},
-				}
+				},
 			}
 			previous = &c.values[i]
 		}
