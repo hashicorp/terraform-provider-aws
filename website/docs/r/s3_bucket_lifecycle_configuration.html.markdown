@@ -205,22 +205,25 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 ### Specifying a filter based on object size
 
-Object size values are in bytes. Maximum filter size is 5TB. Some storage classes have minimum object size limitations, for more information, see [Comparing the Amazon S3 storage classes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html#sc-compare).
+Object size values are in bytes. Maximum filter size is 5TB. Amazon S3 applies a default behavior to your Lifecycle configuration that prevents objects smaller than 128 KB from being transitioned to any storage class. You can allow smaller objects to transition by adding a minimum size (`object_size_greater_than`) or a maximum size (`object_size_less_than`) filter that specifies a smaller size to the configuration. This example allows any object smaller than 128 KB to transition to the S3 Glacier Instant Retrieval storage class:
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
   bucket = aws_s3_bucket.bucket.id
 
   rule {
-    id = "rule-1"
+    id = "Allow small object transitions"
 
     filter {
-      object_size_greater_than = 500
+      object_size_greater_than = 1
     }
 
-    # ... other transition/expiration actions ...
-
     status = "Enabled"
+
+    transition {
+      days          = 365
+      storage_class = "GLACIER_IR"
+    }
   }
 }
 ```
