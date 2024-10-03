@@ -394,21 +394,34 @@ func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema 
 	return s
 }
 
+var aggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
+
 func aggregationFunctionSchema(required bool) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
-		Type:     schema.TypeList,
-		Required: required,
-		Optional: !required,
-		MinItems: 1,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"categorical_aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
-				"date_aggregation_function":        stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
-				"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+	s, ok := aggregationFunctionSchemaCache.Load(required)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = aggregationFunctionSchemaCache.LoadOrStore(
+		required,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+			Type:     schema.TypeList,
+			Required: required,
+			Optional: !required,
+			MinItems: 1,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"categorical_aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
+					"date_aggregation_function":        stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
+					"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+				},
 			},
 		},
-	}
+	)
+	return s
 }
 
 func calculatedFieldsSchema() *schema.Schema {
