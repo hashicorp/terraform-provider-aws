@@ -130,3 +130,37 @@ rules:
           }
     fix: intBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
+
+  - id: quicksight-schema-float-between-required
+    languages: [go]
+    message: Float attributes with between validation should use floatBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeFloat,
+            Required:     true,
+            ValidateFunc: validation.FloatBetween($MIN, $MAX),
+          }
+    fix: floatBetweenSchema(attrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-float-between-optional
+    languages: [go]
+    message: Float attributes with between validation should use floatBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeFloat,
+            Optional:     true,
+            ValidateFunc: validation.FloatBetween($MIN, $MAX),
+          }
+    fix: floatBetweenSchema(attrOptional, $MIN, $MAX)
+    severity: WARNING

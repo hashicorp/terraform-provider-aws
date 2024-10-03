@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func geospatialMapStyleOptionsSchema() *schema.Schema {
@@ -39,26 +38,10 @@ func geospatialWindowOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"east": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-1800, 1800),
-							},
-							"north": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-90, 90),
-							},
-							"south": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-90, 90),
-							},
-							"west": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-1800, 1800),
-							},
+							"east":  floatBetweenSchema(attrRequired, -1800, 1800),
+							"north": floatBetweenSchema(attrRequired, -90, 90),
+							"south": floatBetweenSchema(attrRequired, -90, 90),
+							"west":  floatBetweenSchema(attrRequired, -1800, 1800),
 						},
 					},
 				},

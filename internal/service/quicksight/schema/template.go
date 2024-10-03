@@ -4,7 +4,6 @@
 package schema
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
 
@@ -361,22 +360,38 @@ func intAtLeastSchema(handling attrHandling, min int) *schema.Schema {
 	return s
 }
 
-func floatSchema(required bool, validateFunc any) *schema.Schema {
-	switch v := validateFunc.(type) {
-	case schema.SchemaValidateDiagFunc:
-		return &schema.Schema{
-			Type:             schema.TypeFloat,
-			Required:         required,
-			Optional:         !required,
-			ValidateDiagFunc: v,
-		}
-	case schema.SchemaValidateFunc:
-		return floatSchema(required, validation.ToDiagFunc(v))
-	case func(interface{}, string) ([]string, []error):
-		return floatSchema(required, schema.SchemaValidateFunc(v))
-	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
+type floatBetweenIdentity struct {
+	handling attrHandling
+	min, max float64
+}
+
+var floatBetweenSchemaCache syncMap[floatBetweenIdentity, *schema.Schema]
+
+func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema {
+	id := floatBetweenIdentity{
+		handling: handling,
+		min:      min,
+		max:      max,
 	}
+
+	s, ok := floatBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = floatBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.FloatBetween(min, max),
+		},
+	)
+	return s
 }
 
 func aggregationFunctionSchema(required bool) *schema.Schema {
@@ -428,11 +443,7 @@ func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"percentile_value": {
-								Type:         schema.TypeFloat,
-								Optional:     true,
-								ValidateFunc: validation.FloatBetween(0, 100),
-							},
+							"percentile_value": floatBetweenSchema(attrOptional, 0, 100),
 						},
 					},
 				},

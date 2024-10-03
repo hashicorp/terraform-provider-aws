@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -157,8 +156,8 @@ func axisDisplayOptionsSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"from": floatSchema(false, validation.FloatBetween(0, 100)),
-													"to":   floatSchema(false, validation.FloatBetween(0, 100)),
+													"from": floatBetweenSchema(attrOptional, 0, 100),
+													"to":   floatBetweenSchema(attrOptional, 0, 100),
 												},
 											},
 										},
@@ -384,7 +383,7 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"max_visible_columns": intBetweenSchema(attrOptional, 1, 10),
-				"max_visible_rows": intBetweenSchema(attrOptional, 1, 10),
+				"max_visible_rows":    intBetweenSchema(attrOptional, 1, 10),
 				"panel_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
