@@ -61,7 +61,7 @@ func resourceSpotInstanceRequest() *schema.Resource {
 					continue
 				}
 				// Copy-on-write
-				x := *v
+				x := *v // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
 				x.ForceNew = true
 				s[k] = &x
 			}
