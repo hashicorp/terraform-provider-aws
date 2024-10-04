@@ -19,6 +19,21 @@ resource "aws_codecommit_repository" "test" {
 }
 ```
 
+### AWS KMS Customer Managed Keys (CMK)
+
+```terraform
+resource "aws_codecommit_repository" "test" {
+  repository_name = "MyTestRepository"
+  description     = "This is the Sample App Repository"
+  kms_key_id      = aws_kms_key.test.arn
+}
+
+resource "aws_kms_key" "test" {
+  description             = "test"
+  deletion_window_in_days = 7
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -26,6 +41,7 @@ This resource supports the following arguments:
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
 * `default_branch` - (Optional) The default branch of the repository. The branch specified here needs to exist.
+* `kms_key_id` - (Optional) The ARN of the encryption key. If no key is specified, the default `aws/codecommit` Amazon Web Services managed key is used.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -40,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Codecommit repository using repository name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCommit repository using repository name. For example:
 
 ```terraform
 import {
@@ -49,7 +65,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Codecommit repository using repository name. For example:
+Using `terraform import`, import CodeCommit repository using repository name. For example:
 
 ```console
 % terraform import aws_codecommit_repository.imported ExistingRepo

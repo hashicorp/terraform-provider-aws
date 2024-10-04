@@ -80,26 +80,48 @@ This resource supports the following arguments:
 The `primaryContainer` and `container` block both support:
 
 * `image` - (Optional) The registry path where the inference code image is stored in Amazon ECR.
-* `mode` - (Optional) The container hosts value `singleModel/multiModel`. The default value is `singleModel`.
+* `mode` - (Optional) The container hosts value `SingleModel/MultiModel`. The default value is `SingleModel`.
 * `modelDataUrl` - (Optional) The URL for the S3 location where model artifacts are stored.
 * `modelPackageName` - (Optional) The Amazon Resource Name (ARN) of the model package to use to create the model.
+* `modelDataSource` - (Optional) The location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker Developer Guide_.
 * `containerHostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
 * `imageConfig` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
+* `inferenceSpecificationName` - (Optional) The inference specification name in the model package version.
+* `multiModelConfig` - (Optional) Specifies additional configuration for multi-model endpoints. see [Multi Model Config](#multi-model-config).
 
 ### Image Config
 
-* `repositoryAccessMode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `platform` and `vpc`.
+* `repositoryAccessMode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `Platform` and `Vpc`.
 * `repositoryAuthConfig` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified Vpc as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
 
 #### Repository Auth Config
 
 * `repositoryCredentialsProviderArn` - (Required) The Amazon Resource Name (ARN) of an AWS Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an AWS Lambda function, see [Create a Lambda function with the console](https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) in the _AWS Lambda Developer Guide_.
 
+### Model Data Source
+
+* `s3DataSource` - (Required) The S3 location of model data to deploy.
+
+#### S3 Data Source
+
+* `compressionType` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
+* `s3DataType` - (Required) The type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
+* `s3Uri` - (Required) The S3 path of model data to deploy.
+* `modelAccessConfig` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`modelAccessConfig` configuration block]. see [Model Access Config](#model-access-config).
+
+##### Model Access Config
+
+* `acceptEula` - (Required) Specifies agreement to the model end-user license agreement (EULA). The AcceptEula value must be explicitly defined as `true` in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
+
+### Multi Model Config
+
+* `modelCacheSetting` - (Optional) Whether to cache models for a multi-model endpoint. By default, multi-model endpoints cache models so that a model does not have to be loaded into memory each time it is invoked. Some use cases do not benefit from model caching. For example, if an endpoint hosts a large number of models that are each invoked infrequently, the endpoint might perform better if you disable model caching. To disable model caching, set the value of this parameter to `Disabled`. Allowed values are: `Enabled` and `Disabled`.
+
 ## Inference Execution Config
 
-* `mode` - (Required) How containers in a multi-container are run. The following values are valid `serial` and `direct`.
+* `mode` - (Required) How containers in a multi-container are run. The following values are valid `Serial` and `Direct`.
 
 ## Attribute Reference
 
@@ -117,9 +139,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SagemakerModel } from "./.gen/providers/aws/sagemaker-model";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SagemakerModel.generateConfigForImport(this, "testModel", "model-foo");
   }
 }
 
@@ -131,4 +159,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_model.test_model model-foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-53d6c468eddd1f29a98ecc8fc36ce24bea38081a6d6c05a93d9d1f563dbc5e78 -->
+<!-- cache-key: cdktf-0.20.1 input-22db6730e3e40dcfe0c74caa5b3dc9c2acf674b52c6e6fad1308bde7b4f8d0ee -->

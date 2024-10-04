@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	ResNameTrail = "Trail"
-
 	resourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
 	resourceTypeLambdaFunction = "AWS::Lambda::Function"
 	resourceTypeS3Object       = "AWS::S3::Object"
@@ -45,4 +43,8 @@ func field_Values() []string {
 
 const (
 	propagationTimeout = 2 * time.Minute
+)
+
+const (
+	servicePrincipal = "cloudtrail.amazonaws.com"
 )

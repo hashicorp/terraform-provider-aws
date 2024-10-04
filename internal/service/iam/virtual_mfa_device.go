@@ -7,13 +7,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,8 +29,9 @@ import (
 )
 
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
-// @Tags
-func ResourceVirtualMFADevice() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
+func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
 		ReadWithoutTimeout:   resourceVirtualMFADeviceRead,
@@ -41,7 +43,7 @@ func ResourceVirtualMFADevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +55,7 @@ func ResourceVirtualMFADevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "/",
@@ -66,7 +68,7 @@ func ResourceVirtualMFADevice() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,22 +89,23 @@ func ResourceVirtualMFADevice() *schema.Resource {
 
 func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	name := d.Get("virtual_mfa_device_name").(string)
 	input := &iam.CreateVirtualMFADeviceInput{
-		Path:                 aws.String(d.Get("path").(string)),
+		Path:                 aws.String(d.Get(names.AttrPath).(string)),
 		Tags:                 getTagsIn(ctx),
 		VirtualMFADeviceName: aws.String(name),
 	}
 
-	output, err := conn.CreateVirtualMFADeviceWithContext(ctx, input)
+	output, err := conn.CreateVirtualMFADevice(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	partition := meta.(*conns.AWSClient).Partition
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateVirtualMFADeviceWithContext(ctx, input)
+		output, err = conn.CreateVirtualMFADevice(ctx, input)
 	}
 
 	if err != nil {
@@ -110,7 +113,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	vMFA := output.VirtualMFADevice
-	d.SetId(aws.StringValue(vMFA.SerialNumber))
+	d.SetId(aws.ToString(vMFA.SerialNumber))
 
 	// Base32StringSeed and QRCodePNG must be read here, because they are not available via ListVirtualMFADevices
 	d.Set("base_32_string_seed", string(vMFA.Base32StringSeed))
@@ -121,7 +124,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 		err := virtualMFADeviceCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceVirtualMFADeviceRead(ctx, d, meta)...)
 		}
 
@@ -135,9 +138,9 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	vMFA, err := FindVirtualMFADeviceBySerialNumber(ctx, conn, d.Id())
+	vMFA, err := findVirtualMFADeviceBySerialNumber(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Virtual MFA Device (%s) not found, removing from state", d.Id())
@@ -149,68 +152,53 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vMFA.SerialNumber)
+	d.Set(names.AttrARN, vMFA.SerialNumber)
 
-	path, name, err := parseVirtualMFADeviceARN(aws.StringValue(vMFA.SerialNumber))
+	path, name, err := parseVirtualMFADeviceARN(aws.ToString(vMFA.SerialNumber))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("path", path)
+	d.Set(names.AttrPath, path)
 	d.Set("virtual_mfa_device_name", name)
 
 	if v := vMFA.EnableDate; v != nil {
-		d.Set("enable_date", aws.TimeValue(v).Format(time.RFC3339))
+		d.Set("enable_date", aws.ToTime(v).Format(time.RFC3339))
 	}
 
 	if u := vMFA.User; u != nil {
-		d.Set("user_name", u.UserName)
+		d.Set(names.AttrUserName, u.UserName)
 	}
 
 	// The call above returns empty tags.
-	output, err := conn.ListMFADeviceTagsWithContext(ctx, &iam.ListMFADeviceTagsInput{
-		SerialNumber: aws.String(d.Id()),
-	})
-
+	tags, err := virtualMFADeviceTags(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing IAM Virtual MFA Device (%s) tags: %s", d.Id(), err)
 	}
 
-	setTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, tags)
 
 	return diags
 }
 
 func resourceVirtualMFADeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	o, n := d.GetChange("tags_all")
-
-	err := virtualMFADeviceUpdateTags(ctx, conn, d.Id(), o, n)
-
-	// Some partitions (e.g. ISO) may not support tagging.
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-		return append(diags, resourceVirtualMFADeviceRead(ctx, d, meta)...)
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating tags for IAM Virtual MFA Device (%s): %s", d.Id(), err)
-	}
+	// Tags only.
 
 	return append(diags, resourceVirtualMFADeviceRead(ctx, d, meta)...)
 }
 
 func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if v := d.Get("user_name"); v != "" {
-		_, err := conn.DeactivateMFADeviceWithContext(ctx, &iam.DeactivateMFADeviceInput{
+	if v := d.Get(names.AttrUserName); v != "" {
+		_, err := conn.DeactivateMFADevice(ctx, &iam.DeactivateMFADeviceInput{
 			UserName:     aws.String(v.(string)),
 			SerialNumber: aws.String(d.Id()),
 		})
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return diags
 		}
 		if err != nil {
@@ -219,11 +207,11 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting IAM Virtual MFA Device: %s", d.Id())
-	_, err := conn.DeleteVirtualMFADeviceWithContext(ctx, &iam.DeleteVirtualMFADeviceInput{
+	_, err := conn.DeleteVirtualMFADevice(ctx, &iam.DeleteVirtualMFADeviceInput{
 		SerialNumber: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
 	}
 
@@ -234,34 +222,30 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindVirtualMFADeviceBySerialNumber(ctx context.Context, conn *iam.IAM, serialNumber string) (*iam.VirtualMFADevice, error) {
+func findVirtualMFADeviceBySerialNumber(ctx context.Context, conn *iam.Client, serialNumber string) (*awstypes.VirtualMFADevice, error) {
 	input := &iam.ListVirtualMFADevicesInput{}
-	var output *iam.VirtualMFADevice
+	var output awstypes.VirtualMFADevice
 
-	err := conn.ListVirtualMFADevicesPagesWithContext(ctx, input, func(page *iam.ListVirtualMFADevicesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iam.NewListVirtualMFADevicesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.VirtualMFADevices {
-			if v != nil && aws.StringValue(v.SerialNumber) == serialNumber {
+			if !reflect.ValueOf(v).IsZero() && aws.ToString(v.SerialNumber) == serialNumber {
 				output = v
-				return false
+				break
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
-	if output == nil {
+	if reflect.ValueOf(output).IsZero() {
 		return nil, &retry.NotFoundError{}
 	}
 
-	return output, nil
+	return &output, nil
 }
 
 func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
@@ -277,4 +261,15 @@ func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
 	}
 
 	return matches[1], matches[2], nil
+}
+
+func virtualMFADeviceTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListMFADeviceTags(ctx, &iam.ListMFADeviceTagsInput{
+		SerialNumber: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }

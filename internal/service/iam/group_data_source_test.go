@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMGroupDataSource_basic(t *testing.T) {
@@ -19,16 +19,16 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "group_name", groupName),
-					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrPath, "/"),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrGroupName, groupName),
+					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
 				),
 			},
 		},
@@ -44,16 +44,16 @@ func TestAccIAMGroupDataSource_users(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_user(groupName, userName, groupMemberShipName, userCount),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "group_name", groupName),
-					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrPath, "/"),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrGroupName, groupName),
+					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", fmt.Sprint(userCount)),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_id"),

@@ -30,32 +30,32 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalHostname(resourceName, "domain_name", "accesspoint.s3-global", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap`)),
-					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestMatchResourceAttr(resourceName, names.AttrAlias, regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
+					acctest.MatchResourceAttrGlobalHostname(resourceName, names.AttrDomainName, "accesspoint.s3-global", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap`)),
+					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_acls", "true"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_policy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.ignore_public_acls", "true"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", "true"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_acls", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_policy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.ignore_public_acls", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket":            bucketName,
+						names.AttrBucket:    bucketName,
 						"bucket_account_id": acctest.AccountID(),
-						"region":            acctest.Region(),
+						names.AttrRegion:    acctest.Region(),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.MultiRegionAccessPointStatusReady)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.MultiRegionAccessPointStatusReady)),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,11 +109,11 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_publicBlock(bucketName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.ignore_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", "false"),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.ignore_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", acctest.CtFalse),
 				),
 			},
 			{
@@ -135,7 +135,7 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +178,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 3)
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -186,23 +186,46 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_three(bucket1Name, bucket2Name, bucket3Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket": bucket1Name,
+						names.AttrBucket: bucket1Name,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket": bucket2Name,
+						names.AttrBucket: bucket2Name,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket": bucket3Name,
+						names.AttrBucket: bucket3Name,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.MultiRegionAccessPointStatusReady)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.MultiRegionAccessPointStatusReady)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3ControlMultiRegionAccessPoint_putAndGetObject(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.MultiRegionAccessPointReport
+	resourceName := "aws_s3control_multi_region_access_point.test"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionAccessPointConfig_putAndGetObject(bucketName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})
@@ -324,9 +347,7 @@ resource "aws_s3control_multi_region_access_point" "test" {
 }
 
 func testAccMultiRegionAccessPointConfig_three(bucketName1, bucketName2, bucketName3, multiRegionAccessPointName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(3), fmt.Sprintf(`
 resource "aws_s3_bucket" "test1" {
   provider = aws
 
@@ -368,4 +389,39 @@ resource "aws_s3control_multi_region_access_point" "test" {
   }
 }
 `, bucketName1, bucketName2, bucketName3, multiRegionAccessPointName))
+}
+
+func testAccMultiRegionAccessPointConfig_putAndGetObject(bucketName, multiRegionAccessPointName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3control_multi_region_access_point" "test" {
+  details {
+    name = %[2]q
+
+    region {
+      bucket = aws_s3_bucket.test.id
+    }
+  }
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3control_multi_region_access_point.test.arn
+  key     = "%[1]s-key"
+  content = "Hello World"
+
+  tags = {
+    Name = %[2]q
+  }
+}
+
+# Ensure that we can GET through the bucket.
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+}
+`, bucketName, multiRegionAccessPointName)
 }

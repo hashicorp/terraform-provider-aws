@@ -20,16 +20,16 @@ func TestAccS3ObjectsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_basic(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
 				),
 			},
@@ -44,16 +44,16 @@ func TestAccS3ObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_basicViaAccessPoint(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -67,16 +67,16 @@ func TestAccS3ObjectsDataSource_prefixes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_prefixes(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -90,17 +90,17 @@ func TestAccS3ObjectsDataSource_encoded(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_encoded(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.0", "prefix/a+b"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -114,24 +114,24 @@ func TestAccS3ObjectsDataSource_maxKeysSmall(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 1, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 2, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "5"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -149,25 +149,25 @@ func TestAccS3ObjectsDataSource_maxKeysLarge(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 					testAccCheckBucketAddObjects(ctx, "aws_s3_bucket.test", keys...),
 				),
 			},
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1002"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -181,16 +181,16 @@ func TestAccS3ObjectsDataSource_startAfter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_startAfter(rName, 1, "prefix1/sub2/0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -204,16 +204,40 @@ func TestAccS3ObjectsDataSource_fetchOwner(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectsDataSourceConfig_owners(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct3),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectsDataSource_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectsDataSourceConfig_directoryBucket(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
 				),
 			},
 		},
@@ -356,4 +380,46 @@ data "aws_s3_objects" "test" {
   depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
 }
 `)
+}
+
+func testAccObjectsDataSourceConfig_directoryBucket(rName string, n int) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_object" "test1" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix1/sub1/${count.index}"
+  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object" "test2" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix1/sub2/${count.index}"
+  content = "0123456789"
+}
+
+resource "aws_s3_object" "test3" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix2/${count.index}"
+  content = "abcdefghijklmnopqrstuvwxyz"
+}
+
+data "aws_s3_objects" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
+}
+`, n))
 }

@@ -8,20 +8,24 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_globalaccelerator_listener")
-func ResourceListener() *schema.Resource {
+// @SDKResource("aws_globalaccelerator_listener", name="Listener")
+func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
@@ -45,10 +49,10 @@ func ResourceListener() *schema.Resource {
 				ForceNew: true,
 			},
 			"client_affinity": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      globalaccelerator.ClientAffinityNone,
-				ValidateFunc: validation.StringInSlice(globalaccelerator.ClientAffinity_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ClientAffinityNone,
+				ValidateDiagFunc: enum.Validate[awstypes.ClientAffinity](),
 			},
 			"port_range": {
 				Type:     schema.TypeSet,
@@ -70,136 +74,135 @@ func ResourceListener() *schema.Resource {
 					},
 				},
 			},
-			"protocol": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(globalaccelerator.Protocol_Values(), false),
+			names.AttrProtocol: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
 			},
 		},
 	}
 }
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
-	acceleratorARN := d.Get("accelerator_arn").(string)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
+	acceleratorARN := d.Get("accelerator_arn").(string)
 	input := &globalaccelerator.CreateListenerInput{
 		AcceleratorArn:   aws.String(acceleratorARN),
-		ClientAffinity:   aws.String(d.Get("client_affinity").(string)),
+		ClientAffinity:   awstypes.ClientAffinity(d.Get("client_affinity").(string)),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
-		Protocol:         aws.String(d.Get("protocol").(string)),
+		Protocol:         awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 	}
 
-	resp, err := conn.CreateListenerWithContext(ctx, input)
+	output, err := conn.CreateListener(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Global Accelerator Listener: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Listener: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
+	d.SetId(aws.ToString(output.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending.
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", acceleratorARN, err)
 	}
 
-	return resourceListenerRead(ctx, d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	listener, err := FindListenerByARN(ctx, conn, d.Id())
+	listener, err := findListenerByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Global Accelerator Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Listener (%s): %s", d.Id(), err)
 	}
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
-
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
 	d.Set("client_affinity", listener.ClientAffinity)
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
-		return diag.Errorf("setting port_range: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)
 	}
-	d.Set("protocol", listener.Protocol)
+	d.Set(names.AttrProtocol, listener.Protocol)
 
-	return nil
+	return diags
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
-	acceleratorARN := d.Get("accelerator_arn").(string)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
+	acceleratorARN := d.Get("accelerator_arn").(string)
 	input := &globalaccelerator.UpdateListenerInput{
-		ClientAffinity: aws.String(d.Get("client_affinity").(string)),
+		ClientAffinity: awstypes.ClientAffinity(d.Get("client_affinity").(string)),
 		ListenerArn:    aws.String(d.Id()),
 		PortRanges:     expandPortRanges(d.Get("port_range").(*schema.Set).List()),
-		Protocol:       aws.String(d.Get("protocol").(string)),
+		Protocol:       awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 	}
 
-	_, err := conn.UpdateListenerWithContext(ctx, input)
+	_, err := conn.UpdateListener(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Global Accelerator Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Listener (%s): %s", d.Id(), err)
 	}
 
 	// Updating a listener triggers the accelerator to change status to InPending.
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", acceleratorARN, err)
 	}
 
-	return resourceListenerRead(ctx, d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
-	acceleratorARN := d.Get("accelerator_arn").(string)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Listener: %s", d.Id())
-	_, err := conn.DeleteListenerWithContext(ctx, &globalaccelerator.DeleteListenerInput{
+	_, err := conn.DeleteListener(ctx, &globalaccelerator.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Global Accelerator Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Listener (%s): %s", d.Id(), err)
 	}
 
 	// Deleting a listener triggers the accelerator to change status to InPending.
+	acceleratorARN := d.Get("accelerator_arn").(string)
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", acceleratorARN, err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
+func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.Listener, error) {
 	input := &globalaccelerator.DescribeListenerInput{
 		ListenerArn: aws.String(arn),
 	}
 
-	return findListener(ctx, conn, input)
-}
+	output, err := conn.DescribeListener(ctx, input)
 
-func findListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
-	output, err := conn.DescribeListenerWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
+	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -217,30 +220,30 @@ func findListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator
 	return output.Listener, nil
 }
 
-func expandPortRange(tfMap map[string]interface{}) *globalaccelerator.PortRange {
+func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &globalaccelerator.PortRange{}
+	apiObject := &awstypes.PortRange{}
 
 	if v, ok := tfMap["from_port"].(int); ok && v != 0 {
-		apiObject.FromPort = aws.Int64(int64(v))
+		apiObject.FromPort = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["to_port"].(int); ok && v != 0 {
-		apiObject.ToPort = aws.Int64(int64(v))
+		apiObject.ToPort = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandPortRanges(tfList []interface{}) []*globalaccelerator.PortRange {
+func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*globalaccelerator.PortRange
+	var apiObjects []awstypes.PortRange
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -255,13 +258,13 @@ func expandPortRanges(tfList []interface{}) []*globalaccelerator.PortRange {
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenPortRange(apiObject *globalaccelerator.PortRange) map[string]interface{} {
+func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -269,17 +272,17 @@ func flattenPortRange(apiObject *globalaccelerator.PortRange) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FromPort; v != nil {
-		tfMap["from_port"] = aws.Int64Value(v)
+		tfMap["from_port"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.ToPort; v != nil {
-		tfMap["to_port"] = aws.Int64Value(v)
+		tfMap["to_port"] = aws.ToInt32(v)
 	}
 
 	return tfMap
 }
 
-func flattenPortRanges(apiObjects []*globalaccelerator.PortRange) []interface{} {
+func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -287,11 +290,7 @@ func flattenPortRanges(apiObjects []*globalaccelerator.PortRange) []interface{} 
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenPortRange(apiObject))
+		tfList = append(tfList, flattenPortRange(&apiObject))
 	}
 
 	return tfList

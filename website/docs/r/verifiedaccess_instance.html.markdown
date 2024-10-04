@@ -12,6 +12,8 @@ Terraform resource for managing a Verified Access Instance.
 
 ## Example Usage
 
+### Basic
+
 ```terraform
 resource "aws_verifiedaccess_instance" "example" {
   description = "example"
@@ -22,11 +24,20 @@ resource "aws_verifiedaccess_instance" "example" {
 }
 ```
 
+### With `fips_enabled`
+
+```terraform
+resource "aws_verifiedaccess_instance" "example" {
+  fips_enabled = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
 * `description` - (Optional) A description for the AWS Verified Access Instance.
+* `fips_enabled` - (Optional, Forces new resource) Enable or disable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -50,7 +61,7 @@ Each `verified_access_trust_providers` supports the following argument:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Workflows using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Access Instances using the `id`. For example:
 
 ```terraform
 import {
@@ -59,7 +70,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Transfer Workflows using the  `id`. For example:
+Using `terraform import`, import Verified Access Instances using the  `id`. For example:
 
 ```console
 % terraform import aws_verifiedaccess_instance.example vai-1234567890abcdef0

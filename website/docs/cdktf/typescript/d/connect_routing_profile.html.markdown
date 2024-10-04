@@ -64,7 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** `instanceId` and one of either `name` or `routingProfileId` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instanceId` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
@@ -84,16 +84,16 @@ This data source exports the following attributes in addition to the arguments a
 
 A `mediaConcurrencies` block supports the following attributes:
 
-* `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `voice`, `chat`, `task`.
-* `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `voice`: Minimum value of 1. Maximum value of 1. Valid Range for `chat`: Minimum value of 1. Maximum value of 10. Valid Range for `task`: Minimum value of 1. Maximum value of 10.
+* `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
+* `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
 
 A `queueConfigs` block supports the following attributes:
 
-* `channel` - Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `voice`, `chat`, `task`.
+* `channel` - Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`.
 * `delay` - Delay, in seconds, that a contact should be in the queue before they are routed to an available agent
 * `priority` - Order in which contacts are to be handled for the queue.
 * `queueArn` - ARN for the queue.
 * `queueId` - Identifier for the queue.
 * `queueName` - Name for the queue.
 
-<!-- cache-key: cdktf-0.18.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->
+<!-- cache-key: cdktf-0.20.1 input-4bef98269c30e5e318435de8076afc54af062a6b62cb6767304c69bb9d6f3ee9 -->

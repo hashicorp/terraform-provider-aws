@@ -31,8 +31,11 @@ The following arguments are optional:
 * `container_recipe_arn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
+* `execution_role` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
+* `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
+* `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_tests_configuration
@@ -41,6 +44,39 @@ The following arguments are optional:
 
 * `image_tests_enabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeout_minutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
+
+### image_scanning_configuration
+
+The following arguments are optional:
+
+* `image_scanning_enabled` - (Optional) Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image. Defaults to `false`.
+* `ecr_configuration` - (Optional) Configuration block with ECR configuration. Detailed below.
+
+### ecr_configuration
+
+The following arguments are optional:
+
+* `repository_name` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
+* `container_tags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
+
+### workflow
+
+The following arguments are required:
+
+* `workflow_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Workflow.
+
+The following arguments are optional:
+
+* `on_failure` - (Optional) The action to take if the workflow fails. Must be one of `CONTINUE` or `ABORT`.
+* `parallel_group` - (Optional) The parallel group in which to run a test Workflow.
+* `parameter` - (Optional) Configuration block for the workflow parameters. Detailed below.
+
+### parameter
+
+The following arguments are required:
+
+* `name` - (Required) The name of the Workflow parameter.
+* `value` - (Required) The value of the Workflow parameter.
 
 ## Attribute Reference
 

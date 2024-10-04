@@ -38,21 +38,25 @@ resource "aws_route53domains_registered_domain" "example" {
 
 ~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
-* `admin_contact` - (Optional) Details about the domain administrative contact.
+* `admin_contact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
 * `auto_renew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
+* `billing_contact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
+* `billing_privacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
 * `domain_name` - (Required) The name of the registered domain.
-* `name_server` - (Optional) The list of nameservers for the domain.
-* `registrant_contact` - (Optional) Details about the domain registrant.
+* `name_server` - (Optional) The list of nameservers for the domain. See [`name_server` Blocks](#name_server-blocks) for more details.
+* `registrant_contact` - (Optional) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
 * `registrant_privacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tech_contact` - (Optional) Details about the domain technical contact.
+* `tech_contact` - (Optional) Details about the domain technical contact. See [Contact Blocks](#contact-blocks) for more details.
 * `tech_privacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 * `transfer_lock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
 
-The `admin_contact`, `registrant_contact` and `tech_contact` objects support the following:
+### Contact Blocks
+
+The `admin_contact`, `billing_contact`, `registrant_contact` and `tech_contact` blocks support the following:
 
 * `address_line_1` - (Optional) First line of the contact's address.
 * `address_line_2` - (Optional) Second line of contact's address, if any.
@@ -69,7 +73,9 @@ The `admin_contact`, `registrant_contact` and `tech_contact` objects support the
 * `state` - (Optional) The state or province of the contact's city.
 * `zip_code` - (Optional) The zip or postal code of the contact's address.
 
-The `name_server` object supports the following:
+### `name_server` Blocks
+
+The `name_server` blocks supports the following:
 
 * `glue_ips` - (Optional) Glue IP addresses of a name server. The list can contain only one IPv4 and one IPv6 address.
 * `name` - (Required) The fully qualified host name of the name server.
@@ -97,3 +103,20 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import domains using the domain_name. For example:
+
+```terraform
+import {
+  to = aws_route53domains_registered_domain.example
+  id = "example.com"
+}
+```
+
+Using `terraform import`, import domains using the domain name. For example:
+
+```console
+% terraform import aws_route53domains_registered_domain.example example.com
+```

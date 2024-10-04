@@ -14,13 +14,13 @@ func TestAccServiceCatalog_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"OrganizationsAccess": {
-			"basic": testAccOrganizationsAccess_basic,
+			acctest.CtBasic: testAccOrganizationsAccess_basic,
 		},
 		"PortfolioShare": {
-			"basic":              testAccPortfolioShare_basic,
+			acctest.CtBasic:      testAccPortfolioShare_basic,
 			"sharePrincipals":    testAccPortfolioShare_sharePrincipals,
 			"organizationalUnit": testAccPortfolioShare_organizationalUnit,
-			"disappears":         testAccPortfolioShare_disappears,
+			acctest.CtDisappears: testAccPortfolioShare_disappears,
 		},
 	}
 

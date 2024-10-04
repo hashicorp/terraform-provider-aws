@@ -6,21 +6,30 @@ package route53domains
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53domains_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53domains.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return route53domains_sdkv2.NewFromConfig(cfg, func(o *route53domains_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		} else if config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-			o.Region = endpoints_sdkv1.UsEast1RegionID
-		}
-	}), nil
+	return route53domains.NewFromConfig(cfg,
+		route53domains.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *route53domains.Options) {
+			if config["partition"].(string) == names.StandardPartitionID {
+				// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
+				if cfg.Region != names.USEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USEast1RegionID,
+					})
+				}
+				o.Region = names.USEast1RegionID
+			}
+		},
+	), nil
 }

@@ -7,45 +7,45 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kinesis_stream_consumer")
-func DataSourceStreamConsumer() *schema.Resource {
+// @SDKDataSource("aws_kinesis_stream_consumer", name="Stream Consumer)
+func dataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamConsumerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"creation_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -56,60 +56,66 @@ func DataSourceStreamConsumer() *schema.Resource {
 
 func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	streamArn := d.Get("stream_arn").(string)
-
+	streamARN := d.Get(names.AttrStreamARN).(string)
 	input := &kinesis.ListStreamConsumersInput{
-		StreamARN: aws.String(streamArn),
+		StreamARN: aws.String(streamARN),
 	}
 
-	var results []*kinesis.Consumer
-
-	err := conn.ListStreamConsumersPagesWithContext(ctx, input, func(page *kinesis.ListStreamConsumersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	consumer, err := findStreamConsumer(ctx, conn, input, func(c *types.Consumer) bool {
+		if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.ToString(c.ConsumerName) {
+			return false
 		}
 
-		for _, consumer := range page.Consumers {
-			if consumer == nil {
-				continue
-			}
-
-			if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(consumer.ConsumerName) {
-				continue
-			}
-
-			if v, ok := d.GetOk("arn"); ok && v.(string) != aws.StringValue(consumer.ConsumerARN) {
-				continue
-			}
-
-			results = append(results, consumer)
+		if v, ok := d.GetOk(names.AttrARN); ok && v.(string) != aws.ToString(c.ConsumerARN) {
+			return false
 		}
 
-		return !lastPage
+		return true
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Kinesis Stream Consumers: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Kinesis Stream Consumer", err))
 	}
 
-	if len(results) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no Kinesis Stream Consumer found matching criteria; try different search")
-	}
-
-	if len(results) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple Kinesis Stream Consumers found matching criteria; try different search")
-	}
-
-	consumer := results[0]
-
-	d.SetId(aws.StringValue(consumer.ConsumerARN))
-	d.Set("arn", consumer.ConsumerARN)
-	d.Set("name", consumer.ConsumerName)
-	d.Set("status", consumer.ConsumerStatus)
-	d.Set("stream_arn", streamArn)
-	d.Set("creation_timestamp", aws.TimeValue(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
+	d.SetId(aws.ToString(consumer.ConsumerARN))
+	d.Set(names.AttrARN, consumer.ConsumerARN)
+	d.Set("creation_timestamp", aws.ToTime(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
+	d.Set(names.AttrName, consumer.ConsumerName)
+	d.Set(names.AttrStatus, consumer.ConsumerStatus)
+	d.Set(names.AttrStreamARN, streamARN)
 
 	return diags
+}
+
+func findStreamConsumer(ctx context.Context, conn *kinesis.Client, input *kinesis.ListStreamConsumersInput, filter tfslices.Predicate[*types.Consumer]) (*types.Consumer, error) {
+	output, err := findStreamConsumers(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findStreamConsumers(ctx context.Context, conn *kinesis.Client, input *kinesis.ListStreamConsumersInput, filter tfslices.Predicate[*types.Consumer]) ([]types.Consumer, error) {
+	var output []types.Consumer
+
+	pages := kinesis.NewListStreamConsumersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Consumers {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

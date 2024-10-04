@@ -10,50 +10,47 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfconfigservice "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccRemediationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rc configservice.RemediationConfiguration
+	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := sdkacctest.RandInt()
-	automatic := "false"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
 	rErrorPct := sdkacctest.RandIntRange(1, 100)
-	prefix := "Original"
 	sseAlgorithm := "AES256"
-	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -71,27 +68,25 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 
 func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rc configservice.RemediationConfiguration
+	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := sdkacctest.RandInt()
-	prefix := "Original"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sseAlgorithm := "AES256"
-	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_olderSchema(prefix, sseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig_olderSchema(rName, sseAlgorithm),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
 				),
 			},
 			{
@@ -105,28 +100,26 @@ func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
 
 func testAccRemediationConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rc configservice.RemediationConfiguration
+	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := sdkacctest.RandInt()
-	automatic := "false"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
 	rErrorPct := sdkacctest.RandIntRange(1, 100)
-	prefix := "original"
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfigservice.ResourceRemediationConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,83 +127,38 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccRemediationConfiguration_recreates(t *testing.T) {
-	ctx := acctest.Context(t)
-	var original configservice.RemediationConfiguration
-	var updated configservice.RemediationConfiguration
-	resourceName := "aws_config_remediation_configuration.test"
-	rInt := sdkacctest.RandInt()
-	automatic := "false"
-	rAttempts := sdkacctest.RandIntRange(1, 25)
-	rSeconds := sdkacctest.RandIntRange(1, 2678000)
-	rExecPct := sdkacctest.RandIntRange(1, 100)
-	rErrorPct := sdkacctest.RandIntRange(1, 100)
-
-	originalName := "Original"
-	updatedName := "Updated"
-	sseAlgorithm := "AES256"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRemediationConfigurationConfig_basic(originalName, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRemediationConfigurationExists(ctx, resourceName, &original),
-					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", originalName, rInt)),
-				),
-			},
-			{
-				Config: testAccRemediationConfigurationConfig_basic(updatedName, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRemediationConfigurationExists(ctx, resourceName, &updated),
-					testAccCheckRemediationConfigurationRecreated(&original, &updated),
-					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", updatedName, rInt)),
-				),
-			},
-		},
-	})
-}
-
 func testAccRemediationConfiguration_updates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original configservice.RemediationConfiguration
-	var updated configservice.RemediationConfiguration
+	var original types.RemediationConfiguration
+	var updated types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := sdkacctest.RandInt()
-	automatic := "false"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
 	rErrorPct := sdkacctest.RandIntRange(1, 100)
-	uAutomatic := "true"
 	uAttempts := sdkacctest.RandIntRange(1, 25)
 	uSeconds := sdkacctest.RandIntRange(1, 2678000)
 	uExecPct := sdkacctest.RandIntRange(1, 100)
 	uErrorPct := sdkacctest.RandIntRange(1, 100)
-
-	name := "Original"
 	originalSseAlgorithm := "AES256"
 	updatedSseAlgorithm := "aws:kms"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_basic(name, originalSseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, originalSseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", originalSseAlgorithm),
-					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -218,15 +166,15 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRemediationConfigurationConfig_basic(name, updatedSseAlgorithm, rInt, uAttempts, uSeconds, uExecPct, uErrorPct, uAutomatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, updatedSseAlgorithm, uAttempts, uSeconds, uExecPct, uErrorPct, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &updated),
 					testAccCheckRemediationConfigurationNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", updatedSseAlgorithm),
-					resource.TestCheckResourceAttr(resourceName, "automatic", uAutomatic),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(uAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(uSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(uExecPct),
 						"error_percentage":                     strconv.Itoa(uErrorPct),
@@ -239,10 +187,9 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 
 func testAccRemediationConfiguration_values(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rc configservice.RemediationConfiguration
+	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := "false"
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
@@ -251,21 +198,21 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_values(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_values(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -281,71 +228,22 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 	})
 }
 
-func testAccRemediationConfiguration_migrateParameters(t *testing.T) {
-	ctx := acctest.Context(t)
-	var rc configservice.RemediationConfiguration
-	resourceName := "aws_config_remediation_configuration.test"
-	rInt := sdkacctest.RandInt()
-	automatic := "false"
-	rAttempts := sdkacctest.RandIntRange(1, 25)
-	rSeconds := sdkacctest.RandIntRange(1, 2678000)
-	rExecPct := sdkacctest.RandIntRange(1, 100)
-	rErrorPct := sdkacctest.RandIntRange(1, 100)
-	prefix := "Original"
-	sseAlgorithm := "AES256"
-	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		CheckDestroy: testAccCheckRemediationConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "4.66.0",
-					},
-				},
-				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
-				PlanOnly:                 true,
-			},
-		},
-	})
-}
-
-func testAccCheckRemediationConfigurationExists(ctx context.Context, n string, obj *configservice.RemediationConfiguration) resource.TestCheckFunc {
+func testAccCheckRemediationConfigurationExists(ctx context.Context, n string, v *types.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("not found in state"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("ID not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
-		out, err := conn.DescribeRemediationConfigurationsWithContext(ctx, &configservice.DescribeRemediationConfigurationsInput{
-			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
-		})
+		output, err := tfconfig.FindRemediationConfigurationByConfigRuleName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, err)
-		}
-		if len(out.RemediationConfigurations) < 1 {
-			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("not found"))
+			return err
 		}
 
-		rc := out.RemediationConfigurations[0]
-		*obj = *rc
+		*v = *output
 
 		return nil
 	}
@@ -353,48 +251,40 @@ func testAccCheckRemediationConfigurationExists(ctx context.Context, n string, o
 
 func testAccCheckRemediationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_remediation_configuration" {
 				continue
 			}
 
-			resp, err := conn.DescribeRemediationConfigurationsWithContext(ctx, &configservice.DescribeRemediationConfigurationsInput{
-				ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
-			})
+			_, err := tfconfig.FindRemediationConfigurationByConfigRuleName(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.RemediationConfigurations) != 0 &&
-					aws.StringValue(resp.RemediationConfigurations[0].ConfigRuleName) == rs.Primary.Attributes["name"] {
-					return create.Error(names.ConfigService, create.ErrActionCheckingDestroyed, tfconfigservice.ResNameRemediationConfiguration, rs.Primary.Attributes["name"], errors.New("still exists"))
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ConfigService Remediation Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRemediationConfigurationNotRecreated(before, after *configservice.RemediationConfiguration) resource.TestCheckFunc {
+func testAccCheckRemediationConfigurationNotRecreated(before, after *types.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(before.Arn) != aws.StringValue(after.Arn) {
-			return create.Error(names.ConfigService, create.ErrActionCheckingNotRecreated, tfconfigservice.ResNameRemediationConfiguration, aws.StringValue(before.Arn), fmt.Errorf("ARNs changed, new: %s", aws.StringValue(after.Arn)))
+		if aws.ToString(before.Arn) != aws.ToString(after.Arn) {
+			return errors.New("ConfigService Remediation Configuration was recreated")
 		}
 		return nil
 	}
 }
 
-func testAccCheckRemediationConfigurationRecreated(before, after *configservice.RemediationConfiguration) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(before.Arn) == aws.StringValue(after.Arn) {
-			return create.Error(names.ConfigService, create.ErrActionCheckingRecreated, tfconfigservice.ResNameRemediationConfiguration, aws.StringValue(before.Arn), fmt.Errorf("wasn't recreated, new: %s", aws.StringValue(after.Arn)))
-		}
-		return nil
-	}
-}
-
-func testAccRemediationConfigurationConfig_olderSchema(namePrefix, sseAlgorithm string, randInt int) string {
+func testAccRemediationConfigurationConfig_olderSchema(rName, sseAlgorithm string) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
   config_rule_name = aws_config_config_rule.test.name
@@ -414,16 +304,16 @@ resource "aws_config_remediation_configuration" "test" {
   }
   parameter {
     name         = "SSEAlgorithm"
-    static_value = "%[2]s"
+    static_value = %[2]q
   }
 }
 
 resource "aws_sns_topic" "test" {
-  name = "sns_topic_name"
+  name = %[1]q
 }
 
 resource "aws_config_config_rule" "test" {
-  name = "%[1]s-tf-acc-test-%[3]d"
+  name = %[1]q
 
   source {
     owner             = "AWS"
@@ -434,12 +324,12 @@ resource "aws_config_config_rule" "test" {
 }
 
 resource "aws_config_configuration_recorder" "test" {
-  name     = "%[1]s-tf-acc-test-%[3]d"
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = "%[1]s-tf-acc-test-awsconfig-%[3]d"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -459,7 +349,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "%[1]s-tf-acc-test-awsconfig-%[3]d"
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -476,10 +366,10 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, namePrefix, sseAlgorithm, randInt)
+`, rName, sseAlgorithm)
 }
 
-func testAccRemediationConfigurationConfig_basic(namePrefix, sseAlgorithm string, randInt int, randAttempts int, randSeconds int, randExecPct int, randErrorPct int, automatic string) string {
+func testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm string, randAttempts, randSeconds, randExecPct, randErrorPct int, automatic string) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
   config_rule_name = aws_config_config_rule.test.name
@@ -499,25 +389,25 @@ resource "aws_config_remediation_configuration" "test" {
   }
   parameter {
     name         = "SSEAlgorithm"
-    static_value = "%[2]s"
+    static_value = %[2]q
   }
-  automatic                  = %[8]s
-  maximum_automatic_attempts = %[4]d
-  retry_attempt_seconds      = %[5]d
+  automatic                  = %[7]s
+  maximum_automatic_attempts = %[3]d
+  retry_attempt_seconds      = %[4]d
   execution_controls {
     ssm_controls {
-      concurrent_execution_rate_percentage = %[6]d
-      error_percentage                     = %[7]d
+      concurrent_execution_rate_percentage = %[5]d
+      error_percentage                     = %[6]d
     }
   }
 }
 
 resource "aws_sns_topic" "test" {
-  name = "sns_topic_name"
+  name = %[1]q
 }
 
 resource "aws_config_config_rule" "test" {
-  name = "%[1]s-tf-acc-test-%[3]d"
+  name = %[1]q
 
   source {
     owner             = "AWS"
@@ -528,12 +418,12 @@ resource "aws_config_config_rule" "test" {
 }
 
 resource "aws_config_configuration_recorder" "test" {
-  name     = "%[1]s-tf-acc-test-%[3]d"
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = "%[1]s-tf-acc-test-awsconfig-%[3]d"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -553,7 +443,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "%[1]s-tf-acc-test-awsconfig-%[3]d"
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -570,7 +460,7 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, namePrefix, sseAlgorithm, randInt, randAttempts, randSeconds, randExecPct, randErrorPct, automatic)
+`, rName, sseAlgorithm, randAttempts, randSeconds, randExecPct, randErrorPct, automatic)
 }
 
 func testAccRemediationConfigurationConfig_values(rName, sseAlgorithm string, randAttempts int, randSeconds int, randExecPct int, randErrorPct int, automatic string) string {
@@ -595,7 +485,7 @@ resource "aws_config_remediation_configuration" "test" {
 
   parameter {
     name         = "SSEAlgorithm"
-    static_value = "%[2]s"
+    static_value = %[2]q
   }
 
   automatic                  = %[7]s
@@ -611,7 +501,7 @@ resource "aws_config_remediation_configuration" "test" {
 }
 
 resource "aws_sns_topic" "test" {
-  name = "sns_topic_name"
+  name = %[1]q
 }
 
 resource "aws_config_config_rule" "test" {

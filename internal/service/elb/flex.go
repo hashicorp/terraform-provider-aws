@@ -8,115 +8,110 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Flattens an access log into something that flatmap.Flatten() can handle
-func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
-
-	if l == nil {
+func flattenAccessLog(apiObject *awstypes.AccessLog) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	r := make(map[string]interface{})
-	if l.S3BucketName != nil {
-		r["bucket"] = aws.StringValue(l.S3BucketName)
+	tfList := make([]interface{}, 0, 1)
+	tfMap := make(map[string]interface{})
+
+	if apiObject.S3BucketName != nil {
+		tfMap[names.AttrBucket] = aws.ToString(apiObject.S3BucketName)
 	}
 
-	if l.S3BucketPrefix != nil {
-		r["bucket_prefix"] = aws.StringValue(l.S3BucketPrefix)
+	if apiObject.S3BucketPrefix != nil {
+		tfMap[names.AttrBucketPrefix] = aws.ToString(apiObject.S3BucketPrefix)
 	}
 
-	if l.EmitInterval != nil {
-		r["interval"] = aws.Int64Value(l.EmitInterval)
+	if apiObject.EmitInterval != nil {
+		tfMap[names.AttrInterval] = aws.ToInt32(apiObject.EmitInterval)
 	}
 
-	if l.Enabled != nil {
-		r["enabled"] = aws.BoolValue(l.Enabled)
-	}
+	tfMap[names.AttrEnabled] = apiObject.Enabled
 
-	result = append(result, r)
+	tfList = append(tfList, tfMap)
 
-	return result
+	return tfList
 }
 
-// Flattens an array of Backend Descriptions into a a map of instance_port to policy names.
-func flattenBackendPolicies(backends []*elb.BackendServerDescription) map[int64][]string {
-	policies := make(map[int64][]string)
-	for _, i := range backends {
-		for _, p := range i.PolicyNames {
-			policies[*i.InstancePort] = append(policies[*i.InstancePort], *p)
+func flattenBackendServerDescriptionPolicies(apiObjects []awstypes.BackendServerDescription) map[int32][]string {
+	tfMap := make(map[int32][]string)
+
+	for _, apiObject := range apiObjects {
+		k := aws.ToInt32(apiObject.InstancePort)
+		tfMap[k] = append(tfMap[k], apiObject.PolicyNames...)
+		sort.Strings(tfMap[k])
+	}
+
+	return tfMap
+}
+
+func flattenHealthCheck(apiObject *awstypes.HealthCheck) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfList := make([]interface{}, 0, 1)
+	tfMap := make(map[string]interface{})
+
+	tfMap["unhealthy_threshold"] = aws.ToInt32(apiObject.UnhealthyThreshold)
+	tfMap["healthy_threshold"] = aws.ToInt32(apiObject.HealthyThreshold)
+	tfMap[names.AttrTarget] = aws.ToString(apiObject.Target)
+	tfMap[names.AttrTimeout] = aws.ToInt32(apiObject.Timeout)
+	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
+
+	tfList = append(tfList, tfMap)
+
+	return tfList
+}
+
+func flattenInstances(apiObjects []awstypes.Instance) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Instance) string {
+		return aws.ToString(v.InstanceId)
+	})
+}
+
+func expandInstances(tfList []interface{}) []awstypes.Instance {
+	return tfslices.ApplyToAll(tfList, func(v interface{}) awstypes.Instance {
+		return awstypes.Instance{
+			InstanceId: aws.String(v.(string)),
 		}
-		sort.Strings(policies[*i.InstancePort])
-	}
-	return policies
+	})
 }
 
-// Flattens a health check into something that flatmap.Flatten()
-// can handle
-func FlattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
+func expandListeners(tfList []interface{}) ([]awstypes.Listener, error) {
+	apiObjects := make([]awstypes.Listener, 0)
 
-	chk := make(map[string]interface{})
-	chk["unhealthy_threshold"] = aws.Int64Value(check.UnhealthyThreshold)
-	chk["healthy_threshold"] = aws.Int64Value(check.HealthyThreshold)
-	chk["target"] = aws.StringValue(check.Target)
-	chk["timeout"] = aws.Int64Value(check.Timeout)
-	chk["interval"] = aws.Int64Value(check.Interval)
-
-	result = append(result, chk)
-
-	return result
-}
-
-// Flattens an array of Instances into a []string
-func flattenInstances(list []*elb.Instance) []string {
-	result := make([]string, 0, len(list))
-	for _, i := range list {
-		result = append(result, *i.InstanceId)
-	}
-	return result
-}
-
-// Expands an array of String Instance IDs into a []Instances
-func ExpandInstanceString(list []interface{}) []*elb.Instance {
-	result := make([]*elb.Instance, 0, len(list))
-	for _, i := range list {
-		result = append(result, &elb.Instance{InstanceId: aws.String(i.(string))})
-	}
-	return result
-}
-
-// Takes the result of flatmap.Expand for an array of listeners and
-// returns ELB API compatible objects
-func ExpandListeners(configured []interface{}) ([]*elb.Listener, error) {
-	listeners := make([]*elb.Listener, 0, len(configured))
-
-	// Loop over our configured listeners and create
-	// an array of aws-sdk-go compatible objects
-	for _, lRaw := range configured {
-		data := lRaw.(map[string]interface{})
-
-		ip := int64(data["instance_port"].(int))
-		lp := int64(data["lb_port"].(int))
-		l := &elb.Listener{
-			InstancePort:     &ip,
-			InstanceProtocol: aws.String(data["instance_protocol"].(string)),
-			LoadBalancerPort: &lp,
-			Protocol:         aws.String(data["lb_protocol"].(string)),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		if v, ok := data["ssl_certificate_id"]; ok {
-			l.SSLCertificateId = aws.String(v.(string))
+		apiObject := awstypes.Listener{
+			InstancePort:     aws.Int32(int32(tfMap["instance_port"].(int))),
+			InstanceProtocol: aws.String(tfMap["instance_protocol"].(string)),
+			LoadBalancerPort: int32(tfMap["lb_port"].(int)),
+			Protocol:         aws.String(tfMap["lb_protocol"].(string)),
+		}
+
+		if v, ok := tfMap["ssl_certificate_id"]; ok {
+			apiObject.SSLCertificateId = aws.String(v.(string))
 		}
 
 		var valid bool
-		if aws.StringValue(l.SSLCertificateId) != "" {
+
+		if aws.ToString(apiObject.SSLCertificateId) != "" {
 			// validate the protocol is correct
 			for _, p := range []string{"https", "ssl"} {
-				if (strings.ToLower(*l.InstanceProtocol) == p) || (strings.ToLower(*l.Protocol) == p) {
+				if (strings.ToLower(aws.ToString(apiObject.InstanceProtocol)) == p) || (strings.ToLower(aws.ToString(apiObject.Protocol)) == p) {
 					valid = true
 				}
 			}
@@ -124,72 +119,68 @@ func ExpandListeners(configured []interface{}) ([]*elb.Listener, error) {
 			valid = true
 		}
 
-		if valid {
-			listeners = append(listeners, l)
-		} else {
+		if !valid {
 			return nil, errors.New(`"ssl_certificate_id" may be set only when "protocol" is "https" or "ssl"`)
 		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return listeners, nil
+	return apiObjects, nil
 }
 
-// Flattens an array of Listeners into a []map[string]interface{}
-func flattenListeners(list []*elb.ListenerDescription) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
-	for _, i := range list {
-		l := map[string]interface{}{
-			"instance_port":     *i.Listener.InstancePort,
-			"instance_protocol": strings.ToLower(*i.Listener.InstanceProtocol),
-			"lb_port":           *i.Listener.LoadBalancerPort,
-			"lb_protocol":       strings.ToLower(*i.Listener.Protocol),
-		}
-		// SSLCertificateID is optional, and may be nil
-		if i.Listener.SSLCertificateId != nil {
-			l["ssl_certificate_id"] = aws.StringValue(i.Listener.SSLCertificateId)
-		}
-		result = append(result, l)
-	}
-	return result
-}
+func flattenListenerDescriptions(apiObjects []awstypes.ListenerDescription) []interface{} {
+	tfList := make([]interface{}, 0, len(apiObjects))
 
-// Takes the result of flatmap.Expand for an array of policy attributes and
-// returns ELB API compatible objects
-func ExpandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
-	attributes := make([]*elb.PolicyAttribute, 0, len(configured))
-
-	// Loop over our configured attributes and create
-	// an array of aws-sdk-go compatible objects
-	for _, lRaw := range configured {
-		data := lRaw.(map[string]interface{})
-
-		a := &elb.PolicyAttribute{
-			AttributeName:  aws.String(data["name"].(string)),
-			AttributeValue: aws.String(data["value"].(string)),
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"instance_port":     aws.ToInt32(apiObject.Listener.InstancePort),
+			"instance_protocol": strings.ToLower(aws.ToString(apiObject.Listener.InstanceProtocol)),
+			"lb_port":           apiObject.Listener.LoadBalancerPort,
+			"lb_protocol":       strings.ToLower(*apiObject.Listener.Protocol),
 		}
 
-		attributes = append(attributes, a)
+		if apiObject.Listener.SSLCertificateId != nil {
+			tfMap["ssl_certificate_id"] = aws.ToString(apiObject.Listener.SSLCertificateId)
+		}
+
+		tfList = append(tfList, tfMap)
 	}
 
-	return attributes
+	return tfList
 }
 
-// Flattens an array of PolicyAttributes into a []interface{}
-func FlattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface{} {
-	var attributes []interface{}
+func expandPolicyAttributes(tfList []interface{}) []awstypes.PolicyAttribute {
+	apiObjects := make([]awstypes.PolicyAttribute, 0)
 
-	for _, attrdef := range list {
-		if attrdef == nil {
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
 			continue
 		}
 
-		attribute := map[string]string{
-			"name":  aws.StringValue(attrdef.AttributeName),
-			"value": aws.StringValue(attrdef.AttributeValue),
+		apiObject := awstypes.PolicyAttribute{
+			AttributeName:  aws.String(tfMap[names.AttrName].(string)),
+			AttributeValue: aws.String(tfMap[names.AttrValue].(string)),
 		}
 
-		attributes = append(attributes, attribute)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return attributes
+	return apiObjects
+}
+
+func flattenPolicyAttributeDescriptions(apiObjects []awstypes.PolicyAttributeDescription) []interface{} {
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]string{
+			names.AttrName:  aws.ToString(apiObject.AttributeName),
+			names.AttrValue: aws.ToString(apiObject.AttributeValue),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

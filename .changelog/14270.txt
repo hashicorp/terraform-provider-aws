@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudformation_stack: CRLF line endings in `template_body` no longer cause erroneous diffs
+```
+
+```release-note:note
+provider: When using YAML or JSON documents, such as in `template_body` of `aws_cloudformation_stack`, CRLF was previously treated as different from LF but these are now treated as equivalent in many situations
+```

@@ -12,7 +12,7 @@ description: |-
 
 Provides a Load Balancer Listener Rule resource.
 
-~> **Note:** `awsAlbListenerRule` is known as `awsLbListenerRule`. The functionality is identical.
+~> **Note:** `aws_alb_listener_rule` is known as `aws_lb_listener_rule`. The functionality is identical.
 
 ## Example Usage
 
@@ -238,13 +238,22 @@ This resource supports the following arguments:
 
 Action Blocks (for `action`) support the following:
 
-* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixedResponse`, `authenticateCognito` and `authenticateOidc`.
-* `targetGroupArn` - (Optional) The ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead.
-* `forward` - (Optional) Information for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `targetGroupArn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `targetGroupArn`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
+* `authenticateCognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
+* `authenticateOidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
+* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
+  Specify only if `type` is `forward`.
+  Cannot be specified with `targetGroupArn`.
+* `order` - (Optional) Order for the action.
+  The action with the lowest value for order is performed first.
+  Valid values are between `1` and `50000`.
+  Defaults to the position in the list of actions.
 * `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
-* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixedResponse`.
-* `authenticateCognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticateCognito`.
-* `authenticateOidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticateOidc`.
+* `targetGroupArn` - (Optional) ARN of the Target Group to which to route traffic.
+  Specify only if `type` is `forward` and you want to route to a single target group.
+  To route to one or more target groups, use a `forward` block instead.
+  Cannot be specified with `forward`.
 
 Forward Blocks (for `forward`) support the following:
 
@@ -268,15 +277,15 @@ Redirect Blocks (for `redirect`) support the following:
 * `host` - (Optional) The hostname. This component is not percent-encoded. The hostname can contain `#{host}`. Defaults to `#{host}`.
 * `path` - (Optional) The absolute path, starting with the leading "/". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}. Defaults to `/#{path}`.
 * `port` - (Optional) The port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.
-* `protocol` - (Optional) The protocol. Valid values are `http`, `https`, or `#{protocol}`. Defaults to `#{protocol}`.
+* `protocol` - (Optional) The protocol. Valid values are `HTTP`, `HTTPS`, or `#{protocol}`. Defaults to `#{protocol}`.
 * `query` - (Optional) The query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading "?". Defaults to `#{query}`.
-* `statusCode` - (Required) The HTTP redirect code. The redirect is either permanent (`http301`) or temporary (`http302`).
+* `statusCode` - (Required) The HTTP redirect code. The redirect is either permanent (`HTTP_301`) or temporary (`HTTP_302`).
 
 Fixed-response Blocks (for `fixedResponse`) support the following:
 
 * `contentType` - (Required) The content type. Valid values are `text/plain`, `text/css`, `text/html`, `application/javascript` and `application/json`.
 * `messageBody` - (Optional) The message body.
-* `statusCode` - (Optional) The HTTP response code. Valid values are `2Xx`, `4Xx`, or `5Xx`.
+* `statusCode` - (Optional) The HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
 
 Authenticate Cognito Blocks (for `authenticateCognito`) supports the following:
 
@@ -310,7 +319,7 @@ Authentication Request Extra Params Blocks (for `authenticationRequestExtraParam
 
 ### Condition Blocks
 
-One or more condition blocks can be set per rule. Most condition types can only be specified once per rule except for `httpHeader` and `queryString` which can be specified multiple times.
+One or more condition blocks can be set per rule. Most condition types can only be specified once per rule except for `http-header` and `query-string` which can be specified multiple times.
 
 Condition Blocks (for `condition`) support the following:
 
@@ -319,7 +328,7 @@ Condition Blocks (for `condition`) support the following:
 * `httpRequestMethod` - (Optional) Contains a single `values` item which is a list of HTTP request methods or verbs to match. Maximum size is 40 characters. Only allowed characters are A-Z, hyphen (-) and underscore (\_). Comparison is case sensitive. Wildcards are not supported. Only one needs to match for the condition to be satisfied. AWS recommends that GET and HEAD requests are routed in the same way because the response to a HEAD request may be cached.
 * `pathPattern` - (Optional) Contains a single `values` item which is a list of path patterns to match against the request URL. Maximum size of each pattern is 128 characters. Comparison is case sensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Path pattern is compared only to the path of the URL, not to its query string. To compare against the query string, use a `queryString` condition.
 * `queryString` - (Optional) Query strings to match. [Query String block](#query-string-blocks) fields documented below.
-* `sourceIp` - (Optional) Contains a single `values` item which is a list of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `xForwardedFor` header, use `httpHeader` condition instead.
+* `sourceIp` - (Optional) Contains a single `values` item which is a list of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `httpHeader` condition instead.
 
 ~> **NOTE::** Exactly one of `hostHeader`, `httpHeader`, `httpRequestMethod`, `pathPattern`, `queryString` or `sourceIp` must be set per condition.
 
@@ -327,7 +336,7 @@ Condition Blocks (for `condition`) support the following:
 
 HTTP Header Blocks (for `httpHeader`) support the following:
 
-* `httpHeaderName` - (Required) Name of HTTP header to search. The maximum size is 40 characters. Comparison is case insensitive. Only RFC7240 characters are supported. Wildcards are not supported. You cannot use HTTP header condition to specify the host header, use a `hostHeader` condition instead.
+* `httpHeaderName` - (Required) Name of HTTP header to search. The maximum size is 40 characters. Comparison is case insensitive. Only RFC7240 characters are supported. Wildcards are not supported. You cannot use HTTP header condition to specify the host header, use a `host-header` condition instead.
 * `values` - (Required) List of header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). If the same header appears multiple times in the request they will be searched in order until a match is found. Only one pattern needs to match for the condition to be satisfied. To require that all of the strings are a match, create one condition block per string.
 
 #### Query String Blocks
@@ -336,7 +345,7 @@ Query String Blocks (for `queryString`) support the following:
 
 * `values` - (Required) Query string pairs or values to match. Query String Value blocks documented below. Multiple `values` blocks can be specified, see example above. Maximum size of each string is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). To search for a literal '\*' or '?' character in a query string, escape the character with a backslash (\\). Only one pair needs to match for the condition to be satisfied.
 
-Query String Value Blocks (for `queryStringValues`) support the following:
+Query String Value Blocks (for `query_string.values`) support the following:
 
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
@@ -357,9 +366,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { LbListenerRule } from "./.gen/providers/aws/lb-listener-rule";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    LbListenerRule.generateConfigForImport(
+      this,
+      "frontEnd",
+      "arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b"
+    );
   }
 }
 
@@ -371,4 +390,4 @@ Using `terraform import`, import rules using their ARN. For example:
 % terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-12e9f21426e9efd89a154c6e8445b8894b184d7651322f0592349d28d0132dea -->
+<!-- cache-key: cdktf-0.20.1 input-cbd617f4b3a03ad14c1f71b3912c93fb6d97fddee02da2aaec8e62c4c5648dcf -->

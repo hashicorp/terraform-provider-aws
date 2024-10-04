@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_ami: Fix `interface conversion: interface {} is types.ProductCodeValues, not string` panic
+```

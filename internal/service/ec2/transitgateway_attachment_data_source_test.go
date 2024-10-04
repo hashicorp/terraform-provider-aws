@@ -7,34 +7,39 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T) {
+func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayAttachmentDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", dataSourceName, "resource_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, names.AttrResourceID),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "resource_owner_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "resource_type", "vpc"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "state"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrTransitGatewayAttachmentID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, dataSourceName, names.AttrTransitGatewayID),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "transit_gateway_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "association_state", "associated"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "association_transit_gateway_route_table_id"),
@@ -44,28 +49,32 @@ func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T) {
+func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayAttachmentDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", dataSourceName, "resource_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, names.AttrResourceID),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "resource_owner_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "resource_type", "vpc"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "state"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrTransitGatewayAttachmentID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, dataSourceName, names.AttrTransitGatewayID),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "transit_gateway_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "association_state", "associated"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "association_transit_gateway_route_table_id"),

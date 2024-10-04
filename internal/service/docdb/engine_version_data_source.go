@@ -5,14 +5,18 @@ package docdb
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_docdb_engine_version")
@@ -20,56 +24,46 @@ func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "docdb",
+				Default:  engineDocDB,
 			},
-
 			"engine_description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"exportable_log_types": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"parameter_group_family": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-
 			"preferred_versions": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"version"},
+				ConflictsWith: []string{names.AttrVersion},
 			},
-
 			"supports_log_exports_to_cloudwatch": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"valid_upgrade_targets": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"version": {
+			names.AttrVersion: {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
 				ConflictsWith: []string{"preferred_versions"},
 			},
-
 			"version_description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -80,11 +74,11 @@ func DataSourceEngineVersion() *schema.Resource {
 
 func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	input := &docdb.DescribeDBEngineVersionsInput{}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -92,91 +86,85 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
-	}
-
-	if _, ok := d.GetOk("version"); !ok {
-		if _, ok := d.GetOk("preferred_versions"); !ok {
-			if _, ok := d.GetOk("parameter_group_family"); !ok {
-				input.DefaultOnly = aws.Bool(true)
-			}
+	} else if _, ok := d.GetOk("preferred_versions"); !ok {
+		if _, ok := d.GetOk("parameter_group_family"); !ok {
+			input.DefaultOnly = aws.Bool(true)
 		}
 	}
 
-	log.Printf("[DEBUG] Reading DocumentDB engine versions: %v", input)
-	var engineVersions []*docdb.DBEngineVersion
+	var engineVersion *awstypes.DBEngineVersion
+	var err error
+	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]interface{})); len(preferredVersions) > 0 {
+		var engineVersions []awstypes.DBEngineVersion
 
-	err := conn.DescribeDBEngineVersionsPagesWithContext(ctx, input, func(resp *docdb.DescribeDBEngineVersionsOutput, lastPage bool) bool {
-		for _, engineVersion := range resp.DBEngineVersions {
-			if engineVersion == nil {
-				continue
-			}
+		engineVersions, err = findEngineVersions(ctx, conn, input)
 
-			engineVersions = append(engineVersions, engineVersion)
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DocumentDB engine versions: %s", err)
-	}
-
-	if len(engineVersions) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no DocumentDB engine versions found")
-	}
-
-	// preferred versions
-	var found *docdb.DBEngineVersion
-	if l := d.Get("preferred_versions").([]interface{}); len(l) > 0 {
-		for _, elem := range l {
-			preferredVersion, ok := elem.(string)
-
-			if !ok {
-				continue
-			}
-
-			for _, engineVersion := range engineVersions {
-				if preferredVersion == aws.StringValue(engineVersion.EngineVersion) {
-					found = engineVersion
-					break
+		if err == nil {
+		PreferredVersionLoop:
+			// Return the first matching version.
+			for _, preferredVersion := range preferredVersions {
+				for _, v := range engineVersions {
+					if preferredVersion == aws.ToString(v.EngineVersion) {
+						ev := &v
+						engineVersion = ev
+						break PreferredVersionLoop
+					}
 				}
 			}
 
-			if found != nil {
-				break
+			if engineVersion == nil {
+				err = tfresource.NewEmptyResultError(input)
 			}
 		}
+	} else {
+		engineVersion, err = findEngineVersion(ctx, conn, input)
 	}
 
-	if found == nil && len(engineVersions) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple DocumentDB engine versions (%v) match the criteria", engineVersions)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("DocumentDB Engine Version", err))
 	}
 
-	if found == nil && len(engineVersions) == 1 {
-		found = engineVersions[0]
-	}
+	d.SetId(aws.ToString(engineVersion.EngineVersion))
+	d.Set(names.AttrEngine, engineVersion.Engine)
+	d.Set("engine_description", engineVersion.DBEngineDescription)
+	d.Set("exportable_log_types", engineVersion.ExportableLogTypes)
+	d.Set("parameter_group_family", engineVersion.DBParameterGroupFamily)
+	d.Set("supports_log_exports_to_cloudwatch", engineVersion.SupportsLogExportsToCloudwatchLogs)
+	d.Set("valid_upgrade_targets", tfslices.ApplyToAll(engineVersion.ValidUpgradeTarget, func(v awstypes.UpgradeTarget) string {
+		return aws.ToString(v.EngineVersion)
+	}))
 
-	if found == nil {
-		return sdkdiag.AppendErrorf(diags, "no DocumentDB engine versions match the criteria")
-	}
-
-	d.SetId(aws.StringValue(found.EngineVersion))
-
-	d.Set("engine", found.Engine)
-	d.Set("engine_description", found.DBEngineDescription)
-	d.Set("exportable_log_types", found.ExportableLogTypes)
-	d.Set("parameter_group_family", found.DBParameterGroupFamily)
-	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
-
-	var upgradeTargets []string
-	for _, ut := range found.ValidUpgradeTarget {
-		upgradeTargets = append(upgradeTargets, aws.StringValue(ut.EngineVersion))
-	}
-	d.Set("valid_upgrade_targets", upgradeTargets)
-
-	d.Set("version", found.EngineVersion)
-	d.Set("version_description", found.DBEngineVersionDescription)
+	d.Set(names.AttrVersion, engineVersion.EngineVersion)
+	d.Set("version_description", engineVersion.DBEngineVersionDescription)
 
 	return diags
+}
+
+func findEngineVersion(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBEngineVersionsInput) (*awstypes.DBEngineVersion, error) {
+	output, err := findEngineVersions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEngineVersions(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBEngineVersionsInput) ([]awstypes.DBEngineVersion, error) {
+	var output []awstypes.DBEngineVersion
+
+	pages := docdb.NewDescribeDBEngineVersionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DBEngineVersions...)
+	}
+
+	return output, nil
 }

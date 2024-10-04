@@ -11,9 +11,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func InstanceMigrateState(
+func instanceMigrateState(
 	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
@@ -35,7 +36,7 @@ func migrateInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Instanc
 	// Delete old count
 	delete(is.Attributes, "block_device.#")
 
-	oldBds, err := ReadV0BlockDevices(is)
+	oldBds, err := readV0BlockDevices(is)
 	if err != nil {
 		return is, err
 	}
@@ -48,13 +49,13 @@ func migrateInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Instanc
 		is.Attributes["root_block_device.#"] = "0"
 	}
 	for _, oldBd := range oldBds {
-		WriteV1BlockDevice(is, oldBd)
+		writeV1BlockDevice(is, oldBd)
 	}
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil
 }
 
-func ReadV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]string, error) {
+func readV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]string, error) {
 	oldBds := make(map[string]map[string]string)
 	for k, v := range is.Attributes {
 		if !strings.HasPrefix(k, "block_device.") {
@@ -76,29 +77,28 @@ func ReadV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]stri
 	return oldBds, nil
 }
 
-func WriteV1BlockDevice(
-	is *terraform.InstanceState, oldBd map[string]string) {
-	code := create.StringHashcode(oldBd["device_name"])
+func writeV1BlockDevice(is *terraform.InstanceState, oldBd map[string]string) {
+	code := create.StringHashcode(oldBd[names.AttrDeviceName])
 	bdType := "ebs_block_device"
-	if vn, ok := oldBd["virtual_name"]; ok && strings.HasPrefix(vn, "ephemeral") {
+	if vn, ok := oldBd[names.AttrVirtualName]; ok && strings.HasPrefix(vn, "ephemeral") {
 		bdType = "ephemeral_block_device"
-	} else if dn, ok := oldBd["device_name"]; ok && dn == "/dev/sda1" {
+	} else if dn, ok := oldBd[names.AttrDeviceName]; ok && dn == "/dev/sda1" {
 		bdType = "root_block_device"
 	}
 
 	switch bdType {
 	case "ebs_block_device":
-		delete(oldBd, "virtual_name")
+		delete(oldBd, names.AttrVirtualName)
 	case "root_block_device":
-		delete(oldBd, "virtual_name")
-		delete(oldBd, "encrypted")
-		delete(oldBd, "snapshot_id")
+		delete(oldBd, names.AttrVirtualName)
+		delete(oldBd, names.AttrEncrypted)
+		delete(oldBd, names.AttrSnapshotID)
 	case "ephemeral_block_device":
-		delete(oldBd, "delete_on_termination")
-		delete(oldBd, "encrypted")
-		delete(oldBd, "iops")
-		delete(oldBd, "volume_size")
-		delete(oldBd, "volume_type")
+		delete(oldBd, names.AttrDeleteOnTermination)
+		delete(oldBd, names.AttrEncrypted)
+		delete(oldBd, names.AttrIOPS)
+		delete(oldBd, names.AttrVolumeSize)
+		delete(oldBd, names.AttrVolumeType)
 	}
 	for attr, val := range oldBd {
 		attrKey := fmt.Sprintf("%s.%d.%s", bdType, code, attr)

@@ -6,17 +6,16 @@ package sqs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_sqs_queues")
-func DataSourceQueues() *schema.Resource {
+func dataSourceQueues() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueuesRead,
 
@@ -34,12 +33,9 @@ func DataSourceQueues() *schema.Resource {
 	}
 }
 
-const (
-	DSNameQueues = "Queues Data Source"
-)
-
 func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	input := &sqs.ListQueuesInput{}
 
@@ -47,30 +43,20 @@ func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.QueueNamePrefix = aws.String(v.(string))
 	}
 
-	var queueUrls []string
+	var queueURLs []string
+	pages := sqs.NewListQueuesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err := conn.ListQueuesPagesWithContext(ctx, input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing SQS Queues: %s", err)
 		}
 
-		for _, queueUrl := range page.QueueUrls {
-			if queueUrl == nil {
-				continue
-			}
-
-			queueUrls = append(queueUrls, aws.StringValue(queueUrl))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return create.DiagError(names.SQS, create.ErrActionReading, DSNameQueues, "", err)
+		queueURLs = append(queueURLs, page.QueueUrls...)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("queue_urls", queueUrls)
+	d.Set("queue_urls", queueURLs)
 
-	return nil
+	return diags
 }

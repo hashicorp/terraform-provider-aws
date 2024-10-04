@@ -49,6 +49,9 @@ interpolation.
 * `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
+* `instance_maintenance_policy` - Instance maintenance policy for the group.
+    * `min_healthy_percentage` - Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+    * `max_healthy_percentage` - Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
 * `launch_configuration` - The name of the associated launch configuration.
 * `launch_template` - List of launch templates for the group.
     * `id` - ID of the launch template.
@@ -90,6 +93,7 @@ interpolation.
                 * `instance_generations` - List of instance generation names.
                 * `local_storage` - Indicates whether instance types with instance store volumes are included, excluded, or required.
                 * `local_storage_types` - List of local storage type names.
+                * `max_spot_price_as_percentage_of_optimal_on_demand_price` - Price protection threshold for Spot Instances.
                 * `memory_gib_per_vcpu` - List of objects describing the minimum and maximum amount of memory (GiB) per vCPU.
                     * `min` - Minimum.
                     * `max` - Maximum.
@@ -141,4 +145,4 @@ interpolation.
     * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warm_pool_size` - Current size of the warm pool.
 
-<!-- cache-key: cdktf-0.18.0 input-99dec3ec98ed7de1189a2c55151981d1b50b501480be637bbbe4a2b5d7102172 -->
+<!-- cache-key: cdktf-0.20.1 input-ebf8888e7d02b248dc689ab89018f2682fdfa4054d736231065c99862872c406 -->

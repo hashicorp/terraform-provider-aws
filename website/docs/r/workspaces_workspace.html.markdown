@@ -19,6 +19,10 @@ data "aws_workspaces_bundle" "value_windows_10" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
+data "aws_kms_key" "workspaces" {
+  key_id = "alias/aws/workspaces"
+}
+
 resource "aws_workspaces_workspace" "example" {
   directory_id = aws_workspaces_directory.example.id
   bundle_id    = data.aws_workspaces_bundle.value_windows_10.id
@@ -26,7 +30,7 @@ resource "aws_workspaces_workspace" "example" {
 
   root_volume_encryption_enabled = true
   user_volume_encryption_enabled = true
-  volume_encryption_key          = "alias/aws/workspaces"
+  volume_encryption_key          = data.aws_kms_key.workspaces.arn
 
   workspace_properties {
     compute_type_name                         = "VALUE"
@@ -51,7 +55,7 @@ This resource supports the following arguments:
 * `user_name` – (Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace.
 * `root_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
 * `user_volume_encryption_enabled` – (Optional) Indicates whether the data stored on the user volume is encrypted.
-* `volume_encryption_key` – (Optional) The symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
+* `volume_encryption_key` – (Optional) The ARN of a symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
 * `tags` - (Optional) The tags for the WorkSpace. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workspace_properties` – (Optional) The WorkSpace properties.
 

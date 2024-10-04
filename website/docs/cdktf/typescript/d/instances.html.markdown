@@ -16,7 +16,7 @@ or to make it easier for an operator to connect through bastion host(s).
 
 -> **Note:** It's a best practice to expose instance details via [outputs](https://www.terraform.io/docs/configuration/outputs.html)
 and [remote state](https://www.terraform.io/docs/state/remote.html) and
-**use [`terraformRemoteState`](https://www.terraform.io/docs/providers/terraform/d/remote_state.html)
+**use [`terraform_remote_state`](https://www.terraform.io/docs/providers/terraform/d/remote_state.html)
 data source instead** if you manage referenced instances via Terraform.
 
 ~> **Note:** It's strongly discouraged to use this data source for querying ephemeral
@@ -91,8 +91,8 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.18.0 input-b32a570916ee4ab91b69b22089fb9eae9d1e369af64f851ec6954b99768d43fd -->
+<!-- cache-key: cdktf-0.20.1 input-b32a570916ee4ab91b69b22089fb9eae9d1e369af64f851ec6954b99768d43fd -->

@@ -5,35 +5,45 @@ package route53
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_delegation_set")
-func ResourceDelegationSet() *schema.Resource {
+// @SDKResource("aws_route53_delegation_set", name="Reusable Delegation Set")
+func resourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegationSetCreate,
 		ReadWithoutTimeout:   resourceDelegationSetRead,
 		DeleteWithoutTimeout: resourceDelegationSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"name_servers": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"reference_name": {
 				Type:         schema.TypeString,
@@ -41,19 +51,13 @@ func ResourceDelegationSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
-
-			"name_servers": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
 		},
 	}
 }
 
 func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	callerRef := id.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
@@ -65,55 +69,54 @@ func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, me
 		CallerReference: aws.String(callerRef),
 	}
 
-	out, err := r53.CreateReusableDelegationSetWithContext(ctx, input)
+	output, err := conn.CreateReusableDelegationSet(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route 53 Reusable Delegation Set: %s", err)
 	}
 
-	set := out.DelegationSet
-	d.SetId(CleanDelegationSetID(*set.Id))
+	d.SetId(cleanDelegationSetID(aws.ToString(output.DelegationSet.Id)))
 
 	return append(diags, resourceDelegationSetRead(ctx, d, meta)...)
 }
 
 func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	input := &route53.GetReusableDelegationSetInput{
-		Id: aws.String(CleanDelegationSetID(d.Id())),
+	set, err := findDelegationSetByID(ctx, conn, cleanDelegationSetID(d.Id()))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Reusable Delegation Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-	out, err := r53.GetReusableDelegationSetWithContext(ctx, input)
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading Route 53 Reusable Delegation Set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Reusable Delegation Set (%s): %s", d.Id(), err)
 	}
-
-	set := out.DelegationSet
-	d.Set("name_servers", aws.StringValueSlice(set.NameServers))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
-		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
+		Resource:  "delegationset/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
+	d.Set("name_servers", set.NameServers)
 
 	return diags
 }
 
 func resourceDelegationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	input := &route53.DeleteReusableDelegationSetInput{
-		Id: aws.String(CleanDelegationSetID(d.Id())),
-	}
-	_, err := r53.DeleteReusableDelegationSetWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
+	log.Printf("[DEBUG] Deleting Route 53 Reusable Delegation Set: %s", d.Id())
+	_, err := conn.DeleteReusableDelegationSet(ctx, &route53.DeleteReusableDelegationSetInput{
+		Id: aws.String(cleanDelegationSetID(d.Id())),
+	})
+
+	if errs.IsA[*awstypes.NoSuchDelegationSet](err) {
 		return diags
 	}
 
@@ -124,6 +127,27 @@ func resourceDelegationSetDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func CleanDelegationSetID(id string) string {
-	return strings.TrimPrefix(id, "/delegationset/")
+func findDelegationSetByID(ctx context.Context, conn *route53.Client, id string) (*awstypes.DelegationSet, error) {
+	input := &route53.GetReusableDelegationSetInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetReusableDelegationSet(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchDelegationSet](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DelegationSet == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DelegationSet, nil
 }

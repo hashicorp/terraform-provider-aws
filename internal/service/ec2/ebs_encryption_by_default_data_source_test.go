@@ -9,19 +9,20 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSEncryptionByDefaultDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -36,7 +37,7 @@ func TestAccEC2EBSEncryptionByDefaultDataSource_basic(t *testing.T) {
 
 func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -47,15 +48,15 @@ func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string)
 			return fmt.Errorf("No ID is set")
 		}
 
-		actual, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		actual, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {
 			return fmt.Errorf("Error reading default EBS encryption toggle: %q", err)
 		}
 
-		attr, _ := strconv.ParseBool(rs.Primary.Attributes["enabled"])
+		attr, _ := strconv.ParseBool(rs.Primary.Attributes[names.AttrEnabled])
 
-		if attr != aws.BoolValue(actual.EbsEncryptionByDefault) {
-			return fmt.Errorf("EBS encryption by default is not in expected state (%t)", aws.BoolValue(actual.EbsEncryptionByDefault))
+		if attr != aws.ToBool(actual.EbsEncryptionByDefault) {
+			return fmt.Errorf("EBS encryption by default is not in expected state (%t)", aws.ToBool(actual.EbsEncryptionByDefault))
 		}
 
 		return nil

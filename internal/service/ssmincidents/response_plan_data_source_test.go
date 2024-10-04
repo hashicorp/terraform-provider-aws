@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testResponsePlanDataSource_basic(t *testing.T) {
+func testAccResponsePlanDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -32,7 +32,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					chatChannelTopic,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.title", dataSourceName, "incident_template.0.title"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.impact", dataSourceName, "incident_template.0.impact"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.dedupe_string", dataSourceName, "incident_template.0.dedupe_string"),
@@ -53,10 +53,10 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.incident_tags.%", dataSourceName, "incident_template.0.incident_tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.incident_tags.a", dataSourceName, "incident_template.0.incident_tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.incident_tags.b", dataSourceName, "incident_template.0.incident_tags.b"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "display_name", dataSourceName, "display_name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "chat_channel.0", chatChannelTopic, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDisplayName, dataSourceName, names.AttrDisplayName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "chat_channel.0", chatChannelTopic, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"engagements.0",
@@ -67,13 +67,13 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 						dataSourceName,
 						"action.0.ssm_automation.0.document_name",
 						"aws_ssm_document.document",
-						"name",
+						names.AttrName,
 					),
 					resource.TestCheckTypeSetElemAttrPair(
 						dataSourceName,
 						"action.0.ssm_automation.0.role_arn",
 						"aws_iam_role.role",
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttrPair(
 						resourceName,
@@ -171,11 +171,11 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 						dataSourceName,
 						"integration.0.pagerduty.0.secret_id",
 					),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.a", dataSourceName, "tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.b", dataSourceName, "tags.b"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexache.MustCompile(`response-plan/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`response-plan/+.`)),
 				),
 			},
 		},

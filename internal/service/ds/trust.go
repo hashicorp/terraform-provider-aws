@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -21,51 +22,43 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	trustCreatedTimeout = 10 * time.Minute
-	trustUpdatedTimeout = 10 * time.Minute
-	trustDeleteTimeout  = 5 * time.Minute
-)
-
-// @FrameworkResource
-func newResourceTrust(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTrust{}, nil
+// @FrameworkResource(name="Trust")
+func newTrustResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &trustResource{}, nil
 }
 
-const (
-	ResNameTrust = "Trust"
-)
-
-type resourceTrust struct {
+type trustResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceTrust) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_directory_service_trust"
+func (*trustResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_directory_service_trust"
 }
 
-func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *trustResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	trustType := fwtypes.StringEnumType[awstypes.TrustType]()
+
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"conditional_forwarder_ip_addrs": schema.SetAttribute{
-				Optional:    true,
 				ElementType: types.StringType,
+				Optional:    true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
@@ -77,7 +70,11 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 			"created_date_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"delete_associated_conditional_forwarder": schema.BoolAttribute{
 				Computed: true,
@@ -93,9 +90,10 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 					directoryIDValidator,
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"last_updated_date_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"remote_domain_name": schema.StringAttribute{
 				Required: true,
@@ -108,20 +106,17 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 			"selective_auth": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.SelectiveAuth](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.SelectiveAuth](),
+				Optional:   true,
+				Computed:   true,
 			},
 			"state_last_updated_date_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"trust_direction": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.TrustDirection](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.TrustDirection](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -143,146 +138,189 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed: true,
 			},
 			"trust_type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(string(awstypes.TrustTypeForest)),
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.TrustType](),
-				},
+				CustomType: trustType,
+				Optional:   true,
+				Computed:   true,
+				Default:    trustType.AttributeDefault(awstypes.TrustTypeForest),
 			},
 		},
 	}
 }
 
-func (r *resourceTrust) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().DSClient(ctx)
-
-	var plan resourceTrustData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *trustResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data trustResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	directoryID := plan.DirectoryID.ValueString()
+	conn := r.Meta().DSClient(ctx)
 
-	input := plan.createInput(ctx)
+	directoryID := data.DirectoryID.ValueString()
+	input := &directoryservice.CreateTrustInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	output, err := conn.CreateTrust(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DS, create.ErrActionCreating, ResNameTrust, directoryID, nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Directory Service Trust (%s)", directoryID), err.Error())
+
 		return
 	}
 
-	state := plan
-	state.ID = types.StringValue(aws.ToString(output.TrustId))
+	// Set values for unknowns.
+	trustID := aws.ToString(output.TrustId)
+	data.ID = types.StringValue(trustID)
 
-	// When Trust Direction is `One-Way: Incoming`, the Trust terminates at Created. Otherwise, it terminates at Verified
+	// When Trust Direction is `One-Way: Incoming`, the Trust terminates at Created. Otherwise, it terminates at Verified.
+	const (
+		timeout = 10 * time.Minute
+	)
 	var trust *awstypes.Trust
-	if plan.TrustDirection.ValueString() == string(awstypes.TrustDirectionOneWayIncoming) {
-		trust, err = waitTrustCreated(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustCreatedTimeout)
+	if data.TrustDirection.ValueEnum() == awstypes.TrustDirectionOneWayIncoming {
+		trust, err = waitTrustCreated(ctx, conn, directoryID, trustID, timeout)
 	} else {
-		trust, err = waitTrustVerified(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustCreatedTimeout)
+		trust, err = waitTrustVerified(ctx, conn, directoryID, trustID, timeout)
 	}
+
 	if err != nil {
-		resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionCreating, ResNameTrust, state.ID.ValueString(), err))
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Directory Service Trust (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.update(ctx, trust)
+	// Set values for unknowns after creation is complete.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, trust, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceTrust) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().DSClient(ctx)
-
-	var data resourceTrustData
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data trustResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	trust, err := FindTrustByID(ctx, conn, data.DirectoryID.ValueString(), data.ID.ValueString())
+	conn := r.Meta().DSClient(ctx)
+
+	directoryID := data.DirectoryID.ValueString()
+	trustID := data.ID.ValueString()
+	trust, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionReading, ResNameTrust, data.ID.ValueString(), err))
+		response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Trust (%s)", trustID), err.Error())
+
 		return
 	}
 
-	data.update(ctx, trust)
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, trust, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	forwarder, err := findConditionalForwarder(ctx, conn, data.DirectoryID.ValueString(), data.RemoteDomainName.ValueString())
+	// Directory Trust optionally accepts a remote domain name with a trailing period.
+	domainName := strings.TrimRight(data.RemoteDomainName.ValueString(), ".")
+	forwarder, err := findConditionalForwarderByTwoPartKey(ctx, conn, directoryID, domainName)
+
 	if err != nil {
-		resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionReading, ResNameTrust, data.ID.ValueString(), fmt.Errorf("reading Conditional Forwarder: %w", err)))
+		response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Conditional Forwarder (%s)", conditionalForwarderCreateResourceID(directoryID, domainName)), err.Error())
+
 		return
 	}
 
-	data.updateConditionalForwarder(ctx, forwarder)
+	data.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSet(ctx, forwarder.DnsIpAddrs)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceTrust) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state, config, plan resourceTrustData
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *trustResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new trustResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().DSClient(ctx)
 
-	if !plan.SelectiveAuth.IsUnknown() && !state.SelectiveAuth.Equal(plan.SelectiveAuth) {
-		params := plan.updateInput(ctx)
+	directoryID := new.DirectoryID.ValueString()
+	trustID := new.ID.ValueString()
 
-		_, err := conn.UpdateTrust(ctx, params)
+	if !new.SelectiveAuth.IsUnknown() && !old.SelectiveAuth.Equal(new.SelectiveAuth) {
+		input := &directoryservice.UpdateTrustInput{
+			SelectiveAuth: new.SelectiveAuth.ValueEnum(),
+			TrustId:       aws.String(trustID),
+		}
+
+		_, err := conn.UpdateTrust(ctx, input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Directory Service Trust (%s)", trustID), err.Error())
+
 			return
 		}
 
-		trust, err := waitTrustUpdated(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustUpdatedTimeout)
+		const (
+			timeout = 10 * time.Minute
+		)
+		trust, err := waitTrustUpdated(ctx, conn, directoryID, trustID, timeout)
+
 		if err != nil {
-			resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionUpdating, ResNameTrust, state.ID.ValueString(), err))
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Directory Service Trust (%s) update", trustID), err.Error())
+
 			return
 		}
 
-		state.update(ctx, trust)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, trust, &new)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		// Set values for unknowns.
+		new.LastUpdatedDateTime = old.LastUpdatedDateTime
+		new.SelectiveAuth = old.SelectiveAuth
+		new.StateLastUpdatedDateTime = old.StateLastUpdatedDateTime
+		new.TrustState = old.TrustState
+		new.TrustStateReason = old.TrustStateReason
 	}
 
-	if !plan.ConditionalForwarderIpAddrs.IsUnknown() && !state.ConditionalForwarderIpAddrs.Equal(plan.ConditionalForwarderIpAddrs) {
-		params := plan.updateConditionalForwarderInput(ctx)
+	if !new.ConditionalForwarderIPAddrs.IsUnknown() && !old.ConditionalForwarderIPAddrs.Equal(new.ConditionalForwarderIPAddrs) {
+		input := &directoryservice.UpdateConditionalForwarderInput{
+			DirectoryId:      aws.String(directoryID),
+			DnsIpAddrs:       fwflex.ExpandFrameworkStringValueSet(ctx, new.ConditionalForwarderIPAddrs),
+			RemoteDomainName: fwflex.StringFromFramework(ctx, new.RemoteDomainName),
+		}
 
-		_, err := conn.UpdateConditionalForwarder(ctx, params)
+		_, err := conn.UpdateConditionalForwarder(ctx, input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("updating Cognito User Pool Client (%s) conditional forwarder IPs", plan.ID.ValueString()),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Directory Service Conditional Forwarder (%s)", conditionalForwarderCreateResourceID(new.DirectoryID.ValueString(), new.RemoteDomainName.ValueString())), err.Error())
+
 			return
 		}
 
-		forwarder, err := findConditionalForwarder(ctx, conn, plan.DirectoryID.ValueString(), plan.RemoteDomainName.ValueString())
+		// Directory Trust optionally accepts a remote domain name with a trailing period.
+		domainName := strings.TrimRight(new.RemoteDomainName.ValueString(), ".")
+		forwarder, err := findConditionalForwarderByTwoPartKey(ctx, conn, directoryID, domainName)
+
 		if err != nil {
 			// Outputting a NotFoundError does not include the original error.
 			// Retrieve it to give the user an actionalble error message.
@@ -291,53 +329,56 @@ func (r *resourceTrust) Update(ctx context.Context, req resource.UpdateRequest, 
 					err = nfe.LastError
 				}
 			}
-			resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionReading, ResNameTrust, plan.ID.ValueString(), fmt.Errorf("reading Conditional Forwarder: %w", err)))
+
+			response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Conditional Forwarder (%s)", conditionalForwarderCreateResourceID(directoryID, domainName)), err.Error())
+
 			return
 		}
 
-		state.updateConditionalForwarder(ctx, forwarder)
+		new.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSet(ctx, forwarder.DnsIpAddrs)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceTrust) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceTrustData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *trustResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data trustResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-
-	params := state.deleteInput(ctx)
 
 	conn := r.Meta().DSClient(ctx)
 
-	_, err := conn.DeleteTrust(ctx, params)
-	if isTrustNotFoundErr(err) {
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DS, create.ErrActionDeleting, ResNameTrust, state.ID.ValueString(), err),
-			err.Error(),
-		)
+	_, err := conn.DeleteTrust(ctx, &directoryservice.DeleteTrustInput{
+		DeleteAssociatedConditionalForwarder: data.DeleteAssociatedConditionalForwarder.ValueBool(),
+		TrustId:                              fwflex.StringFromFramework(ctx, data.ID),
+	})
+
+	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return
 	}
 
-	_, err = waitTrustDeleted(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustDeleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DS, create.ErrActionDeleting, ResNameTrust, state.ID.ValueString(), fmt.Errorf("waiting for completion: %w", err)),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Directory Service Trust (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	const (
+		timeout = 5 * time.Minute
+	)
+	if _, err := waitTrustDeleted(ctx, conn, data.DirectoryID.ValueString(), data.ID.ValueString(), timeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Directory Service Trust (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceTrust) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, "/")
+func (r *trustResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("Wrong format for import ID (%s), use: 'directory-id/remote-directory-domain'", req.ID))
+		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("Wrong format for import ID (%s), use: 'directory-id/remote-directory-domain'", request.ID))
 		return
 	}
 	directoryID := parts[0]
@@ -345,161 +386,110 @@ func (r *resourceTrust) ImportState(ctx context.Context, req resource.ImportStat
 
 	trust, err := findTrustByDomain(ctx, r.Meta().DSClient(ctx), directoryID, domain)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			"Importing Resource",
 			err.Error(),
 		)
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), aws.ToString(trust.TrustId))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("directory_id"), directoryID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(trust.TrustId))...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("directory_id"), directoryID)...)
 }
 
-type resourceTrustData struct {
-	ConditionalForwarderIpAddrs          types.Set    `tfsdk:"conditional_forwarder_ip_addrs"`
-	CreatedDateTime                      types.String `tfsdk:"created_date_time"`
-	DeleteAssociatedConditionalForwarder types.Bool   `tfsdk:"delete_associated_conditional_forwarder"`
-	DirectoryID                          types.String `tfsdk:"directory_id"`
-	ID                                   types.String `tfsdk:"id"`
-	LastUpdatedDateTime                  types.String `tfsdk:"last_updated_date_time"`
-	RemoteDomainName                     types.String `tfsdk:"remote_domain_name"`
-	SelectiveAuth                        types.String `tfsdk:"selective_auth"`
-	StateLastUpdatedDateTime             types.String `tfsdk:"state_last_updated_date_time"`
-	TrustDirection                       types.String `tfsdk:"trust_direction"`
-	TrustPassword                        types.String `tfsdk:"trust_password"`
-	TrustState                           types.String `tfsdk:"trust_state"`
-	TrustStateReason                     types.String `tfsdk:"trust_state_reason"`
-	TrustType                            types.String `tfsdk:"trust_type"`
+type trustResourceModel struct {
+	ConditionalForwarderIPAddrs          types.Set                                   `tfsdk:"conditional_forwarder_ip_addrs"`
+	CreatedDateTime                      timetypes.RFC3339                           `tfsdk:"created_date_time"`
+	DeleteAssociatedConditionalForwarder types.Bool                                  `tfsdk:"delete_associated_conditional_forwarder"`
+	DirectoryID                          types.String                                `tfsdk:"directory_id"`
+	ID                                   types.String                                `tfsdk:"id"`
+	LastUpdatedDateTime                  timetypes.RFC3339                           `tfsdk:"last_updated_date_time"`
+	RemoteDomainName                     types.String                                `tfsdk:"remote_domain_name"`
+	SelectiveAuth                        fwtypes.StringEnum[awstypes.SelectiveAuth]  `tfsdk:"selective_auth"`
+	StateLastUpdatedDateTime             timetypes.RFC3339                           `tfsdk:"state_last_updated_date_time"`
+	TrustDirection                       fwtypes.StringEnum[awstypes.TrustDirection] `tfsdk:"trust_direction"`
+	TrustPassword                        types.String                                `tfsdk:"trust_password"`
+	TrustState                           types.String                                `tfsdk:"trust_state"`
+	TrustStateReason                     types.String                                `tfsdk:"trust_state_reason"`
+	TrustType                            fwtypes.StringEnum[awstypes.TrustType]      `tfsdk:"trust_type"`
 }
 
-func (data resourceTrustData) createInput(ctx context.Context) *directoryservice.CreateTrustInput {
-	return &directoryservice.CreateTrustInput{
-		ConditionalForwarderIpAddrs: flex.ExpandFrameworkStringValueSet(ctx, data.ConditionalForwarderIpAddrs),
-		DirectoryId:                 flex.StringFromFramework(ctx, data.DirectoryID),
-		RemoteDomainName:            flex.StringFromFramework(ctx, data.RemoteDomainName),
-		SelectiveAuth:               stringlikeValueFromFramework[awstypes.SelectiveAuth](ctx, data.SelectiveAuth),
-		TrustDirection:              stringlikeValueFromFramework[awstypes.TrustDirection](ctx, data.TrustDirection),
-		TrustPassword:               flex.StringFromFramework(ctx, data.TrustPassword),
-		TrustType:                   stringlikeValueFromFramework[awstypes.TrustType](ctx, data.TrustType),
-	}
-}
+func findTrust(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeTrustsInput, filter tfslices.Predicate[*awstypes.Trust]) (*awstypes.Trust, error) {
+	output, err := findTrusts(ctx, conn, input, filter)
 
-func (data resourceTrustData) updateInput(ctx context.Context) *directoryservice.UpdateTrustInput {
-	return &directoryservice.UpdateTrustInput{
-		TrustId:       flex.StringFromFramework(ctx, data.ID),
-		SelectiveAuth: stringlikeValueFromFramework[awstypes.SelectiveAuth](ctx, data.SelectiveAuth),
-	}
-}
-
-func (data resourceTrustData) updateConditionalForwarderInput(ctx context.Context) *directoryservice.UpdateConditionalForwarderInput {
-	return &directoryservice.UpdateConditionalForwarderInput{
-		DirectoryId:      flex.StringFromFramework(ctx, data.DirectoryID),
-		RemoteDomainName: flex.StringFromFramework(ctx, data.RemoteDomainName),
-		DnsIpAddrs:       flex.ExpandFrameworkStringValueSet(ctx, data.ConditionalForwarderIpAddrs),
-	}
-}
-
-func (data resourceTrustData) deleteInput(ctx context.Context) *directoryservice.DeleteTrustInput {
-	return &directoryservice.DeleteTrustInput{
-		TrustId:                              flex.StringFromFramework(ctx, data.ID),
-		DeleteAssociatedConditionalForwarder: data.DeleteAssociatedConditionalForwarder.ValueBool(),
-	}
-}
-
-func (data *resourceTrustData) update(ctx context.Context, in *awstypes.Trust) {
-	data.CreatedDateTime = flex.StringValueToFramework(ctx, in.CreatedDateTime.Format(time.RFC3339))
-	data.LastUpdatedDateTime = flex.StringValueToFramework(ctx, in.LastUpdatedDateTime.Format(time.RFC3339))
-	data.RemoteDomainName = flex.StringToFramework(ctx, in.RemoteDomainName)
-	data.SelectiveAuth = flex.StringValueToFramework(ctx, in.SelectiveAuth)
-	data.StateLastUpdatedDateTime = flex.StringValueToFramework(ctx, in.StateLastUpdatedDateTime.Format(time.RFC3339))
-	data.TrustDirection = flex.StringValueToFramework(ctx, in.TrustDirection)
-	// TrustPassword is not returned
-	data.TrustState = flex.StringValueToFramework(ctx, in.TrustState)
-	data.TrustStateReason = flex.StringToFramework(ctx, in.TrustStateReason)
-	data.TrustType = flex.StringValueToFramework(ctx, in.TrustType)
-}
-
-func (data *resourceTrustData) updateConditionalForwarder(ctx context.Context, in *awstypes.ConditionalForwarder) {
-	data.ConditionalForwarderIpAddrs = flex.FlattenFrameworkStringValueSet(ctx, in.DnsIpAddrs)
-}
-
-func stringlikeValueFromFramework[T ~string](_ context.Context, v types.String) T {
-	if v.IsNull() || v.IsUnknown() {
-		return ""
+	if err != nil {
+		return nil, err
 	}
 
-	return T(v.ValueString())
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindTrustByID(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string) (*awstypes.Trust, error) {
+func findTrusts(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeTrustsInput, filter tfslices.Predicate[*awstypes.Trust]) ([]awstypes.Trust, error) {
+	var output []awstypes.Trust
+
+	pages := directoryservice.NewDescribeTrustsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Trusts {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func findTrustByTwoPartKey(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) (*awstypes.Trust, error) {
 	input := &directoryservice.DescribeTrustsInput{
 		DirectoryId: aws.String(directoryID),
 		TrustIds:    []string{trustID},
 	}
 
-	output, err := conn.DescribeTrusts(ctx, input)
-	if isTrustNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	trust, err := tfresource.AssertSingleValueResult(output.Trusts)
-	if err != nil {
-		return nil, err
-	}
-	return trust, nil
+	return findTrust(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Trust]())
 }
 
-func findTrustByDomain(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, domain string) (*awstypes.Trust, error) {
+func findTrustByDomain(ctx context.Context, conn *directoryservice.Client, directoryID, domain string) (*awstypes.Trust, error) {
 	input := &directoryservice.DescribeTrustsInput{
 		DirectoryId: aws.String(directoryID),
 	}
 
-	var results []awstypes.Trust
-	paginator := directoryservice.NewDescribeTrustsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	return findTrust(ctx, conn, input, func(v *awstypes.Trust) bool {
+		return aws.ToString(v.RemoteDomainName) == domain
+	})
+}
+
+func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
-		for _, trust := range page.Trusts {
-			if aws.ToString(trust.RemoteDomainName) == domain {
-				results = append(results, trust)
-			}
-		}
+		return output, string(output.TrustState), nil
 	}
-
-	trust, err := tfresource.AssertSingleValueResult(results)
-	if err != nil {
-		return nil, err
-	}
-	return trust, nil
 }
 
-func isTrustNotFoundErr(err error) bool {
-	return errs.IsA[*awstypes.EntityDoesNotExistException](err)
-}
-
-func isConditionalForwarderNotFoundErr(err error) bool {
-	return errs.IsA[*awstypes.EntityDoesNotExistException](err)
-}
-
-// waitTrustCreated waits until a Trust is created.
-func waitTrustCreated(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
+func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.TrustStateCreating,
-		),
-		Target: enum.Slice(
-			awstypes.TrustStateCreated,
-		),
+		Pending: enum.Slice(awstypes.TrustStateCreating),
+		Target:  enum.Slice(awstypes.TrustStateCreated),
 		Refresh: statusTrust(ctx, conn, directoryID, trustID),
 		Timeout: timeout,
 	}
@@ -522,15 +512,14 @@ func waitTrustCreated(ctx context.Context, conn directoryservice.DescribeTrustsA
 	return nil, err
 }
 
-// waitTrustVerified waits until a Trust is created and verified.
-// On first side of a Two-Way Trust relationship, `VerifyFailed` is expected. This then gets updated when the second side is created.
-func waitTrustVerified(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
+func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateCreating,
 			awstypes.TrustStateCreated,
 			awstypes.TrustStateVerifying,
 		),
+		// On first side of a Two-Way Trust relationship, `VerifyFailed` is expected. This then gets updated when the second side is created.
 		Target: enum.Slice(
 			awstypes.TrustStateVerified,
 			awstypes.TrustStateVerifyFailed,
@@ -557,7 +546,7 @@ func waitTrustVerified(ctx context.Context, conn directoryservice.DescribeTrusts
 	return nil, err
 }
 
-func waitTrustUpdated(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
+func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateUpdating,
@@ -590,7 +579,7 @@ func waitTrustUpdated(ctx context.Context, conn directoryservice.DescribeTrustsA
 	return nil, err
 }
 
-func waitTrustDeleted(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
+func waitTrustDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateCreated,
@@ -618,50 +607,4 @@ func waitTrustDeleted(ctx context.Context, conn directoryservice.DescribeTrustsA
 	}
 
 	return nil, err
-}
-
-func statusTrust(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindTrustByID(ctx, conn, directoryID, trustID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.TrustState), nil
-	}
-}
-
-func findConditionalForwarder(ctx context.Context, conn *directoryservice.Client, directoryID, remoteDomainName string) (*awstypes.ConditionalForwarder, error) {
-	// Directory Trust optionally accepts a remote domain name with a trailing period.
-	// Conditional Forwarders
-	remoteDomainName = strings.TrimRight(remoteDomainName, ".")
-
-	input := &directoryservice.DescribeConditionalForwardersInput{
-		DirectoryId:       aws.String(directoryID),
-		RemoteDomainNames: []string{remoteDomainName},
-	}
-
-	output, err := conn.DescribeConditionalForwarders(ctx, input)
-	if isConditionalForwarderNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	forwarder, err := tfresource.AssertSingleValueResult(output.ConditionalForwarders)
-	if err != nil {
-		return nil, err
-	}
-
-	return forwarder, nil
 }

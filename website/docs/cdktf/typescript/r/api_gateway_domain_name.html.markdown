@@ -16,7 +16,7 @@ can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/ap
 This resource just establishes ownership of and the TLS settings for
 a particular domain name. An API can be attached to a particular path
 under the registered domain name using
-[the `awsApiGatewayBasePathMapping` resource](api_gateway_base_path_mapping.html).
+[the `aws_api_gateway_base_path_mapping` resource](api_gateway_base_path_mapping.html).
 
 API Gateway domains can be defined as either 'edge-optimized' or 'regional'.  In an edge-optimized configuration,
 API Gateway internally creates and manages a CloudFront distribution to route requests on the given hostname. In
@@ -29,9 +29,9 @@ a distribution can be created if needed. In either case, it is necessary to crea
 given domain name which is an alias (either Route53 alias or traditional CNAME) to the regional domain name exported in
 the `regionalDomainName` attribute.
 
-~> **Note:** API Gateway requires the use of AWS Certificate Manager (ACM) certificates instead of Identity and Access Management (IAM) certificates in regions that support ACM. Regions that support ACM can be found in the [Regions and Endpoints Documentation](https://docs.aws.amazon.com/general/latest/gr/rande.html#acm_region). To import an existing private key and certificate into ACM or request an ACM certificate, see the [`awsAcmCertificate` resource](/docs/providers/aws/r/acm_certificate.html).
+~> **Note:** API Gateway requires the use of AWS Certificate Manager (ACM) certificates instead of Identity and Access Management (IAM) certificates in regions that support ACM. Regions that support ACM can be found in the [Regions and Endpoints Documentation](https://docs.aws.amazon.com/general/latest/gr/rande.html#acm_region). To import an existing private key and certificate into ACM or request an ACM certificate, see the [`aws_acm_certificate` resource](/docs/providers/aws/r/acm_certificate.html).
 
-~> **Note:** The `awsApiGatewayDomainName` resource expects dependency on the `awsAcmCertificateValidation` as
+~> **Note:** The `aws_api_gateway_domain_name` resource expects dependency on the `aws_acm_certificate_validation` as
 only verified certificates can be used. This can be made either explicitly by adding the
 `depends_on = [aws_acm_certificate_validation.cert]` attribute. Or implicitly by referring certificate ARN
 from the validation resource where it will be available after the resource creation:
@@ -42,7 +42,7 @@ from the validation resource where it will be available after the resource creat
 
 ## Example Usage
 
-An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/apiGatewayRestApiOpenapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
+An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
 ### Edge Optimized (ACM Certificate)
 
@@ -224,7 +224,7 @@ This resource supports the following arguments:
 * `endpointConfiguration` - (Optional) Configuration block defining API endpoint information including type. See below.
 * `mutualTlsAuthentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.
 * `ownershipVerificationCertificateArn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificateArn` is issued via an ACM Private CA or `mutualTlsAuthentication` is configured with an ACM-imported certificate.)
-* `securityPolicy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Valid values are `tls10` and `tls12`. Must be configured to perform drift detection.
+* `securityPolicy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When referencing an AWS-managed certificate, the following arguments are supported:
@@ -234,19 +234,19 @@ When referencing an AWS-managed certificate, the following arguments are support
 
 When uploading a certificate, the following arguments are supported:
 
-* `certificateBody` - (Optional) Certificate issued for the domain name being registered, in PEM format. Only valid for `edge` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
-* `certificateChain` - (Optional) Certificate for the CA that issued the certificate, along with any intermediate CA certificates required to create an unbroken chain to a certificate trusted by the intended API clients. Only valid for `edge` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
+* `certificateBody` - (Optional) Certificate issued for the domain name being registered, in PEM format. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
+* `certificateChain` - (Optional) Certificate for the CA that issued the certificate, along with any intermediate CA certificates required to create an unbroken chain to a certificate trusted by the intended API clients. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
 * `certificateName` - (Optional) Unique name to use when registering this certificate as an IAM server certificate. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`. Required if `certificateArn` is not set.
-* `certificatePrivateKey` - (Optional) Private key associated with the domain certificate given in `certificateBody`. Only valid for `edge` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
+* `certificatePrivateKey` - (Optional) Private key associated with the domain certificate given in `certificateBody`. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
 * `regionalCertificateName` - (Optional) User-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with `certificateArn`, `certificateName`, `certificateBody`, `certificateChain`, and `certificatePrivateKey`.
 
 ### endpoint_configuration
 
-* `types` - (Required) List of endpoint types. This resource currently only supports managing a single value. Valid values: `edge` or `regional`. If unspecified, defaults to `edge`. Must be declared as `regional` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
+* `types` - (Required) List of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
 
 ### mutual_tls_authentication
 
-* `truststoreUri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucketName/keyName`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
+* `truststoreUri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
 * `truststoreVersion` - (Optional) Version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
 
 ## Attribute Reference
@@ -256,7 +256,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of domain name.
 * `certificateUploadDate` - Upload date associated with the domain certificate.
 * `cloudfrontDomainName` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
-* `cloudfrontZoneId` - For convenience, the hosted zone ID (`z2Fdtndataqyw2`) that can be used to create a Route53 alias record for the distribution.
+* `cloudfrontZoneId` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `id` - Internal identifier assigned to this domain name by API Gateway.
 * `regionalDomainName` - Hostname for the custom domain's regional endpoint.
 * `regionalZoneId` - Hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
@@ -270,9 +270,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ApiGatewayDomainName } from "./.gen/providers/aws/api-gateway-domain-name";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ApiGatewayDomainName.generateConfigForImport(
+      this,
+      "example",
+      "dev.example.com"
+    );
   }
 }
 
@@ -284,4 +294,4 @@ Using `terraform import`, import API Gateway domain names using their `name`. Fo
 % terraform import aws_api_gateway_domain_name.example dev.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-94b48fa1d23d0d114bb8d9f31a16923c5bf9db107914287c83b704a97489f072 -->
+<!-- cache-key: cdktf-0.20.1 input-94b48fa1d23d0d114bb8d9f31a16923c5bf9db107914287c83b704a97489f072 -->

@@ -21,7 +21,7 @@ resource "aws_mq_configuration" "example" {
   description    = "Example Configuration"
   name           = "example"
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -43,7 +43,7 @@ resource "aws_mq_configuration" "example" {
   description    = "Example Configuration"
   name           = "example"
   engine_type    = "RabbitMQ"
-  engine_version = "3.11.16"
+  engine_version = "3.11.20"
 
   data = <<DATA
 # Default RabbitMQ delivery acknowledgement timeout is 30 minutes in milliseconds

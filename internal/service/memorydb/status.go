@@ -6,14 +6,14 @@ package memorydb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // statusACL fetches the MemoryDB ACL and its status.
-func statusACL(ctx context.Context, conn *memorydb.MemoryDB, aclName string) retry.StateRefreshFunc {
+func statusACL(ctx context.Context, conn *memorydb.Client, aclName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		acl, err := FindACLByName(ctx, conn, aclName)
 
@@ -25,12 +25,12 @@ func statusACL(ctx context.Context, conn *memorydb.MemoryDB, aclName string) ret
 			return nil, "", err
 		}
 
-		return acl, aws.StringValue(acl.Status), nil
+		return acl, aws.ToString(acl.Status), nil
 	}
 }
 
 // statusCluster fetches the MemoryDB Cluster and its status.
-func statusCluster(ctx context.Context, conn *memorydb.MemoryDB, clusterName string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *memorydb.Client, clusterName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		cluster, err := FindClusterByName(ctx, conn, clusterName)
 
@@ -42,12 +42,12 @@ func statusCluster(ctx context.Context, conn *memorydb.MemoryDB, clusterName str
 			return nil, "", err
 		}
 
-		return cluster, aws.StringValue(cluster.Status), nil
+		return cluster, aws.ToString(cluster.Status), nil
 	}
 }
 
 // statusClusterParameterGroup fetches the MemoryDB Cluster and its parameter group status.
-func statusClusterParameterGroup(ctx context.Context, conn *memorydb.MemoryDB, clusterName string) retry.StateRefreshFunc {
+func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, clusterName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		cluster, err := FindClusterByName(ctx, conn, clusterName)
 
@@ -59,12 +59,12 @@ func statusClusterParameterGroup(ctx context.Context, conn *memorydb.MemoryDB, c
 			return nil, "", err
 		}
 
-		return cluster, aws.StringValue(cluster.ParameterGroupStatus), nil
+		return cluster, aws.ToString(cluster.ParameterGroupStatus), nil
 	}
 }
 
 // statusClusterSecurityGroups fetches the MemoryDB Cluster and its security group status.
-func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.MemoryDB, clusterName string) retry.StateRefreshFunc {
+func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, clusterName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		cluster, err := FindClusterByName(ctx, conn, clusterName)
 
@@ -80,7 +80,7 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.MemoryDB, c
 			// When at least one security group change is being applied (whether
 			// that be adding or removing an SG), say that we're still in progress.
 
-			if aws.StringValue(sg.Status) != ClusterSecurityGroupStatusActive {
+			if aws.ToString(sg.Status) != ClusterSecurityGroupStatusActive {
 				return cluster, ClusterSecurityGroupStatusModifying, nil
 			}
 		}
@@ -90,7 +90,7 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.MemoryDB, c
 }
 
 // statusSnapshot fetches the MemoryDB Snapshot and its status.
-func statusSnapshot(ctx context.Context, conn *memorydb.MemoryDB, snapshotName string) retry.StateRefreshFunc {
+func statusSnapshot(ctx context.Context, conn *memorydb.Client, snapshotName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		snapshot, err := FindSnapshotByName(ctx, conn, snapshotName)
 
@@ -102,12 +102,12 @@ func statusSnapshot(ctx context.Context, conn *memorydb.MemoryDB, snapshotName s
 			return nil, "", err
 		}
 
-		return snapshot, aws.StringValue(snapshot.Status), nil
+		return snapshot, aws.ToString(snapshot.Status), nil
 	}
 }
 
 // statusUser fetches the MemoryDB user and its status.
-func statusUser(ctx context.Context, conn *memorydb.MemoryDB, userName string) retry.StateRefreshFunc {
+func statusUser(ctx context.Context, conn *memorydb.Client, userName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		user, err := FindUserByName(ctx, conn, userName)
 
@@ -119,6 +119,6 @@ func statusUser(ctx context.Context, conn *memorydb.MemoryDB, userName string) r
 			return nil, "", err
 		}
 
-		return user, aws.StringValue(user.Status), nil
+		return user, aws.ToString(user.Status), nil
 	}
 }

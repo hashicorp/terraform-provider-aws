@@ -54,6 +54,7 @@ This resource supports the following arguments:
 
 * `identifier` - (Required) An identifier for the resource server.
 * `name` - (Required) A name for the resource server.
+* `user_pool_id` - (Required) User pool the client belongs to.
 * `scope` - (Optional) A list of [Authorization Scope](#authorization-scope).
 
 ### Authorization Scope

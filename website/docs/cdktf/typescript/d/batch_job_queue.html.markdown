@@ -47,16 +47,21 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the job queue.
 * `schedulingPolicyArn` - The ARN of the fair share scheduling policy. If this attribute has a value, the job queue uses a fair share scheduling policy. If this attribute does not have a value, the job queue uses a first in, first out (FIFO) scheduling policy.
-* `status` - Current status of the job queue (for example, `creating` or `valid`).
+* `status` - Current status of the job queue (for example, `CREATING` or `VALID`).
 * `statusReason` - Short, human-readable string to provide additional details about the current status
     of the job queue.
-* `state` - Describes the ability of the queue to accept new jobs (for example, `enabled` or `disabled`).
+* `state` - Describes the ability of the queue to accept new jobs (for example, `ENABLED` or `DISABLED`).
 * `tags` - Key-value map of resource tags
 * `priority` - Priority of the job queue. Job queues with a higher priority are evaluated first when
     associated with the same compute environment.
 * `computeEnvironmentOrder` - The compute environments that are attached to the job queue and the order in
     which job placement is preferred. Compute environments are selected for job placement in ascending order.
-    * `computeEnvironmentOrder.#Order` - The order of the compute environment.
-    * `computeEnvironmentOrder.#ComputeEnvironment` - The ARN of the compute environment.
+    * `compute_environment_order.#.order` - The order of the compute environment.
+    * `compute_environment_order.#.compute_environment` - The ARN of the compute environment.
+* `job_state_time_limit_action` - Specifies an action that AWS Batch will take after the job has remained at the head of the queue in the specified state for longer than the specified time.
+    * `job_state_time_limit_action.#.action` - The action to take when a job is at the head of the job queue in the specified state for the specified period of time.
+    * `job_state_time_limit_action.#.max_time_seconds` - The approximate amount of time, in seconds, that must pass with the job in the specified state before the action is taken.
+    * `job_state_time_limit_action.#.reason` - The reason to log for the action being taken.
+    * `job_state_time_limit_action.#.state` - The state of the job needed to trigger the action.
 
-<!-- cache-key: cdktf-0.18.0 input-458fa4c54b7533c202af979978ce3bfb9fac6c2e69a836bcfd612403c16fe74e -->
+<!-- cache-key: cdktf-0.20.1 input-85a401d3fca6d618df41fba2a48a956f0183ce5f38d10dbdb2b4e7a58e2777e6 -->

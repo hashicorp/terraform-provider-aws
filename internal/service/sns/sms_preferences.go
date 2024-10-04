@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
@@ -47,7 +47,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"default_sms_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -61,7 +60,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"delivery_status_iam_role_arn": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -74,7 +72,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"delivery_status_success_sampling_rate": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -88,7 +85,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"monthly_spend_limit": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -103,7 +99,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"usage_report_s3_bucket": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -129,7 +124,7 @@ var (
 )
 
 // @SDKResource("aws_sns_sms_preferences")
-func ResourceSMSPreferences() *schema.Resource {
+func resourceSMSPreferences() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMSPreferencesSet,
 		ReadWithoutTimeout:   resourceSMSPreferencesGet,
@@ -141,43 +136,45 @@ func ResourceSMSPreferences() *schema.Resource {
 }
 
 func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := SMSPreferencesAttributeMap.ResourceDataToAPIAttributesCreate(d)
-
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &sns.SetSMSAttributesInput{
-		Attributes: aws.StringMap(attributes),
+		Attributes: attributes,
 	}
 
-	_, err = conn.SetSMSAttributesWithContext(ctx, input)
+	_, err = conn.SetSMSAttributes(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("setting SNS SMS Preferences: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting SNS SMS Preferences: %s", err)
 	}
 
 	d.SetId("aws_sns_sms_id")
 
-	return nil
+	return diags
 }
 
 func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	output, err := conn.GetSMSAttributesWithContext(ctx, &sns.GetSMSAttributesInput{})
+	output, err := conn.GetSMSAttributes(ctx, &sns.GetSMSAttributesInput{})
 
 	if err != nil {
-		return diag.Errorf("reading SNS SMS Preferences: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS SMS Preferences: %s", err)
 	}
 
-	return diag.FromErr(SMSPreferencesAttributeMap.APIAttributesToResourceData(aws.StringValueMap(output.Attributes), d))
+	return sdkdiag.AppendFromErr(diags, SMSPreferencesAttributeMap.APIAttributesToResourceData(output.Attributes, d))
 }
 
 func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	// Reset the attributes to their default value.
 	attributes := make(map[string]string)
@@ -186,14 +183,14 @@ func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	input := &sns.SetSMSAttributesInput{
-		Attributes: aws.StringMap(attributes),
+		Attributes: attributes,
 	}
 
-	_, err := conn.SetSMSAttributesWithContext(ctx, input)
+	_, err := conn.SetSMSAttributes(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("resetting SNS SMS Preferences: %s", err)
+		return sdkdiag.AppendErrorf(diags, "resetting SNS SMS Preferences: %s", err)
 	}
 
-	return nil
+	return diags
 }

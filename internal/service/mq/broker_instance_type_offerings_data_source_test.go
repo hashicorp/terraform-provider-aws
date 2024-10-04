@@ -6,16 +6,16 @@ package mq_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, mq.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.MQEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -31,7 +31,7 @@ func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.storage", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.storage", "broker_instance_options.*", map[string]string{
-						"storage_type": "ebs",
+						names.AttrStorageType: "ebs",
 					}),
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.instance", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.instance", "broker_instance_options.*", map[string]string{
@@ -39,9 +39,9 @@ func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.all", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.instance", "broker_instance_options.*", map[string]string{
-						"host_instance_type": "mq.m5.large",
-						"storage_type":       "ebs",
-						"engine_type":        "ACTIVEMQ",
+						"host_instance_type":  "mq.m5.large",
+						names.AttrStorageType: "ebs",
+						"engine_type":         "ACTIVEMQ",
 					}),
 				),
 			},

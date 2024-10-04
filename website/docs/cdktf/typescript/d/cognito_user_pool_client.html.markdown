@@ -59,10 +59,10 @@ This data source exports the following attributes in addition to the arguments a
 * `generateSecret` - (Optional) Should an application secret be generated.
 * `idTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. This value will be overridden if you have entered a value in `tokenValidityUnits`.
 * `logoutUrls` - (Optional) List of allowed logout URLs for the identity providers.
-* `preventUserExistenceErrors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `enabled` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `legacy`, those APIs will return a `userNotFoundException` exception if the user does not exist in the user pool.
+* `preventUserExistenceErrors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
 * `readAttributes` - (Optional) List of user pool attributes the application client can read from.
 * `refreshTokenValidity` - (Optional) Time limit in days refresh tokens are valid for.
-* `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `providerName` attribute of `awsCognitoIdentityProvider` resource(s), or the equivalent string(s).
+* `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `providerName` attribute of `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `tokenValidityUnits` - (Optional) Configuration block for units in which the validity times are represented in. [Detailed below](#token_validity_units).
 * `writeAttributes` - (Optional) List of user pool attributes the application client can write to.
 
@@ -84,4 +84,4 @@ Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `
 * `idToken` - (Optional) Time unit in for the value in `idTokenValidity`, defaults to `hours`.
 * `refreshToken` - (Optional) Time unit in for the value in `refreshTokenValidity`, defaults to `days`.
 
-<!-- cache-key: cdktf-0.18.0 input-804400abfbd53cd25621680ec5f1657976bea849d7c8272f9f3b774f5cc1e05b -->
+<!-- cache-key: cdktf-0.20.1 input-804400abfbd53cd25621680ec5f1657976bea849d7c8272f9f3b774f5cc1e05b -->

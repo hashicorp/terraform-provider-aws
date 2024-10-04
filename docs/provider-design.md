@@ -10,12 +10,12 @@ Some examples of functionality that is not expected in this provider:
 
 * Raw HTTP(S) handling. See the [Terraform HTTP Provider](https://registry.terraform.io/providers/hashicorp/http/latest) and [Terraform TLS Provider](https://registry.terraform.io/providers/hashicorp/tls/latest) instead.
 * Kubernetes resource management beyond the EKS service APIs. See the [Terraform Kubernetes Provider](https://registry.terraform.io/providers/hashicorp/kubernetes/latest) instead.
-* Active Directory or other protocol clients. See the [Terraform Active Directory Provider](https://registry.terraform.io/providers/hashicorp/ad/latest/docs) and other available provider instead.
+* Active Directory or other protocol clients. See the [Terraform Active Directory Provider](https://registry.terraform.io/providers/hashicorp/ad/latest/docs) and other available providers instead.
 * Functionality that requires additional software beyond the Terraform AWS Provider to be installed on the host executing Terraform. This currently includes the AWS CLI. See the [Terraform External Provider](https://registry.terraform.io/providers/hashicorp/external/latest) and other available providers instead.
 
 ## Infrastructure as Code Suitability
 
-The provider maintainers' design goal is to cover as much of the AWS API as pragmatically possible. However, not every aspect of the API is compatible with an infrastructure-as-code (IaC) conception. Specifically: IaC is best suited for [immutable rather than mutable infrastrcture](https://www.hashicorp.com/resources/what-is-mutable-vs-immutable-infrastructure) -- i.e. for resources with a single desired state described in its entirety, as opposed to resources defined via a dynamic process.
+The provider maintainers' design goal is to cover as much of the AWS API as pragmatically possible. However, not every aspect of the API is compatible with an infrastructure-as-code (IaC) conception. Specifically: IaC is best suited for [immutable rather than mutable infrastructure](https://www.hashicorp.com/resources/what-is-mutable-vs-immutable-infrastructure) -- i.e. for resources with a single desired state described in its entirety, as opposed to resources defined via a dynamic process.
 
 If such limits affect you, we recommend that you open an AWS Support case and encourage others to do the same. Request that AWS components be made more self-contained and compatible with IaC. These AWS Support cases can also yield insights into the AWS service and API that are not well documented.
 
@@ -23,9 +23,9 @@ If such limits affect you, we recommend that you open an AWS Support case and en
 
 Terraform resources work best as the smallest infrastructure blocks on which practitioners can build more complex configurations and abstractions, such as [Terraform Modules](https://www.terraform.io/language/modules). The general heuristic guiding when to implement a new Terraform resource for an aspect of AWS is whether the AWS service API provides create, read, update, and delete (CRUD) operations. However, not all AWS service API functionality falls cleanly into CRUD lifecycle management. In these situations, there is extra consideration necessary for properly mapping API operations to Terraform resources.
 
-This section highlights design patterns when to consider an implementation within a singular Terraform resource or as separate Terraform resources.
+This section highlights design patterns when considering an implementation within a singular Terraform resource or as separate Terraform resources.
 
-Please note: the overall design and implementation across all AWS functionality is federated: individual services may implement concepts and use terminology differently. As such, this guide is not exhaustive. The aim is to provide general concepts and basic terminology that points contributors in the right direction, especially in understanding previous implementations.
+Please note: the overall design and implementation across all AWS functionality is federated: individual services may implement concepts and use terminology differently. As such, this guide is not exhaustive. The aim is to provide general concepts and basic terminology that point contributors in the right direction, especially in understanding previous implementations.
 
 ### Authorization and Acceptance Resources
 
@@ -45,7 +45,7 @@ To model creating an association using an invitation or proposal, follow these g
 * For the originating account, create an "invitation" or "proposal" resource. Make sure that the AWS service API has operations for creating and reading invitations.
 * For the responding account, create an "accepter" resource. Ensure that the API has operations for accepting, reading, and rejecting invitations in the responding account. Map the operations as follows:
     * Create: Accepts the invitation.
-    * Read: Reads the invitation to determine its status. Note that in some APIs, invitations expire and disappear, complicating associations. If a resource does not find an invitation, the developer should implement a fall back to read the API resource associated with the invitation/proposal.
+    * Read: Reads the invitation to determine its status. Note that in some APIs, invitations expire and disappear, complicating associations. If a resource does not find an invitation, the developer should implement a fallback to read the API resource associated with the invitation/proposal.
     * Delete: Rejects or otherwise deletes the invitation.
 
 To model the second type of association, implicit associations, create an "association" resource and, optionally, an "authorization" resource. Map create, read, and delete to the corresponding operations in the AWS service API.
@@ -67,7 +67,7 @@ The rationale behind this design decision includes the following:
 * Needing extra and unexpected API endpoints configuration for organizations using custom endpoints, such as VPC endpoints.
 * Unexpected changes to the AWS service internals for the cross-service implementations. Given that this functionality is not part of the primary service API, these details can change over time and may not be considered as a breaking change by the service team for an API upgrade.
 
-A poignant real-world example of the last point involved a Lambda resource. The resource helped clean up extra resources (ENIs) due to a common misconfiguration. Practitioners found the functionality helpful since the issue was hard to diagnose. Years later, AWS updated the Lambda API. Immediately, practitioners reported that Terraform executions were failing. Downgrading the provider was not possible since many configurations depended on recent releases. For environments running many versions behind, forcing an upgrade with the fix would likely cause unrelated and unexpected changes. In the end, HashiCorp and AWS performed a large-scale outreach to help upgrade and fixing the misconfigurations. Provider maintainers and practitioners lost considerable time.
+A poignant real-world example of the last point involved a Lambda resource. The resource helped clean up extra resources (ENIs) due to a common misconfiguration. Practitioners found the functionality helpful since the issue was hard to diagnose. Years later, AWS updated the Lambda API. Immediately, practitioners reported that Terraform executions were failing. Downgrading the provider was not possible since many configurations depended on recent releases. For environments running many versions behind, forcing an upgrade with the fix would likely cause unrelated and unexpected changes. In the end, HashiCorp and AWS performed a large-scale outreach to help upgrade and fix the misconfigurations. Provider maintainers and practitioners lost considerable time.
 
 ### Data Sources
 
@@ -95,7 +95,7 @@ Provider developers should implement this capability in a new resource rather th
 
 * Many of the policies must include the ARN of the resource. Working around this requirement with custom difference handling within a self-contained resource is unnecessarily cumbersome.
 * Some policies involving multiple resources need to cross-reference each other's ARNs. Without a separate resource, this introduces a configuration cycle.
-* Splitting the resources allows operators to logically split their configurations into purely operational and security boundaries. This allows environments to have distinct practitioners roles and permissions for IAM versus infrastructure changes.
+* Splitting the resources allows operators to logically split their configurations into purely operational and security boundaries. This allows environments to have distinct practitioner roles and permissions for IAM versus infrastructure changes.
 
 One rare exception to this guideline is where the policy is _required_ during resource creation.
 
@@ -134,15 +134,15 @@ In general, provider developers should create a separate resource to represent a
 In deciding when to create a separate resource, follow these guidelines:
 
 * If AWS necessarily creates a version when you make a new AWS component, include version handling in the same Terraform resource. Creating an AWS component with one Terraform resource and later using a different resource for updates is confusing.
-* If the AWS service API allows deleting versions and practitioners will want to delete versions, provider developers should implement a separate version resource.
+* If the AWS service API allows deleting versions and practitioners want to delete versions, provider developers should implement a separate version resource.
 * If the API only supports publishing new versions, either method is acceptable, however most current implementations are self-contained. Terraform's current configuration language does not natively support triggering resource updates or recreation across resources without a state value change. This can make the implementation more difficult for practitioners without special resource and configuration workarounds, such as a `triggers` attribute. If this changes in the future, then this guidance may be updated towards separate resources, following the [Task Execution and Waiter Resources](#task-execution-and-waiter-resources) guidance.
 
 ## Other Considerations
 
 ### AWS Credential Exfiltration
 
-In the interest of security, the maintainers will not approve data sources that provide the ability to reference or export the AWS credentials of the running provider. There are valid use cases for this information, such as to execute AWS CLI calls as part of the same Terraform configuration. However, this mechanism may allow credentials to be discovered and used outside of Terraform. Some specific concerns include:
+In the interest of security, the maintainers will not approve data sources that provide the ability to reference or export the AWS credentials of the running provider. There are valid use cases for this information, such as executing AWS CLI calls as part of the same Terraform configuration. However, this mechanism may allow credentials to be discovered and used outside of Terraform. Some specific concerns include:
 
-* The values may be visible in Terraform user interface output or logging, allowing anyone with user interface or log access to see the credentials.
+* The values may be visible in Terraform user interface output or logging, allowing anyone with a user interface or log access to see the credentials.
 * The values are currently stored in plaintext in the Terraform state, allowing anyone with access to the state file or another Terraform configuration that references the state access to the credentials.
 * Any new related functionality, while opt-in to implement, is also opt-in to prevent via security controls or policies. Adopting a weaker default security posture requires advance notice and prevents organizations that implement those controls from updating to a version with any such functionality.

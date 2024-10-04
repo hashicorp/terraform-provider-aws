@@ -7,24 +7,29 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sfn_state_machine")
-func DataSourceStateMachine() *schema.Resource {
+// @SDKDataSource("aws_sfn_state_machine", name="State Machine")
+func dataSourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStateMachineRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,15 +37,15 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +53,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,51 +62,65 @@ func DataSourceStateMachine() *schema.Resource {
 }
 
 func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	name := d.Get("name").(string)
-	var arns []string
+	name := d.Get(names.AttrName).(string)
+	output, err := findStateByARN(ctx, conn, name)
 
-	err := conn.ListStateMachinesPagesWithContext(ctx, &sfn.ListStateMachinesInput{}, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machines: %s", err)
+	}
 
-		for _, v := range page.StateMachines {
-			if aws.StringValue(v.Name) == name {
-				arns = append(arns, aws.StringValue(v.StateMachineArn))
+	if n := len(output); n == 0 {
+		return sdkdiag.AppendErrorf(diags, "no Step Functions State Machines matched")
+	} else if n > 1 {
+		return sdkdiag.AppendErrorf(diags, "%d Step Functions State Machines matched; use additional constraints to reduce matches to a single State Machine", n)
+	}
+
+	out, err := findStateMachineByARN(ctx, conn, aws.ToString(output[0].StateMachineArn))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine (%s): %s", aws.ToString(output[0].StateMachineArn), err)
+	}
+
+	d.SetId(aws.ToString(out.StateMachineArn))
+	d.Set(names.AttrARN, out.StateMachineArn)
+	d.Set(names.AttrCreationDate, out.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, out.Description)
+	d.Set("definition", out.Definition)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrRoleARN, out.RoleArn)
+	d.Set("revision_id", out.RevisionId)
+	d.Set(names.AttrStatus, out.Status)
+
+	return diags
+}
+
+func findStateByARN(ctx context.Context, conn *sfn.Client, name string) ([]awstypes.StateMachineListItem, error) {
+	var output []awstypes.StateMachineListItem
+
+	pages := sfn.NewListStateMachinesPaginator(conn, &sfn.ListStateMachinesInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.StateMachineDoesNotExist](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: name,
 			}
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return diag.Errorf("listing Step Functions State Machines: %s", err)
+		for _, v := range page.StateMachines {
+			if name == aws.ToString(v.Name) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	if n := len(arns); n == 0 {
-		return diag.Errorf("no Step Functions State Machines matched")
-	} else if n > 1 {
-		return diag.Errorf("%d Step Functions State Machines matched; use additional constraints to reduce matches to a single State Machine", n)
-	}
-
-	arn := arns[0]
-	output, err := FindStateMachineByARN(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("reading Step Functions State Machine (%s): %s", arn, err)
-	}
-
-	d.SetId(arn)
-	d.Set("arn", output.StateMachineArn)
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("description", output.Description)
-	d.Set("definition", output.Definition)
-	d.Set("name", output.Name)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("revision_id", output.RevisionId)
-	d.Set("status", output.Status)
-
-	return nil
+	return output, nil
 }

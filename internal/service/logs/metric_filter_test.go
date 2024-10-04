@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,18 +16,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsMetricFilter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,15 +36,15 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 				Config: testAccMetricFilterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", ""),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.name", "metric1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.namespace", "ns1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.unit", "None"),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", ""),
 				),
 			},
@@ -59,13 +60,13 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 
 func TestAccLogsMetricFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,14 +84,14 @@ func TestAccLogsMetricFilter_disappears(t *testing.T) {
 
 func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func TestAccLogsMetricFilter_many(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,14 +128,14 @@ func TestAccLogsMetricFilter_many(t *testing.T) {
 
 func TestAccLogsMetricFilter_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,15 +143,15 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 				Config: testAccMetricFilterConfig_allAttributes1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", "2.5"),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.name", "metric1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.namespace", "ns1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.unit", "Terabytes"),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "3"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", "[TEST]"),
 				),
 			},
@@ -164,18 +165,18 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 				Config: testAccMetricFilterConfig_allAttributes2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", ""),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.d1", "$.d1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.d2", "$.d2"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.d3", "$.d3"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.name", "metric2"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.namespace", "ns2"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.unit", "Gigabits"),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "10"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", `{ $.d1 = "OK" }`),
 				),
 			},
@@ -190,24 +191,20 @@ func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportSt
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["log_group_name"] + ":" + rs.Primary.Attributes["name"], nil
+		return rs.Primary.Attributes[names.AttrLogGroupName] + ":" + rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 
-func testAccCheckMetricFilterExists(ctx context.Context, n string, v *cloudwatchlogs.MetricFilter) resource.TestCheckFunc {
+func testAccCheckMetricFilterExists(ctx context.Context, n string, v *types.MetricFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch Logs Metric Filter ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
-
-		output, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+		output, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -221,14 +218,14 @@ func testAccCheckMetricFilterExists(ctx context.Context, n string, v *cloudwatch
 
 func testAccCheckMetricFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_metric_filter" {
 				continue
 			}
 
-			_, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+			_, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -249,7 +246,7 @@ func testAccCheckMetricFilterManyExists(ctx context.Context, basename string, n 
 	return func(s *terraform.State) error {
 		for i := 0; i < n; i++ {
 			n := fmt.Sprintf("%s.%d", basename, i)
-			var v cloudwatchlogs.MetricFilter
+			var v types.MetricFilter
 
 			err := testAccCheckMetricFilterExists(ctx, n, &v)(s)
 

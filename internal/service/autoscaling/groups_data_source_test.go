@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/autoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
@@ -23,20 +23,20 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasource1Name, "names.#", "3"),
-					resource.TestCheckResourceAttr(datasource1Name, "arns.#", "3"),
-					resource.TestCheckResourceAttr(datasource2Name, "names.#", "3"),
-					resource.TestCheckResourceAttr(datasource2Name, "arns.#", "3"),
-					resource.TestCheckResourceAttr(datasource3Name, "names.#", "1"),
-					resource.TestCheckResourceAttr(datasource3Name, "arns.#", "1"),
-					resource.TestCheckResourceAttr(datasource4Name, "names.#", "2"),
-					resource.TestCheckResourceAttr(datasource4Name, "arns.#", "2"),
+					resource.TestCheckResourceAttr(datasource1Name, "names.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource1Name, "arns.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource2Name, "names.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource2Name, "arns.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource3Name, "names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasource3Name, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasource4Name, "names.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(datasource4Name, "arns.#", acctest.Ct2),
 				),
 			},
 		},
@@ -45,13 +45,13 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 
 func testAccGroupsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 

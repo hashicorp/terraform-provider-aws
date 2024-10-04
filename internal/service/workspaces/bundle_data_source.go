@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_workspaces_bundle")
@@ -25,19 +26,19 @@ func DataSourceBundle() *schema.Resource {
 			"bundle_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"owner", "name"},
+				ConflictsWith: []string{names.AttrOwner, names.AttrName},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"bundle_id"},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"bundle_id"},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +47,7 @@ func DataSourceBundle() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -99,18 +100,18 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "expected 1 result for WorkSpaces Workspace Bundle %q, found %d", bundleID, len(resp.Bundles))
 		}
 
-		if len(resp.Bundles) <= 0 {
+		if len(resp.Bundles) == 0 {
 			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace Bundle with ID %q found", bundleID)
 		}
 
 		bundle = resp.Bundles[0]
 	}
 
-	if name, ok := d.GetOk("name"); ok {
+	if name, ok := d.GetOk(names.AttrName); ok {
 		id := name
 		input := &workspaces.DescribeWorkspaceBundlesInput{}
 
-		if owner, ok := d.GetOk("owner"); ok {
+		if owner, ok := d.GetOk(names.AttrOwner); ok {
 			id = fmt.Sprintf("%s:%s", owner, id)
 			input.Owner = aws.String(owner.(string))
 		}
@@ -142,14 +143,14 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(bundle.BundleId))
 	d.Set("bundle_id", bundle.BundleId)
-	d.Set("description", bundle.Description)
-	d.Set("name", bundle.Name)
-	d.Set("owner", bundle.Owner)
+	d.Set(names.AttrDescription, bundle.Description)
+	d.Set(names.AttrName, bundle.Name)
+	d.Set(names.AttrOwner, bundle.Owner)
 
 	computeType := make([]map[string]interface{}, 1)
 	if bundle.ComputeType != nil {
 		computeType[0] = map[string]interface{}{
-			"name": string(bundle.ComputeType.Name),
+			names.AttrName: string(bundle.ComputeType.Name),
 		}
 	}
 	if err := d.Set("compute_type", computeType); err != nil {

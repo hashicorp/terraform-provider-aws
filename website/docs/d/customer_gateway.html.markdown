@@ -48,6 +48,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the customer gateway.
 * `bgp_asn` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `bgp_asn_extended` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
 * `certificate_arn` - ARN for the customer gateway certificate.
 * `device_name` - Name for the customer gateway device.
 * `ip_address` - IP address of the gateway's Internet-routable external interface.

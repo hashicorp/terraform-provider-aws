@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshift_cluster: Fix `InvalidParameterCombination` errors when updating only `skip_final_snapshot`
+```

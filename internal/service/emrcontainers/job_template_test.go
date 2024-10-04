@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/emrcontainers"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemrcontainers "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emrcontainers.JobTemplate
+	var v awstypes.JobTemplate
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_job_template.test"
 
@@ -28,7 +29,7 @@ func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,14 +37,14 @@ func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 				Config: testAccJobTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "job_template_data.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "job_template_data.0.execution_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.0.spark_sql_job_driver.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "job_template_data.0.execution_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.0.spark_sql_job_driver.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.0.spark_sql_job_driver.0.entry_point", "default"),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.release_label", "emr-6.10.0-latest"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -57,7 +58,7 @@ func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 
 func TestAccEMRContainersJobTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emrcontainers.JobTemplate
+	var v awstypes.JobTemplate
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_job_template.test"
 
@@ -65,7 +66,7 @@ func TestAccEMRContainersJobTemplate_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func TestAccEMRContainersJobTemplate_disappears(t *testing.T) {
 
 func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emrcontainers.JobTemplate
+	var v awstypes.JobTemplate
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_job_template.test"
 
@@ -91,16 +92,16 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobTemplateConfig_tags1(rName, "key1", "value1"),
+				Config: testAccJobTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -112,7 +113,7 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckJobTemplateExists(ctx context.Context, n string, v *emrcontainers.JobTemplate) resource.TestCheckFunc {
+func testAccCheckJobTemplateExists(ctx context.Context, n string, v *awstypes.JobTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,7 +124,7 @@ func testAccCheckJobTemplateExists(ctx context.Context, n string, v *emrcontaine
 			return fmt.Errorf("No EMR Containers Job Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersClient(ctx)
 
 		output, err := tfemrcontainers.FindJobTemplateByID(ctx, conn, rs.Primary.ID)
 
@@ -139,7 +140,7 @@ func testAccCheckJobTemplateExists(ctx context.Context, n string, v *emrcontaine
 
 func testAccCheckJobTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emrcontainers_job_template" {

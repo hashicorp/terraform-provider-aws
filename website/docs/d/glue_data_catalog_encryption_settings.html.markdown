@@ -42,4 +42,5 @@ This data source exports the following attributes in addition to the arguments a
 ### encryption_at_rest
 
 * `catalog_encryption_mode` - The encryption-at-rest mode for encrypting Data Catalog data.
+* `catalog_encryption_service_role` - The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sse_aws_kms_key_id` - ARN of the AWS KMS key to use for encryption at rest.

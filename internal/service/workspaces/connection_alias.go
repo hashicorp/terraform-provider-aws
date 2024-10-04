@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -59,7 +58,7 @@ func (r *resourceConnectionAlias) Metadata(_ context.Context, req resource.Metad
 func (r *resourceConnectionAlias) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"connection_string": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -67,14 +66,14 @@ func (r *resourceConnectionAlias) Schema(ctx context.Context, req resource.Schem
 				},
 				Description: "The connection string specified for the connection alias. The connection string must be in the form of a fully qualified domain name (FQDN), such as www.example.com.",
 			},
-			"owner_account_id": schema.StringAttribute{
+			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed:    true,
 				Description: "The identifier of the Amazon Web Services account that owns the connection alias.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed:    true,
 				Description: "The current state of the connection alias.",
 				PlanModifiers: []planmodifier.String{
@@ -85,7 +84,7 @@ func (r *resourceConnectionAlias) Schema(ctx context.Context, req resource.Schem
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -104,7 +103,7 @@ func (r *resourceConnectionAlias) Create(ctx context.Context, req resource.Creat
 	}
 
 	in := &workspaces.CreateConnectionAliasInput{
-		ConnectionString: aws.String(plan.ConnectionString.ValueString()),
+		ConnectionString: plan.ConnectionString.ValueStringPointer(),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -188,7 +187,7 @@ func (r *resourceConnectionAlias) Delete(ctx context.Context, req resource.Delet
 	}
 
 	in := &workspaces.DeleteConnectionAliasInput{
-		AliasId: aws.String(state.ID.ValueString()),
+		AliasId: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteConnectionAlias(ctx, in)
@@ -215,7 +214,7 @@ func (r *resourceConnectionAlias) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *resourceConnectionAlias) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceConnectionAlias) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -307,7 +306,7 @@ type resourceConnectionAliasData struct {
 	ConnectionString types.String   `tfsdk:"connection_string"`
 	OwnerAccountId   types.String   `tfsdk:"owner_account_id"`
 	State            types.String   `tfsdk:"state"`
-	Tags             types.Map      `tfsdk:"tags"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
+	Tags             tftags.Map     `tfsdk:"tags"`
+	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }

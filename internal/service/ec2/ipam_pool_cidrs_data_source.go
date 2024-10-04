@@ -7,16 +7,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_ipam_pool_cidrs")
-func DataSourceIPAMPoolCIDRs() *schema.Resource {
+// @SDKDataSource("aws_vpc_ipam_pool_cidrs", name="IPAM Pool CIDRs")
+func dataSourceIPAMPoolCIDRs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPoolCIDRsRead,
 
@@ -25,7 +27,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -39,7 +41,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -52,22 +54,22 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 
 func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	poolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.GetIpamPoolCidrsInput{
 		IpamPoolId: aws.String(poolID),
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := FindIPAMPoolCIDRs(ctx, conn, input)
+	output, err := findIPAMPoolCIDRs(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDRs: %s", err)
@@ -79,7 +81,7 @@ func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {
+func flattenIPAMPoolCIDRs(c []awstypes.IpamPoolCidr) []interface{} {
 	cidrs := []interface{}{}
 	for _, cidr := range c {
 		cidrs = append(cidrs, flattenIPAMPoolCIDR(cidr))
@@ -87,9 +89,9 @@ func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {
 	return cidrs
 }
 
-func flattenIPAMPoolCIDR(c *ec2.IpamPoolCidr) map[string]interface{} {
+func flattenIPAMPoolCIDR(c awstypes.IpamPoolCidr) map[string]interface{} {
 	cidr := make(map[string]interface{})
-	cidr["cidr"] = aws.StringValue(c.Cidr)
-	cidr["state"] = aws.StringValue(c.State)
+	cidr["cidr"] = aws.ToString(c.Cidr)
+	cidr[names.AttrState] = c.State
 	return cidr
 }

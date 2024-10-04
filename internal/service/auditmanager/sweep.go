@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package auditmanager
 
 import (
@@ -18,9 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_auditmanager_assessment", &resource.Sweeper{
 		Name: "aws_auditmanager_assessment",
 		F:    sweepAssessments,
@@ -60,10 +58,7 @@ func init() {
 // AccessDeniedException: Please complete AWS Audit Manager setup from home page to enable this action in this account.
 func isCompleteSetupError(err error) bool {
 	var ade *types.AccessDeniedException
-	if errors.As(err, &ade) {
-		return true
-	}
-	return false
+	return errors.As(err, &ade)
 }
 
 func sweepAssessments(region string) error {
@@ -94,7 +89,7 @@ func sweepAssessments(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessment, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -173,7 +168,7 @@ func sweepAssessmentReports(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentReport, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 				framework.NewAttribute("assessment_id", aws.ToString(report.AssessmentId)),
 			))
 		}
@@ -214,7 +209,7 @@ func sweepControls(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Control: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceControl, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -254,7 +249,7 @@ func sweepFrameworks(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Framework: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFramework, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -294,7 +289,7 @@ func sweepFrameworkShares(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Framework Share: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFrameworkShare, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}

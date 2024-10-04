@@ -8,14 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Int64FromFramework converts a Framework Int64 value to an int64 pointer.
 // A null Int64 is converted to a nil int64 pointer.
-func Int64FromFramework(ctx context.Context, v types.Int64) *int64 {
+func Int64FromFramework(ctx context.Context, v basetypes.Int64Valuable) *int64 {
 	var output *int64
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -25,7 +26,7 @@ func Int64FromFramework(ctx context.Context, v types.Int64) *int64 {
 func Int64ToFramework(ctx context.Context, v *int64) types.Int64 {
 	var output types.Int64
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -36,15 +37,44 @@ func Int64ToFrameworkLegacy(_ context.Context, v *int64) types.Int64 {
 	return types.Int64Value(aws.ToInt64(v))
 }
 
-func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
+func Int32ToFramework(ctx context.Context, v *int32) types.Int64 {
+	var output types.Int64
 
-	i := v.ValueInt64()
-	if i == 0 {
-		return nil
-	}
+	must(Flatten(ctx, v, &output))
 
-	return aws.Int64(i)
+	return output
+}
+
+func Int32ValueToFramework(ctx context.Context, v int32) types.Int64 {
+	var output types.Int64
+
+	must(Flatten(ctx, v, &output))
+
+	return output
+}
+
+// Int32ToFrameworkLegacy converts an int32 pointer to a Framework Int64 value.
+// A nil int32 pointer is converted to a zero Int64.
+func Int32ToFrameworkLegacy(_ context.Context, v *int32) types.Int64 {
+	return types.Int64Value(int64(aws.ToInt32(v)))
+}
+
+// Int32FromFramework coverts a Framework Int64 value to an int32 pointer.
+// A null Int64 is converted to a nil int32 pointer.
+func Int32FromFramework(ctx context.Context, v types.Int64) *int32 {
+	var output *int32
+
+	must(Expand(ctx, v, &output))
+
+	return output
+}
+
+// Int32ValueFromFramework coverts a Framework Int64 value to an int32 pointer.
+// A null Int64 is converted to a nil int32 pointer.
+func Int32ValueFromFramework(ctx context.Context, v types.Int64) int32 {
+	var output int32
+
+	must(Expand(ctx, v, &output))
+
+	return output
 }

@@ -4,8 +4,8 @@
 package errs
 
 import (
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -30,10 +30,10 @@ const (
 // to make an educated guess about whether the problem stems from a feature not being
 // available in a non-standard partitions (e.g. ISO) that is normally available.
 // A return value of `true` means that there is an error AND it suggests a feature is not supported in ISO.
-// Be careful with a return value of `false“, which means either there is NO error
+// Be careful with a return value of `false`, which means either there is NO error
 // or there is an error but not one that suggests an unsupported feature in ISO.
 func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
-	if partition == endpoints.AwsPartitionID {
+	if partition == names.StandardPartitionID {
 		return false
 	}
 

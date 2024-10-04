@@ -1,16 +1,16 @@
 ---
 subcategory: ""
 layout: "aws"
-page_title: "Using Terraform Cloud's Continuous Validation feature with the AWS Provider"
+page_title: "Using HCP Terraform's Continuous Validation feature with the AWS Provider"
 description: |-
-  Using Terraform Cloud's Continuous Validation feature with the AWS Provider
+  Using HCP Terraform's Continuous Validation feature with the AWS Provider
 ---
 
-# Using Terraform Cloud's Continuous Validation feature with the AWS Provider
+# Using HCP Terraform's Continuous Validation feature with the AWS Provider
 
-## Continuous Validation in Terraform Cloud
+## Continuous Validation in HCP Terraform
 
-The Continuous Validation feature in Terraform Cloud (TFC) allows users to make assertions about their infrastructure between applied runs. This helps users to identify issues at the time they first appear and avoid situations where a change is only identified once it causes a customer-facing problem.
+The Continuous Validation feature in HCP Terraform allows users to make assertions about their infrastructure between applied runs. This helps users to identify issues at the time they first appear and avoid situations where a change is only identified once it causes a customer-facing problem.
 
 Users can add checks to their Terraform configuration using check blocks. Check blocks contain assertions that are defined with a custom condition expression and an error message. When the condition expression evaluates to true the check passes, but when the expression evaluates to false Terraform will show a warning message that includes the user-defined error message.
 
@@ -54,12 +54,12 @@ If the budget exceeds the set limit, the check block assertion will return a war
 
 ```
 │ Warning: Check block assertion failed
-│ 
+│
 │   on main.tf line 43, in check "check_budget_exceeded":
 │   43:     condition = !data.aws_budgets_budget.example.budget_exceeded
 │     ├────────────────
 │     │ data.aws_budgets_budget.example.budget_exceeded is true
-│ 
+│
 │ AWS budget has been exceeded! Calculated spend: '1550.0' and budget limit: '1200.0'
 ```
 
@@ -126,6 +126,39 @@ check "check_iam_role_unused" {
     error_message = format("AWS IAM role '%s' is unused in the last 30 days!",
       data.aws_iam_role.example.name,
     )
+  }
+}
+```
+
+## Example - Check EKS Cluster Instance Health and Availability (`aws_eks_cluster`)
+
+Amazon Elastic Kubernetes Service (Amazon EKS) is a managed Kubernetes service to run Kubernetes in the AWS cloud and on-premises data centers. In the cloud, Amazon EKS automatically manages the availability and scalability of the Kubernetes control plane nodes responsible for scheduling containers, managing application availability, storing cluster data, and other key tasks. With Amazon EKS, you can take advantage of all the performance, scale, reliability, and availability of AWS infrastructure, as well as integrations with AWS networking and security services.
+
+The example below shows how a check block can be used to assert that your cluster is in good health and available.
+
+```hcl
+check "aws_eks_cluster_default" {
+  assert {
+    condition     = aws_eks_cluster.default.status == "ACTIVE"
+    error_message = "EKS cluster ${aws_eks_cluster.default.id} status is ${aws_eks_cluster.default.status}"
+  }
+}
+```
+
+## Example - Check for EC2 Stopped Instances (`aws_instances`)
+
+Amazon Elastic Compute Cloud (Amazon EC2) is a web service that provides secure, resizable compute capacity in the cloud. Access reliable, scalable infrastructure on demand. Scale capacity within minutes with SLA commitment of 99.99% availability.
+
+The example below shows how a check block can be used to assert that your EC2 instances are stopped.
+
+```hcl
+check "aws_instances_stopped" {
+  data "aws_instances" "example" {
+    instance_state_names = "stopped"
+  }
+  assert {
+    condition     = length(data.aws_instances.example) > 0
+    error_message = format("Found Instances have stopped! Instance ID’s: %s", data.aws_instances.example.ids)
   }
 }
 ```

@@ -44,8 +44,8 @@ This data source supports the following arguments:
 * `autoCreate` - (Optional)  Create a database user with the name specified for the user named in `dbUser` if one does not exist.
 * `clusterIdentifier` - (Required) Unique identifier of the cluster that contains the database for which your are requesting credentials.
 * `dbName` - (Optional) Name of a database that DbUser is authorized to log on to. If `dbName` is not specified, `dbUser` can log on to any existing database.
-* `dbUser` - (Required) Name of a database user. If a user name matching `dbUser` exists in the database, the temporary user credentials have the same permissions as the  existing user. If `dbUser` doesn't exist in the database and `autoCreate` is `true`, a new user is created using the value for `dbUser` with `public` permissions.  If a database user matching the value for `dbUser` doesn't exist and `not` is `false`, then the command succeeds but the connection attempt will fail because the user doesn't exist in the database.
-* `dbGroups` - (Optional) List of the names of existing database groups that the user named in `dbUser` will join for the current session, in addition to any group memberships for an existing user. If not specified, a new user is added only to `public`.
+* `dbUser` - (Required) Name of a database user. If a user name matching `dbUser` exists in the database, the temporary user credentials have the same permissions as the  existing user. If `dbUser` doesn't exist in the database and `autoCreate` is `True`, a new user is created using the value for `dbUser` with `PUBLIC` permissions.  If a database user matching the value for `dbUser` doesn't exist and `not` is `False`, then the command succeeds but the connection attempt will fail because the user doesn't exist in the database.
+* `dbGroups` - (Optional) List of the names of existing database groups that the user named in `dbUser` will join for the current session, in addition to any group memberships for an existing user. If not specified, a new user is added only to `PUBLIC`.
 * `durationSeconds` - (Optional) The number of seconds until the returned temporary password expires. Valid values are between `900` and `3600`. Default value is `900`.
 
 ## Attribute Reference
@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `dbPassword` - Temporary password that authorizes the user name returned by `dbUser` to log on to the database `dbName`.
 * `expiration` - Date and time the password in `dbPassword` expires.
 
-<!-- cache-key: cdktf-0.18.0 input-213149af130486a765c70a3136e8b43c8007a43f9271c0b532f89e893f1f207c -->
+<!-- cache-key: cdktf-0.20.1 input-213149af130486a765c70a3136e8b43c8007a43f9271c0b532f89e893f1f207c -->
