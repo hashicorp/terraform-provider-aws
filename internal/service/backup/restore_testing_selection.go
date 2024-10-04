@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -69,10 +70,28 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric characters, and underscores"),
 				},
 			},
-			"protected_resource_arns": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfARNType,
+			"protected_resource_arns": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfARNType,
 				ElementType: fwtypes.ARNType,
 				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"protected_resource_conditions": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[protectedResourceConditionsModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[protectedResourceConditionsModel](ctx),
+				},
 			},
 			"protected_resource_type": schema.StringAttribute{
 				Required: true,
@@ -81,7 +100,7 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				},
 			},
 			"restore_metadata_overrides": schema.MapAttribute{
-				CustomType: fwtypes.NewMapTypeOf[types.String](ctx),
+				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.Map{
@@ -102,44 +121,6 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"protected_resource_conditions": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[protectedResourceConditionsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"string_equals": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"key": schema.StringAttribute{
-										Required: true,
-									},
-									"value": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-						"string_not_equals": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"key": schema.StringAttribute{
-										Required: true,
-									},
-									"value": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-					},
 				},
 			},
 		},
@@ -346,10 +327,10 @@ func findRestoreTestingSelection(ctx context.Context, conn *backup.Client, input
 
 type restoreTestingSelectionResourceModel struct {
 	IAMRoleARN                  fwtypes.ARN                                                       `tfsdk:"iam_role_arn"`
-	ProtectedResourceARNs       fwtypes.ListValueOf[fwtypes.ARN]                                  `tfsdk:"protected_resource_arns"`
+	ProtectedResourceARNs       fwtypes.SetOfARN                                                  `tfsdk:"protected_resource_arns"`
 	ProtectedResourceConditions fwtypes.ListNestedObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`
 	ProtectedResourceType       types.String                                                      `tfsdk:"protected_resource_type"`
-	RestoreMetadataOverrides    fwtypes.MapValueOf[basetypes.StringValue]                         `tfsdk:"restore_metadata_overrides"`
+	RestoreMetadataOverrides    fwtypes.MapOfString                                               `tfsdk:"restore_metadata_overrides"`
 	RestoreTestingSelectionName types.String                                                      `tfsdk:"name"`
 	RestoreTestingPlanName      types.String                                                      `tfsdk:"restore_testing_plan_name"`
 	ValidationWindowHours       types.Int64                                                       `tfsdk:"validation_window_hours"`
