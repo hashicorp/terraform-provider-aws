@@ -4,6 +4,8 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,7 +28,7 @@ func fieldSortOptionsSchema(maxItems int) *schema.Schema {
 	}
 }
 
-func columnSortSchema() *schema.Schema {
+var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -40,9 +42,9 @@ func columnSortSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func fieldSortSchema() *schema.Schema {
+var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -55,7 +57,7 @@ func fieldSortSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOptions {
 	if len(tfList) == 0 {

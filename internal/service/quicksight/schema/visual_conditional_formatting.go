@@ -4,13 +4,15 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func conditionalFormattingColorSchema() *schema.Schema {
+var conditionalFormattingColorSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -73,9 +75,9 @@ func conditionalFormattingColorSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func conditionalFormattingIconSchema() *schema.Schema {
+var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -132,7 +134,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandConditionalFormattingColor(tfList []interface{}) *awstypes.ConditionalFormattingColor {
 	if len(tfList) == 0 || tfList[0] == nil {

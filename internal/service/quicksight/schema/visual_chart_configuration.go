@@ -4,13 +4,15 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func axisDisplayOptionsSchema() *schema.Schema {
+var axisDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -185,9 +187,9 @@ func axisDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func chartAxisLabelOptionsSchema() *schema.Schema {
+var chartAxisLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -227,9 +229,9 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func itemsLimitConfigurationSchema() *schema.Schema {
+var itemsLimitConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -245,9 +247,9 @@ func itemsLimitConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func contributionAnalysisDefaultsSchema() *schema.Schema {
+var contributionAnalysisDefaultsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -271,14 +273,14 @@ func contributionAnalysisDefaultsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func referenceLineSchema(maxItems int) *schema.Schema {
+var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 		Type:     schema.TypeList,
 		Optional: true,
 		MinItems: 1,
-		MaxItems: maxItems,
+		MaxItems: referenceLinesMaxItems,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDataConfiguration.html
@@ -372,9 +374,9 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func smallMultiplesOptionsSchema() *schema.Schema {
+var smallMultiplesOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -424,7 +426,7 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandAxisDisplayOptions(tfList []interface{}) *awstypes.AxisDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {

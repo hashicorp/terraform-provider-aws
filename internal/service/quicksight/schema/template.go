@@ -323,7 +323,7 @@ func intBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
 	s, _ = intBetweenSchemaCache.LoadOrStore(
 		id,
 		&schema.Schema{
-			Type:         schema.TypeString,
+			Type:         schema.TypeInt,
 			Required:     handling.isRequired(),
 			Optional:     handling.isOptional(),
 			Computed:     handling.isComputed(),
@@ -350,7 +350,7 @@ func intAtLeastSchema(handling attrHandling, min int) *schema.Schema {
 	s, _ = intBetweenSchemaCache.LoadOrStore(
 		id,
 		&schema.Schema{
-			Type:         schema.TypeString,
+			Type:         schema.TypeInt,
 			Required:     handling.isRequired(),
 			Optional:     handling.isOptional(),
 			Computed:     handling.isComputed(),
@@ -384,7 +384,7 @@ func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema 
 	s, _ = floatBetweenSchemaCache.LoadOrStore(
 		id,
 		&schema.Schema{
-			Type:         schema.TypeString,
+			Type:         schema.TypeFloat,
 			Required:     handling.isRequired(),
 			Optional:     handling.isOptional(),
 			Computed:     handling.isComputed(),

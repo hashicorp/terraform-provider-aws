@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +17,7 @@ const customActionsMaxItems = 10
 const referenceLinesMaxItems = 20
 const dataPathValueMaxItems = 20
 
-func visualsSchema() *schema.Schema {
+var visualsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -50,9 +51,9 @@ func visualsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func legendOptionsSchema() *schema.Schema {
+var legendOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -74,9 +75,9 @@ func legendOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func tooltipOptionsSchema() *schema.Schema {
+var tooltipOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -144,9 +145,9 @@ func tooltipOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func visualPaletteSchema() *schema.Schema {
+var visualPaletteSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -171,7 +172,7 @@ func visualPaletteSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func dataPathValueSchema(maxItems int) *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
@@ -188,7 +189,7 @@ func dataPathValueSchema(maxItems int) *schema.Schema {
 	}
 }
 
-func columnHierarchiesSchema() *schema.Schema {
+var columnHierarchiesSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -259,9 +260,9 @@ func columnHierarchiesSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func visualSubtitleLabelOptionsSchema() *schema.Schema {
+var visualSubtitleLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -275,7 +276,7 @@ func visualSubtitleLabelOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func longFormatTextSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LongFormatText.html
@@ -307,7 +308,7 @@ func shortFormatTextSchema() *schema.Schema {
 	}
 }
 
-func visualTitleLabelOptionsSchema() *schema.Schema {
+var visualTitleLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -321,9 +322,9 @@ func visualTitleLabelOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func comparisonConfigurationSchema() *schema.Schema {
+var comparisonConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -347,9 +348,9 @@ func comparisonConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func colorScaleSchema() *schema.Schema {
+var colorScaleSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColorScale.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -391,9 +392,9 @@ func colorScaleSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func dataLabelOptionsSchema() *schema.Schema {
+var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -480,7 +481,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func hexColorSchema(handling attrHandling) *schema.Schema {
 	return stringMatchSchema(handling, `^#[0-9A-F]{6}$`, "")

@@ -4,13 +4,15 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func numericFormatConfigurationSchema() *schema.Schema {
+var numericFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -41,9 +43,9 @@ func numericFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func dateTimeFormatConfigurationSchema() *schema.Schema {
+var dateTimeFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -57,9 +59,9 @@ func dateTimeFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func numberDisplayFormatConfigurationSchema() *schema.Schema {
+var numberDisplayFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberDisplayFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -77,9 +79,9 @@ func numberDisplayFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func percentageDisplayFormatConfigurationSchema() *schema.Schema {
+var percentageDisplayFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentageDisplayFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -96,9 +98,9 @@ func percentageDisplayFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func numberFormatConfigurationSchema() *schema.Schema {
+var numberFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -110,9 +112,9 @@ func numberFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func stringFormatConfigurationSchema() *schema.Schema {
+var stringFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -125,9 +127,9 @@ func stringFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func decimalPlacesConfigurationSchema() *schema.Schema {
+var decimalPlacesConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -139,9 +141,9 @@ func decimalPlacesConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func negativeValueConfigurationSchema() *schema.Schema {
+var negativeValueConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -153,9 +155,9 @@ func negativeValueConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func nullValueConfigurationSchema() *schema.Schema {
+var nullValueConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -167,9 +169,9 @@ func nullValueConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func separatorConfigurationSchema() *schema.Schema {
+var separatorConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -193,9 +195,9 @@ func separatorConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func labelOptionsSchema() *schema.Schema {
+var labelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -212,9 +214,9 @@ func labelOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func fontConfigurationSchema() *schema.Schema {
+var fontConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -248,9 +250,9 @@ func fontConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func formatConfigurationSchema() *schema.Schema {
+var formatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -264,7 +266,7 @@ func formatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandFormatConfiguration(tfList []interface{}) *awstypes.FormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {

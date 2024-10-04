@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func dateTimeParameterDeclarationSchema() *schema.Schema {
+var dateTimeParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -74,9 +75,9 @@ func dateTimeParameterDeclarationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func decimalParameterDeclarationSchema() *schema.Schema {
+var decimalParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -131,9 +132,9 @@ func decimalParameterDeclarationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func integerParameterDeclarationSchema() *schema.Schema {
+var integerParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -188,9 +189,9 @@ func integerParameterDeclarationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func stringParameterDeclarationSchema() *schema.Schema {
+var stringParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -245,9 +246,9 @@ func stringParameterDeclarationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func dynamicValueSchema() *schema.Schema {
+var dynamicValueSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DynamicDefaultValue.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -261,9 +262,9 @@ func dynamicValueSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func parameterControlsSchema() *schema.Schema {
+var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -377,9 +378,9 @@ func parameterControlsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func parameterSelectableValuesSchema() *schema.Schema {
+var parameterSelectableValuesSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -400,7 +401,7 @@ func parameterSelectableValuesSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func parameterNameSchema(required bool) *schema.Schema {
 	return &schema.Schema{

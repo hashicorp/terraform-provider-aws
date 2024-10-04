@@ -156,7 +156,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-func textFieldControlDisplayOptionsSchema() *schema.Schema {
+var textFieldControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -169,9 +169,9 @@ func textFieldControlDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func textAreaControlDisplayOptionsSchema() *schema.Schema {
+var textAreaControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -184,9 +184,9 @@ func textAreaControlDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sliderControlDisplayOptionsSchema() *schema.Schema {
+var sliderControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -198,9 +198,9 @@ func sliderControlDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func dateTimePickerControlDisplayOptionsSchema() *schema.Schema {
+var dateTimePickerControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -213,9 +213,9 @@ func dateTimePickerControlDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func listControlDisplayOptionsSchema() *schema.Schema {
+var listControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -239,9 +239,9 @@ func listControlDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func cascadingControlConfigurationSchema() *schema.Schema {
+var cascadingControlConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -267,9 +267,9 @@ func cascadingControlConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func selectAllOptionsSchema() *schema.Schema {
+var selectAllOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -281,9 +281,9 @@ func selectAllOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func dropDownControlDisplayOptionsSchema() *schema.Schema {
+var dropDownControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -296,9 +296,9 @@ func dropDownControlDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func placeholderOptionsSchema() *schema.Schema {
+var placeholderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -310,7 +310,7 @@ func placeholderOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandFilterControl(tfMap map[string]interface{}) *awstypes.FilterControl {
 	if tfMap == nil {

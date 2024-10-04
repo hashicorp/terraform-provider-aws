@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func filtersSchema() *schema.Schema {
+var filtersSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -34,7 +35,7 @@ func filtersSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func categoryFilterSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoryFilter.html
@@ -301,7 +302,7 @@ func topBottomFilterSchema() *schema.Schema {
 	}
 }
 
-func excludePeriodConfigurationSchema() *schema.Schema {
+var excludePeriodConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -318,9 +319,9 @@ func excludePeriodConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func numericRangeFilterValueSchema() *schema.Schema {
+var numericRangeFilterValueSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -343,9 +344,9 @@ func numericRangeFilterValueSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func timeRangeFilterValueSchema() *schema.Schema {
+var timeRangeFilterValueSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -366,9 +367,9 @@ func timeRangeFilterValueSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func drillDownFilterSchema() *schema.Schema {
+var drillDownFilterSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -429,9 +430,9 @@ func drillDownFilterSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func filterSelectableValuesSchema() *schema.Schema {
+var filterSelectableValuesSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -451,9 +452,9 @@ func filterSelectableValuesSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func filterScopeConfigurationSchema() *schema.Schema {
+var filterScopeConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -493,7 +494,7 @@ func filterScopeConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandFilters(tfList []interface{}) []awstypes.Filter {
 	if len(tfList) == 0 {

@@ -4,6 +4,8 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func analysisDefaultSchema() *schema.Schema {
+var analysisDefaultSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -35,7 +37,7 @@ func analysisDefaultSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func interactiveLayoutConfigurationSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultInteractiveLayoutConfiguration.html
@@ -153,7 +155,7 @@ func paginatedLayoutConfigurationSchema() *schema.Schema {
 	}
 }
 
-func paperCanvasSizeOptionsSchema() *schema.Schema {
+var paperCanvasSizeOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -167,9 +169,9 @@ func paperCanvasSizeOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sheetControlLayoutsSchema() *schema.Schema {
+var sheetControlLayoutsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 		Type:     schema.TypeList,
 		MinItems: 0,
@@ -191,9 +193,9 @@ func sheetControlLayoutsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func layoutSchema() *schema.Schema {
+var layoutSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -319,9 +321,9 @@ func layoutSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func gridLayoutConfigurationSchema() *schema.Schema {
+var gridLayoutConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GridLayoutConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -382,9 +384,9 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func headerFooterSectionConfigurationSchema() *schema.Schema {
+var headerFooterSectionConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeaderFooterSectionConfiguration.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -398,9 +400,9 @@ func headerFooterSectionConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sectionStyleSchema() *schema.Schema {
+var sectionStyleSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SectionStyle.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -416,9 +418,9 @@ func sectionStyleSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func freeFormLayoutElementsSchema() *schema.Schema {
+var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FreeFormLayoutElement.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -517,9 +519,9 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sectionLayoutConfigurationSchema() *schema.Schema {
+var sectionLayoutConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SectionLayoutConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -541,9 +543,9 @@ func sectionLayoutConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func spacingSchema() *schema.Schema {
+var spacingSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Spacing.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -570,7 +572,7 @@ func spacingSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandAnalysisDefaults(tfList []interface{}) *awstypes.AnalysisDefaults {
 	if len(tfList) == 0 || tfList[0] == nil {

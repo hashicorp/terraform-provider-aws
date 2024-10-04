@@ -4,12 +4,14 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func geospatialMapStyleOptionsSchema() *schema.Schema {
+var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapStyleOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -21,9 +23,9 @@ func geospatialMapStyleOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func geospatialWindowOptionsSchema() *schema.Schema {
+var geospatialWindowOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -49,7 +51,7 @@ func geospatialWindowOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandGeospatialMapStyleOptions(tfList []interface{}) *awstypes.GeospatialMapStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {

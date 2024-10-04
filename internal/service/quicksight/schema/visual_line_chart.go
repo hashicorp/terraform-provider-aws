@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -165,8 +166,8 @@ func lineChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"primary_y_axis_label_options": chartAxisLabelOptionsSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"reference_lines":              referenceLineSchema(referenceLinesMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
+							"primary_y_axis_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"reference_lines":              referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"secondary_y_axis_display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineSeriesAxisDisplayOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -285,7 +286,7 @@ func lineChartVisualSchema() *schema.Schema {
 	}
 }
 
-func lineChartLineStyleSettingsSchema() *schema.Schema {
+var lineChartLineStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartLineStyleSettings.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -303,9 +304,9 @@ func lineChartLineStyleSettingsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func lineChartMarkerStyleSettingsSchema() *schema.Schema {
+var lineChartMarkerStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartMarkerStyleSettings.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -323,7 +324,7 @@ func lineChartMarkerStyleSettingsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandLineChartVisual(tfList []interface{}) *awstypes.LineChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {

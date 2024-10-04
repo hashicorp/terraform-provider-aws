@@ -4,6 +4,8 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
@@ -248,7 +250,7 @@ func pivotTableVisualSchema() *schema.Schema {
 	}
 }
 
-func tableBorderOptionsSchema() *schema.Schema {
+var tableBorderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableBorderOptions.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -262,9 +264,9 @@ func tableBorderOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func tableCellStyleSchema() *schema.Schema {
+var tableCellStyleSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -309,9 +311,9 @@ func tableCellStyleSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func subtotalOptionsSchema() *schema.Schema {
+var subtotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SubtotalOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -342,9 +344,9 @@ func subtotalOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func pivotTotalOptionsSchema() *schema.Schema {
+var pivotTotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTotalOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -365,9 +367,9 @@ func pivotTotalOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func rowAlternateColorOptionsSchema() *schema.Schema {
+var rowAlternateColorOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RowAlternateColorOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -386,9 +388,9 @@ func rowAlternateColorOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func textConditionalFormatSchema() *schema.Schema {
+var textConditionalFormatSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextConditionalFormat.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -402,7 +404,7 @@ func textConditionalFormatSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandPivotTableVisual(tfList []interface{}) *awstypes.PivotTableVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
