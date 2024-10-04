@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_ipam_pool: Allow creation of ipv6 pool in private scope
+```
