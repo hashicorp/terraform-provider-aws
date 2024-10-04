@@ -712,7 +712,7 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("num_cache_clusters"), knownvalue.Int64Exact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("preferred_cache_cluster_azs"), knownvalue.ListSizeExact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("security_group_ids"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroupIDs), knownvalue.SetSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("security_group_names"), knownvalue.SetSizeExact(0)),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
