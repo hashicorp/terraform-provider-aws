@@ -56,35 +56,26 @@ resource "aws_backup_restore_testing_selection" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the backup restore testing selection.
-
 * `restore_testing_plan_name` - (Required) The name of the restore testing plan.
-
 * `protected_resource_type` - (Required) The type of the protected resource.
-
 * `iam_role_arn` - (Required) The ARN of the IAM role.
-
-* `protected_resource_conditions` - (Required) The conditions for the protected resource.
-
+* `protected_resource_arns` - (Optional) The ARNs for the protected resources.
+* `protected_resource_conditions` - (Optional) The conditions for the protected resource.
 * `restore_metadata_overrides` - (Optional) Override certain restore metadata keys. See the complete list of [restore testing inferred metadata](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing-inferred-metadata.html) .
 
 The `protected_resource_conditions` block supports the following arguments:
 
 * `string_equals` - (Optional) The list of string equals conditions for resource tags. Filters the values of your tagged resources for only those resources that you tagged with the same value. Also called "exact matching.". See [the structure for details](#keyvalues)
-
 * `string_not_equals` - (Optional) The list of string not equals conditions for resource tags. Filters the values of your tagged resources for only those resources that you tagged that do not have the same value. Also called "negated matching.". See [the structure for details](#keyvalues)
 
 ### KeyValues
 
-* `key` - The Tag name, must start with one of the following prefixes: [aws:ResourceTag/] with a Minimum length of 1. Maximum length of 128, and can contain characters that are letters, white space, and numbers that can be represented in UTF-8 and the following characters: `+ - = . _ : /`.
-* `value` - The value of the Tag. Maximum length of 256.
+* `key` - (Required) The Tag name, must start with one of the following prefixes: [aws:ResourceTag/] with a Minimum length of 1. Maximum length of 128, and can contain characters that are letters, white space, and numbers that can be represented in UTF-8 and the following characters: `+ - = . _ : /`.
+* `value` - (Required) The value of the Tag. Maximum length of 256.
 
-## Timeouts
+## Attribute Reference
 
-The following timeouts are available for this resource:
-
-* `create` - (Default `5m`)
-* `update` - (Default `5m`)
-* `delete` - (Default `5m`)
+This resource exports no additional attributes.
 
 ## Import
 

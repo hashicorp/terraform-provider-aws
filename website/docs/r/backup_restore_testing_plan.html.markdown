@@ -50,14 +50,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Restore Testing Plan.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `update` - (Default `5m`)
-* `delete` - (Default `5m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Restore Testing Plan using the `name`. For example:
