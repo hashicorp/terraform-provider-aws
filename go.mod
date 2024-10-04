@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/iot v1.58.0
-	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.15.3
