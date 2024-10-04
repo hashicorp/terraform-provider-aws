@@ -73,16 +73,16 @@ This resource exports no additional attributes.
 
 ## Import
 
-To import an existing backup restore testing selection, use the following `import` block:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Restore Testing Selection using `name:restore_testing_plan_name`. For example:
 
-```
+```terraform
 import {
   to = aws_backup_restore_testing_selection.example
   id = "my_testing_selection:my_testing_plan"
 }
 ```
 
-Using `terraform import`, import Backup Restore Testing Selection using the `name:restore_testing_plan_name`. For example:
+Using `terraform import`, import Backup Restore Testing Selection using `name:restore_testing_plan_name`. For example:
 
 ```console
 % terraform import aws_backup_restore_testing_selection.example restore_testing_selection_12345678:restore_testing_plan_12345678
