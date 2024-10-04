@@ -5,27 +5,22 @@ provider "aws" {
   default_tags {
     tags = var.provider_tags
   }
+  ignore_tags {
+    keys = var.ignore_tag_keys
+  }
 }
 
 # tflint-ignore: terraform_unused_declarations
-data "aws_batch_job_queue" "test" {
-  name = aws_batch_job_queue.test.name
-}
-
-resource "aws_batch_job_queue" "test" {
-  name     = var.rName
-  priority = 1
-  state    = "DISABLED"
-
-  compute_environments = [aws_batch_compute_environment.test.arn]
-
-  tags = var.resource_tags
+data "aws_batch_compute_environment" "test" {
+  compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
 }
 
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = var.rName
   service_role             = aws_iam_role.batch_service.arn
   type                     = "UNMANAGED"
+
+  tags = var.resource_tags
 
   depends_on = [aws_iam_role_policy_attachment.batch_service]
 }
@@ -100,5 +95,11 @@ variable "resource_tags" {
 
 variable "provider_tags" {
   type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
   nullable = false
 }

@@ -246,6 +246,7 @@ func main() {
 
 				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
 				generateTestConfig(g, testDirPath, "data.tags", true, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "data.tags_ignore", false, tfTemplates, common)
 			}
 		}
 	}

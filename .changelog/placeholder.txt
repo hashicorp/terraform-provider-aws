@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_batch_job_definition: Properly handles ignored tags.
+```

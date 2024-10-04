@@ -5,20 +5,25 @@ provider "aws" {
   default_tags {
     tags = var.provider_tags
   }
+  ignore_tags {
+    keys = var.ignore_tag_keys
+  }
 }
 
 # tflint-ignore: terraform_unused_declarations
-data "aws_batch_scheduling_policy" "test" {
-  arn = aws_batch_scheduling_policy.test.arn
+data "aws_batch_job_definition" "test" {
+  arn = aws_batch_job_definition.test.arn
 }
 
-resource "aws_batch_scheduling_policy" "test" {
+resource "aws_batch_job_definition" "test" {
   name = var.rName
-
-  fair_share_policy {
-    compute_reservation = 0
-    share_decay_seconds = 0
-  }
+  type = "container"
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
 
   tags = var.resource_tags
 }
@@ -38,5 +43,11 @@ variable "resource_tags" {
 
 variable "provider_tags" {
   type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
   nullable = false
 }
