@@ -142,7 +142,7 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.ToString(output.BackupPlanId))
 	d.Set(names.AttrARN, output.BackupPlanArn)
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
-	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
