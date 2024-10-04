@@ -1,0 +1,39 @@
+```release-note:bug
+resource/aws_redshiftserverless_namespace: invalid configuration for resource creation but valid for resource update
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: non-empty plan after creating minimal namespace with workgroup and `db_name` output
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: removing `kms_key_id` from config has no effect and can lead to problems
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: unable to remove `default_iam_role`
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: in managed password mode, unable to change admin username
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: conflict between `manage_admin_password` and `admin_user_password`
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: unable to switch to managed admin password
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: unable to update multiple attributes at the same time
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_namespace: non-empty plan after apply with `log_exports` in output
+```
+
+```release-note:enhancement
+datasource/aws_redshiftserverless_namespace: Add `admin_password_secret_arn` and `admin_password_secret_kms_key_id` attributes.
+```
