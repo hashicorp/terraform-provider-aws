@@ -93,6 +93,17 @@ func main() {
 		g.Fatalf("%s", err.Error())
 	}
 
+	for di, datasource := range v.taggedResources {
+		if !datasource.IsDataSource {
+			continue
+		}
+		if ri := slices.IndexFunc(v.taggedResources, func(r ResourceDatum) bool {
+			return r.TypeName == datasource.TypeName && !r.IsDataSource
+		}); ri != -1 {
+			v.taggedResources[di].DataSourceResourceImplementation = v.taggedResources[ri].Implementation
+		}
+	}
+
 	for _, resource := range v.taggedResources {
 		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
@@ -107,7 +118,7 @@ func main() {
 		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
 		resource.ProviderPackage = servicePackage
 
-		if !resource.DataSource {
+		if !resource.IsDataSource {
 			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
 			d := g.NewGoFileDestination(filename)
@@ -141,7 +152,7 @@ func main() {
 			}
 		}
 
-		if !resource.DataSource {
+		if !resource.IsDataSource {
 			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
@@ -331,35 +342,36 @@ const (
 )
 
 type ResourceDatum struct {
-	ProviderPackage           string
-	ResourceProviderNameUpper string
-	PackageProviderNameUpper  string
-	Name                      string
-	TypeName                  string
-	DestroyTakesT             bool
-	ExistsTypeName            string
-	ExistsTakesT              bool
-	FileName                  string
-	Generator                 string
-	NoImport                  bool
-	ImportStateID             string
-	ImportStateIDFunc         string
-	ImportIgnore              []string
-	Implementation            implementation
-	Serialize                 bool
-	SerializeDelay            bool
-	PreCheck                  bool
-	SkipEmptyTags             bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
-	SkipNullTags              bool
-	NoRemoveTags              bool
-	GoImports                 []goImport
-	GenerateConfig            bool
-	InitCodeBlocks            []codeBlock
-	additionalTfVars          map[string]string
-	AlternateRegionProvider   bool
-	TagsUpdateForceNew        bool
-	CheckDestroyNoop          bool
-	DataSource                bool
+	ProviderPackage                  string
+	ResourceProviderNameUpper        string
+	PackageProviderNameUpper         string
+	Name                             string
+	TypeName                         string
+	DestroyTakesT                    bool
+	ExistsTypeName                   string
+	ExistsTakesT                     bool
+	FileName                         string
+	Generator                        string
+	NoImport                         bool
+	ImportStateID                    string
+	ImportStateIDFunc                string
+	ImportIgnore                     []string
+	Implementation                   implementation
+	Serialize                        bool
+	SerializeDelay                   bool
+	PreCheck                         bool
+	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	SkipNullTags                     bool
+	NoRemoveTags                     bool
+	GoImports                        []goImport
+	GenerateConfig                   bool
+	InitCodeBlocks                   []codeBlock
+	additionalTfVars                 map[string]string
+	AlternateRegionProvider          bool
+	TagsUpdateForceNew               bool
+	CheckDestroyNoop                 bool
+	IsDataSource                     bool
+	DataSourceResourceImplementation implementation
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -478,7 +490,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkDataSource":
-				d.DataSource = true
+				d.IsDataSource = true
 				fallthrough
 
 			case "FrameworkResource":
@@ -496,7 +508,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKDataSource":
-				d.DataSource = true
+				d.IsDataSource = true
 				fallthrough
 
 			case "SDKResource":
@@ -511,7 +523,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["name"]; ok {
 					attr = strings.ReplaceAll(attr, " ", "")
 					d.Name = strings.ReplaceAll(attr, "-", "")
-				} else if d.DataSource {
+				} else if d.IsDataSource {
 					m := sdkNameRegexp.FindStringSubmatch(v.functionName)
 					if m == nil {
 						v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
