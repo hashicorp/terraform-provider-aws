@@ -105,7 +105,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/efs v1.32.4
-	github.com/aws/aws-sdk-go-v2/service/eks v1.49.3
+	github.com/aws/aws-sdk-go-v2/service/eks v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.27.3
