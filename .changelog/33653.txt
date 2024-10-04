@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resource/aws_backup_plan: Add `rule.schedule_expression_timezone` argument
+```

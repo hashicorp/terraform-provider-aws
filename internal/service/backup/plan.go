@@ -157,6 +157,11 @@ func resourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"schedule_expression_timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"start_window": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -339,6 +344,12 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []awstypes.BackupR
 		if vSchedule, ok := mRule[names.AttrSchedule].(string); ok && vSchedule != "" {
 			rule.ScheduleExpression = aws.String(vSchedule)
 		}
+		if vSchedule, ok := mRule[names.AttrSchedule].(string); ok && vSchedule != "" {
+			rule.ScheduleExpression = aws.String(vSchedule)
+		}
+		if v, ok := mRule["schedule_expression_timezone"].(string); ok && v != "" {
+			rule.ScheduleExpressionTimezone = aws.String(v)
+		}
 		if vEnableContinuousBackup, ok := mRule["enable_continuous_backup"].(bool); ok {
 			rule.EnableContinuousBackup = aws.Bool(vEnableContinuousBackup)
 		}
@@ -440,13 +451,14 @@ func flattenPlanRules(ctx context.Context, rules []awstypes.BackupRule) *schema.
 
 	for _, rule := range rules {
 		mRule := map[string]interface{}{
-			"rule_name":                aws.ToString(rule.RuleName),
-			"target_vault_name":        aws.ToString(rule.TargetBackupVaultName),
-			names.AttrSchedule:         aws.ToString(rule.ScheduleExpression),
-			"enable_continuous_backup": aws.ToBool(rule.EnableContinuousBackup),
-			"start_window":             int(aws.ToInt64(rule.StartWindowMinutes)),
-			"completion_window":        int(aws.ToInt64(rule.CompletionWindowMinutes)),
-			"recovery_point_tags":      KeyValueTags(ctx, rule.RecoveryPointTags).IgnoreAWS().Map(),
+			"rule_name":                    aws.ToString(rule.RuleName),
+			"target_vault_name":            aws.ToString(rule.TargetBackupVaultName),
+			names.AttrSchedule:             aws.ToString(rule.ScheduleExpression),
+			"schedule_expression_timezone": aws.ToString(rule.ScheduleExpressionTimezone),
+			"enable_continuous_backup":     aws.ToBool(rule.EnableContinuousBackup),
+			"start_window":                 aws.ToInt64(rule.StartWindowMinutes),
+			"completion_window":            aws.ToInt64(rule.CompletionWindowMinutes),
+			"recovery_point_tags":          KeyValueTags(ctx, rule.RecoveryPointTags).IgnoreAWS().Map(),
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {
@@ -524,6 +536,9 @@ func planHash(vRule interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule[names.AttrSchedule].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+	if v, ok := mRule["schedule_expression_timezone"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule["enable_continuous_backup"].(bool); ok {
