@@ -22,10 +22,7 @@ resource "aws_backup_restore_testing_selection" "example" {
   protected_resource_type   = "EC2"
   iam_role_arn              = aws_iam_role.example.arn
 
-  protected_resource_conditions {
-    string_equals     = []
-    string_not_equals = []
-  }
+  protected_resource_arns = ["*"]
 }
 ```
 
@@ -40,13 +37,10 @@ resource "aws_backup_restore_testing_selection" "example" {
   iam_role_arn              = aws_iam_role.example.arn
 
   protected_resource_conditions {
-    string_equals = [
-      {
-        key   = "Backup Test",
-        value = true
-      }
-    ]
-    string_not_equals = []
+    string_equals {
+      key   = "aws:ResourceTag/backup"
+      value = true
+    }
   }
 }
 ```

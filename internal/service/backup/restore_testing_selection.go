@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -89,20 +88,6 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"protected_resource_conditions": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[protectedResourceConditionsModel](ctx),
-				Optional:   true,
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[protectedResourceConditionsModel](ctx),
-				},
-			},
 			"protected_resource_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -131,6 +116,44 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"protected_resource_conditions": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[protectedResourceConditionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"string_equals": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"key": schema.StringAttribute{
+										Required: true,
+									},
+									"value": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+						"string_not_equals": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"key": schema.StringAttribute{
+										Required: true,
+									},
+									"value": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -175,6 +198,24 @@ func (r *restoreTestingSelectionResource) Create(ctx context.Context, request re
 		return
 	}
 
+	if v := restoreTestingSelection.ProtectedResourceConditions; v != nil {
+		// The default is
+		//
+		// "ProtectedResourceConditions": {
+		// 	"StringEquals": [],
+		// 	"StringNotEquals": []
+		// },
+		if len(v.StringEquals) == 0 {
+			v.StringEquals = nil
+		}
+		if len(v.StringNotEquals) == 0 {
+			v.StringNotEquals = nil
+		}
+		if v.StringEquals == nil && v.StringNotEquals == nil {
+			restoreTestingSelection.ProtectedResourceConditions = nil
+		}
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, restoreTestingSelection, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -207,6 +248,24 @@ func (r *restoreTestingSelectionResource) Read(ctx context.Context, request reso
 		response.Diagnostics.AddError(fmt.Sprintf("reading Backup Restore Testing Selection (%s)", name), err.Error())
 
 		return
+	}
+
+	if v := restoreTestingSelection.ProtectedResourceConditions; v != nil {
+		// The default is
+		//
+		// "ProtectedResourceConditions": {
+		// 	"StringEquals": [],
+		// 	"StringNotEquals": []
+		// },
+		if len(v.StringEquals) == 0 {
+			v.StringEquals = nil
+		}
+		if len(v.StringNotEquals) == 0 {
+			v.StringNotEquals = nil
+		}
+		if v.StringEquals == nil && v.StringNotEquals == nil {
+			restoreTestingSelection.ProtectedResourceConditions = nil
+		}
 	}
 
 	// Set attributes for import.

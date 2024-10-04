@@ -33,14 +33,14 @@ func TestAccBackupRestoreTestingSelection_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanSelection(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
 				),
 			},
@@ -48,7 +48,7 @@ func TestAccBackupRestoreTestingSelection_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateId:                        fmt.Sprintf("%s:%s", rName, rName),
+				ImportStateId:                        fmt.Sprintf("%s:%s", rName, rName+"_plan"),
 				ImportStateVerifyIdentifierAttribute: "name",
 				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
@@ -69,7 +69,7 @@ func TestAccBackupRestoreTestingSelection_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
@@ -96,14 +96,14 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanSelection(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateId:                        fmt.Sprintf("%s:%s", rName, rName),
+				ImportStateId:                        fmt.Sprintf("%s:%s", rName, rName+"_plan"),
 				ImportStateVerifyIdentifierAttribute: "name",
 				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
@@ -120,7 +120,7 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
 				),
 			},
@@ -128,7 +128,7 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 	})
 }
 
-func testAccCheckRestoreTestingPlanSelection(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRestoreTestingSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_restore_testing_selection" {
@@ -236,8 +236,7 @@ resource "aws_backup_restore_testing_selection" "test" {
   protected_resource_type   = "EC2"
   iam_role_arn              = aws_iam_role.test.arn
 
-  protected_resource_conditions {
-  }
+  protected_resource_arns = ["*"]
 }
 `, rName))
 }
@@ -254,12 +253,10 @@ resource "aws_backup_restore_testing_selection" "test" {
   iam_role_arn              = aws_iam_role.test.arn
 
   protected_resource_conditions {
-    string_equals = [
-      {
-        key   = "aws:ResourceTag/backup"
-        value = true
-      }
-    ]
+    string_equals {
+      key   = "aws:ResourceTag/backup"
+      value = true
+    }
   }
 
   validation_window_hours = 10
