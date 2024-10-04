@@ -107,7 +107,7 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 	input := &route53profiles.CreateProfileInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
 		Name:        data.Name.ValueStringPointer(),
-		Tags:        getTagsIn(ctx),
+		Tags:        getTagsInSlice(ctx),
 	}
 
 	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
