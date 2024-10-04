@@ -71,10 +71,6 @@ func ResourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"schedule_timezone": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"enable_continuous_backup": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -314,9 +310,6 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInpu
 		if vSchedule, ok := mRule["schedule"].(string); ok && vSchedule != "" {
 			rule.ScheduleExpression = aws.String(vSchedule)
 		}
-		if vScheduleTZ, ok := mRule["schedule_timezone"].(string); ok && vScheduleTZ != "" {
-			rule.ScheduleExpressionTimezone = aws.String(vScheduleTZ)
-		}
 		if vEnableContinuousBackup, ok := mRule["enable_continuous_backup"].(bool); ok {
 			rule.EnableContinuousBackup = aws.Bool(vEnableContinuousBackup)
 		}
@@ -415,7 +408,6 @@ func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
 			"rule_name":                aws.StringValue(rule.RuleName),
 			"target_vault_name":        aws.StringValue(rule.TargetBackupVaultName),
 			"schedule":                 aws.StringValue(rule.ScheduleExpression),
-			"schedule_timezone":        aws.StringValue(rule.ScheduleExpressionTimezone),
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
@@ -500,9 +492,6 @@ func planHash(vRule interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule["schedule"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mRule["schedule_timezone"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule["enable_continuous_backup"].(bool); ok {

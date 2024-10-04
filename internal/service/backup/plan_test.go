@@ -42,7 +42,6 @@ func TestAccBackupPlan_basic(t *testing.T) {
 						"rule_name":         rName,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 12 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -137,14 +136,12 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 						"rule_name":         rule1Name,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 12 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule2Name,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 6 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -165,21 +162,18 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 						"rule_name":         rule1Name,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 6 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule2Name,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 12 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule3Name,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 18 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -195,7 +189,6 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 						"rule_name":         rName,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 12 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -300,7 +293,6 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 						"rule_name":                rName,
 						"target_vault_name":        rName,
 						"schedule":                 "cron(0 12 * * ? *)",
-						"schedule_timezone":        "Pacific/Fiji",
 						"lifecycle.#":              "0",
 						"recovery_point_tags.%":    "3",
 						"recovery_point_tags.Name": rName,
@@ -344,7 +336,6 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 						"rule_name":         rName,
 						"target_vault_name": rName,
 						"schedule":          "cron(0 12 * * ? *)",
-						"schedule_timezone": "Pacific/Fiji",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -627,7 +618,6 @@ func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 						"rule_name":                rName,
 						"target_vault_name":        rName,
 						"schedule":                 "cron(0 12 * * ? *)",
-						"schedule_timezone":        "Pacific/Fiji",
 						"enable_continuous_backup": "true",
 						"lifecycle.#":              "1",
 						"lifecycle.0.delete_after": "35",
@@ -732,7 +722,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
 }
 `, rName)
@@ -751,7 +740,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
 
   tags = {
@@ -776,7 +764,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
 
   tags = {
@@ -801,13 +788,11 @@ resource "aws_backup_plan" "test" {
     rule_name         = "%[1]s_1"
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
   rule {
     rule_name         = "%[1]s_2"
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 6 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
 }
 `, rName)
@@ -826,19 +811,16 @@ resource "aws_backup_plan" "test" {
     rule_name         = "%[1]s_1"
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 6 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
   rule {
     rule_name         = "%[1]s_2"
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
   rule {
     rule_name         = "%[1]s_3"
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 18 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
   }
 }
 `, rName)
@@ -857,7 +839,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       cold_storage_after = 7
@@ -880,7 +861,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       delete_after = 120
@@ -903,7 +883,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       cold_storage_after = 30
@@ -927,7 +906,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     recovery_point_tags = {
       Name = %[1]q
@@ -952,7 +930,7 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
+
     recovery_point_tags = {
       Name = %[1]q
       Key2 = "Value2b"
@@ -980,7 +958,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       cold_storage_after = 30
@@ -1021,7 +998,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       cold_storage_after = 30
@@ -1068,7 +1044,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       cold_storage_after = 30
@@ -1105,7 +1080,7 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
+
     copy_action {
       destination_vault_arn = aws_backup_vault.test2.arn
     }
@@ -1127,7 +1102,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       cold_storage_after = 30
@@ -1159,7 +1133,6 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
 
     lifecycle {
       cold_storage_after = 30
@@ -1191,7 +1164,6 @@ resource "aws_backup_plan" "test" {
     rule_name                = %[1]q
     target_vault_name        = aws_backup_vault.test.name
     schedule                 = "cron(0 12 * * ? *)"
-	schedule_timezone = "Pacific/Fiji"
     enable_continuous_backup = true
 
     lifecycle {
