@@ -102,8 +102,8 @@ type SetValueOf[T attr.Value] struct {
 }
 
 type (
-	SetOfString SetValueOf[basetypes.StringValue]
-	SetOfARN    SetValueOf[ARN]
+	SetOfString = SetValueOf[basetypes.StringValue]
+	SetOfARN    = SetValueOf[ARN]
 )
 
 func (v SetValueOf[T]) Equal(o attr.Value) bool {
