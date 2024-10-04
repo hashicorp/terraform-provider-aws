@@ -57,7 +57,7 @@ func (*restoreTestingSelectionResource) Metadata(_ context.Context, request reso
 func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"iam_role_arn": schema.StringAttribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
@@ -131,10 +131,10 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"key": schema.StringAttribute{
+									names.AttrKey: schema.StringAttribute{
 										Required: true,
 									},
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -144,10 +144,10 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"key": schema.StringAttribute{
+									names.AttrKey: schema.StringAttribute{
 										Required: true,
 									},
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},

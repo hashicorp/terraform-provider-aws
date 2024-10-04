@@ -67,7 +67,7 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resourc
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric characters, and underscores"),
 				},
 			},
-			"schedule_expression": schema.StringAttribute{
+			names.AttrScheduleExpression: schema.StringAttribute{
 				Required: true,
 			},
 			"schedule_expression_timezone": schema.StringAttribute{

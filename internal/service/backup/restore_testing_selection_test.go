@@ -39,7 +39,7 @@ func TestAccBackupRestoreTestingSelection_basic(t *testing.T) {
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
 				),
@@ -49,8 +49,8 @@ func TestAccBackupRestoreTestingSelection_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        fmt.Sprintf("%s:%s", rName, rName+"_plan"),
-				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -102,7 +102,7 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
 				),
@@ -112,14 +112,14 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        fmt.Sprintf("%s:%s", rName, rName+"_plan"),
-				ImportStateVerifyIdentifierAttribute: "name",
-				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				Config: testAccRestoreTestingSelectionConfig_updates(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
 				),
@@ -137,7 +137,7 @@ func testAccCheckRestoreTestingSelectionDestroy(ctx context.Context) resource.Te
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-			_, err := tfbackup.FindRestoreTestingSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["restore_testing_plan_name"], rs.Primary.Attributes["name"])
+			_, err := tfbackup.FindRestoreTestingSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["restore_testing_plan_name"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -147,7 +147,7 @@ func testAccCheckRestoreTestingSelectionDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			return fmt.Errorf("Backup Restore Testing Selection %s still exists", rs.Primary.Attributes["name"])
+			return fmt.Errorf("Backup Restore Testing Selection %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
@@ -163,7 +163,7 @@ func testAccCheckRestoreTestingSelectionExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-		output, err := tfbackup.FindRestoreTestingSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["restore_testing_plan_name"], rs.Primary.Attributes["name"])
+		output, err := tfbackup.FindRestoreTestingSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["restore_testing_plan_name"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

@@ -39,13 +39,13 @@ func TestAccBackupRestoreTestingPlan_basic(t *testing.T) {
 				Config: testAccRestoreTestingPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"), // no tags
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0), // no tags
 				),
 			},
 			{
@@ -53,7 +53,7 @@ func TestAccBackupRestoreTestingPlan_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -113,7 +113,7 @@ func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccRestoreTestingPlanConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -154,13 +154,13 @@ func TestAccBackupRestoreTestingPlan_includeVaults(t *testing.T) {
 				Config: testAccRestoreTestingPlanConfig_includeVaults(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "recovery_point_selection.0.include_vaults.0", "backup", fmt.Sprintf("backup-vault:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
 				),
 			},
 			{
@@ -168,7 +168,7 @@ func TestAccBackupRestoreTestingPlan_includeVaults(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -192,13 +192,13 @@ func TestAccBackupRestoreTestingPlan_excludeVaults(t *testing.T) {
 				Config: testAccRestoreTestingPlanConfig_excludeVaults(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "recovery_point_selection.0.exclude_vaults.0", "backup", fmt.Sprintf("backup-vault:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
 				),
 			},
 			{
@@ -206,7 +206,7 @@ func TestAccBackupRestoreTestingPlan_excludeVaults(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -230,14 +230,14 @@ func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 				Config: testAccRestoreTestingPlanConfig_additionals("365", "cron(0 12 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", "365"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_window_hours", "168"),
 				),
 			},
@@ -246,7 +246,7 @@ func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -270,14 +270,14 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 				Config: testAccRestoreTestingPlanConfig_additionals("365", "cron(0 1 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", "365"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 1 ? * * *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 1 ? * * *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_window_hours", "168"),
 				),
 			},
@@ -286,20 +286,20 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        rName,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccRestoreTestingPlanConfig_additionals("1", "cron(0 12 ? * * *)", rName),
+				Config: testAccRestoreTestingPlanConfig_additionals(acctest.Ct1, "cron(0 12 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 12 ? * * *)"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_window_hours", "168"),
 				),
 			},
@@ -316,7 +316,7 @@ func testAccCheckRestoreTestingPlanDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -326,7 +326,7 @@ func testAccCheckRestoreTestingPlanDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("Backup Restore Testing Plan %s still exists", rs.Primary.Attributes["name"])
+			return fmt.Errorf("Backup Restore Testing Plan %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
@@ -342,7 +342,7 @@ func testAccCheckRestoreTestingPlanExists(ctx context.Context, n string, v *awst
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-		output, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes["name"])
+		output, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
