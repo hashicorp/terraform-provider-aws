@@ -1,4 +1,9 @@
 ## 5.71.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_elasticache_replication_group: Fix `security_group_names` causing resource replacement after import ([#39591](https://github.com/hashicorp/terraform-provider-aws/issues/39591))
+
 ## 5.70.0 (October  4, 2024)
 
 NOTES:
