@@ -10,6 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func flattenSecurityGroupNames(apiObjects []awstypes.CacheSecurityGroupMembership) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.CacheSecurityGroupMembership) string {
+		return aws.ToString(v.CacheSecurityGroupName)
+	})
+}
+
 func flattenSecurityGroupIDs(apiObjects []awstypes.SecurityGroupMembership) []string {
 	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SecurityGroupMembership) string {
 		return aws.ToString(v.SecurityGroupId)
