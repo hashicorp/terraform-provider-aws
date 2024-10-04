@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -89,6 +89,20 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"protected_resource_conditions": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[protectedResourceConditionsModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[protectedResourceConditionsModel](ctx),
+				},
+			},
 			"protected_resource_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -117,38 +131,6 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"protected_resource_conditions": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[protectedResourceConditionsModel](ctx),
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
-				},
-				Attributes: map[string]schema.Attribute{
-					"string_equals": schema.ListAttribute{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
-						Optional:   true,
-						Computed:   true,
-						PlanModifiers: []planmodifier.List{
-							listplanmodifier.UseStateForUnknown(),
-						},
-						ElementType: types.ObjectType{
-							AttrTypes: fwtypes.AttributeTypesMust[keyValueModel](ctx),
-						},
-					},
-					"string_not_equals": schema.ListAttribute{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueModel](ctx),
-						Optional:   true,
-						Computed:   true,
-						PlanModifiers: []planmodifier.List{
-							listplanmodifier.UseStateForUnknown(),
-						},
-						ElementType: types.ObjectType{
-							AttrTypes: fwtypes.AttributeTypesMust[keyValueModel](ctx),
-						},
-					},
 				},
 			},
 		},
@@ -354,14 +336,14 @@ func findRestoreTestingSelection(ctx context.Context, conn *backup.Client, input
 }
 
 type restoreTestingSelectionResourceModel struct {
-	IAMRoleARN                  fwtypes.ARN                                             `tfsdk:"iam_role_arn"`
-	ProtectedResourceARNs       fwtypes.SetOfString                                     `tfsdk:"protected_resource_arns"`
-	ProtectedResourceConditions fwtypes.ObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`
-	ProtectedResourceType       types.String                                            `tfsdk:"protected_resource_type"`
-	RestoreMetadataOverrides    fwtypes.MapOfString                                     `tfsdk:"restore_metadata_overrides"`
-	RestoreTestingSelectionName types.String                                            `tfsdk:"name"`
-	RestoreTestingPlanName      types.String                                            `tfsdk:"restore_testing_plan_name"`
-	ValidationWindowHours       types.Int64                                             `tfsdk:"validation_window_hours"`
+	IAMRoleARN                  fwtypes.ARN                                                       `tfsdk:"iam_role_arn"`
+	ProtectedResourceARNs       fwtypes.SetOfString                                               `tfsdk:"protected_resource_arns"`
+	ProtectedResourceConditions fwtypes.ListNestedObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`
+	ProtectedResourceType       types.String                                                      `tfsdk:"protected_resource_type"`
+	RestoreMetadataOverrides    fwtypes.MapOfString                                               `tfsdk:"restore_metadata_overrides"`
+	RestoreTestingSelectionName types.String                                                      `tfsdk:"name"`
+	RestoreTestingPlanName      types.String                                                      `tfsdk:"restore_testing_plan_name"`
+	ValidationWindowHours       types.Int64                                                       `tfsdk:"validation_window_hours"`
 }
 
 type protectedResourceConditionsModel struct {
