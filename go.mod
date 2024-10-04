@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.33.5
-	github.com/aws/aws-sdk-go-v2/service/fis v1.29.3
+	github.com/aws/aws-sdk-go-v2/service/fis v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/fms v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.35.3
