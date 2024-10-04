@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -71,10 +73,18 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				},
 			},
 			"protected_resource_arns": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfARNType,
-				ElementType: fwtypes.ARNType,
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						stringvalidator.Any(
+							validators.ARN(),
+							stringvalidator.OneOf("*"),
+						),
+					),
+				},
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
@@ -327,7 +337,7 @@ func findRestoreTestingSelection(ctx context.Context, conn *backup.Client, input
 
 type restoreTestingSelectionResourceModel struct {
 	IAMRoleARN                  fwtypes.ARN                                                       `tfsdk:"iam_role_arn"`
-	ProtectedResourceARNs       fwtypes.SetOfARN                                                  `tfsdk:"protected_resource_arns"`
+	ProtectedResourceARNs       fwtypes.SetOfString                                               `tfsdk:"protected_resource_arns"`
 	ProtectedResourceConditions fwtypes.ListNestedObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`
 	ProtectedResourceType       types.String                                                      `tfsdk:"protected_resource_type"`
 	RestoreMetadataOverrides    fwtypes.MapOfString                                               `tfsdk:"restore_metadata_overrides"`

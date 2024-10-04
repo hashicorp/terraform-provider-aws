@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -110,7 +111,10 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resourc
 							Computed:    true,
 							Validators: []validator.Set{
 								setvalidator.ValueStringsAre(
-									stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:backup:\w+(?:-\w+)+:\d{12}:backup-vault:[A-Za-z0-9_\-\*]+|\*$`), "must be either an AWS ARN for a backup vault or a *"),
+									stringvalidator.Any(
+										validators.ARN(),
+										stringvalidator.OneOf("*"),
+									),
 								),
 							},
 							PlanModifiers: []planmodifier.Set{
@@ -123,7 +127,10 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resourc
 							Required:    true,
 							Validators: []validator.Set{
 								setvalidator.ValueStringsAre(
-									stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:backup:\w+(?:-\w+)+:\d{12}:backup-vault:[A-Za-z0-9_\-\*]+|\*$`), "must be either an AWS ARN for a backup vault or a *"),
+									stringvalidator.Any(
+										validators.ARN(),
+										stringvalidator.OneOf("*"),
+									),
 								),
 							},
 						},
@@ -342,8 +349,8 @@ type restoreTestingPlanResourceModel struct {
 
 type restoreRecoveryPointSelectionModel struct {
 	Algorithm           fwtypes.StringEnum[awstypes.RestoreTestingRecoveryPointSelectionAlgorithm]       `tfsdk:"algorithm"`
-	ExcludeVaults       fwtypes.SetValueOf[types.String]                                                 `tfsdk:"exclude_vaults"`
-	IncludeVaults       fwtypes.SetValueOf[types.String]                                                 `tfsdk:"include_vaults"`
+	ExcludeVaults       fwtypes.SetOfString                                                              `tfsdk:"exclude_vaults"`
+	IncludeVaults       fwtypes.SetOfString                                                              `tfsdk:"include_vaults"`
 	RecoveryPointTypes  fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.RestoreTestingRecoveryPointType]] `tfsdk:"recovery_point_types"`
 	SelectionWindowDays types.Int64                                                                      `tfsdk:"selection_window_days"`
 }
