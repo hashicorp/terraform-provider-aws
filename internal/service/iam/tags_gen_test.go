@@ -11,6 +11,10 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
-func expectFullTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullTags(tfiam.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfiam.ServicePackage(context.Background()), resourceAddress, knownValue)
+}
+
+func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tfiam.ServicePackage(context.Background()), resourceAddress, knownValue)
 }

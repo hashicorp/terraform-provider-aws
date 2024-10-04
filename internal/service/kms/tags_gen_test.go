@@ -12,5 +12,5 @@ import (
 )
 
 func expectFullTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullTags(tfkms.ServicePackage(context.Background()), resourceAddress, knownValue)
+	return tfstatecheck.ExpectFullResourceTags(tfkms.ServicePackage(context.Background()), resourceAddress, knownValue)
 }

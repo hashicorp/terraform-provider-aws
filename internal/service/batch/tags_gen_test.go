@@ -11,6 +11,10 @@ import (
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
-func expectFullTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullTags(tfbatch.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfbatch.ServicePackage(context.Background()), resourceAddress, knownValue)
+}
+
+func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tfbatch.ServicePackage(context.Background()), resourceAddress, knownValue)
 }

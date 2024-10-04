@@ -11,6 +11,10 @@ import (
 	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
 )
 
-func expectFullTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, knownValue)
+}
+
+func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, knownValue)
 }

@@ -372,6 +372,8 @@ type ResourceDatum struct {
 	CheckDestroyNoop                 bool
 	IsDataSource                     bool
 	DataSourceResourceImplementation implementation
+	OverrideIdentifierAttribute      string
+	OverrideResourceType             string
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -647,6 +649,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.SerializeDelay = b
 					}
+				}
+				if attr, ok := args.Keyword["tagsIdentifierAttribute"]; ok {
+					d.OverrideIdentifierAttribute = attr
+				}
+				if attr, ok := args.Keyword["tagsResourceType"]; ok {
+					d.OverrideResourceType = attr
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
 					switch attr {

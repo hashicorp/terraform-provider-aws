@@ -31,6 +31,7 @@ import (
 
 // @FrameworkDataSource("aws_batch_job_definition", name="Job Definition")
 // @Testing(tagsTest=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }

@@ -79,6 +79,9 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 package {{ .ProviderPackage }}_test
 
 import (
+	{{ if ne .OverrideIdentifierAttribute "" }}
+	"context"
+	{{- end }}
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -88,6 +91,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	{{- if ne .OverrideIdentifierAttribute "" }}
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- end }}
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
@@ -98,9 +106,12 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: {{ template "testname" . }}_tags,
-		"NullMap":       {{ template "testname" . }}_tags_NullMap,
-		"EmptyMap":      {{ template "testname" . }}_tags_EmptyMap,
+		acctest.CtBasic:                  {{ template "testname" . }}_tags,
+		"NullMap":                        {{ template "testname" . }}_tags_NullMap,
+		"EmptyMap":                       {{ template "testname" . }}_tags_EmptyMap,
+		"DefaultTags_nonOverlapping":     {{ template "testname" . }}_tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag,
+		"IgnoreTags_Overlap_ResourceTag": {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
@@ -247,7 +258,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullDataSourceTags" . }}(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -282,7 +293,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullDataSourceTags" . }}(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -293,3 +304,18 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 		},
 	})
 }
+
+{{ define "expectFullDataSourceTags" -}}
+{{ if ne .OverrideIdentifierAttribute "" }}expectFull{{ .Name }}DataSourceTags{{ else }}expectFullDataSourceTags{{ end }}
+{{- end }}
+
+{{ if ne .OverrideIdentifierAttribute "" }}
+func expectFull{{ .Name }}DataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+		IdentifierAttribute: "{{ .OverrideIdentifierAttribute }}",
+		{{ if ne .OverrideResourceType "" -}}
+		ResourceType:        "{{ .OverrideResourceType }}",
+		{{- end }}
+	}, knownValue)
+}
+{{ end }}

@@ -11,6 +11,10 @@ import (
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
-func expectFullTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullTags(tfacmpca.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfacmpca.ServicePackage(context.Background()), resourceAddress, knownValue)
+}
+
+func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tfacmpca.ServicePackage(context.Background()), resourceAddress, knownValue)
 }

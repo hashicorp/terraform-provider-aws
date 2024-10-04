@@ -11,6 +11,10 @@ import (
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 )
 
-func expectFullTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullTags(tfacm.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfacm.ServicePackage(context.Background()), resourceAddress, knownValue)
+}
+
+func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tfacm.ServicePackage(context.Background()), resourceAddress, knownValue)
 }
