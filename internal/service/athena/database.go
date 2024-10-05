@@ -108,6 +108,12 @@ func resourceDatabase() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"workgroup": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "primary",
+				ForceNew: false,
+			},
 		},
 	}
 }
@@ -142,6 +148,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString.String()),
 		ResultConfiguration: expandResultConfiguration(d),
+		WorkGroup:           aws.String(d.Get("workgroup").(string)),
 	}
 
 	output, err := conn.StartQueryExecution(ctx, input)
@@ -195,6 +202,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
 		ResultConfiguration: expandResultConfiguration(d),
+		WorkGroup:           aws.String(d.Get("workgroup").(string)),
 	}
 
 	output, err := conn.StartQueryExecution(ctx, input)
