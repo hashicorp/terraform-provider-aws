@@ -13,6 +13,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"iter"
 	"os"
 	"path"
 	"path/filepath"
@@ -270,12 +271,28 @@ func main() {
 		g.Fatalf("parsing base Go test template: %w", err)
 	}
 
-	if err := d.WriteTemplateSet(templates, struct{ ProviderPackage string }{servicePackage}); err != nil {
-		g.Fatalf("error generating %q service package data: %s", servicePackage, err)
-	}
+	if len(v.taggedResources) > 0 {
+		datum := struct {
+			ProviderPackage string
+			ResourceCount   int
+			DataSourceCount int
+		}{
+			ProviderPackage: servicePackage,
+			ResourceCount: count(slices.Values(v.taggedResources), func(v ResourceDatum) bool {
+				return !v.IsDataSource
+			}),
+			DataSourceCount: count(slices.Values(v.taggedResources), func(v ResourceDatum) bool {
+				return v.IsDataSource
+			}),
+		}
 
-	if err := d.Write(); err != nil {
-		g.Fatalf("generating file (%s): %s", filename, err)
+		if err := d.WriteTemplateSet(templates, datum); err != nil {
+			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+		}
+
+		if err := d.Write(); err != nil {
+			g.Fatalf("generating file (%s): %s", filename, err)
+		}
 	}
 
 	if failed {
@@ -836,4 +853,13 @@ func generateDurationStatement(d time.Duration) string {
 	}
 
 	return buf.String()
+}
+
+func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
+	for v := range s {
+		if f(v) {
+			c++
+		}
+	}
+	return c
 }

@@ -15,6 +15,8 @@ func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check)
 	return tfstatecheck.ExpectFullResourceTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, knownValue)
 }
 
+{{ if ne .DataSourceCount 0 -}}
 func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, knownValue)
 }
+{{- end }}
