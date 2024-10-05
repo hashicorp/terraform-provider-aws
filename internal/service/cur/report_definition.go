@@ -99,9 +99,12 @@ func resourceReportDefinition() *schema.Resource {
 				Required: true,
 			},
 			"s3_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 256),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The prefix can't include invalid characters (!-_.*'()/) or spaces."),
+				),
 			},
 			"s3_region": {
 				Type:             schema.TypeString,
