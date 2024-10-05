@@ -17,10 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -96,11 +98,16 @@ func resourceEIP() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"ipam_pool_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 			"network_border_group": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"network_interface": {
 				Type:     schema.TypeString,
@@ -169,6 +176,10 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v := d.Get("vpc"); v != nil && v.(bool) {
 		input.Domain = types.DomainTypeVpc
+	}
+
+	if v, ok := d.GetOk("ipam_pool_id"); ok {
+		input.IpamPoolId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("network_border_group"); ok {
@@ -244,6 +255,9 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("network_border_group", address.NetworkBorderGroup)
 	d.Set("network_interface", address.NetworkInterfaceId)
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	if strings.HasPrefix(*address.PublicIpv4Pool, "ipam-pool") {
+		d.Set("ipam_pool_id", address.PublicIpv4Pool)
+	}
 	d.Set("private_ip", address.PrivateIpAddress)
 	if v := aws.ToString(address.PrivateIpAddress); v != "" {
 		d.Set("private_dns", meta.(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, v))
@@ -325,6 +339,27 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Deleting EC2 EIP: %s", d.Id())
 	_, err := conn.ReleaseAddress(ctx, input)
+
+	// If the EIP's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
+	var ipamPoolID, eipAllocationId string
+	if v, ok := d.GetOk("ipam_pool_id"); ok {
+		ipamPoolID = v.(string)
+	}
+	if v, ok := d.GetOk("allocation_id"); ok {
+		eipAllocationId = v.(string)
+	}
+	if ipamPoolID != "" {
+		const (
+			timeout = 10 * time.Minute // IPAM eventual consistency
+		)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+			return findIPAMPoolAllocationsForEip(ctx, conn, ipamPoolID, eipAllocationId)
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
+		}
+	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 		return diags
@@ -422,4 +457,26 @@ func eipARN(c *conns.AWSClient, allocationID string) string {
 		AccountID: c.AccountID,
 		Resource:  "elastic-ip/" + allocationID,
 	}.String()
+}
+
+func findIPAMPoolAllocationsForEip(ctx context.Context, conn *ec2.Client, poolID, eipAllocationId string) ([]types.IpamPoolAllocation, error) {
+	input := &ec2.GetIpamPoolAllocationsInput{
+		IpamPoolId: aws.String(poolID),
+	}
+
+	output, err := findIPAMPoolAllocations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output = tfslices.Filter(output, func(v types.IpamPoolAllocation) bool {
+		return string(v.ResourceType) == string(types.IpamPoolAllocationResourceTypeEip) && aws.ToString(v.ResourceId) == eipAllocationId
+	})
+
+	if len(output) == 0 {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
 }
