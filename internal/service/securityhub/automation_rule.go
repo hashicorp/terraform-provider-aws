@@ -198,7 +198,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx),
+						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx, 100),
 						"aws_account_name":                   stringFilterSchemaFramework(ctx),
 						"company_name":                       stringFilterSchemaFramework(ctx),
 						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx),
@@ -209,7 +209,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"criticality":                        numberFilterSchemaFramework(ctx),
 						names.AttrDescription:                stringFilterSchemaFramework(ctx),
 						"first_observed_at":                  dateFilterSchemaFramework(ctx),
-						"generator_id":                       stringFilterSchemaFramework(ctx),
+						"generator_id":                       stringFilterSchemaFramework(ctx, 100),
 						names.AttrID:                         stringFilterSchemaFramework(ctx),
 						"last_observed_at":                   dateFilterSchemaFramework(ctx),
 						"note_text":                          stringFilterSchemaFramework(ctx),
@@ -223,14 +223,14 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"resource_application_arn":           stringFilterSchemaFramework(ctx),
 						"resource_application_name":          stringFilterSchemaFramework(ctx),
 						"resource_details_other":             mapFilterSchemaFramework(ctx),
-						names.AttrResourceID:                 stringFilterSchemaFramework(ctx),
+						names.AttrResourceID:                 stringFilterSchemaFramework(ctx, 100),
 						"resource_partition":                 stringFilterSchemaFramework(ctx),
 						"resource_region":                    stringFilterSchemaFramework(ctx),
 						names.AttrResourceTags:               mapFilterSchemaFramework(ctx),
 						names.AttrResourceType:               stringFilterSchemaFramework(ctx),
 						"severity_label":                     stringFilterSchemaFramework(ctx),
 						"source_url":                         stringFilterSchemaFramework(ctx),
-						"title":                              stringFilterSchemaFramework(ctx),
+						"title":                              stringFilterSchemaFramework(ctx, 100),
 						names.AttrType:                       stringFilterSchemaFramework(ctx),
 						"updated_at":                         dateFilterSchemaFramework(ctx),
 						"user_defined_fields":                mapFilterSchemaFramework(ctx),
@@ -334,11 +334,16 @@ func numberFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 	}
 }
 
-func stringFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func stringFilterSchemaFramework(ctx context.Context, maxSize ...int) schema.SetNestedBlock {
+
+	defaultSize := 20
+	if len(maxSize) > 0 {
+		defaultSize = maxSize[0]
+	}
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[stringFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(defaultSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
