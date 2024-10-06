@@ -503,7 +503,7 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIP_publicIpv4Pool_ipamPoolId(t *testing.T) {
+func TestAccEC2EIP_PublicIPv4Pool_IPAMPoolId(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf types.Address
 	resourceName := "aws_eip.test"
@@ -517,7 +517,7 @@ func TestAccEC2EIP_publicIpv4Pool_ipamPoolId(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_publicIPv4IpamPoolId(rName),
+				Config: testAccEIPConfig_publicIPv4_IPAMPoolId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
@@ -1175,7 +1175,7 @@ resource "aws_eip" "test" {
 `, rName, poolName)
 }
 
-func testAccEIPConfig_publicIPv4IpamPoolId(rName string) string {
+func testAccEIPConfig_publicIPv4_IPAMPoolId(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

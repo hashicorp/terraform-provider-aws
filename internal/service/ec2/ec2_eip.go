@@ -353,7 +353,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 			timeout = 10 * time.Minute // IPAM eventual consistency
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
-			return findIpamPoolAllocationsForEip(ctx, conn, ipamPoolID, eipAllocationId)
+			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, eipAllocationId)
 		})
 
 		if err != nil {
@@ -459,7 +459,7 @@ func eipARN(c *conns.AWSClient, allocationID string) string {
 	}.String()
 }
 
-func findIpamPoolAllocationsForEip(ctx context.Context, conn *ec2.Client, poolID, eipAllocationId string) ([]types.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, poolID, eipAllocationId string) ([]types.IpamPoolAllocation, error) {
 	input := &ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(poolID),
 	}
