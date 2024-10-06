@@ -97,7 +97,7 @@ resource "aws_eip" "byoip-ip" {
 
 ```terraform
 resource "aws_eip" "ipam-ip" {
-  domain           = "vpc"
+  domain       = "vpc"
   ipam_pool_id = "ipam-pool-07ccc86aa41bef7ce"
 }
 ```

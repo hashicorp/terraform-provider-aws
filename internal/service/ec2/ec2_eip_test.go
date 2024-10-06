@@ -503,7 +503,7 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIP_PublicIPv4Pool_IpamPoolId(t *testing.T) {
+func TestAccEC2EIP_publicIpv4Pool_ipamPoolId(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf types.Address
 	resourceName := "aws_eip.test"
@@ -521,7 +521,7 @@ func TestAccEC2EIP_PublicIPv4Pool_IpamPoolId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", ipamPoolDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", ipamPoolDataSourceName, names.AttrID),
 				),
 			},
 		},
@@ -1174,11 +1174,7 @@ resource "aws_eip" "test" {
 }
 `, rName, poolName)
 }
-func testAccEIPConfig_setupIpamPool() string {
-	return fmt.Sprintf(`
 
-	`)
-}
 func testAccEIPConfig_publicIPv4IpamPoolId(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
