@@ -26,6 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	defaultPlanRuleScheduleExpressionTimezone = "Etc/UTC"
+)
+
 // @SDKResource("aws_backup_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
 func resourcePlan() *schema.Resource {
@@ -37,6 +41,15 @@ func resourcePlan() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    planResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: planStateUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -157,7 +170,7 @@ func resourcePlan() *schema.Resource {
 						"schedule_expression_timezone": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "Etc/UTC",
+							Default:  defaultPlanRuleScheduleExpressionTimezone,
 						},
 						"start_window": {
 							Type:     schema.TypeInt,

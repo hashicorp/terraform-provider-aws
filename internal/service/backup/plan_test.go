@@ -706,7 +706,9 @@ func TestAccBackupPlan_upgradeScheduleExpressionTimezone(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccPlanConfig_basic(rName),
-				PlanOnly:                 true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+				),
 			},
 		},
 	})
