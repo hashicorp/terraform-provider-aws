@@ -6,6 +6,8 @@ package backup
 import (
 	"context"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -17,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -157,7 +161,7 @@ func resourcePlan() *schema.Resource {
 						"schedule_expression_timezone": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "Etc/UTC",
+							Computed: true,
 						},
 						"start_window": {
 							Type:     schema.TypeInt,
@@ -174,6 +178,7 @@ func resourcePlan() *schema.Resource {
 						},
 					},
 				},
+				Set: backupRuleSetFunc,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -438,7 +443,7 @@ func expandLifecycle(tfMap map[string]interface{}) *awstypes.Lifecycle {
 	return apiObject
 }
 
-func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) []interface{} { // nosemgrep:ci.backup-in-func-name
+func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) *schema.Set { // nosemgrep:ci.backup-in-func-name
 	tfList := []interface{}{}
 
 	for _, apiObject := range apiObjects {
@@ -467,7 +472,7 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 		tfList = append(tfList, tfMap)
 	}
 
-	return tfList
+	return schema.NewSet(backupRuleSetFunc, tfList)
 }
 
 func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) []interface{} { // nosemgrep:ci.backup-in-func-name
@@ -519,4 +524,47 @@ func flattenLifecycle(apiObject *awstypes.Lifecycle) []interface{} {
 	}
 
 	return []interface{}{tfMap}
+}
+
+func backupRuleSetFunc(v interface{}) int { // nosemgrep:ci.backup-in-func-name
+	tfMap := v.(map[string]interface{})
+	const (
+		defaultScheduleExpressionTimezone = "Etc/UTC"
+	)
+	simpleAttributesSetFunc := sdkv2.SimpleSchemaSetFunc("completion_window", "enable_continuous_backup", "rule_name", names.AttrSchedule, "start_window", "target_vault_name")
+	lifecycleSetFunc := sdkv2.SimpleSchemaSetFunc("cold_storage_after", "delete_after")
+	var str strings.Builder
+
+	str.WriteRune('-')
+	str.WriteString(strconv.Itoa(simpleAttributesSetFunc(tfMap)))
+	if v, ok := tfMap["schedule_expression_timezone"].(string); ok && v != defaultScheduleExpressionTimezone {
+		str.WriteRune('-')
+		str.WriteString(v)
+	}
+	if v, ok := tfMap["lifecycle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		str.WriteRune('-')
+		str.WriteString(strconv.Itoa(lifecycleSetFunc(v[0])))
+	}
+	if v, ok := tfMap["recovery_point_tags"].(map[string]interface{}); ok && len(v) > 0 {
+		str.WriteRune('-')
+		str.WriteString(strconv.Itoa(tftags.New(context.Background(), v).Hash()))
+	}
+	if v, ok := tfMap["copy_action"].(*schema.Set); ok && v.Len() > 0 {
+		for _, tfMapRaw := range v.List() {
+			tfMap := tfMapRaw.(map[string]interface{})
+			if v, ok := tfMap["lifecycle"].([]interface{}); ok {
+				for _, tfMapRaw := range v {
+					str.WriteRune('-')
+					str.WriteString(strconv.Itoa(lifecycleSetFunc(tfMapRaw)))
+				}
+			}
+
+			if v, ok := tfMap["destination_vault_arn"].(string); ok {
+				str.WriteRune('-')
+				str.WriteString(v)
+			}
+		}
+	}
+
+	return create.StringHashcode(str.String())
 }
