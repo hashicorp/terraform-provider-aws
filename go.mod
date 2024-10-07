@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.14.0
-	github.com/aws/aws-sdk-go-v2/service/outposts v1.43.4
+	github.com/aws/aws-sdk-go-v2/service/outposts v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.1.5
