@@ -8,9 +8,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ses_domain_identity")
-func DataSourceDomainIdentity() *schema.Resource {
+// @SDKDataSource("aws_ses_domain_identity", name="Domain Identity")
+func dataSourceDomainIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainIdentityRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -46,25 +45,13 @@ func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	d.SetId(domainName)
-	d.Set(names.AttrDomain, domainName)
+	verificationAttrs, err := findIdentityVerificationAttributesByIdentity(ctx, conn, domainName)
 
-	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []string{
-			aws.ToString(&domainName),
-		},
-	}
-
-	response, err := conn.GetIdentityVerificationAttributes(ctx, readOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "[WARN] Error fetching identity verification attributes for %s: %s", domainName, err)
+		return sdkdiag.AppendErrorf(diags, "reading SES Domain Identity (%s) verification: %s", domainName, err)
 	}
 
-	verificationAttrs, ok := response.VerificationAttributes[domainName]
-	if !ok {
-		return sdkdiag.AppendErrorf(diags, "[WARN] Domain not listed in response when fetching verification attributes for %s", domainName)
-	}
-
+	d.SetId(domainName)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ses",
@@ -73,6 +60,8 @@ func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, m
 		Resource:  fmt.Sprintf("identity/%s", domainName),
 	}.String()
 	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDomain, domainName)
 	d.Set("verification_token", verificationAttrs.VerificationToken)
+
 	return diags
 }

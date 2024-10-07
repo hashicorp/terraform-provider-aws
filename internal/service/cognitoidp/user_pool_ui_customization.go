@@ -84,7 +84,11 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	userPoolID, clientID := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrClientID).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
 		UserPoolId: aws.String(userPoolID),
@@ -102,9 +106,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 		input.ImageFile = v
 	}
 
-	_, err := conn.SetUICustomization(ctx, input)
-
-	if err != nil {
+	if _, err := conn.SetUICustomization(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Cognito User Pool UI Customization (%s): %s", id, err)
 	}
 

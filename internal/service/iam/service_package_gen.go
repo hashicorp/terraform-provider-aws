@@ -19,7 +19,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceGroupPoliciesExclusive,
+			Name:    "Group Policies Exclusive",
+		},
+		{
+			Factory: newResourceRolePoliciesExclusive,
+			Name:    "Role Policies Exclusive",
+		},
+		{
+			Factory: newResourceUserPoliciesExclusive,
+			Name:    "User Policies Exclusive",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

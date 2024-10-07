@@ -238,7 +238,7 @@ func (r *resourceEmailTemplate) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	in := &pinpoint.DeleteEmailTemplateInput{
-		TemplateName: aws.String(state.TemplateName.ValueString()),
+		TemplateName: state.TemplateName.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteEmailTemplate(ctx, in)

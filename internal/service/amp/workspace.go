@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_prometheus_workspace", name="Workspace")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.WorkspaceDescription")
+// @Testing(generator=false)
 func resourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceCreate,
