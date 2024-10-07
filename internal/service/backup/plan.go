@@ -475,7 +475,7 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) *
 	return schema.NewSet(planHash, tfList)
 }
 
-func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) *schema.Set { // nosemgrep:ci.backup-in-func-name
+func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) []interface{} { // nosemgrep:ci.backup-in-func-name
 	tfList := []interface{}{}
 
 	for _, apiObject := range apiObjects {
@@ -487,7 +487,7 @@ func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) 
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(planHash, tfList)
+	return tfList
 }
 
 func flattenCopyActions(apiObjects []awstypes.CopyAction) []interface{} {
