@@ -714,6 +714,55 @@ func TestAccBackupPlan_upgradeScheduleExpressionTimezone(t *testing.T) {
 	})
 }
 
+func TestAccBackupPlan_scheduleExpressionTimezone(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_scheduleExpressionTimezone(rName, "Pacific/Tahiti"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"lifecycle.#":                  acctest.Ct0,
+						"rule_name":                    rName,
+						names.AttrSchedule:             "cron(0 12 * * ? *)",
+						"schedule_expression_timezone": "Pacific/Tahiti",
+						"target_vault_name":            rName,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPlanConfig_scheduleExpressionTimezone(rName, "Africa/Abidjan"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"lifecycle.#":                  acctest.Ct0,
+						"rule_name":                    rName,
+						names.AttrSchedule:             "cron(0 12 * * ? *)",
+						"schedule_expression_timezone": "Africa/Abidjan",
+						"target_vault_name":            rName,
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
@@ -1243,4 +1292,23 @@ resource "aws_backup_plan" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPlanConfig_scheduleExpressionTimezone(rName, scheduleExpressionTimezone string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name                    = %[1]q
+    target_vault_name            = aws_backup_vault.test.name
+    schedule                     = "cron(0 12 * * ? *)"
+    schedule_expression_timezone = %[2]q
+  }
+}
+`, rName, scheduleExpressionTimezone)
 }
