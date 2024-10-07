@@ -107,6 +107,10 @@ func dataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"schedule_expression_timezone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"start_window": {
 							Type:     schema.TypeInt,
 							Computed: true,
