@@ -381,4 +381,5 @@ replace (
 	github.com/hashicorp/terraform-plugin-framework => github.com/hashicorp/terraform-plugin-framework v1.12.1-0.20241003232403-50b570f7d4eb
 	github.com/hashicorp/terraform-plugin-go => github.com/hashicorp/terraform-plugin-go v0.24.1-0.20241003195015-94a6f8ce9ce7
 	github.com/hashicorp/terraform-plugin-mux => github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20241003205859-6d925b328952
+	google.golang.org/grpc => google.golang.org/grpc v1.67.1
 )
