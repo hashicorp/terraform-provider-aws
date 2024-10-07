@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `lastModifiedTime` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `urlId` - Generated ID for the endpoint.
 
-<!-- cache-key: cdktf-0.20.1 input-b587b59f7a3e286f023eb4d8e5bb8b174ddb55d0a6307c1cd7e1fa245282063f -->
+<!-- cache-key: cdktf-0.20.9 input-b587b59f7a3e286f023eb4d8e5bb8b174ddb55d0a6307c1cd7e1fa245282063f -->

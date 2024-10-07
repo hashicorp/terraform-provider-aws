@@ -134,4 +134,4 @@ Using `terraform import`, import Lex V2 Models Bot using the `id`. For example:
 % terraform import aws_lexv2models_bot.example bot-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2d5c17d5b236548880764f250ad235cee892b9d3db7b5cf759003e8a5990aa67 -->
+<!-- cache-key: cdktf-0.20.9 input-2d5c17d5b236548880764f250ad235cee892b9d3db7b5cf759003e8a5990aa67 -->

@@ -172,4 +172,4 @@ Using `terraform import`, import Transcribe LanguageModel using the `modelName`.
 % terraform import aws_transcribe_language_model.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-85a81f3a3aae68cdb05de1abee14c19e807278023470592c0e052318dc2bff47 -->
+<!-- cache-key: cdktf-0.20.9 input-85a81f3a3aae68cdb05de1abee14c19e807278023470592c0e052318dc2bff47 -->

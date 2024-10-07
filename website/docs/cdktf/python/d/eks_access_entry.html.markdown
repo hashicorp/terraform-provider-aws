@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `type` - Defaults to STANDARD which provides the standard workflow. EC2_LINUX, EC2_WINDOWS, FARGATE_LINUX types disallow users to input a username or groups, and prevent associations.
 * `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.1 input-9bbb26118237e89b1ec4a4af4451e3c4f5378f139ebdd69cc542649692e1985d -->
+<!-- cache-key: cdktf-0.20.9 input-9bbb26118237e89b1ec4a4af4451e3c4f5378f139ebdd69cc542649692e1985d -->

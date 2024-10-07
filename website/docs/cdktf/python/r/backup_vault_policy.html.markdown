@@ -24,6 +24,7 @@ from cdktf import Token, TerraformStack
 #
 from imports.aws.backup_vault import BackupVault
 from imports.aws.backup_vault_policy import BackupVaultPolicy
+from imports.aws.data_aws_caller_identity import DataAwsCallerIdentity
 from imports.aws.data_aws_iam_policy_document import DataAwsIamPolicyDocument
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
@@ -31,13 +32,14 @@ class MyConvertedCode(TerraformStack):
         example = BackupVault(self, "example",
             name="example"
         )
-        data_aws_iam_policy_document_example = DataAwsIamPolicyDocument(self, "example_1",
+        current = DataAwsCallerIdentity(self, "current")
+        data_aws_iam_policy_document_example = DataAwsIamPolicyDocument(self, "example_2",
             statement=[DataAwsIamPolicyDocumentStatement(
                 actions=["backup:DescribeBackupVault", "backup:DeleteBackupVault", "backup:PutBackupVaultAccessPolicy", "backup:DeleteBackupVaultAccessPolicy", "backup:GetBackupVaultAccessPolicy", "backup:StartBackupJob", "backup:GetBackupVaultNotifications", "backup:PutBackupVaultNotifications"
                 ],
                 effect="Allow",
                 principals=[DataAwsIamPolicyDocumentStatementPrincipals(
-                    identifiers=["*"],
+                    identifiers=[Token.as_string(current.account_id)],
                     type="AWS"
                 )
                 ],
@@ -47,7 +49,7 @@ class MyConvertedCode(TerraformStack):
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         data_aws_iam_policy_document_example.override_logical_id("example")
-        aws_backup_vault_policy_example = BackupVaultPolicy(self, "example_2",
+        aws_backup_vault_policy_example = BackupVaultPolicy(self, "example_3",
             backup_vault_name=example.name,
             policy=Token.as_string(data_aws_iam_policy_document_example.json)
         )
@@ -94,4 +96,4 @@ Using `terraform import`, import Backup vault policy using the `name`. For examp
 % terraform import aws_backup_vault_policy.test TestVault
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ab98f99514f38866a517aac446be1f3acb9e1bf25ba0c4567594ea6cc2e401d8 -->
+<!-- cache-key: cdktf-0.20.9 input-e6e2a9ecb59fce2e79c5991a441f8cb419a72c12b4391f7cf9f887f36613afd4 -->

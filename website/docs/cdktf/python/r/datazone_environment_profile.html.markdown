@@ -182,4 +182,4 @@ Using `terraform import`, import DataZone Environment Profile using a comma-deli
 % terraform import aws_datazone_environment_profile.example environment_profile-id-12345678,domain-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b22b2c3dc82f15715181d2eb58f14799fba60665db5e68a9fc727b242fc3031f -->
+<!-- cache-key: cdktf-0.20.9 input-b22b2c3dc82f15715181d2eb58f14799fba60665db5e68a9fc727b242fc3031f -->

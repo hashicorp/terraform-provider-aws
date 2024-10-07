@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `propertiesFileContent` - contents of connect-distributed.properties file.
 * `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-b067e099cacc6901069c55fafe52d9391278196c63c58becdcbbd36667cf890b -->
+<!-- cache-key: cdktf-0.20.9 input-b067e099cacc6901069c55fafe52d9391278196c63c58becdcbbd36667cf890b -->

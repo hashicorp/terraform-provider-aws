@@ -29,6 +29,7 @@ import { Fn, Token, TerraformStack } from "cdktf";
 import { DrsReplicationConfigurationTemplate } from "./.gen/providers/aws/drs-replication-configuration-template";
 interface MyConfig {
   ebsEncryption: any;
+  stagingAreaTags: any;
 }
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string, config: MyConfig) {
@@ -72,6 +73,7 @@ class MyConvertedCode extends TerraformStack {
       stagingAreaSubnetId: Token.asString(awsSubnetExample.id),
       useDedicatedReplicationServer: false,
       ebsEncryption: config.ebsEncryption,
+      stagingAreaTags: config.stagingAreaTags,
     });
   }
 }
@@ -159,4 +161,4 @@ Using `terraform import`, import DRS Replication Configuration Template using th
 % terraform import aws_drs_replication_configuration_template.example templateid
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6c07abef7048c3cc06087a9898fdf05a3940fa2b0415a9b5c550b599e682141f -->
+<!-- cache-key: cdktf-0.20.9 input-6c07abef7048c3cc06087a9898fdf05a3940fa2b0415a9b5c550b599e682141f -->

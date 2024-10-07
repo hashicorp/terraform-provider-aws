@@ -431,4 +431,4 @@ Using `terraform import`, import ECS Task Definitions using their ARNs. For exam
 % terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-153332ff5446243fdd9c8653d58b4f49ca2b46d04ccd98e913cf20787414b12a -->
+<!-- cache-key: cdktf-0.20.9 input-153332ff5446243fdd9c8653d58b4f49ca2b46d04ccd98e913cf20787414b12a -->

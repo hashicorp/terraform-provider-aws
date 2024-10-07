@@ -92,7 +92,7 @@ The following arguments are optional:
 * `region` - (Optional) Region of the service (_e.g.,_ `us-west-2`, `ap-northeast-1`).
 * `reverseDnsName` - (Optional) Reverse DNS name of the service (_e.g.,_ `com.amazonaws.us-west-2.s3`). One of `dnsName`, `reverseDnsName`, or `serviceId` is required.
 * `reverseDnsPrefix` - (Optional) Prefix of the service (_e.g.,_ `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
-* `serviceId` - (Optional) Service (_e.g.,_ `s3`, `rds`, `ec2`). One of `dnsName`, `reverseDnsName`, or `serviceId` is required.
+* `serviceId` - (Optional) Service endpoint ID (_e.g.,_ `s3`, `rds`, `ec2`). One of `dnsName`, `reverseDnsName`, or `serviceId` is required. A service's endpoint ID can be found in the [_AWS General Reference_](https://docs.aws.amazon.com/general/latest/gr/aws-service-information.html).
 
 ## Attribute Reference
 
@@ -100,4 +100,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `supported` - Whether the service is supported in the region's partition. New services may not be listed immediately as supported.
 
-<!-- cache-key: cdktf-0.20.1 input-1f67bf4039f0b27910cf9da065ca27ea6cdfc91b4ae00696fbad70cc0c50d4db -->
+<!-- cache-key: cdktf-0.20.9 input-7c79311e7ea6639749452795e558b7c3413aae2129211c3d5f42af6d156ea840 -->

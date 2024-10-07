@@ -373,4 +373,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-810fbdca20fc8dae7684a0c0b7f8ed92177810a7dda66a1f28706f01663a494b -->
+<!-- cache-key: cdktf-0.20.9 input-810fbdca20fc8dae7684a0c0b7f8ed92177810a7dda66a1f28706f01663a494b -->

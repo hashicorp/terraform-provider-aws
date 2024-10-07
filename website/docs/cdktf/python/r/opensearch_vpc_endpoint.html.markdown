@@ -92,4 +92,4 @@ Using `terraform import`, import OpenSearch VPC endpoint connections using the `
 % terraform import aws_opensearch_vpc_endpoint_connection.example endpoint-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0cbd9462478b83364b91f1d0bd36ff42057d2b1fcd8ca135100e7948f9224f93 -->
+<!-- cache-key: cdktf-0.20.9 input-0cbd9462478b83364b91f1d0bd36ff42057d2b1fcd8ca135100e7948f9224f93 -->

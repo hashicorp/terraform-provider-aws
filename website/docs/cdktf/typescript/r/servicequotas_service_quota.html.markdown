@@ -102,4 +102,4 @@ Using `terraform import`, import `aws_servicequotas_service_quota` using the ser
 % terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8925c6b8aa699116dcad422ba2332dd43139659327e20ceb1d3df872c9c113ea -->
+<!-- cache-key: cdktf-0.20.9 input-8925c6b8aa699116dcad422ba2332dd43139659327e20ceb1d3df872c9c113ea -->

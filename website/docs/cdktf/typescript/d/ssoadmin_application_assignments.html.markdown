@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `principalId` - An identifier for an object in IAM Identity Center, such as a user or group.
 * `principalType` - Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.
 
-<!-- cache-key: cdktf-0.20.1 input-f5a2ce85fc0c5ffb1a4ebb58b8970d5f5807a4ffe74391bf11840fc1e9a7b701 -->
+<!-- cache-key: cdktf-0.20.9 input-f5a2ce85fc0c5ffb1a4ebb58b8970d5f5807a4ffe74391bf11840fc1e9a7b701 -->

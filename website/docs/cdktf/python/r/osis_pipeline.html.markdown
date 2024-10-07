@@ -158,4 +158,4 @@ Using `terraform import`, import OpenSearch Ingestion Pipeline using the `id`. F
 % terraform import aws_osis_pipeline.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-102e9aec43b3118029eeda9efb34ad22903eda3b2298d7b6960f663cf5642db3 -->
+<!-- cache-key: cdktf-0.20.9 input-102e9aec43b3118029eeda9efb34ad22903eda3b2298d7b6960f663cf5642db3 -->

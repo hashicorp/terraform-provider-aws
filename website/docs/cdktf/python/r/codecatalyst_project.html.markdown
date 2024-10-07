@@ -86,4 +86,4 @@ Using `terraform import`, import CodeCatalyst Project using the `id`. For exampl
 % terraform import aws_codecatalyst_project.example project-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-52e39d0e3daf0e27a9a8c7f0a41d7c993be9e30de059e1222e73c9070812eb64 -->
+<!-- cache-key: cdktf-0.20.9 input-52e39d0e3daf0e27a9a8c7f0a41d7c993be9e30de059e1222e73c9070812eb64 -->

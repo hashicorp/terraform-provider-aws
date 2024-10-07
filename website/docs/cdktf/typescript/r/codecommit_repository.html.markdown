@@ -122,4 +122,4 @@ Using `terraform import`, import CodeCommit repository using repository name. Fo
 % terraform import aws_codecommit_repository.imported ExistingRepo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-217390eb5f7a27d321e450c06bfbdb2e96d532106ed9c9f29d34b7603dfc713b -->
+<!-- cache-key: cdktf-0.20.9 input-217390eb5f7a27d321e450c06bfbdb2e96d532106ed9c9f29d34b7603dfc713b -->

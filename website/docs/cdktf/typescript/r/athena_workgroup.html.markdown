@@ -125,4 +125,4 @@ Using `terraform import`, import Athena Workgroups using their name. For example
 % terraform import aws_athena_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c130731e53530304eb8b07566132f6c077365dfdbf8f6396690cec4300991bd4 -->
+<!-- cache-key: cdktf-0.20.9 input-c130731e53530304eb8b07566132f6c077365dfdbf8f6396690cec4300991bd4 -->

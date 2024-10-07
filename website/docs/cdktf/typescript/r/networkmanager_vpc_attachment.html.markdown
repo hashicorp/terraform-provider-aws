@@ -107,4 +107,4 @@ Using `terraform import`, import `aws_networkmanager_vpc_attachment` using the a
 % terraform import aws_networkmanager_vpc_attachment.example attachment-0f8fa60d2238d1bd8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cc1d154d9a55335caf00aadaab7fbce5215f86bb670f30c6fb7dce2d8c50b3ac -->
+<!-- cache-key: cdktf-0.20.9 input-cc1d154d9a55335caf00aadaab7fbce5215f86bb670f30c6fb7dce2d8c50b3ac -->

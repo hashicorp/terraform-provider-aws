@@ -93,4 +93,4 @@ Using `terraform import`, import WorkSpaces IP groups using their GroupID. For e
 % terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4b601bcbe6ec03a647bced3e04fee24a2ec058d79738bc0ec9fc5dbfd30d43de -->
+<!-- cache-key: cdktf-0.20.9 input-4b601bcbe6ec03a647bced3e04fee24a2ec058d79738bc0ec9fc5dbfd30d43de -->

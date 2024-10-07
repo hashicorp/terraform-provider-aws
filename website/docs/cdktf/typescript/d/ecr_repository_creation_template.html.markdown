@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `encryptionType` - Encryption type to use for any created repositories, either `AES256` or `KMS`.
 * `kmsKey` - If `encryptionType` is `KMS`, the ARN of the KMS key used.
 
-<!-- cache-key: cdktf-0.20.1 input-f1c4bbe12045f65ff162d44fb4a86ac5bbbe85bcc7fe18d7917dbdc3db134be7 -->
+<!-- cache-key: cdktf-0.20.9 input-f1c4bbe12045f65ff162d44fb4a86ac5bbbe85bcc7fe18d7917dbdc3db134be7 -->
