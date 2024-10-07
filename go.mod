@@ -138,7 +138,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/iot v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.0
-	github.com/aws/aws-sdk-go-v2/service/iotevents v1.26.4
+	github.com/aws/aws-sdk-go-v2/service/iotevents v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.37.4
