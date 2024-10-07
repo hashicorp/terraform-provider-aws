@@ -502,6 +502,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	generatorSeen := false
 	tlsKey := false
 	var tlsKeyCN string
+	hasIdentifierAttribute := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -553,6 +554,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Tags":
 				tagged = true
+				args := common.ParseArgs(m[3])
+				if _, ok := args.Keyword["identifierAttribute"]; ok {
+					hasIdentifierAttribute = true
+				}
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
@@ -751,6 +756,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		})
 		d.additionalTfVars["certificate_pem"] = "certificatePEM"
 		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
+	}
+
+	if tagged && !hasIdentifierAttribute && len(d.OverrideIdentifierAttribute) == 0 {
+		v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		return
 	}
 
 	if tagged {
