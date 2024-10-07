@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -118,31 +119,29 @@ func (d *dataSourceAPIKeys) Read(ctx context.Context, request datasource.ReadReq
 		apiKeyItems = append(apiKeyItems, page.Items...)
 	}
 
-	data.Items = flattenAPIKeyItems(ctx, apiKeyItems)
+	items, diags := flattenAPIKeyItems(ctx, apiKeyItems)
+	response.Diagnostics.Append(diags...)
+	data.Items = items
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func flattenAPIKeyItems(ctx context.Context, apiKeyItems []awstypes.ApiKey) []apiKeyModel {
-	apiKeys := []apiKeyModel{}
-	for _, apiKeyItem := range apiKeyItems {
-		keyItem := apiKeyModel{
-			CreatedDate:    flex.TimeToFramework(ctx, apiKeyItem.CreatedDate),
-			CustomerID:     flex.StringToFramework(ctx, apiKeyItem.CustomerId),
-			Description:    flex.StringToFramework(ctx, apiKeyItem.Description),
-			Name:           flex.StringToFramework(ctx, apiKeyItem.Name),
-			Enabled:        flex.BoolToFramework(ctx, &apiKeyItem.Enabled),
-			LastUpdateDate: flex.TimeToFramework(ctx, apiKeyItem.LastUpdatedDate),
-			ID:             flex.StringToFramework(ctx, apiKeyItem.Id),
-			StageKeys:      flex.FlattenFrameworkStringValueList(ctx, apiKeyItem.StageKeys),
-			Tags:           flex.FlattenFrameworkStringValueMap(ctx, apiKeyItem.Tags),
-			Value:          flex.StringToFramework(ctx, apiKeyItem.Value),
-		}
+func flattenAPIKeyItems(ctx context.Context, apiKeyItems []awstypes.ApiKey) ([]apiKeyModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
-		apiKeys = append(apiKeys, keyItem)
+	if len(apiKeyItems) == 0 {
+		return []apiKeyModel{}, diags
 	}
 
-	return apiKeys
+	var apiKeys []apiKeyModel
+
+	for _, apiKeyItem := range apiKeyItems {
+		var ak apiKeyModel
+		diags.Append(flex.Flatten(ctx, apiKeyItem, &ak, flex.WithNoIgnoredFieldNames())...)
+		apiKeys = append(apiKeys, ak)
+	}
+
+	return apiKeys, diags
 }
 
 type dataSourceAPIKeysModel struct {
@@ -153,14 +152,14 @@ type dataSourceAPIKeysModel struct {
 }
 
 type apiKeyModel struct {
-	CreatedDate    timetypes.RFC3339 `tfsdk:"created_date"`
-	CustomerID     types.String      `tfsdk:"customer_id"`
-	Description    types.String      `tfsdk:"description"`
-	Enabled        types.Bool        `tfsdk:"enabled"`
-	ID             types.String      `tfsdk:"id"`
-	LastUpdateDate timetypes.RFC3339 `tfsdk:"last_updated_date"`
-	Name           types.String      `tfsdk:"name"`
-	StageKeys      types.List        `tfsdk:"stage_keys"`
-	Tags           types.Map         `tfsdk:"tags"`
-	Value          types.String      `tfsdk:"value"`
+	CreatedDate     timetypes.RFC3339 `tfsdk:"created_date"`
+	CustomerID      types.String      `tfsdk:"customer_id"`
+	Description     types.String      `tfsdk:"description"`
+	Enabled         types.Bool        `tfsdk:"enabled"`
+	ID              types.String      `tfsdk:"id"`
+	LastUpdatedDate timetypes.RFC3339 `tfsdk:"last_updated_date"`
+	Name            types.String      `tfsdk:"name"`
+	StageKeys       types.List        `tfsdk:"stage_keys"`
+	Tags            types.Map         `tfsdk:"tags"`
+	Value           types.String      `tfsdk:"value"`
 }
