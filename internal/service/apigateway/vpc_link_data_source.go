@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_api_gateway_vpc_link", name="VPC Link")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
