@@ -434,8 +434,8 @@ github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.16.0 h1:6g52Jw3Kkcwapx0Zw0
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.16.0/go.mod h1:Icyb01vb5rarCy2O62IWhC+uuUswzYy5CkDwLA1w+bY=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.45.0 h1:rwDRzOudNWFLRmpHIC6zZjGKovvgdfobPgXn/aXTdcs=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.45.0/go.mod h1:NAmFsZ4aGISCGa2nX+EGxPQGukb/z+XwriLW0i+EHKs=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.26.4 h1:fVpRIfHwVxlkOTkcn0llBr7OKBJZS5+5167F18cQUAg=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.26.4/go.mod h1:uFNgoaUIINLeJmEQmq4WqDvg4iVUPgpGyHGvuJKESxM=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.27.0 h1:e+u19/iuSeOCuGScwu3xnIh8BoVFioDEXYGs02fDbFI=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.27.0/go.mod h1:s7xQfc5XS0ZxLGI1gvJagVrh+WbgEaGaAPxYBMUTowo=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.3.4 h1:b5fQbigS806A9ZTVHHG6zzHiRai5VrDP6FAlKwNwUHk=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.3.4/go.mod h1:evgz1UEzddTr14GoSn43lU7SLqZnzwLbrHjYixmyAHk=
 github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.24.4 h1:cM40nzlmHO191K4q48LnJSPfTZhU6W71qbopL1dzQHE=
