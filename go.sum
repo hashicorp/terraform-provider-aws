@@ -644,8 +644,8 @@ github.com/hashicorp/terraform-exec v0.21.0 h1:uNkLAe95ey5Uux6KJdua6+cv8asgILFVW
 github.com/hashicorp/terraform-exec v0.21.0/go.mod h1:1PPeMYou+KDUSSeRE9szMZ/oHf4fYUmB923Wzbq1ICg=
 github.com/hashicorp/terraform-json v0.22.1 h1:xft84GZR0QzjPVWs4lRUwvTcPnegqlyS7orfb5Ltvec=
 github.com/hashicorp/terraform-json v0.22.1/go.mod h1:JbWSQCLFSXFFhg42T7l9iJwdGXBYV8fmmD6o/ML4p3A=
-github.com/hashicorp/terraform-plugin-framework v1.11.1-0.20240904212030-b84bb1ddcd3a h1:Oskw75q0lh+nFo5ZnN7/a/p6payHJglLdGMUMPy4usg=
-github.com/hashicorp/terraform-plugin-framework v1.11.1-0.20240904212030-b84bb1ddcd3a/go.mod h1:LRTNEWYu2dyy0IjlvOdZ/mP5uVIorzixNz1Adq7IdFg=
+github.com/hashicorp/terraform-plugin-framework v1.12.1-0.20241003232403-50b570f7d4eb h1:LdydAQQuRhE5iOzNMORunVwr42v4gAx1E7Q98efQzWE=
+github.com/hashicorp/terraform-plugin-framework v1.12.1-0.20241003232403-50b570f7d4eb/go.mod h1:eOhHhYoKdlhlRQxYsSyrTghzsLgX7LeoPME7z1jLVSs=
 github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 h1:SJXL5FfJJm17554Kpt9jFXngdM6fXbnUnZ6iT2IeiYA=
 github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0/go.mod h1:p0phD0IYhsu9bR4+6OetVvvH59I6LwjXGnTVEr8ox6E=
 github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1 h1:gm5b1kHgFFhaKFhm4h2TgvMUlNzFAtUqlcOWnWPm+9E=
@@ -654,10 +654,10 @@ github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 h1:v3DapR8gsp3E
 github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0/go.mod h1:c3PnGE9pHBDfdEVG9t1S1C9ia5LW+gkFR0CygXlM8ak=
 github.com/hashicorp/terraform-plugin-framework-validators v0.13.0 h1:bxZfGo9DIUoLLtHMElsu+zwqI4IsMZQBRRy4iLzZJ8E=
 github.com/hashicorp/terraform-plugin-framework-validators v0.13.0/go.mod h1:wGeI02gEhj9nPANU62F2jCaHjXulejm/X+af4PdZaNo=
-github.com/hashicorp/terraform-plugin-go v0.23.1-0.20240904211550-7ea64adab752 h1:KtwYfSreTB6WRoHmYvvPzCAXPaJeKzsCeFNA0ErzLas=
-github.com/hashicorp/terraform-plugin-go v0.23.1-0.20240904211550-7ea64adab752/go.mod h1:ko0HcPe7AkwMukddKa13Qq5zyvi8V9KYxBZmqU8a9cE=
-github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20240906123801-c1b0898848bb h1:eFlQnyMVoqu194mupM3XbNl8kDF0UAOmkClVpRJrcq0=
-github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20240906123801-c1b0898848bb/go.mod h1:7pISUkcq4rv0yRjD026acdSYjDk2OMvX4V3j1ff7JMw=
+github.com/hashicorp/terraform-plugin-go v0.24.1-0.20241003195015-94a6f8ce9ce7 h1:Qrnz5z9gKKn7oDhWNKPLzl7yygiz322p1Rkzx5uqLiA=
+github.com/hashicorp/terraform-plugin-go v0.24.1-0.20241003195015-94a6f8ce9ce7/go.mod h1:lmP6B7frH0MrScpBN0x9kY8DSFSUWX54NmeL00knT9c=
+github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20241003205859-6d925b328952 h1:AnyG6sTAF7db3+kV3H2VHjK1SW+1SJolf3e1GzGDPlk=
+github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20241003205859-6d925b328952/go.mod h1:oSIojQfUKIafmckmvwY50g3cIrs9AoO6haDrICv8f6c=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0 h1:kJiWGx2kiQVo97Y5IOGR4EMcZ8DtMswHhUuFibsCQQE=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0/go.mod h1:sl/UoabMc37HA6ICVMmGO+/0wofkVIRxf+BMb/dnoIg=
 github.com/hashicorp/terraform-plugin-testing v1.10.0 h1:2+tmRNhvnfE4Bs8rB6v58S/VpqzGC6RCh9Y8ujdn+aw=
@@ -839,8 +839,8 @@ google.golang.org/appengine v1.6.8 h1:IhEN5q69dyKagZPYMSdIjS2HqprW324FRQZJcGqPAs
 google.golang.org/appengine v1.6.8/go.mod h1:1jJ3jBArFh5pcgW8gCtRJnepW8FzD1V44FJffLiz/Ds=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed h1:J6izYgfBXAI3xTKLgxzTmUltdYaLsuBxFCgDHWJ/eXg=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed/go.mod h1:UqMtugtsSgubUsoxbuAoiCXvqvErP7Gf0so0mK9tHxU=
-google.golang.org/grpc v1.66.2 h1:3QdXkuq3Bkh7w+ywLdLvM56cmGvQHUMZpiCzt6Rqaoo=
-google.golang.org/grpc v1.66.2/go.mod h1:s3/l6xSSCURdVfAnL+TqCNMyTDAGN6+lZeVxnZR128Y=
+google.golang.org/grpc v1.67.1 h1:zWnc1Vrcno+lHZCOofnIMvycFcc0QRGIzm9dhnDX68E=
+google.golang.org/grpc v1.67.1/go.mod h1:1gLDyUQU7CTLJI90u3nXZ9ekeghjeM7pTDZlqFNg2AA=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.34.2 h1:6xV6lTsCfpGD21XK49h7MhtcApnLqkfYgPcdHftf6hg=
