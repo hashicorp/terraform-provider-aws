@@ -134,7 +134,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.0
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.31.4
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/iot v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.25.4
