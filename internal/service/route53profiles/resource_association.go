@@ -115,7 +115,9 @@ func (r *resourceResourceAssociation) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	input := &route53profiles.AssociateResourceToProfileInput{}
+	input := &route53profiles.AssociateResourceToProfileInput{
+		Name: state.Name.ValueStringPointer(),
+	}
 	resp.Diagnostics.Append(flex.Expand(ctx, state, input)...)
 
 	out, err := conn.AssociateResourceToProfile(ctx, input)

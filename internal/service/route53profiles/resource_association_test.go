@@ -30,6 +30,8 @@ func TestAccRoute53ProfilesResourceAssociation_basic(t *testing.T) {
 	var resourceAssociation awstypes.ProfileResourceAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53profiles_resource_association.test"
+	profileName := "aws_route53profiles_profile.test"
+	zoneName := "aws_route53_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,6 +45,11 @@ func TestAccRoute53ProfilesResourceAssociation_basic(t *testing.T) {
 				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceAssociation),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_id", profileName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", zoneName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatusMessage),
 				),
 			},
 			{

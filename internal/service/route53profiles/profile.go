@@ -36,7 +36,6 @@ func newResourceProfile(_ context.Context) (resource.ResourceWithConfigure, erro
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultReadTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -140,6 +139,9 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	data.OwnerId = fwflex.StringToFramework(ctx, output.Profile.OwnerId)
+	data.ARN = fwflex.StringToFramework(ctx, output.Profile.Arn)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -169,6 +171,9 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// state.OwnerId = fwflex.StringToFramework(ctx, out.OwnerId)
+	// state.ShareStatus = fwflex.StringEnum(ctx, out.ShareStatus)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -294,7 +299,7 @@ type resourceProfileData struct {
 	ShareStatus   fwtypes.StringEnum[awstypes.ShareStatus]   `tfsdk:"share_status"`
 	Status        fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
 	StatusMessage types.String                               `tfsdk:"status_message"`
-	Tags          types.Map                                  `tfsdk:"tags"`
-	TagsAll       types.Map                                  `tfsdk:"tags_all"`
+	Tags          tftags.Map                                 `tfsdk:"tags"`
+	TagsAll       tftags.Map                                 `tfsdk:"tags_all"`
 	Timeouts      timeouts.Value                             `tfsdk:"timeouts"`
 }
