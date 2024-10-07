@@ -42,7 +42,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The user profile identifier.
 * `type` - The user profile type.
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
