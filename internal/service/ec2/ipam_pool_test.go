@@ -234,6 +234,27 @@ func TestAccIPAMPool_tags(t *testing.T) {
 	})
 }
 
+func TestAccIPAMPool_ipv6PrivateScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.IpamPool
+	resourceName := "aws_vpc_ipam_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolConfig_ipv6PrivateScope,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *awstypes.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -384,3 +405,15 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
+
+var testAccIPAMPoolConfig_ipv6PrivateScope = acctest.ConfigCompose(testAccIPAMScopeConfig_base, `
+resource "aws_vpc_ipam_scope" "test" {
+  ipam_id = aws_vpc_ipam.test.id
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv6"
+  ipam_scope_id  = aws_vpc_ipam_scope.test.id
+  locale         = data.aws_region.current.name
+}
+`)
