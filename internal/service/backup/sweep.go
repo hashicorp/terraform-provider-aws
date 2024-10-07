@@ -19,12 +19,17 @@ import (
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_backup_framework", &resource.Sweeper{
 		Name: "aws_backup_framework",
-		F:    sweepFramework,
+		F:    sweepFrameworks,
+	})
+
+	resource.AddTestSweepers("aws_backup_plan", &resource.Sweeper{
+		Name: "aws_backup_plan",
+		F:    sweepPlans,
 	})
 
 	resource.AddTestSweepers("aws_backup_report_plan", &resource.Sweeper{
 		Name: "aws_backup_report_plan",
-		F:    sweepReportPlan,
+		F:    sweepReportPlans,
 	})
 
 	resource.AddTestSweepers("aws_backup_restore_testing_plan", &resource.Sweeper{
@@ -42,7 +47,7 @@ func RegisterSweepers() {
 
 	resource.AddTestSweepers("aws_backup_vault_lock_configuration", &resource.Sweeper{
 		Name: "aws_backup_vault_lock_configuration",
-		F:    sweepVaultLockConfiguration,
+		F:    sweepVaultLockConfigurations,
 	})
 
 	resource.AddTestSweepers("aws_backup_vault_notifications", &resource.Sweeper{
@@ -66,7 +71,7 @@ func RegisterSweepers() {
 	})
 }
 
-func sweepFramework(region string) error {
+func sweepFrameworks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -105,7 +110,46 @@ func sweepFramework(region string) error {
 	return nil
 }
 
-func sweepReportPlan(region string) error {
+func sweepPlans(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.BackupClient(ctx)
+	input := &backup.ListBackupPlansInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := backup.NewListBackupPlansPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Plan sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Plans (%s): %w", region, err)
+		}
+
+		for _, v := range page.BackupPlansList {
+			r := resourcePlan()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.BackupPlanId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Backup Plans (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepReportPlans(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -233,7 +277,7 @@ func sweepRestoreTestingSelections(region string) error {
 	return nil
 }
 
-func sweepVaultLockConfiguration(region string) error {
+func sweepVaultLockConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
