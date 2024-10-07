@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.41
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.39
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.15
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.27
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.28
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/account v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/acm v1.29.4
@@ -212,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/rum v1.20.4
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.64.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.48.4
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.162.1
@@ -311,16 +311,16 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.5 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.6 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.18 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.20 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.18 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.0 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
