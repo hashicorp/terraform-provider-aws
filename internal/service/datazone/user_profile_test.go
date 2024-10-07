@@ -57,7 +57,7 @@ func TestAccDataZoneUserProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVATED"),
 				),
@@ -98,7 +98,7 @@ func TestAccDataZoneUserProfile_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVATED"),
 				),
@@ -108,7 +108,7 @@ func TestAccDataZoneUserProfile_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEACTIVATED"),
 				),
@@ -123,7 +123,7 @@ func testAccUserProfileImportStateFunc(resourceName string) resource.ImportState
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-		return strings.Join([]string{rs.Primary.Attributes["user_identifier"], rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes["type"]}, ","), nil
+		return strings.Join([]string{rs.Primary.Attributes["user_identifier"], rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrType]}, ","), nil
 	}
 }
 
@@ -140,7 +140,7 @@ func testAccCheckUserProfileExists(ctx context.Context, name string, userprofile
 
 		du := rs.Primary.Attributes["domain_identifier"]
 		ui := rs.Primary.Attributes["user_identifier"]
-		ut := types.UserProfileType(rs.Primary.Attributes["type"])
+		ut := types.UserProfileType(rs.Primary.Attributes[names.AttrType])
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
 		resp, err := tfdatazone.FindUserProfileByID(ctx, conn, du, ui, ut)
