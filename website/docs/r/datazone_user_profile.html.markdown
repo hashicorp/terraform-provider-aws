@@ -16,6 +16,9 @@ Terraform resource for managing an AWS DataZone User Profile.
 
 ```terraform
 resource "aws_datazone_user_profile" "example" {
+  user_identifier   = aws_iam_user.example.arn
+  domain_identifier = aws_datazone_domain.example.id
+  user_type         = "IAM_USER"
 }
 ```
 
@@ -23,40 +26,43 @@ resource "aws_datazone_user_profile" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `domain_identifier` - (Required) The domain identifier.
+* `user_identifier` - (Required) The user identifier.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `status` - (Optional) The user profile status.
+* `user_type` - (Optional) The user type.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the User Profile. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `details` - Details about the user profile.
+* `id` - The user profile identifier.
+* `type` - The user profile type.
+
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone User Profile using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone User Profile using the `user_identifier,domain_identifier,type`. For example:
 
 ```terraform
 import {
   to = aws_datazone_user_profile.example
-  id = "user_profile-id-12345678"
+  id = "arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6sri,IAM"
 }
 ```
 
-Using `terraform import`, import DataZone User Profile using the `example_id_arg`. For example:
+Using `terraform import`, import DataZone User Profile using the `user_identifier,domain_identifier,type`. For example:
 
 ```console
-% terraform import aws_datazone_user_profile.example user_profile-id-12345678
+% terraform import aws_datazone_user_profile.example arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6suo,IAM
 ```
