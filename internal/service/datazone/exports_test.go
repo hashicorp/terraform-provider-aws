@@ -22,6 +22,7 @@ var (
 	FindFormTypeByID           = findFormTypeByID
 	FindGlossaryByID           = findGlossaryByID
 	FindGlossaryTermByID       = findGlossaryTermByID
+	FindUserProfileByID        = findUserProfileByID
 
 	IsResourceMissing = isResourceMissing
 )

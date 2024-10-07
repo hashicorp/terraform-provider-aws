@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -22,6 +22,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.DataZoneServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"IAM Identity Center application not enabled",
+	)
+}
+
 func TestAccDataZoneUserProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -29,12 +39,9 @@ func TestAccDataZoneUserProfile_basic(t *testing.T) {
 	}
 
 	var userprofile datazone.GetUserProfileOutput
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_user_profile.test"
-	domainName := "aws_datazone_domain.test"
-	callerName := "data.caller_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -46,88 +53,21 @@ func TestAccDataZoneUserProfile_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileConfig_iamUser(dName, uName),
+				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
-					resource.TestCheckResourceAttrPair(resourceName, "user_identifier", callerName, names.AttrAccountID),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "details.arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVATED"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
-			},
-		},
-	})
-}
-
-func TestAccDataZoneUserProfile_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var userprofile datazone.GetUserProfileOutput
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resourceName := "aws_datazone_user_profile.test"
-	domainName := "aws_datazone_domain.test"
-	callerName := "data.caller_identity.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserProfileConfig_iamUser(dName, uName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
-					resource.TestCheckResourceAttrPair(resourceName, "user_identifier", callerName, names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "user_type", "SSO"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "details.sso_user_profiles_details.first_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "details.sso_user_profiles_details.last_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "details.sso_user_profiles_details.user_name"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
-			},
-			{
-				Config: testAccUserProfileConfig_iamUser(dName, uName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
-					resource.TestCheckResourceAttrPair(resourceName, "user_identifier", callerName, names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "user_type", "SSO"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "details.sso_user_profiles_details.first_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "details.sso_user_profiles_details.last_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "details.sso_user_profiles_details.user_name"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateIdFunc:       testAccUserProfileImportStateFunc(resourceName),
+				ImportStateVerifyIgnore: []string{"user_type"},
 			},
 		},
 	})
@@ -141,7 +81,6 @@ func TestAccDataZoneUserProfile_disappears(t *testing.T) {
 
 	var userprofile datazone.GetUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_user_profile.test"
 
@@ -155,7 +94,7 @@ func TestAccDataZoneUserProfile_disappears(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileConfig_iamUser(rName, uName),
+				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceUserProfile, resourceName),
@@ -164,6 +103,16 @@ func TestAccDataZoneUserProfile_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccUserProfileImportStateFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+		return strings.Join([]string{rs.Primary.Attributes["user_identifier"], rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes["type"]}, ","), nil
+	}
 }
 
 func testAccCheckUserProfileExists(ctx context.Context, name string, userprofile *datazone.GetUserProfileOutput) resource.TestCheckFunc {
@@ -177,16 +126,12 @@ func testAccCheckUserProfileExists(ctx context.Context, name string, userprofile
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameUserProfile, name, errors.New("not set"))
 		}
 
-		td := rs.Primary.Attributes["domain_identifier"]
-		tui := rs.Primary.Attributes["user_identifier"]
-		tt := types.UserProfileType(rs.Primary.Attributes["user_type"])
+		du := rs.Primary.Attributes["domain_identifier"]
+		ui := rs.Primary.Attributes["user_identifier"]
+		ut := types.UserProfileType(rs.Primary.Attributes["type"])
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := conn.GetUserProfile(ctx, &datazone.GetUserProfileInput{
-			DomainIdentifier: &td,
-			UserIdentifier:   &tui,
-			Type:             tt,
-		})
+		resp, err := tfdatazone.FindUserProfileByID(ctx, conn, du, ui, ut)
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameUserProfile, rs.Primary.ID, err)
@@ -198,112 +143,17 @@ func testAccCheckUserProfileExists(ctx context.Context, name string, userprofile
 	}
 }
 
-/*
-func testAccUserProfilePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-
-	input := &datazone.GetUserProfileInput{}
-	_, err := conn.ListUserProfiles(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-*/
-
-func testAccCheckUserProfileNotRecreated(before, after *datazone.GetUserProfileOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.DataZone, create.ErrActionCheckingNotRecreated, tfdatazone.ResNameUserProfile, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccUserProfileConfig_iamUser(dName, uName string) string {
-	return acctest.ConfigCompose(testAccDomainConfig_domain(dName, uName), `
-resource "aws_datazone_user_profile" "test" {
-  user_identifier   = data.aws_caller_identity.test.account_id
-  domain_identifier = aws_datazone_domain.test.id
-}
-`)
-}
-
-func testAccDomainConfig_domain(rName, uName string) string {
-	return acctest.ConfigCompose(
-		testAccDomainConfigUserProfileExecutionRole(rName, uName),
-		fmt.Sprintf(`
-resource "aws_datazone_domain" "test" {
-  name                  = %[1]q
-  domain_execution_role = aws_iam_role.domain_execution_role.arn
-}
-`, rName),
-	)
-}
-
-func testAccUserProfileIAMUser(rName string) string {
-	return fmt.Sprintf(`
+func testAccUserProfileConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
+  path = "/"
 }
-		`, rName)
-}
 
-func testAccDomainConfigUserProfileExecutionRole(rName, uName string) string {
-	return acctest.ConfigCompose(testAccUserProfileIAMUser(uName), fmt.Sprintf(`
-data "aws_caller_identity" "test" {}
-
-resource "aws_iam_role" "domain_execution_role" {
-  name = %[1]q
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = ["sts:AssumeRole", "sts:TagSession"]
-        Effect = "Allow"
-        Principal = {
-          Service = "datazone.amazonaws.com"
-        }
-      },
-      {
-        Action = ["sts:AssumeRole", "sts:TagSession"]
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudformation.amazonaws.com"
-        }
-      },
-      {
-        Action = ["sts:AssumeRole", "sts:TagSession"]
-        Effect = "Allow"
-        Principal = {
-          AWS = "${data.aws_caller_identity.test.arn}"
-        }
-      },
-    ]
-  })
-
-  inline_policy {
-    name = %[1]q
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = [
-            "datazone:*",
-            "ram:*",
-            "sso:*",
-            "kms:*",
-          ]
-          Effect   = "Allow"
-          Resource = "*"
-        },
-      ]
-    })
-  }
+resource "aws_datazone_user_profile" "test" {
+  user_identifier   = aws_iam_user.test.arn
+  domain_identifier = aws_datazone_domain.test.id
+  user_type		    = "IAM_USER"
 }
 `, rName))
 }

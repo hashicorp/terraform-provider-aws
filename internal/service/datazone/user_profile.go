@@ -5,12 +5,15 @@ package datazone
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -33,8 +35,8 @@ import (
 // @FrameworkResource("aws_datazone_user_profile", name="User Profile")
 func newResourceUserProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceUserProfile{}
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -49,11 +51,11 @@ type resourceUserProfile struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceUserProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceUserProfile) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_datazone_user_profile"
 }
 
-func (r *resourceUserProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"domain_identifier": schema.StringAttribute{
@@ -137,24 +139,20 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	state := plan
-	resp.State.SetAttribute(ctx, path.Root(names.AttrID), state.ID) // set partial state to taint if wait fails
+	state.ID = flex.StringToFramework(ctx, out.Id)
+	resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id) // set partial state to taint if wait fails
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := waitUserProfileCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), out.Type, createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameUserProfile, plan.UserIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	output, err := tfresource.RetryGWhenNotFound(ctx, createTimeout, func() (*datazone.GetUserProfileOutput, error) {
+		return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
+	})
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -197,25 +195,35 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	if !plan.UserType.Equal(state.UserType) {
-		in := &datazone.UpdateUserProfileInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	diff, d := flex.Calculate(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		in := datazone.UpdateUserProfileInput{}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitUserProfileUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), plan.Type.ValueEnum(), updateTimeout)
+		out, err := conn.UpdateUserProfile(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameUserProfile, plan.UserIdentifier.String(), err),
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameUserProfile, plan.UserIdentifier.ValueString(), err),
 				err.Error(),
 			)
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		output, err := tfresource.RetryGWhenNotFound(ctx, updateTimeout, func() (*datazone.GetUserProfileOutput, error) {
+			return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
+		})
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -225,43 +233,16 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *resourceUserProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
+	parts := strings.Split(req.ID, ",")
 
-func waitUserProfileCreated(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType, timeout time.Duration) (*datazone.GetUserProfileOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.UserProfileStatusNotAssigned, awstypes.UserProfileStatusDeactivated),
-		Target:                    enum.Slice(awstypes.UserProfileStatusActivated, awstypes.UserProfileStatusActivated),
-		Refresh:                   statusUserProfile(ctx, conn, domainId, userId, userProfileType),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+	if len(parts) != 3 {
+		resp.Diagnostics.AddError("resource import invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "user_identifier,domain_identifier,type"`, req.ID))
+		return
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*datazone.GetUserProfileOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitUserProfileUpdated(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType, timeout time.Duration) (*datazone.GetUserProfileOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.UserProfileStatusNotAssigned, awstypes.UserProfileStatusDeactivated),
-		Target:                    enum.Slice(awstypes.UserProfileStatusActivated, awstypes.UserProfileStatusActivated),
-		Refresh:                   statusUserProfile(ctx, conn, domainId, userId, userProfileType),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*datazone.GetUserProfileOutput); ok {
-		return out, err
-	}
-
-	return nil, err
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_identifier"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrType), parts[2])...)
 }
 
 func statusUserProfile(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType) retry.StateRefreshFunc {
@@ -313,22 +294,57 @@ type userProfileData struct {
 	ID               types.String                                   `tfsdk:"id"`
 	Status           fwtypes.StringEnum[awstypes.UserProfileStatus] `tfsdk:"status"`
 	UserIdentifier   types.String                                   `tfsdk:"user_identifier"`
-	Type             fwtypes.StringEnum[awstypes.UserProfileType]   `tfsdk:"user_profile_type"`
+	Type             fwtypes.StringEnum[awstypes.UserProfileType]   `tfsdk:"type"`
 	UserType         fwtypes.StringEnum[awstypes.UserType]          `tfsdk:"user_type"`
 	Timeouts         timeouts.Value                                 `tfsdk:"timeouts"`
 }
 
 type detailsData struct {
-	IamUserProfileDetails fwtypes.ListNestedObjectValueOf[iamUserProfileDetailsData] `tfsdk:"iam_user_profile_details"`
-	SsoUserProfileDetails fwtypes.ListNestedObjectValueOf[ssoUserProfileDetailsData] `tfsdk:"sso_user_profile_details"`
+	IAM fwtypes.ListNestedObjectValueOf[iamUserProfileDetailsData] `tfsdk:"iam"`
+	SSO fwtypes.ListNestedObjectValueOf[ssoUserProfileDetailsData] `tfsdk:"sso"`
 }
 
 type iamUserProfileDetailsData struct {
-	Arn types.String `tfsdk:"arn"`
+	ARN types.String `tfsdk:"arn"`
 }
 
 type ssoUserProfileDetailsData struct {
 	FirstName types.String `tfsdk:"first_name"`
 	LastName  types.String `tfsdk:"last_name"`
 	UserName  types.String `tfsdk:"user_name"`
+}
+
+var (
+	_ flex.Flattener = &detailsData{}
+)
+
+func (d *detailsData) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.UserProfileDetailsMemberIam:
+		var model iamUserProfileDetailsData
+		di := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		d.IAM = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	case awstypes.UserProfileDetailsMemberSso:
+		var model ssoUserProfileDetailsData
+		di := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		d.SSO = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	default:
+		return diags
+	}
 }
