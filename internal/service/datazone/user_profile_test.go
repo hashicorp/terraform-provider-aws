@@ -73,7 +73,7 @@ func TestAccDataZoneUserProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataZoneUserProfile_disappears(t *testing.T) {
+func TestAccDataZoneUserProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -94,12 +94,24 @@ func TestAccDataZoneUserProfile_disappears(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileConfig_basic(rName),
+				Config: testAccUserProfileConfig_update(rName, "ACTIVATED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceUserProfile, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVATED"),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccUserProfileConfig_update(rName, "DEACTIVATED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEACTIVATED"),
+				),
 			},
 		},
 	})
@@ -153,7 +165,23 @@ resource "aws_iam_user" "test" {
 resource "aws_datazone_user_profile" "test" {
   user_identifier   = aws_iam_user.test.arn
   domain_identifier = aws_datazone_domain.test.id
-  user_type		    = "IAM_USER"
+  user_type         = "IAM_USER"
 }
 `, rName))
+}
+
+func testAccUserProfileConfig_update(rName, status string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+  path = "/"
+}
+
+resource "aws_datazone_user_profile" "test" {
+  user_identifier   = aws_iam_user.test.arn
+  domain_identifier = aws_datazone_domain.test.id
+  user_type         = "IAM_USER"
+  status            = %[2]q
+}
+`, rName, status))
 }
