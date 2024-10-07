@@ -154,7 +154,7 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 		)
 		return
 	}
-	
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
