@@ -34,20 +34,20 @@ resource "aws_route53profiles_association" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) The name of the Profile Association.
+* `name` - (Required) Name of the Profile Association.
 
-* `profile_id` - (Required) The ID of the profile associated with the VPC.
+* `profile_id` - (Required) ID of the profile associated with the VPC.
 
-* `resource_id` - (Required) The resource ID of the VPC the profile to be associated with.
+* `resource_id` - (Required) Resource ID of the VPC the profile to be associated with.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Profile Association.
-* `name` - The name of the Profile Association.
-* `status` - The status of the Profile Association. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
-* `status_message` - The status message of the Profile Association.
+* `id` - ID of the Profile Association.
+* `name` - Name of the Profile Association.
+* `status` - Status of the Profile Association. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
+* `status_message` - Status message of the Profile Association.
 
 ## Timeouts
 

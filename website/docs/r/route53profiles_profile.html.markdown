@@ -24,18 +24,18 @@ resource "aws_route53profiles_profile" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) The name of the Profile.
+* `name` - (Required) Name of the Profile.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Profile.
-* `id` - The ID of the Profile.
-* `name` - The name of the Profile.
-* `status` - The status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
-* `status_message` - The status message of the Profile.
-* `share_status` - The share status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
+* `arn` - ARN of the Profile.
+* `id` - ID of the Profile.
+* `name` - Name of the Profile.
+* `status` - Status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
+* `status_message` - Status message of the Profile.
+* `share_status` - Share status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
