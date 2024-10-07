@@ -206,9 +206,9 @@ type logicallyAirGappedVaultResourceModel struct {
 	ID               types.String   `tfsdk:"id"`
 	MaxRetentionDays types.Int64    `tfsdk:"max_retention_days"`
 	MinRetentionDays types.Int64    `tfsdk:"min_retention_days"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 	Tags             tftags.Map     `tfsdk:"tags"`
 	TagsAll          tftags.Map     `tfsdk:"tags_all"`
+	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }
 
 func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) { // nosemgrep:ci.backup-in-func-name

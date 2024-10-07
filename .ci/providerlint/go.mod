@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/ci/providerlint
 
-go 1.23.1
+go 1.23.2
 
 require (
 	github.com/bflad/tfproviderlint v0.30.0
