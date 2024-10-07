@@ -147,6 +147,14 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 		return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 	})
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameUserProfile, plan.UserIdentifier.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -223,6 +231,14 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 			return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 		})
 
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameUserProfile, plan.UserIdentifier.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+
 		resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -243,22 +259,6 @@ func (r *resourceUserProfile) ImportState(ctx context.Context, req resource.Impo
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_identifier"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrType), parts[2])...)
-}
-
-func statusUserProfile(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findUserProfileByID(ctx, conn, domainId, userId, userProfileType)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
 }
 
 func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType) (*datazone.GetUserProfileOutput, error) {
