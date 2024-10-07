@@ -23,6 +23,10 @@ func dataSourceAPIKey() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAPIKeyRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -73,6 +77,7 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(apiKey.Id))
+	d.Set(names.AttrARN, apiKeyARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrCreatedDate, aws.ToTime(apiKey.CreatedDate).Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)
