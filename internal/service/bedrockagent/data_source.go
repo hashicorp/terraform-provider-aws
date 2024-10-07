@@ -307,6 +307,106 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								},
 							},
 						},
+						"custom_transformation_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[customTransformationConfigurationModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"intermediate_storage": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[intermediaStorageModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"s3_location": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrURI: schema.StringAttribute{
+																Required: true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"transformation": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[transformationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"step_to_apply": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.StepType](),
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"transformation_function": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[transformationFunctionModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"transformation_lambda_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[transformationLambdaConfigurationModel](ctx),
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"lambda_arn": schema.StringAttribute{
+																			CustomType: fwtypes.ARNType,
+																			Required:   true,
+																			PlanModifiers: []planmodifier.String{
+																				stringplanmodifier.RequiresReplace(),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"parsing_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[parsingConfigurationModel](ctx),
 							PlanModifiers: []planmodifier.List{
@@ -657,13 +757,40 @@ type serverSideEncryptionConfigurationModel struct {
 }
 
 type vectorIngestionConfigurationModel struct {
-	ChunkingConfiguration fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel] `tfsdk:"chunking_configuration"`
-	ParsingConfiguration  fwtypes.ListNestedObjectValueOf[parsingConfigurationModel]  `tfsdk:"parsing_configuration"`
+	ChunkingConfiguration             fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel]             `tfsdk:"chunking_configuration"`
+	CustomTransformationConfiguration fwtypes.ListNestedObjectValueOf[customTransformationConfigurationModel] `tfsdk:"custom_transformation_configuration"`
+	ParsingConfiguration              fwtypes.ListNestedObjectValueOf[parsingConfigurationModel]              `tfsdk:"parsing_configuration"`
 }
 
 type parsingConfigurationModel struct {
 	ParsingStrategy                     fwtypes.StringEnum[awstypes.ParsingStrategy]                              `tfsdk:"parsing_strategy"`
 	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
+}
+
+type customTransformationConfigurationModel struct {
+	IntermediateStorage fwtypes.ListNestedObjectValueOf[intermediaStorageModel] `tfsdk:"intermediate_storage"`
+	Transformation      fwtypes.ListNestedObjectValueOf[transformationModel]    `tfsdk:"transformation"`
+}
+
+type intermediaStorageModel struct {
+	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
+}
+
+type s3LocationModel struct {
+	Uri types.String `tfsdk:"uri"`
+}
+
+type transformationModel struct {
+	StepToApply            fwtypes.StringEnum[awstypes.StepType]                        `tfsdk:"step_to_apply"`
+	TransformationFunction fwtypes.ListNestedObjectValueOf[transformationFunctionModel] `tfsdk:"transformation_function"`
+}
+
+type transformationFunctionModel struct {
+	TransformationLambdaConfiguration fwtypes.ListNestedObjectValueOf[transformationLambdaConfigurationModel] `tfsdk:"transformation_lambda_configuration"`
+}
+
+type transformationLambdaConfigurationModel struct {
+	LambdaArn fwtypes.ARN `tfsdk:"lambda_arn"`
 }
 
 type bedrockFoundationModelConfigurationModel struct {

@@ -560,7 +560,7 @@ resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.arn
-  principal     = "${data.aws_service_principal.current.name}"
+  principal     = data.aws_service_principal.current.name
   source_arn    = aws_s3_bucket.test.arn
 }
 
@@ -569,7 +569,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -655,7 +655,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_alias" "test" {
@@ -667,7 +667,7 @@ resource "aws_lambda_alias" "test" {
 resource "aws_lambda_permission" "test" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.arn
-  principal     = "${data.aws_service_principal.current.name}"
+  principal     = data.aws_service_principal.current.name
   qualifier     = aws_lambda_alias.test.name
   source_arn    = aws_s3_bucket.test.arn
   statement_id  = "AllowExecutionFromS3Bucket"

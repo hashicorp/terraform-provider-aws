@@ -22,6 +22,10 @@ resource "aws_lambda_event_source_mapping" "example" {
   event_source_arn  = aws_dynamodb_table.example.stream_arn
   function_name     = aws_lambda_function.example.arn
   starting_position = "LATEST"
+
+  tags = {
+    Name = "dynamodb"
+  }
 }
 ```
 
@@ -169,6 +173,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `source_access_configuration`: (Optional) For Self Managed Kafka sources, the access configuration for the source. If set, configuration must also include `self_managed_event_source`. Detailed below.
 * `starting_position` - (Optional) The position in the stream where AWS Lambda should start reading. Must be one of `AT_TIMESTAMP` (Kinesis only), `LATEST` or `TRIM_HORIZON` if getting events from Kinesis, DynamoDB, MSK or Self Managed Apache Kafka. Must not be provided if getting events from SQS. More information about these positions can be found in the [AWS DynamoDB Streams API Reference](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html) and [AWS Kinesis API Reference](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html#Kinesis-GetShardIterator-request-ShardIteratorType).
 * `starting_position_timestamp` - (Optional) A timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of the data record which to start reading when using `starting_position` set to `AT_TIMESTAMP`. If a record with this exact timestamp does not exist, the next later record is chosen. If the timestamp is older than the current trim horizon, the oldest available record is chosen.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topics` - (Optional) The name of the Kafka topics. Only available for MSK sources. A single topic name must be specified.
 * `tumbling_window_in_seconds` - (Optional) The duration in seconds of a processing window for [AWS Lambda streaming analytics](https://docs.aws.amazon.com/lambda/latest/dg/with-kinesis.html#services-kinesis-windows). The range is between 1 second up to 900 seconds. Only available for stream sources (DynamoDB and Kinesis).
 
@@ -219,11 +224,13 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `function_arn` - The the ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
+* `arn` - The event source mapping ARN.
+* `function_arn` - The ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
 * `last_modified` - The date this resource was last modified.
 * `last_processing_result` - The result of the last AWS Lambda invocation of your Lambda function.
 * `state` - The state of the event source mapping.
 * `state_transition_reason` - The reason the event source mapping is in its current state.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The UUID of the created event source mapping.
 
 [1]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html

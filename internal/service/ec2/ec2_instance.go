@@ -45,6 +45,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
 // @Testing(importIgnore="user_data_replace_on_change")
+// @Testing(generator=false)
 func resourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
