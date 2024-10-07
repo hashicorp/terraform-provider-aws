@@ -6,66 +6,90 @@ package backup
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_backup_plan", name="Plan")
-func dataSourcePlan() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourcePlanRead,
+func planStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	var tfList []interface{}
+	if v, ok := rawState[names.AttrRule].([]interface{}); ok {
+		for _, tfMapRaw := range v {
+			tfMap := tfMapRaw.(map[string]interface{})
+			tfMap["schedule_expression_timezone"] = defaultPlanRuleScheduleExpressionTimezone
+			tfList = append(tfList, tfMap)
+		}
+		rawState[names.AttrRule] = tfList
+	}
 
+	return rawState, nil
+}
+
+func planResourceV0() *schema.Resource {
+	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
+			"advanced_backup_setting": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"backup_options": {
+							Type:     schema.TypeMap,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrResourceType: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrName: {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"plan_id": {
-				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			names.AttrRule: {
 				Type:     schema.TypeSet,
-				Computed: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"completion_window": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
+							Default:  180,
 						},
 						"copy_action": {
 							Type:     schema.TypeSet,
-							Computed: true,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination_vault_arn": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Required: true,
 									},
 									"lifecycle": {
 										Type:     schema.TypeList,
-										Computed: true,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cold_storage_after": {
 													Type:     schema.TypeInt,
-													Computed: true,
+													Optional: true,
 												},
 												"delete_after": {
 													Type:     schema.TypeInt,
-													Computed: true,
+													Optional: true,
 												},
 												"opt_in_to_archive_for_supported_resources": {
 													Type:     schema.TypeBool,
+													Optional: true,
 													Computed: true,
 												},
 											},
@@ -76,23 +100,26 @@ func dataSourcePlan() *schema.Resource {
 						},
 						"enable_continuous_backup": {
 							Type:     schema.TypeBool,
-							Computed: true,
+							Optional: true,
+							Default:  false,
 						},
 						"lifecycle": {
 							Type:     schema.TypeList,
-							Computed: true,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cold_storage_after": {
 										Type:     schema.TypeInt,
-										Computed: true,
+										Optional: true,
 									},
 									"delete_after": {
 										Type:     schema.TypeInt,
-										Computed: true,
+										Optional: true,
 									},
 									"opt_in_to_archive_for_supported_resources": {
 										Type:     schema.TypeBool,
+										Optional: true,
 										Computed: true,
 									},
 								},
@@ -101,65 +128,30 @@ func dataSourcePlan() *schema.Resource {
 						"recovery_point_tags": tftags.TagsSchema(),
 						"rule_name": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Required: true,
 						},
 						names.AttrSchedule: {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"schedule_expression_timezone": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Optional: true,
 						},
 						"start_window": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
+							Default:  60,
 						},
 						"target_vault_name": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Required: true,
 						},
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 	}
-}
-
-func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	id := d.Get("plan_id").(string)
-	output, err := findPlanByID(ctx, conn, id)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Backup Plan (%s): %s", id, err)
-	}
-
-	d.SetId(aws.ToString(output.BackupPlanId))
-	d.Set(names.AttrARN, output.BackupPlanArn)
-	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
-	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
-	}
-	d.Set(names.AttrVersion, output.VersionId)
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	return diags
 }
