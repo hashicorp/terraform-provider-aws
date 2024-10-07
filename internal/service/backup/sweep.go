@@ -6,6 +6,7 @@ package backup
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
@@ -25,6 +26,14 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_backup_plan", &resource.Sweeper{
 		Name: "aws_backup_plan",
 		F:    sweepPlans,
+		Dependencies: []string{
+			"aws_backup_selection",
+		},
+	})
+
+	resource.AddTestSweepers("aws_backup_selection", &resource.Sweeper{
+		Name: "aws_backup_selection",
+		F:    sweepSelections,
 	})
 
 	resource.AddTestSweepers("aws_backup_report_plan", &resource.Sweeper{
@@ -134,9 +143,16 @@ func sweepPlans(region string) error {
 		}
 
 		for _, v := range page.BackupPlansList {
+			planID := aws.ToString(v.BackupPlanId)
+
+			if strings.HasPrefix(planID, "aws/") {
+				log.Printf("[INFO] Skipping Backup Plan: %s", planID)
+				continue
+			}
+
 			r := resourcePlan()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.BackupPlanId))
+			d.SetId(planID)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -144,6 +160,68 @@ func sweepPlans(region string) error {
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping Backup Plans (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepSelections(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.BackupClient(ctx)
+	input := &backup.ListBackupPlansInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := backup.NewListBackupPlansPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Selection sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Plans (%s): %w", region, err)
+		}
+
+		for _, v := range page.BackupPlansList {
+			planID := aws.ToString(v.BackupPlanId)
+
+			if strings.HasPrefix(planID, "aws/") {
+				log.Printf("[INFO] Skipping Backup Plan: %s", planID)
+				continue
+			}
+
+			input := &backup.ListBackupSelectionsInput{
+				BackupPlanId: aws.String(planID),
+			}
+
+			pages := backup.NewListBackupSelectionsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.BackupSelectionsList {
+					r := resourceSelection()
+					d := r.Data(nil)
+					d.SetId(aws.ToString(v.SelectionId))
+					d.Set("plan_id", planID)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Backup Selections (%s): %w", region, err)
 	}
 
 	return nil
