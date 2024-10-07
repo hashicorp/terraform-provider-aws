@@ -196,8 +196,8 @@ func (r *resourceResourceAssociation) Delete(ctx context.Context, req resource.D
 	}
 
 	in := &route53profiles.DisassociateResourceFromProfileInput{
-		ProfileId:   aws.String(state.ProfileID.ValueString()),
-		ResourceArn: aws.String(state.ResourceArn.ValueString()),
+		ProfileId:   state.ProfileID.ValueStringPointer(),
+		ResourceArn: state.ResourceArn.ValueStringPointer(),
 	}
 
 	_, err := conn.DisassociateResourceFromProfile(ctx, in)

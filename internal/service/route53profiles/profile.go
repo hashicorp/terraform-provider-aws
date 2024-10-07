@@ -172,9 +172,6 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	// state.OwnerId = fwflex.StringToFramework(ctx, out.OwnerId)
-	// state.ShareStatus = fwflex.StringEnum(ctx, out.ShareStatus)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -188,7 +185,7 @@ func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	in := &route53profiles.DeleteProfileInput{
-		ProfileId: aws.String(state.ID.ValueString()),
+		ProfileId: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteProfile(ctx, in)

@@ -45,8 +45,8 @@ func TestAccRoute53ProfilesAssociation_basic(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName, &association),
-					resource.TestCheckResourceAttrPair(resourceName, "profile_id", profileName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_id", profileName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatusMessage),
