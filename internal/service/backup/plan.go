@@ -4,9 +4,7 @@
 package backup
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -19,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -160,7 +157,7 @@ func resourcePlan() *schema.Resource {
 						"schedule_expression_timezone": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+							Default:  "Etc/UTC",
 						},
 						"start_window": {
 							Type:     schema.TypeInt,
@@ -177,7 +174,6 @@ func resourcePlan() *schema.Resource {
 						},
 					},
 				},
-				Set: planHash,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -332,43 +328,37 @@ func expandBackupRuleInputs(ctx context.Context, tfList []interface{}) []awstype
 		tfMap := tfMapRaw.(map[string]interface{})
 		apiObject := awstypes.BackupRuleInput{}
 
-		if vRuleName, ok := tfMap["rule_name"].(string); ok && vRuleName != "" {
-			apiObject.RuleName = aws.String(vRuleName)
+		if v, ok := tfMap["completion_window"].(int); ok {
+			apiObject.CompletionWindowMinutes = aws.Int64(int64(v))
+		}
+		if v := expandCopyActions(tfMap["copy_action"].(*schema.Set).List()); len(v) > 0 {
+			apiObject.CopyActions = v
+		}
+		if v, ok := tfMap["enable_continuous_backup"].(bool); ok {
+			apiObject.EnableContinuousBackup = aws.Bool(v)
+		}
+		if v, ok := tfMap["lifecycle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]interface{}))
+		}
+		if v, ok := tfMap["recovery_point_tags"].(map[string]interface{}); ok && len(v) > 0 {
+			apiObject.RecoveryPointTags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		}
+		if v, ok := tfMap["rule_name"].(string); ok && v != "" {
+			apiObject.RuleName = aws.String(v)
 		} else {
 			continue
 		}
-		if vTargetVaultName, ok := tfMap["target_vault_name"].(string); ok && vTargetVaultName != "" {
-			apiObject.TargetBackupVaultName = aws.String(vTargetVaultName)
-		}
-		if vSchedule, ok := tfMap[names.AttrSchedule].(string); ok && vSchedule != "" {
-			apiObject.ScheduleExpression = aws.String(vSchedule)
-		}
-		if vSchedule, ok := tfMap[names.AttrSchedule].(string); ok && vSchedule != "" {
-			apiObject.ScheduleExpression = aws.String(vSchedule)
+		if v, ok := tfMap[names.AttrSchedule].(string); ok && v != "" {
+			apiObject.ScheduleExpression = aws.String(v)
 		}
 		if v, ok := tfMap["schedule_expression_timezone"].(string); ok && v != "" {
 			apiObject.ScheduleExpressionTimezone = aws.String(v)
 		}
-		if vEnableContinuousBackup, ok := tfMap["enable_continuous_backup"].(bool); ok {
-			apiObject.EnableContinuousBackup = aws.Bool(vEnableContinuousBackup)
+		if v, ok := tfMap["start_window"].(int); ok {
+			apiObject.StartWindowMinutes = aws.Int64(int64(v))
 		}
-		if vStartWindow, ok := tfMap["start_window"].(int); ok {
-			apiObject.StartWindowMinutes = aws.Int64(int64(vStartWindow))
-		}
-		if vCompletionWindow, ok := tfMap["completion_window"].(int); ok {
-			apiObject.CompletionWindowMinutes = aws.Int64(int64(vCompletionWindow))
-		}
-
-		if vRecoveryPointTags, ok := tfMap["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-			apiObject.RecoveryPointTags = Tags(tftags.New(ctx, vRecoveryPointTags).IgnoreAWS())
-		}
-
-		if v, ok := tfMap["lifecycle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]interface{}))
-		}
-
-		if vCopyActions := expandCopyActions(tfMap["copy_action"].(*schema.Set).List()); len(vCopyActions) > 0 {
-			apiObject.CopyActions = vCopyActions
+		if v, ok := tfMap["target_vault_name"].(string); ok && v != "" {
+			apiObject.TargetBackupVaultName = aws.String(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -448,31 +438,36 @@ func expandLifecycle(tfMap map[string]interface{}) *awstypes.Lifecycle {
 	return apiObject
 }
 
-func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) *schema.Set { // nosemgrep:ci.backup-in-func-name
+func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) []interface{} { // nosemgrep:ci.backup-in-func-name
 	tfList := []interface{}{}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
+			"completion_window":            aws.ToInt64(apiObject.CompletionWindowMinutes),
+			"enable_continuous_backup":     aws.ToBool(apiObject.EnableContinuousBackup),
 			"rule_name":                    aws.ToString(apiObject.RuleName),
-			"target_vault_name":            aws.ToString(apiObject.TargetBackupVaultName),
 			names.AttrSchedule:             aws.ToString(apiObject.ScheduleExpression),
 			"schedule_expression_timezone": aws.ToString(apiObject.ScheduleExpressionTimezone),
-			"enable_continuous_backup":     aws.ToBool(apiObject.EnableContinuousBackup),
 			"start_window":                 aws.ToInt64(apiObject.StartWindowMinutes),
-			"completion_window":            aws.ToInt64(apiObject.CompletionWindowMinutes),
-			"recovery_point_tags":          KeyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(),
+			"target_vault_name":            aws.ToString(apiObject.TargetBackupVaultName),
 		}
 
-		if lifecycle := apiObject.Lifecycle; lifecycle != nil {
-			tfMap["lifecycle"] = flattenLifecycle(lifecycle)
+		if v := apiObject.CopyActions; len(v) > 0 {
+			tfMap["copy_action"] = flattenCopyActions(v)
 		}
 
-		tfMap["copy_action"] = flattenCopyActions(apiObject.CopyActions)
+		if v := apiObject.Lifecycle; v != nil {
+			tfMap["lifecycle"] = flattenLifecycle(v)
+		}
+
+		if v := KeyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
+			tfMap["recovery_point_tags"] = v
+		}
 
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(planHash, tfList)
+	return tfList
 }
 
 func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) []interface{} { // nosemgrep:ci.backup-in-func-name
@@ -524,70 +519,4 @@ func flattenLifecycle(apiObject *awstypes.Lifecycle) []interface{} {
 	}
 
 	return []interface{}{tfMap}
-}
-
-func planHash(vRule interface{}) int {
-	var buf bytes.Buffer
-
-	mRule := vRule.(map[string]interface{})
-
-	if v, ok := mRule["rule_name"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mRule["target_vault_name"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mRule[names.AttrSchedule].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mRule["schedule_expression_timezone"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mRule["enable_continuous_backup"].(bool); ok {
-		buf.WriteString(fmt.Sprintf("%t-", v))
-	}
-	if v, ok := mRule["start_window"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if v, ok := mRule["completion_window"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-
-	if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", tftags.New(context.Background(), vRecoveryPointTags).Hash()))
-	}
-
-	if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {
-		mLifecycle := vLifecycle[0].(map[string]interface{})
-
-		if v, ok := mLifecycle["delete_after"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-		if v, ok := mLifecycle["cold_storage_after"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-	}
-
-	if vCopyActions, ok := mRule["copy_action"].(*schema.Set); ok && vCopyActions.Len() > 0 {
-		for _, a := range vCopyActions.List() {
-			action := a.(map[string]interface{})
-			if mLifecycle, ok := action["lifecycle"].([]interface{}); ok {
-				for _, l := range mLifecycle {
-					lifecycle := l.(map[string]interface{})
-					if v, ok := lifecycle["delete_after"].(int); ok {
-						buf.WriteString(fmt.Sprintf("%d-", v))
-					}
-					if v, ok := lifecycle["cold_storage_after"].(int); ok {
-						buf.WriteString(fmt.Sprintf("%d-", v))
-					}
-				}
-			}
-
-			if v, ok := action["destination_vault_arn"].(string); ok {
-				buf.WriteString(fmt.Sprintf("%s-", v))
-			}
-		}
-	}
-
-	return create.StringHashcode(buf.String())
 }
