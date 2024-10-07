@@ -88,4 +88,4 @@ Using `terraform import`, import a ChimeSDKVoice SIP Media Application using the
 % terraform import aws_chimesdkvoice_sip_media_application.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e1b6072f4d998c9e513ec72230b13fe8b463d6b65adffbd9a34c66c4336e5e88 -->
+<!-- cache-key: cdktf-0.20.9 input-e1b6072f4d998c9e513ec72230b13fe8b463d6b65adffbd9a34c66c4336e5e88 -->

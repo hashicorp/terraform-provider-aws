@@ -139,4 +139,4 @@ Using `terraform import`, import Transfer SSH Public Key using the `server_id` a
 % terraform import aws_transfer_ssh_key.bar s-12345678/test-username/key-12345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b1d6cb5d993474a7ca2476432fffe3755b8615b3fd1b2007ce93984646f2bdbc -->
+<!-- cache-key: cdktf-0.20.9 input-b1d6cb5d993474a7ca2476432fffe3755b8615b3fd1b2007ce93984646f2bdbc -->

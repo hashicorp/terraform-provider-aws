@@ -51,11 +51,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `assignGeneratedIpv6CidrBlock` - (Optional) Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IPv6 addresses, or the size of the CIDR block. Default is `false`. Conflicts with `ipv6_pam_pool_id`, `ipv6_pool`, `ipv6CidrBlock` and `ipv6NetmaskLength`.
+* `assignGeneratedIpv6CidrBlock` - (Optional) Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IPv6 addresses, or the size of the CIDR block. Default is `false`. Conflicts with `ipv6_pam_pool_id`, `ipv6Pool`, `ipv6CidrBlock` and `ipv6NetmaskLength`.
 * `ipv6CidrBlock` - (Optional) The IPv6 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv6NetmaskLength`. This parameter is required if `ipv6NetmaskLength` is not set and the IPAM pool does not have `allocation_default_netmask` set. Conflicts with `assignGeneratedIpv6CidrBlock`.
 * `ipv6IpamPoolId` - - (Optional) The ID of an IPv6 IPAM pool you want to use for allocating this VPC's CIDR. IPAM is a VPC feature that you can use to automate your IP address management workflows including assigning, tracking, troubleshooting, and auditing IP addresses across AWS Regions and accounts. Conflict with `assignGeneratedIpv6CidrBlock` and `ipv6IpamPoolId`.
 * `ipv6NetmaskLength` - (Optional) The netmask length of the IPv6 CIDR you want to allocate to this VPC. Requires specifying a `ipv6IpamPoolId`. This parameter is optional if the IPAM pool has `allocation_default_netmask` set, otherwise it or `ipv6CidrBlock` are required. Conflicts with `assignGeneratedIpv6CidrBlock` and `ipv6IpamPoolId`.
-* `ipv6_pool` - (Optional) The  ID of an IPv6 address pool from which to allocate the IPv6 CIDR block. Conflicts with `ipv6_pam_pool_id`, `ipv6_pool`.
+* `ipv6Pool` - (Optional) The  ID of an IPv6 address pool from which to allocate the IPv6 CIDR block. Conflicts with `ipv6_pam_pool_id`, `ipv6Pool`.
 * `vpcId` - (Required) The ID of the VPC to make the association with.
 
 ## Timeouts
@@ -103,4 +103,4 @@ Using `terraform import`, import `aws_vpc_ipv6_cidr_block_association` using the
 % terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a8b8992f527374062a54ace4dc559feae40a1d9d8b746a264a4d0a5ccdea445c -->
+<!-- cache-key: cdktf-0.20.9 input-a8b8992f527374062a54ace4dc559feae40a1d9d8b746a264a4d0a5ccdea445c -->

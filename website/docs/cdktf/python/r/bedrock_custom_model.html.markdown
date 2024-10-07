@@ -126,4 +126,4 @@ Using `terraform import`, import Bedrock custom model using the `job_arn`. For e
 % terraform import aws_bedrock_custom_model.example arn:aws:bedrock:us-west-2:123456789012:model-customization-job/amazon.titan-text-express-v1:0:8k/1y5n57gh5y2e
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3d60addeebcdb0c93eb8bb9a874384f005074a43c27ca260258653b83b7d5cc9 -->
+<!-- cache-key: cdktf-0.20.9 input-3d60addeebcdb0c93eb8bb9a874384f005074a43c27ca260258653b83b7d5cc9 -->

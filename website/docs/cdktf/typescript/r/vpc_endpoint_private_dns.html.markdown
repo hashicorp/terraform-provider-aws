@@ -82,4 +82,4 @@ Using `terraform import`, import a VPC (Virtual Private Cloud) Endpoint Private 
 % terraform import aws_vpc_endpoint_private_dns.example vpce-abcd-1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-49b741dd5cb214f9cf00d1ac46aeffcfee5cf2eab477515748c3ab472f3e042a -->
+<!-- cache-key: cdktf-0.20.9 input-49b741dd5cb214f9cf00d1ac46aeffcfee5cf2eab477515748c3ab472f3e042a -->

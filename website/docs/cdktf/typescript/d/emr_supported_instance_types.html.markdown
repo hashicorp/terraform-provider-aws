@@ -117,4 +117,4 @@ This data source exports the following attributes in addition to the arguments a
 * `type` - Amazon EC2 instance type. For example, `m5.xlarge`.
 * `vcpu` - The number of vCPUs available for the instance type.
 
-<!-- cache-key: cdktf-0.20.1 input-ba212951c23add89500cd142afe5608d4a6a81dcaef51a7d3aedfa014eec03d7 -->
+<!-- cache-key: cdktf-0.20.9 input-ba212951c23add89500cd142afe5608d4a6a81dcaef51a7d3aedfa014eec03d7 -->

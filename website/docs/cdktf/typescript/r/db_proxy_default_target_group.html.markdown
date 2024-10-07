@@ -134,4 +134,4 @@ Using `terraform import`, import DB proxy default target groups using the `dbPro
 % terraform import aws_db_proxy_default_target_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f4629d5400c5ab4a62b7d565c4f1da0abc16b03f8414ba2cd0b713dd70f884c -->
+<!-- cache-key: cdktf-0.20.9 input-6f4629d5400c5ab4a62b7d565c4f1da0abc16b03f8414ba2cd0b713dd70f884c -->

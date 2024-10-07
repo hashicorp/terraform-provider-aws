@@ -105,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
 * `multiAzCapable` - Whether a DB instance is Multi-AZ capable.
 * `outpostCapable` - Whether a DB instance supports RDS on Outposts.
 
-<!-- cache-key: cdktf-0.20.1 input-b7d7f1ef4f3717ebf717a671d4388db2e9e81bc8063c21466642709438b646f7 -->
+<!-- cache-key: cdktf-0.20.9 input-b7d7f1ef4f3717ebf717a671d4388db2e9e81bc8063c21466642709438b646f7 -->
