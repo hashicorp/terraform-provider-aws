@@ -133,6 +133,7 @@ func TestAccSNSTopic_name(t *testing.T) {
 				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -162,6 +163,7 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 				Config: testAccTopicConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf(`%s.+$`, rName))),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
