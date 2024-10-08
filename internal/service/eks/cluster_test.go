@@ -204,6 +204,42 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/38967
+func TestAccEKSCluster_AccessConfigBootstrapClusterCreator_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_accessConfigBootstrapClusterCreatorSet(rName, types.AuthenticationModeApiAndConfigMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeApiAndConfigMap)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_accessConfigBootstrapClusterCreatorUnset(rName, types.AuthenticationModeApiAndConfigMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeApiAndConfigMap)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
@@ -1113,6 +1149,45 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName))
+}
+
+func testAccClusterConfig_accessConfigBootstrapClusterCreatorSet(rName string, authenticationMode types.AuthenticationMode) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  access_config {
+    bootstrap_cluster_creator_admin_permissions = true
+    authentication_mode                         = %[2]q
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName, authenticationMode))
+}
+
+func testAccClusterConfig_accessConfigBootstrapClusterCreatorUnset(rName string, authenticationMode types.AuthenticationMode) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  access_config {
+    authentication_mode = %[2]q
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName, authenticationMode))
 }
 
 func testAccClusterConfig_accessConfig(rName string, authenticationMode types.AuthenticationMode) string {
