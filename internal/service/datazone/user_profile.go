@@ -60,6 +60,9 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			"domain_identifier": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"details": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[detailsData](ctx),
@@ -84,6 +87,9 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 			},
 			"user_identifier": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.UserProfileType](),
@@ -98,6 +104,7 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
