@@ -60,6 +60,26 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"saml_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relay_state_parameter_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_access_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"self_service_permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -198,6 +218,10 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
+	}
+
+	if err := d.Set("saml_properties", FlattenSAMLProperties(directory.SamlProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_properties: %s", err)
 	}
 
 	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {

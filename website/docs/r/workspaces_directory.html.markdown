@@ -26,6 +26,11 @@ resource "aws_workspaces_directory" "example" {
     Example = true
   }
 
+  saml_properties {
+    user_access_url = "https://sso.example.com/"
+    status = "ENABLED"
+  }
+
   self_service_permissions {
     change_compute_type  = true
     increase_volume_size = true
@@ -151,9 +156,16 @@ This resource supports the following arguments:
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
 * `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `saml_properties` – (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
 * `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspace_creation_properties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
+
+### saml_properties
+
+* `relay_state_parameter_name` - (Optional) The relay state parameter name supported by the SAML 2.0 identity provider (IdP). Default `RelayState`.
+* `status` - (Optional) Status of SAML 2.0 authentication. Default `DISABLED`.
+* `user_access_url` - (Optional) The SAML 2.0 identity provider (IdP) user access URL.
 
 ### self_service_permissions
 
