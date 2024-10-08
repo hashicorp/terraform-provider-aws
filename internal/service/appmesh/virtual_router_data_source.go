@@ -20,6 +20,7 @@ import (
 // @SDKDataSource("aws_appmesh_virtual_router", name="Virtual Router")
 // @Tags
 // @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVirtualRouter() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualRouterRead,
