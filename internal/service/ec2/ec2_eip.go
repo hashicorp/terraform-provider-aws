@@ -252,12 +252,12 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDomain, address.Domain)
 	d.Set("instance", address.InstanceId)
+	if v := aws.ToString(address.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
+		d.Set("ipam_pool_id", v)
+	}
 	d.Set("network_border_group", address.NetworkBorderGroup)
 	d.Set("network_interface", address.NetworkInterfaceId)
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
-	if strings.HasPrefix(*address.PublicIpv4Pool, "ipam-pool") {
-		d.Set("ipam_pool_id", address.PublicIpv4Pool)
-	}
 	d.Set("private_ip", address.PrivateIpAddress)
 	if v := aws.ToString(address.PrivateIpAddress); v != "" {
 		d.Set("private_dns", meta.(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, v))
@@ -341,19 +341,13 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	_, err := conn.ReleaseAddress(ctx, input)
 
 	// If the EIP's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
-	var ipamPoolID, eipAllocationId string
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
-		ipamPoolID = v.(string)
-	}
-	if v, ok := d.GetOk("allocation_id"); ok {
-		eipAllocationId = v.(string)
-	}
-	if ipamPoolID != "" {
+		ipamPoolID := v.(string)
 		const (
 			timeout = 10 * time.Minute // IPAM eventual consistency
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
-			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, eipAllocationId)
+			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
 		})
 
 		if err != nil {
@@ -459,9 +453,9 @@ func eipARN(c *conns.AWSClient, allocationID string) string {
 	}.String()
 }
 
-func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, poolID, eipAllocationId string) ([]types.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]types.IpamPoolAllocation, error) {
 	input := &ec2.GetIpamPoolAllocationsInput{
-		IpamPoolId: aws.String(poolID),
+		IpamPoolId: aws.String(ipamPoolID),
 	}
 
 	output, err := findIPAMPoolAllocations(ctx, conn, input)
@@ -471,7 +465,7 @@ func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, poolID
 	}
 
 	output = tfslices.Filter(output, func(v types.IpamPoolAllocation) bool {
-		return string(v.ResourceType) == string(types.IpamPoolAllocationResourceTypeEip) && aws.ToString(v.ResourceId) == eipAllocationId
+		return v.ResourceType == types.IpamPoolAllocationResourceTypeEip && aws.ToString(v.ResourceId) == eipAllocationID
 	})
 
 	if len(output) == 0 {
