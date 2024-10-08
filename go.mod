@@ -161,7 +161,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.43.1
-	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.0
