@@ -106,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
 * `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
 * `originalSnapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 
-<!-- cache-key: cdktf-0.20.1 input-be16a585a001a15ffaad224244653b982e1b01a2590868d66cebb7356017a9eb -->
+<!-- cache-key: cdktf-0.20.9 input-be16a585a001a15ffaad224244653b982e1b01a2590868d66cebb7356017a9eb -->

@@ -71,4 +71,4 @@ The `metric_configuration` configuration block supports the following arguments:
 
 * `filter` - Filter string that specifies  which metrics are to be shared with the monitoring account. See [MetricConfiguration](https://docs.aws.amazon.com/OAM/latest/APIReference/API_MetricConfiguration.html) for details.
 
-<!-- cache-key: cdktf-0.20.1 input-f4729e4598ebdb9f58fe0c4d1e223a55c5e962738dad8cf63407b1f580279abe -->
+<!-- cache-key: cdktf-0.20.9 input-f4729e4598ebdb9f58fe0c4d1e223a55c5e962738dad8cf63407b1f580279abe -->

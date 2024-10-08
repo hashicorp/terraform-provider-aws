@@ -81,4 +81,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS CloudTrail service account in the selected region.
 * `arn` - ARN of the AWS CloudTrail service account in the selected region.
 
-<!-- cache-key: cdktf-0.20.1 input-3998e4f635a042ba272505edd7920f0a7d81b9494779e6ebad66cb92fc74ee17 -->
+<!-- cache-key: cdktf-0.20.9 input-3998e4f635a042ba272505edd7920f0a7d81b9494779e6ebad66cb92fc74ee17 -->

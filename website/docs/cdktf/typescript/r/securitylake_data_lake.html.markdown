@@ -183,4 +183,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securitylake_data_lake.example arn:aws:securitylake:eu-west-1:123456789012:data-lake/default
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cd4f7b125108e23d500096c3b34e293b2a53008e5efa8927c049ea69bd7889ab -->
+<!-- cache-key: cdktf-0.20.9 input-cd4f7b125108e23d500096c3b34e293b2a53008e5efa8927c049ea69bd7889ab -->

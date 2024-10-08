@@ -95,4 +95,4 @@ Using `terraform import`, import the EFS access points using the `id`. For examp
 % terraform import aws_efs_access_point.test fsap-52a643fb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ffd407eb1dbab3cdcf58701fd44811aa2c2bcc1408ea548ad5726f0832c16821 -->
+<!-- cache-key: cdktf-0.20.9 input-ffd407eb1dbab3cdcf58701fd44811aa2c2bcc1408ea548ad5726f0832c16821 -->

@@ -102,4 +102,4 @@ Using `terraform import`, import Cost Optimization Hub Enrollment Status using y
 % terraform import aws_costoptimizationhub_enrollment_status.example 111222333444
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-39f52154d2db43d5d6d6a516038d2631579a1c67753f41f1985315cb0f72e929 -->
+<!-- cache-key: cdktf-0.20.9 input-39f52154d2db43d5d6d6a516038d2631579a1c67753f41f1985315cb0f72e929 -->

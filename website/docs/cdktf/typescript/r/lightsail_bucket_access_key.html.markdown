@@ -90,4 +90,4 @@ Using `terraform import`, import `aws_lightsail_bucket_access_key` using the `id
 % terraform import aws_lightsail_bucket_access_key.test example-bucket,AKIAIOSFODNN7EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b91ae40f371a9970106798bfa657f64698a001e42a15cbfb64853b415f57d3e8 -->
+<!-- cache-key: cdktf-0.20.9 input-b91ae40f371a9970106798bfa657f64698a001e42a15cbfb64853b415f57d3e8 -->

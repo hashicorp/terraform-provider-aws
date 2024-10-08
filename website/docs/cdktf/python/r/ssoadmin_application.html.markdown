@@ -141,4 +141,4 @@ Using `terraform import`, import SSO Admin Application using the `id`. For examp
 % terraform import aws_ssoadmin_application.example arn:aws:sso::012345678901:application/id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-04fb9d4772e0aa4f71530f2ec40be6250918bcd379ee3bf6e0ef032089c648b5 -->
+<!-- cache-key: cdktf-0.20.9 input-04fb9d4772e0aa4f71530f2ec40be6250918bcd379ee3bf6e0ef032089c648b5 -->

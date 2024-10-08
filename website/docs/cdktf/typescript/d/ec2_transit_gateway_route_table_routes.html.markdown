@@ -382,4 +382,4 @@ In addition to all arguments above, the following attributes are exported:
 * `transit_gateway_route_table_announcement_id` - The id of the transit gateway route table announcement, most of the time it is an empty string.
 * `type` - The type of the route, can be `propagated` or `static`.
 
-<!-- cache-key: cdktf-0.20.1 input-5fba265cc145ada0235efec26c10c79f01ec5384ee918cc84a3f6d087ffa07e0 -->
+<!-- cache-key: cdktf-0.20.9 input-696ba7f42bc4c749cdbe89cddfd24a5aa116e802c8e675cd5c391818b6e6f371 -->
