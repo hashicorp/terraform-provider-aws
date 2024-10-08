@@ -131,6 +131,7 @@ func resourceIPAMPool() *schema.Resource {
 			"publicly_advertisable": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			"source_ipam_pool_id": {
 				Type:     schema.TypeString,
