@@ -14,8 +14,8 @@ Manages an AWS End User Messaging SMS Configuration Set.
 
 ```terraform
 resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
-  name = "example-configuration-set"
-  default_sender_id = "example"
+  name                 = "example-configuration-set"
+  default_sender_id    = "example"
   default_message_type = "TRANSACTIONAL"
 }
 ```
