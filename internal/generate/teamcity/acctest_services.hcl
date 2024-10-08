@@ -22,6 +22,10 @@ service "appfabric" {
   region = "us-east-1"
 }
 
+service "appintegrations" {
+  parallelism = 10
+}
+
 service "appstream" {
   vpc_lock    = true
   parallelism = 10
