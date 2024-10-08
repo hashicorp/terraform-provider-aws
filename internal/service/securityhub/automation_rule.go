@@ -225,18 +225,18 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"related_findings_product_arn":       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"resource_application_arn":           stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"resource_application_name":          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"resource_details_other":             mapFilterSchemaFramework(ctx),
+						"resource_details_other":             mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrResourceID:                 stringFilterSchemaFramework(ctx, 100),
 						"resource_partition":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"resource_region":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						names.AttrResourceTags:               mapFilterSchemaFramework(ctx),
+						names.AttrResourceTags:               mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrResourceType:               stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"severity_label":                     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"source_url":                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"title":                              stringFilterSchemaFramework(ctx, 100),
 						names.AttrType:                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"updated_at":                         dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"user_defined_fields":                mapFilterSchemaFramework(ctx),
+						"user_defined_fields":                mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"verification_state":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"workflow_status":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 					},
@@ -286,11 +286,11 @@ func dateFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNeste
 	}
 }
 
-func mapFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func mapFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[mapFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
