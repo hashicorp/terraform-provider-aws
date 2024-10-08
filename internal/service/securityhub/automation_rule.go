@@ -207,9 +207,9 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"compliance_security_control_id":     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"compliance_status":                  stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"confidence":                         numberFilterSchemaFramework(ctx),
+						"confidence":                         numberFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"criticality":                        numberFilterSchemaFramework(ctx),
+						"criticality":                        numberFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrDescription:                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"first_observed_at":                  dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"generator_id":                       stringFilterSchemaFramework(ctx, 100),
@@ -309,11 +309,11 @@ func mapFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 	}
 }
 
-func numberFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func numberFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[numberFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
