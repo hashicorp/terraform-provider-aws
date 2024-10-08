@@ -201,7 +201,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx, 100),
+						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
 						"aws_account_name":                   stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"company_name":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -212,7 +212,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"criticality":                        numberFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrDescription:                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"first_observed_at":                  dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"generator_id":                       stringFilterSchemaFramework(ctx, 100),
+						"generator_id":                       stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
 						names.AttrID:                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"last_observed_at":                   dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"note_text":                          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -226,14 +226,14 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"resource_application_arn":           stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"resource_application_name":          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"resource_details_other":             mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						names.AttrResourceID:                 stringFilterSchemaFramework(ctx, 100),
+						names.AttrResourceID:                 stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
 						"resource_partition":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"resource_region":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrResourceTags:               mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrResourceType:               stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"severity_label":                     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"source_url":                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"title":                              stringFilterSchemaFramework(ctx, 100),
+						"title":                              stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
 						names.AttrType:                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"updated_at":                         dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"user_defined_fields":                mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
