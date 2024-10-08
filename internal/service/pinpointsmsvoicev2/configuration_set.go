@@ -166,21 +166,41 @@ func (r *configurationSetResource) Update(ctx context.Context, request resource.
 
 	name := new.ConfigurationSetName.ValueString()
 	if !new.DefaultSenderId.Equal(old.DefaultSenderId) {
-		err := setDefaultSenderId(ctx, conn, new.ID.ValueStringPointer(), new.DefaultSenderId.ValueStringPointer())
+		if new.DefaultSenderId.IsNull() {
+			err := deleteDefaultSenderId(ctx, conn, new.ID.ValueStringPointer())
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultSenderId.ValueString()), err.Error())
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("deleting default sender ID for End User Messaging SMS Configuration Set (%s)", name), err.Error())
 
-			return
+				return
+			}
+		} else {
+			err := setDefaultSenderId(ctx, conn, new.ID.ValueStringPointer(), new.DefaultSenderId.ValueStringPointer())
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultSenderId.ValueString()), err.Error())
+
+				return
+			}
 		}
 	}
 	if !new.DefaultMessageType.Equal(old.DefaultMessageType) {
-		err := setDefaultMessageType(ctx, conn, new.ID.ValueStringPointer(), new.DefaultMessageType.ValueEnum())
+		if new.DefaultMessageType.IsNull() {
+			err := deleteDefaultMessageType(ctx, conn, new.ID.ValueStringPointer())
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("setting default message type for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultMessageType.ValueString()), err.Error())
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("deleting default message type for End User Messaging SMS Configuration Set (%s)", name), err.Error())
 
-			return
+				return
+			}
+		} else {
+			err := setDefaultMessageType(ctx, conn, new.ID.ValueStringPointer(), new.DefaultMessageType.ValueEnum())
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("setting default message type for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultMessageType.ValueString()), err.Error())
+
+				return
+			}
 		}
 	}
 
@@ -295,6 +315,26 @@ func setDefaultMessageType(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 	}
 
 	_, err := conn.SetDefaultMessageType(ctx, input)
+
+	return err
+}
+
+func deleteDefaultSenderId(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName *string) error {
+	input := &pinpointsmsvoicev2.DeleteDefaultSenderIdInput{
+		ConfigurationSetName: configurationSetName,
+	}
+
+	_, err := conn.DeleteDefaultSenderId(ctx, input)
+
+	return err
+}
+
+func deleteDefaultMessageType(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName *string) error {
+	input := &pinpointsmsvoicev2.DeleteDefaultMessageTypeInput{
+		ConfigurationSetName: configurationSetName,
+	}
+
+	_, err := conn.DeleteDefaultMessageType(ctx, input)
 
 	return err
 }
