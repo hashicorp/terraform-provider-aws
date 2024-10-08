@@ -306,6 +306,19 @@ func testAccCheckIPAMPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.IpamPool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		_, err := conn.ProvisionIpamPoolCidr(ctx, &ec2.ProvisionIpamPoolCidrInput{
+			IpamPoolId: ipampool.IpamPoolId,
+			Cidr:       aws.String("10.0.0.0/16"),
+		})
+
+		return err
+	}
+}
+
 const testAccIPAMPoolConfig_base = `
 data "aws_region" "current" {}
 
@@ -365,19 +378,6 @@ resource "aws_vpc_ipam_pool" "test" {
   publicly_advertisable = false
 }
 `)
-
-func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.IpamPool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		_, err := conn.ProvisionIpamPoolCidr(ctx, &ec2.ProvisionIpamPoolCidrInput{
-			IpamPoolId: ipampool.IpamPoolId,
-			Cidr:       aws.String("10.0.0.0/16"),
-		})
-
-		return err
-	}
-}
 
 func testAccIPAMPoolConfig_tags(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccIPAMPoolConfig_base, fmt.Sprintf(`
