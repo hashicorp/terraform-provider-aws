@@ -6,6 +6,7 @@ FEATURES:
 * **New Resource:** `aws_backup_restore_testing_plan` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
 * **New Resource:** `aws_backup_restore_testing_selection` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
 * **New Resource:** `aws_datazone_user_profile` ([#38810](https://github.com/hashicorp/terraform-provider-aws/issues/38810))
+* **New Resource:** `aws_pinpointsmsvoicev2_configuration_set` ([#39620](https://github.com/hashicorp/terraform-provider-aws/issues/39620))
 * **New Resource:** `aws_route53profiles_association` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 * **New Resource:** `aws_route53profiles_profile` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 * **New Resource:** `aws_route53profiles_resource_association` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
@@ -13,7 +14,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_backup_plan: Add `rule.schedule_expression_timezone` attribute ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* data-source/aws_eip: Add `ipam_pool_id` attribute ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
 * resource/aws_backup_plan: Add `rule.schedule_expression_timezone` argument ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* resource/aws_eip: Add `ipam_pool_id` argument in support of [public IPAM pools](https://docs.aws.amazon.com/vpc/latest/ipam/tutorials-eip-pool.html) ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
 
 BUG FIXES:
 
