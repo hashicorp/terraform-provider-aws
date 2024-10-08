@@ -10,9 +10,15 @@ FEATURES:
 * **New Resource:** `aws_route53profiles_profile` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 * **New Resource:** `aws_route53profiles_resource_association` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 
+ENHANCEMENTS:
+
+* data-source/aws_backup_plan: Add `rule.schedule_expression_timezone` attribute ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* resource/aws_backup_plan: Add `rule.schedule_expression_timezone` argument ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+
 BUG FIXES:
 
 * resource/aws_elasticache_replication_group: Fix `security_group_names` causing resource replacement after import ([#39591](https://github.com/hashicorp/terraform-provider-aws/issues/39591))
+* resource/aws_securityhub_automation_rule: Increase `criteria.aws_account_id`, `criteria.generator_id`, `criteria.resource_id`, and `criteria.title` max length from `20` to `100` ([#39616](https://github.com/hashicorp/terraform-provider-aws/issues/39616))
 
 ## 5.70.0 (October  4, 2024)
 

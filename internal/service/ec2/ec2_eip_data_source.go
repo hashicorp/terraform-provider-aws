@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -62,6 +63,10 @@ func dataSourceEIP() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrInstanceID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -162,6 +167,9 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDomain, eip.Domain)
 	d.Set(names.AttrInstanceID, eip.InstanceId)
+	if v := aws.ToString(eip.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
+		d.Set("ipam_pool_id", v)
+	}
 	d.Set(names.AttrNetworkInterfaceID, eip.NetworkInterfaceId)
 	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
