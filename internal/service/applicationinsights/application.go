@@ -106,8 +106,9 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.OpsItemSNSTopicArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateApplication(ctx, input)
-
+	output, err := tfresource.RetryGWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (*applicationinsights.CreateApplicationOutput, error) {
+		return conn.CreateApplication(ctx, input)
+	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ApplicationInsights Application: %s", err)
 	}
