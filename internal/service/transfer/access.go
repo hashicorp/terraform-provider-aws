@@ -77,7 +77,7 @@ func resourceAccess() *schema.Resource {
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(2048),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
