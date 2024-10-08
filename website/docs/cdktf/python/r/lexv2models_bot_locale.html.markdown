@@ -122,4 +122,4 @@ Using `terraform import`, import Lex V2 Models Bot Locale using the `id`. For ex
 % terraform import aws_lexv2models_bot_locale.example en_US,abcd-12345678,1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-52a787e5f74dce2092b63bd267846b6da565ed68558bf26ae03c42cb5ee7824e -->
+<!-- cache-key: cdktf-0.20.9 input-52a787e5f74dce2092b63bd267846b6da565ed68558bf26ae03c42cb5ee7824e -->

@@ -88,4 +88,4 @@ Using `terraform import`, import IOT Role Alias using the alias. For example:
 % terraform import aws_iot_role_alias.example myalias
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-79b16d71cecab088857010b51ec1786635bbbcb20eff1c7a4d6e9c32e1b3bec5 -->
+<!-- cache-key: cdktf-0.20.9 input-79b16d71cecab088857010b51ec1786635bbbcb20eff1c7a4d6e9c32e1b3bec5 -->

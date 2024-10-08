@@ -85,4 +85,4 @@ Using `terraform import`, import KMS aliases using the `name`. For example:
 % terraform import aws_kms_alias.a alias/my-key-alias
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca20383ce5b8fdeb88071f1c945d966a1085da48052143ed4134dcc859d1ae7d -->
+<!-- cache-key: cdktf-0.20.9 input-ca20383ce5b8fdeb88071f1c945d966a1085da48052143ed4134dcc859d1ae7d -->

@@ -129,4 +129,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_cors_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-46d05f4edffda026c1ba9028dbaf7808b8d38daf8758aaa695e27c27b121e258 -->
+<!-- cache-key: cdktf-0.20.9 input-46d05f4edffda026c1ba9028dbaf7808b8d38daf8758aaa695e27c27b121e258 -->

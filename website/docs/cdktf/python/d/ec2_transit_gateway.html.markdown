@@ -80,7 +80,7 @@ This data source exports the following attributes in addition to the arguments a
 * `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table
 * `description` - Description of the EC2 Transit Gateway
 * `dns_support` - Whether DNS support is enabled
-* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled.
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled
 * `multicast_support` - Whether Multicast support is enabled
 * `id` - EC2 Transit Gateway identifier
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
@@ -95,4 +95,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-ffa9ee3ddd9d388f5e2e15cbd5dbf081b080b3ce321303e9a320db13aad75c6f -->
+<!-- cache-key: cdktf-0.20.9 input-36e1298fe9953c5e3231d09fe39757302ea1053eee49138982f201819f26708f -->

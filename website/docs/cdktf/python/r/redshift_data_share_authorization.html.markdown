@@ -77,4 +77,4 @@ Using `terraform import`, import Redshift Data Share Authorization using the `id
 % terraform import aws_redshift_data_share_authorization.example arn:aws:redshift:us-west-2:012345678901:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,012345678901
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dc3a17ac6bda6d7316c30a94de4347cba29e545e22910c9152a354a5526aa233 -->
+<!-- cache-key: cdktf-0.20.9 input-dc3a17ac6bda6d7316c30a94de4347cba29e545e22910c9152a354a5526aa233 -->

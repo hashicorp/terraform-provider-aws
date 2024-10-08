@@ -70,4 +70,4 @@ Using `terraform import`, import opt-out lists using the `name`. For example:
 % terraform import aws_pinpointsmsvoicev2_opt_out_list.example example-opt-out-list
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-08582a837093dea102edd31f2d0df85003da29a5e16450a5e3851483a4d4c234 -->
+<!-- cache-key: cdktf-0.20.9 input-08582a837093dea102edd31f2d0df85003da29a5e16450a5e3851483a4d4c234 -->

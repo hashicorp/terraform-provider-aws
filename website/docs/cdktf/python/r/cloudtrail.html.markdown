@@ -452,4 +452,4 @@ Using `terraform import`, import Cloudtrails using the `arn`. For example:
 % terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5ed397d637a150a8f46c866261ad00abfa51b67e2e83e6d4564b95a1f22de811 -->
+<!-- cache-key: cdktf-0.20.9 input-5ed397d637a150a8f46c866261ad00abfa51b67e2e83e6d4564b95a1f22de811 -->

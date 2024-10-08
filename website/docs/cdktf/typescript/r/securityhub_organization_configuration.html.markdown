@@ -92,11 +92,9 @@ class MyConvertedCode extends TerraformStack {
         autoEnable: false,
         autoEnableStandards: "NONE",
         dependsOn: [awsSecurityhubFindingAggregatorExample],
-        organization_configuration: [
-          {
-            configuration_type: "CENTRAL",
-          },
-        ],
+        organizationConfiguration: {
+          configurationType: "CENTRAL",
+        },
       });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsSecurityhubOrganizationConfigurationExample.overrideLogicalId("example");
@@ -111,9 +109,9 @@ This resource supports the following arguments:
 
 * `autoEnable` - (Required) Whether to automatically enable Security Hub for new accounts in the organization.
 * `autoEnableStandards` - (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to `DEFAULT`, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to `NONE`.
-* `organization_configuration` - (Optional) Provides information about the way an organization is configured in Security Hub.
+* `organizationConfiguration` - (Optional) Provides information about the way an organization is configured in Security Hub.
 
-`organization_configuration` supports the following:
+`organizationConfiguration` supports the following:
 
 * `configurationType` - (Required) Indicates whether the organization uses local or central configuration. If using central configuration, `autoEnable` must be set to `false` and `autoEnableStandards` set to `NONE`. More information can be found in the [documentation for central configuration](https://docs.aws.amazon.com/securityhub/latest/userguide/central-configuration-intro.html). Valid values: `LOCAL`, `CENTRAL`.
 
@@ -163,4 +161,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_organization_configuration.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2fbc3368dfe1e813d4004abb851ef466468b7d2bea02a2126eea8fae74ad5485 -->
+<!-- cache-key: cdktf-0.20.9 input-2fbc3368dfe1e813d4004abb851ef466468b7d2bea02a2126eea8fae74ad5485 -->

@@ -203,4 +203,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Alias using the
 % terraform import aws_bedrockagent_agent_alias.example 66IVY0GUTF,GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ec9002dbf394ea30a92ebfbe0cd46c10a1224be5c43880fe491b2e709a8ed68e -->
+<!-- cache-key: cdktf-0.20.9 input-ec9002dbf394ea30a92ebfbe0cd46c10a1224be5c43880fe491b2e709a8ed68e -->
