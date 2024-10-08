@@ -48,6 +48,9 @@ func (r *automationRuleResource) Metadata(_ context.Context, request resource.Me
 }
 
 func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	const (
+		defaultFilterSchemaMaxSize = 20
+	)
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -199,43 +202,43 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx, 100),
-						"aws_account_name":                   stringFilterSchemaFramework(ctx),
-						"company_name":                       stringFilterSchemaFramework(ctx),
-						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx),
-						"compliance_security_control_id":     stringFilterSchemaFramework(ctx),
-						"compliance_status":                  stringFilterSchemaFramework(ctx),
+						"aws_account_name":                   stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"company_name":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"compliance_security_control_id":     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"compliance_status":                  stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"confidence":                         numberFilterSchemaFramework(ctx),
 						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx),
 						"criticality":                        numberFilterSchemaFramework(ctx),
-						names.AttrDescription:                stringFilterSchemaFramework(ctx),
+						names.AttrDescription:                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"first_observed_at":                  dateFilterSchemaFramework(ctx),
 						"generator_id":                       stringFilterSchemaFramework(ctx, 100),
-						names.AttrID:                         stringFilterSchemaFramework(ctx),
+						names.AttrID:                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"last_observed_at":                   dateFilterSchemaFramework(ctx),
-						"note_text":                          stringFilterSchemaFramework(ctx),
+						"note_text":                          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"note_updated_at":                    dateFilterSchemaFramework(ctx),
-						"note_updated_by":                    stringFilterSchemaFramework(ctx),
-						"product_arn":                        stringFilterSchemaFramework(ctx),
-						"product_name":                       stringFilterSchemaFramework(ctx),
-						"record_state":                       stringFilterSchemaFramework(ctx),
-						"related_findings_id":                stringFilterSchemaFramework(ctx),
-						"related_findings_product_arn":       stringFilterSchemaFramework(ctx),
-						"resource_application_arn":           stringFilterSchemaFramework(ctx),
-						"resource_application_name":          stringFilterSchemaFramework(ctx),
+						"note_updated_by":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"product_arn":                        stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"product_name":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"record_state":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"related_findings_id":                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"related_findings_product_arn":       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"resource_application_arn":           stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"resource_application_name":          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"resource_details_other":             mapFilterSchemaFramework(ctx),
 						names.AttrResourceID:                 stringFilterSchemaFramework(ctx, 100),
-						"resource_partition":                 stringFilterSchemaFramework(ctx),
-						"resource_region":                    stringFilterSchemaFramework(ctx),
+						"resource_partition":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"resource_region":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrResourceTags:               mapFilterSchemaFramework(ctx),
-						names.AttrResourceType:               stringFilterSchemaFramework(ctx),
-						"severity_label":                     stringFilterSchemaFramework(ctx),
-						"source_url":                         stringFilterSchemaFramework(ctx),
+						names.AttrResourceType:               stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"severity_label":                     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"source_url":                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"title":                              stringFilterSchemaFramework(ctx, 100),
-						names.AttrType:                       stringFilterSchemaFramework(ctx),
+						names.AttrType:                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"updated_at":                         dateFilterSchemaFramework(ctx),
 						"user_defined_fields":                mapFilterSchemaFramework(ctx),
-						"verification_state":                 stringFilterSchemaFramework(ctx),
-						"workflow_status":                    stringFilterSchemaFramework(ctx),
+						"verification_state":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"workflow_status":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 					},
 				},
 			},
@@ -334,16 +337,11 @@ func numberFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 	}
 }
 
-func stringFilterSchemaFramework(ctx context.Context, maxSize ...int) schema.SetNestedBlock {
-
-	defaultSize := 20
-	if len(maxSize) > 0 {
-		defaultSize = maxSize[0]
-	}
+func stringFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[stringFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(defaultSize),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
