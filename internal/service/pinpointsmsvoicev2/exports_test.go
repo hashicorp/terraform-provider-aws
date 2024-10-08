@@ -5,9 +5,11 @@ package pinpointsmsvoicev2
 
 // Exports for use in tests only.
 var (
-	ResourceOptOutList  = newOptOutListResource
-	ResourcePhoneNumber = newPhoneNumberResource
+	ResourceOptOutList       = newOptOutListResource
+	ResourcePhoneNumber      = newPhoneNumberResource
+	ResourceConfigurationSet = newConfigurationSetResource
 
-	FindOptOutListByID  = findOptOutListByID
-	FindPhoneNumberByID = findPhoneNumberByID
+	FindOptOutListByID       = findOptOutListByID
+	FindPhoneNumberByID      = findPhoneNumberByID
+	FindConfigurationSetByID = findConfigurationSetByID
 )
