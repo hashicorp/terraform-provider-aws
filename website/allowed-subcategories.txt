@@ -213,6 +213,7 @@ SQS (Simple Queue)
 SSM (Systems Manager)
 SSM Contacts
 SSM Incident Manager Incidents
+SSM Quick Setup
 SSO Admin
 SSO Identity Store
 STS (Security Token)
