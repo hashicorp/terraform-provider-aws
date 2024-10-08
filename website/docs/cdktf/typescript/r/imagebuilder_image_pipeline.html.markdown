@@ -159,4 +159,4 @@ Using `terraform import`, import `aws_imagebuilder_image_pipeline` resources usi
 % terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b7ef54b8ccc48bee42fd6b40e0b184c832c8d3c6a532ff264291c55060d501b7 -->
+<!-- cache-key: cdktf-0.20.9 input-b7ef54b8ccc48bee42fd6b40e0b184c832c8d3c6a532ff264291c55060d501b7 -->

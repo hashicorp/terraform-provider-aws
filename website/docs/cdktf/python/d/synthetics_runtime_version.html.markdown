@@ -74,4 +74,4 @@ This data source exports the following attributes in addition to the arguments a
 * `release_date` - Date that the runtime version was released.
 * `version_name` - Name of the runtime version. For a list of valid runtime versions, see [Canary Runtime Versions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html).
 
-<!-- cache-key: cdktf-0.20.1 input-e6a2213fe4ac6a18145c981992f3636cc72cdc909368fb612d8d2484eadbec3d -->
+<!-- cache-key: cdktf-0.20.9 input-e6a2213fe4ac6a18145c981992f3636cc72cdc909368fb612d8d2484eadbec3d -->

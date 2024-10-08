@@ -28,7 +28,7 @@ from cdktf import Fn, Token, TerraformStack
 #
 from imports.aws.drs_replication_configuration_template import DrsReplicationConfigurationTemplate
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, ebsEncryption):
+    def __init__(self, scope, name, *, ebsEncryption, stagingAreaTags):
         super().__init__(scope, name)
         DrsReplicationConfigurationTemplate(self, "example",
             associate_default_security_group=False,
@@ -63,7 +63,8 @@ class MyConvertedCode(TerraformStack):
                 Fn.lookup_nested(aws_security_group_example, ["*", "id"])),
             staging_area_subnet_id=Token.as_string(aws_subnet_example.id),
             use_dedicated_replication_server=False,
-            ebs_encryption=ebs_encryption
+            ebs_encryption=ebs_encryption,
+            staging_area_tags=staging_area_tags
         )
 ```
 
@@ -141,4 +142,4 @@ Using `terraform import`, import DRS Replication Configuration Template using th
 % terraform import aws_drs_replication_configuration_template.example templateid
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6c07abef7048c3cc06087a9898fdf05a3940fa2b0415a9b5c550b599e682141f -->
+<!-- cache-key: cdktf-0.20.9 input-6c07abef7048c3cc06087a9898fdf05a3940fa2b0415a9b5c550b599e682141f -->

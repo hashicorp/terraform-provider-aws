@@ -56,6 +56,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - DB Instance Identifier and IAM Role ARN separated by a comma (`,`)
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_db_instance_role_association` using the DB Instance Identifier and IAM Role ARN separated by a comma (`,`). For example:
@@ -81,4 +88,4 @@ Using `terraform import`, import `aws_db_instance_role_association` using the DB
 % terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8bcec7e4e7baacc01bda616551c977b2611d1af2d22e935bdf26957aed7f9ff8 -->
+<!-- cache-key: cdktf-0.20.9 input-c34db82964ab3bf0f638d220b644c559759ab610787f629522f52a04104e2938 -->

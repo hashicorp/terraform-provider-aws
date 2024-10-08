@@ -90,4 +90,4 @@ Using `terraform import`, import Redshift endpoint access using the `name`. For 
 % terraform import aws_redshift_endpoint_access.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b1a23f712abf5e70b5e09afe1545b494b878b5bffe5195cca6310e786a254ca9 -->
+<!-- cache-key: cdktf-0.20.9 input-b1a23f712abf5e70b5e09afe1545b494b878b5bffe5195cca6310e786a254ca9 -->

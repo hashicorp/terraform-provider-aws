@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `runtime` - Identifier of the function's runtime.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 
-<!-- cache-key: cdktf-0.20.1 input-b6e2e1659c76c964ed286497ed56bc0112bcfd7040e471fe9ab9da87416a183b -->
+<!-- cache-key: cdktf-0.20.9 input-b6e2e1659c76c964ed286497ed56bc0112bcfd7040e471fe9ab9da87416a183b -->

@@ -68,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `publicKeyPem` - Exported public key. The value is Privacy Enhanced Mail (PEM) encoded.
 * `signingAlgorithms` - Signing algorithms that AWS KMS supports for this key. Only set when the `keyUsage` of the public key is `SIGN_VERIFY`.
 
-<!-- cache-key: cdktf-0.20.1 input-12b3af34b0a1b4d66a4ded239c7cec5e42bb02e7dbdeb474700393154476f950 -->
+<!-- cache-key: cdktf-0.20.9 input-12b3af34b0a1b4d66a4ded239c7cec5e42bb02e7dbdeb474700393154476f950 -->

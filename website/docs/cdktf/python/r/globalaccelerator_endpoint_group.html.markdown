@@ -54,11 +54,11 @@ Terraform will only perform drift detection of its value when present in a confi
 
 `endpoint_configuration` supports the following arguments:
 
+* `attachment_arn` - (Optional) An ARN of an exposed cross-account attachment. See the [AWS documentation](https://docs.aws.amazon.com/global-accelerator/latest/dg/cross-account-resources.html) for more details.
 * `client_ip_preservation_enabled` - (Optional) Indicates whether client IP address preservation is enabled for an Application Load Balancer endpoint. See the [AWS documentation](https://docs.aws.amazon.com/global-accelerator/latest/dg/preserve-client-ip-address.html) for more details. The default value is `false`.
 **Note:** When client IP address preservation is enabled, the Global Accelerator service creates an EC2 Security Group in the VPC named `GlobalAccelerator` that must be deleted (potentially outside of Terraform) before the VPC will successfully delete. If this EC2 Security Group is not deleted, Terraform will retry the VPC deletion for a few minutes before reporting a `DependencyViolation` error. This cannot be resolved by re-running Terraform.
 * `endpoint_id` - (Optional) An ID for the endpoint. If the endpoint is a Network Load Balancer or Application Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If the endpoint is an Elastic IP address, this is the Elastic IP address allocation ID.
 * `weight` - (Optional) The weight associated with the endpoint. When you add weights to endpoints, you configure AWS Global Accelerator to route traffic based on proportions that you specify.
-* `attachment_arn` - (Optional) An ARN of an exposed cross-account attachment. See the [AWS documentation](https://docs.aws.amazon.com/global-accelerator/latest/dg/cross-account-resources.html) for more details.
 
 `port_override` supports the following arguments:
 
@@ -105,4 +105,4 @@ Using `terraform import`, import Global Accelerator endpoint groups using the `i
 % terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a99822bb8d802bdee38671c5875d85175be0aff6331a6b380641cb861eac7402 -->
+<!-- cache-key: cdktf-0.20.9 input-48677c74b60b74b1eb3424087d22e429d2236cebe37c1b292da850fb32a95838 -->

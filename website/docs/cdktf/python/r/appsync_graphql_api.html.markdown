@@ -425,4 +425,4 @@ Using `terraform import`, import AppSync GraphQL API using the GraphQL API ID. F
 % terraform import aws_appsync_graphql_api.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0a2d07c4ff9db43db137b148ef200a76363b1289e3df0b4fbfab4de199028271 -->
+<!-- cache-key: cdktf-0.20.9 input-0a2d07c4ff9db43db137b148ef200a76363b1289e3df0b4fbfab4de199028271 -->

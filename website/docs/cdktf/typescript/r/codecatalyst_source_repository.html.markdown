@@ -96,4 +96,4 @@ Using `terraform import`, import CodeCatalyst Source Repository using the `id`. 
 % terraform import aws_codecatalyst_source_repository.example example-repo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1bec0051bd4f9d6df50a3a5997bc07c4f0ca038f8f72a64f152d2bf7012ae2cb -->
+<!-- cache-key: cdktf-0.20.9 input-1bec0051bd4f9d6df50a3a5997bc07c4f0ca038f8f72a64f152d2bf7012ae2cb -->

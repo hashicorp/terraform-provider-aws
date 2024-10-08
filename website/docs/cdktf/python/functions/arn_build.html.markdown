@@ -39,4 +39,4 @@ arn_build(partition string, service string, region string, account_id string, re
 1. `account_id` (String) AWS account identifier.
 1. `resource` (String) Resource section, typically composed of a resource type and identifier.
 
-<!-- cache-key: cdktf-0.20.1 input-875170efc0ce0f31fd00792ca755e7cc47236bfc64b908a39463ea2f1a937d2a -->
+<!-- cache-key: cdktf-0.20.9 input-875170efc0ce0f31fd00792ca755e7cc47236bfc64b908a39463ea2f1a937d2a -->

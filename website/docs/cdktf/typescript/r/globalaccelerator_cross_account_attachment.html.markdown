@@ -131,4 +131,4 @@ Using `terraform import`, import Global Accelerator Cross Account Attachment usi
 % terraform import aws_globalaccelerator_cross_account_attachment.example arn:aws:globalaccelerator::012345678910:attachment/01234567-abcd-8910-efgh-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-16c120c3c0fc8e22b9cab22c91552e32d1979ad6b24d2a1a3f05f27c368d38a4 -->
+<!-- cache-key: cdktf-0.20.9 input-16c120c3c0fc8e22b9cab22c91552e32d1979ad6b24d2a1a3f05f27c368d38a4 -->

@@ -215,4 +215,4 @@ Using `terraform import`, import Lex V2 Models Slot Type using using a comma-del
 % terraform import aws_lexv2models_slot_type.example bot-1234,DRAFT,en_US,slot_type-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-df48b27c4e4585ae06dabeb5903193a3b43e575a64b68abb0d9175ccbbc92f0a -->
+<!-- cache-key: cdktf-0.20.9 input-df48b27c4e4585ae06dabeb5903193a3b43e575a64b68abb0d9175ccbbc92f0a -->
