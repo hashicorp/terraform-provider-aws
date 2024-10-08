@@ -49,6 +49,14 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", "ipv6_cidr_block", "ipv6_netmask_length"},
 			},
+			"ip_source": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipv6_address_attribute": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -154,6 +162,8 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 	isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
 
 	d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
+	d.Set("ip_source", vpcIpv6CidrBlockAssociation.IpSource)
+	d.Set("ipv6_address_attribute", vpcIpv6CidrBlockAssociation.Ipv6AddressAttribute)
 	d.Set("ipv6_cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
 	d.Set("ipv6_pool", ipv6PoolID)
 	d.Set(names.AttrVPCID, vpc.VpcId)
