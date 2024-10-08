@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_workteam: Fix `workforce_name`: WorkforceName is misconfigured as Required.
+```

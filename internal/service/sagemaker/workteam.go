@@ -166,7 +166,7 @@ func resourceWorkteam() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"workforce_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"workteam_name": {
@@ -191,7 +191,6 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("workteam_name").(string)
 	input := &sagemaker.CreateWorkteamInput{
 		WorkteamName:      aws.String(name),
-		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 		Tags:              getTagsIn(ctx),
@@ -203,6 +202,10 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("worker_access_configuration"); ok {
 		input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("workforce_name"); ok {
+		input.WorkforceName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %#v", input)
