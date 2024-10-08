@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_securityhub_automation_rule: Fix `criteria` attributes - aws_account_id, generator_id, title, resource_id to have a maximum Item size of 100
+resource/aws_securityhub_automation_rule: Increase `criteria.aws_account_id`, `criteria.generator_id`, `criteria.resource_id`, and `criteria.title` max length from `20` to `100`
 ```
