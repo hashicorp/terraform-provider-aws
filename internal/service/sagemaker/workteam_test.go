@@ -92,7 +92,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 	})
 }
 
-func TestAccWorkteam_cognitoOmitWorkforceName(t *testing.T) {
+func TestAccSageMakerWorkteam_cognitoOmitWorkforceName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -480,8 +480,8 @@ resource "aws_cognito_user_group" "test" {
 }
 
 resource "aws_sagemaker_workteam" "test" {
-  workteam_name  = %[1]q
-  description    = %[1]q
+  workteam_name = %[1]q
+  description   = %[1]q
 
   member_definition {
     cognito_member_definition {
