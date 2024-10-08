@@ -105,23 +105,6 @@ func (r *configurationSetResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	if !data.DefaultSenderId.IsNull() {
-		err = setDefaultSenderId(ctx, conn, fwflex.StringFromFramework(ctx, data.DefaultSenderId), fwflex.StringFromFramework(ctx, data.DefaultSenderId))
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s) to %s", name, data.DefaultMessageType.ValueString()), err.Error())
-
-			return
-		}
-	}
-	if !data.DefaultMessageType.IsNull() {
-		err = setDefaultMessageType(ctx, conn, fwflex.StringFromFramework(ctx, data.DefaultMessageType), data.DefaultMessageType.ValueEnum())
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("setting default message type for End User Messaging SMS Configuration Set (%s) to %s", name, data.DefaultMessageType.ValueString()), err.Error())
-
-			return
-		}
-	}
-
 	// Set values for unknowns.
 	data.ConfigurationSetARN = fwflex.StringToFramework(ctx, output.ConfigurationSetArn)
 	data.setID()
@@ -181,11 +164,12 @@ func (r *configurationSetResource) Update(ctx context.Context, request resource.
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
+	name := new.ConfigurationSetName.ValueString()
 	if !new.DefaultSenderId.Equal(old.DefaultSenderId) {
 		err := setDefaultSenderId(ctx, conn, new.ID.ValueStringPointer(), new.DefaultSenderId.ValueStringPointer())
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultSenderId.ValueString()), err.Error())
 
 			return
 		}
@@ -194,7 +178,7 @@ func (r *configurationSetResource) Update(ctx context.Context, request resource.
 		err := setDefaultMessageType(ctx, conn, new.ID.ValueStringPointer(), new.DefaultMessageType.ValueEnum())
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("setting default message type for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultMessageType.ValueString()), err.Error())
 
 			return
 		}
