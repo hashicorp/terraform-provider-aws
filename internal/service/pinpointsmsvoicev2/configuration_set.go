@@ -40,7 +40,6 @@ func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigur
 
 type configurationSetResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[configurationSetResourceModel]
 	framework.WithImportByID
 }
 
@@ -52,14 +51,11 @@ func (r *configurationSetResource) Schema(ctx context.Context, request resource.
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
+			"default_message_type": schema.StringAttribute{
+				Optional:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.MessageType](),
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$`), ""),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^(TRANSACTIONAL|PROMOTIONAL)$`), "must be either TRANSACTIONAL or PROMOTIONAL"),
 				},
 			},
 			"default_sender_id": schema.StringAttribute{
@@ -68,11 +64,14 @@ func (r *configurationSetResource) Schema(ctx context.Context, request resource.
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_-]{1,11}$`), "must be between 1 and 11 characters long and contain only letters, numbers, underscores, and dashes"),
 				},
 			},
-			"default_message_type": schema.StringAttribute{
-				Optional:   true,
-				CustomType: fwtypes.StringEnumType[awstypes.MessageType](),
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^(TRANSACTIONAL|PROMOTIONAL)$`), "must be either TRANSACTIONAL or PROMOTIONAL"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$`), ""),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -165,9 +164,9 @@ func (r *configurationSetResource) Update(ctx context.Context, request resource.
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	name := new.ConfigurationSetName.ValueString()
-	if !new.DefaultSenderId.Equal(old.DefaultSenderId) {
-		if new.DefaultSenderId.IsNull() {
-			err := deleteDefaultSenderId(ctx, conn, new.ID.ValueStringPointer())
+	if !new.DefaultSenderID.Equal(old.DefaultSenderID) {
+		if new.DefaultSenderID.IsNull() {
+			err := deleteDefaultSenderID(ctx, conn, name)
 
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("deleting default sender ID for End User Messaging SMS Configuration Set (%s)", name), err.Error())
@@ -175,10 +174,10 @@ func (r *configurationSetResource) Update(ctx context.Context, request resource.
 				return
 			}
 		} else {
-			err := setDefaultSenderId(ctx, conn, new.ID.ValueStringPointer(), new.DefaultSenderId.ValueStringPointer())
+			err := setDefaultSenderID(ctx, conn, name, new.DefaultSenderID.ValueString())
 
 			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultSenderId.ValueString()), err.Error())
+				response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultSenderID.ValueString()), err.Error())
 
 				return
 			}
@@ -186,7 +185,7 @@ func (r *configurationSetResource) Update(ctx context.Context, request resource.
 	}
 	if !new.DefaultMessageType.Equal(old.DefaultMessageType) {
 		if new.DefaultMessageType.IsNull() {
-			err := deleteDefaultMessageType(ctx, conn, new.ID.ValueStringPointer())
+			err := deleteDefaultMessageType(ctx, conn, name)
 
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("deleting default message type for End User Messaging SMS Configuration Set (%s)", name), err.Error())
@@ -194,7 +193,7 @@ func (r *configurationSetResource) Update(ctx context.Context, request resource.
 				return
 			}
 		} else {
-			err := setDefaultMessageType(ctx, conn, new.ID.ValueStringPointer(), new.DefaultMessageType.ValueEnum())
+			err := setDefaultMessageType(ctx, conn, name, new.DefaultMessageType.ValueEnum())
 
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("setting default message type for End User Messaging SMS Configuration Set (%s) to %s", name, new.DefaultMessageType.ValueString()), err.Error())
@@ -239,8 +238,8 @@ type configurationSetResourceModel struct {
 	ID                   types.String                             `tfsdk:"id"`
 	ConfigurationSetARN  types.String                             `tfsdk:"arn"`
 	ConfigurationSetName types.String                             `tfsdk:"name"`
-	DefaultSenderId      types.String                             `tfsdk:"default_sender_id"`
 	DefaultMessageType   fwtypes.StringEnum[awstypes.MessageType] `tfsdk:"default_message_type"`
+	DefaultSenderID      types.String                             `tfsdk:"default_sender_id"`
 	Tags                 tftags.Map                               `tfsdk:"tags"`
 	TagsAll              tftags.Map                               `tfsdk:"tags_all"`
 }
@@ -297,10 +296,10 @@ func findConfigurationSets(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 	return output, nil
 }
 
-func setDefaultSenderId(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName *string, senderId *string) error {
+func setDefaultSenderID(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName, senderID string) error {
 	input := &pinpointsmsvoicev2.SetDefaultSenderIdInput{
-		ConfigurationSetName: configurationSetName,
-		SenderId:             senderId,
+		ConfigurationSetName: aws.String(configurationSetName),
+		SenderId:             aws.String(senderID),
 	}
 
 	_, err := conn.SetDefaultSenderId(ctx, input)
@@ -308,9 +307,9 @@ func setDefaultSenderId(ctx context.Context, conn *pinpointsmsvoicev2.Client, co
 	return err
 }
 
-func setDefaultMessageType(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName *string, messageType awstypes.MessageType) error {
+func setDefaultMessageType(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName string, messageType awstypes.MessageType) error {
 	input := &pinpointsmsvoicev2.SetDefaultMessageTypeInput{
-		ConfigurationSetName: configurationSetName,
+		ConfigurationSetName: aws.String(configurationSetName),
 		MessageType:          messageType,
 	}
 
@@ -319,9 +318,9 @@ func setDefaultMessageType(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 	return err
 }
 
-func deleteDefaultSenderId(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName *string) error {
+func deleteDefaultSenderID(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName string) error {
 	input := &pinpointsmsvoicev2.DeleteDefaultSenderIdInput{
-		ConfigurationSetName: configurationSetName,
+		ConfigurationSetName: aws.String(configurationSetName),
 	}
 
 	_, err := conn.DeleteDefaultSenderId(ctx, input)
@@ -329,9 +328,9 @@ func deleteDefaultSenderId(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 	return err
 }
 
-func deleteDefaultMessageType(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName *string) error {
+func deleteDefaultMessageType(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName string) error {
 	input := &pinpointsmsvoicev2.DeleteDefaultMessageTypeInput{
-		ConfigurationSetName: configurationSetName,
+		ConfigurationSetName: aws.String(configurationSetName),
 	}
 
 	_, err := conn.DeleteDefaultMessageType(ctx, input)
