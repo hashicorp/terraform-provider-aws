@@ -111,6 +111,16 @@ func ExpectFullResourceTags(servicePackage conns.ServicePackage, resourceAddress
 	}
 }
 
+func ExpectFullResourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec *types.ServicePackageResourceTags, knownValue knownvalue.Check) expectFullTagsCheck {
+	return expectFullTagsCheck{
+		base:           NewBase(resourceAddress),
+		knownValue:     knownValue,
+		servicePackage: servicePackage,
+		tagSpecFinder:  identityTagSpec(tagsSpec),
+		entity:         entityResource,
+	}
+}
+
 func ExpectFullDataSourceTags(servicePackage conns.ServicePackage, resourceAddress string, knownValue knownvalue.Check) expectFullTagsCheck {
 	return expectFullTagsCheck{
 		base:           NewBase(resourceAddress),

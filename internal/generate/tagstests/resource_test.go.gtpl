@@ -119,6 +119,9 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 package {{ .ProviderPackage }}_test
 
 import (
+	{{ if ne .OverrideIdentifierAttribute "" }}
+	"context"
+	{{- end }}
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -129,6 +132,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	{{- if ne .OverrideIdentifierAttribute "" }}
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- end }}
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
@@ -2460,7 +2468,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2512,7 +2520,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2631,7 +2639,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2720,7 +2728,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2871,5 +2879,20 @@ func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(
 		t.Log("Skipping step: Resource {{ .Name }} does not support removing tags")
 		return true, nil
 	}
+}
+{{ end }}
+
+{{ define "expectFullResourceTags" -}}
+{{ if ne .OverrideIdentifierAttribute "" }}expectFull{{ .Name }}ResourceTags{{ else }}expectFullResourceTags{{ end }}
+{{- end }}
+
+{{ if ne .OverrideIdentifierAttribute "" }}
+func {{ template "expectFullResourceTags" . }}(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+		IdentifierAttribute: "{{ .OverrideIdentifierAttribute }}",
+		{{ if ne .OverrideResourceType "" -}}
+		ResourceType:        "{{ .OverrideResourceType }}",
+		{{- end }}
+	}, knownValue)
 }
 {{ end }}
