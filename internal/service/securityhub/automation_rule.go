@@ -208,15 +208,15 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"compliance_security_control_id":     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"compliance_status":                  stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"confidence":                         numberFilterSchemaFramework(ctx),
-						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx),
+						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"criticality":                        numberFilterSchemaFramework(ctx),
 						names.AttrDescription:                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"first_observed_at":                  dateFilterSchemaFramework(ctx),
+						"first_observed_at":                  dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"generator_id":                       stringFilterSchemaFramework(ctx, 100),
 						names.AttrID:                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"last_observed_at":                   dateFilterSchemaFramework(ctx),
+						"last_observed_at":                   dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"note_text":                          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"note_updated_at":                    dateFilterSchemaFramework(ctx),
+						"note_updated_at":                    dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"note_updated_by":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"product_arn":                        stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"product_name":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -235,7 +235,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"source_url":                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"title":                              stringFilterSchemaFramework(ctx, 100),
 						names.AttrType:                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						"updated_at":                         dateFilterSchemaFramework(ctx),
+						"updated_at":                         dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"user_defined_fields":                mapFilterSchemaFramework(ctx),
 						"verification_state":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"workflow_status":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -246,11 +246,11 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 	}
 }
 
-func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func dateFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[dateFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
