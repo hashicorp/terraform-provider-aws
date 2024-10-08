@@ -5,3 +5,8 @@ resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can on
 ```release-note:enhancement
 resource/aws_vpc_ipam: Add `enable_private_gua` argument
 ```
+
+
+```release-note:enhancement
+resource/aws_vpc_ipv6_cidr_block_association: Add `ip_source` and `ipv6_address_attribute` attributes
+```
