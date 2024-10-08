@@ -81,7 +81,7 @@ This resource supports the following arguments:
 
 * `coldStorageAfter` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `deleteAfter` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `coldStorageAfter`.
-* `opt_in_to_archive_for_supported_resources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
+* `optInToArchiveForSupportedResources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
 
 ### Copy Action Arguments
 
@@ -134,4 +134,4 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 % terraform import aws_backup_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ae01c9fb9e7affc0382314ccec1c65f4cc4f130b5e941d660e20c92e9b5312b9 -->
+<!-- cache-key: cdktf-0.20.9 input-ae01c9fb9e7affc0382314ccec1c65f4cc4f130b5e941d660e20c92e9b5312b9 -->

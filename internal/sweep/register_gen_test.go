@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
@@ -126,6 +127,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
@@ -175,6 +177,7 @@ func registerSweepers() {
 	apigatewayv2.RegisterSweepers()
 	appautoscaling.RegisterSweepers()
 	appconfig.RegisterSweepers()
+	appfabric.RegisterSweepers()
 	appflow.RegisterSweepers()
 	applicationinsights.RegisterSweepers()
 	appmesh.RegisterSweepers()
@@ -289,6 +292,7 @@ func registerSweepers() {
 	resourceexplorer2.RegisterSweepers()
 	resourcegroups.RegisterSweepers()
 	route53.RegisterSweepers()
+	route53profiles.RegisterSweepers()
 	route53recoverycontrolconfig.RegisterSweepers()
 	route53resolver.RegisterSweepers()
 	rum.RegisterSweepers()

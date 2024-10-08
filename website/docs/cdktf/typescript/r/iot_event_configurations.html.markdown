@@ -88,4 +88,4 @@ Using `terraform import`, import IoT Event Configurations using the AWS Region. 
 % terraform import aws_iot_event_configurations.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6c2534bc481fb2d9ea904879358653aa4b239080a23d4a63362116e2f5fa8a1c -->
+<!-- cache-key: cdktf-0.20.9 input-6c2534bc481fb2d9ea904879358653aa4b239080a23d4a63362116e2f5fa8a1c -->

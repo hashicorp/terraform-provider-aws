@@ -52,6 +52,7 @@ import (
 	codebuild_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codebuild"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	codecommit_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecommit"
+	codeconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeconnections"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	codegurureviewer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
@@ -444,6 +445,10 @@ func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.
 
 func (c *AWSClient) CodeCommitClient(ctx context.Context) *codecommit_sdkv2.Client {
 	return errs.Must(client[*codecommit_sdkv2.Client](ctx, c, names.CodeCommit, make(map[string]any)))
+}
+
+func (c *AWSClient) CodeConnectionsClient(ctx context.Context) *codeconnections_sdkv2.Client {
+	return errs.Must(client[*codeconnections_sdkv2.Client](ctx, c, names.CodeConnections, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler_sdkv2.Client {

@@ -161,4 +161,4 @@ Using `terraform import`, import Amazon File Cache cache using the resource `id`
 % terraform import aws_fsx_file_cache.example fc-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1859ea99cb9d6d35c3bafa1903ea724f9611978baf76d96694a45ea873f2f1c0 -->
+<!-- cache-key: cdktf-0.20.9 input-1859ea99cb9d6d35c3bafa1903ea724f9611978baf76d96694a45ea873f2f1c0 -->

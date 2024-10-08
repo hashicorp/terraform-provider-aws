@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
     * `delegationEnabledDate` - The date that the account became a delegated administrator for this service.
     * `servicePrincipal` - The name of an AWS service that can request an operation for the specified service.
 
-<!-- cache-key: cdktf-0.20.1 input-75948a55ba6b06c24be13238e2f8b8e4a682a05352b790ab2e35e7f82c3c8577 -->
+<!-- cache-key: cdktf-0.20.9 input-75948a55ba6b06c24be13238e2f8b8e4a682a05352b790ab2e35e7f82c3c8577 -->

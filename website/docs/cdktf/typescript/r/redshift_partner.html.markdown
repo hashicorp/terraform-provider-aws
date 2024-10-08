@@ -86,4 +86,4 @@ Using `terraform import`, import Redshift usage limits using the `id`. For examp
 % terraform import aws_redshift_partner.example 01234567910:cluster-example-id:example:example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d4438832cfe9bd08e76f7dbce4113e2e512ea90f05f4a5914f89a70db35ad904 -->
+<!-- cache-key: cdktf-0.20.9 input-d4438832cfe9bd08e76f7dbce4113e2e512ea90f05f4a5914f89a70db35ad904 -->

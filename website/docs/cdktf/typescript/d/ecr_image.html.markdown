@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `imageTags` - List of tags associated with this image.
 * `imageUri` - The URI for the specific image version specified by `imageTag` or `imageDigest`.
 
-<!-- cache-key: cdktf-0.20.1 input-1ae226f49a1f55e1a08caebd09db34fd57e8439bed838a6ae5cb76a75f4bb2a9 -->
+<!-- cache-key: cdktf-0.20.9 input-1ae226f49a1f55e1a08caebd09db34fd57e8439bed838a6ae5cb76a75f4bb2a9 -->

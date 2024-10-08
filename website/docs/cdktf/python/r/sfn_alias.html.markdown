@@ -94,4 +94,4 @@ Using `terraform import`, import SFN (Step Functions) Alias using the `arn`. For
 % terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfd0b99447354a387498343e81e37140646e8c656cabd51886388e3b57f53683 -->
+<!-- cache-key: cdktf-0.20.9 input-bfd0b99447354a387498343e81e37140646e8c656cabd51886388e3b57f53683 -->

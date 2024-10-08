@@ -96,4 +96,4 @@ Using `terraform import`, import CloudFront KeyValueStore Key using the `id`. Fo
 % terraform import aws_cloudfrontkeyvaluestore_key.example arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c,someKey
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8be706fbd3f242284c279369e9109cd860f070c155ffa699042454a80549babc -->
+<!-- cache-key: cdktf-0.20.9 input-8be706fbd3f242284c279369e9109cd860f070c155ffa699042454a80549babc -->

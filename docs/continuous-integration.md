@@ -116,6 +116,18 @@ Use the `testacc-tflint` target to run only the `tflint` test. This is useful if
 make testacc-tflint
 ```
 
+To run `tflint` only against acceptance test configurations in `.tf` files, use the `testacc-tflint-dir` target:
+
+```console
+make testacc-tflint-dir
+```
+
+To run `tflint` only against embedded configurations, use the `testacc-tflint-embedded` target:
+
+```console
+make testacc-tflint-embedded
+```
+
 ### Copyright Checks / add headers check
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.

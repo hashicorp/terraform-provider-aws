@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Policy")
+// @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
