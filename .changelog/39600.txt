@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip` errors
 ```
+
+```release-note:enhancement
+resource/aws_vpc_ipam: Add `enable_private_gua` argument
+```
