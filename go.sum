@@ -370,8 +370,8 @@ github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.43.1 h1:kjkecDAUjG4CTFSb
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.43.1/go.mod h1:HZRWr6ix/jn3GzyUeuG8C/Pigob3DyUD9KjyD6lbEm4=
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.1 h1:yY0evBdh8c1m6lp1QiTZdes/iN3RL0T5D01t6JPU/wo=
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.1/go.mod h1:xVwiI88HgIJODrFuMs/WcS5+Xd26Av2RiJO+Upiis3A=
-github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.0 h1:uvylROv9ey1PHn8afykew2L3/JH0dKLvDcVmUSBIvTk=
-github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.0/go.mod h1:DytkIzftjlErXKQltIUTE2ri0GpP5cua1YFxvuRZzmg=
+github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.1 h1:mGjCM3kkp5Z1gsvGbmIl0YRwbGKfd3BUKkXzsmdj2fw=
+github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.1/go.mod h1:jPWLATzV8EOlasT/PHRBSTOyScnKjrouQL6bC6c5ELk=
 github.com/aws/aws-sdk-go-v2/service/oam v1.15.0 h1:lvf6IzNHP0BLNPp1vbw27EG1oB5wl3TCOp6uQAb63pU=
 github.com/aws/aws-sdk-go-v2/service/oam v1.15.0/go.mod h1:5YXYSS1D37ToAb/Ruacre0c9YHKAH5/azbjb6py+xUs=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.41.0 h1:oMeCZaKcbbpGBt/t08+xdCii1JT7gXbZlycNwP6UJV8=
