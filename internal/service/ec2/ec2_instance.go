@@ -2363,9 +2363,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			// default setup, in case we don't find config for the block device (don't resolve duplicates)
 			bd[names.AttrTags] = tags.Map()
 			bd[names.AttrTagsAll] = tags.Map()
-			//bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
-			// this is hardcoded for the attr name to test this out
-			//rbd := d.Get("root_block_device")
+
 			if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
 				ebdList := v.(*schema.Set).List()
 				for _, ebd := range ebdList {
