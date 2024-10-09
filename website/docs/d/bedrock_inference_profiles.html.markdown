@@ -26,7 +26,6 @@ There are no arguments available for this data source.
 
 This data source exports the following attributes in addition to the arguments above:
 
-- `id` - AWS region.
 - `inference_profile_summaries` - List of inference profile summary objects. See [`inference_profile_summaries`](#inference_profile_summaries).
 
 ### `inference_profile_summaries`
