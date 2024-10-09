@@ -1,0 +1,35 @@
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `max_instance_lifetime` attribute
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `mixed_instances_policy` attribute
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `predicted_capacity` attribute
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `predicted_capacity` attribute
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `suspended_processes` attribute
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `tag` attribute
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `warm_pool` attribute
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `warm_pool_size` attribute
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `warm_pool_size` attribute
+```

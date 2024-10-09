@@ -1,33 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 const (
 	// If AWS adds these to the API, we should use those and remove these.
 
-	AcceptLanguageEnglish  = "en"
-	AcceptLanguageJapanese = "jp"
-	AcceptLanguageChinese  = "zh"
+	acceptLanguageEnglish  = "en"
+	acceptLanguageJapanese = "jp"
+	acceptLanguageChinese  = "zh"
 
-	ConstraintTypeLaunch         = "LAUNCH"
-	ConstraintTypeNotification   = "NOTIFICATION"
-	ConstraintTypeResourceUpdate = "RESOURCE_UPDATE"
-	ConstraintTypeStackset       = "STACKSET"
-	ConstraintTypeTemplate       = "TEMPLATE"
+	constraintTypeLaunch         = "LAUNCH"
+	constraintTypeNotification   = "NOTIFICATION"
+	constraintTypeResourceUpdate = "RESOURCE_UPDATE"
+	constraintTypeStackset       = "STACKSET"
+	constraintTypeTemplate       = "TEMPLATE"
 )
 
-func AcceptLanguage_Values() []string {
+func acceptLanguage_Values() []string {
 	return []string{
-		AcceptLanguageEnglish,
-		AcceptLanguageJapanese,
-		AcceptLanguageChinese,
+		acceptLanguageEnglish,
+		acceptLanguageJapanese,
+		acceptLanguageChinese,
 	}
 }
 
-func ConstraintType_Values() []string {
+func constraintType_Values() []string {
 	return []string{
-		ConstraintTypeLaunch,
-		ConstraintTypeNotification,
-		ConstraintTypeResourceUpdate,
-		ConstraintTypeStackset,
-		ConstraintTypeTemplate,
+		constraintTypeLaunch,
+		constraintTypeNotification,
+		constraintTypeResourceUpdate,
+		constraintTypeStackset,
+		constraintTypeTemplate,
 	}
 }

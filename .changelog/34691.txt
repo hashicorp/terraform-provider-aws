@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_ami: Correctly sets `description` on update due to eventual consistency
+```
+
+```release-note:bug
+resource/aws_ami: Correctly sets `deprecation_time` on creation and update due to eventual consistency
+```
+
+```release-note:bug
+resource/aws_ami: Now allows removing `deprecation_time`
+```

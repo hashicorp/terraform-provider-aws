@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValidUsagePlanQuotaSettings(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Offset   int
 		Period   string

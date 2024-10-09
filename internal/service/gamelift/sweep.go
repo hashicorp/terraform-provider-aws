@@ -1,22 +1,20 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package gamelift
 
 import (
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_gamelift_alias", &resource.Sweeper{
 		Name: "aws_gamelift_alias",
 		Dependencies: []string{
@@ -30,12 +28,22 @@ func init() {
 		F:    sweepBuilds,
 	})
 
+	resource.AddTestSweepers("aws_gamelift_script", &resource.Sweeper{
+		Name: "aws_gamelift_script",
+		F:    sweepScripts,
+	})
+
 	resource.AddTestSweepers("aws_gamelift_fleet", &resource.Sweeper{
 		Name: "aws_gamelift_fleet",
 		Dependencies: []string{
 			"aws_gamelift_build",
 		},
 		F: sweepFleets,
+	})
+
+	resource.AddTestSweepers("aws_gamelift_game_server_group", &resource.Sweeper{
+		Name: "aws_gamelift_game_server_group",
+		F:    sweepGameServerGroups,
 	})
 
 	resource.AddTestSweepers("aws_gamelift_game_session_queue", &resource.Sweeper{
@@ -45,205 +53,247 @@ func init() {
 }
 
 func sweepAliases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	input := &gamelift.ListAliasesInput{}
+	conn := client.GameLiftClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listAliases(&gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
-		if len(resp.Aliases) == 0 {
-			log.Print("[DEBUG] No Gamelift Aliases to sweep")
+	pages := gamelift.NewListAliasesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping GameLift Alias sweep for %s: %s", region, err)
 			return nil
 		}
 
-		log.Printf("[INFO] Found %d Gamelift Aliases", len(resp.Aliases))
-
-		for _, alias := range resp.Aliases {
-			log.Printf("[INFO] Deleting Gamelift Alias %q", *alias.AliasId)
-			_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
-				AliasId: alias.AliasId,
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting Gamelift Alias (%s): %s",
-					*alias.AliasId, err)
-			}
+		if err != nil {
+			return fmt.Errorf("error listing GameLift Aliases (%s): %w", region, err)
 		}
-		return nil
-	})
+
+		for _, v := range page.Aliases {
+			r := resourceAlias()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.AliasId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelift Alias sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing Gamelift Aliases: %s", err)
+		return fmt.Errorf("error sweeping GameLift Aliases (%s): %w", region, err)
 	}
 
 	return nil
 }
 
 func sweepBuilds(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	input := &gamelift.ListBuildsInput{}
+	conn := client.GameLiftClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	resp, err := conn.ListBuilds(&gamelift.ListBuildsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelife Build sweep for %s: %s", region, err)
+	pages := gamelift.NewListBuildsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping GameLift Build sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error listing Gamelift Builds: %s", err)
-	}
 
-	if len(resp.Builds) == 0 {
-		log.Print("[DEBUG] No Gamelift Builds to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d Gamelift Builds", len(resp.Builds))
-
-	for _, build := range resp.Builds {
-		log.Printf("[INFO] Deleting Gamelift Build %q", *build.BuildId)
-		_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
-			BuildId: build.BuildId,
-		})
 		if err != nil {
-			return fmt.Errorf("Error deleting Gamelift Build (%s): %s",
-				*build.BuildId, err)
+			return fmt.Errorf("error listing GameLift Builds (%s): %w", region, err)
 		}
+
+		for _, v := range page.Builds {
+			r := resourceBuild()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.BuildId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping GameLift Builds (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepScripts(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %s", err)
+	}
+	input := &gamelift.ListScriptsInput{}
+	conn := client.GameLiftClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := gamelift.NewListScriptsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping GameLift Script sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing GameLift Scripts (%s): %w", region, err)
+		}
+
+		for _, v := range page.Scripts {
+			r := resourceScript()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ScriptId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping GameLift Scripts (%s): %w", region, err)
 	}
 
 	return nil
 }
 
 func sweepFleets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	input := &gamelift.ListFleetsInput{}
+	conn := client.GameLiftClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	return listFleets(conn, nil, region, func(fleetIds []*string) error {
-		if len(fleetIds) == 0 {
-			log.Print("[DEBUG] No Gamelift Fleets to sweep")
+	pages := gamelift.NewListFleetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping GameLift Fleet sweep for %s: %s", region, err)
 			return nil
 		}
 
-		out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
-			FleetIds: fleetIds,
-		})
 		if err != nil {
-			return fmt.Errorf("Error describing Gamelift Fleet attributes: %s", err)
+			return fmt.Errorf("error listing GameLift Fleets (%s): %w", region, err)
 		}
 
-		log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
+		for _, v := range page.FleetIds {
+			r := resourceFleet()
+			d := r.Data(nil)
+			d.SetId(v)
 
-		for _, attr := range out.FleetAttributes {
-			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
-			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
-					FleetId: attr.FleetId,
-				})
-				if err != nil {
-					msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *attr.FleetId)
-					if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting Gamelift Fleet (%s): %s",
-					*attr.FleetId, err)
-			}
-
-			err = WaitForFleetToBeDeleted(conn, *attr.FleetId, FleetDeletedDefaultTimeout)
-			if err != nil {
-				return fmt.Errorf("Error waiting for Gamelift Fleet (%s) to be deleted: %s",
-					*attr.FleetId, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return nil
-	})
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping GameLift Fleets (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepGameServerGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %s", err)
+	}
+	conn := client.GameLiftClient(ctx)
+	input := &gamelift.ListGameServerGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := gamelift.NewListGameServerGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping GameLift Game Server Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing GameLift Game Server Groups (%s): %w", region, err)
+		}
+
+		for _, v := range page.GameServerGroups {
+			r := resourceGameServerGroup()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.GameServerGroupName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping GameLift Game Server Groups (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepGameSessionQueue(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	input := &gamelift.DescribeGameSessionQueuesInput{}
+	conn := client.GameLiftClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{})
+	pages := gamelift.NewDescribeGameSessionQueuesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Gamelift Session Queue: %s", err)
-	}
-
-	if len(out.GameSessionQueues) == 0 {
-		log.Print("[DEBUG] No Gamelift Session Queue to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d Gamelift Session Queue", len(out.GameSessionQueues))
-
-	for _, queue := range out.GameSessionQueues {
-		log.Printf("[INFO] Deleting Gamelift Session Queue %q", *queue.Name)
-		_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
-			Name: aws.String(*queue.Name),
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting Gamelift Session Queue (%s): %s",
-				*queue.Name, err)
-		}
-	}
-
-	return nil
-}
-
-func listAliases(input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f func(*gamelift.ListAliasesOutput) error) error {
-	resp, err := conn.ListAliases(input)
-	if err != nil {
-		return err
-	}
-	err = f(resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.NextToken != nil {
-		return listAliases(input, conn, f)
-	}
-	return nil
-}
-
-func listFleets(conn *gamelift.GameLift, nextToken *string, region string, f func([]*string) error) error {
-	resp, err := conn.ListFleets(&gamelift.ListFleetsInput{
-		NextToken: nextToken,
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelift Fleet sweep for %s: %s", region, err)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping GameLift Game Session Queue sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error listing Gamelift Fleets: %s", err)
+
+		if err != nil {
+			return fmt.Errorf("error listing GameLift Game Session Queues (%s): %w", region, err)
+		}
+
+		for _, v := range page.GameSessionQueues {
+			r := resourceGameSessionQueue()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	err = f(resp.FleetIds)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error sweeping GameLift Game Session Queues (%s): %w", region, err)
 	}
-	if nextToken != nil {
-		return listFleets(conn, nextToken, region, f)
-	}
+
 	return nil
 }

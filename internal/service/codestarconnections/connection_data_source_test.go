@@ -1,34 +1,48 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codestarconnections_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeStarConnectionsConnectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_codestarconnections_connection.test"
+	dataSourceName := "data.aws_codestarconnections_connection.test_arn"
+	dataSourceName2 := "data.aws_codestarconnections_connection.test_name"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionBasicDataSourceConfig(rName),
+				Config: testAccConnectionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "provider_type", dataSourceName, "provider_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_status", dataSourceName, "connection_status"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName2, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "provider_type", dataSourceName2, "provider_type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName2, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_status", dataSourceName2, "connection_status"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName2, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -36,39 +50,47 @@ func TestAccCodeStarConnectionsConnectionDataSource_basic(t *testing.T) {
 }
 
 func TestAccCodeStarConnectionsConnectionDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codestarconnections_connection.test"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionTagsDataSourceConfig(rName),
+				Config: testAccConnectionDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
 	})
 }
 
-func testAccConnectionBasicDataSourceConfig(rName string) string {
+func testAccConnectionDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "Bitbucket"
 }
 
-data "aws_codestarconnections_connection" "test" {
+data "aws_codestarconnections_connection" "test_arn" {
   arn = aws_codestarconnections_connection.test.arn
+}
+
+data "aws_codestarconnections_connection" "test_name" {
+  name = aws_codestarconnections_connection.test.name
 }
 `, rName)
 }
 
-func testAccConnectionTagsDataSourceConfig(rName string) string {
+func testAccConnectionDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q

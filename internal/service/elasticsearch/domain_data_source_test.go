@@ -1,30 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+func TestAccElasticsearchDomainDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := testAccRandomDomainName()
+	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainWithDataSourceConfig(rInt),
+				Config: testAccDomainDataSourceConfig_basic(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "processing", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.desired_state", resourceName, "auto_tune_options.0.desired_state"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.maintenance_schedule", resourceName, "auto_tune_options.0.maintenance_schedule"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.rollback_on_disable", resourceName, "auto_tune_options.0.rollback_on_disable"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_type", resourceName, "cluster_config.0.instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
@@ -32,6 +44,7 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.zone_awareness_enabled", resourceName, "cluster_config.0.zone_awareness_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.throughput", resourceName, "ebs_options.0.throughput"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
@@ -43,20 +56,30 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+func TestAccElasticsearchDomainDataSource_advanced(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := testAccRandomDomainName()
+	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAdvancedWithDataSourceConfig(rInt),
+				Config: testAccDomainDataSourceConfig_advanced(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.desired_state", resourceName, "auto_tune_options.0.desired_state"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.maintenance_schedule", resourceName, "auto_tune_options.0.maintenance_schedule"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.rollback_on_disable", resourceName, "auto_tune_options.0.rollback_on_disable"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_type", resourceName, "cluster_config.0.instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
@@ -78,10 +101,10 @@ func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
 	})
 }
 
-func testAccDomainWithDataSourceConfig(rInt int) string {
+func testAccDomainDataSourceConfig_basic(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 locals {
-  random_name = "test-es-%d"
+  random_name = %[1]q
 }
 
 data "aws_partition" "current" {}
@@ -92,7 +115,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = local.random_name
-  elasticsearch_version = "1.5"
+  elasticsearch_version = "6.7"
 
   access_policies = <<POLICY
 {
@@ -115,8 +138,23 @@ resource "aws_elasticsearch_domain" "test" {
 }
 POLICY
 
+  auto_tune_options {
+    desired_state = "ENABLED"
+
+    maintenance_schedule {
+      start_at = %[2]q
+      duration {
+        value = "2"
+        unit  = "HOURS"
+      }
+      cron_expression_for_recurrence = "cron(0 0 ? * 1 *)"
+    }
+
+    rollback_on_disable = "NO_ROLLBACK"
+
+  }
+
   cluster_config {
-    instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -129,7 +167,9 @@ POLICY
 
   ebs_options {
     ebs_enabled = true
-    volume_type = "gp2"
+    iops        = 3000
+    throughput  = 125
+    volume_type = "gp3"
     volume_size = 20
   }
 
@@ -141,11 +181,11 @@ POLICY
 data "aws_elasticsearch_domain" "test" {
   domain_name = aws_elasticsearch_domain.test.domain_name
 }
-		`, rInt)
+`, rName, autoTuneStartAtTime)
 }
 
-func testAccDomainAdvancedWithDataSourceConfig(rInt int) string {
-	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
+func testAccDomainDataSourceConfig_advanced(rName, autoTuneStartAtTime string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -153,7 +193,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  random_name = "test-es-%d"
+  random_name = %[1]q
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -184,25 +224,13 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 CONFIG
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test2" {
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
 resource "aws_security_group" "test" {
   name   = local.random_name
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = local.random_name
+  }
 }
 
 resource "aws_security_group_rule" "test" {
@@ -217,7 +245,7 @@ resource "aws_security_group_rule" "test" {
 
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = local.random_name
-  elasticsearch_version = "1.5"
+  elasticsearch_version = "6.7"
 
   access_policies = <<POLICY
 {
@@ -233,8 +261,23 @@ resource "aws_elasticsearch_domain" "test" {
 }
 POLICY
 
+  auto_tune_options {
+    desired_state = "ENABLED"
+
+    maintenance_schedule {
+      start_at = %[2]q
+      duration {
+        value = "2"
+        unit  = "HOURS"
+      }
+      cron_expression_for_recurrence = "cron(0 0 ? * 1 *)"
+    }
+
+    rollback_on_disable = "NO_ROLLBACK"
+
+  }
+
   cluster_config {
-    instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -264,10 +307,8 @@ POLICY
     security_group_ids = [
       aws_security_group.test.id
     ]
-    subnet_ids = [
-      aws_subnet.test.id,
-      aws_subnet.test2.id
-    ]
+
+    subnet_ids = aws_subnet.test[*].id
   }
 
   advanced_security_options {
@@ -276,12 +317,14 @@ POLICY
   }
 
   tags = {
-    Domain = "TestDomain"
+    Name = local.random_name
   }
+
+  depends_on = [aws_cloudwatch_log_resource_policy.test]
 }
 
 data "aws_elasticsearch_domain" "test" {
   domain_name = aws_elasticsearch_domain.test.domain_name
 }
-`, rInt)
+`, rName, autoTuneStartAtTime))
 }

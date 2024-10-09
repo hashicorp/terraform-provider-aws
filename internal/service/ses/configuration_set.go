@@ -1,31 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceConfigurationSet() *schema.Resource {
+// @SDKResource("aws_ses_configuration_set", name="Configuration Set")
+func resourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationSetCreate,
-		Read:   resourceConfigurationSetRead,
-		Update: resourceConfigurationSetUpdate,
-		Delete: resourceConfigurationSetDelete,
+		CreateWithoutTimeout: resourceConfigurationSetCreate,
+		ReadWithoutTimeout:   resourceConfigurationSetRead,
+		UpdateWithoutTimeout: resourceConfigurationSetUpdate,
+		DeleteWithoutTimeout: resourceConfigurationSetDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,10 +50,10 @@ func ResourceConfigurationSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"tls_policy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      ses.TlsPolicyOptional,
-							ValidateFunc: validation.StringInSlice(ses.TlsPolicy_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.TlsPolicyOptional,
+							ValidateDiagFunc: enum.Validate[awstypes.TlsPolicy](),
 						},
 					},
 				},
@@ -47,6 +61,12 @@ func ResourceConfigurationSet() *schema.Resource {
 			"last_fresh_start": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"reputation_metrics_enabled": {
 				Type:     schema.TypeBool,
@@ -58,30 +78,39 @@ func ResourceConfigurationSet() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+			"tracking_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_redirect_domain": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+						},
+					},
+				},
 			},
 		},
 	}
 }
 
-func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	configurationSetName := d.Get("name").(string)
-
-	createOpts := &ses.CreateConfigurationSetInput{
-		ConfigurationSet: &ses.ConfigurationSet{
+	configurationSetName := d.Get(names.AttrName).(string)
+	input := &ses.CreateConfigurationSetInput{
+		ConfigurationSet: &awstypes.ConfigurationSet{
 			Name: aws.String(configurationSetName),
 		},
 	}
 
-	_, err := conn.CreateConfigurationSet(createOpts)
+	_, err := conn.CreateConfigurationSet(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating SES configuration set (%s): %w", configurationSetName, err)
+		return sdkdiag.AppendErrorf(diags, "creating SES Configuration Set (%s): %s", configurationSetName, err)
 	}
 
 	d.SetId(configurationSetName)
@@ -89,74 +118,81 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			DeliveryOptions:      expandSesConfigurationSetDeliveryOptions(v.([]interface{})),
+			DeliveryOptions:      expandDeliveryOptions(v.([]interface{})),
 		}
 
-		_, err := conn.PutConfigurationSetDeliveryOptions(input)
+		_, err := conn.PutConfigurationSetDeliveryOptions(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) delivery options: %w", configurationSetName, err)
+			return sdkdiag.AppendErrorf(diags, "putting SES Configuration Set (%s) delivery options: %s", d.Id(), err)
 		}
 	}
 
 	if v := d.Get("reputation_metrics_enabled"); v.(bool) {
 		input := &ses.UpdateConfigurationSetReputationMetricsEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			Enabled:              aws.Bool(v.(bool)),
+			Enabled:              v.(bool),
 		}
 
-		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(input)
+		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) reputation metrics enabled: %w", configurationSetName, err)
+			return sdkdiag.AppendErrorf(diags, "enabling SES Configuration Set (%s) reputation metrics %s", d.Id(), err)
 		}
 	}
 
 	if v := d.Get("sending_enabled"); !v.(bool) {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			Enabled:              aws.Bool(v.(bool)),
+			Enabled:              v.(bool),
 		}
 
-		_, err := conn.UpdateConfigurationSetSendingEnabled(input)
+		_, err := conn.UpdateConfigurationSetSendingEnabled(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) sending enabled: %w", configurationSetName, err)
+			return sdkdiag.AppendErrorf(diags, "disabling SES Configuration Set (%s) sending: %s", d.Id(), err)
 		}
 	}
 
-	return resourceConfigurationSetRead(d, meta)
+	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := &ses.CreateConfigurationSetTrackingOptionsInput{
+			ConfigurationSetName: aws.String(configurationSetName),
+			TrackingOptions:      expandTrackingOptions(v.([]interface{})),
+		}
+
+		_, err := conn.CreateConfigurationSetTrackingOptions(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating SES Configuration Set (%s) tracking options: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceConfigurationSetRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	configSetInput := &ses.DescribeConfigurationSetInput{
+	input := &ses.DescribeConfigurationSetInput{
+		ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{
+			awstypes.ConfigurationSetAttributeDeliveryOptions,
+			awstypes.ConfigurationSetAttributeReputationOptions,
+			awstypes.ConfigurationSetAttributeTrackingOptions,
+		},
 		ConfigurationSetName: aws.String(d.Id()),
-		ConfigurationSetAttributeNames: aws.StringSlice([]string{
-			ses.ConfigurationSetAttributeDeliveryOptions,
-			ses.ConfigurationSetAttributeReputationOptions}),
 	}
 
-	response, err := conn.DescribeConfigurationSet(configSetInput)
+	output, err := findConfigurationSet(ctx, conn, input)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
-			log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if err := d.Set("delivery_options", flattenSesConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {
-		return fmt.Errorf("error setting delivery_options: %w", err)
-	}
-
-	d.Set("name", response.ConfigurationSet.Name)
-
-	repOpts := response.ReputationOptions
-	if repOpts != nil {
-		d.Set("reputation_metrics_enabled", repOpts.ReputationMetricsEnabled)
-		d.Set("sending_enabled", repOpts.SendingEnabled)
-		d.Set("last_fresh_start", aws.TimeValue(repOpts.LastFreshStart).Format(time.RFC3339))
+		return sdkdiag.AppendErrorf(diags, "reading SES Configuration Set (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -166,97 +202,190 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
+	if err := d.Set("delivery_options", flattenDeliveryOptions(output.DeliveryOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting delivery_options: %s", err)
+	}
+	d.Set(names.AttrName, output.ConfigurationSet.Name)
+	if err := d.Set("tracking_options", flattenTrackingOptions(output.TrackingOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tracking_options: %s", err)
+	}
 
-	return nil
+	if apiObject := output.ReputationOptions; apiObject != nil {
+		d.Set("last_fresh_start", aws.ToTime(apiObject.LastFreshStart).Format(time.RFC3339))
+		d.Set("reputation_metrics_enabled", apiObject.ReputationMetricsEnabled)
+		d.Set("sending_enabled", apiObject.SendingEnabled)
+	}
+
+	return diags
 }
 
-func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			DeliveryOptions:      expandSesConfigurationSetDeliveryOptions(d.Get("delivery_options").([]interface{})),
+			DeliveryOptions:      expandDeliveryOptions(d.Get("delivery_options").([]interface{})),
 		}
 
-		_, err := conn.PutConfigurationSetDeliveryOptions(input)
+		_, err := conn.PutConfigurationSetDeliveryOptions(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) delivery options: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SES Configuration Set (%s) delivery options: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("reputation_metrics_enabled") {
 		input := &ses.UpdateConfigurationSetReputationMetricsEnabledInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			Enabled:              aws.Bool(d.Get("reputation_metrics_enabled").(bool)),
+			Enabled:              d.Get("reputation_metrics_enabled").(bool),
 		}
 
-		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(input)
+		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SES Configuration Set (%s) reputation metrics enabled: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("sending_enabled") {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			Enabled:              aws.Bool(d.Get("sending_enabled").(bool)),
+			Enabled:              d.Get("sending_enabled").(bool),
 		}
 
-		_, err := conn.UpdateConfigurationSetSendingEnabled(input)
+		_, err := conn.UpdateConfigurationSetSendingEnabled(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SES Configuration Set (%s) reputation metrics enabled: %s", d.Id(), err)
 		}
 	}
 
-	return resourceConfigurationSetRead(d, meta)
+	if d.HasChange("tracking_options") {
+		input := &ses.UpdateConfigurationSetTrackingOptionsInput{
+			ConfigurationSetName: aws.String(d.Id()),
+			TrackingOptions:      expandTrackingOptions(d.Get("tracking_options").([]interface{})),
+		}
+
+		_, err := conn.UpdateConfigurationSetTrackingOptions(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SES Configuration Set (%s) tracking options: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceConfigurationSetRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())
-	input := &ses.DeleteConfigurationSetInput{
+	log.Printf("[DEBUG] Deleting Configuration Set: %s", d.Id())
+	_, err := conn.DeleteConfigurationSet(ctx, &ses.DeleteConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
+		return diags
 	}
 
-	if _, err := conn.DeleteConfigurationSet(input); err != nil {
-		if !tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
-			return fmt.Errorf("error deleting SES Configuration Set (%s): %w", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SES Configuration Set (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findConfigurationSetByName(ctx context.Context, conn *ses.Client, name string) (*ses.DescribeConfigurationSetOutput, error) {
+	input := &ses.DescribeConfigurationSetInput{
+		ConfigurationSetName: aws.String(name),
+	}
+
+	return findConfigurationSet(ctx, conn, input)
+}
+
+func findConfigurationSet(ctx context.Context, conn *ses.Client, input *ses.DescribeConfigurationSetInput) (*ses.DescribeConfigurationSetOutput, error) {
+	output, err := conn.DescribeConfigurationSet(ctx, input)
+
+	if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func expandSesConfigurationSetDeliveryOptions(l []interface{}) *ses.DeliveryOptions {
-	if len(l) == 0 || l[0] == nil {
+func expandDeliveryOptions(tfList []interface{}) *awstypes.DeliveryOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
-	options := &ses.DeliveryOptions{}
+	apiObject := &awstypes.DeliveryOptions{}
 
 	if v, ok := tfMap["tls_policy"].(string); ok && v != "" {
-		options.TlsPolicy = aws.String(v)
+		apiObject.TlsPolicy = awstypes.TlsPolicy(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenSesConfigurationSetDeliveryOptions(options *ses.DeliveryOptions) []interface{} {
-	if options == nil {
+func flattenDeliveryOptions(apiObject *awstypes.DeliveryOptions) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"tls_policy": aws.StringValue(options.TlsPolicy),
+	tfMap := map[string]interface{}{
+		"tls_policy": string(apiObject.TlsPolicy),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
+}
+
+func expandTrackingOptions(tfList []interface{}) *awstypes.TrackingOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.TrackingOptions{}
+
+	if v, ok := tfMap["custom_redirect_domain"].(string); ok && v != "" {
+		apiObject.CustomRedirectDomain = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenTrackingOptions(apiObject *awstypes.TrackingOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"custom_redirect_domain": aws.ToString(apiObject.CustomRedirectDomain),
+	}
+
+	return []interface{}{tfMap}
 }

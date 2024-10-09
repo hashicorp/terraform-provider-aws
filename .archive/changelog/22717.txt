@@ -1,0 +1,51 @@
+```release-note:bug
+resource/aws_cloudwatch_event_rule: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_cloudwatch_event_bus: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_cloudwatch_composite_alarm: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_cloudwatch_metric_alarm: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_cloudwatch_metric_stream: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+data-source/aws_lb_listener: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_lb_listener_rule: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_lb_listener: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+data-source/aws_lb: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_lb: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+data-source/aws_lb: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+data-source/aws_lb_target_group: Further refine tag error handling for ISO regions
+```
+
+```release-note:bug
+resource/aws_lb_target_group: Further refine tag error handling for ISO regions
+```

@@ -1,21 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
-	"fmt"
-	"strconv"
+	"context"
+	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceTargetGroup() *schema.Resource {
+// @SDKDataSource("aws_alb_target_group", name="Target Group")
+// @SDKDataSource("aws_lb_target_group", name="Target Group")
+// @Testing(tagsTest=true)
+func dataSourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTargetGroupRead,
+		ReadWithoutTimeout: dataSourceTargetGroupRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -24,16 +42,20 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deregistration_delay": {
-				Type:     schema.TypeInt,
+			"connection_termination": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"health_check": {
+			"deregistration_delay": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -41,7 +63,7 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -49,19 +71,19 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -76,16 +98,30 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"load_balancing_algorithm_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			"load_balancing_anomaly_mitigation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			"load_balancing_cross_zone_enabled": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -93,7 +129,7 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,23 +158,23 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"target_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,123 +182,109 @@ func DataSourceTargetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	input := &elbv2.DescribeTargetGroupsInput{}
+	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
-		input.TargetGroupArns = aws.StringSlice([]string{v.(string)})
-	} else if v, ok := d.GetOk("name"); ok {
-		input.Names = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrARN); ok {
+		input.TargetGroupArns = []string{v.(string)}
+	} else if v, ok := d.GetOk(names.AttrName); ok {
+		input.Names = []string{v.(string)}
 	}
 
-	var results []*elbv2.TargetGroup
-
-	err := conn.DescribeTargetGroupsPages(input, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		results = append(results, page.TargetGroups...)
-
-		return !lastPage
-	})
+	results, err := findTargetGroups(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error retrieving LB Target Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Groups: %s", err)
 	}
+
+	if len(tagsToMatch) > 0 {
+		var targetGroups []awstypes.TargetGroup
+
+		for _, targetGroup := range results {
+			arn := aws.ToString(targetGroup.TargetGroupArn)
+			tags, err := listTags(ctx, conn, arn)
+
+			if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
+				continue
+			}
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "listing tags for ELBv2 Target Group (%s): %s", arn, err)
+			}
+
+			if !tags.ContainsAll(tagsToMatch) {
+				continue
+			}
+
+			targetGroups = append(targetGroups, targetGroup)
+		}
+
+		results = targetGroups
+	}
+
 	if len(results) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", len(results))
 	}
 
 	targetGroup := results[0]
-
-	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
-
-	d.Set("arn", targetGroup.TargetGroupArn)
+	d.SetId(aws.ToString(targetGroup.TargetGroupArn))
+	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	d.Set("name", targetGroup.TargetGroupName)
+	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
+	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
 
-	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
-		return fmt.Errorf("error setting health_check: %w", err)
+	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(&targetGroup)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
+	d.Set(names.AttrName, targetGroup.TargetGroupName)
+	targetType := targetGroup.TargetType
+	d.Set("target_type", targetType)
 
-	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
-		d.Set("vpc_id", targetGroup.VpcId)
-		d.Set("port", targetGroup.Port)
-		d.Set("protocol", targetGroup.Protocol)
+	var protocol awstypes.ProtocolEnum
+	if targetType != awstypes.TargetTypeEnumLambda {
+		d.Set(names.AttrPort, targetGroup.Port)
+		protocol = targetGroup.Protocol
+		d.Set(names.AttrProtocol, protocol)
+		d.Set(names.AttrVPCID, targetGroup.VpcId)
 	}
-	switch d.Get("protocol").(string) {
-	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+	switch targetGroup.Protocol {
+	case awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps:
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
-	attrResp, err := conn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
-		TargetGroupArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("error retrieving Target Group Attributes: %w", err)
-	}
-
-	for _, attr := range attrResp.Attributes {
-		switch aws.StringValue(attr.Key) {
-		case "deregistration_delay.timeout_seconds":
-			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("error converting deregistration_delay.timeout_seconds to int: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("deregistration_delay", timeout)
-		case "lambda.multi_value_headers.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("error converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("lambda_multi_value_headers_enabled", enabled)
-		case "proxy_protocol_v2.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("error converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("proxy_protocol_v2", enabled)
-		case "slow_start.duration_seconds":
-			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("slow_start", slowStart)
-		case "load_balancing.algorithm.type":
-			loadBalancingAlgorithm := aws.StringValue(attr.Value)
-			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
-		case "preserve_client_ip.enabled":
-			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("error converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("preserve_client_ip", attr.Value)
-		}
-	}
-
-	stickinessAttr, err := flattenTargetGroupStickiness(attrResp.Attributes)
-	if err != nil {
-		return fmt.Errorf("error flattening stickiness: %w", err)
-	}
-
-	if err := d.Set("stickiness", stickinessAttr); err != nil {
-		return fmt.Errorf("error setting stickiness: %w", err)
-	}
-
-	tags, err := ListTags(conn, d.Id())
+	attributes, err := findTargetGroupAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 
-	return nil
+	targetGroupAttributes.flatten(d, targetType, attributes)
+
+	tags, err := listTags(ctx, conn, d.Id())
+
+	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for ELBv2 Target Group (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	return diags
 }

@@ -1,33 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
-	rName := fmt.Sprintf("tf_acc_ds_cognito_user_pools_%s", sdkacctest.RandString(7))
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck: acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "arns.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "ids.#", acctest.Ct0),
 				),
-			},
-			{
-				Config:      testAccUserPoolsDataSourceConfig_notFound(rName),
-				ExpectError: regexp.MustCompile(`No cognito user pool found with name:`),
 			},
 		},
 	})
@@ -35,21 +37,21 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 
 func testAccUserPoolsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognito_user_pool" "test" {
   count = 2
-  name  = "%s"
+  name  = %[1]q
 }
 
-data "aws_cognito_user_pools" "selected" {
-  name = aws_cognito_user_pool.main.*.name[0]
-}
-`, rName)
+data "aws_cognito_user_pools" "test" {
+  name = %[1]q
+
+  depends_on = [aws_cognito_user_pool.test[0], aws_cognito_user_pool.test[1]]
 }
 
-func testAccUserPoolsDataSourceConfig_notFound(rName string) string {
-	return fmt.Sprintf(`
-data "aws_cognito_user_pools" "selected" {
-  name = "%s-not-found"
+data "aws_cognito_user_pools" "empty" {
+  name = "not.%[1]s"
+
+  depends_on = [aws_cognito_user_pool.test[0], aws_cognito_user_pool.test[1]]
 }
 `, rName)
 }

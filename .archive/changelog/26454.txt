@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appstream_fleet: Fix crash when providing empty `domain_join_info` (_e.g._, `directory_name = ""`)
+```

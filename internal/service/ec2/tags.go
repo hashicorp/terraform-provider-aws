@@ -1,75 +1,96 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// getInstanceTagValue returns instance tag value by name
-func getInstanceTagValue(conn *ec2.EC2, instanceId string, tagKey string) (*string, error) {
-	tagsResp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(instanceId)},
-			},
-			{
-				Name:   aws.String("key"),
-				Values: []*string{aws.String(tagKey)},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
+const eventualConsistencyTimeout = 5 * time.Minute
 
-	if len(tagsResp.Tags) != 1 {
-		return nil, nil
-	}
-
-	return tagsResp.Tags[0].Value, nil
-}
-
-// ec2TagSpecificationsFromKeyValueTags returns the tag specifications for the given KeyValueTags object and resource type.
-func ec2TagSpecificationsFromKeyValueTags(tags tftags.KeyValueTags, t string) []*ec2.TagSpecification {
+// createTags creates ec2 service tags for new resources.
+func createTags(ctx context.Context, conn *ec2.Client, identifier string, tags []awstypes.Tag, optFns ...func(*ec2.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return []*ec2.TagSpecification{
+	newTagsMap := keyValueTags(ctx, tags)
+
+	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+		return nil, updateTags(ctx, conn, identifier, nil, newTagsMap, optFns...)
+	}, ".NotFound")
+
+	if err != nil {
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+	}
+
+	return nil
+}
+
+// getTagSpecificationsIn returns AWS SDK for Go v2 EC2 service tags from Context.
+// nil is returned if there are no input tags.
+func getTagSpecificationsIn(ctx context.Context, resourceType awstypes.ResourceType) []awstypes.TagSpecification {
+	tags := getTagsIn(ctx)
+
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return []awstypes.TagSpecification{
 		{
-			ResourceType: aws.String(t),
+			ResourceType: resourceType,
+			Tags:         tags,
+		},
+	}
+}
+
+// tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
+func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t awstypes.ResourceType) []awstypes.TagSpecification {
+	if len(m) == 0 {
+		return nil
+	}
+
+	return []awstypes.TagSpecification{
+		{
+			ResourceType: t,
+			Tags:         Tags(tftags.New(ctx, m).IgnoreAWS()),
+		},
+	}
+}
+
+// tagSpecificationsFromKeyValue returns the tag specifications for the given tag key/value tags and resource type.
+func tagSpecificationsFromKeyValue(tags tftags.KeyValueTags, resourceType string) []awstypes.TagSpecification {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return []awstypes.TagSpecification{
+		{
+			ResourceType: awstypes.ResourceType(resourceType),
 			Tags:         Tags(tags.IgnoreAWS()),
 		},
 	}
 }
 
-// ec2TagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
-func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
-	if len(m) == 0 {
-		return nil
-	}
-
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String(t),
-			Tags:         Tags(tftags.New(m).IgnoreAWS()),
-		},
-	}
-}
-
-// ec2TagsFromTagDescriptions returns the tags from the given tag descriptions.
+// tagsFromTagDescriptions returns the tags from the given tag descriptions.
 // No attempt is made to remove duplicates.
-func ec2TagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
+func tagsFromTagDescriptions(tds []awstypes.TagDescription) []awstypes.Tag {
 	if len(tds) == 0 {
 		return nil
 	}
 
-	tags := []*ec2.Tag{}
+	tags := []awstypes.Tag{}
 	for _, td := range tds {
-		tags = append(tags, &ec2.Tag{
+		tags = append(tags, awstypes.Tag{
 			Key:   td.Key,
 			Value: td.Value,
 		})
@@ -79,10 +100,8 @@ func ec2TagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
 }
 
 func tagsSchemaConflictsWith(conflictsWith []string) *schema.Schema {
-	return &schema.Schema{
-		ConflictsWith: conflictsWith,
-		Type:          schema.TypeMap,
-		Optional:      true,
-		Elem:          &schema.Schema{Type: schema.TypeString},
-	}
+	v := *tftags.TagsSchema() // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+	v.ConflictsWith = conflictsWith
+
+	return &v
 }

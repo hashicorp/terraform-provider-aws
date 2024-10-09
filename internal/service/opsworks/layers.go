@@ -1,21 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // OpsWorks has a single concept of "layer" which represents several different
@@ -29,182 +41,233 @@ import (
 // layer resource types, which have names matching aws_opsworks_*_layer .
 
 type opsworksLayerTypeAttribute struct {
-	AttrName  string
-	Type      schema.ValueType
-	Default   interface{}
-	Required  bool
-	WriteOnly bool
+	AttrName     awstypes.LayerAttributesKeys
+	Type         schema.ValueType
+	Default      interface{}
+	ForceNew     bool
+	Required     bool
+	ValidateFunc schema.SchemaValidateFunc
+	WriteOnly    bool
 }
 
+type opsworksLayerTypeAttributeMap map[string]*opsworksLayerTypeAttribute
+
 type opsworksLayerType struct {
-	TypeName         string
+	TypeName         awstypes.LayerType
 	DefaultLayerName string
-	Attributes       map[string]*opsworksLayerTypeAttribute
+	Attributes       opsworksLayerTypeAttributeMap
 	CustomShortName  bool
 }
 
-var (
-	opsworksTrueString  = "true"
-	opsworksFalseString = "false"
-)
-
-func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
+func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	resourceSchema := map[string]*schema.Schema{
+		names.AttrARN: {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"auto_assign_elastic_ips": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-
 		"auto_assign_public_ips": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-
-		"custom_instance_profile_arn": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: verify.ValidARN,
-		},
-
-		"elastic_load_balancer": {
-			Type:     schema.TypeString,
+		"auto_healing": {
+			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
-
-		"custom_setup_recipes": {
+		"cloudwatch_configuration": {
 			Type:     schema.TypeList,
 			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+			MaxItems: 1,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "1" && new == "0" && !d.Get("cloudwatch_configuration.0.enabled").(bool) {
+					return true
+				}
+				return false
+			},
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					names.AttrEnabled: {
+						Type:     schema.TypeBool,
+						Optional: true,
+						DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+							if old == "false" && new == "" {
+								return true
+							}
+							return false
+						},
+					},
+					"log_streams": {
+						Type:     schema.TypeList,
+						Optional: true,
+						DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+							if old == "1" && new == "0" && !d.Get("cloudwatch_configuration.0.enabled").(bool) {
+								return true
+							}
+							return false
+						},
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"batch_count": {
+									Type:         schema.TypeInt,
+									Default:      1000,
+									Optional:     true,
+									ValidateFunc: validation.IntAtMost(10000),
+								},
+								"batch_size": {
+									Type:         schema.TypeInt,
+									Default:      32768,
+									Optional:     true,
+									ValidateFunc: validation.IntAtMost(1048576),
+								},
+								"buffer_duration": {
+									Type:         schema.TypeInt,
+									Default:      5000,
+									Optional:     true,
+									ValidateFunc: validation.IntAtLeast(5000),
+								},
+								"datetime_format": {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+								"encoding": {
+									Type:             schema.TypeString,
+									Optional:         true,
+									Default:          awstypes.CloudWatchLogsEncodingUtf8,
+									ValidateDiagFunc: enum.Validate[awstypes.CloudWatchLogsEncoding](),
+								},
+								"file": {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+								"file_fingerprint_lines": {
+									Type:     schema.TypeString,
+									Optional: true,
+									Default:  "1",
+								},
+								"initial_position": {
+									Type:             schema.TypeString,
+									Optional:         true,
+									Default:          awstypes.CloudWatchLogsInitialPositionStartOfFile,
+									ValidateDiagFunc: enum.Validate[awstypes.CloudWatchLogsInitialPosition](),
+								},
+								names.AttrLogGroupName: {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+								"multiline_start_pattern": {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+								"time_zone": {
+									Type:             schema.TypeString,
+									Optional:         true,
+									ValidateDiagFunc: enum.Validate[awstypes.CloudWatchLogsTimeZone](),
+								},
+							},
+						},
+					},
+				},
+			},
 		},
-
 		"custom_configure_recipes": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-
 		"custom_deploy_recipes": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-
-		"custom_undeploy_recipes": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+		"custom_instance_profile_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
 		},
-
-		"custom_shutdown_recipes": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-
-		"custom_security_group_ids": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
-		},
-
 		"custom_json": {
-			Type: schema.TypeString,
+			Type:         schema.TypeString,
+			ValidateFunc: validation.StringIsJSON,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
 			Optional: true,
 		},
-
-		"auto_healing": {
-			Type:     schema.TypeBool,
+		"custom_security_group_ids": {
+			Type:     schema.TypeSet,
 			Optional: true,
-			Default:  true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-
-		"install_updates_on_boot": {
-			Type:     schema.TypeBool,
+		"custom_setup_recipes": {
+			Type:     schema.TypeList,
 			Optional: true,
-			Default:  true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-
-		"instance_shutdown_timeout": {
-			Type:     schema.TypeInt,
+		"custom_shutdown_recipes": {
+			Type:     schema.TypeList,
 			Optional: true,
-			Default:  120,
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-
+		"custom_undeploy_recipes": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
 		"drain_elb_on_shutdown": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  true,
 		},
-
-		"system_packages": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
-		},
-
-		"stack_id": {
-			Type:     schema.TypeString,
-			ForceNew: true,
-			Required: true,
-		},
-
-		"use_ebs_optimized_instances": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		},
-
 		"ebs_volume": {
 			Type:     schema.TypeSet,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-
-					"iops": {
+					names.AttrEncrypted: {
+						Type:     schema.TypeBool,
+						Optional: true,
+						Default:  false,
+					},
+					names.AttrIOPS: {
 						Type:     schema.TypeInt,
 						Optional: true,
 						Default:  0,
 					},
-
 					"mount_point": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-
 					"number_of_disks": {
 						Type:     schema.TypeInt,
 						Required: true,
 					},
-
 					"raid_level": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Default:  "",
 					},
-
-					"size": {
+					names.AttrSize: {
 						Type:     schema.TypeInt,
 						Required: true,
 					},
-
-					"type": {
+					names.AttrType: {
 						Type:     schema.TypeString,
 						Optional: true,
 						Default:  "standard",
-					},
-
-					"encrypted": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  false,
+						ValidateFunc: validation.StringInSlice([]string{
+							"standard",
+							"io1",
+							"gp2",
+							"st1",
+							"sc1",
+						}, false),
 					},
 				},
 			},
@@ -213,12 +276,143 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 				return create.StringHashcode(m["mount_point"].(string))
 			},
 		},
-		"arn": {
+		"elastic_load_balancer": {
 			Type:     schema.TypeString,
-			Computed: true,
+			Optional: true,
 		},
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
+		"instance_shutdown_timeout": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  120,
+		},
+		"install_updates_on_boot": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
+		"load_based_auto_scaling": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"downscaling": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Computed: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"alarms": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+									MaxItems: 5,
+								},
+								"cpu_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  30.0,
+								},
+								"ignore_metrics_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      10,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+								names.AttrInstanceCount: {
+									Type:     schema.TypeInt,
+									Optional: true,
+									Default:  1,
+								},
+								"load_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"memory_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"thresholds_wait_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      10,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+							},
+						},
+					},
+					"enable": {
+						Type:     schema.TypeBool,
+						Optional: true,
+					},
+					"upscaling": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Computed: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"alarms": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+									MaxItems: 5,
+								},
+								"cpu_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  80.0,
+								},
+								"ignore_metrics_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      5,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+								names.AttrInstanceCount: {
+									Type:     schema.TypeInt,
+									Optional: true,
+									Default:  1,
+								},
+								"load_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"memory_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"thresholds_wait_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      5,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"system_packages": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+		"stack_id": {
+			Type:     schema.TypeString,
+			ForceNew: true,
+			Required: true,
+		},
+		names.AttrTags:    tftags.TagsSchema(),
+		names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		"use_ebs_optimized_instances": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 	}
 
 	if lt.CustomShortName {
@@ -229,13 +423,13 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	}
 
 	if lt.DefaultLayerName != "" {
-		resourceSchema["name"] = &schema.Schema{
+		resourceSchema[names.AttrName] = &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  lt.DefaultLayerName,
 		}
 	} else {
-		resourceSchema["name"] = &schema.Schema{
+		resourceSchema[names.AttrName] = &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 		}
@@ -243,484 +437,982 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 
 	for key, def := range lt.Attributes {
 		resourceSchema[key] = &schema.Schema{
-			Type:     def.Type,
-			Default:  def.Default,
-			Required: def.Required,
-			Optional: !def.Required,
+			Type:         def.Type,
+			Default:      def.Default,
+			ForceNew:     def.ForceNew,
+			Required:     def.Required,
+			Optional:     !def.Required,
+			ValidateFunc: def.ValidateFunc,
 		}
 	}
 
 	return &schema.Resource{
-		Read: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Read(d, meta)
+		CreateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Create(ctx, d, meta)
 		},
-		Create: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Create(d, meta)
+		ReadWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Read(ctx, d, meta)
 		},
-		Update: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Update(d, meta)
+		UpdateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Update(ctx, d, meta)
 		},
-		Delete: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Delete(d, meta)
-		},
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+		DeleteWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Delete(ctx, d, meta)
 		},
 
-		Schema: resourceSchema,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return resourceSchema
+		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
-	req := &opsworks.DescribeLayersInput{
-		LayerIds: []*string{
-			aws.String(d.Id()),
-		},
-	}
+	attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
-	log.Printf("[DEBUG] Reading OpsWorks layer: %s", d.Id())
-
-	resp, err := conn.DescribeLayers(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	layer := resp.Layers[0]
-	d.SetId(aws.StringValue(layer.LayerId))
-	d.Set("auto_assign_elastic_ips", layer.AutoAssignElasticIps)
-	d.Set("auto_assign_public_ips", layer.AutoAssignPublicIps)
-	d.Set("custom_instance_profile_arn", layer.CustomInstanceProfileArn)
-	d.Set("custom_security_group_ids", flex.FlattenStringList(layer.CustomSecurityGroupIds))
-	d.Set("auto_healing", layer.EnableAutoHealing)
-	d.Set("install_updates_on_boot", layer.InstallUpdatesOnBoot)
-	d.Set("name", layer.Name)
-	d.Set("system_packages", flex.FlattenStringList(layer.Packages))
-	d.Set("stack_id", layer.StackId)
-	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
+	name := d.Get(names.AttrName).(string)
+	input := &opsworks.CreateLayerInput{
+		Attributes:           attributes,
+		AutoAssignElasticIps: aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
+		AutoAssignPublicIps:  aws.Bool(d.Get("auto_assign_public_ips").(bool)),
+		CustomRecipes:        &awstypes.Recipes{},
+		EnableAutoHealing:    aws.Bool(d.Get("auto_healing").(bool)),
+		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
+		LifecycleEventConfiguration: &awstypes.LifecycleEventConfiguration{
+			Shutdown: &awstypes.ShutdownEventConfiguration{
+				DelayUntilElbConnectionsDrained: aws.Bool(d.Get("drain_elb_on_shutdown").(bool)),
+			},
+		},
+		Name:                     aws.String(name),
+		Type:                     lt.TypeName,
+		StackId:                  aws.String(d.Get("stack_id").(string)),
+		UseEbsOptimizedInstances: aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
+	}
+
+	if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_configure_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Configure = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_deploy_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Deploy = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_instance_profile_arn"); ok {
+		input.CustomInstanceProfileArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_json"); ok {
+		input.CustomJson = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.CustomSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("custom_setup_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Setup = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_shutdown_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Shutdown = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_undeploy_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Undeploy = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("ebs_volume"); ok && v.(*schema.Set).Len() > 0 {
+		input.VolumeConfigurations = expandVolumeConfigurations(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("instance_shutdown_timeout"); ok {
+		input.LifecycleEventConfiguration.Shutdown.ExecutionTimeout = aws.Int32(int32(v.(int)))
+	}
 
 	if lt.CustomShortName {
-		d.Set("short_name", layer.Shortname)
+		input.Shortname = aws.String(d.Get("short_name").(string))
+	} else {
+		input.Shortname = aws.String(string(lt.TypeName))
 	}
 
+	if v, ok := d.GetOk("system_packages"); ok && v.(*schema.Set).Len() > 0 {
+		input.Packages = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
+		arn := v.(string)
+		_, err := conn.RegisterEcsCluster(ctx, &opsworks.RegisterEcsClusterInput{
+			EcsClusterArn: aws.String(arn),
+			StackId:       input.StackId,
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "registering OpsWorks Layer (%s) ECS Cluster (%s): %s", name, arn, err)
+		}
+	}
+
+	log.Printf("[DEBUG] Creating OpsWorks Layer: %#v", input)
+	output, err := conn.CreateLayer(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Layer (%s): %s", name, err)
+	}
+
+	d.SetId(aws.ToString(output.LayerId))
+
+	if v, ok := d.GetOk("elastic_load_balancer"); ok {
+		v := v.(string)
+		_, err := conn.AttachElasticLoadBalancer(ctx, &opsworks.AttachElasticLoadBalancerInput{
+			ElasticLoadBalancerName: aws.String(v),
+			LayerId:                 aws.String(d.Id()),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "attaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
+		}
+	}
+
+	if v, ok := d.GetOk("load_based_auto_scaling"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := expandSetLoadBasedAutoScalingInput(v.([]interface{})[0].(map[string]interface{}))
+		input.LayerId = aws.String(d.Id())
+
+		_, err := conn.SetLoadBasedAutoScaling(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting OpsWorks Layer (%s) load-based auto scaling configuration: %s", d.Id(), err)
+		}
+	}
+
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+		layer, err := findLayerByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading OpsWorks Layer (%s): %s", d.Id(), err)
+		}
+
+		arn := aws.ToString(layer.Arn)
+		if err := updateTags(ctx, conn, arn, nil, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "adding OpsWorks Layer (%s) tags: %s", arn, err)
+		}
+	}
+
+	return append(diags, lt.Read(ctx, d, meta)...)
+}
+
+func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
+
+	layer, err := findLayerByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpsWorks Layer %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Layer (%s): %s", d.Id(), err)
+	}
+
+	arn := aws.ToString(layer.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set("auto_assign_elastic_ips", layer.AutoAssignElasticIps)
+	d.Set("auto_assign_public_ips", layer.AutoAssignPublicIps)
+	d.Set("auto_healing", layer.EnableAutoHealing)
+	if layer.CloudWatchLogsConfiguration != nil {
+		if err := d.Set("cloudwatch_configuration", []interface{}{flattenCloudWatchLogsConfiguration(layer.CloudWatchLogsConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting cloudwatch_configuration: %s", err)
+		}
+	} else {
+		d.Set("cloudwatch_configuration", nil)
+	}
+	if layer.CustomRecipes == nil {
+		d.Set("custom_configure_recipes", nil)
+		d.Set("custom_deploy_recipes", nil)
+		d.Set("custom_setup_recipes", nil)
+		d.Set("custom_shutdown_recipes", nil)
+		d.Set("custom_undeploy_recipes", nil)
+	} else {
+		d.Set("custom_configure_recipes", layer.CustomRecipes.Configure)
+		d.Set("custom_deploy_recipes", layer.CustomRecipes.Deploy)
+		d.Set("custom_setup_recipes", layer.CustomRecipes.Setup)
+		d.Set("custom_shutdown_recipes", layer.CustomRecipes.Shutdown)
+		d.Set("custom_undeploy_recipes", layer.CustomRecipes.Undeploy)
+	}
+	d.Set("custom_instance_profile_arn", layer.CustomInstanceProfileArn)
 	if layer.CustomJson == nil {
 		d.Set("custom_json", "")
 	} else {
-		policy, err := structure.NormalizeJsonString(*layer.CustomJson)
+		policy, err := structure.NormalizeJsonString(aws.ToString(layer.CustomJson))
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %s", err)
+			return sdkdiag.AppendErrorf(diags, "policy contains an invalid JSON: %s", err)
 		}
 		d.Set("custom_json", policy)
 	}
-
-	err = lt.SetAttributeMap(d, layer.Attributes)
-	if err != nil {
-		return err
-	}
-	lt.SetLifecycleEventConfiguration(d, layer.LifecycleEventConfiguration)
-	lt.SetCustomRecipes(d, layer.CustomRecipes)
-	lt.SetVolumeConfigurations(d, layer.VolumeConfigurations)
-
-	/* get ELB */
-	ebsRequest := &opsworks.DescribeElasticLoadBalancersInput{
-		LayerIds: []*string{
-			aws.String(d.Id()),
-		},
-	}
-	loadBalancers, err := conn.DescribeElasticLoadBalancers(ebsRequest)
-	if err != nil {
-		return err
-	}
-
-	if loadBalancers.ElasticLoadBalancers == nil || len(loadBalancers.ElasticLoadBalancers) == 0 {
-		d.Set("elastic_load_balancer", "")
-	} else {
-		loadBalancer := loadBalancers.ElasticLoadBalancers[0]
-		if loadBalancer != nil {
-			d.Set("elastic_load_balancer", loadBalancer.ElasticLoadBalancerName)
-		}
-	}
-
-	arn := aws.StringValue(layer.Arn)
-	d.Set("arn", arn)
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Opsworks Layer (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	attributes, err := lt.AttributeMap(d)
-	if err != nil {
-		return err
-	}
-	req := &opsworks.CreateLayerInput{
-		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
-		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
-		CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
-		CustomRecipes:               lt.CustomRecipes(d),
-		CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
-		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
-		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
-		Name:                        aws.String(d.Get("name").(string)),
-		Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
-		Type:                        aws.String(lt.TypeName),
-		StackId:                     aws.String(d.Get("stack_id").(string)),
-		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		Attributes:                  attributes,
-		VolumeConfigurations:        lt.VolumeConfigurations(d),
-	}
-
-	if lt.CustomShortName {
-		req.Shortname = aws.String(d.Get("short_name").(string))
-	} else {
-		req.Shortname = aws.String(lt.TypeName)
-	}
-
-	req.CustomJson = aws.String(d.Get("custom_json").(string))
-
-	log.Printf("[DEBUG] Creating OpsWorks layer: %s", d.Id())
-
-	resp, err := conn.CreateLayer(req)
-	if err != nil {
-		return err
-	}
-
-	layerId := *resp.LayerId
-	d.SetId(layerId)
-
-	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
-	if loadBalancer != nil && *loadBalancer != "" {
-		log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancer)
-		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
-			ElasticLoadBalancerName: loadBalancer,
-			LayerId:                 &layerId,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "opsworks",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("layer/%s", d.Id()),
-	}.String()
-
-	if len(tags) > 0 {
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
-		}
-	}
-
-	return lt.Read(d, meta)
-}
-
-func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-
-	attributes, err := lt.AttributeMap(d)
-	if err != nil {
-		return err
-	}
-	req := &opsworks.UpdateLayerInput{
-		LayerId:                     aws.String(d.Id()),
-		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
-		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
-		CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
-		CustomRecipes:               lt.CustomRecipes(d),
-		CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
-		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
-		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
-		Name:                        aws.String(d.Get("name").(string)),
-		Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
-		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		Attributes:                  attributes,
-		VolumeConfigurations:        lt.VolumeConfigurations(d),
-	}
-
-	if lt.CustomShortName {
-		req.Shortname = aws.String(d.Get("short_name").(string))
-	} else {
-		req.Shortname = aws.String(lt.TypeName)
-	}
-
-	req.CustomJson = aws.String(d.Get("custom_json").(string))
-
-	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
-
-	if d.HasChange("elastic_load_balancer") {
-		lbo, lbn := d.GetChange("elastic_load_balancer")
-
-		loadBalancerOld := aws.String(lbo.(string))
-		loadBalancerNew := aws.String(lbn.(string))
-
-		if loadBalancerOld != nil && *loadBalancerOld != "" {
-			log.Printf("[DEBUG] Dettaching load balancer: %s", *loadBalancerOld)
-			_, err := conn.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
-				ElasticLoadBalancerName: loadBalancerOld,
-				LayerId:                 aws.String(d.Id()),
-			})
-			if err != nil {
-				return err
-			}
-		}
-
-		if loadBalancerNew != nil && *loadBalancerNew != "" {
-			log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancerNew)
-			_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
-				ElasticLoadBalancerName: loadBalancerNew,
-				LayerId:                 aws.String(d.Id()),
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	_, err = conn.UpdateLayer(req)
-	if err != nil {
-		return err
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		arn := d.Get("arn").(string)
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %s", arn, err)
-		}
-	}
-
-	return lt.Read(d, meta)
-}
-
-func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-
-	req := &opsworks.DeleteLayerInput{
-		LayerId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting OpsWorks layer: %s", d.Id())
-
-	_, err := conn.DeleteLayer(req)
-	return err
-}
-
-func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) (map[string]*string, error) {
-	attrs := map[string]*string{}
-
-	for key, def := range lt.Attributes {
-		value := d.Get(key)
-		switch def.Type {
-		case schema.TypeString:
-			strValue := value.(string)
-			attrs[def.AttrName] = &strValue
-		case schema.TypeInt:
-			intValue := value.(int)
-			strValue := strconv.Itoa(intValue)
-			attrs[def.AttrName] = &strValue
-		case schema.TypeBool:
-			boolValue := value.(bool)
-			if boolValue {
-				attrs[def.AttrName] = &opsworksTrueString
-			} else {
-				attrs[def.AttrName] = &opsworksFalseString
-			}
-		default:
-			// should never happen
-			return nil, fmt.Errorf("Unsupported OpsWorks layer attribute type: %s", def.Type)
-		}
-	}
-
-	return attrs, nil
-}
-
-func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[string]*string) error {
-	for key, def := range lt.Attributes {
-		// Ignore write-only attributes; we'll just keep what we already have stored.
-		// (The AWS API returns garbage placeholder values for these.)
-		if def.WriteOnly {
-			continue
-		}
-
-		if strPtr, ok := attrs[def.AttrName]; ok && strPtr != nil {
-			strValue := *strPtr
-
-			switch def.Type {
-			case schema.TypeString:
-				d.Set(key, strValue)
-			case schema.TypeInt:
-				intValue, err := strconv.Atoi(strValue)
-				if err == nil {
-					d.Set(key, intValue)
-				} else {
-					// Got garbage from the AWS API
-					d.Set(key, nil)
-				}
-			case schema.TypeBool:
-				boolValue := true
-				if strValue == opsworksFalseString {
-					boolValue = false
-				}
-				d.Set(key, boolValue)
-			default:
-				// should never happen
-				return fmt.Errorf("Unsupported OpsWorks layer attribute type: %s", def.Type)
-			}
-			return nil
-
-		} else {
-			d.Set(key, nil)
-		}
-	}
-	return nil
-}
-
-func (lt *opsworksLayerType) LifecycleEventConfiguration(d *schema.ResourceData) *opsworks.LifecycleEventConfiguration {
-	return &opsworks.LifecycleEventConfiguration{
-		Shutdown: &opsworks.ShutdownEventConfiguration{
-			DelayUntilElbConnectionsDrained: aws.Bool(d.Get("drain_elb_on_shutdown").(bool)),
-			ExecutionTimeout:                aws.Int64(int64(d.Get("instance_shutdown_timeout").(int))),
-		},
-	}
-}
-
-func (lt *opsworksLayerType) SetLifecycleEventConfiguration(d *schema.ResourceData, v *opsworks.LifecycleEventConfiguration) {
-	if v == nil || v.Shutdown == nil {
+	d.Set("custom_security_group_ids", layer.CustomSecurityGroupIds)
+	if layer.LifecycleEventConfiguration == nil || layer.LifecycleEventConfiguration.Shutdown == nil {
 		d.Set("drain_elb_on_shutdown", nil)
 		d.Set("instance_shutdown_timeout", nil)
 	} else {
-		d.Set("drain_elb_on_shutdown", v.Shutdown.DelayUntilElbConnectionsDrained)
-		d.Set("instance_shutdown_timeout", v.Shutdown.ExecutionTimeout)
+		d.Set("drain_elb_on_shutdown", layer.LifecycleEventConfiguration.Shutdown.DelayUntilElbConnectionsDrained)
+		d.Set("instance_shutdown_timeout", layer.LifecycleEventConfiguration.Shutdown.ExecutionTimeout)
 	}
-}
-
-func (lt *opsworksLayerType) CustomRecipes(d *schema.ResourceData) *opsworks.Recipes {
-	return &opsworks.Recipes{
-		Configure: flex.ExpandStringList(d.Get("custom_configure_recipes").([]interface{})),
-		Deploy:    flex.ExpandStringList(d.Get("custom_deploy_recipes").([]interface{})),
-		Setup:     flex.ExpandStringList(d.Get("custom_setup_recipes").([]interface{})),
-		Shutdown:  flex.ExpandStringList(d.Get("custom_shutdown_recipes").([]interface{})),
-		Undeploy:  flex.ExpandStringList(d.Get("custom_undeploy_recipes").([]interface{})),
+	if err := d.Set("ebs_volume", flattenVolumeConfigurations(layer.VolumeConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ebs_volume: %s", err)
 	}
-}
+	d.Set("install_updates_on_boot", layer.InstallUpdatesOnBoot)
+	d.Set(names.AttrName, layer.Name)
+	if lt.CustomShortName {
+		d.Set("short_name", layer.Shortname)
+	}
+	d.Set("system_packages", layer.Packages)
+	d.Set("stack_id", layer.StackId)
+	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
 
-func (lt *opsworksLayerType) SetCustomRecipes(d *schema.ResourceData, v *opsworks.Recipes) {
-	// Null out everything first, and then we'll consider what to put back.
-	d.Set("custom_configure_recipes", nil)
-	d.Set("custom_deploy_recipes", nil)
-	d.Set("custom_setup_recipes", nil)
-	d.Set("custom_shutdown_recipes", nil)
-	d.Set("custom_undeploy_recipes", nil)
-
-	if v == nil {
-		return
+	if err := lt.Attributes.apiAttributesToResourceData(layer.Attributes, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("custom_configure_recipes", flex.FlattenStringList(v.Configure))
-	d.Set("custom_deploy_recipes", flex.FlattenStringList(v.Deploy))
-	d.Set("custom_setup_recipes", flex.FlattenStringList(v.Setup))
-	d.Set("custom_shutdown_recipes", flex.FlattenStringList(v.Shutdown))
-	d.Set("custom_undeploy_recipes", flex.FlattenStringList(v.Undeploy))
+	loadBalancer, err := findElasticLoadBalancerByLayerID(ctx, conn, d.Id())
+
+	if err == nil {
+		d.Set("elastic_load_balancer", loadBalancer.ElasticLoadBalancerName)
+	} else if tfresource.NotFound(err) {
+		d.Set("elastic_load_balancer", nil)
+	} else {
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Layer (%s) load balancers: %s", d.Id(), err)
+	}
+
+	loadBasedAutoScalingConfiguration, err := findLoadBasedAutoScalingConfigurationByLayerID(ctx, conn, d.Id())
+
+	if err == nil {
+		if err := d.Set("load_based_auto_scaling", []interface{}{flattenLoadBasedAutoScalingConfiguration(loadBasedAutoScalingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting load_based_auto_scaling: %s", err)
+		}
+	} else if tfresource.NotFound(err) {
+		d.Set("load_based_auto_scaling", nil)
+	} else {
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Layer (%s) load-based auto scaling configurations: %s", d.Id(), err)
+	}
+
+	return nil
 }
 
-func (lt *opsworksLayerType) VolumeConfigurations(d *schema.ResourceData) []*opsworks.VolumeConfiguration {
-	configuredVolumes := d.Get("ebs_volume").(*schema.Set).List()
-	result := make([]*opsworks.VolumeConfiguration, len(configuredVolumes))
+func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
-	for i := 0; i < len(configuredVolumes); i++ {
-		volumeData := configuredVolumes[i].(map[string]interface{})
-
-		result[i] = &opsworks.VolumeConfiguration{
-			MountPoint:    aws.String(volumeData["mount_point"].(string)),
-			NumberOfDisks: aws.Int64(int64(volumeData["number_of_disks"].(int))),
-			Size:          aws.Int64(int64(volumeData["size"].(int))),
-			VolumeType:    aws.String(volumeData["type"].(string)),
-			Encrypted:     aws.Bool(volumeData["encrypted"].(bool)),
+	if d.HasChangesExcept("elastic_load_balancer", "load_based_auto_scaling", names.AttrTags, names.AttrTagsAll) {
+		input := &opsworks.UpdateLayerInput{
+			LayerId: aws.String(d.Id()),
 		}
 
-		iops := int64(volumeData["iops"].(int))
-		if iops != 0 {
-			result[i].Iops = aws.Int64(iops)
+		if d.HasChanges(tfmaps.Keys(lt.Attributes)...) {
+			attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
+
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			input.Attributes = attributes
 		}
 
-		raidLevelStr := volumeData["raid_level"].(string)
-		if raidLevelStr != "" {
-			raidLevel, err := strconv.Atoi(raidLevelStr)
-			if err == nil {
-				result[i].RaidLevel = aws.Int64(int64(raidLevel))
+		if d.HasChanges("auto_assign_elastic_ips") {
+			input.AutoAssignElasticIps = aws.Bool(d.Get("auto_assign_elastic_ips").(bool))
+		}
+
+		if d.HasChanges("auto_assign_public_ips") {
+			input.AutoAssignPublicIps = aws.Bool(d.Get("auto_assign_public_ips").(bool))
+		}
+
+		if d.HasChanges("auto_healing") {
+			input.EnableAutoHealing = aws.Bool(d.Get("auto_assign_public_ips").(bool))
+		}
+
+		if d.HasChanges("cloudwatch_configuration") {
+			if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChanges("custom_configure_recipes", "custom_deploy_recipes", "custom_setup_recipes", "custom_shutdown_recipes", "custom_undeploy_recipes") {
+			apiObject := &awstypes.Recipes{}
+
+			if d.HasChanges("custom_configure_recipes") {
+				apiObject.Configure = flex.ExpandStringValueList(d.Get("custom_configure_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_deploy_recipes") {
+				apiObject.Deploy = flex.ExpandStringValueList(d.Get("custom_deploy_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_setup_recipes") {
+				apiObject.Setup = flex.ExpandStringValueList(d.Get("custom_setup_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_shutdown_recipes") {
+				apiObject.Shutdown = flex.ExpandStringValueList(d.Get("custom_shutdown_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_undeploy_recipes") {
+				apiObject.Undeploy = flex.ExpandStringValueList(d.Get("custom_undeploy_recipes").([]interface{}))
+			}
+
+			input.CustomRecipes = apiObject
+		}
+
+		if d.HasChanges("custom_instance_profile_arn") {
+			input.CustomInstanceProfileArn = aws.String(d.Get("custom_instance_profile_arn").(string))
+		}
+
+		if d.HasChange("custom_json") {
+			input.CustomJson = aws.String(d.Get("custom_json").(string))
+		}
+
+		if d.HasChanges("custom_security_group_ids") {
+			input.CustomSecurityGroupIds = flex.ExpandStringValueSet(d.Get("custom_security_group_ids").(*schema.Set))
+		}
+
+		if d.HasChanges("drain_elb_on_shutdown", "instance_shutdown_timeout") {
+			input.LifecycleEventConfiguration = &awstypes.LifecycleEventConfiguration{
+				Shutdown: &awstypes.ShutdownEventConfiguration{
+					DelayUntilElbConnectionsDrained: aws.Bool(d.Get("drain_elb_on_shutdown").(bool)),
+					ExecutionTimeout:                aws.Int32(int32(d.Get("instance_shutdown_timeout").(int))),
+				},
+			}
+		}
+
+		if d.HasChanges("ebs_volume") {
+			if v, ok := d.GetOk("ebs_volume"); ok && v.(*schema.Set).Len() > 0 {
+				input.VolumeConfigurations = expandVolumeConfigurations(v.(*schema.Set).List())
+			}
+		}
+
+		if d.HasChanges("install_updates_on_boot") {
+			input.InstallUpdatesOnBoot = aws.Bool(d.Get("install_updates_on_boot").(bool))
+		}
+
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		if d.HasChange("short_name") {
+			input.Shortname = aws.String(d.Get("short_name").(string))
+		}
+
+		if d.HasChanges("system_packages") {
+			input.Packages = flex.ExpandStringValueSet(d.Get("system_packages").(*schema.Set))
+		}
+
+		if d.HasChanges("use_ebs_optimized_instances") {
+			input.UseEbsOptimizedInstances = aws.Bool(d.Get("install_updates_on_boot").(bool))
+		}
+
+		log.Printf("[DEBUG] Updating OpsWorks Layer: %#v", input)
+		_, err := conn.UpdateLayer(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating OpsWorks Layer (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("elastic_load_balancer") {
+		o, n := d.GetChange("elastic_load_balancer")
+
+		if v := o.(string); v != "" {
+			_, err := conn.DetachElasticLoadBalancer(ctx, &opsworks.DetachElasticLoadBalancerInput{
+				ElasticLoadBalancerName: aws.String(v),
+				LayerId:                 aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "detaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
+			}
+		}
+
+		if v := n.(string); v != "" {
+			_, err := conn.AttachElasticLoadBalancer(ctx, &opsworks.AttachElasticLoadBalancerInput{
+				ElasticLoadBalancerName: aws.String(v),
+				LayerId:                 aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "attaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
 			}
 		}
 	}
 
-	return result
-}
+	if d.HasChange("load_based_auto_scaling") {
+		input := expandSetLoadBasedAutoScalingInput(d.Get("load_based_auto_scaling").([]interface{})[0].(map[string]interface{}))
+		input.LayerId = aws.String(d.Id())
 
-func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v []*opsworks.VolumeConfiguration) {
-	newValue := make([]*map[string]interface{}, len(v))
+		_, err := conn.SetLoadBasedAutoScaling(ctx, input)
 
-	for i := 0; i < len(v); i++ {
-		config := v[i]
-		data := make(map[string]interface{})
-		newValue[i] = &data
-
-		if config.Iops != nil {
-			data["iops"] = int(*config.Iops)
-		} else {
-			data["iops"] = 0
-		}
-		if config.MountPoint != nil {
-			data["mount_point"] = *config.MountPoint
-		}
-		if config.NumberOfDisks != nil {
-			data["number_of_disks"] = int(*config.NumberOfDisks)
-		}
-		if config.RaidLevel != nil {
-			data["raid_level"] = strconv.Itoa(int(*config.RaidLevel))
-		}
-		if config.Size != nil {
-			data["size"] = int(*config.Size)
-		}
-		if config.VolumeType != nil {
-			data["type"] = *config.VolumeType
-		}
-		if config.Encrypted != nil {
-			data["encrypted"] = *config.Encrypted
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting OpsWorks Layer (%s) load-based auto scaling configuration: %s", d.Id(), err)
 		}
 	}
 
-	d.Set("ebs_volume", newValue)
+	return append(diags, lt.Read(ctx, d, meta)...)
+}
+
+func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
+
+	log.Printf("[DEBUG] Deleting OpsWorks Layer: %s", d.Id())
+	_, err := conn.DeleteLayer(ctx, &opsworks.DeleteLayerInput{
+		LayerId: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks Layer (%s): %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
+		arn := v.(string)
+		_, err := conn.DeregisterEcsCluster(ctx, &opsworks.DeregisterEcsClusterInput{
+			EcsClusterArn: aws.String(arn),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deregistering OpsWorks Layer (%s) ECS Cluster (%s): %s", d.Id(), arn, err)
+		}
+	}
+
+	return nil
+}
+
+func findLayerByID(ctx context.Context, conn *opsworks.Client, id string) (*awstypes.Layer, error) {
+	input := &opsworks.DescribeLayersInput{
+		LayerIds: []string{id},
+	}
+
+	output, err := conn.DescribeLayers(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Layers) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Layers); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Layers)
+}
+
+func findElasticLoadBalancerByLayerID(ctx context.Context, conn *opsworks.Client, id string) (*awstypes.ElasticLoadBalancer, error) {
+	input := &opsworks.DescribeElasticLoadBalancersInput{
+		LayerIds: []string{id},
+	}
+
+	output, err := conn.DescribeElasticLoadBalancers(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ElasticLoadBalancers) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ElasticLoadBalancers); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.ElasticLoadBalancers)
+}
+
+func findLoadBasedAutoScalingConfigurationByLayerID(ctx context.Context, conn *opsworks.Client, id string) (*awstypes.LoadBasedAutoScalingConfiguration, error) {
+	input := &opsworks.DescribeLoadBasedAutoScalingInput{
+		LayerIds: []string{id},
+	}
+
+	output, err := conn.DescribeLoadBasedAutoScaling(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.LoadBasedAutoScalingConfigurations) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.LoadBasedAutoScalingConfigurations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.LoadBasedAutoScalingConfigurations)
+}
+
+func (m opsworksLayerTypeAttributeMap) apiAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
+	for k, attr := range m {
+		// Ignore write-only attributes; we'll just keep what we already have stored.
+		// (The AWS API returns garbage placeholder values for these.)
+		if attr.WriteOnly {
+			continue
+		}
+
+		if v, ok := apiAttributes[string(attr.AttrName)]; ok {
+			switch typ := attr.Type; typ {
+			case schema.TypeString:
+				d.Set(k, v)
+			case schema.TypeInt:
+				if v, err := strconv.Atoi(v); err == nil {
+					d.Set(k, v)
+				} else {
+					d.Set(k, nil)
+				}
+			case schema.TypeBool:
+				d.Set(k, v != "false")
+			default:
+				return fmt.Errorf("unsupported OpsWorks Layer (%s) attribute (%s) type: %s", d.Id(), k, typ)
+			}
+		} else {
+			d.Set(k, nil)
+		}
+	}
+
+	return nil
+}
+
+func (m opsworksLayerTypeAttributeMap) resourceDataToAPIAttributes(d *schema.ResourceData) (map[string]string, error) {
+	apiAttributes := map[string]string{}
+
+	for k, attr := range m {
+		v := d.Get(k)
+
+		switch typ := attr.Type; typ {
+		case schema.TypeString:
+			apiAttributes[string(attr.AttrName)] = v.(string)
+		case schema.TypeInt:
+			apiAttributes[string(attr.AttrName)] = strconv.Itoa(v.(int))
+		case schema.TypeBool:
+			apiAttributes[string(attr.AttrName)] = strconv.FormatBool(v.(bool))
+		default:
+			return nil, fmt.Errorf("unsupported OpsWorks Layer (%s) attribute (%s) type: %s", d.Id(), k, typ)
+		}
+	}
+
+	return apiAttributes, nil
+}
+
+func expandCloudWatchLogsConfiguration(tfMap map[string]interface{}) *awstypes.CloudWatchLogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CloudWatchLogsConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["log_streams"].([]interface{}); ok && len(v) > 0 {
+		apiObject.LogStreams = expandCloudWatchLogsLogStreams(v)
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchLogsLogStream(tfMap map[string]interface{}) awstypes.CloudWatchLogsLogStream {
+	apiObject := awstypes.CloudWatchLogsLogStream{}
+
+	if v, ok := tfMap["batch_count"].(int); ok && v != 0 {
+		apiObject.BatchCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["buffer_duration"].(int); ok && v != 0 {
+		apiObject.BufferDuration = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["datetime_format"].(string); ok && v != "" {
+		apiObject.DatetimeFormat = aws.String(v)
+	}
+
+	if v, ok := tfMap["encoding"].(string); ok && v != "" {
+		apiObject.Encoding = awstypes.CloudWatchLogsEncoding(v)
+	}
+
+	if v, ok := tfMap["file"].(string); ok && v != "" {
+		apiObject.File = aws.String(v)
+	}
+
+	if v, ok := tfMap["file_fingerprint_lines"].(string); ok && v != "" {
+		apiObject.FileFingerprintLines = aws.String(v)
+	}
+
+	if v, ok := tfMap["initial_position"].(string); ok && v != "" {
+		apiObject.InitialPosition = awstypes.CloudWatchLogsInitialPosition(v)
+	}
+
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["multiline_start_pattern"].(string); ok && v != "" {
+		apiObject.MultiLineStartPattern = aws.String(v)
+	}
+
+	if v, ok := tfMap["time_zone"].(string); ok && v != "" {
+		apiObject.TimeZone = awstypes.CloudWatchLogsTimeZone(v)
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchLogsLogStreams(tfList []interface{}) []awstypes.CloudWatchLogsLogStream {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.CloudWatchLogsLogStream
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, expandCloudWatchLogsLogStream(tfMap))
+	}
+
+	return apiObjects
+}
+
+func flattenCloudWatchLogsConfiguration(apiObject *awstypes.CloudWatchLogsConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LogStreams; v != nil {
+		tfMap["log_streams"] = flattenCloudWatchLogsLogStreams(v)
+	}
+
+	return tfMap
+}
+
+func flattenCloudWatchLogsLogStream(apiObject awstypes.CloudWatchLogsLogStream) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BatchCount; v != nil {
+		tfMap["batch_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.BatchSize; v != nil {
+		tfMap["batch_size"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.BufferDuration; v != nil {
+		tfMap["buffer_duration"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.DatetimeFormat; v != nil {
+		tfMap["datetime_format"] = aws.ToString(v)
+	}
+
+	tfMap["encoding"] = apiObject.Encoding
+
+	if v := apiObject.File; v != nil {
+		tfMap["file"] = aws.ToString(v)
+	}
+
+	if v := apiObject.FileFingerprintLines; v != nil {
+		tfMap["file_fingerprint_lines"] = aws.ToString(v)
+	}
+
+	tfMap["initial_position"] = apiObject.InitialPosition
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
+	}
+
+	if v := apiObject.MultiLineStartPattern; v != nil {
+		tfMap["multiline_start_pattern"] = aws.ToString(v)
+	}
+
+	tfMap["time_zone"] = apiObject.TimeZone
+
+	return tfMap
+}
+
+func flattenCloudWatchLogsLogStreams(apiObjects []awstypes.CloudWatchLogsLogStream) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenCloudWatchLogsLogStream(apiObject))
+	}
+
+	return tfList
+}
+
+func expandVolumeConfiguration(tfMap map[string]interface{}) awstypes.VolumeConfiguration {
+	apiObject := awstypes.VolumeConfiguration{}
+
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
+		apiObject.Encrypted = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
+		apiObject.Iops = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["mount_point"].(string); ok && v != "" {
+		apiObject.MountPoint = aws.String(v)
+	}
+
+	if v, ok := tfMap["number_of_disks"].(int); ok && v != 0 {
+		apiObject.NumberOfDisks = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["raid_level"].(string); ok && v != "" {
+		if v, err := strconv.Atoi(v); err == nil {
+			apiObject.RaidLevel = aws.Int32(int32(v))
+		}
+	}
+
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
+		apiObject.Size = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.VolumeType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandVolumeConfigurations(tfList []interface{}) []awstypes.VolumeConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.VolumeConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, expandVolumeConfiguration(tfMap))
+	}
+
+	return apiObjects
+}
+
+func flattenVolumeConfiguration(apiObject awstypes.VolumeConfiguration) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Encrypted; v != nil {
+		tfMap[names.AttrEncrypted] = aws.ToBool(v)
+	}
+
+	if v := apiObject.Iops; v != nil {
+		tfMap[names.AttrIOPS] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MountPoint; v != nil {
+		tfMap["mount_point"] = aws.ToString(v)
+	}
+
+	if v := apiObject.NumberOfDisks; v != nil {
+		tfMap["number_of_disks"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.RaidLevel; v != nil {
+		tfMap["raid_level"] = strconv.Itoa(int(aws.ToInt32(v)))
+	}
+
+	if v := apiObject.Size; v != nil {
+		tfMap[names.AttrSize] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.VolumeType; v != nil {
+		tfMap[names.AttrType] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenVolumeConfigurations(apiObjects []awstypes.VolumeConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenVolumeConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func expandSetLoadBasedAutoScalingInput(tfMap map[string]interface{}) *opsworks.SetLoadBasedAutoScalingInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opsworks.SetLoadBasedAutoScalingInput{}
+
+	if v, ok := tfMap["downscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DownScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["upscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UpScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingThresholds(tfMap map[string]interface{}) *awstypes.AutoScalingThresholds {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AutoScalingThresholds{}
+
+	if v, ok := tfMap["alarms"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Alarms = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["cpu_threshold"].(float64); ok && v != 0.0 {
+		apiObject.CpuThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["ignore_metrics_time"].(int); ok && v != 0 {
+		apiObject.IgnoreMetricsTime = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrInstanceCount].(int); ok && v != 0 {
+		apiObject.InstanceCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["load_threshold"].(float64); ok && v != 0.0 {
+		apiObject.LoadThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["memory_threshold"].(float64); ok && v != 0.0 {
+		apiObject.MemoryThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["thresholds_wait_time"].(int); ok && v != 0 {
+		apiObject.ThresholdsWaitTime = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenLoadBasedAutoScalingConfiguration(apiObject *awstypes.LoadBasedAutoScalingConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DownScaling; v != nil {
+		tfMap["downscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+	}
+
+	if v := apiObject.Enable; v != nil {
+		tfMap["enable"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.UpScaling; v != nil {
+		tfMap["upscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAutoScalingThresholds(apiObject *awstypes.AutoScalingThresholds) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Alarms; v != nil {
+		tfMap["alarms"] = v
+	}
+
+	if v := apiObject.CpuThreshold; v != nil {
+		tfMap["cpu_threshold"] = aws.ToFloat64(v)
+	}
+
+	if v := apiObject.IgnoreMetricsTime; v != nil {
+		tfMap["ignore_metrics_time"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.InstanceCount; v != nil {
+		tfMap[names.AttrInstanceCount] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.LoadThreshold; v != nil {
+		tfMap["load_threshold"] = aws.ToFloat64(v)
+	}
+
+	if v := apiObject.MemoryThreshold; v != nil {
+		tfMap["memory_threshold"] = aws.ToFloat64(v)
+	}
+
+	if v := apiObject.ThresholdsWaitTime; v != nil {
+		tfMap["thresholds_wait_time"] = aws.ToInt32(v)
+	}
+
+	return tfMap
 }

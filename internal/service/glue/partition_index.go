@@ -1,42 +1,51 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_glue_partition_index")
 func ResourcePartitionIndex() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePartitionIndexCreate,
-		Read:   resourcePartitionIndexRead,
-		Delete: resourcePartitionIndexDelete,
+		CreateWithoutTimeout: resourcePartitionIndexCreate,
+		ReadWithoutTimeout:   resourcePartitionIndexRead,
+		DeleteWithoutTimeout: resourcePartitionIndexDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -68,14 +77,20 @@ func ResourcePartitionIndex() *schema.Resource {
 				},
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
-func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourcePartitionIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get("database_name").(string)
-	tableName := d.Get("table_name").(string)
+	dbName := d.Get(names.AttrDatabaseName).(string)
+	tableName := d.Get(names.AttrTableName).(string)
 
 	input := &glue.CreatePartitionIndexInput{
 		CatalogId:      aws.String(catalogID),
@@ -85,90 +100,92 @@ func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating Glue Partition Index: %#v", input)
-	_, err := conn.CreatePartitionIndex(input)
+	_, err := conn.CreatePartitionIndex(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Partition Index: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Partition Index: %s", err)
 	}
 
-	d.SetId(createPartitionIndexID(catalogID, dbName, tableName, aws.StringValue(input.PartitionIndex.IndexName)))
+	d.SetId(createPartitionIndexID(catalogID, dbName, tableName, aws.ToString(input.PartitionIndex.IndexName)))
 
-	if _, err := waitGluePartitionIndexCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error while waiting for Glue Partition Index (%s) to become available: %w", d.Id(), err)
+	if _, err := waitPartitionIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "while waiting for Glue Partition Index (%s) to become available: %s", d.Id(), err)
 	}
 
-	return resourcePartitionIndexRead(d, meta)
+	return append(diags, resourcePartitionIndexRead(ctx, d, meta)...)
 }
 
-func resourcePartitionIndexRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID, dbName, tableName, _, tableErr := readPartitionIndexID(d.Id())
-	if tableErr != nil {
-		return tableErr
+	catalogID, dbName, tableName, _, err := readPartitionIndexID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Partition Index (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading Glue Partition Index: %s", d.Id())
-	partition, err := FindPartitionIndexByName(conn, d.Id())
+	partition, err := FindPartitionIndexByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Partition Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glue Partition Index (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Partition Index (%s): %s", d.Id(), err)
 	}
 
-	d.Set("table_name", tableName)
-	d.Set("catalog_id", catalogID)
-	d.Set("database_name", dbName)
+	d.Set(names.AttrTableName, tableName)
+	d.Set(names.AttrCatalogID, catalogID)
+	d.Set(names.AttrDatabaseName, dbName)
 
-	if err := d.Set("partition_index", []map[string]interface{}{flattenGluePartitionIndex(partition)}); err != nil {
-		return fmt.Errorf("error setting partition_index: %w", err)
+	if err := d.Set("partition_index", []map[string]interface{}{flattenPartitionIndex(*partition)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePartitionIndexDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourcePartitionIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID, dbName, tableName, partIndex, tableErr := readPartitionIndexID(d.Id())
-	if tableErr != nil {
-		return tableErr
+	catalogID, dbName, tableName, partIndex, err := readPartitionIndexID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition Index: %s", err)
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Partition Index: %s", d.Id())
-	_, err := conn.DeletePartitionIndex(&glue.DeletePartitionIndexInput{
+	_, err = conn.DeletePartitionIndex(ctx, &glue.DeletePartitionIndexInput{
 		CatalogId:    aws.String(catalogID),
 		TableName:    aws.String(tableName),
 		DatabaseName: aws.String(dbName),
 		IndexName:    aws.String(partIndex),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+			return diags
 		}
-		return fmt.Errorf("Error deleting Glue Partition Index: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition Index: %s", err)
 	}
 
-	if _, err := waitGluePartitionIndexDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error while waiting for Glue Partition Index (%s) to be deleted: %w", d.Id(), err)
+	if _, err := waitPartitionIndexDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "while waiting for Glue Partition Index (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandPartitionIndex(l []interface{}) *glue.PartitionIndex {
+func expandPartitionIndex(l []interface{}) *awstypes.PartitionIndex {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	s := l[0].(map[string]interface{})
-	parIndex := &glue.PartitionIndex{}
+	parIndex := &awstypes.PartitionIndex{}
 
 	if v, ok := s["keys"].([]interface{}); ok && len(v) > 0 {
-		parIndex.Keys = flex.ExpandStringList(v)
+		parIndex.Keys = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := s["index_name"].(string); ok && v != "" {

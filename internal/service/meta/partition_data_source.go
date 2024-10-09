@@ -1,49 +1,72 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
-	"log"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourcePartition() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourcePartitionRead,
+// @FrameworkDataSource(name="Partition")
+func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &partitionDataSource{}
 
-		Schema: map[string]*schema.Schema{
-			"partition": {
-				Type:     schema.TypeString,
+	return d, nil
+}
+
+type partitionDataSource struct {
+	framework.DataSourceWithConfigure
+}
+
+func (*partitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_partition"
+}
+
+func (d *partitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"dns_suffix": schema.StringAttribute{
 				Computed: true,
 			},
-
-			"dns_suffix": {
-				Type:     schema.TypeString,
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-
-			"reverse_dns_prefix": {
-				Type:     schema.TypeString,
+			"partition": schema.StringAttribute{
+				Computed: true,
+			},
+			"reverse_dns_prefix": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient)
+func (d *partitionDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data partitionDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	log.Printf("[DEBUG] Reading Partition.")
-	d.SetId(meta.(*conns.AWSClient).Partition)
+	data.DNSSuffix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().DNSSuffix(ctx))
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.ReverseDNSPrefix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().ReverseDNSPrefix(ctx))
 
-	log.Printf("[DEBUG] Setting AWS Partition to %s.", client.Partition)
-	d.Set("partition", meta.(*conns.AWSClient).Partition)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
 
-	log.Printf("[DEBUG] Setting AWS URL Suffix to %s.", client.DNSSuffix)
-	d.Set("dns_suffix", meta.(*conns.AWSClient).DNSSuffix)
-
-	d.Set("reverse_dns_prefix", meta.(*conns.AWSClient).ReverseDNSPrefix)
-	log.Printf("[DEBUG] Setting service prefix to %s.", meta.(*conns.AWSClient).ReverseDNSPrefix)
-
-	return nil
+type partitionDataSourceModel struct {
+	DNSSuffix        types.String `tfsdk:"dns_suffix"`
+	ID               types.String `tfsdk:"id"`
+	Partition        types.String `tfsdk:"partition"`
+	ReverseDNSPrefix types.String `tfsdk:"reverse_dns_prefix"`
 }

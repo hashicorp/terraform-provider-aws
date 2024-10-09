@@ -1,51 +1,94 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloud9"
+	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEnvironmentEC2() *schema.Resource {
+// @SDKResource("aws_cloud9_environment_ec2", name="Environment EC2")
+// @Tags(identifierAttribute="arn")
+func resourceEnvironmentEC2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEnvironmentEC2Create,
-		Read:   resourceEnvironmentEC2Read,
-		Update: resourceEnvironmentEC2Update,
-		Delete: resourceEnvironmentEC2Delete,
+		CreateWithoutTimeout: resourceEnvironmentEC2Create,
+		ReadWithoutTimeout:   resourceEnvironmentEC2Read,
+		UpdateWithoutTimeout: resourceEnvironmentEC2Update,
+		DeleteWithoutTimeout: resourceEnvironmentEC2Delete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"automatic_stop_time_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntAtMost(20160),
+			},
+			"connection_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.ConnectionTypeConnectSsh,
+				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
+			},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 200),
+			},
+			"image_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"amazonlinux-1-x86_64",
+					"amazonlinux-2-x86_64",
+					"amazonlinux-2023-x86_64",
+					"ubuntu-18.04-x86_64",
+					"ubuntu-22.04-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
+				}, false),
+			},
+			names.AttrInstanceType: {
+				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 60),
 			},
 			"owner_arn": {
 				Type:         schema.TypeString,
@@ -54,234 +97,263 @@ func ResourceEnvironmentEC2() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	params := &cloud9.CreateEnvironmentEC2Input{
-		InstanceType:       aws.String(d.Get("instance_type").(string)),
-		Name:               aws.String(d.Get("name").(string)),
-		ClientRequestToken: aws.String(resource.UniqueId()),
-		Tags:               Tags(tags.IgnoreAWS()),
+	name := d.Get(names.AttrName).(string)
+	input := &cloud9.CreateEnvironmentEC2Input{
+		ClientRequestToken: aws.String(id.UniqueId()),
+		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
+		ImageId:            aws.String(d.Get("image_id").(string)),
+		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),
+		Name:               aws.String(name),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {
-		params.AutomaticStopTimeMinutes = aws.Int64(int64(v.(int)))
+		input.AutomaticStopTimeMinutes = aws.Int32(int32(v.(int)))
 	}
-	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("owner_arn"); ok {
-		params.OwnerArn = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("subnet_id"); ok {
-		params.SubnetId = aws.String(v.(string))
+		input.OwnerArn = aws.String(v.(string))
 	}
 
-	var out *cloud9.CreateEnvironmentEC2Output
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		out, err = conn.CreateEnvironmentEC2(params)
-		if err != nil {
-			// NotFoundException: User arn:aws:iam::*******:user/****** does not exist.
-			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "User") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateEnvironmentEC2(params)
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
+		input.SubnetId = aws.String(v.(string))
 	}
+
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateEnvironmentEC2(ctx, input)
+	}, "User")
 
 	if err != nil {
-		return fmt.Errorf("Error creating Cloud9 EC2 Environment: %s", err)
-	}
-	d.SetId(aws.StringValue(out.EnvironmentId))
-
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			cloud9.EnvironmentStatusConnecting,
-			cloud9.EnvironmentStatusCreating,
-		},
-		Target: []string{
-			cloud9.EnvironmentStatusReady,
-		},
-		Timeout: 10 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.DescribeEnvironmentStatus(&cloud9.DescribeEnvironmentStatusInput{
-				EnvironmentId: aws.String(d.Id()),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			status := aws.StringValue(out.Status)
-
-			if status == cloud9.EnvironmentStatusError && out.Message != nil {
-				return out, status, fmt.Errorf("Reason: %s", aws.StringValue(out.Message))
-			}
-
-			return out, status, nil
-		},
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Cloud9 EC2 Environment (%s): %s", name, err)
 	}
 
-	return resourceEnvironmentEC2Read(d, meta)
+	d.SetId(aws.ToString(outputRaw.(*cloud9.CreateEnvironmentEC2Output).EnvironmentId))
+
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Cloud9 EC2 Environment (%s) create: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
 }
 
-func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	log.Printf("[INFO] Reading Cloud9 Environment EC2 %s", d.Id())
+	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	out, err := conn.DescribeEnvironments(&cloud9.DescribeEnvironmentsInput{
-		EnvironmentIds: []*string{aws.String(d.Id())},
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] Cloud9 Environment EC2 (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-	if len(out.Environments) == 0 {
-		log.Printf("[WARN] Cloud9 Environment EC2 (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Cloud9 EC2 Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-	env := out.Environments[0]
 
-	arn := aws.StringValue(env.Arn)
-	d.Set("arn", arn)
-	d.Set("description", env.Description)
-	d.Set("name", env.Name)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Cloud9 EC2 Environment (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, env.Arn)
+	d.Set("connection_type", env.ConnectionType)
+	d.Set(names.AttrDescription, env.Description)
+	d.Set(names.AttrName, env.Name)
 	d.Set("owner_arn", env.OwnerArn)
-	d.Set("type", env.Type)
+	d.Set(names.AttrType, env.Type)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Cloud9 EC2 Environment (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	log.Printf("[DEBUG] Received Cloud9 Environment EC2: %s", env)
-
-	return nil
+	return diags
 }
 
-func resourceEnvironmentEC2Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	input := cloud9.UpdateEnvironmentInput{
-		Description:   aws.String(d.Get("description").(string)),
-		EnvironmentId: aws.String(d.Id()),
-		Name:          aws.String(d.Get("name").(string)),
-	}
-
-	log.Printf("[INFO] Updating Cloud9 Environment EC2: %s", input)
-
-	out, err := conn.UpdateEnvironment(&input)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("[DEBUG] Cloud9 Environment EC2 updated: %s", out)
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Cloud9 EC2 Environment (%s) tags: %s", arn, err)
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := cloud9.UpdateEnvironmentInput{
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
+			EnvironmentId: aws.String(d.Id()),
+			Name:          aws.String(d.Get(names.AttrName).(string)),
 		}
-	}
 
-	return resourceEnvironmentEC2Read(d, meta)
-}
+		_, err := conn.UpdateEnvironment(ctx, &input)
 
-func resourceEnvironmentEC2Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
-
-	_, err := conn.DeleteEnvironment(&cloud9.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return err
-	}
-
-	input := &cloud9.DescribeEnvironmentsInput{
-		EnvironmentIds: []*string{aws.String(d.Id())},
-	}
-	var out *cloud9.DescribeEnvironmentsOutput
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
-		out, err = conn.DescribeEnvironments(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
-				return nil
-			}
-			// :'-(
-			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
-				return nil
-			}
-			return resource.NonRetryableError(err)
+			return sdkdiag.AppendErrorf(diags, "updating Cloud9 EC2 Environment (%s): %s", d.Id(), err)
 		}
-		if len(out.Environments) == 0 {
-			return nil
-		}
-		return resource.RetryableError(fmt.Errorf("Cloud9 EC2 Environment %q still exists", d.Id()))
+	}
+
+	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
+}
+
+func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
+
+	log.Printf("[INFO] Deleting Cloud9 EC2 Environment: %s", d.Id())
+	_, err := conn.DeleteEnvironment(ctx, &cloud9.DeleteEnvironmentInput{
+		EnvironmentId: aws.String(d.Id()),
 	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeEnvironments(input)
-		if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
-			return nil
-		}
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Cloud9 EC2 Environment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cloud9 EC2 Environment (%s): %s", d.Id(), err)
 	}
-	return nil
+
+	if _, err := waitEnvironmentDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Cloud9 EC2 Environment (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findEnvironment(ctx context.Context, conn *cloud9.Client, input *cloud9.DescribeEnvironmentsInput) (*types.Environment, error) {
+	output, err := findEnvironments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	environment, err := tfresource.AssertSingleValueResult(output)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if environment.Lifecycle == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return environment, nil
+}
+
+func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.DescribeEnvironmentsInput) ([]types.Environment, error) {
+	output, err := conn.DescribeEnvironments(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Environments, nil
+}
+
+func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*types.Environment, error) {
+	input := &cloud9.DescribeEnvironmentsInput{
+		EnvironmentIds: []string{id},
+	}
+
+	output, err := findEnvironment(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.Id) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEnvironmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Lifecycle.Status), nil
+	}
+}
+
+func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (*types.Environment, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EnvironmentLifecycleStatusCreating),
+		Target:  enum.Slice(types.EnvironmentLifecycleStatusCreated),
+		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Environment); ok {
+		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusCreateFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string) (*types.Environment, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EnvironmentLifecycleStatusDeleting),
+		Target:  []string{},
+		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Environment); ok {
+		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusDeleteFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }

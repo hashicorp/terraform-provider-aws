@@ -1,49 +1,51 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRRegistryPolicy_serial(t *testing.T) {
-	testFuncs := map[string]func(t *testing.T){
-		"basic":      testAccRegistryPolicy_basic,
-		"disappears": testAccRegistryPolicy_disappears,
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccRegistryPolicy_basic,
+		acctest.CtDisappears: testAccRegistryPolicy_disappears,
 	}
 
-	for name, testFunc := range testFuncs {
-		testFunc := testFunc
-
-		t.Run(name, func(t *testing.T) {
-			testFunc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccRegistryPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryPolicy(),
+				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
+					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
@@ -53,11 +55,11 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegistryPolicyUpdated(),
+				Config: testAccRegistryPolicyConfig_updated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:CreateRepository".+`)),
+					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:CreateRepository".+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
@@ -66,20 +68,21 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 }
 
 func testAccRegistryPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryPolicy(),
+				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRegistryPolicy(), resourceName),
+					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceRegistryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,54 +90,54 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRegistryPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecr_registry_policy" {
-			continue
-		}
-
-		_, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRegistryPolicyNotFoundException) {
-				return nil
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckRegistryPolicyExists(name string, res *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
+func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECR registry policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
-
-		output, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRegistryPolicyNotFoundException) {
-				return fmt.Errorf("ECR repository %s not found", rs.Primary.ID)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecr_registry_policy" {
+				continue
 			}
-			return err
-		}
 
-		*res = *output
+			_, err := tfecr.FindRegistryPolicy(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ECR Registry Policy %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
 }
 
-func testAccRegistryPolicy() string {
+func testAccCheckRegistryPolicyExists(ctx context.Context, n string, v *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+
+		output, err := tfecr.FindRegistryPolicy(ctx, conn)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccRegistryPolicyConfig_basic() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -152,12 +155,8 @@ resource "aws_ecr_registry_policy" "test" {
         "Principal" : {
           "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         },
-        "Action" : [
-          "ecr:ReplicateImage"
-        ],
-        "Resource" : [
-          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
-        ]
+        "Action" : "ecr:ReplicateImage",
+        "Resource" : "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*",
       }
     ]
   })
@@ -165,7 +164,7 @@ resource "aws_ecr_registry_policy" "test" {
 `
 }
 
-func testAccRegistryPolicyUpdated() string {
+func testAccRegistryPolicyConfig_updated() string {
 	return `
 data "aws_caller_identity" "current" {}
 

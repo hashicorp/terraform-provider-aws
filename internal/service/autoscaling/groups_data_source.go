@@ -1,135 +1,121 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceGroups() *schema.Resource {
+// @SDKDataSource("aws_autoscaling_groups", name="Groups")
+func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupsRead,
+		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"names": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
-							Type:     schema.TypeSet,
+						names.AttrValues: {
+							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 					},
 				},
+			},
+			names.AttrNames: {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
 }
 
-func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
-
-	log.Printf("[DEBUG] Reading Autoscaling Groups.")
-
-	var rawName []string
-	var rawArn []string
-	var err error
-
-	tf := d.Get("filter").(*schema.Set)
-	if tf.Len() > 0 {
-		input := &autoscaling.DescribeTagsInput{
-			Filters: expandAsgTagFilters(tf.List()),
+func buildFiltersDataSource(set *schema.Set) []awstypes.Filter {
+	var filters []awstypes.Filter
+	for _, v := range set.List() {
+		m := v.(map[string]interface{})
+		var filterValues []string
+		for _, e := range m[names.AttrValues].([]interface{}) {
+			filterValues = append(filterValues, e.(string))
 		}
-		err = conn.DescribeTagsPages(input, func(resp *autoscaling.DescribeTagsOutput, lastPage bool) bool {
-			for _, v := range resp.Tags {
-				rawName = append(rawName, aws.StringValue(v.ResourceId))
-			}
-			return !lastPage
-		})
 
-		maxAutoScalingGroupNames := 1600
-		for i := 0; i < len(rawName); i += maxAutoScalingGroupNames {
-			end := i + maxAutoScalingGroupNames
-
-			if end > len(rawName) {
-				end = len(rawName)
-			}
-
-			nameInput := &autoscaling.DescribeAutoScalingGroupsInput{
-				AutoScalingGroupNames: aws.StringSlice(rawName[i:end]),
-				MaxRecords:            aws.Int64(100),
-			}
-
-			err = conn.DescribeAutoScalingGroupsPages(nameInput, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
-				for _, group := range resp.AutoScalingGroups {
-					rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
-				}
-				return !lastPage
-			})
+		// In previous iterations, users were expected to provide "key" and "value" tag names.
+		// With the addition of asgs filters, the signature is "tag-key" and "tag-value", so these conditions prevent breaking changes.
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/autoscaling/#Filter
+		name := m[names.AttrName].(string)
+		if name == names.AttrKey {
+			name = "tag-key"
 		}
-	} else {
-		err = conn.DescribeAutoScalingGroupsPages(&autoscaling.DescribeAutoScalingGroupsInput{}, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
-			for _, group := range resp.AutoScalingGroups {
-				rawName = append(rawName, aws.StringValue(group.AutoScalingGroupName))
-				rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
-			}
-			return !lastPage
+		if name == names.AttrValue {
+			name = "tag-value"
+		}
+		filters = append(filters, awstypes.Filter{
+			Name:   aws.String(name),
+			Values: filterValues,
 		})
 	}
-	if err != nil {
-		return fmt.Errorf("Error fetching Autoscaling Groups: %w", err)
-	}
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-
-	sort.Strings(rawName)
-	sort.Strings(rawArn)
-
-	if err := d.Set("names", rawName); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group Names: %w", err)
-	}
-
-	if err := d.Set("arns", rawArn); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group ARNs: %w", err)
-	}
-
-	return nil
-
+	return filters
 }
 
-func expandAsgTagFilters(in []interface{}) []*autoscaling.Filter {
-	out := make([]*autoscaling.Filter, len(in))
-	for i, filter := range in {
-		m := filter.(map[string]interface{})
-		values := flex.ExpandStringSet(m["values"].(*schema.Set))
+func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-		out[i] = &autoscaling.Filter{
-			Name:   aws.String(m["name"].(string)),
-			Values: values,
-		}
+	input := &autoscaling.DescribeAutoScalingGroupsInput{}
+
+	if v, ok := d.GetOk(names.AttrNames); ok && len(v.([]interface{})) > 0 {
+		input.AutoScalingGroupNames = flex.ExpandStringValueList(v.([]interface{}))
 	}
-	return out
+
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
+	}
+
+	groups, err := findGroups(ctx, conn, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Groups: %s", err)
+	}
+
+	var arns, nms []string
+
+	for _, group := range groups {
+		arns = append(arns, aws.ToString(group.AutoScalingGroupARN))
+		nms = append(nms, aws.ToString(group.AutoScalingGroupName))
+	}
+
+	sort.Strings(arns)
+	sort.Strings(nms)
+
+	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrNames, nms)
+
+	return diags
 }

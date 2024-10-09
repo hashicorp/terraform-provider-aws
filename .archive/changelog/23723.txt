@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_versioning: Add missing support for `Disabled` bucket versioning
+```

@@ -1,74 +1,98 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	rdsGlobalClusterRemovalTimeout = 2 * time.Minute
-)
-
-func ResourceGlobalCluster() *schema.Resource {
+// @SDKResource("aws_rds_global_cluster", name="Global Cluster")
+func resourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGlobalClusterCreate,
-		Read:   resourceGlobalClusterRead,
-		Update: resourceGlobalClusterUpdate,
-		Delete: resourceGlobalClusterDelete,
+		CreateWithoutTimeout: resourceGlobalClusterCreate,
+		ReadWithoutTimeout:   resourceGlobalClusterRead,
+		UpdateWithoutTimeout: resourceGlobalClusterUpdate,
+		DeleteWithoutTimeout: resourceGlobalClusterDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(90 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc: validation.StringInSlice([]string{
-					"aurora",
-					"aurora-mysql",
-					"aurora-postgresql",
-				}, false),
+				ValidateFunc:  validation.StringInSlice(globalClusterEngine_Values(), false),
 			},
-			"engine_version": {
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
+			},
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"force_destroy": {
+			"engine_version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"global_cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
 			},
 			"global_cluster_members": {
 				Type:     schema.TypeSet,
@@ -95,10 +119,10 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"engine"},
-				RequiredWith:  []string{"force_destroy"},
+				ConflictsWith: []string{names.AttrEngine},
+				RequiredWith:  []string{names.AttrForceDestroy},
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -108,26 +132,32 @@ func ResourceGlobalCluster() *schema.Resource {
 	}
 }
 
-func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	globalClusterID := d.Get("global_cluster_identifier").(string)
 	input := &rds.CreateGlobalClusterInput{
-		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
+		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	if v, ok := d.GetOk("database_name"); ok {
+	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 		input.DatabaseName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+		input.EngineLifecycleSupport = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -135,7 +165,7 @@ func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error
 		input.SourceDBClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_encrypted"); ok {
+	if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
 		input.StorageEncrypted = aws.Bool(v.(bool))
 	}
 
@@ -143,192 +173,606 @@ func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error
 	// since we cannot have Engine default after adding SourceDBClusterIdentifier:
 	// InvalidParameterValue: When creating standalone global cluster, value for engineName should be specified
 	if input.Engine == nil && input.SourceDBClusterIdentifier == nil {
-		input.Engine = aws.String("aurora")
+		input.Engine = aws.String(globalClusterEngineAurora)
 	}
 
-	output, err := conn.CreateGlobalCluster(input)
+	output, err := conn.CreateGlobalCluster(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating RDS Global Cluster: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Global Cluster (%s): %s", globalClusterID, err)
 	}
 
-	d.SetId(aws.StringValue(output.GlobalCluster.GlobalClusterIdentifier))
+	d.SetId(aws.ToString(output.GlobalCluster.GlobalClusterIdentifier))
 
-	if err := waitForRdsGlobalClusterCreation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for RDS Global Cluster (%s) availability: %s", d.Id(), err)
+	if _, err := waitGlobalClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceGlobalClusterRead(d, meta)
+	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
 }
 
-func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	globalCluster, err := DescribeGlobalCluster(conn, d.Id())
+	globalCluster, err := findGlobalClusterByID(ctx, conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS Global Cluster: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Global Cluster (%s): %s", d.Id(), err)
 	}
 
-	if globalCluster == nil {
-		log.Printf("[WARN] RDS Global Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(globalCluster.Status) == "deleting" || aws.StringValue(globalCluster.Status) == "deleted" {
-		log.Printf("[WARN] RDS Global Cluster (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(globalCluster.Status))
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("arn", globalCluster.GlobalClusterArn)
-	d.Set("database_name", globalCluster.DatabaseName)
-	d.Set("deletion_protection", globalCluster.DeletionProtection)
-	d.Set("engine", globalCluster.Engine)
-	d.Set("engine_version", globalCluster.EngineVersion)
+	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
+	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
+	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
+	d.Set(names.AttrEngine, globalCluster.Engine)
+	d.Set("engine_lifecycle_support", globalCluster.EngineLifecycleSupport)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
+	}
+	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
+	d.Set(names.AttrStorageEncrypted, globalCluster.StorageEncrypted)
 
-	if err := d.Set("global_cluster_members", flattenRdsGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
-		return fmt.Errorf("error setting global_cluster_members: %w", err)
+	oldEngineVersion, newEngineVersion := d.Get(names.AttrEngineVersion).(string), aws.ToString(globalCluster.EngineVersion)
+
+	// For example a configured engine_version of "5.6.10a" and a returned engine_version of "5.6.global_10a".
+	if oldParts, newParts := strings.Split(oldEngineVersion, "."), strings.Split(newEngineVersion, "."); len(oldParts) == 3 && //nolint:gocritic // Ignore 'badCond'
+		len(oldParts) == len(newParts) &&
+		oldParts[0] == newParts[0] &&
+		oldParts[1] == newParts[1] &&
+		strings.HasSuffix(newParts[2], oldParts[2]) {
+		d.Set(names.AttrEngineVersion, oldEngineVersion)
+		d.Set("engine_version_actual", newEngineVersion)
+	} else {
+		d.Set(names.AttrEngineVersion, newEngineVersion)
+		d.Set("engine_version_actual", newEngineVersion)
 	}
 
-	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
-	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
-
-	return nil
+	return diags
 }
 
-func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
+	if d.HasChange(names.AttrEngineVersion) {
+		if err := globalClusterUpgradeEngineVersion(ctx, conn, d, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
 
 	input := &rds.ModifyGlobalClusterInput{
-		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+		DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		GlobalClusterIdentifier: aws.String(d.Id()),
 	}
 
-	if d.HasChange("engine_version") {
-		if err := resourceGlobalClusterUpgradeEngineVersion(d, conn); err != nil {
-			return err
-		}
-	}
+	_, err := conn.ModifyGlobalCluster(ctx, input)
 
-	log.Printf("[DEBUG] Updating RDS Global Cluster (%s): %s", d.Id(), input)
-	_, err := conn.ModifyGlobalCluster(input)
-
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
-		return nil
+	if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting RDS Global Cluster: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating RDS Global Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForRdsGlobalClusterUpdate(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
+	if _, err := waitGlobalClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceGlobalClusterRead(d, meta)
+	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
 }
 
-func resourceGlobalClusterGetIdByARN(conn *rds.RDS, arn string) string {
-	result, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{})
-	if err != nil {
-		return ""
-	}
-	for _, cluster := range result.DBClusters {
-		if aws.StringValue(cluster.DBClusterArn) == arn {
-			return aws.StringValue(cluster.DBClusterIdentifier)
-		}
-	}
-	return ""
-}
+func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
-func resourceGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	if d.Get(names.AttrForceDestroy).(bool) {
+		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
 
-	if d.Get("force_destroy").(bool) {
-		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
-			globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
+		// The writer cluster must be removed last.
+		var writerARN string
+		globalClusterMembers := d.Get("global_cluster_members").(*schema.Set)
+		if globalClusterMembers.Len() > 0 {
+			for _, tfMapRaw := range globalClusterMembers.List() {
+				tfMap, ok := tfMapRaw.(map[string]interface{})
+				if !ok {
+					continue
+				}
 
-			if !ok {
-				continue
-			}
+				dbClusterARN, ok := tfMap["db_cluster_arn"].(string)
+				if !ok {
+					continue
+				}
 
-			dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
+				if tfMap["is_writer"].(bool) {
+					writerARN = dbClusterARN
+					continue
+				}
 
-			if !ok {
-				continue
+				input := &rds.RemoveFromGlobalClusterInput{
+					DbClusterIdentifier:     aws.String(dbClusterARN),
+					GlobalClusterIdentifier: aws.String(d.Id()),
+				}
+
+				_, err := conn.RemoveFromGlobalCluster(ctx, input)
+
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
+					continue
+				}
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from RDS Global Cluster (%s): %s", dbClusterARN, d.Id(), err)
+				}
+
+				if _, err := waitGlobalClusterMemberRemoved(ctx, conn, dbClusterARN, deadline.Remaining()); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", dbClusterARN, d.Id(), err)
+				}
 			}
 
 			input := &rds.RemoveFromGlobalClusterInput{
-				DbClusterIdentifier:     aws.String(dbClusterArn),
+				DbClusterIdentifier:     aws.String(writerARN),
 				GlobalClusterIdentifier: aws.String(d.Id()),
 			}
 
-			_, err := conn.RemoveFromGlobalCluster(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-				continue
-			}
+			_, err := conn.RemoveFromGlobalCluster(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error removing RDS DB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err)
+				if !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
+					return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from RDS Global Cluster (%s): %s", writerARN, d.Id(), err)
+				}
 			}
 
-			if err := waitForRdsGlobalClusterRemoval(conn, dbClusterArn); err != nil {
-				return fmt.Errorf("error waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %w", dbClusterArn, d.Id(), err)
+			if _, err := waitGlobalClusterMemberRemoved(ctx, conn, writerARN, deadline.Remaining()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", writerARN, d.Id(), err)
 			}
 		}
 	}
 
-	input := &rds.DeleteGlobalClusterInput{
-		GlobalClusterIdentifier: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting RDS Global Cluster (%s): %s", d.Id(), input)
+	log.Printf("[DEBUG] Deleting RDS Global Cluster: %s", d.Id())
 
 	// Allow for eventual consistency
 	// InvalidGlobalClusterStateFault: Global Cluster arn:aws:rds::123456789012:global-cluster:tf-acc-test-5618525093076697001-0 is not empty
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteGlobalCluster(input)
+	const (
+		// GlobalClusterClusterDeleteTimeout is the timeout for actual deletion of the cluster
+		// This operation will be quick if successful
+		globalClusterClusterDeleteTimeout = 5 * time.Minute
+	)
+	var timeout time.Duration
+	if x, y := deadline.Remaining(), globalClusterClusterDeleteTimeout; x < y {
+		timeout = x
+	} else {
+		timeout = y
+	}
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidGlobalClusterStateFault](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteGlobalCluster(ctx, &rds.DeleteGlobalClusterInput{
+			GlobalClusterIdentifier: aws.String(d.Id()),
+		})
+	}, "is not empty")
 
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
-			return resource.RetryableError(err)
+	if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RDS Global Cluster (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitGlobalClusterDeleted(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findGlobalClusterByDBClusterARN(ctx context.Context, conn *rds.Client, dbClusterARN string) (*types.GlobalCluster, error) {
+	input := &rds.DescribeGlobalClustersInput{
+		Filters: []types.Filter{
+			{
+				Name:   aws.String("db-cluster-id"),
+				Values: []string{dbClusterARN},
+			},
+		},
+	}
+
+	return findGlobalCluster(ctx, conn, input, func(v *types.GlobalCluster) bool {
+		return slices.ContainsFunc(v.GlobalClusterMembers, func(v types.GlobalClusterMember) bool {
+			return aws.ToString(v.DBClusterArn) == dbClusterARN
+		})
+	})
+}
+
+func findGlobalClusterByID(ctx context.Context, conn *rds.Client, id string) (*types.GlobalCluster, error) {
+	input := &rds.DescribeGlobalClustersInput{
+		GlobalClusterIdentifier: aws.String(id),
+	}
+	output, err := findGlobalCluster(ctx, conn, input, tfslices.PredicateTrue[*types.GlobalCluster]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.GlobalClusterIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findGlobalCluster(ctx context.Context, conn *rds.Client, input *rds.DescribeGlobalClustersInput, filter tfslices.Predicate[*types.GlobalCluster]) (*types.GlobalCluster, error) {
+	output, err := findGlobalClusters(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findGlobalClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeGlobalClustersInput, filter tfslices.Predicate[*types.GlobalCluster]) ([]types.GlobalCluster, error) {
+	var output []types.GlobalCluster
+
+	pages := rds.NewDescribeGlobalClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return nil, err
 		}
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteGlobalCluster(input)
+		for _, v := range page.GlobalClusters {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	return output, nil
+}
+
+func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findGlobalClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), nil
+	}
+}
+
+func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{globalClusterStatusCreating},
+		Target:  []string{globalClusterStatusAvailable},
+		Refresh: statusGlobalCluster(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.GlobalCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
+		Target:  []string{globalClusterStatusAvailable},
+		Refresh: statusGlobalCluster(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.GlobalCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
+		Target:         []string{},
+		Refresh:        statusGlobalCluster(ctx, conn, id),
+		Timeout:        timeout,
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.GlobalCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) { //nolint:unparam
+	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+		return findGlobalClusterByDBClusterARN(ctx, conn, dbClusterARN)
+	})
+
+	if output, ok := outputRaw.(*types.GlobalCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// globalClusterUpgradeEngineVersion upgrades the engine version of the RDS Global Cluster, accommodating
+// either a MAJOR or MINOR version upgrade. Given only the old and new versions, determining whether to
+// perform a MAJOR or MINOR upgrade is challenging. Instead of attempting to parse numerous combinations
+// of engines and versions, we initially attempt a major upgrade. If AWS returns an error indicating that
+// a minor version upgrade is supported ("InvalidParameterValue"/"only supports Major Version Upgrades"),
+// we infer that a minor upgrade will suffice. Therefore, it's crucial to recognize that this error serves
+// as more than just an error; it guides our decision between major and minor upgrades.
+
+// IMPORTANT: Altering the error handling in `globalClusterUpgradeMajorEngineVersion` can disrupt the
+// logic, including the handling of errors that signify the need for a minor version upgrade.
+func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d *schema.ResourceData, timeout time.Duration) error {
+	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get(names.AttrEngineVersion))
+
+	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
+			return fmt.Errorf("upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
+		}
+
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting RDS Global Cluster: %s", err)
-	}
-
-	if err := WaitForGlobalClusterDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for RDS Global Cluster (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("upgrading major version of RDS Global Cluster (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func flattenRdsGlobalClusterMembers(apiObjects []*rds.GlobalClusterMember) []interface{} {
+// globalClusterUpgradeMajorEngineVersion attempts a major version upgrade. If that fails, it returns an
+// error that is more than just an error but also indicates a minor version should be tried. It's IMPORTANT
+// to not handle this like any other error, such as, for example, retrying the error, since it indicates
+// another branch of logic. Please use caution when updating!!
+func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Client, globalClusterID, engineVersion string, timeout time.Duration) error {
+	input := &rds.ModifyGlobalClusterInput{
+		AllowMajorVersionUpgrade: aws.Bool(true),
+		EngineVersion:            aws.String(engineVersion),
+		GlobalClusterIdentifier:  aws.String(globalClusterID),
+	}
+
+	_, err := tfresource.RetryWhen(ctx, timeout,
+		func() (interface{}, error) {
+			return conn.ModifyGlobalCluster(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
+				return false, err
+			}
+
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+				return false, err // NOT retryable !! AND indicates this should be a minor version upgrade
+			}
+
+			// Any other errors are retryable.
+			return err != nil, err
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("modifying RDS Global Cluster (%s) EngineVersion: %w", globalClusterID, err)
+	}
+
+	globalCluster, err := findGlobalClusterByID(ctx, conn, globalClusterID)
+
+	if err != nil {
+		return fmt.Errorf("after major engine_version upgrade to RDS Global Cluster (%s): %w", globalClusterID, err)
+	}
+
+	for _, clusterMember := range globalCluster.GlobalClusterMembers {
+		memberARN := aws.ToString(clusterMember.DBClusterArn)
+
+		if memberARN == "" {
+			continue
+		}
+
+		clusterID, clusterRegion, err := clusterIDAndRegionFromARN(memberARN)
+		if err != nil {
+			return err
+		}
+
+		if clusterID == "" {
+			continue
+		}
+
+		optFn := func(o *rds.Options) {
+			o.Region = clusterRegion
+		}
+
+		if _, err := waitGlobalClusterMemberUpdated(ctx, conn, clusterID, timeout, optFn); err != nil {
+			return fmt.Errorf("waiting for RDS Global Cluster (%s) member (%s) update: %w", globalClusterID, clusterID, err)
+		}
+	}
+
+	return err
+}
+
+func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *rds.Client, globalClusterID, engineVersion string, clusterMembers *schema.Set, timeout time.Duration) error {
+	log.Printf("[INFO] Performing RDS Global Cluster (%s) minor version (%s) upgrade", globalClusterID, engineVersion)
+
+	leelooMultiPass := false // only one pass is needed
+
+	for _, tfMapRaw := range clusterMembers.List() {
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		// DBClusterIdentifier supposedly can be either ARN or ID, and both used to work,
+		// but as of now, only ID works.
+		if memberARN, ok := tfMap["db_cluster_arn"]; !ok || memberARN.(string) == "" {
+			continue
+		}
+
+		memberARN := tfMap["db_cluster_arn"].(string)
+
+		clusterID, clusterRegion, err := clusterIDAndRegionFromARN(memberARN)
+		if err != nil {
+			return err
+		}
+
+		if clusterID == "" {
+			continue
+		}
+
+		optFn := func(o *rds.Options) {
+			o.Region = clusterRegion
+		}
+
+		// pre-wait for the cluster to be in a state where it can be updated
+		if _, err := waitGlobalClusterMemberUpdated(ctx, conn, clusterID, timeout, optFn); err != nil {
+			return fmt.Errorf("waiting for RDS Global Cluster (%s) member (%s) update: %w", globalClusterID, clusterID, err)
+		}
+
+		input := &rds.ModifyDBClusterInput{
+			ApplyImmediately:    aws.Bool(true),
+			DBClusterIdentifier: aws.String(clusterID),
+			EngineVersion:       aws.String(engineVersion),
+		}
+
+		log.Printf("[INFO] Performing RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", globalClusterID, clusterID, engineVersion)
+		_, err = tfresource.RetryWhen(ctx, timeout,
+			func() (interface{}, error) {
+				return conn.ModifyDBCluster(ctx, input, optFn)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+					return true, err
+				}
+
+				if errs.IsAErrorMessageContains[*types.InvalidDBClusterStateFault](err, "Cannot modify engine version without a primary instance in DB cluster") {
+					return false, err
+				}
+
+				if errs.IsA[*types.InvalidDBClusterStateFault](err) {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if errs.IsAErrorMessageContains[*types.InvalidGlobalClusterStateFault](err, "is upgrading") {
+			leelooMultiPass = true
+			continue
+		}
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "upgrade global replicas first") {
+			leelooMultiPass = true
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("modifying RDS Global Cluster (%s) member (%s) EngineVersion: %w", globalClusterID, clusterID, err)
+		}
+
+		if _, err := waitGlobalClusterMemberUpdated(ctx, conn, clusterID, timeout, optFn); err != nil {
+			return fmt.Errorf("waiting for RDS Global Cluster (%s) member (%s) update: %w", globalClusterID, clusterID, err)
+		}
+	}
+
+	globalCluster, err := findGlobalClusterByID(ctx, conn, globalClusterID)
+
+	if err != nil {
+		return fmt.Errorf("after minor engine_version upgrade to RDS Global Cluster (%s) members: %w", globalClusterID, err)
+	}
+
+	if leelooMultiPass || aws.ToString(globalCluster.EngineVersion) != engineVersion {
+		log.Printf("[DEBUG] RDS Global Cluster (%s) upgrade did not take effect, trying again", globalClusterID)
+
+		return globalClusterUpgradeMinorEngineVersion(ctx, conn, globalClusterID, engineVersion, clusterMembers, timeout)
+	}
+
+	return nil
+}
+
+func clusterIDAndRegionFromARN(clusterARN string) (string, string, error) {
+	parsedARN, err := arn.Parse(clusterARN)
+	if err != nil {
+		return "", "", fmt.Errorf("could not parse ARN (%s): %w", clusterARN, err)
+	}
+
+	dbi := ""
+
+	if parsedARN.Resource != "" {
+		parts := strings.Split(parsedARN.Resource, ":")
+
+		if len(parts) < 2 {
+			return "", "", fmt.Errorf("could not get DB Cluster ID from parsing ARN (%s): %w", clusterARN, err)
+		}
+
+		if parsedARN.Service != "rds" || parts[0] != "cluster" {
+			return "", "", fmt.Errorf("wrong ARN (%s) for a DB Cluster", clusterARN)
+		}
+
+		dbi = parts[1]
+	}
+
+	return dbi, parsedARN.Region, nil
+}
+
+func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBCluster, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			clusterStatusBackingUp,
+			clusterStatusConfiguringIAMDatabaseAuth,
+			clusterStatusModifying,
+			clusterStatusRenaming,
+			clusterStatusResettingMasterCredentials,
+			clusterStatusUpgrading,
+		},
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id, false, optFns...),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func flattenGlobalClusterMembers(apiObjects []types.GlobalClusterMember) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -337,277 +781,12 @@ func flattenRdsGlobalClusterMembers(apiObjects []*rds.GlobalClusterMember) []int
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"db_cluster_arn": aws.StringValue(apiObject.DBClusterArn),
-			"is_writer":      aws.BoolValue(apiObject.IsWriter),
+			"db_cluster_arn": aws.ToString(apiObject.DBClusterArn),
+			"is_writer":      aws.ToBool(apiObject.IsWriter),
 		}
 
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
-}
-
-func DescribeGlobalCluster(conn *rds.RDS, globalClusterID string) (*rds.GlobalCluster, error) {
-	var globalCluster *rds.GlobalCluster
-
-	input := &rds.DescribeGlobalClustersInput{
-		GlobalClusterIdentifier: aws.String(globalClusterID),
-	}
-
-	log.Printf("[DEBUG] Reading RDS Global Cluster (%s): %s", globalClusterID, input)
-	err := conn.DescribeGlobalClustersPages(input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, gc := range page.GlobalClusters {
-			if gc == nil {
-				continue
-			}
-
-			if aws.StringValue(gc.GlobalClusterIdentifier) == globalClusterID {
-				globalCluster = gc
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return globalCluster, err
-}
-
-func DescribeGlobalClusterFromClusterARN(conn *rds.RDS, dbClusterARN string) (*rds.GlobalCluster, error) {
-	var globalCluster *rds.GlobalCluster
-
-	input := &rds.DescribeGlobalClustersInput{
-		Filters: []*rds.Filter{
-			{
-				Name:   aws.String("db-cluster-id"),
-				Values: []*string{aws.String(dbClusterARN)},
-			},
-		},
-	}
-
-	log.Printf("[DEBUG] Reading RDS Global Clusters: %s", input)
-	err := conn.DescribeGlobalClustersPages(input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, gc := range page.GlobalClusters {
-			if gc == nil {
-				continue
-			}
-
-			for _, globalClusterMember := range gc.GlobalClusterMembers {
-				if aws.StringValue(globalClusterMember.DBClusterArn) == dbClusterARN {
-					globalCluster = gc
-					return false
-				}
-			}
-		}
-
-		return !lastPage
-	})
-
-	return globalCluster, err
-}
-
-func rdsGlobalClusterRefreshFunc(conn *rds.RDS, globalClusterID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		globalCluster, err := DescribeGlobalCluster(conn, globalClusterID)
-
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
-			return nil, "deleted", nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading RDS Global Cluster (%s): %s", globalClusterID, err)
-		}
-
-		if globalCluster == nil {
-			return nil, "deleted", nil
-		}
-
-		return globalCluster, aws.StringValue(globalCluster.Status), nil
-	}
-}
-
-func waitForRdsGlobalClusterCreation(conn *rds.RDS, globalClusterID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"creating"},
-		Target:  []string{"available"},
-		Refresh: rdsGlobalClusterRefreshFunc(conn, globalClusterID),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for RDS Global Cluster (%s) availability", globalClusterID)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForRdsGlobalClusterUpdate(conn *rds.RDS, globalClusterID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"modifying", "upgrading"},
-		Target:  []string{"available"},
-		Refresh: rdsGlobalClusterRefreshFunc(conn, globalClusterID),
-		Timeout: 10 * time.Minute,
-		Delay:   30 * time.Second,
-	}
-
-	log.Printf("[DEBUG] Waiting for RDS Global Cluster (%s) availability", globalClusterID)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func WaitForGlobalClusterDeletion(conn *rds.RDS, globalClusterID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			"available",
-			"deleting",
-		},
-		Target:         []string{"deleted"},
-		Refresh:        rdsGlobalClusterRefreshFunc(conn, globalClusterID),
-		Timeout:        10 * time.Minute,
-		NotFoundChecks: 1,
-	}
-
-	log.Printf("[DEBUG] Waiting for RDS Global Cluster (%s) deletion", globalClusterID)
-	_, err := stateConf.WaitForState()
-
-	if tfresource.NotFound(err) {
-		return nil
-	}
-
-	return err
-}
-
-func waitForRdsGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string) error {
-	var globalCluster *rds.GlobalCluster
-	stillExistsErr := fmt.Errorf("RDS DB Cluster still exists in RDS Global Cluster")
-
-	err := resource.Retry(rdsGlobalClusterRemovalTimeout, func() *resource.RetryError {
-		var err error
-
-		globalCluster, err = DescribeGlobalClusterFromClusterARN(conn, dbClusterIdentifier)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if globalCluster != nil {
-			return resource.RetryableError(stillExistsErr)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = DescribeGlobalClusterFromClusterARN(conn, dbClusterIdentifier)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	if globalCluster != nil {
-		return stillExistsErr
-	}
-
-	return nil
-}
-
-func resourceGlobalClusterUpgradeMajorEngineVersion(clusterId string, engineVersion string, conn *rds.RDS) error {
-	input := &rds.ModifyGlobalClusterInput{
-		GlobalClusterIdentifier: aws.String(clusterId),
-	}
-	input.AllowMajorVersionUpgrade = aws.Bool(true)
-	input.EngineVersion = aws.String(engineVersion)
-	err := resource.Retry(rdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
-		_, err := conn.ModifyGlobalCluster(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
-				return resource.NonRetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
-				return resource.NonRetryableError(err)
-			}
-
-			return resource.RetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.ModifyGlobalCluster(input)
-	}
-	return err
-}
-
-func resourceGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVersion string, conn *rds.RDS) error {
-	for _, clusterMemberRaw := range clusterMembers.List() {
-		clusterMember := clusterMemberRaw.(map[string]interface{})
-		if clusterMemberArn, ok := clusterMember["db_cluster_arn"]; ok && clusterMemberArn.(string) != "" {
-			modInput := &rds.ModifyDBClusterInput{
-				ApplyImmediately:    aws.Bool(true),
-				DBClusterIdentifier: aws.String(clusterMemberArn.(string)),
-				EngineVersion:       aws.String(engineVersion),
-			}
-			err := resource.Retry(rdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
-				_, err := conn.ModifyDBCluster(modInput)
-				if err != nil {
-					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-						return resource.RetryableError(err)
-					}
-
-					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
-						return resource.NonRetryableError(err)
-					}
-
-					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err := conn.ModifyDBCluster(modInput)
-				if err != nil {
-					return err
-				}
-			}
-			if err != nil {
-				return fmt.Errorf("Failed to update engine_version on global cluster member (%s): %s", clusterMemberArn, err)
-			}
-		}
-	}
-	return nil
-}
-
-func resourceGlobalClusterUpgradeEngineVersion(d *schema.ResourceData, conn *rds.RDS) error {
-	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
-	err := resourceGlobalClusterUpgradeMajorEngineVersion(d.Id(), d.Get("engine_version").(string), conn)
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
-		err = resourceGlobalClusterUpgradeMinorEngineVersion(d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
-	}
-	globalCluster, err := DescribeGlobalCluster(conn, d.Id())
-	if err != nil {
-		return err
-	}
-	for _, clusterMember := range globalCluster.GlobalClusterMembers {
-		err := waitForRDSClusterUpdate(conn, resourceGlobalClusterGetIdByARN(conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

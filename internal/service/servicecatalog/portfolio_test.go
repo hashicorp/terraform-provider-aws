@@ -1,40 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_portfolio.test"
 	name := sdkacctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPortfolioResourceBasicConfig(name),
+				Config: testAccPortfolioConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`portfolio/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-2"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", "test-3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckPortfolioExists(ctx, resourceName, &dpo),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`portfolio/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, "test-3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -47,21 +54,22 @@ func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 }
 
 func TestAccServiceCatalogPortfolio_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandString(5)
 	resourceName := "aws_servicecatalog_portfolio.test"
 	var dpo servicecatalog.DescribePortfolioOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPortfolioResourceBasicConfig(name),
+				Config: testAccPortfolioConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					testAccCheckServiceCatlaogPortfolioDisappears(&dpo),
+					testAccCheckPortfolioExists(ctx, resourceName, &dpo),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourcePortfolio(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,111 +77,58 @@ func TestAccServiceCatalogPortfolio_disappears(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
-	resourceName := "aws_servicecatalog_portfolio.test"
-	name := sdkacctest.RandString(5)
-	var dpo servicecatalog.DescribePortfolioOutput
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckPortfolioResourceTags1Config(name, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCheckPortfolioResourceTags2Config(name, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccCheckPortfolioResourceTags1Config(name, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckPortfolio(pr string, dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
+func testAccCheckPortfolioExists(ctx context.Context, n string, v *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
-		rs, ok := s.RootModule().Resources[pr]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Service Catalog Portfolio ID is set")
 		}
 
-		input := servicecatalog.DescribePortfolioInput{}
-		input.Id = aws.String(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-		resp, err := conn.DescribePortfolio(&input)
+		output, err := tfservicecatalog.FindPortfolioByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*dpo = *resp
+		*v = *output
+
 		return nil
 	}
 }
 
-func testAccCheckServiceCatlaogPortfolioDisappears(dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
+func testAccCheckPortfolioDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-		input := servicecatalog.DeletePortfolioInput{}
-		input.Id = dpo.PortfolioDetail.Id
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_portfolio" {
+				continue
+			}
 
-		_, err := conn.DeletePortfolio(&input)
-		return err
+			_, err := tfservicecatalog.FindPortfolioByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Service Catalog Portfolio %s still exists", rs.Primary.ID)
+		}
+
+		return nil
 	}
 }
 
-func testAccCheckServiceCatlaogPortfolioDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_portfolio" {
-			continue
-		}
-		input := servicecatalog.DescribePortfolioInput{}
-		input.Id = aws.String(rs.Primary.ID)
-
-		_, err := conn.DescribePortfolio(&input)
-		if err == nil {
-			return fmt.Errorf("Portfolio still exists")
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckPortfolioResourceBasicConfig(name string) string {
+func testAccPortfolioConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
   name          = "%s"
@@ -181,33 +136,4 @@ resource "aws_servicecatalog_portfolio" "test" {
   provider_name = "test-3"
 }
 `, name)
-}
-
-func testAccCheckPortfolioResourceTags1Config(name, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-b"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, name, tagKey1, tagValue1)
-}
-
-func testAccCheckPortfolioResourceTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-only-change-me"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }

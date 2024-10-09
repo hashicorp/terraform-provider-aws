@@ -1,28 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourcePatchGroup() *schema.Resource {
+const (
+	patchGroupResourceIDPartCount = 2
+)
+
+// @SDKResource("aws_ssm_patch_group", name="Patch Group")
+func resourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePatchGroupCreate,
-		Read:   resourcePatchGroupRead,
-		Delete: resourcePatchGroupDelete,
+		CreateWithoutTimeout: resourcePatchGroupCreate,
+		ReadWithoutTimeout:   resourcePatchGroupRead,
+		DeleteWithoutTimeout: resourcePatchGroupDelete,
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourcePatchGroupV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: PatchGroupStateUpgradeV0,
+				Upgrade: patchGroupStateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -42,94 +55,131 @@ func ResourcePatchGroup() *schema.Resource {
 	}
 }
 
-func resourcePatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	baselineId := d.Get("baseline_id").(string)
+	baselineID := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
-
-	params := &ssm.RegisterPatchBaselineForPatchGroupInput{
-		BaselineId: aws.String(baselineId),
+	id, err := flex.FlattenResourceId([]string{patchGroup, baselineID}, patchGroupResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	input := &ssm.RegisterPatchBaselineForPatchGroupInput{
+		BaselineId: aws.String(baselineID),
 		PatchGroup: aws.String(patchGroup),
 	}
 
-	resp, err := conn.RegisterPatchBaselineForPatchGroup(params)
-	if err != nil {
-		return fmt.Errorf("error registering SSM Patch Baseline (%s) for Patch Group (%s): %w", baselineId, patchGroup, err)
+	if _, err := conn.RegisterPatchBaselineForPatchGroup(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating SSM Patch Group (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(resp.PatchGroup), aws.StringValue(resp.BaselineId)))
+	d.SetId(id)
 
-	return resourcePatchGroupRead(d, meta)
+	return append(diags, resourcePatchGroupRead(ctx, d, meta)...)
 }
 
-func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
+	parts, err := flex.ExpandResourceId(d.Id(), patchGroupResourceIDPartCount, false)
 	if err != nil {
-		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	group, err := FindPatchGroup(conn, patchGroup, baselineId)
+	patchGroup, baselineID := parts[0], parts[1]
+	group, err := findPatchGroupByTwoPartKey(ctx, conn, patchGroup, baselineID)
 
-	if err != nil {
-		return fmt.Errorf("error reading SSM Patch Group (%s): %w", d.Id(), err)
-	}
-
-	if group == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading SSM Patch Group (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] SSM Patch Group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Patch Group %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	var groupBaselineId string
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Group (%s): %s", d.Id(), err)
+	}
+
+	var groupBaselineID string
 	if group.BaselineIdentity != nil {
-		groupBaselineId = aws.StringValue(group.BaselineIdentity.BaselineId)
+		groupBaselineID = aws.ToString(group.BaselineIdentity.BaselineId)
 	}
-
-	d.Set("baseline_id", groupBaselineId)
+	d.Set("baseline_id", groupBaselineID)
 	d.Set("patch_group", group.PatchGroup)
 
-	return nil
-
+	return diags
 }
 
-func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
+	parts, err := flex.ExpandResourceId(d.Id(), patchGroupResourceIDPartCount, false)
 	if err != nil {
-		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	params := &ssm.DeregisterPatchBaselineForPatchGroupInput{
-		BaselineId: aws.String(baselineId),
+	patchGroup, baselineID := parts[0], parts[1]
+
+	log.Printf("[WARN] Deleting SSM Patch Group: %s", d.Id())
+	_, err = conn.DeregisterPatchBaselineForPatchGroup(ctx, &ssm.DeregisterPatchBaselineForPatchGroupInput{
+		BaselineId: aws.String(baselineID),
 		PatchGroup: aws.String(patchGroup),
-	}
+	})
 
-	_, err = conn.DeregisterPatchBaselineForPatchGroup(params)
+	if errs.IsA[*awstypes.DoesNotExistException](err) {
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-			return nil
-		}
-		return fmt.Errorf("error deregistering SSM Patch Baseline (%s) for Patch Group (%s): %w", baselineId, patchGroup, err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSM Patch Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func ParsePatchGroupID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
+func findPatchGroupByTwoPartKey(ctx context.Context, conn *ssm.Client, patchGroup, baselineID string) (*awstypes.PatchGroupPatchBaselineMapping, error) {
+	input := &ssm.DescribePatchGroupsInput{}
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("please make sure ID is in format PATCH_GROUP,BASELINE_ID")
+	return findPatchGroup(ctx, conn, input, func(v *awstypes.PatchGroupPatchBaselineMapping) bool {
+		if aws.ToString(v.PatchGroup) == patchGroup {
+			if v.BaselineIdentity != nil && aws.ToString(v.BaselineIdentity.BaselineId) == baselineID {
+				return true
+			}
+		}
+
+		return false
+	})
+}
+
+func findPatchGroup(ctx context.Context, conn *ssm.Client, input *ssm.DescribePatchGroupsInput, filter tfslices.Predicate[*awstypes.PatchGroupPatchBaselineMapping]) (*awstypes.PatchGroupPatchBaselineMapping, error) {
+	output, err := findPatchGroups(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return parts[0], parts[1], nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPatchGroups(ctx context.Context, conn *ssm.Client, input *ssm.DescribePatchGroupsInput, filter tfslices.Predicate[*awstypes.PatchGroupPatchBaselineMapping]) ([]awstypes.PatchGroupPatchBaselineMapping, error) {
+	var output []awstypes.PatchGroupPatchBaselineMapping
+
+	pages := ssm.NewDescribePatchGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Mappings {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

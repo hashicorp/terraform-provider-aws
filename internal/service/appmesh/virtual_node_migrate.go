@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -12,13 +15,13 @@ func resourceVirtualNodeMigrateState(v int, is *terraform.InstanceState, meta in
 	switch v {
 	case 0:
 		log.Println("[INFO] Found App Mesh virtual node state v0; migrating to v1")
-		return migrateAppmeshVirtualNodeStateV0toV1(is)
+		return migrateVirtualNodeStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateAppmeshVirtualNodeStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateVirtualNodeStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty App Mesh virtual node state; nothing to migrate.")
 		return is, nil

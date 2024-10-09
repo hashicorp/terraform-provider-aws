@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elaticache_replication_group: Fix regression caused by the introduction of the `auth_token_update_strategy` argument with a default value
+```

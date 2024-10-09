@@ -1,27 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ssoadmin_instances")
 func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstancesRead,
+		ReadWithoutTimeout: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
-				Type:     schema.TypeSet,
+			names.AttrARNs: {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"identity_store_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -29,42 +36,45 @@ func DataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	var instances []*ssoadmin.InstanceMetadata
-	var arns, ids []string
-
-	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		instances = append(instances, page.Instances...)
-
-		return !lastPage
-	})
+	output, err := findInstanceMetadatas(ctx, conn)
 
 	if err != nil {
-		return fmt.Errorf("error reading SSO Instances: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSO Instances: %s", err)
 	}
 
-	if len(instances) == 0 {
-		return fmt.Errorf("error reading SSO Instance: no instances found")
-	}
+	var identityStoreIDs, arns []string
 
-	for _, instance := range instances {
-		arns = append(arns, aws.StringValue(instance.InstanceArn))
-		ids = append(ids, aws.StringValue(instance.IdentityStoreId))
+	for _, v := range output {
+		identityStoreIDs = append(identityStoreIDs, aws.ToString(v.IdentityStoreId))
+		arns = append(arns, aws.ToString(v.InstanceArn))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
-	}
-	if err := d.Set("identity_store_ids", ids); err != nil {
-		return fmt.Errorf("error setting identity_store_ids: %w", err)
+	d.Set(names.AttrARNs, arns)
+	d.Set("identity_store_ids", identityStoreIDs)
+
+	return diags
+}
+
+func findInstanceMetadatas(ctx context.Context, conn *ssoadmin.Client) ([]awstypes.InstanceMetadata, error) {
+	input := &ssoadmin.ListInstancesInput{}
+	var output []awstypes.InstanceMetadata
+
+	paginator := ssoadmin.NewListInstancesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		if page != nil {
+			output = append(output, page.Instances...)
+		}
 	}
 
-	return nil
+	return output, nil
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: When encountering `InsufficientInstanceCapacity` errors, do not retry in order to fail faster, as this error is typically not resolvable in the near future
+```

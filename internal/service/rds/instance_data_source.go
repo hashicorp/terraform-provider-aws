@@ -1,334 +1,325 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
+	"context"
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceInstance() *schema.Resource {
+// @SDKDataSource("aws_db_instance", name="DB Instance")
+// @Tags
+func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"db_instance_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-
-			"tags": tftags.TagsSchemaComputed(),
-
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"backup_retention_period": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"db_cluster_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"db_instance_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"db_instance_class": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"db_instance_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"db_instance_port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"db_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"db_parameter_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"db_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
 			"db_subnet_group": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"db_instance_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"license_model": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKMSKeyID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"max_allocated_storage": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"monitoring_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
+			"network_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"option_group_memberships": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"preferred_backup_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
-			"resource_id": {
+			"replicate_source_db": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"storage_encrypted": {
+			names.AttrResourceID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
-			"storage_type": {
+			"storage_throughput": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"timezone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"vpc_security_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"replicate_source_db": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
-func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	opts := &rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
+	var instance *types.DBInstance
+
+	filter := tfslices.PredicateTrue[*types.DBInstance]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		filter = func(v *types.DBInstance) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		}
 	}
 
-	log.Printf("[DEBUG] Reading DB Instance: %s", opts)
+	if v, ok := d.GetOk("db_instance_identifier"); ok {
+		id := v.(string)
+		output, err := findDBInstanceByID(ctx, conn, id)
 
-	resp, err := conn.DescribeDBInstances(opts)
-	if err != nil {
-		return err
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", id, err)
+		}
+
+		if !filter(output) {
+			return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
+		}
+
+		instance = output
+	} else {
+		input := &rds.DescribeDBInstancesInput{}
+		output, err := findDBInstance(ctx, conn, input, filter)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance: %s", err)
+		}
+
+		instance = output
 	}
 
-	if resp == nil || len(resp.DBInstances) < 1 || resp.DBInstances[0] == nil {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-	if len(resp.DBInstances) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
-	}
-
-	dbInstance := resp.DBInstances[0]
-
-	d.SetId(d.Get("db_instance_identifier").(string))
-
-	d.Set("allocated_storage", dbInstance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", dbInstance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", dbInstance.AvailabilityZone)
-	d.Set("backup_retention_period", dbInstance.BackupRetentionPeriod)
-	d.Set("db_cluster_identifier", dbInstance.DBClusterIdentifier)
-	d.Set("db_instance_arn", dbInstance.DBInstanceArn)
-	d.Set("db_instance_class", dbInstance.DBInstanceClass)
-	d.Set("db_name", dbInstance.DBName)
-	d.Set("resource_id", dbInstance.DbiResourceId)
-
-	var parameterGroups []string
-	for _, v := range dbInstance.DBParameterGroups {
-		parameterGroups = append(parameterGroups, *v.DBParameterGroupName)
-	}
-	if err := d.Set("db_parameter_groups", parameterGroups); err != nil {
-		return fmt.Errorf("Error setting db_parameter_groups attribute: %#v, error: %w", parameterGroups, err)
-	}
-
-	var dbSecurityGroups []string
-	for _, v := range dbInstance.DBSecurityGroups {
-		dbSecurityGroups = append(dbSecurityGroups, *v.DBSecurityGroupName)
-	}
-	if err := d.Set("db_security_groups", dbSecurityGroups); err != nil {
-		return fmt.Errorf("Error setting db_security_groups attribute: %#v, error: %w", dbSecurityGroups, err)
-	}
-
-	if dbInstance.DBSubnetGroup != nil {
-		d.Set("db_subnet_group", dbInstance.DBSubnetGroup.DBSubnetGroupName)
+	d.SetId(aws.ToString(instance.DBInstanceIdentifier))
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
+	d.Set("ca_cert_identifier", instance.CACertificateIdentifier)
+	d.Set("db_cluster_identifier", instance.DBClusterIdentifier)
+	d.Set("db_instance_arn", instance.DBInstanceArn)
+	d.Set("db_instance_class", instance.DBInstanceClass)
+	d.Set("db_instance_port", instance.DbInstancePort)
+	d.Set("db_name", instance.DBName)
+	d.Set("db_parameter_groups", tfslices.ApplyToAll(instance.DBParameterGroups, func(v types.DBParameterGroupStatus) string {
+		return aws.ToString(v.DBParameterGroupName)
+	}))
+	if instance.DBSubnetGroup != nil {
+		d.Set("db_subnet_group", instance.DBSubnetGroup.DBSubnetGroupName)
 	} else {
 		d.Set("db_subnet_group", "")
 	}
+	d.Set("enabled_cloudwatch_logs_exports", instance.EnabledCloudwatchLogsExports)
+	d.Set(names.AttrEngine, instance.Engine)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
+	d.Set(names.AttrIOPS, instance.Iops)
+	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
+	d.Set("license_model", instance.LicenseModel)
+	d.Set("master_username", instance.MasterUsername)
+	if instance.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(instance.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	}
+	d.Set("max_allocated_storage", instance.MaxAllocatedStorage)
+	d.Set("monitoring_interval", instance.MonitoringInterval)
+	d.Set("monitoring_role_arn", instance.MonitoringRoleArn)
+	d.Set("multi_az", instance.MultiAZ)
+	d.Set("network_type", instance.NetworkType)
+	d.Set("option_group_memberships", tfslices.ApplyToAll(instance.OptionGroupMemberships, func(v types.OptionGroupMembership) string {
+		return aws.ToString(v.OptionGroupName)
+	}))
+	d.Set("preferred_backup_window", instance.PreferredBackupWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
+	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
+	d.Set(names.AttrResourceID, instance.DbiResourceId)
+	d.Set(names.AttrStorageEncrypted, instance.StorageEncrypted)
+	d.Set("storage_throughput", instance.StorageThroughput)
+	d.Set(names.AttrStorageType, instance.StorageType)
+	d.Set("timezone", instance.Timezone)
+	d.Set("vpc_security_groups", tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	}))
 
-	d.Set("db_instance_port", dbInstance.DbInstancePort)
-	d.Set("engine", dbInstance.Engine)
-	d.Set("engine_version", dbInstance.EngineVersion)
-	d.Set("iops", dbInstance.Iops)
-	d.Set("kms_key_id", dbInstance.KmsKeyId)
-	d.Set("license_model", dbInstance.LicenseModel)
-	d.Set("master_username", dbInstance.MasterUsername)
-	d.Set("monitoring_interval", dbInstance.MonitoringInterval)
-	d.Set("monitoring_role_arn", dbInstance.MonitoringRoleArn)
-	d.Set("multi_az", dbInstance.MultiAZ)
-	d.Set("address", dbInstance.Endpoint.Address)
-	d.Set("port", dbInstance.Endpoint.Port)
-	d.Set("hosted_zone_id", dbInstance.Endpoint.HostedZoneId)
-	d.Set("endpoint", fmt.Sprintf("%s:%d", *dbInstance.Endpoint.Address, *dbInstance.Endpoint.Port))
-
-	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbInstance.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %w", err)
+	// Per AWS SDK Go docs:
+	// The endpoint might not be shown for instances whose status is creating.
+	if dbEndpoint := instance.Endpoint; dbEndpoint != nil {
+		d.Set(names.AttrAddress, dbEndpoint.Address)
+		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.ToString(dbEndpoint.Address), aws.ToInt32(dbEndpoint.Port)))
+		d.Set(names.AttrHostedZoneID, dbEndpoint.HostedZoneId)
+		d.Set(names.AttrPort, dbEndpoint.Port)
+	} else {
+		d.Set(names.AttrAddress, nil)
+		d.Set(names.AttrEndpoint, nil)
+		d.Set(names.AttrHostedZoneID, nil)
+		d.Set(names.AttrPort, nil)
 	}
 
-	var optionGroups []string
-	for _, v := range dbInstance.OptionGroupMemberships {
-		optionGroups = append(optionGroups, *v.OptionGroupName)
-	}
-	if err := d.Set("option_group_memberships", optionGroups); err != nil {
-		return fmt.Errorf("Error setting option_group_memberships attribute: %#v, error: %w", optionGroups, err)
-	}
+	setTagsOut(ctx, instance.TagList)
 
-	d.Set("preferred_backup_window", dbInstance.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", dbInstance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", dbInstance.PubliclyAccessible)
-	d.Set("storage_encrypted", dbInstance.StorageEncrypted)
-	d.Set("storage_type", dbInstance.StorageType)
-	d.Set("timezone", dbInstance.Timezone)
-	d.Set("replicate_source_db", dbInstance.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("ca_cert_identifier", dbInstance.CACertificateIdentifier)
-
-	var vpcSecurityGroups []string
-	for _, v := range dbInstance.VpcSecurityGroups {
-		vpcSecurityGroups = append(vpcSecurityGroups, *v.VpcSecurityGroupId)
-	}
-	if err := d.Set("vpc_security_groups", vpcSecurityGroups); err != nil {
-		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %w", vpcSecurityGroups, err)
-	}
-
-	tags, err := ListTags(conn, d.Get("db_instance_arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	return nil
+	return diags
 }

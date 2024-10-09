@@ -1,22 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
 	vInt := v.(int)
 	if vInt < 0 {
-		errors = append(errors, fmt.Errorf("error setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
+		errors = append(errors, fmt.Errorf("setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
 	}
 	return
 }
@@ -24,7 +28,7 @@ func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error)
 func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors []error) {
 	vInt, _ := strconv.Atoi(v.(string))
 	if vInt < 0 || vInt > 100 {
-		errors = append(errors, fmt.Errorf("error setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100", vInt))
+		errors = append(errors, fmt.Errorf("setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100", vInt))
 	}
 	return
 }
@@ -43,7 +47,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"default_sms_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -57,7 +60,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"delivery_status_iam_role_arn": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -70,7 +72,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"delivery_status_success_sampling_rate": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -84,7 +85,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"monthly_spend_limit": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -99,7 +99,6 @@ var (
 				"usage_report_s3_bucket",
 			},
 		},
-
 		"usage_report_s3_bucket": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -114,84 +113,84 @@ var (
 		},
 	}
 
-	SMSPreferencesAttributeMap = create.AttrMap(map[string]string{
+	SMSPreferencesAttributeMap = attrmap.New(map[string]string{
 		"default_sender_id":                     "DefaultSenderID",
 		"default_sms_type":                      "DefaultSMSType",
 		"delivery_status_iam_role_arn":          "DeliveryStatusIAMRole",
 		"delivery_status_success_sampling_rate": "DeliveryStatusSuccessSamplingRate",
 		"monthly_spend_limit":                   "MonthlySpendLimit",
 		"usage_report_s3_bucket":                "UsageReportS3Bucket",
-	}, smsPreferencesSchema)
+	}, smsPreferencesSchema).WithMissingSetToNil("*")
 )
 
-func ResourceSMSPreferences() *schema.Resource {
+// @SDKResource("aws_sns_sms_preferences")
+func resourceSMSPreferences() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSMSPreferencesSet,
-		Read:   resourceSMSPreferencesGet,
-		Update: resourceSMSPreferencesSet,
-		Delete: resourceSMSPreferencesDelete,
+		CreateWithoutTimeout: resourceSMSPreferencesSet,
+		ReadWithoutTimeout:   resourceSMSPreferencesGet,
+		UpdateWithoutTimeout: resourceSMSPreferencesSet,
+		DeleteWithoutTimeout: resourceSMSPreferencesDelete,
 
 		Schema: smsPreferencesSchema,
 	}
 }
 
-func resourceSMSPreferencesSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	attributes, err := SMSPreferencesAttributeMap.ResourceDataToApiAttributesCreate(d)
-
+	attributes, err := SMSPreferencesAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &sns.SetSMSAttributesInput{
-		Attributes: aws.StringMap(attributes),
+		Attributes: attributes,
 	}
 
-	log.Printf("[DEBUG] Setting SNS SMS Attributes: %s", input)
-	if _, err := conn.SetSMSAttributes(input); err != nil {
-		return fmt.Errorf("error setting SNS SMS Preferences: %w", err)
+	_, err = conn.SetSMSAttributes(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting SNS SMS Preferences: %s", err)
 	}
 
 	d.SetId("aws_sns_sms_id")
 
-	return nil
+	return diags
 }
 
-func resourceSMSPreferencesGet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	output, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
-
-	if err != nil {
-		return fmt.Errorf("error getting SNS SMS Preferences: %w", err)
-	}
-
-	err = SMSPreferencesAttributeMap.ApiAttributesToResourceData(aws.StringValueMap(output.Attributes), d)
+	output, err := conn.GetSMSAttributes(ctx, &sns.GetSMSAttributesInput{})
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SNS SMS Preferences: %s", err)
 	}
 
-	return nil
+	return sdkdiag.AppendFromErr(diags, SMSPreferencesAttributeMap.APIAttributesToResourceData(output.Attributes, d))
 }
 
-func resourceSMSPreferencesDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	// Reset the attributes to their default value.
 	attributes := make(map[string]string)
-	for _, apiAttributeName := range SMSPreferencesAttributeMap.ApiAttributeNames() {
+	for _, apiAttributeName := range SMSPreferencesAttributeMap.APIAttributeNames() {
 		attributes[apiAttributeName] = ""
 	}
 
 	input := &sns.SetSMSAttributesInput{
-		Attributes: aws.StringMap(attributes),
+		Attributes: attributes,
 	}
 
-	if _, err := conn.SetSMSAttributes(input); err != nil {
-		return fmt.Errorf("error resetting SNS SMS Preferences: %w", err)
+	_, err := conn.SetSMSAttributes(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "resetting SNS SMS Preferences: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "STS (Security Token)"
 layout: "aws"
 page_title: "AWS: aws_caller_identity"
 description: |-
@@ -34,7 +34,9 @@ output "caller_user" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `account_id` - AWS Account ID number of the account that owns or contains the calling entity.
 * `arn` - ARN associated with the calling entity.

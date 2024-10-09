@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_elb_service_account: Add account ID for `ap-southeast-3` AWS Region
+```

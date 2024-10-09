@@ -1,21 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -23,14 +31,21 @@ const (
 	securityGroupsDeletedSleepTime = 30 * time.Second
 )
 
-func ResourceStack() *schema.Resource {
+// @SDKResource("aws_opsworks_stack", name="Stack")
+// @Tags
+func resourceStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStackCreate,
-		Read:   resourceStackRead,
-		Update: resourceStackUpdate,
-		Delete: resourceStackDelete,
+		CreateWithoutTimeout: resourceStackCreate,
+		ReadWithoutTimeout:   resourceStackRead,
+		UpdateWithoutTimeout: resourceStackUpdate,
+		DeleteWithoutTimeout: resourceStackDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,170 +54,147 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
+			"berkshelf_version": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  defaultBerkshelfVersion,
 			},
-
-			"region": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-
-			"service_role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"default_instance_profile_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"color": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"configuration_manager_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Chef",
 			},
-
 			"configuration_manager_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "11.10",
 			},
-
-			"manage_berkshelf": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"berkshelf_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "3.2.0",
-			},
-
 			"custom_cookbooks_source": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"url": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
 						},
-
 						"revision": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"ssh_key": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
 						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceType](),
+						},
+						names.AttrURL: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrUsername: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
-
 			"custom_json": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
-
 			"default_availability_zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{names.AttrVPCID},
 			},
-
+			"default_instance_profile_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"default_os": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Ubuntu 12.04 LTS",
 			},
-
 			"default_root_device_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "instance-store",
 			},
-
 			"default_ssh_key_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"default_subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{names.AttrVPCID},
 			},
-
 			"hostname_theme": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Layer_Dependent",
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
+			"manage_berkshelf": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrRegion: {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+			},
+			names.AttrServiceRoleARN: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"stack_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"use_custom_cookbooks": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"use_opsworks_security_groups": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
-			"vpc_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Computed: true,
-				Optional: true,
-			},
-
-			"stack_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+			names.AttrVPCID: {
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"default_availability_zone"},
 			},
 		},
 
@@ -210,296 +202,111 @@ func ResourceStack() *schema.Resource {
 	}
 }
 
-func resourceStackValidate(d *schema.ResourceData) error {
-	cookbooksSourceCount := d.Get("custom_cookbooks_source.#").(int)
-	if cookbooksSourceCount > 1 {
-		return fmt.Errorf("Only one custom_cookbooks_source is permitted")
-	}
+func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
-	vpcId := d.Get("vpc_id").(string)
-	if vpcId != "" {
-		if d.Get("default_subnet_id").(string) == "" {
-			return fmt.Errorf("default_subnet_id must be set if vpc_id is set")
-		}
-	} else {
-		if d.Get("default_availability_zone").(string) == "" {
-			return fmt.Errorf("either vpc_id or default_availability_zone must be set")
-		}
-	}
-
-	return nil
-}
-
-func resourceStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source {
-	count := d.Get("custom_cookbooks_source.#").(int)
-	if count == 0 {
-		return nil
-	}
-
-	return &opsworks.Source{
-		Type:     aws.String(d.Get("custom_cookbooks_source.0.type").(string)),
-		Url:      aws.String(d.Get("custom_cookbooks_source.0.url").(string)),
-		Username: aws.String(d.Get("custom_cookbooks_source.0.username").(string)),
-		Password: aws.String(d.Get("custom_cookbooks_source.0.password").(string)),
-		Revision: aws.String(d.Get("custom_cookbooks_source.0.revision").(string)),
-		SshKey:   aws.String(d.Get("custom_cookbooks_source.0.ssh_key").(string)),
-	}
-}
-
-func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
-	nv := make([]interface{}, 0, 1)
-	if v != nil && v.Type != nil && *v.Type != "" {
-		m := make(map[string]interface{})
-		if v.Type != nil {
-			m["type"] = *v.Type
-		}
-		if v.Url != nil {
-			m["url"] = *v.Url
-		}
-		if v.Username != nil {
-			m["username"] = *v.Username
-		}
-		if v.Revision != nil {
-			m["revision"] = *v.Revision
-		}
-
-		// v.Password and v.SshKey will, on read, contain the placeholder string
-		// "*****FILTERED*****", so we ignore it on read and let persist
-		// the value already in the state.
-		m["password"] = d.Get("custom_cookbooks_source.0.password").(string)
-		m["ssh_key"] = d.Get("custom_cookbooks_source.0.ssh_key").(string)
-
-		nv = append(nv, m)
-	}
-
-	err := d.Set("custom_cookbooks_source", nv)
-	if err != nil {
-		// should never happen
-		return err
-	}
-	return nil
-}
-
-func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	var conErr error
-	if v := d.Get("stack_endpoint").(string); v != "" {
-		client, conErr = opsworksConnForRegion(v, meta)
-		if conErr != nil {
-			return conErr
-		}
-	}
-
-	req := &opsworks.DescribeStacksInput{
-		StackIds: []*string{
-			aws.String(d.Id()),
+	name := d.Get(names.AttrName).(string)
+	region := d.Get(names.AttrRegion).(string)
+	input := &opsworks.CreateStackInput{
+		ChefConfiguration: &awstypes.ChefConfiguration{
+			ManageBerkshelf: aws.Bool(d.Get("manage_berkshelf").(bool)),
 		},
-	}
-
-	log.Printf("[DEBUG] Reading OpsWorks stack: %s", d.Id())
-
-	// notFound represents the number of times we've called DescribeStacks looking
-	// for this Stack. If it's not found in the the default region we're in, we
-	// check us-east-1 in the event this stack was created with Terraform before
-	// version 0.9
-	// See https://github.com/hashicorp/terraform/issues/12842
-	var notFound int
-	var resp *opsworks.DescribeStacksOutput
-	var dErr error
-
-	for {
-		resp, dErr = client.DescribeStacks(req)
-		if dErr != nil {
-			if awserr, ok := dErr.(awserr.Error); ok {
-				if awserr.Code() == "ResourceNotFoundException" {
-					if notFound < 1 {
-						// If we haven't already, try us-east-1, legacy connection
-						notFound++
-						var connErr error
-						client, connErr = opsworksConnForRegion("us-east-1", meta) //lintignore:AWSAT003
-						if connErr != nil {
-							return connErr
-						}
-						// start again from the top of the FOR loop, but with a client
-						// configured to talk to us-east-1
-						continue
-					}
-
-					// We've tried both the original and us-east-1 endpoint, and the stack
-					// is still not found
-					log.Printf("[DEBUG] OpsWorks stack (%s) not found", d.Id())
-					d.SetId("")
-					return nil
-				}
-				// not ResoureNotFoundException, fall through to returning error
-			}
-			return dErr
-		}
-		// If the stack was found, set the stack_endpoint
-		if region := aws.StringValue(client.Config.Region); region != "" {
-			log.Printf("[DEBUG] Setting stack_endpoint for (%s) to (%s)", d.Id(), region)
-			if err := d.Set("stack_endpoint", region); err != nil {
-				log.Printf("[WARN] Error setting stack_endpoint: %s", err)
-			}
-		}
-		log.Printf("[DEBUG] Breaking stack endpoint search, found stack for (%s)", d.Id())
-		// Break the FOR loop
-		break
-	}
-
-	stack := resp.Stacks[0]
-	arn := aws.StringValue(stack.Arn)
-	d.Set("arn", arn)
-	d.Set("agent_version", stack.AgentVersion)
-	d.Set("name", stack.Name)
-	d.Set("region", stack.Region)
-	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
-	d.Set("service_role_arn", stack.ServiceRoleArn)
-	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
-	d.Set("default_os", stack.DefaultOs)
-	d.Set("default_root_device_type", stack.DefaultRootDeviceType)
-	d.Set("default_ssh_key_name", stack.DefaultSshKeyName)
-	d.Set("default_subnet_id", stack.DefaultSubnetId)
-	d.Set("hostname_theme", stack.HostnameTheme)
-	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
-	if stack.CustomJson != nil {
-		d.Set("custom_json", stack.CustomJson)
-	}
-	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
-	d.Set("vpc_id", stack.VpcId)
-	if color, ok := stack.Attributes["Color"]; ok {
-		d.Set("color", color)
-	}
-	if stack.ConfigurationManager != nil {
-		d.Set("configuration_manager_name", stack.ConfigurationManager.Name)
-		d.Set("configuration_manager_version", stack.ConfigurationManager.Version)
-	}
-	if stack.ChefConfiguration != nil {
-		d.Set("berkshelf_version", stack.ChefConfiguration.BerkshelfVersion)
-		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
-	}
-	err := resourceSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
-	if err != nil {
-		return err
-	}
-
-	tags, err := ListTags(client, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-// opsworksConn will return a connection for the stack_endpoint in the
-// configuration. Stacks can only be accessed or managed within the endpoint
-// in which they are created, so we allow users to specify an original endpoint
-// for Stacks created before multiple endpoints were offered (Terraform v0.9.0).
-// See:
-//  - https://github.com/hashicorp/terraform/pull/12688
-//  - https://github.com/hashicorp/terraform/issues/12842
-func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
-	originalConn := meta.(*conns.AWSClient).OpsWorksConn
-
-	// Regions are the same, no need to reconfigure
-	if originalConn.Config.Region != nil && *originalConn.Config.Region == region {
-		return originalConn, nil
-	}
-
-	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
-
-	if err != nil {
-		return nil, fmt.Errorf("error creating AWS session: %w", err)
-	}
-
-	return opsworks.New(sess), nil
-}
-
-func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-
-	err := resourceStackValidate(d)
-	if err != nil {
-		return err
-	}
-
-	req := &opsworks.CreateStackInput{
+		ConfigurationManager: &awstypes.StackConfigurationManager{
+			Name:    aws.String(d.Get("configuration_manager_name").(string)),
+			Version: aws.String(d.Get("configuration_manager_version").(string)),
+		},
 		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
-		Name:                      aws.String(d.Get("name").(string)),
-		Region:                    aws.String(d.Get("region").(string)),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
 		DefaultOs:                 aws.String(d.Get("default_os").(string)),
+		HostnameTheme:             aws.String(d.Get("hostname_theme").(string)),
+		Name:                      aws.String(name),
+		Region:                    aws.String(region),
+		ServiceRoleArn:            aws.String(d.Get(names.AttrServiceRoleARN).(string)),
+		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
 		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
 	}
-	req.ConfigurationManager = &opsworks.StackConfigurationManager{
-		Name:    aws.String(d.Get("configuration_manager_name").(string)),
-		Version: aws.String(d.Get("configuration_manager_version").(string)),
-	}
-	inVpc := false
-	if vpcId, ok := d.GetOk("vpc_id"); ok {
-		req.VpcId = aws.String(vpcId.(string))
-		inVpc = true
-	}
-	if defaultSubnetId, ok := d.GetOk("default_subnet_id"); ok {
-		req.DefaultSubnetId = aws.String(defaultSubnetId.(string))
-	}
-	if defaultAvailabilityZone, ok := d.GetOk("default_availability_zone"); ok {
-		req.DefaultAvailabilityZone = aws.String(defaultAvailabilityZone.(string))
-	}
-	if defaultRootDeviceType, ok := d.GetOk("default_root_device_type"); ok {
-		req.DefaultRootDeviceType = aws.String(defaultRootDeviceType.(string))
+
+	if v, ok := d.GetOk("agent_version"); ok {
+		input.AgentVersion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating OpsWorks stack: %s", req)
+	if v, ok := d.GetOk("color"); ok {
+		input.Attributes = map[string]string{
+			string(awstypes.StackAttributesKeysColor): v.(string),
+		}
+	}
 
-	var resp *opsworks.CreateStackOutput
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-		resp, err = client.CreateStack(req)
-		if err != nil {
+	if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_json"); ok {
+		input.CustomJson = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_availability_zone"); ok {
+		input.DefaultAvailabilityZone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_root_device_type"); ok {
+		input.DefaultRootDeviceType = awstypes.RootDeviceType(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_ssh_key_name"); ok {
+		input.DefaultSshKeyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_subnet_id"); ok {
+		input.DefaultSubnetId = aws.String(v.(string))
+	}
+
+	if d.Get("manage_berkshelf").(bool) {
+		input.ChefConfiguration.BerkshelfVersion = aws.String(d.Get("berkshelf_version").(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
+		input.VpcId = aws.String(v.(string))
+	}
+
+	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return conn.CreateStack(ctx, input)
+		},
+		func(err error) (bool, error) {
 			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
 			// propagated. AWS doesn't provide a machine-readable code for this specific error, so we're forced
 			// to do fragile message matching.
 			// The full error we're looking for looks something like the following:
 			// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
-			propErr := "not yet propagated"
-			trustErr := "not the necessary trust relationship"
-			validateErr := "validate IAM role permission"
-
-			if tfawserr.ErrMessageContains(err, "ValidationException", propErr) || tfawserr.ErrMessageContains(err, "ValidationException", trustErr) || tfawserr.ErrMessageContains(err, "ValidationException", validateErr) {
-				log.Printf("[INFO] Waiting for service IAM role to propagate")
-				return resource.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not yet propagated") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not the necessary trust relationship") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "validate IAM role permission") {
+				return true, err
 			}
 
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = client.CreateStack(req)
-	}
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Opsworks stack: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Stack (%s): %s", name, err)
 	}
 
-	stackId := *resp.StackId
-	d.SetId(stackId)
+	d.SetId(aws.ToString(outputRaw.(*opsworks.CreateStackOutput).StackId))
 
-	if inVpc && *req.UseOpsworksSecurityGroups {
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   names.OpsWorks,
+		Region:    region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
+	}.String()
+
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting OpsWorks Stack (%s) tags: %s", arn, err)
+	}
+
+	if aws.ToString(input.VpcId) != "" && aws.ToBool(input.UseOpsworksSecurityGroups) {
 		// For VPC-based stacks, OpsWorks asynchronously creates some default
 		// security groups which must exist before layers can be created.
 		// Unfortunately it doesn't tell us what the ids of these are, so
@@ -509,110 +316,251 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		time.Sleep(securityGroupsCreatedSleepTime)
 	}
 
-	return resourceStackUpdate(d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-	var conErr error
-	if v := d.Get("stack_endpoint").(string); v != "" {
-		client, conErr = opsworksConnForRegion(v, meta)
-		if conErr != nil {
-			return conErr
-		}
+func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var err error
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
+
+	region := conn.Options().Region
+	if v, ok := d.GetOk("stack_endpoint"); ok {
+		region = v.(string)
 	}
 
-	err := resourceStackValidate(d)
+	stack, err := findStackByID(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+		// If it's not found in the default region we're in, we check us-east-1
+		// in the event this stack was created with Terraform before version 0.9.
+		// See https://github.com/hashicorp/terraform/issues/12842.
+		region = names.USEast1RegionID
+
+		stack, err = findStackByID(ctx, conn, d.Id(), func(o *opsworks.Options) {
+			o.Region = region
+		})
+	}
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpsWorks Stack %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Stack (%s): %s", d.Id(), err)
 	}
 
-	req := &opsworks.UpdateStackInput{
-		CustomJson:                aws.String(d.Get("custom_json").(string)),
-		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
-		DefaultRootDeviceType:     aws.String(d.Get("default_root_device_type").(string)),
-		DefaultSshKeyName:         aws.String(d.Get("default_ssh_key_name").(string)),
-		Name:                      aws.String(d.Get("name").(string)),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
-		StackId:                   aws.String(d.Id()),
-		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
-		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
-		Attributes:                make(map[string]*string),
-		CustomCookbooksSource:     resourceStackCustomCookbooksSource(d),
-	}
-	if v, ok := d.GetOk("agent_version"); ok {
-		req.AgentVersion = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("default_os"); ok {
-		req.DefaultOs = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("default_subnet_id"); ok {
-		req.DefaultSubnetId = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("default_availability_zone"); ok {
-		req.DefaultAvailabilityZone = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("hostname_theme"); ok {
-		req.HostnameTheme = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("color"); ok {
-		req.Attributes["Color"] = aws.String(v.(string))
+	// If the stack was found, set the stack_endpoint.
+	if v := conn.Options().Region; v != "" {
+		d.Set("stack_endpoint", v)
 	}
 
-	req.ChefConfiguration = &opsworks.ChefConfiguration{
-		BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
-		ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
-	}
-
-	req.ConfigurationManager = &opsworks.StackConfigurationManager{
-		Name:    aws.String(d.Get("configuration_manager_name").(string)),
-		Version: aws.String(d.Get("configuration_manager_version").(string)),
-	}
-
-	log.Printf("[DEBUG] Updating OpsWorks stack: %s", req)
-
-	_, err = client.UpdateStack(req)
-	if err != nil {
-		return err
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "opsworks",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
-	}.String()
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(client, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
+	d.Set("agent_version", stack.AgentVersion)
+	arn := aws.ToString(stack.Arn)
+	d.Set(names.AttrARN, arn)
+	if stack.ChefConfiguration != nil {
+		if v := aws.ToString(stack.ChefConfiguration.BerkshelfVersion); v != "" {
+			d.Set("berkshelf_version", v)
+		} else {
+			d.Set("berkshelf_version", defaultBerkshelfVersion)
 		}
+		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
+	}
+	if color, ok := stack.Attributes[string(awstypes.StackAttributesKeysColor)]; ok {
+		d.Set("color", color)
+	}
+	if stack.ConfigurationManager != nil {
+		d.Set("configuration_manager_name", stack.ConfigurationManager.Name)
+		d.Set("configuration_manager_version", stack.ConfigurationManager.Version)
+	}
+	if stack.CustomCookbooksSource != nil {
+		tfMap := flattenSource(stack.CustomCookbooksSource)
+
+		// CustomCookbooksSource.Password and CustomCookbooksSource.SshKey will, on read, contain the placeholder string "*****FILTERED*****",
+		// so we ignore it on read and let persist the value already in the state.
+		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			v := v.([]interface{})[0].(map[string]interface{})
+
+			tfMap[names.AttrPassword] = v[names.AttrPassword]
+			tfMap["ssh_key"] = v["ssh_key"]
+		}
+
+		if err := d.Set("custom_cookbooks_source", []interface{}{tfMap}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting custom_cookbooks_source: %s", err)
+		}
+	} else {
+		d.Set("custom_cookbooks_source", nil)
+	}
+	d.Set("custom_json", stack.CustomJson)
+	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
+	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
+	d.Set("default_os", stack.DefaultOs)
+	d.Set("default_root_device_type", stack.DefaultRootDeviceType)
+	d.Set("default_ssh_key_name", stack.DefaultSshKeyName)
+	d.Set("default_subnet_id", stack.DefaultSubnetId)
+	d.Set("hostname_theme", stack.HostnameTheme)
+	d.Set(names.AttrName, stack.Name)
+	d.Set(names.AttrRegion, stack.Region)
+	d.Set(names.AttrServiceRoleARN, stack.ServiceRoleArn)
+	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
+	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
+	d.Set(names.AttrVPCID, stack.VpcId)
+
+	tags, err := listTags(ctx, conn, arn)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for OpsWorks Stack (%s): %s", arn, err)
 	}
 
-	return resourceStackRead(d, meta)
+	setTagsOut(ctx, Tags(tags))
+
+	return diags
 }
 
-func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-	var conErr error
-	if v := d.Get("stack_endpoint").(string); v != "" {
-		client, conErr = opsworksConnForRegion(v, meta)
-		if conErr != nil {
-			return conErr
+func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var err error
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
+
+	region := conn.Options().Region
+	if v, ok := d.GetOk("stack_endpoint"); ok {
+		region = v.(string)
+	}
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &opsworks.UpdateStackInput{
+			StackId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("agent_version") {
+			input.AgentVersion = aws.String(d.Get("agent_version").(string))
+		}
+
+		if d.HasChanges("berkshelf_version", "manage_berkshelf") {
+			input.ChefConfiguration = &awstypes.ChefConfiguration{
+				ManageBerkshelf: aws.Bool(d.Get("manage_berkshelf").(bool)),
+			}
+
+			if d.Get("manage_berkshelf").(bool) {
+				input.ChefConfiguration.BerkshelfVersion = aws.String(d.Get("berkshelf_version").(string))
+			}
+		}
+
+		if d.HasChange("color") {
+			input.Attributes = map[string]string{
+				string(awstypes.StackAttributesKeysColor): d.Get("color").(string),
+			}
+		}
+
+		if d.HasChanges("configuration_manager_name", "configuration_manager_version") {
+			input.ConfigurationManager = &awstypes.StackConfigurationManager{
+				Name:    aws.String(d.Get("configuration_manager_name").(string)),
+				Version: aws.String(d.Get("configuration_manager_version").(string)),
+			}
+		}
+
+		if d.HasChange("custom_json") {
+			input.CustomJson = aws.String(d.Get("custom_json").(string))
+		}
+
+		if d.HasChange("custom_cookbooks_source") {
+			if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("default_availability_zone") {
+			input.DefaultAvailabilityZone = aws.String(d.Get("default_availability_zone").(string))
+		}
+
+		if d.HasChange("default_instance_profile_arn") {
+			input.DefaultInstanceProfileArn = aws.String(d.Get("default_instance_profile_arn").(string))
+		}
+
+		if d.HasChange("default_os") {
+			input.DefaultOs = aws.String(d.Get("default_os").(string))
+		}
+
+		if d.HasChange("default_root_device_type") {
+			input.DefaultRootDeviceType = awstypes.RootDeviceType(d.Get("default_root_device_type").(string))
+		}
+
+		if d.HasChange("default_ssh_key_name") {
+			input.DefaultSshKeyName = aws.String(d.Get("default_ssh_key_name").(string))
+		}
+
+		if d.HasChange("default_subnet_id") {
+			input.DefaultSubnetId = aws.String(d.Get("default_subnet_id").(string))
+		}
+
+		if d.HasChange("hostname_theme") {
+			input.HostnameTheme = aws.String(d.Get("hostname_theme").(string))
+		}
+
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		if d.HasChange(names.AttrServiceRoleARN) {
+			input.ServiceRoleArn = aws.String(d.Get(names.AttrServiceRoleARN).(string))
+		}
+
+		if d.HasChange("use_custom_cookbooks") {
+			input.UseCustomCookbooks = aws.Bool(d.Get("use_custom_cookbooks").(bool))
+		}
+
+		if d.HasChange("use_opsworks_security_groups") {
+			input.UseOpsworksSecurityGroups = aws.Bool(d.Get("use_opsworks_security_groups").(bool))
+		}
+
+		_, err = conn.UpdateStack(ctx, input, func(o *opsworks.Options) {
+			o.Region = region
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating OpsWorks Stack (%s): %s", d.Id(), err)
 		}
 	}
 
-	req := &opsworks.DeleteStackInput{
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
+
+		if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating OpsWorks Stack (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceStackRead(ctx, d, meta)...)
+}
+
+func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var err error
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
+
+	region := conn.Options().Region
+
+	if v, ok := d.GetOk("stack_endpoint"); ok {
+		region = v.(string)
+	}
+
+	input := &opsworks.DeleteStackInput{
 		StackId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting OpsWorks stack: %s", d.Id())
+	log.Printf("[DEBUG] Deleting OpsWorks Stack: %s", d.Id())
+	_, err = conn.DeleteStack(ctx, input, func(o *opsworks.Options) {
+		o.Region = region
+	})
 
-	_, err := client.DeleteStack(req)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWork Stack (%s): %s", d.Id(), err)
 	}
 
 	// For a stack in a VPC, OpsWorks has created some default security groups
@@ -624,13 +572,107 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	// wait for the security groups to be deleted.
 	// There is no robust way to check for this, so we'll just wait a
 	// nominal amount of time.
-	_, inVpc := d.GetOk("vpc_id")
-	_, useOpsworksDefaultSg := d.GetOk("use_opsworks_security_group")
-
-	if inVpc && useOpsworksDefaultSg {
-		log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
-		time.Sleep(securityGroupsDeletedSleepTime)
+	if _, ok := d.GetOk(names.AttrVPCID); ok {
+		if _, ok := d.GetOk("use_opsworks_security_groups"); ok {
+			log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
+			time.Sleep(securityGroupsDeletedSleepTime)
+		}
 	}
 
-	return nil
+	return diags
+}
+
+func findStackByID(ctx context.Context, conn *opsworks.Client, id string, optFns ...func(*opsworks.Options)) (*awstypes.Stack, error) {
+	input := &opsworks.DescribeStacksInput{
+		StackIds: []string{id},
+	}
+
+	output, err := conn.DescribeStacks(ctx, input, optFns...)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Stacks) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Stacks); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Stacks)
+}
+
+func expandSource(tfMap map[string]interface{}) *awstypes.Source {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.Source{}
+
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
+		apiObject.Password = aws.String(v)
+	}
+
+	if v, ok := tfMap["revision"].(string); ok && v != "" {
+		apiObject.Revision = aws.String(v)
+	}
+
+	if v, ok := tfMap["ssh_key"].(string); ok && v != "" {
+		apiObject.SshKey = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.SourceType(v)
+	}
+
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
+		apiObject.Url = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
+		apiObject.Username = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenSource(apiObject *awstypes.Source) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Password; v != nil {
+		tfMap[names.AttrPassword] = aws.ToString(v)
+	}
+
+	if v := apiObject.Revision; v != nil {
+		tfMap["revision"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SshKey; v != nil {
+		tfMap["ssh_key"] = aws.ToString(v)
+	}
+
+	tfMap[names.AttrType] = apiObject.Type
+
+	if v := apiObject.Url; v != nil {
+		tfMap[names.AttrURL] = aws.ToString(v)
+	}
+
+	if v := apiObject.Username; v != nil {
+		tfMap[names.AttrUsername] = aws.ToString(v)
+	}
+
+	return tfMap
 }

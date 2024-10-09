@@ -1,41 +1,125 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCloudFrontDistribution_disappears(t *testing.T) {
-	var distribution cloudfront.Distribution
+func TestAccCloudFrontDistribution_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionEnabledConfig(false, false),
+				Config: testAccDistributionConfig_enabled(false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					testAccCheckCloudFrontDistributionDisappears(&distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_enabled(false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceDistribution(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -47,24 +131,25 @@ func TestAccCloudFrontDistribution_disappears(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
-	var distribution cloudfront.Distribution
-	ri := sdkacctest.RandInt()
-	testConfig := testAccDistributionS3Config(ri)
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig,
+				Config: testAccDistributionConfig_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.s3_distribution", &distribution),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution",
-						"hosted_zone_id",
-						"Z2FDTNDATAQYW2",
-					),
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.s3_distribution", &distribution),
+					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
 				),
 			},
 			{
@@ -80,72 +165,29 @@ func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontDistribution_s3OriginWithTags(t *testing.T) {
-	var distribution cloudfront.Distribution
-	ri := sdkacctest.RandInt()
-	preConfig := testAccDistributionS3WithTagsConfig(ri)
-	postConfig := testAccDistributionS3WithTagsUpdatedConfig(ri)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: preConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.s3_distribution", &distribution),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.%", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.environment", "production"),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.account", "main"),
-				),
-			},
-			{
-				ResourceName:      "aws_cloudfront_distribution.s3_distribution",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"retain_on_delete",
-					"wait_for_deployment",
-				},
-			},
-			{
-				Config: postConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.s3_distribution", &distribution),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.%", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.environment", "dev"),
-				),
-			},
-		},
-	})
-}
-
-// TestAccAWSCloudFrontDistribution_customOriginruns an
-// aws_cloudfront_distribution acceptance test with a single custom origin.
+// TestAccCloudFrontDistribution_customOrigin tests a single custom origin.
 //
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_customOrigin(t *testing.T) {
-	var distribution cloudfront.Distribution
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionCustomConfig(rInt),
+				Config: testAccDistributionConfig_custom(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.custom_distribution", &distribution),
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.custom_distribution", &distribution),
 				),
 			},
 			{
@@ -162,18 +204,23 @@ func TestAccCloudFrontDistribution_customOrigin(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_originPolicyDefault(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOriginRequestPolicyDefaultConfig(rInt),
+				Config: testAccDistributionConfig_originRequestPolicyDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "default_cache_behavior.0.origin_request_policy_id", regexp.MustCompile("[A-z0-9]+")),
+					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "default_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[0-9A-z]+")),
 				),
 			},
 			{
@@ -190,18 +237,23 @@ func TestAccCloudFrontDistribution_originPolicyDefault(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOriginRequestPolicyOrderedConfig(rInt),
+				Config: testAccDistributionConfig_originRequestPolicyOrdered(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "ordered_cache_behavior.0.origin_request_policy_id", regexp.MustCompile("[A-z0-9]+")),
+					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "ordered_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[0-9A-Za-z]+")),
 				),
 			},
 			{
@@ -223,21 +275,26 @@ func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_multiOrigin(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.multi_origin_distribution"
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionMultiOriginConfig(rInt),
+				Config: testAccDistributionConfig_multiOrigin(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "2"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images1/*.jpg"),
 				),
@@ -262,21 +319,25 @@ func TestAccCloudFrontDistribution_multiOrigin(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.main"
-	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOrderedCacheBehavior(rInt),
+				Config: testAccDistributionConfig_orderedCacheBehavior(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "2"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images1/*.jpg"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.1.default_ttl", "51"),
@@ -297,22 +358,27 @@ func TestAccCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.main"
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOrderedCacheBehaviorCachePolicy(rInt),
+				Config: testAccDistributionConfig_orderedCacheBehaviorCachePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
-					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", regexp.MustCompile(`^[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
 				),
 			},
 			{
@@ -329,22 +395,27 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T)
 }
 
 func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.main"
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderedCacheBehaviorResponseHeadersPolicy(rInt),
+				Config: testAccDistributionConfig_orderedCacheBehaviorResponseHeadersPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
-					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.response_headers_policy_id", regexp.MustCompile(`^[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.response_headers_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
 				),
 			},
 			{
@@ -361,25 +432,31 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *
 }
 
 func TestAccCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
-	var distribution cloudfront.Distribution
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_distribution.main"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOrderedCacheBehavior(rInt),
+				Config: testAccDistributionConfig_orderedCacheBehavior(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 				),
 			},
 			{
-				Config: testAccDistributionOrderedCacheBehaviorCachePolicy(rInt),
+				Config: testAccDistributionConfig_orderedCacheBehaviorCachePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 				),
 			},
 		},
@@ -387,60 +464,67 @@ func TestAccCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_Origin_emptyDomainName(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDistributionConfig_Origin_EmptyDomainName(),
-				ExpectError: regexp.MustCompile(`domain_name must not be empty`),
+				Config:      testAccDistributionConfig_originEmptyDomainName(),
+				ExpectError: regexache.MustCompile(`domain_name must not be empty`),
 			},
 		},
 	})
 }
 
 func TestAccCloudFrontDistribution_Origin_emptyOriginID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDistributionConfig_Origin_EmptyOriginID(),
-				ExpectError: regexp.MustCompile(`origin.0.origin_id must not be empty`),
+				Config:      testAccDistributionConfig_originEmptyOriginID(),
+				ExpectError: regexache.MustCompile(`origin.0.origin_id must not be empty`),
 			},
 		},
 	})
 }
 
 func TestAccCloudFrontDistribution_Origin_connectionAttempts(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rInt := sdkacctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "cloudfront") },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, `connection_attempts = 0`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_attempts to be in the range`),
+				Config:      testAccDistributionConfig_originItem(rName, `connection_attempts = 0`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_attempts to be in the range`),
 			},
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, `connection_attempts = 4`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_attempts to be in the range`),
+				Config:      testAccDistributionConfig_originItem(rName, `connection_attempts = 4`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_attempts to be in the range`),
 			},
 			{
-				Config: testAccDistributionOriginItem(rName, rInt, `connection_attempts = 2`),
+				Config: testAccDistributionConfig_originItem(rName, `connection_attempts = 2`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_attempts", `2`),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_attempts", acctest.Ct2),
 				),
 			},
 		},
@@ -448,29 +532,34 @@ func TestAccCloudFrontDistribution_Origin_connectionAttempts(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_Origin_connectionTimeout(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rInt := sdkacctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "cloudfront") },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, `connection_timeout = 0`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_timeout to be in the range`),
+				Config:      testAccDistributionConfig_originItem(rName, `connection_timeout = 0`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_timeout to be in the range`),
 			},
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, `connection_timeout = 11`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_timeout to be in the range`),
+				Config:      testAccDistributionConfig_originItem(rName, `connection_timeout = 11`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_timeout to be in the range`),
 			},
 			{
-				Config: testAccDistributionOriginItem(rName, rInt, `connection_timeout = 6`),
+				Config: testAccDistributionConfig_originItem(rName, `connection_timeout = 6`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", `6`),
 				),
 			},
@@ -479,43 +568,82 @@ func TestAccCloudFrontDistribution_Origin_connectionTimeout(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rInt := sdkacctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "cloudfront") },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, originShieldItem(`null`, `data.aws_region.current.name`)),
-				ExpectError: regexp.MustCompile(`Missing required argument`),
+				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`null`, `data.aws_region.current.name`)),
+				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, originShieldItem(`false`, `null`)),
-				ExpectError: regexp.MustCompile(`Missing required argument`),
+				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtFalse, `""`)),
+				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, originShieldItem(`true`, `null`)),
-				ExpectError: regexp.MustCompile(`Missing required argument`),
+				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"US East (Ohio)"`)),
+				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
-				Config:      testAccDistributionOriginItem(rName, rInt, originShieldItem(`false`, `""`)),
-				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code.*`),
-			},
-			{
-				Config:      testAccDistributionOriginItem(rName, rInt, originShieldItem(`true`, `"US East (Ohio)"`)),
-				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code.*`),
-			},
-			{
-				Config: testAccDistributionOriginItem(rName, rInt, originShieldItem(`true`, `"us-east-1"`)), //lintignore:AWSAT003
+				Config: testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"us-east-1"`)), //lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", `true`),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.origin_shield_region", "us-east-1"), //lintignore:AWSAT003
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_Origin_originAccessControl(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_originAccessControl(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.test", &distribution),
+					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.0", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      "aws_cloudfront_distribution.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_originAccessControl(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.test", &distribution),
+					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.1", names.AttrID),
 				),
 			},
 		},
@@ -528,70 +656,74 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.no_optional_items"
-	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionNoOptionalItemsConfig(rInt),
+				Config: testAccDistributionConfig_noOptionalItems(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexp.MustCompile(`distribution/[A-Z0-9]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct0),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`distribution/[0-9A-Z]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cached_methods.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.compress", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cached_methods.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.compress", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.forward", "all"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string_cache_keys.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.lambda_function_association.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.function_association.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string_cache_keys.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.lambda_function_association.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.function_association.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.target_origin_id", "myCustomOrigin"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
-					resource.TestMatchResourceAttr(resourceName, "domain_name", regexp.MustCompile(`^[a-z0-9]+\.cloudfront\.net$`)),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "etag", regexp.MustCompile(`^[A-Z0-9]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2FDTNDATAQYW2"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrDomainName, regexache.MustCompile(`^[0-9a-z]+\.cloudfront\.net$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[0-9A-Z]+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
-					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
-						"custom_header.#":                                 "0",
-						"custom_origin_config.#":                          "1",
+						"custom_header.#":                                 acctest.Ct0,
+						"custom_origin_config.#":                          acctest.Ct1,
 						"custom_origin_config.0.http_port":                "80",
 						"custom_origin_config.0.https_port":               "443",
 						"custom_origin_config.0.origin_keepalive_timeout": "5",
 						"custom_origin_config.0.origin_protocol_policy":   "http-only",
 						"custom_origin_config.0.origin_read_timeout":      "30",
-						"custom_origin_config.0.origin_ssl_protocols.#":   "2",
-						"domain_name": "www.example.com",
+						"custom_origin_config.0.origin_ssl_protocols.#":   acctest.Ct2,
+						names.AttrDomainName:                              "www.example.com",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "price_class", "PriceClass_All"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.locations.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.locations.#", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.restriction_type", "whitelist"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.0.cloudfront_default_certificate", "true"),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "true"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.0.cloudfront_default_certificate", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtTrue),
 				),
 			},
 			{
@@ -614,19 +746,23 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_http11(t *testing.T) {
-	var distribution cloudfront.Distribution
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionHTTP11Config(rInt),
+				Config: testAccDistributionConfig_http11(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.http_1_1", &distribution),
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.http_1_1", &distribution),
 				),
 			},
 			{
@@ -643,21 +779,25 @@ func TestAccCloudFrontDistribution_http11(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_isIPV6Enabled(t *testing.T) {
-	var distribution cloudfront.Distribution
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionIsIPV6EnabledConfig(rInt),
+				Config: testAccDistributionConfig_isIPV6Enabled(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.is_ipv6_enabled", &distribution),
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.is_ipv6_enabled", &distribution),
 					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.is_ipv6_enabled", "is_ipv6_enabled", "true"),
+						"aws_cloudfront_distribution.is_ipv6_enabled", "is_ipv6_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -674,19 +814,23 @@ func TestAccCloudFrontDistribution_isIPV6Enabled(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_noCustomErrorResponse(t *testing.T) {
-	var distribution cloudfront.Distribution
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionNoCustomErroResponseInfo(rInt),
+				Config: testAccDistributionConfig_noCustomErroResponseInfo(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.no_custom_error_responses", &distribution),
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.no_custom_error_responses", &distribution),
 				),
 			},
 			{
@@ -694,6 +838,7 @@ func TestAccCloudFrontDistribution_noCustomErrorResponse(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"custom_error_response.0.response_code",
 					"retain_on_delete",
 					"wait_for_deployment",
 				},
@@ -703,24 +848,25 @@ func TestAccCloudFrontDistribution_noCustomErrorResponse(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValuesCookies_whitelistedNames(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionDefaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3Config(retainOnDelete),
+				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "3"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct3),
 				),
 			},
 			{
@@ -733,13 +879,13 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValuesCookies_wh
 				},
 			},
 			{
-				Config: testAccDistributionDefaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2Config(retainOnDelete),
+				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "2"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct2),
 				),
 			},
 		},
@@ -747,23 +893,24 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValuesCookies_wh
 }
 
 func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionDefaultCacheBehaviorForwardedValuesHeadersUnordered3Config(retainOnDelete),
+				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "3"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct3),
 				),
 			},
 			{
@@ -776,12 +923,12 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t
 				},
 			},
 			{
-				Config: testAccDistributionDefaultCacheBehaviorForwardedValuesHeadersUnordered2Config(retainOnDelete),
+				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesHeadersUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "2"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct2),
 				),
 			},
 		},
@@ -789,29 +936,30 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t
 }
 
 func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedKeyGroups(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionDefaultCacheBehaviorTrustedKeyGroupsConfig(retainOnDelete, rName),
+				Config: testAccDistributionConfig_defaultCacheBehaviorTrustedKeyGroups(retainOnDelete, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.#", "1"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "trusted_key_groups.0.items.0.key_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.0.key_pair_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.0.key_pair_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", acctest.Ct1),
 				),
 			},
 			{
@@ -828,25 +976,26 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedKeyGroups(t *test
 }
 
 func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedSigners(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionDefaultCacheBehaviorTrustedSignersSelfConfig(retainOnDelete),
+				Config: testAccDistributionConfig_defaultCacheBehaviorTrustedSignersSelf(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "trusted_signers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.#", "1"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.0.aws_account_number", "self"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", acctest.Ct1),
 				),
 			},
 			{
@@ -863,24 +1012,25 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedSigners(t *testin
 }
 
 func TestAccCloudFrontDistribution_DefaultCacheBehavior_realtimeLogARN(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_distribution.test"
 	realtimeLogConfigResourceName := "aws_cloudfront_realtime_log_config.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionDefaultCacheBehaviorRealtimeLogARNConfig(rName, retainOnDelete),
+				Config: testAccDistributionConfig_defaultCacheBehaviorRealtimeLogARN(rName, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, "arn"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -897,24 +1047,25 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_realtimeLogARN(t *testin
 }
 
 func TestAccCloudFrontDistribution_OrderedCacheBehavior_realtimeLogARN(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_distribution.test"
 	realtimeLogConfigResourceName := "aws_cloudfront_realtime_log_config.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOrderedCacheBehaviorRealtimeLogARNConfig(rName, retainOnDelete),
+				Config: testAccDistributionConfig_orderedCacheBehaviorRealtimeLogARN(rName, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ordered_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, "arn"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "ordered_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -931,20 +1082,25 @@ func TestAccCloudFrontDistribution_OrderedCacheBehavior_realtimeLogARN(t *testin
 }
 
 func TestAccCloudFrontDistribution_enabled(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionEnabledConfig(false, false),
+				Config: testAccDistributionConfig_enabled(false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -957,45 +1113,10 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDistributionEnabledConfig(true, false),
+				Config: testAccDistributionConfig_enabled(true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-				),
-			},
-		},
-	})
-}
-
-// TestAccCloudFrontDistribution_retainOnDelete verifies retain_on_delete = true
-// This acceptance test performs the following steps:
-//  * Trigger a Terraform destroy of the resource, which should only disable the distribution
-//  * Check it still exists and is disabled outside Terraform
-//  * Destroy for real outside Terraform
-func TestAccCloudFrontDistribution_retainOnDelete(t *testing.T) {
-	var distribution cloudfront.Distribution
-	resourceName := "aws_cloudfront_distribution.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDistributionEnabledConfig(true, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-				),
-			},
-			{
-				Config:  testAccDistributionEnabledConfig(true, true),
-				Destroy: true,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExistsAPIOnly(&distribution),
-					testAccCheckCloudFrontDistributionWaitForDeployment(&distribution),
-					testAccCheckCloudFrontDistributionDisabled(&distribution),
-					testAccCheckCloudFrontDistributionDisappears(&distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -1003,24 +1124,29 @@ func TestAccCloudFrontDistribution_retainOnDelete(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_whitelistedNames(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOrderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3Config(retainOnDelete),
+				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "3"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct3),
 				),
 			},
 			{
@@ -1033,13 +1159,13 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_wh
 				},
 			},
 			{
-				Config: testAccDistributionOrderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2Config(retainOnDelete),
+				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "2"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct2),
 				),
 			},
 		},
@@ -1047,23 +1173,28 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_wh
 }
 
 func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionOrderedCacheBehaviorForwardedValuesHeadersUnordered3Config(retainOnDelete),
+				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", "3"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct3),
 				),
 			},
 			{
@@ -1076,12 +1207,12 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t
 				},
 			},
 			{
-				Config: testAccDistributionOrderedCacheBehaviorForwardedValuesHeadersUnordered2Config(retainOnDelete),
+				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesHeadersUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", "2"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct2),
 				),
 			},
 		},
@@ -1089,24 +1220,25 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t
 }
 
 func TestAccCloudFrontDistribution_ViewerCertificate_acmCertificateARN(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionViewerCertificateACMCertificateARNConfig(retainOnDelete),
+				Config: testAccDistributionConfig_viewerCertificateACMCertificateARN(t, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 				),
 			},
 			{
-				Config:            testAccDistributionViewerCertificateACMCertificateARNConfig(retainOnDelete),
+				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARN(t, retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1121,24 +1253,25 @@ func TestAccCloudFrontDistribution_ViewerCertificate_acmCertificateARN(t *testin
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7773
 func TestAccCloudFrontDistribution_ViewerCertificateACMCertificateARN_conflictsWithCloudFrontDefaultCertificate(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionViewerCertificateACMCertificateARNConflictsWithCloudFrontDefaultCertificateConfig(retainOnDelete),
+				Config: testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 				),
 			},
 			{
-				Config:            testAccDistributionViewerCertificateACMCertificateARNConflictsWithCloudFrontDefaultCertificateConfig(retainOnDelete),
+				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t, retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1152,22 +1285,84 @@ func TestAccCloudFrontDistribution_ViewerCertificateACMCertificateARN_conflictsW
 }
 
 func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
-	var distribution cloudfront.Distribution
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionWaitForDeploymentConfig(false, false),
+				Config: testAccDistributionConfig_waitForDeployment(false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					testAccCheckCloudFrontDistributionStatusInProgress(&distribution),
-					testAccCheckCloudFrontDistributionWaitForDeployment(&distribution),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "false"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckDistributionStatusInProgress(&distribution),
+					testAccCheckDistributionWaitForDeployment(ctx, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					names.AttrStatus,
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_waitForDeployment(true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckDistributionStatusInProgress(&distribution),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_waitForDeployment(false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckDistributionStatusDeployed(&distribution),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_distribution.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_eTagInitial(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Some comment"),
 				),
 			},
 			{
@@ -1180,205 +1375,167 @@ func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDistributionWaitForDeploymentConfig(true, false),
+				Config: testAccDistributionConfig_eTagUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					testAccCheckCloudFrontDistributionStatusInProgress(&distribution),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "false"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.1", "updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Some comment"),
 				),
 			},
 			{
-				Config: testAccDistributionWaitForDeploymentConfig(false, true),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"etag",
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_eTagFinal(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					testAccCheckCloudFrontDistributionStatusDeployed(&distribution),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "true"),
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.1", "updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comment"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCloudFrontDistributionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudfront_distribution" {
-			continue
-		}
-
-		input := &cloudfront.GetDistributionInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetDistribution(input)
-
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if !testAccDistributionRetainOnDeleteFromEnv() {
-			return fmt.Errorf("CloudFront Distribution (%s) still exists", rs.Primary.ID)
-		}
-
-		if output != nil && output.Distribution != nil && output.Distribution.DistributionConfig != nil && aws.BoolValue(output.Distribution.DistributionConfig.Enabled) {
-			return fmt.Errorf("CloudFront Distribution (%s) not disabled", rs.Primary.ID)
-		}
+func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
 
-	return nil
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.failover_distribution"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_originGroups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin_group.*", map[string]string{
+						"origin_id":                          "groupS3",
+						"failover_criteria.#":                acctest.Ct1,
+						"failover_criteria.0.status_codes.#": acctest.Ct4,
+						"member.#":                           acctest.Ct2,
+						"member.0.origin_id":                 "primaryS3",
+						"member.1.origin_id":                 "failoverS3",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "403"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "404"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "500"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "502"),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckCloudFrontDistributionExists(resourceName string, distribution *cloudfront.Distribution) resource.TestCheckFunc {
+func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource ID not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-
-		input := &cloudfront.GetDistributionInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetDistribution(input)
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving CloudFront distribution: %s", err)
-		}
-
-		*distribution = *output.Distribution
-
-		return nil
-	}
-}
-
-func testAccCheckCloudFrontDistributionExistsAPIOnly(distribution *cloudfront.Distribution) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-
-		input := &cloudfront.GetDistributionInput{
-			Id: distribution.Id,
-		}
-
-		output, err := conn.GetDistribution(input)
-
-		if err != nil {
-			return err
-		}
-
-		*distribution = *output.Distribution
-
-		return nil
-	}
-}
-
-func testAccCheckCloudFrontDistributionStatusDeployed(distribution *cloudfront.Distribution) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if distribution == nil {
-			return fmt.Errorf("CloudFront Distribution empty")
-		}
-
-		if aws.StringValue(distribution.Status) != "Deployed" {
-			return fmt.Errorf("CloudFront Distribution (%s) status not Deployed: %s", aws.StringValue(distribution.Id), aws.StringValue(distribution.Status))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckCloudFrontDistributionStatusInProgress(distribution *cloudfront.Distribution) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if distribution == nil {
-			return fmt.Errorf("CloudFront Distribution empty")
-		}
-
-		if aws.StringValue(distribution.Status) != "InProgress" {
-			return fmt.Errorf("CloudFront Distribution (%s) status not InProgress: %s", aws.StringValue(distribution.Id), aws.StringValue(distribution.Status))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckCloudFrontDistributionDisabled(distribution *cloudfront.Distribution) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if distribution == nil || distribution.DistributionConfig == nil {
-			return fmt.Errorf("CloudFront Distribution configuration empty")
-		}
-
-		if aws.BoolValue(distribution.DistributionConfig.Enabled) {
-			return fmt.Errorf("CloudFront Distribution (%s) enabled", aws.StringValue(distribution.Id))
-		}
-
-		return nil
-	}
-}
-
-// testAccCheckCloudFrontDistributionDisappears deletes a CloudFront Distribution outside Terraform
-// This requires the CloudFront Distribution to previously be disabled and fetches latest ETag automatically.
-func testAccCheckCloudFrontDistributionDisappears(distribution *cloudfront.Distribution) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-
-		getDistributionInput := &cloudfront.GetDistributionInput{
-			Id: distribution.Id,
-		}
-
-		getDistributionOutput, err := conn.GetDistribution(getDistributionInput)
-
-		if err != nil {
-			return err
-		}
-
-		deleteDistributionInput := &cloudfront.DeleteDistributionInput{
-			Id:      distribution.Id,
-			IfMatch: getDistributionOutput.ETag,
-		}
-
-		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-			_, err = conn.DeleteDistribution(deleteDistributionInput)
-
-			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
-				return resource.RetryableError(err)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_distribution" {
+				continue
 			}
 
-			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
-				return nil
-			}
+			output, err := tfcloudfront.FindDistributionByID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
-				return resource.RetryableError(err)
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return err
 			}
 
-			return nil
-		})
+			if !testAccDistributionRetainOnDeleteFromEnv() {
+				return fmt.Errorf("CloudFront Distribution (%s) still exists", rs.Primary.ID)
+			}
 
-		if tfresource.TimedOut(err) {
-			_, err = conn.DeleteDistribution(deleteDistributionInput)
+			if aws.ToBool(output.Distribution.DistributionConfig.Enabled) {
+				return fmt.Errorf("CloudFront Distribution (%s) not disabled", rs.Primary.ID)
+			}
 		}
 
-		return err
+		return nil
 	}
 }
 
-func testAccCheckCloudFrontDistributionWaitForDeployment(distribution *cloudfront.Distribution) resource.TestCheckFunc {
+func testAccCheckDistributionExists(ctx context.Context, n string, v *awstypes.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfcloudfront.DistributionWaitUntilDeployed(aws.StringValue(distribution.Id), acctest.Provider.Meta())
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+
+		output, err := tfcloudfront.FindDistributionByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output.Distribution
+
+		return nil
+	}
+}
+
+func testAccCheckDistributionStatusDeployed(distribution *awstypes.Distribution) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if distribution == nil {
+			return fmt.Errorf("CloudFront Distribution empty")
+		}
+
+		if aws.ToString(distribution.Status) != "Deployed" {
+			return fmt.Errorf("CloudFront Distribution (%s) status not Deployed: %s", aws.ToString(distribution.Id), aws.ToString(distribution.Status))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckDistributionStatusInProgress(distribution *awstypes.Distribution) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if distribution == nil {
+			return fmt.Errorf("CloudFront Distribution empty")
+		}
+
+		if aws.ToString(distribution.Status) != "InProgress" {
+			return fmt.Errorf("CloudFront Distribution (%s) status not InProgress: %s", aws.ToString(distribution.Id), aws.ToString(distribution.Status))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckDistributionWaitForDeployment(ctx context.Context, distribution *awstypes.Distribution) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, err := tfcloudfront.WaitDistributionDeployed(ctx, acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx), aws.ToString(distribution.Id))
+		return err
 	}
 }
 
@@ -1394,74 +1551,138 @@ func testAccDistributionRetainConfig() string {
 	return ""
 }
 
-func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
-	var distribution cloudfront.Distribution
-	resourceName := "aws_cloudfront_distribution.failover_distribution"
-	ri := sdkacctest.RandInt()
-	testConfig := testAccDistributionOriginGroupsConfig(ri)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin_group.*", map[string]string{
-						"origin_id":                          "groupS3",
-						"failover_criteria.#":                "1",
-						"failover_criteria.0.status_codes.#": "4",
-						"member.#":                           "2",
-						"member.0.origin_id":                 "primaryS3",
-						"member.1.origin_id":                 "failoverS3",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "403"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "404"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "500"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "502"),
-				),
-			},
-		},
-	})
+// testAccRegionProviderConfig is the Terraform provider configuration for CloudFront region testing
+//
+// Testing CloudFront assumes no other provider configurations
+// are necessary and overwrites the "aws" provider configuration.
+func testAccRegionProviderConfig() string {
+	switch acctest.Partition() {
+	case names.StandardPartitionID:
+		return acctest.ConfigRegionalProvider(names.USEast1RegionID)
+	case names.ChinaPartitionID:
+		return acctest.ConfigRegionalProvider(names.CNNorthwest1RegionID)
+	default:
+		return acctest.ConfigRegionalProvider(acctest.Region())
+	}
 }
 
-var originBucket = `
+func originBucket(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "s3_bucket_origin" {
-  bucket = "mybucket.${var.rand_id}"
+  bucket = "%[1]s.origin-bucket"
+}
+
+resource "aws_s3_bucket_public_access_block" "s3_bucket_origin" {
+  bucket = aws_s3_bucket.s3_bucket_origin.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_bucket_origin" {
+  bucket = aws_s3_bucket.s3_bucket_origin.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "s3_bucket_origin_acl" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.s3_bucket_origin,
+    aws_s3_bucket_ownership_controls.s3_bucket_origin,
+  ]
+
+  bucket = aws_s3_bucket.s3_bucket_origin.id
   acl    = "public-read"
 }
-`
+`, rName)
+}
 
-var backupBucket = `
+func backupBucket(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "s3_backup_bucket_origin" {
-  bucket = "mybucket-backup.${var.rand_id}"
+  bucket = "%[1]s.backup-bucket"
+}
+
+resource "aws_s3_bucket_public_access_block" "s3_backup_bucket_origin" {
+  bucket = aws_s3_bucket.s3_backup_bucket_origin.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_backup_bucket_origin" {
+  bucket = aws_s3_bucket.s3_backup_bucket_origin.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "s3_backup_bucket_origin_acl" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.s3_backup_bucket_origin,
+    aws_s3_bucket_ownership_controls.s3_backup_bucket_origin,
+  ]
+
+  bucket = aws_s3_bucket.s3_backup_bucket_origin.id
   acl    = "public-read"
 }
-`
+`, rName)
+}
 
-var logBucket = `
+func logBucket(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "s3_bucket_logs" {
-  acl           = "public-read"
-  bucket        = "mylogs.${var.rand_id}"
+  bucket        = "%[1]s.log-bucket"
   force_destroy = true
 }
-`
 
-func testAccDistributionS3Config(rInt int) string {
-	return acctest.ConfigCompose(
-		originBucket,
-		logBucket,
-		fmt.Sprintf(`
-variable rand_id {
-  default = %d
+resource "aws_s3_bucket_public_access_block" "s3_bucket_logs" {
+  bucket = aws_s3_bucket.s3_bucket_logs.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
+resource "aws_s3_bucket_ownership_controls" "s3_bucket_logs" {
+  bucket = aws_s3_bucket.s3_bucket_logs.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+
+resource "aws_s3_bucket_acl" "s3_bucket_logs_acl" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.s3_bucket_logs,
+    aws_s3_bucket_ownership_controls.s3_bucket_logs,
+  ]
+
+  bucket = aws_s3_bucket.s3_bucket_logs.id
+  acl    = "public-read"
+}
+`, rName)
+}
+
+func testAccDistributionConfig_s3(rName string) string {
+	return acctest.ConfigCompose(
+		originBucket(rName),
+		logBucket(rName),
+		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "s3_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_bucket_logs_acl,
+  ]
+
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
   }
 
@@ -1470,7 +1691,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1506,54 +1727,47 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig()))
-}
-
-func testAccDistributionS3WithTagsConfig(rInt int) string {
-	return acctest.ConfigCompose(
-		originBucket,
-		logBucket,
-		fmt.Sprintf(`
-variable rand_id {
-  default = %d
+`, testAccDistributionRetainConfig()))
 }
 
-resource "aws_cloudfront_distribution" "s3_distribution" {
-  origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
-    origin_id   = "myS3Origin"
-  }
-
-  enabled             = true
-  default_root_object = "index.html"
+func testAccDistributionConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
 
   default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
 
     forwarded_values {
       query_string = false
 
       cookies {
-        forward = "none"
+        forward = "all"
       }
     }
-
-    viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
   }
 
-  price_class = "PriceClass_200"
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
 
   restrictions {
     geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
+      restriction_type = "none"
     }
   }
 
@@ -1562,58 +1776,48 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   tags = {
-    environment = "production"
-    account     = "main"
+    %[1]q = %[2]q
   }
-
-  %s
 }
-`, rInt, testAccDistributionRetainConfig()))
+`, tagKey1, tagValue1)
 }
 
-func testAccDistributionS3WithTagsUpdatedConfig(rInt int) string {
-	return acctest.ConfigCompose(
-		originBucket,
-		logBucket,
-		fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
-resource "aws_cloudfront_distribution" "s3_distribution" {
-  origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
-    origin_id   = "myS3Origin"
-  }
-
-  enabled             = true
-  default_root_object = "index.html"
+func testAccDistributionConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
 
   default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
 
     forwarded_values {
       query_string = false
 
       cookies {
-        forward = "none"
+        forward = "all"
       }
     }
-
-    viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
   }
 
-  price_class = "PriceClass_200"
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
 
   restrictions {
     geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
+      restriction_type = "none"
     }
   }
 
@@ -1622,23 +1826,20 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   tags = {
-    environment = "dev"
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
-
-  %s
 }
-`, rInt, testAccDistributionRetainConfig()))
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDistributionCustomConfig(rInt int) string {
+func testAccDistributionConfig_custom(rName string) string {
 	return acctest.ConfigCompose(
-		logBucket,
+		logBucket(rName),
 		fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "custom_distribution" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -1659,7 +1860,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1696,21 +1897,17 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig()))
+`, testAccDistributionRetainConfig()))
 }
 
-func testAccDistributionOriginRequestPolicyDefaultConfig(rInt int) string {
+func testAccDistributionConfig_originRequestPolicyDefault(rName string) string {
 	return acctest.ConfigCompose(
-		logBucket,
+		logBucket(rName),
 		fmt.Sprintf(`
-variable rand_id {
-  default = %[1]d
-}
-
 resource "aws_cloudfront_cache_policy" "example" {
-  name        = "test-policy%[1]d"
+  name        = "test-policy-%[1]s"
   comment     = "test comment"
   default_ttl = 50
   max_ttl     = 100
@@ -1738,7 +1935,7 @@ resource "aws_cloudfront_cache_policy" "example" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "example" {
-  name    = "test-policy%[1]d"
+  name    = "test-policy-%[1]s"
   comment = "test comment"
 
   cors_config {
@@ -1761,7 +1958,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 }
 
 resource "aws_cloudfront_origin_request_policy" "test_policy" {
-  name    = "test-policy%[1]d"
+  name    = "test-policy-%[1]s"
   comment = "test comment"
   cookies_config {
     cookie_behavior = "whitelist"
@@ -1784,6 +1981,8 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "custom_distribution" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -1804,7 +2003,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1836,19 +2035,15 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   %[2]s
 }
-`, rInt, testAccDistributionRetainConfig()))
+`, rName, testAccDistributionRetainConfig()))
 }
 
-func testAccDistributionOriginRequestPolicyOrderedConfig(rInt int) string {
+func testAccDistributionConfig_originRequestPolicyOrdered(rName string) string {
 	return acctest.ConfigCompose(
-		logBucket,
+		logBucket(rName),
 		fmt.Sprintf(`
-variable rand_id {
-  default = %[1]d
-}
-
 resource "aws_cloudfront_cache_policy" "example" {
-  name        = "test-policy%[1]d"
+  name        = "test-policy-%[1]s"
   comment     = "test comment"
   default_ttl = 50
   max_ttl     = 100
@@ -1876,7 +2071,7 @@ resource "aws_cloudfront_cache_policy" "example" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "example" {
-  name    = "test-policy%[1]d"
+  name    = "test-policy-%[1]s"
   comment = "test comment"
 
   cors_config {
@@ -1899,7 +2094,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 }
 
 resource "aws_cloudfront_origin_request_policy" "test_policy" {
-  name    = "test-policy%[1]d"
+  name    = "test-policy-%[1]s"
   comment = "test comment"
   cookies_config {
     cookie_behavior = "whitelist"
@@ -1922,6 +2117,8 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "custom_distribution" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -1942,7 +2139,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1988,21 +2185,22 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   %[2]s
 }
-`, rInt, testAccDistributionRetainConfig()))
+`, rName, testAccDistributionRetainConfig()))
 }
 
-func testAccDistributionMultiOriginConfig(rInt int) string {
+func testAccDistributionConfig_multiOrigin(rName string) string {
 	return acctest.ConfigCompose(
-		originBucket,
-		logBucket,
+		originBucket(rName),
+		logBucket(rName),
 		fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "multi_origin_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_bucket_logs_acl,
+  ]
+
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
   }
 
@@ -2025,7 +2223,7 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -2108,17 +2306,13 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig()))
+`, testAccDistributionRetainConfig()))
 }
 
-func testAccDistributionNoCustomErroResponseInfo(rInt int) string {
+func testAccDistributionConfig_noCustomErroResponseInfo() string {
 	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "no_custom_error_responses" {
   origin {
     domain_name = "www.example.com"
@@ -2171,17 +2365,13 @@ resource "aws_cloudfront_distribution" "no_custom_error_responses" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig())
+`, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionNoOptionalItemsConfig(rInt int) string {
+func testAccDistributionConfig_noOptionalItems() string {
 	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "no_optional_items" {
   origin {
     domain_name = "www.example.com"
@@ -2225,12 +2415,12 @@ resource "aws_cloudfront_distribution" "no_optional_items" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig())
+`, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionConfig_Origin_EmptyDomainName() string {
+func testAccDistributionConfig_originEmptyDomainName() string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "Origin_EmptyDomainName" {
   origin {
@@ -2275,12 +2465,12 @@ resource "aws_cloudfront_distribution" "Origin_EmptyDomainName" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionConfig_Origin_EmptyOriginID() string {
+func testAccDistributionConfig_originEmptyOriginID() string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "Origin_EmptyOriginID" {
   origin {
@@ -2325,17 +2515,13 @@ resource "aws_cloudfront_distribution" "Origin_EmptyOriginID" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionHTTP11Config(rInt int) string {
+func testAccDistributionConfig_http11() string {
 	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "http_1_1" {
   origin {
     domain_name = "www.example.com"
@@ -2385,17 +2571,13 @@ resource "aws_cloudfront_distribution" "http_1_1" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig())
+`, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionIsIPV6EnabledConfig(rInt int) string {
+func testAccDistributionConfig_isIPV6Enabled() string {
 	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "is_ipv6_enabled" {
   origin {
     domain_name = "www.example.com"
@@ -2446,20 +2628,16 @@ resource "aws_cloudfront_distribution" "is_ipv6_enabled" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig())
+`, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionOrderedCacheBehavior(rInt int) string {
+func testAccDistributionConfig_orderedCacheBehavior() string {
 	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "main" {
   origin {
-    domain_name = "www.hashicorp.com"
+    domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
 
     custom_origin_config {
@@ -2545,20 +2723,16 @@ resource "aws_cloudfront_distribution" "main" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig())
+`, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionOrderedCacheBehaviorCachePolicy(rInt int) string {
+func testAccDistributionConfig_orderedCacheBehaviorCachePolicy(rName string) string {
 	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "main" {
   origin {
-    domain_name = "www.hashicorp.com"
+    domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
 
     custom_origin_config {
@@ -2612,11 +2786,11 @@ resource "aws_cloudfront_distribution" "main" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[2]s
 }
 
 resource "aws_cloudfront_cache_policy" "cache_policy" {
-  name        = "test-policy%[1]d"
+  name        = "test-policy-%[1]s"
   comment     = "test comment"
   default_ttl = 50
   max_ttl     = 100
@@ -2632,18 +2806,14 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
     }
   }
 }
-`, rInt, testAccDistributionRetainConfig())
+`, rName, testAccDistributionRetainConfig())
 }
 
-func testAccOrderedCacheBehaviorResponseHeadersPolicy(rInt int) string {
+func testAccDistributionConfig_orderedCacheBehaviorResponseHeadersPolicy(rName string) string {
 	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "main" {
   origin {
-    domain_name = "www.hashicorp.com"
+    domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
 
     custom_origin_config {
@@ -2698,11 +2868,11 @@ resource "aws_cloudfront_distribution" "main" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[2]s
 }
 
 resource "aws_cloudfront_cache_policy" "cache_policy" {
-  name        = "test-policy%[1]d"
+  name        = "test-policy-%[1]s"
   comment     = "test comment"
   default_ttl = 50
   max_ttl     = 100
@@ -2720,7 +2890,7 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "response_headers_policy" {
-  name    = "test-policy%[1]d"
+  name    = "test-policy-%[1]s"
   comment = "test comment"
 
   cors_config {
@@ -2741,19 +2911,20 @@ resource "aws_cloudfront_response_headers_policy" "response_headers_policy" {
     origin_override = true
   }
 }
-`, rInt, testAccDistributionRetainConfig())
+`, rName, testAccDistributionRetainConfig())
 }
 
-func testAccDistributionOriginGroupsConfig(rInt int) string {
+func testAccDistributionConfig_originGroups(rName string) string {
 	return acctest.ConfigCompose(
-		originBucket,
-		backupBucket,
+		originBucket(rName),
+		backupBucket(rName),
 		fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
 resource "aws_cloudfront_distribution" "failover_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_backup_bucket_origin_acl,
+  ]
+
   origin {
     domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "primaryS3"
@@ -2808,12 +2979,12 @@ resource "aws_cloudfront_distribution" "failover_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-  %s
+  %[1]s
 }
-`, rInt, testAccDistributionRetainConfig()))
+`, testAccDistributionRetainConfig()))
 }
 
-func testAccDistributionDefaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2Config(retainOnDelete bool) string {
+func testAccDistributionConfig_defaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -2862,7 +3033,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionDefaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3Config(retainOnDelete bool) string {
+func testAccDistributionConfig_defaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -2911,7 +3082,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionDefaultCacheBehaviorForwardedValuesHeadersUnordered2Config(retainOnDelete bool) string {
+func testAccDistributionConfig_defaultCacheBehaviorForwardedValuesHeadersUnordered2(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -2960,7 +3131,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionDefaultCacheBehaviorForwardedValuesHeadersUnordered3Config(retainOnDelete bool) string {
+func testAccDistributionConfig_defaultCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -3009,7 +3180,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionEnabledConfig(enabled, retainOnDelete bool) string {
+func testAccDistributionConfig_enabled(enabled, retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = %[1]t
@@ -3055,7 +3226,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, enabled, retainOnDelete)
 }
 
-func testAccDistributionOrderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2Config(retainOnDelete bool) string {
+func testAccDistributionConfig_orderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -3120,7 +3291,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionOrderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3Config(retainOnDelete bool) string {
+func testAccDistributionConfig_orderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -3185,7 +3356,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionOrderedCacheBehaviorForwardedValuesHeadersUnordered2Config(retainOnDelete bool) string {
+func testAccDistributionConfig_orderedCacheBehaviorForwardedValuesHeadersUnordered2(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -3250,7 +3421,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionOrderedCacheBehaviorForwardedValuesHeadersUnordered3Config(retainOnDelete bool) string {
+func testAccDistributionConfig_orderedCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -3315,7 +3486,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-func testAccDistributionDefaultCacheBehaviorTrustedKeyGroupsConfig(retainOnDelete bool, rName string) string {
+func testAccDistributionConfig_defaultCacheBehaviorTrustedKeyGroups(retainOnDelete bool, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -3376,7 +3547,7 @@ resource "aws_cloudfront_key_group" "test" {
 `, retainOnDelete, rName)
 }
 
-func testAccDistributionDefaultCacheBehaviorTrustedSignersSelfConfig(retainOnDelete bool) string {
+func testAccDistributionConfig_defaultCacheBehaviorTrustedSignersSelf(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   # Faster acceptance testing
@@ -3426,23 +3597,23 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 // CloudFront Distribution ACM Certificates must be created in us-east-1
-func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
+func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t *testing.T, commonName string) string {
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
-	return testAccCloudfrontRegionProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRegionProviderConfig(), fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
 }
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccDistributionViewerCertificateACMCertificateARNConfig(retainOnDelete bool) string {
-	return testAccDistributionViewerCertificateACMCertificateARNBaseConfig("example.com") + fmt.Sprintf(`
+func testAccDistributionConfig_viewerCertificateACMCertificateARN(t *testing.T, retainOnDelete bool) string {
+	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
-  retain_on_delete = %t
+  retain_on_delete = %[1]t
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
@@ -3482,14 +3653,14 @@ resource "aws_cloudfront_distribution" "test" {
     ssl_support_method  = "sni-only"
   }
 }
-`, retainOnDelete)
+`, retainOnDelete))
 }
 
-func testAccDistributionViewerCertificateACMCertificateARNConflictsWithCloudFrontDefaultCertificateConfig(retainOnDelete bool) string {
-	return testAccDistributionViewerCertificateACMCertificateARNBaseConfig("example.com") + fmt.Sprintf(`
+func testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t *testing.T, retainOnDelete bool) string {
+	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
-  retain_on_delete = %t
+  retain_on_delete = %[1]t
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
@@ -3530,10 +3701,10 @@ resource "aws_cloudfront_distribution" "test" {
     ssl_support_method             = "sni-only"
   }
 }
-`, retainOnDelete)
+`, retainOnDelete))
 }
 
-func testAccDistributionWaitForDeploymentConfig(enabled, waitForDeployment bool) string {
+func testAccDistributionConfig_waitForDeployment(enabled, waitForDeployment bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled             = %[1]t
@@ -3643,7 +3814,7 @@ resource "aws_cloudfront_realtime_log_config" "test" {
 `, rName)
 }
 
-func testAccDistributionDefaultCacheBehaviorRealtimeLogARNConfig(rName string, retainOnDelete bool) string {
+func testAccDistributionConfig_defaultCacheBehaviorRealtimeLogARN(rName string, retainOnDelete bool) string {
 	return acctest.ConfigCompose(
 		testAccDistributionCacheBehaviorRealtimeLogBaseConfig(rName),
 		fmt.Sprintf(`
@@ -3694,7 +3865,7 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete))
 }
 
-func testAccDistributionOrderedCacheBehaviorRealtimeLogARNConfig(rName string, retainOnDelete bool) string {
+func testAccDistributionConfig_orderedCacheBehaviorRealtimeLogARN(rName string, retainOnDelete bool) string {
 	return acctest.ConfigCompose(
 		testAccDistributionCacheBehaviorRealtimeLogBaseConfig(rName),
 		fmt.Sprintf(`
@@ -3770,22 +3941,20 @@ origin_shield {
 `, enabled, region)
 }
 
-func testAccDistributionOriginItem(rName string, rInt int, item string) string {
+func testAccDistributionConfig_originItem(rName string, item string) string {
 	return acctest.ConfigCompose(
-		originBucket,
+		originBucket(rName),
 		testAccDistributionCacheBehaviorRealtimeLogBaseConfig(rName),
 		fmt.Sprintf(`
-variable rand_id {
-  default = %[1]d
-}
-
 data "aws_region" "current" {}
 
 resource "aws_cloudfront_distribution" "test" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_origin_acl]
+
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myOrigin"
-    %[2]s
+    %[1]s
   }
   enabled = true
   default_cache_behavior {
@@ -3814,5 +3983,490 @@ resource "aws_cloudfront_distribution" "test" {
     cloudfront_default_certificate = true
   }
 }
-`, rInt, item))
+`, item))
+}
+
+func testAccDistributionConfig_eTagInitial(rName string) string {
+	return acctest.ConfigCompose(
+		logBucket(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_cache_policy" "example" {
+  name        = "test-policy-%[1]s"
+  comment     = "test comment"
+  default_ttl = 50
+  max_ttl     = 100
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "whitelist"
+      cookies {
+        items = ["test"]
+      }
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["test"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "whitelist"
+      query_strings {
+        items = ["test"]
+      }
+    }
+  }
+}
+
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name    = "test-policy-%[1]s"
+  comment = "test comment"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "test_policy" {
+  name    = "test-policy-%[1]s"
+  comment = "test comment"
+  cookies_config {
+    cookie_behavior = "whitelist"
+    cookies {
+      items = ["test"]
+    }
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["test"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "whitelist"
+    query_strings {
+      items = ["test"]
+    }
+  }
+}
+
+resource "aws_cloudfront_distribution" "main" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["SSLv3", "TLSv1"]
+      origin_read_timeout      = 30
+      origin_keepalive_timeout = 5
+    }
+  }
+
+  enabled             = true
+  comment             = "Some comment"
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+`, rName, testAccDistributionRetainConfig()))
+}
+
+func testAccDistributionConfig_eTagUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		logBucket(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_cache_policy" "example" {
+  name        = "test-policy-%[1]s"
+  comment     = "test comment"
+  default_ttl = 50
+  max_ttl     = 100
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "whitelist"
+      cookies {
+        items = ["test"]
+      }
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["test"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "whitelist"
+      query_strings {
+        items = ["test"]
+      }
+    }
+  }
+}
+
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name    = "test-policy-%[1]s"
+  comment = "test comment"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test", "updated"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "test_policy" {
+  name    = "test-policy-%[1]s"
+  comment = "test comment"
+  cookies_config {
+    cookie_behavior = "whitelist"
+    cookies {
+      items = ["test"]
+    }
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["test"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "whitelist"
+    query_strings {
+      items = ["test"]
+    }
+  }
+}
+
+resource "aws_cloudfront_distribution" "main" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["SSLv3", "TLSv1"]
+      origin_read_timeout      = 30
+      origin_keepalive_timeout = 5
+    }
+  }
+
+  enabled             = true
+  comment             = "Some comment"
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+`, rName, testAccDistributionRetainConfig()))
+}
+
+func testAccDistributionConfig_eTagFinal(rName string) string {
+	return acctest.ConfigCompose(
+		logBucket(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_cache_policy" "example" {
+  name        = "test-policy-%[1]s"
+  comment     = "test comment"
+  default_ttl = 50
+  max_ttl     = 100
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "whitelist"
+      cookies {
+        items = ["test"]
+      }
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["test"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "whitelist"
+      query_strings {
+        items = ["test"]
+      }
+    }
+  }
+}
+
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name    = "test-policy-%[1]s"
+  comment = "test comment"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test", "updated"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "test_policy" {
+  name    = "test-policy-%[1]s"
+  comment = "test comment"
+  cookies_config {
+    cookie_behavior = "whitelist"
+    cookies {
+      items = ["test"]
+    }
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["test"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "whitelist"
+    query_strings {
+      items = ["test"]
+    }
+  }
+}
+
+resource "aws_cloudfront_distribution" "main" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["SSLv3", "TLSv1"]
+      origin_read_timeout      = 30
+      origin_keepalive_timeout = 5
+    }
+  }
+
+  enabled             = true
+  comment             = "Updated comment"
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+`, rName, testAccDistributionRetainConfig()))
+}
+
+func testAccDistributionConfig_originAccessControl(rName string, which int) string {
+	return acctest.ConfigCompose(
+		originBucket(rName),
+		logBucket(rName),
+		fmt.Sprintf(`
+locals {
+  rName = %[1]q
+}
+
+resource "aws_cloudfront_origin_access_control" "test" {
+  count = 2
+
+  name                              = "${local.rName}-${count.index}"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "test" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_bucket_logs_acl,
+  ]
+
+  origin {
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
+    origin_id   = "myS3Origin"
+
+    origin_access_control_id = aws_cloudfront_origin_access_control.test[%[3]d].id
+  }
+
+  enabled             = true
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+`, rName, testAccDistributionRetainConfig(), which))
 }

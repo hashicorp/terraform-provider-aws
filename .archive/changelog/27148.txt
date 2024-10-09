@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_dx_connection: Add `vlan_id` attribute
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Add `vlan_id` attribute
+```

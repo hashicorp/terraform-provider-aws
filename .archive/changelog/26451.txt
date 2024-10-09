@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_kinesis_firehose_delivery_stream: Updating `tags` no longer causes an unnecessary update
+```

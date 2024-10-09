@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudwatch_event_target: Preserve order of `http_target.path_parameter_values`.
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_target: Add plan time validation for `input`, `input_path`, `run_command_targets.values`, `http_target.header_parameters`, `http_target.query_string_parameters`, `redshift_target.database`, `redshift_target.db_user`, `redshift_target.secrets_manager_arn`, `redshift_target.sql`, `redshift_target.statement_name`, `retry_policy.maximum_event_age_in_seconds`, `retry_policy.maximum_retry_attempts`.
+```

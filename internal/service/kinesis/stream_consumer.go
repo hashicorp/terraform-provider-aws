@@ -1,46 +1,54 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceStreamConsumer() *schema.Resource {
+// @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
+func resourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStreamConsumerCreate,
-		Read:   resourceStreamConsumerRead,
-		Delete: resourceStreamConsumerDelete,
+		CreateWithoutTimeout: resourceStreamConsumerCreate,
+		ReadWithoutTimeout:   resourceStreamConsumerRead,
+		DeleteWithoutTimeout: resourceStreamConsumerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"creation_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -50,89 +58,156 @@ func ResourceStreamConsumer() *schema.Resource {
 	}
 }
 
-func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	name := d.Get("name").(string)
-	streamArn := d.Get("stream_arn").(string)
-
+	name := d.Get(names.AttrName).(string)
 	input := &kinesis.RegisterStreamConsumerInput{
 		ConsumerName: aws.String(name),
-		StreamARN:    aws.String(streamArn),
+		StreamARN:    aws.String(d.Get(names.AttrStreamARN).(string)),
 	}
 
-	output, err := conn.RegisterStreamConsumer(input)
+	output, err := conn.RegisterStreamConsumer(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Stream Consumer (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kinesis Stream Consumer (%s): %s", name, err)
 	}
 
-	if output == nil || output.Consumer == nil {
-		return fmt.Errorf("error creating Kinesis Stream Consumer (%s): empty output", name)
+	d.SetId(aws.ToString(output.Consumer.ConsumerARN))
+
+	if _, err := waitStreamConsumerCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream Consumer (%s) create: %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(output.Consumer.ConsumerARN))
-
-	if _, err := waitStreamConsumerCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Stream Consumer (%s) creation: %w", d.Id(), err)
-	}
-
-	return resourceStreamConsumerRead(d, meta)
+	return append(diags, resourceStreamConsumerRead(ctx, d, meta)...)
 }
 
-func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	consumer, err := FindStreamConsumerByARN(conn, d.Id())
+	consumer, err := findStreamConsumerByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Stream Consumer (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Stream Consumer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Stream Consumer (%s): %s", d.Id(), err)
 	}
 
-	if consumer == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading Kinesis Stream Consumer (%s): empty output after creation", d.Id())
-		}
-		log.Printf("[WARN] Kinesis Stream Consumer (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	d.Set(names.AttrARN, consumer.ConsumerARN)
+	d.Set("creation_timestamp", aws.ToTime(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
+	d.Set(names.AttrName, consumer.ConsumerName)
+	d.Set(names.AttrStreamARN, consumer.StreamARN)
 
-	d.Set("arn", consumer.ConsumerARN)
-	d.Set("name", consumer.ConsumerName)
-	d.Set("creation_timestamp", aws.TimeValue(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
-	d.Set("stream_arn", consumer.StreamARN)
-
-	return nil
+	return diags
 }
 
-func resourceStreamConsumerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	input := &kinesis.DeregisterStreamConsumerInput{
+	log.Printf("[DEBUG] Deregistering Kinesis Stream Consumer: (%s)", d.Id())
+	_, err := conn.DeregisterStreamConsumer(ctx, &kinesis.DeregisterStreamConsumerInput{
 		ConsumerARN: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeregisterStreamConsumer(input)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting Kinesis Stream Consumer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Stream Consumer (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStreamConsumerDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error waiting for Kinesis Stream Consumer (%s) deletion: %w", d.Id(), err)
+	if _, err := waitStreamConsumerDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream Consumer (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn string) (*types.ConsumerDescription, error) {
+	input := &kinesis.DescribeStreamConsumerInput{
+		ConsumerARN: aws.String(arn),
+	}
+
+	output, err := conn.DescribeStreamConsumer(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ConsumerDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ConsumerDescription, nil
+}
+
+func statusStreamConsumer(ctx context.Context, conn *kinesis.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findStreamConsumerByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ConsumerStatus), nil
+	}
+}
+
+func waitStreamConsumerCreated(ctx context.Context, conn *kinesis.Client, arn string) (*types.ConsumerDescription, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ConsumerStatusCreating),
+		Target:  enum.Slice(types.ConsumerStatusActive),
+		Refresh: statusStreamConsumer(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.ConsumerDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStreamConsumerDeleted(ctx context.Context, conn *kinesis.Client, arn string) (*types.ConsumerDescription, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ConsumerStatusDeleting),
+		Target:  []string{},
+		Refresh: statusStreamConsumer(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.ConsumerDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }

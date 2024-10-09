@@ -1,60 +1,90 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceARN() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceARNRead,
+// @FrameworkDataSource(name="ARN")
+func newARNDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &arnDataSource{}
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"partition": {
-				Type:     schema.TypeString,
+	return d, nil
+}
+
+type arnDataSource struct {
+	framework.DataSourceWithConfigure
+}
+
+func (*arnDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_arn"
+}
+
+func (d *arnDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"account": schema.StringAttribute{
 				Computed: true,
 			},
-			"service": {
-				Type:     schema.TypeString,
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-			"region": {
-				Type:     schema.TypeString,
+			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"account": {
-				Type:     schema.TypeString,
+			names.AttrRegion: schema.StringAttribute{
 				Computed: true,
 			},
-			"resource": {
-				Type:     schema.TypeString,
+			"resource": schema.StringAttribute{
+				Computed: true,
+			},
+			"service": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceARNRead(d *schema.ResourceData, meta interface{}) error {
-	v := d.Get("arn").(string)
-	arn, err := arn.Parse(v)
-	if err != nil {
-		return fmt.Errorf("Error parsing '%s': %w", v, err)
+func (d *arnDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data arnDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	d.SetId(arn.String())
-	d.Set("partition", arn.Partition)
-	d.Set("service", arn.Service)
-	d.Set("region", arn.Region)
-	d.Set("account", arn.AccountID)
-	d.Set("resource", arn.Resource)
+	arn := data.ARN.ValueARN()
 
-	return nil
+	data.Account = fwflex.StringValueToFrameworkLegacy(ctx, arn.AccountID)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, arn.String())
+	data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, arn.Partition)
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, arn.Region)
+	data.Resource = fwflex.StringValueToFrameworkLegacy(ctx, arn.Resource)
+	data.Service = fwflex.StringValueToFrameworkLegacy(ctx, arn.Service)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type arnDataSourceModel struct {
+	Account   types.String `tfsdk:"account"`
+	ARN       fwtypes.ARN  `tfsdk:"arn"`
+	ID        types.String `tfsdk:"id"`
+	Partition types.String `tfsdk:"partition"`
+	Region    types.String `tfsdk:"region"`
+	Resource  types.String `tfsdk:"resource"`
+	Service   types.String `tfsdk:"service"`
 }

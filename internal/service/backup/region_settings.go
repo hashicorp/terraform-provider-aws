@@ -1,25 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
-	"fmt"
+	"context"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceRegionSettings() *schema.Resource {
+// @SDKResource("aws_backup_region_settings", name="Region Settings")
+func resourceRegionSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRegionSettingsUpdate,
-		Update: resourceRegionSettingsUpdate,
-		Read:   resourceRegionSettingsRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceRegionSettingsUpdate,
+		UpdateWithoutTimeout: resourceRegionSettingsUpdate,
+		ReadWithoutTimeout:   resourceRegionSettingsRead,
+		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"resource_type_management_preference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeBool},
+			},
 			"resource_type_opt_in_preference": {
 				Type:     schema.TypeMap,
 				Required: true,
@@ -29,38 +44,66 @@ func ResourceRegionSettings() *schema.Resource {
 	}
 }
 
-func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	prefrences := d.Get("resource_type_opt_in_preference").(map[string]interface{})
-	list := make(map[string]*bool, len(prefrences))
-	for i, v := range prefrences {
-		list[i] = aws.Bool(v.(bool))
+	input := &backup.UpdateRegionSettingsInput{}
+
+	if v, ok := d.GetOk("resource_type_management_preference"); ok && len(v.(map[string]interface{})) > 0 {
+		input.ResourceTypeManagementPreference = flex.ExpandBoolValueMap(v.(map[string]interface{}))
 	}
 
-	input := &backup.UpdateRegionSettingsInput{
-		ResourceTypeOptInPreference: list,
+	if v, ok := d.GetOk("resource_type_opt_in_preference"); ok && len(v.(map[string]interface{})) > 0 {
+		input.ResourceTypeOptInPreference = flex.ExpandBoolValueMap(v.(map[string]interface{}))
 	}
 
-	_, err := conn.UpdateRegionSettings(input)
+	_, err := conn.UpdateRegionSettings(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error setting Backup Region Settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Backup Region Settings: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	if d.IsNewResource() {
+		d.SetId(meta.(*conns.AWSClient).Region)
+	}
 
-	return resourceRegionSettingsRead(d, meta)
+	return append(diags, resourceRegionSettingsRead(ctx, d, meta)...)
 }
 
-func resourceRegionSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceRegionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	resp, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
-	if err != nil {
-		return fmt.Errorf("error reading Backup Region Settings (%s): %w", d.Id(), err)
+	output, err := findRegionSettings(ctx, conn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Backup Region Settings (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("resource_type_opt_in_preference", aws.BoolValueMap(resp.ResourceTypeOptInPreference))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Backup Region Settings (%s): %s", d.Id(), err)
+	}
 
-	return nil
+	d.Set("resource_type_opt_in_preference", output.ResourceTypeOptInPreference)
+	d.Set("resource_type_management_preference", output.ResourceTypeManagementPreference)
+
+	return diags
+}
+
+func findRegionSettings(ctx context.Context, conn *backup.Client) (*backup.DescribeRegionSettingsOutput, error) {
+	input := &backup.DescribeRegionSettingsInput{}
+	output, err := conn.DescribeRegionSettings(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

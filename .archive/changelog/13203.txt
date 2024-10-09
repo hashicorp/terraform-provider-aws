@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshift_cluster: Correctly use `number_of_nodes` argument value when restoring from snapshot
+```

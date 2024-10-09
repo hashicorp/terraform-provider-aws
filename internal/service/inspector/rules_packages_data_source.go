@@ -1,22 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_inspector_rules_packages")
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRulesPackagesRead,
+		ReadWithoutTimeout: dataSourceRulesPackagesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -25,33 +30,39 @@ func DataSourceRulesPackages() *schema.Resource {
 	}
 }
 
-func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	log.Printf("[DEBUG] Reading Rules Packages.")
+	output, err := findRulesPackageARNs(ctx, conn)
 
-	var arns []string
-
-	input := &inspector.ListRulesPackagesInput{}
-
-	err := conn.ListRulesPackagesPages(input, func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
-		for _, arn := range page.RulesPackageArns {
-			arns = append(arns, *arn)
-		}
-		return !lastPage
-	})
 	if err != nil {
-		return fmt.Errorf("Error fetching Rules Packages: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Rules Packages: %s", err)
 	}
-
-	if len(arns) == 0 {
-		return errors.New("No rules packages found.")
-	}
+	arns := output
+	sort.Strings(arns)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set(names.AttrARNs, arns)
 
-	sort.Strings(arns)
-	d.Set("arns", arns)
+	return diags
+}
 
-	return nil
+func findRulesPackageARNs(ctx context.Context, conn *inspector.Client) ([]string, error) {
+	input := &inspector.ListRulesPackagesInput{}
+	var output []string
+
+	pages := inspector.NewListRulesPackagesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RulesPackageArns...)
+	}
+
+	return output, nil
 }

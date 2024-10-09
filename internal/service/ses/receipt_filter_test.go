@@ -1,37 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESReceiptFilter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ses_receipt_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckSESReceiptRule(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptFilterConfig(rName),
+				Config: testAccReceiptFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptFilterExists(resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-filter/%s", rName)),
+					testAccCheckReceiptFilterExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-filter/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.10.10.10"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "policy", "Block"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, "Block"),
 				),
 			},
 			{
@@ -44,20 +49,21 @@ func TestAccSESReceiptFilter_basic(t *testing.T) {
 }
 
 func TestAccSESReceiptFilter_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ses_receipt_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckSESReceiptRule(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptFilterConfig(rName),
+				Config: testAccReceiptFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptFilterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptFilter(), resourceName),
+					testAccCheckReceiptFilterExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,63 +71,52 @@ func TestAccSESReceiptFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSESReceiptFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckReceiptFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_receipt_filter" {
-			continue
-		}
-
-		response, err := conn.ListReceiptFilters(&ses.ListReceiptFiltersInput{})
-		if err != nil {
-			return err
-		}
-
-		for _, element := range response.Filters {
-			if aws.StringValue(element.Name) == rs.Primary.ID {
-				return fmt.Errorf("SES Receipt Filter (%s) still exists", rs.Primary.ID)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_receipt_filter" {
+				continue
 			}
+
+			_, err := tfses.FindReceiptFilterByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SES Receipt Filter %s still exists", rs.Primary.ID)
 		}
+
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckReceiptFilterExists(n string) resource.TestCheckFunc {
+func testAccCheckReceiptFilterExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES receipt filter not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES receipt filter ID not set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		_, err := tfses.FindReceiptFilterByName(ctx, conn, rs.Primary.ID)
 
-		response, err := conn.ListReceiptFilters(&ses.ListReceiptFiltersInput{})
-		if err != nil {
-			return err
-		}
-
-		for _, element := range response.Filters {
-			if aws.StringValue(element.Name) == rs.Primary.ID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("The receipt filter was not created")
+		return err
 	}
 }
 
-func testAccReceiptFilterConfig(rName string) string {
+func testAccReceiptFilterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_filter" "test" {
   cidr   = "10.10.10.10"
-  name   = %q
+  name   = %[1]q
   policy = "Block"
 }
 `, rName)

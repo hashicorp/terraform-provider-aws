@@ -1,30 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEBSSnapshot() *schema.Resource {
+// @SDKResource("aws_ebs_snapshot", name="EBS Snapshot")
+// @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
+func resourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEBSSnapshotCreate,
-		Read:   resourceEBSSnapshotRead,
-		Update: resourceEBSSnapshotUpdate,
-		Delete: resourceEBSSnapshotDelete,
+		CreateWithoutTimeout: resourceEBSSnapshotCreate,
+		ReadWithoutTimeout:   resourceEBSSnapshotRead,
+		UpdateWithoutTimeout: resourceEBSSnapshotUpdate,
+		DeleteWithoutTimeout: resourceEBSSnapshotDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -35,37 +48,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"volume_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"kms_key_id": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,172 +56,223 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			names.AttrEncrypted: {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			names.AttrKMSKeyID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"owner_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrOwnerID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"permanent_restore": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"storage_tier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), targetStorageTierStandard)...), false),
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"temporary_restore_days": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"volume_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrVolumeSize: {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	request := &ec2.CreateSnapshotInput{
-		VolumeId:          aws.String(d.Get("volume_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
-	}
-	if v, ok := d.GetOk("description"); ok {
-		request.Description = aws.String(v.(string))
+	volumeID := d.Get("volume_id").(string)
+	input := &ec2.CreateSnapshotInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSnapshot),
+		VolumeId:          aws.String(volumeID),
 	}
 
-	var res *ec2.Snapshot
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		res, err = conn.CreateSnapshot(request)
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
 
-		if tfawserr.ErrMessageContains(err, "SnapshotCreationPerVolumeRateExceeded", "The maximum per volume CreateSnapshot request rate has been exceeded") {
-			return resource.RetryableError(err)
-		}
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		input.OutpostArn = aws.String(v.(string))
+	}
+
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
+		func() (interface{}, error) {
+			return conn.CreateSnapshot(ctx, input)
+		},
+		errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot (%s): %s", volumeID, err)
+	}
+
+	d.SetId(aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId))
+
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			waiter := ec2.NewSnapshotCompletedWaiter(conn)
+			return waiter.WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
+				SnapshotIds: []string{d.Id()},
+			}, d.Timeout(schema.TimeoutCreate))
+		},
+		errCodeResourceNotReady)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) create: %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
+		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+			SnapshotId:  aws.String(d.Id()),
+			StorageTier: awstypes.TargetStorageTier(v.(string)),
+		})
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
 		}
 
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		res, err = conn.CreateSnapshot(request)
-	}
-	if err != nil {
-		return fmt.Errorf("error creating EC2 EBS Snapshot: %s", err)
+		if _, err := waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) Storage Tier archive: %s", d.Id(), err)
+		}
 	}
 
-	d.SetId(aws.StringValue(res.SnapshotId))
-
-	err = resourceEBSSnapshotWaitForAvailable(d, conn)
-	if err != nil {
-		return err
-	}
-
-	return resourceEBSSnapshotRead(d, meta)
+	return append(diags, resourceEBSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	req := &ec2.DescribeSnapshotsInput{
-		SnapshotIds: []*string{aws.String(d.Id())},
-	}
-	res, err := conn.DescribeSnapshots(req)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
-			log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
+	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
-	if len(res.Snapshots) == 0 {
-		log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EBS Snapshot %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	snapshot := res.Snapshots[0]
-
-	d.Set("description", snapshot.Description)
-	d.Set("owner_id", snapshot.OwnerId)
-	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("owner_alias", snapshot.OwnerAlias)
-	d.Set("volume_id", snapshot.VolumeId)
-	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
-	d.Set("volume_size", snapshot.VolumeSize)
-
-	tags := KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshot (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	snapshotArn := arn.ARN{
+	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
-		Service:   ec2.ServiceName,
 	}.String()
+	d.Set(names.AttrARN, arn)
+	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
+	d.Set(names.AttrDescription, snapshot.Description)
+	d.Set(names.AttrEncrypted, snapshot.Encrypted)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
+	d.Set("outpost_arn", snapshot.OutpostArn)
+	d.Set("owner_alias", snapshot.OwnerAlias)
+	d.Set(names.AttrOwnerID, snapshot.OwnerId)
+	d.Set("storage_tier", snapshot.StorageTier)
+	d.Set("volume_id", snapshot.VolumeId)
+	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
 
-	d.Set("arn", snapshotArn)
+	setTagsOut(ctx, snapshot.Tags)
 
-	return nil
+	return diags
 }
 
-func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+	if d.HasChange("storage_tier") {
+		if tier := d.Get("storage_tier").(string); tier == string(awstypes.TargetStorageTierArchive) {
+			_, err := conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+				SnapshotId:  aws.String(d.Id()),
+				StorageTier: awstypes.TargetStorageTier(tier),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
+			}
+
+			if _, err := waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) Storage Tier archive: %s", d.Id(), err)
+			}
+		} else {
+			input := &ec2.RestoreSnapshotTierInput{
+				SnapshotId: aws.String(d.Id()),
+			}
+
+			if v, ok := d.GetOk("permanent_restore"); ok {
+				input.PermanentRestore = aws.Bool(v.(bool))
+			}
+
+			if v, ok := d.GetOk("temporary_restore_days"); ok {
+				input.TemporaryRestoreDays = aws.Int32(int32(v.(int)))
+			}
+
+			//Skipping waiter as restoring a snapshot takes 24-72 hours so state will reamin (https://aws.amazon.com/blogs/aws/new-amazon-ebs-snapshots-archive/)
+			_, err := conn.RestoreSnapshotTier(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "restoring EBS Snapshot (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
-	return resourceEBSSnapshotRead(d, meta)
+	return append(diags, resourceEBSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	input := &ec2.DeleteSnapshotInput{
-		SnapshotId: aws.String(d.Id()),
+func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	log.Printf("[INFO] Deleting EBS Snapshot: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteSnapshot(ctx, &ec2.DeleteSnapshotInput{
+			SnapshotId: aws.String(d.Id()),
+		})
+	}, errCodeInvalidSnapshotInUse)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+		return diags
 	}
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSnapshot(input)
-		if err == nil {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
-			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
-		}
-		return resource.NonRetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteSnapshot(input)
-	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting EBS snapshot: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting EBS Snapshot (%s): %s", d.Id(), err)
 	}
-	return nil
-}
 
-func resourceEBSSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) error {
-	log.Printf("Waiting for Snapshot %s to become available...", d.Id())
-	input := &ec2.DescribeSnapshotsInput{
-		SnapshotIds: []*string{aws.String(d.Id())},
-	}
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		err := conn.WaitUntilSnapshotCompleted(input)
-		if err == nil {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
-			return resource.RetryableError(fmt.Errorf("EBS CreatingSnapshot - waiting for snapshot to become available"))
-		}
-		return resource.NonRetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		err = conn.WaitUntilSnapshotCompleted(input)
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for EBS snapshot to complete: %s", err)
-	}
-	return nil
+	return diags
 }

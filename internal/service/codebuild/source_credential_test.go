@@ -1,44 +1,52 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codebuild"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
-	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
+	ctx := acctest.Context(t)
+	var sourceCredentialsInfo types.SourceCredentialsInfo
 	token := sdkacctest.RandomWithPrefix("token")
 	resourceName := "aws_codebuild_source_credential.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSourceCredentialDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSourceCredentialDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
+				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github`)),
+					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", regexache.MustCompile(`token/github`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
 			},
 			{
-				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
+				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github_enterprise`)),
+					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", regexache.MustCompile(`token/github_enterprise`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB_ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -47,106 +55,144 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token", "user_name"},
+				ImportStateVerifyIgnore: []string{"token", names.AttrUserName},
 			},
 		},
 	})
 }
 
 func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
-	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
+	ctx := acctest.Context(t)
+	var sourceCredentialsInfo types.SourceCredentialsInfo
 	token := sdkacctest.RandomWithPrefix("token")
 	resourceName := "aws_codebuild_source_credential.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSourceCredentialDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSourceCredentialDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceCredential_BasicAuth(token, "user1"),
+				Config: testAccSourceCredentialConfig_basicAuth(token, "user1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/bitbucket`)),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
+					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", regexache.MustCompile(`token/bitbucket`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user1"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "BASIC_AUTH"),
 				),
 			},
 			{
-				Config: testAccSourceCredential_BasicAuth(token, "user2"),
+				Config: testAccSourceCredentialConfig_basicAuth(token, "user2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
+					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user2"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token", "user_name"},
+				ImportStateVerifyIgnore: []string{"token", names.AttrUserName},
 			},
 		},
 	})
 }
 
-func testAccCheckSourceCredentialDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sourceCredentialsInfo types.SourceCredentialsInfo
+	token := sdkacctest.RandomWithPrefix("token")
+	resourceName := "aws_codebuild_source_credential.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codebuild_source_credential" {
-			continue
-		}
-
-		resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
-		if err != nil {
-			return err
-		}
-
-		if len(resp.SourceCredentialsInfos) == 0 {
-			return nil
-		}
-
-		for _, sourceCredentialsInfo := range resp.SourceCredentialsInfos {
-			if rs.Primary.ID == aws.StringValue(sourceCredentialsInfo.Arn) {
-				return fmt.Errorf("Found Source Credential %s", rs.Primary.ID)
-			}
-		}
-	}
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSourceCredentialDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckSourceCredentialExists(name string, sourceCredential *codebuild.SourceCredentialsInfo) resource.TestCheckFunc {
+func testAccPreCheckSourceCredentialsForServerType(ctx context.Context, t *testing.T, serverType types.ServerType) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+
+	input := &codebuild.ListSourceCredentialsInput{}
+	output, err := tfcodebuild.FindSourceCredentials(ctx, conn, input, func(v *types.SourceCredentialsInfo) bool {
+		return v.ServerType == serverType
+	})
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	if len(output) == 0 {
+		t.Skipf("skipping acceptance testing: Source Credentials (%s) not found", serverType)
+	}
+}
+
+func testAccCheckSourceCredentialDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codebuild_source_credential" {
+				continue
+			}
+
+			_, err := tfcodebuild.FindSourceCredentialsByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CodeBuild Source Credential %s still exists", rs.Primary.ID)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+		return nil
+	}
+}
 
-		resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
+func testAccCheckSourceCredentialExists(ctx context.Context, n string, v *types.SourceCredentialsInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+
+		output, err := tfcodebuild.FindSourceCredentialsByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.SourceCredentialsInfos) == 0 {
-			return fmt.Errorf("Source Credential %s not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		for _, sourceCredentialsInfo := range resp.SourceCredentialsInfos {
-			if rs.Primary.ID == aws.StringValue(sourceCredentialsInfo.Arn) {
-				*sourceCredential = *sourceCredentialsInfo
-				return nil
-			}
-		}
-
-		return fmt.Errorf("Source Credential %s not found", rs.Primary.ID)
+		return nil
 	}
 }
 
-func testAccSourceCredential_Basic(authType, serverType, token string) string {
+func testAccSourceCredentialConfig_basic(authType, serverType, token string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_source_credential" "test" {
   auth_type   = "%s"
@@ -156,7 +202,7 @@ resource "aws_codebuild_source_credential" "test" {
 `, authType, serverType, token)
 }
 
-func testAccSourceCredential_BasicAuth(token, userName string) string {
+func testAccSourceCredentialConfig_basicAuth(token, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_source_credential" "test" {
   auth_type   = "BASIC_AUTH"

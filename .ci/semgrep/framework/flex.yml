@@ -1,0 +1,90 @@
+rules:
+  - id: flex-type-from-framework
+    languages: [go]
+    message: Prefer `x.Value<type>Pointer()` to `aws.<type>(x.Value<type>())`
+    patterns:
+      - pattern: aws.$TYPE($X.$VALFUNC())
+      - metavariable-comparison:
+          metavariable: $VALFUNC
+          comparison: re.match("\AValue", str($VALFUNC))
+    fix: $X.$VALFUNCPointer()
+    severity: WARNING
+
+  - id: manual-expander-functions
+    languages: [go]
+    message: Prefer `flex.Expand` to manually creating expand functions
+    paths:
+      exclude:
+        - internal/framework/flex/
+        # TODO: Remove the following exclusions
+        - internal/service/appfabric/ingestion_destination.go
+        - internal/service/auditmanager/assessment.go
+        - internal/service/auditmanager/control.go
+        - internal/service/auditmanager/framework.go
+        - internal/service/batch/job_queue.go
+        - internal/service/cognitoidp/user_pool_client.go
+        - internal/service/lexv2models/bot.go
+        - internal/service/lexv2models/bot_locale.go
+        - internal/service/lightsail/flex.go
+        - internal/service/opensearchserverless/security_config.go
+        - internal/service/quicksight/iam_policy_assignment.go
+        - internal/service/quicksight/refresh_schedule.go
+        - internal/service/securitylake/subscriber.go
+        - internal/service/securitylake/subscriber_notification.go
+        - internal/service/ssmcontacts/rotation.go
+        - internal/service/ssoadmin/application.go
+        - internal/service/ssoadmin/trusted_token_issuer.go
+        - internal/service/verifiedpermissions/schema.go
+    patterns:
+      - pattern: func $FUNC(ctx context.Context, ...)
+      - metavariable-comparison:
+          metavariable: $FUNC
+          comparison: re.match("expand\w+", str($FUNC))
+      - pattern-not-inside: |
+          import ("github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema")
+          ...
+    severity: WARNING
+
+  - id: manual-flattener-functions
+    languages: [go]
+    message: Prefer `flex.Flatten` to manually creating flatten functions
+    paths:
+      exclude:
+        - internal/framework/flex/
+        # TODO: Remove the following exclusions
+        - internal/service/appconfig/environment.go
+        - internal/service/appfabric/ingestion_destination.go
+        - internal/service/auditmanager/assessment.go
+        - internal/service/auditmanager/control.go
+        - internal/service/auditmanager/framework.go
+        - internal/service/batch/job_queue.go
+        - internal/service/cognitoidp/user_pool_client.go
+        - internal/service/datazone/domain.go
+        - internal/service/datazone/environment_blueprint_configuration.go
+        - internal/service/ec2/vpc_security_group_ingress_rule.go
+        - internal/service/emr/supported_instance_types_data_source.go
+        - internal/service/lexv2models/bot.go
+        - internal/service/lexv2models/bot_locale.go
+        - internal/service/medialive/multiplex_program.go
+        - internal/service/networkfirewall/tls_inspection_configuration.go
+        - internal/service/opensearchserverless/security_config.go
+        - internal/service/quicksight/iam_policy_assignment.go
+        - internal/service/quicksight/refresh_schedule.go
+        - internal/service/securitylake/subscriber.go
+        - internal/service/servicequotas/templates_data_source.go
+        - internal/service/ssmcontacts/rotation.go
+        - internal/service/ssmcontacts/rotation_data_source.go
+        - internal/service/ssoadmin/application.go
+        - internal/service/ssoadmin/application_providers_data_source.go
+        - internal/service/ssoadmin/trusted_token_issuer.go
+        - internal/service/verifiedpermissions/identity_source.go
+        - internal/service/verifiedpermissions/schema.go
+    patterns:
+      - pattern: func $FUNC(ctx context.Context, ...)
+      - metavariable-comparison:
+          metavariable: $FUNC
+          comparison: re.match("flatten\w+", str($FUNC))
+      - pattern-not-inside: |
+          import ("github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema")
+          ...
+    severity: WARNING

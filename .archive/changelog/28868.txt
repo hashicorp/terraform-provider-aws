@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_iam_role_policy: Fixed issue that could result in "inconsistent final plan" errors
+```
+
+```release-note:bug
+resource/aws_iam_group_policy: Fixed issue that could result in "inconsistent final plan" errors
+```
+
+```release-note:bug
+resource/aws_iam_role: Fixed issue that could result in "inconsistent final plan" errors
+```
+
+```release-note:bug
+resource/aws_iam_user_policy: Fixed issue that could result in "inconsistent final plan" errors
+```

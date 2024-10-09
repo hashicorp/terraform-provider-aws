@@ -1,0 +1,16 @@
+```release-note:bug
+resource/aws_rds_cluster: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately
+```
+
+```release-note:bug
+resource/aws_rds_cluster_instance: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately
+```
+
+```release-note:bug
+resource/aws_rds_instance: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately
+```
+
+```release-note:bug
+resource/aws_rds_cluster: Send `db_instance_parameter_group_name` on all modify requests when set 
+```
+

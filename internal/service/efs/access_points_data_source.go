@@ -1,32 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceAccessPoints() *schema.Resource {
+// @SDKDataSource("aws_efs_access_points", name="Access Point")
+func dataSourceAccessPoints() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAccessPointsRead,
+		ReadWithoutTimeout: dataSourceAccessPointsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
-				Type:     schema.TypeSet,
+			names.AttrARNs: {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"ids": {
-				Type:     schema.TypeSet,
+			names.AttrIDs: {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -34,50 +42,49 @@ func DataSourceAccessPoints() *schema.Resource {
 	}
 }
 
-func dataSourceAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	fileSystemId := d.Get("file_system_id").(string)
+	fileSystemID := d.Get(names.AttrFileSystemID).(string)
 	input := &efs.DescribeAccessPointsInput{
-		FileSystemId: aws.String(fileSystemId),
+		FileSystemId: aws.String(fileSystemID),
 	}
 
-	var accessPoints []*efs.AccessPointDescription
-
-	err := conn.DescribeAccessPointsPages(input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		accessPoints = append(accessPoints, page.AccessPoints...)
-
-		return !lastPage
-	})
+	output, err := findAccessPointDescriptions(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EFS Access Points for File System (%s): %w", fileSystemId, err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Access Points: %s", err)
 	}
 
-	if len(accessPoints) == 0 {
-		return fmt.Errorf("no matching EFS Access Points for File System (%s) found", fileSystemId)
+	var accessPointIDs, arns []string
+
+	for _, v := range output {
+		accessPointIDs = append(accessPointIDs, aws.ToString(v.AccessPointId))
+		arns = append(arns, aws.ToString(v.AccessPointArn))
 	}
 
-	d.SetId(fileSystemId)
+	d.SetId(fileSystemID)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrIDs, accessPointIDs)
 
-	var arns, ids []string
+	return diags
+}
 
-	for _, accessPoint := range accessPoints {
-		arns = append(arns, aws.StringValue(accessPoint.AccessPointArn))
-		ids = append(ids, aws.StringValue(accessPoint.AccessPointId))
+func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]awstypes.AccessPointDescription, error) {
+	var output []awstypes.AccessPointDescription
+
+	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.AccessPoints...)
 	}
 
-	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
-	}
-
-	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
-
-	return nil
+	return output, nil
 }

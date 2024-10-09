@@ -1,145 +1,143 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDomainPolicy() *schema.Resource {
+// @SDKResource("aws_elasticsearch_domain_policy", name="Domain Policy")
+func resourceDomainPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainPolicyUpsert,
-		Read:   resourceDomainPolicyRead,
-		Update: resourceDomainPolicyUpsert,
-		Delete: resourceDomainPolicyDelete,
+		CreateWithoutTimeout: resourceDomainPolicyUpsert,
+		ReadWithoutTimeout:   resourceDomainPolicyRead,
+		UpdateWithoutTimeout: resourceDomainPolicyUpsert,
+		DeleteWithoutTimeout: resourceDomainPolicyDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			"access_policies": {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"access_policies": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
-func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	name := d.Get("domain_name").(string)
-	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(name),
-	})
+func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
+
+	domainName := d.Get(names.AttrDomainName).(string)
+	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Elasticsearch Domain %q not found, removing", name)
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", out)
-
-	ds := out.DomainStatus
-	d.Set("access_policies", ds.AccessPolicies)
-
-	return nil
-}
-
-func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	domainName := d.Get("domain_name").(string)
-	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
+	input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+		AccessPolicies: aws.String(policy),
 		DomainName:     aws.String(domainName),
-		AccessPolicies: aws.String(d.Get("access_policies").(string)),
-	})
+	}
+
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateElasticsearchDomainConfig(ctx, input)
+		}, "A change/update is in progress")
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	d.SetId("esd-policy-" + domainName)
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(50*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if !*out.DomainStatus.Processing {
-			return nil
-		}
-
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err == nil && !*out.DomainStatus.Processing {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error upserting Elasticsearch domain policy: %s", err)
+	if d.IsNewResource() {
+		d.SetId("esd-policy-" + domainName)
 	}
 
-	return resourceDomainPolicyRead(d, meta)
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceDomainPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName:     aws.String(d.Get("domain_name").(string)),
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elasticsearch Domain Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain Policy (%s): %s", d.Id(), err)
+	}
+
+	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.ToString(ds.AccessPolicies))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set("access_policies", policies)
+
+	return diags
+}
+
+func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
+
+	log.Printf("[DEBUG] Deleting Elasticsearch Domain Policy: %s", d.Id())
+	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		AccessPolicies: aws.String(""),
+		DomainName:     aws.String(d.Get(names.AttrDomainName).(string)),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for Elasticsearch domain policy %q to be deleted", d.Get("domain_name").(string))
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
 
-		if !*out.DomainStatus.Processing {
-			return nil
-		}
-
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for policy to be deleted", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		out, err := conn.DescribeElasticsearchDomain(input)
-		if err == nil && !*out.DomainStatus.Processing {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting Elasticsearch domain policy: %s", err)
-	}
-	return nil
+	return diags
 }

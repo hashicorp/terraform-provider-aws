@@ -1,43 +1,49 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccKMSCiphertext_Resource_basic(t *testing.T) {
+func TestAccKMSCiphertext_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceCiphertextConfig_basic,
+				Config: testAccCiphertextConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
-						"aws_kms_ciphertext.foo", "ciphertext_blob"),
+						"aws_kms_ciphertext.test", "ciphertext_blob"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccKMSCiphertext_Resource_validate(t *testing.T) {
-	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
-	resourceName := "aws_kms_ciphertext.foo"
+func TestAccKMSCiphertext_validate(t *testing.T) {
+	ctx := acctest.Context(t)
+	kmsSecretsDataSource := "data.aws_kms_secrets.test"
+	resourceName := "aws_kms_ciphertext.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceCiphertextConfig_validate,
+				Config: testAccCiphertextConfig_validate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "ciphertext_blob"),
 					resource.TestCheckResourceAttrPair(resourceName, "plaintext", kmsSecretsDataSource, "plaintext.plaintext"),
@@ -47,18 +53,19 @@ func TestAccKMSCiphertext_Resource_validate(t *testing.T) {
 	})
 }
 
-func TestAccKMSCiphertext_ResourceValidate_withContext(t *testing.T) {
-	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
-	resourceName := "aws_kms_ciphertext.foo"
+func TestAccKMSCiphertext_Validate_withContext(t *testing.T) {
+	ctx := acctest.Context(t)
+	kmsSecretsDataSource := "data.aws_kms_secrets.test"
+	resourceName := "aws_kms_ciphertext.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceCiphertextConfig_validate_withContext,
+				Config: testAccCiphertextConfig_validateContext,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "ciphertext_blob"),
 					resource.TestCheckResourceAttrPair(resourceName, "plaintext", kmsSecretsDataSource, "plaintext.plaintext"),
@@ -68,47 +75,47 @@ func TestAccKMSCiphertext_ResourceValidate_withContext(t *testing.T) {
 	})
 }
 
-const testAccResourceCiphertextConfig_basic = `
-resource "aws_kms_key" "foo" {
+const testAccCiphertextConfig_basic = `
+resource "aws_kms_key" "test" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
   is_enabled  = true
 }
 
-resource "aws_kms_ciphertext" "foo" {
-  key_id = aws_kms_key.foo.key_id
+resource "aws_kms_ciphertext" "test" {
+  key_id = aws_kms_key.test.key_id
 
   plaintext = "Super secret data"
 }
 `
 
-const testAccResourceCiphertextConfig_validate = `
-resource "aws_kms_key" "foo" {
+const testAccCiphertextConfig_validate = `
+resource "aws_kms_key" "test" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
   is_enabled  = true
 }
 
-resource "aws_kms_ciphertext" "foo" {
-  key_id = aws_kms_key.foo.key_id
+resource "aws_kms_ciphertext" "test" {
+  key_id = aws_kms_key.test.key_id
 
   plaintext = "Super secret data"
 }
 
-data "aws_kms_secrets" "foo" {
+data "aws_kms_secrets" "test" {
   secret {
     name    = "plaintext"
-    payload = aws_kms_ciphertext.foo.ciphertext_blob
+    payload = aws_kms_ciphertext.test.ciphertext_blob
   }
 }
 `
 
-const testAccResourceCiphertextConfig_validate_withContext = `
-resource "aws_kms_key" "foo" {
+const testAccCiphertextConfig_validateContext = `
+resource "aws_kms_key" "test" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
   is_enabled  = true
 }
 
-resource "aws_kms_ciphertext" "foo" {
-  key_id = aws_kms_key.foo.key_id
+resource "aws_kms_ciphertext" "test" {
+  key_id = aws_kms_key.test.key_id
 
   plaintext = "Super secret data"
 
@@ -117,10 +124,10 @@ resource "aws_kms_ciphertext" "foo" {
   }
 }
 
-data "aws_kms_secrets" "foo" {
+data "aws_kms_secrets" "test" {
   secret {
     name    = "plaintext"
-    payload = aws_kms_ciphertext.foo.ciphertext_blob
+    payload = aws_kms_ciphertext.test.ciphertext_blob
 
     context = {
       name = "value"

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudwatch_log_group: Remove default value (`STANDARD`) for `log_group_class` argument and mark as Computed. This fixes `InvalidParameterException: Only Standard log class is supported` errors in AWS Regions other than AWS Commercial
+```
+
+```release-note:enhancement
+data-source/aws_cloudwatch_log_group: Add `log_group_class` attribute
+```

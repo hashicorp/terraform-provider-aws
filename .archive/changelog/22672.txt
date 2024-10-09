@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_ecs_cluster_capacity_providers
+```
+
+```release-note:bug
+resource/aws_ecs_cluster: Provide new resource `aws_ecs_cluster_capacity_providers` to avoid bugs using `capacity_providers` and `default_capacity_provider_strategy`, which arguments will be deprecated in a future version
+```

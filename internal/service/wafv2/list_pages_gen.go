@@ -5,22 +5,18 @@ package wafv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 )
 
-func listIPSetsPages(conn *wafv2.WAFV2, input *wafv2.ListIPSetsInput, fn func(*wafv2.ListIPSetsOutput, bool) bool) error {
-	return listIPSetsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listIPSetsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListIPSetsInput, fn func(*wafv2.ListIPSetsOutput, bool) bool) error {
+func listIPSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListIPSetsInput, fn func(*wafv2.ListIPSetsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListIPSetsWithContext(ctx, input)
+		output, err := conn.ListIPSets(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextMarker) == ""
+		lastPage := aws.ToString(output.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -29,19 +25,14 @@ func listIPSetsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, input *w
 	}
 	return nil
 }
-
-func listRegexPatternSetsPages(conn *wafv2.WAFV2, input *wafv2.ListRegexPatternSetsInput, fn func(*wafv2.ListRegexPatternSetsOutput, bool) bool) error {
-	return listRegexPatternSetsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listRegexPatternSetsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListRegexPatternSetsInput, fn func(*wafv2.ListRegexPatternSetsOutput, bool) bool) error {
+func listRegexPatternSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListRegexPatternSetsInput, fn func(*wafv2.ListRegexPatternSetsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListRegexPatternSetsWithContext(ctx, input)
+		output, err := conn.ListRegexPatternSets(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextMarker) == ""
+		lastPage := aws.ToString(output.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -50,19 +41,14 @@ func listRegexPatternSetsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2
 	}
 	return nil
 }
-
-func listRuleGroupsPages(conn *wafv2.WAFV2, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool) error {
-	return listRuleGroupsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listRuleGroupsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool) error {
+func listRuleGroupsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListRuleGroupsWithContext(ctx, input)
+		output, err := conn.ListRuleGroups(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextMarker) == ""
+		lastPage := aws.ToString(output.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -71,19 +57,14 @@ func listRuleGroupsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, inpu
 	}
 	return nil
 }
-
-func listWebACLsPages(conn *wafv2.WAFV2, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool) error {
-	return listWebACLsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listWebACLsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool) error {
+func listWebACLsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListWebACLsWithContext(ctx, input)
+		output, err := conn.ListWebACLs(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextMarker) == ""
+		lastPage := aws.ToString(output.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}

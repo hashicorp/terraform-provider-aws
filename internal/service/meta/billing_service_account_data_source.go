@@ -1,36 +1,72 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
-var billingAccountId = "386209384616"
+// @FrameworkDataSource(name="Billing Service Account")
+func newBillingServiceAccountDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &billingServiceAccountDataSource{}
 
-func DataSourceBillingServiceAccount() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceBillingServiceAccountRead,
+	return d, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
+type billingServiceAccountDataSource struct {
+	framework.DataSourceWithConfigure
+}
+
+func (*billingServiceAccountDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_billing_service_account"
+}
+
+func (d *billingServiceAccountDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceBillingServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	d.SetId(billingAccountId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "iam",
-		AccountID: billingAccountId,
-		Resource:  "root",
-	}.String()
-	d.Set("arn", arn)
+func (d *billingServiceAccountDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data billingServiceAccountDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	return nil
+	// See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
+	const billingAccountID = "386209384616"
+
+	arn := arn.ARN{
+		Partition: d.Meta().Partition,
+		Service:   "iam",
+		AccountID: billingAccountID,
+		Resource:  "root",
+	}
+	data.ARN = fwflex.StringValueToFrameworkLegacy(ctx, arn.String())
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, billingAccountID)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type billingServiceAccountDataSourceModel struct {
+	ARN types.String `tfsdk:"arn"`
+	ID  types.String `tfsdk:"id"`
 }

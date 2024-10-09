@@ -1,56 +1,69 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCEndpointSubnetAssociation_basic(t *testing.T) {
-	var vpce ec2.VpcEndpoint
+func TestAccVPCEndpointSubnetAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpce awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointSubnetAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointSubnetAssociationConfigBasic(rName),
+				Config: testAccVPCEndpointSubnetAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointSubnetAssociationExists(resourceName, &vpce),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName, &vpce),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccVPCEndpointSubnetAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccEC2VPCEndpointSubnetAssociation_disappears(t *testing.T) {
-	var vpce ec2.VpcEndpoint
+func TestAccVPCEndpointSubnetAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpce awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointSubnetAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointSubnetAssociationConfigBasic(rName),
+				Config: testAccVPCEndpointSubnetAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointSubnetAssociationExists(resourceName, &vpce),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpointSubnetAssociation(), resourceName),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName, &vpce),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointSubnetAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -58,56 +71,59 @@ func TestAccEC2VPCEndpointSubnetAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSubnetAssociation_multiple(t *testing.T) {
-	var vpce ec2.VpcEndpoint
+func TestAccVPCEndpointSubnetAssociation_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpce awstypes.VpcEndpoint
 	resourceName0 := "aws_vpc_endpoint_subnet_association.test.0"
 	resourceName1 := "aws_vpc_endpoint_subnet_association.test.1"
 	resourceName2 := "aws_vpc_endpoint_subnet_association.test.2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointSubnetAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointSubnetAssociationConfigMultiple(rName),
+				Config: testAccVPCEndpointSubnetAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointSubnetAssociationExists(resourceName0, &vpce),
-					testAccCheckVpcEndpointSubnetAssociationExists(resourceName1, &vpce),
-					testAccCheckVpcEndpointSubnetAssociationExists(resourceName2, &vpce),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName0, &vpce),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName1, &vpce),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName2, &vpce),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckVpcEndpointSubnetAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckVPCEndpointSubnetAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_endpoint_subnet_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_endpoint_subnet_association" {
+				continue
+			}
+
+			err := tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("VPC Endpoint Subnet Association %s still exists", rs.Primary.ID)
 		}
 
-		err := tfec2.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("VPC Endpoint Subnet Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVPCEndpointSubnetAssociationExists(ctx context.Context, n string, vpce *awstypes.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -118,15 +134,15 @@ func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		out, err := tfec2.FindVPCEndpointByID(conn, rs.Primary.Attributes["vpc_endpoint_id"])
+		out, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID])
 
 		if err != nil {
 			return err
 		}
 
-		err = tfec2.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		err = tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
 
 		if err != nil {
 			return err
@@ -138,7 +154,7 @@ func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 	}
 }
 
-func testAccVpcEndpointSubnetAssociationConfigBase(rName string) string {
+func testAccVPCEndpointSubnetAssociationConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -183,9 +199,9 @@ resource "aws_subnet" "test" {
 `, rName))
 }
 
-func testAccVpcEndpointSubnetAssociationConfigBasic(rName string) string {
+func testAccVPCEndpointSubnetAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointSubnetAssociationConfigBase(rName),
+		testAccVPCEndpointSubnetAssociationConfig_base(rName),
 		`
 resource "aws_vpc_endpoint_subnet_association" "test" {
   vpc_endpoint_id = aws_vpc_endpoint.test.id
@@ -194,9 +210,9 @@ resource "aws_vpc_endpoint_subnet_association" "test" {
 `)
 }
 
-func testAccVpcEndpointSubnetAssociationConfigMultiple(rName string) string {
+func testAccVPCEndpointSubnetAssociationConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointSubnetAssociationConfigBase(rName),
+		testAccVPCEndpointSubnetAssociationConfig_base(rName),
 		`
 resource "aws_vpc_endpoint_subnet_association" "test" {
   count = 3
@@ -205,4 +221,16 @@ resource "aws_vpc_endpoint_subnet_association" "test" {
   subnet_id       = aws_subnet.test[count.index].id
 }
 `)
+}
+
+func testAccVPCEndpointSubnetAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
+		return id, nil
+	}
 }

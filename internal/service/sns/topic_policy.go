@@ -1,133 +1,144 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTopicPolicy() *schema.Resource {
+// @SDKResource("aws_sns_topic_policy")
+func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicPolicyUpsert,
-		Read:   resourceTopicPolicyRead,
-		Update: resourceTopicPolicyUpsert,
-		Delete: resourceTopicPolicyDelete,
+		CreateWithoutTimeout: resourceTopicPolicyUpsert,
+		ReadWithoutTimeout:   resourceTopicPolicyRead,
+		UpdateWithoutTimeout: resourceTopicPolicyUpsert,
+		DeleteWithoutTimeout: resourceTopicPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrPolicy: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
 }
 
-func resourceTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	arn := d.Get("arn").(string)
-	req := sns.SetTopicAttributesInput{
-		TopicArn:       aws.String(arn),
-		AttributeName:  aws.String("Policy"),
-		AttributeValue: aws.String(d.Get("policy").(string)),
-	}
+func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	d.SetId(arn)
-
-	// Retry the update in the event of an eventually consistent style of
-	// error, where say an IAM resource is successfully created but not
-	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	conn := meta.(*conns.AWSClient).SNSConn
-	_, err := verify.RetryOnAWSCode("InvalidParameter", func() (interface{}, error) {
-		return conn.SetTopicAttributes(&req)
-	})
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
-	return resourceTopicPolicyRead(d, meta)
+	arn := d.Get(names.AttrARN).(string)
+	err = putTopicPolicy(ctx, conn, arn, policy)
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId(arn)
+	}
+
+	return append(diags, resourceTopicPolicyRead(ctx, d, meta)...)
 }
 
-func resourceTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
-		TopicArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+	attributes, err := findTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, d.Id())
+
+	var policy string
+
+	if err == nil {
+		policy = attributes[topicAttributeNamePolicy]
+
+		if policy == "" {
+			err = tfresource.NewEmptyResultError(d.Id())
 		}
-
-		return err
 	}
 
-	if attributeOutput.Attributes == nil {
-		log.Printf("[WARN] SNS Topic (%q) attributes not found (nil), removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SNS Topic Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
-	}
-	attrmap := attributeOutput.Attributes
-
-	policy, ok := attrmap["Policy"]
-	if !ok {
-		log.Printf("[WARN] SNS Topic (%q) policy not found in attributes, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return diags
 	}
 
-	d.Set("policy", policy)
-	d.Set("arn", attrmap["TopicArn"])
-	d.Set("owner", attrmap["Owner"])
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Policy (%s): %s", d.Id(), err)
+	}
 
-	return nil
+	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
+	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
+
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return diags
 }
 
-func resourceTopicPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	req := sns.SetTopicAttributesInput{
-		TopicArn:      aws.String(d.Id()),
-		AttributeName: aws.String("Policy"),
-		// It is impossible to delete a policy or set to empty
-		// (confirmed by AWS Support representative)
-		// so we instead set it back to the default one
-		AttributeValue: aws.String(buildDefaultSnsTopicPolicy(d.Id(), d.Get("owner").(string))),
+func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
+
+	// It is impossible to delete a policy or set to empty
+	// (confirmed by AWS Support representative)
+	// so we instead set it back to the default one.
+	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get(names.AttrOwner).(string)))
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
-	// Retry the update in the event of an eventually consistent style of
-	// error, where say an IAM resource is successfully created but not
-	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	log.Printf("[DEBUG] Resetting SNS Topic Policy to default: %s", req)
-	conn := meta.(*conns.AWSClient).SNSConn
-	_, err := verify.RetryOnAWSCode("InvalidParameter", func() (interface{}, error) {
-		return conn.SetTopicAttributes(&req)
-	})
-	return err
+	return sdkdiag.AppendFromErr(diags, err)
 }
 
-func buildDefaultSnsTopicPolicy(topicArn, accountId string) string {
+func defaultTopicPolicy(topicARN, accountID string) string {
 	return fmt.Sprintf(`{
   "Version": "2008-10-17",
   "Id": "__default_policy_ID",
@@ -149,14 +160,18 @@ func buildDefaultSnsTopicPolicy(topicArn, accountId string) string {
         "SNS:Publish",
         "SNS:Receive"
       ],
-      "Resource": "%s",
+      "Resource": %[1]q,
       "Condition": {
         "StringEquals": {
-          "AWS:SourceOwner": "%s"
+          "AWS:SourceOwner": %[2]q
         }
       }
     }
   ]
 }
-`, topicArn, accountId)
+`, topicARN, accountID)
+}
+
+func putTopicPolicy(ctx context.Context, conn *sns.Client, arn string, policy string) error {
+	return putTopicAttribute(ctx, conn, arn, topicAttributeNamePolicy, policy)
 }

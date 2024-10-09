@@ -1,0 +1,39 @@
+```release-note:bug
+data-source/aws_ecr_repository: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecr_repository: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_capacity_provider: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_cluster: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_service: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_task_definition: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_task_set: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_sns_topic: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+resource/aws_sqs_queue: Further refine tag error handling in ISO partitions
+```
+
+```release-note:bug
+data-source/aws_sqs_queue: Further refine tag error handling in ISO partitions
+```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_datasync_location_fsx_openzfs_file_system: Fix `setting protocol: Invalid address to set` errors
+```

@@ -21,16 +21,16 @@ data "aws_lambda_alias" "production" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `function_name` - (Required) Name of the aliased Lambda function.
 * `name` - (Required) Name of the Lambda alias.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) identifying the Lambda function alias.
+* `arn` - ARN identifying the Lambda function alias.
 * `description` - Description of alias.
 * `function_version` - Lambda function version which the alias uses.
-* `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway - to be used in aws_api_gateway_integration's `uri`.
+* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in aws_api_gateway_integration's `uri`.

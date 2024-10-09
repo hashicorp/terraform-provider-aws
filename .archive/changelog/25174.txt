@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_parameter: Allow `Intelligent-Tiering` to upgrade to `Advanced` tier as needed.
+```

@@ -1,85 +1,172 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSInstanceDataSource_basic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_db_instance.test"
+	resourceName := "aws_db_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig(rInt),
+				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "address"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "allocated_storage"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "auto_minor_version_upgrade"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "db_instance_class"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "db_name"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "db_subnet_group"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "endpoint"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "engine"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "hosted_zone_id"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "master_username"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "port"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "multi_az"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0"),
-					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "enabled_cloudwatch_logs_exports.1"),
-					resource.TestCheckResourceAttrPair("data.aws_db_instance.bar", "resource_id", "aws_db_instance.bar", "resource_id"),
-					resource.TestCheckResourceAttrPair("data.aws_db_instance.bar", "tags.%", "aws_db_instance.bar", "tags.%"),
-					resource.TestCheckResourceAttrPair("data.aws_db_instance.bar", "tags.Environment", "aws_db_instance.bar", "tags.Environment"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enabled_cloudwatch_logs_exports.#", resourceName, "enabled_cloudwatch_logs_exports.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIOPS, resourceName, names.AttrIOPS),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, names.AttrUsername),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_allocated_storage", resourceName, "max_allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_throughput", resourceName, "storage_throughput"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageType, resourceName, names.AttrStorageType),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_db_instance.test"
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_ec2Classic(rInt),
+				Config: testAccInstanceDataSourceConfig_managedMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_db_instance.bar", "db_subnet_group", ""),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIOPS, resourceName, names.AttrIOPS),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, names.AttrUsername),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.kms_key_id", resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_arn", resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_status", resourceName, "master_user_secret.0.secret_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_throughput", resourceName, "storage_throughput"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageType, resourceName, names.AttrStorageType),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
 	})
 }
 
-func testAccInstanceDataSourceConfig(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = "mariadb"
-  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t3.small"]
+func TestAccRDSInstanceDataSource_matchTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_db_instance.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_matchTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enabled_cloudwatch_logs_exports.#", resourceName, "enabled_cloudwatch_logs_exports.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIOPS, resourceName, names.AttrIOPS),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, names.AttrUsername),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_allocated_storage", resourceName, "max_allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_throughput", resourceName, "storage_throughput"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageType, resourceName, names.AttrStorageType),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
 }
 
-resource "aws_db_instance" "bar" {
-  identifier = "datasource-test-terraform-%d"
-
-  allocated_storage = 10
-  engine            = data.aws_rds_orderable_db_instance.test.engine
-  instance_class    = data.aws_rds_orderable_db_instance.test.instance_class
-  name              = "baz"
-  password          = "barbarbarbar"
-  username          = "foo"
-
+func testAccInstanceDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 10
   backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_engine_version.default.engine
+  engine_version          = data.aws_rds_engine_version.default.version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  password                = "avoid-plaintext-passwords"
   skip_final_snapshot     = true
+  username                = "tfacctest"
+  max_allocated_storage   = 100
 
   enabled_cloudwatch_logs_exports = [
     "audit",
@@ -87,43 +174,80 @@ resource "aws_db_instance" "bar" {
   ]
 
   tags = {
-    Environment = "test"
+    Name = %[1]q
   }
 }
 
-data "aws_db_instance" "bar" {
-  db_instance_identifier = aws_db_instance.bar.identifier
+data "aws_db_instance" "test" {
+  db_instance_identifier = aws_db_instance.test.identifier
 }
-`, rInt)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_ec2Classic(rInt int) string {
+func testAccInstanceDataSourceConfig_managedMasterPassword(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = "mysql"
-  engine_version             = "5.6.41"
-  preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
+resource "aws_db_instance" "test" {
+  allocated_storage           = 10
+  backup_retention_period     = 0
+  db_subnet_group_name        = aws_db_subnet_group.test.name
+  engine                      = data.aws_rds_engine_version.default.engine
+  engine_version              = data.aws_rds_engine_version.default.version
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  manage_master_user_password = true
+  db_name                     = "test"
+  skip_final_snapshot         = true
+  username                    = "tfacctest"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_db_instance" "bar" {
-  identifier           = "foobarbaz-test-terraform-%[1]d"
-  allocated_storage    = 10
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  name                 = "baz"
-  password             = "barbarbarbar"
-  username             = "foo"
-  publicly_accessible  = true
-  security_group_names = ["default"]
-  parameter_group_name = "default.mysql5.6"
-  skip_final_snapshot  = true
+data "aws_db_instance" "test" {
+  db_instance_identifier = aws_db_instance.test.identifier
+}
+`, rName))
 }
 
-data "aws_db_instance" "bar" {
-  db_instance_identifier = aws_db_instance.bar.identifier
+func testAccInstanceDataSourceConfig_matchTags(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 10
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_engine_version.default.engine
+  engine_version          = data.aws_rds_engine_version.default.version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  username                = "tfacctest"
+  max_allocated_storage   = 100
+
+  enabled_cloudwatch_logs_exports = [
+    "audit",
+    "error",
+  ]
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rInt))
+
+data "aws_db_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_db_instance.test]
+}
+`, rName))
 }

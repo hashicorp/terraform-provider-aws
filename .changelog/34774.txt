@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appmesh_virtual_node: Remove limit of 50 `backend`s per virtual node
+```

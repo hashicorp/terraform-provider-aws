@@ -1,144 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
-	var snapshot ec2.Snapshot
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotCopyConfig,
+				Config: testAccEBSSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
-	var snapshot ec2.Snapshot
-	resourceName := "aws_ebs_snapshot_copy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSSnapshotCopyTags1Config("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccEBSSnapshotCopyTags2Config("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccEBSSnapshotCopyTags1Config("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
-	var snapshot ec2.Snapshot
-	resourceName := "aws_ebs_snapshot_copy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSSnapshotCopyWithDescriptionConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "description", "Copy Snapshot Acceptance Test"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2EBSSnapshotCopy_withRegions(t *testing.T) {
-	var providers []*schema.Provider
-	var snapshot ec2.Snapshot
-	resourceName := "aws_ebs_snapshot_copy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckMultipleRegion(t, 2)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckEbsSnapshotCopyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSSnapshotCopyWithRegionsConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-				),
-			},
-		},
-	})
-
-}
-
-func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
-	var snapshot ec2.Snapshot
-	kmsKeyResourceName := "aws_kms_key.test"
-	resourceName := "aws_ebs_snapshot_copy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSSnapshotCopyWithKMSConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`snapshot/snap-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -146,20 +41,22 @@ func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
-	var snapshot ec2.Snapshot
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotCopyConfig,
+				Config: testAccEBSSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshotCopy(), resourceName),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,79 +64,144 @@ func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_copy.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ebs_snapshot_copy" {
-			continue
-		}
-
-		resp, err := conn.DescribeSnapshots(&ec2.DescribeSnapshotsInput{
-			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
-		})
-
-		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
-			continue
-		}
-
-		if err == nil {
-			for _, snapshot := range resp.Snapshots {
-				if aws.StringValue(snapshot.SnapshotId) == rs.Primary.ID {
-					return fmt.Errorf("EBS Snapshot still exists")
-				}
-			}
-		}
-
-		return err
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				Config: testAccEBSSnapshotCopyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccEBSSnapshotCopyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckEbsSnapshotCopyExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_copy.test"
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DescribeSnapshotsInput{
-			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		output, err := conn.DescribeSnapshots(input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || len(output.Snapshots) == 0 {
-			return fmt.Errorf("Error finding EC2 Snapshot %s", rs.Primary.ID)
-		}
-
-		*v = *output.Snapshots[0]
-
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyConfig_description(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Copy Snapshot Acceptance Test"),
+				),
+			},
+		},
+	})
 }
 
-const testAccEBSSnapshotCopyConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
+func TestAccEC2EBSSnapshotCopy_withRegions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_copy.test"
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyConfig_regions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+				),
+			},
+		},
+	})
 }
 
+func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_ebs_snapshot_copy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyConfig_kms(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSSnapshotCopy_storageTier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_copy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyConfig_storageTier(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEBSSnapshotCopyBaseConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {
@@ -251,140 +213,82 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
 
   tags = {
-    Name = "testAccEBSSnapshotCopyConfig"
+    Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccEBSSnapshotCopyConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), `
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
 }
-`
-
-func testAccEBSSnapshotCopyTags1Config(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+`)
 }
 
-data "aws_region" "current" {
-}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
+func testAccEBSSnapshotCopyConfig_storageTier(rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
+resource "aws_ebs_snapshot_copy" "test" {
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.current.name
+  storage_tier       = "archive"
 
   tags = {
-    Name = "testAccEBSSnapshotCopyConfig"
+    Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccEBSSnapshotCopyConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
 
   tags = {
-    Name = "testAccEBSSnapshotCopyConfig"
-    "%s" = "%s"
+    %[1]q = %[2]q
   }
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
-func testAccEBSSnapshotCopyTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_region" "current" {
-}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyConfig"
-  }
-}
-
+func testAccEBSSnapshotCopyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
 
   tags = {
-    Name = "testAccEBSSnapshotCopyConfig"
-    "%s" = "%s"
-    "%s" = "%s"
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-const testAccEBSSnapshotCopyWithDescriptionConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_region" "current" {}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
-  }
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id   = aws_ebs_volume.test.id
-  description = "EBS Snapshot Acceptance Test"
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
-  }
-}
-
+func testAccEBSSnapshotCopyConfig_description(rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   description        = "Copy Snapshot Acceptance Test"
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
 
   tags = {
-    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
+    Name = %[1]q
   }
 }
-`
+`, rName))
+}
 
-var testAccEBSSnapshotCopyWithRegionsConfig = acctest.ConfigAlternateRegionProvider() + `
+func testAccEBSSnapshotCopyConfig_regions(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 data "aws_availability_zones" "alternate_available" {
   provider = "awsalternate"
-  state    = "available"
+
+  state = "available"
 
   filter {
     name   = "opt-in-status"
@@ -402,7 +306,7 @@ resource "aws_ebs_volume" "test" {
   size              = 1
 
   tags = {
-    Name = "testAccEBSSnapshotCopyWithRegionsConfig"
+    Name = %[1]q
   }
 }
 
@@ -411,7 +315,7 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
 
   tags = {
-    Name = "testAccEBSSnapshotCopyWithRegionsConfig"
+    Name = %[1]q
   }
 }
 
@@ -420,43 +324,17 @@ resource "aws_ebs_snapshot_copy" "test" {
   source_region      = data.aws_region.alternate.name
 
   tags = {
-    Name = "testAccEBSSnapshotCopyWithRegionsConfig"
+    Name = %[1]q
   }
 }
-`
-
-const testAccEBSSnapshotCopyWithKMSConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+`, rName))
 }
 
-data "aws_region" "current" {}
-
+func testAccEBSSnapshotCopyConfig_kms(rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "testAccEBSSnapshotCopyWithKMSConfig"
+  description             = %[1]q
   deletion_window_in_days = 7
-}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithKMSConfig"
-  }
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithKMSConfig"
-  }
 }
 
 resource "aws_ebs_snapshot_copy" "test" {
@@ -466,7 +344,8 @@ resource "aws_ebs_snapshot_copy" "test" {
   kms_key_id         = aws_kms_key.test.arn
 
   tags = {
-    Name = "testAccEBSSnapshotCopyWithKMSConfig"
+    Name = %[1]q
   }
 }
-`
+`, rName))
+}

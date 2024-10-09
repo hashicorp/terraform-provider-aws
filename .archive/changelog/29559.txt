@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicecatalog_provisioned_product: Fix to allow `outputs` to be `Computed` when the resource changes
+```

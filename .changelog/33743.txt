@@ -1,0 +1,4 @@
+
+```release-note:bug
+resource/aws_vpc_endpoint: Set `dns_options.dns_record_ip_type` to `Computed` to prevent diffs
+```

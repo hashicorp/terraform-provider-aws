@@ -1,1335 +1,1503 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
-	"fmt"
+	"context"
+	"log"
+	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTopicRule() *schema.Resource {
+// @SDKResource("aws_iot_topic_rule", name="Topic Rule")
+// @Tags(identifierAttribute="arn")
+func resourceTopicRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicRuleCreate,
-		Read:   resourceTopicRuleRead,
-		Update: resourceTopicRuleUpdate,
-		Delete: resourceTopicRuleDelete,
+		CreateWithoutTimeout: resourceTopicRuleCreate,
+		ReadWithoutTimeout:   resourceTopicRuleRead,
+		UpdateWithoutTimeout: resourceTopicRuleUpdate,
+		DeleteWithoutTimeout: resourceTopicRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudwatch_alarm": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			topicRuleErrorActionExactlyOneOf := []string{
+				"error_action.0.cloudwatch_alarm",
+				"error_action.0.cloudwatch_logs",
+				"error_action.0.cloudwatch_metric",
+				"error_action.0.dynamodb",
+				"error_action.0.dynamodbv2",
+				"error_action.0.elasticsearch",
+				"error_action.0.firehose",
+				"error_action.0.http",
+				"error_action.0.iot_analytics",
+				"error_action.0.iot_events",
+				"error_action.0.kafka",
+				"error_action.0.kinesis",
+				"error_action.0.lambda",
+				"error_action.0.republish",
+				"error_action.0.s3",
+				"error_action.0.sns",
+				"error_action.0.sqs",
+				"error_action.0.step_functions",
+				"error_action.0.timestream",
+			}
+
+			timestreamDimensionResource := func() *schema.Resource {
+				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"alarm_name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"state_reason": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"state_value": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
-						},
-					},
-				},
-			},
-			"cloudwatch_metric": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metric_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"metric_namespace": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"metric_timestamp": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidUTCTimestamp,
-						},
-						"metric_unit": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"metric_value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"dynamodb": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hash_key_field": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"hash_key_value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"hash_key_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"operation": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"DELETE",
-								"INSERT",
-								"UPDATE",
-							}, false),
-						},
-						"payload_field": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"range_key_field": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"range_key_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"range_key_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"table_name": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"dynamodbv2": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"put_item": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"table_name": {
-										Type:     schema.TypeString,
-										Required: true,
+				"cloudwatch_alarm": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarm_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"state_reason": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"state_value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
+							},
+						},
+					},
+				},
+				names.AttrCloudWatchLogs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrLogGroupName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"cloudwatch_metric": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMetricName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"metric_namespace": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"metric_timestamp": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
+							},
+							"metric_unit": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"metric_value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"dynamodb": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hash_key_field": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"hash_key_value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"hash_key_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"operation": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"DELETE",
+									"INSERT",
+									"UPDATE",
+								}, false),
+							},
+							"payload_field": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"range_key_field": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"range_key_value": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"range_key_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"dynamodbv2": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"put_item": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrTableName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"elasticsearch": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"endpoint": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validTopicRuleElasticsearchEndpoint,
-						},
-						"id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"index": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"firehose": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delivery_stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"separator": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTopicRuleFirehoseSeparator,
-						},
-					},
-				},
-			},
-			"iot_analytics": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+				"elasticsearch": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEndpoint: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validTopicRuleElasticsearchEndpoint,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"index": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"iot_events": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"message_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Required: true,
 				},
-			},
-			"kinesis": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"partition_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"lambda": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"function_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validTopicRuleName,
-			},
-			"republish": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"qos": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntBetween(0, 1),
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"s3": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"step_functions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"execution_name_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"state_machine_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"sns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_format": {
-							Type:     schema.TypeString,
-							Default:  iot.MessageFormatRaw,
-							Optional: true,
-						},
-						"target_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"sql": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sql_version": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sqs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"queue_url": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"use_base64": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"error_action": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_alarm": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alarm_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"state_reason": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"state_value": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
+				"error_action": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_alarm": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alarm_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"state_reason": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"state_value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
+										},
 									},
 								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"cloudwatch_metric": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"metric_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metric_namespace": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metric_timestamp": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidUTCTimestamp,
-									},
-									"metric_unit": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metric_value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+							names.AttrCloudWatchLogs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"batch_mode": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										names.AttrLogGroupName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"dynamodb": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"hash_key_field": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"hash_key_value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"hash_key_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"operation": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"DELETE",
-											"INSERT",
-											"UPDATE",
-										}, false),
-									},
-									"payload_field": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"range_key_field": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"range_key_value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"range_key_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"table_name": {
-										Type:     schema.TypeString,
-										Required: true,
+							"cloudwatch_metric": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMetricName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metric_namespace": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metric_timestamp": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidUTCTimestamp,
+										},
+										"metric_unit": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metric_value": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
+							"dynamodb": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hash_key_field": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"hash_key_value": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"hash_key_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"operation": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"DELETE",
+												"INSERT",
+												"UPDATE",
+											}, false),
+										},
+										"payload_field": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"range_key_field": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"range_key_value": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"range_key_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrTableName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 							},
-						},
-						"dynamodbv2": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"put_item": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"table_name": {
-													Type:     schema.TypeString,
-													Required: true,
+							"dynamodbv2": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"put_item": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrTableName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"elasticsearch": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEndpoint: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validTopicRuleElasticsearchEndpoint,
+										},
+										names.AttrID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"index": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"firehose": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"batch_mode": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"delivery_stream_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"separator": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validTopicRuleFirehoseSeparator,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"http": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"confirmation_url": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.IsURLWithHTTPS,
+										},
+										"http_header": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										names.AttrURL: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.IsURLWithHTTPS,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"iot_analytics": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"batch_mode": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"channel_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"iot_events": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"batch_mode": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"input_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"message_id": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"kafka": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"client_properties": {
+											Type:     schema.TypeMap,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrDestinationARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrHeader: {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"partition": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"topic": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"kinesis": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"partition_key": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"stream_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"lambda": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrFunctionARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"republish": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"qos": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      0,
+											ValidateFunc: validation.IntBetween(0, 1),
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"topic": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"s3": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"canned_acl": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CannedAccessControlList](),
+										},
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"sns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"message_format": {
+											Type:     schema.TypeString,
+											Default:  awstypes.MessageFormatRaw,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrTargetARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"sqs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"queue_url": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"use_base64": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"step_functions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"execution_name_prefix": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"state_machine_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"timestream": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDatabaseName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"dimension": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem:     timestreamDimensionResource(),
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrTableName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"timestamp": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrUnit: {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.StringInSlice([]string{
+															"SECONDS",
+															"MILLISECONDS",
+															"MICROSECONDS",
+															"NANOSECONDS",
+														}, false),
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
 									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
 								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"elasticsearch": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validTopicRuleElasticsearchEndpoint,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"index": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"delivery_stream_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"separator": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validTopicRuleFirehoseSeparator,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"iot_analytics": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"channel_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"iot_events": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"input_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"message_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"kinesis": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"partition_key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"stream_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"lambda": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"function_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"republish": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"qos": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0,
-										ValidateFunc: validation.IntBetween(0, 1),
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"topic": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"s3": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"key": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"step_functions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"execution_name_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"state_machine_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"sns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"message_format": {
-										Type:     schema.TypeString,
-										Default:  iot.MessageFormatRaw,
-										Optional: true,
-									},
-									"target_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"sqs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"queue_url": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"use_base64": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 							},
 						},
 					},
 				},
-			},
+				"firehose": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"delivery_stream_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"separator": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validTopicRuleFirehoseSeparator,
+							},
+						},
+					},
+				},
+				"http": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"confirmation_url": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							"http_header": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							names.AttrURL: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+						},
+					},
+				},
+				"iot_analytics": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"channel_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"iot_events": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"input_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"message_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"kafka": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"client_properties": {
+								Type:     schema.TypeMap,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrDestinationARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrHeader: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"partition": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"topic": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"kinesis": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"partition_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"stream_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"lambda": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFunctionARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validTopicRuleName,
+				},
+				"republish": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"qos": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntBetween(0, 1),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"topic": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"s3": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"canned_acl": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CannedAccessControlList](),
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"sns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"message_format": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  awstypes.MessageFormatRaw,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrTargetARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"sql": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"sql_version": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"sqs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"queue_url": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"use_base64": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"step_functions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"execution_name_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"state_machine_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"timestream": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"dimension": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     timestreamDimensionResource(),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"timestamp": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrUnit: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"SECONDS",
+												"MILLISECONDS",
+												"MICROSECONDS",
+												"NANOSECONDS",
+											}, false),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	ruleName := d.Get("name").(string)
-
+	ruleName := d.Get(names.AttrName).(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(tags.IgnoreAWS().UrlQueryString()),
-		TopicRulePayload: expandIotTopicRulePayload(d),
+		Tags:             aws.String(KeyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
+		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		_, err = conn.CreateTopicRule(input)
-
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "unable to perform: sts:AssumeRole on resource") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "unable to assume role (sts:AssumeRole) on resource") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateTopicRule(input)
-	}
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateTopicRule(ctx, input)
+		})
 
 	if err != nil {
-		return fmt.Errorf("error creating IoT Topic Rule (%s): %w", ruleName, err)
+		return sdkdiag.AppendErrorf(diags, "creating IoT Topic Rule (%s): %s", ruleName, err)
 	}
 
 	d.SetId(ruleName)
 
-	return resourceTopicRuleRead(d, meta)
+	return append(diags, resourceTopicRuleRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	input := &iot.GetTopicRuleInput{
-		RuleName: aws.String(d.Id()),
+	output, err := findTopicRuleByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Topic Rule %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-
-	out, err := conn.GetTopicRule(input)
 
 	if err != nil {
-		return fmt.Errorf("error getting IoT Topic Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Topic Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.RuleArn)
-	d.Set("name", out.Rule.RuleName)
-	d.Set("description", out.Rule.Description)
-	d.Set("enabled", !aws.BoolValue(out.Rule.RuleDisabled))
-	d.Set("sql", out.Rule.Sql)
-	d.Set("sql_version", out.Rule.AwsIotSqlVersion)
+	d.Set(names.AttrARN, output.RuleArn)
+	d.Set(names.AttrName, output.Rule.RuleName)
+	d.Set(names.AttrDescription, output.Rule.Description)
+	d.Set(names.AttrEnabled, !aws.ToBool(output.Rule.RuleDisabled))
+	d.Set("sql", output.Rule.Sql)
+	d.Set("sql_version", output.Rule.AwsIotSqlVersion)
 
-	tags, err := ListTags(conn, aws.StringValue(out.RuleArn))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
+	if err := d.Set("cloudwatch_alarm", flattenCloudWatchAlarmActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_alarm: %s", err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set(names.AttrCloudWatchLogs, flattenCloudWatchLogsActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_logs: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+	if err := d.Set("cloudwatch_metric", flattenCloudWatchMetricActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_metric: %s", err)
 	}
 
-	if err := d.Set("cloudwatch_alarm", flattenIotCloudWatchAlarmActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_alarm: %w", err)
+	if err := d.Set("dynamodb", flattenDynamoDBActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting dynamodb: %s", err)
 	}
 
-	if err := d.Set("cloudwatch_metric", flattenIotCloudwatchMetricActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_metric: %w", err)
+	if err := d.Set("dynamodbv2", flattenDynamoDBv2Actions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting dynamodbv2: %s", err)
 	}
 
-	if err := d.Set("dynamodb", flattenIotDynamoDbActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting dynamodb: %w", err)
+	if err := d.Set("elasticsearch", flattenElasticsearchActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting elasticsearch: %s", err)
 	}
 
-	if err := d.Set("dynamodbv2", flattenIotDynamoDbv2Actions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting dynamodbv2: %w", err)
+	if err := d.Set("firehose", flattenFirehoseActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting firehose: %s", err)
 	}
 
-	if err := d.Set("elasticsearch", flattenIotElasticsearchActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting elasticsearch: %w", err)
+	if err := d.Set("http", flattenHTTPActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting http: %s", err)
 	}
 
-	if err := d.Set("firehose", flattenIotFirehoseActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting firehose: %w", err)
+	if err := d.Set("iot_analytics", flattenAnalyticsActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting iot_analytics: %s", err)
 	}
 
-	if err := d.Set("iot_analytics", flattenIotIotAnalyticsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting iot_analytics: %w", err)
+	if err := d.Set("iot_events", flattenEventsActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting iot_events: %s", err)
 	}
 
-	if err := d.Set("iot_events", flattenIotIotEventsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting iot_events: %w", err)
+	if err := d.Set("kafka", flattenKafkaActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kafka: %s", err)
 	}
 
-	if err := d.Set("kinesis", flattenIotKinesisActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting kinesis: %w", err)
+	if err := d.Set("kinesis", flattenKinesisActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kinesis: %s", err)
 	}
 
-	if err := d.Set("lambda", flattenIotLambdaActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting lambda: %w", err)
+	if err := d.Set("lambda", flattenLambdaActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lambda: %s", err)
 	}
 
-	if err := d.Set("republish", flattenIotRepublishActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting republish: %w", err)
+	if err := d.Set("republish", flattenRepublishActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting republish: %s", err)
 	}
 
-	if err := d.Set("s3", flattenIotS3Actions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting s3: %w", err)
+	if err := d.Set("s3", flattenS3Actions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3: %s", err)
 	}
 
-	if err := d.Set("sns", flattenIotSnsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting sns: %w", err)
+	if err := d.Set("sns", flattenSNSActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sns: %s", err)
 	}
 
-	if err := d.Set("sqs", flattenIotSqsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting sqs: %w", err)
+	if err := d.Set("sqs", flattenSQSActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sqs: %s", err)
 	}
 
-	if err := d.Set("step_functions", flattenIotStepFunctionsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting step_functions: %w", err)
+	if err := d.Set("step_functions", flattenStepFunctionsActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting step_functions: %s", err)
 	}
 
-	if err := d.Set("error_action", flattenIotErrorAction(out.Rule.ErrorAction)); err != nil {
-		return fmt.Errorf("error setting error_action: %w", err)
+	if err := d.Set("timestream", flattenTimestreamActions(output.Rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting timestream: %s", err)
 	}
 
-	return nil
+	if err := d.Set("error_action", flattenErrorAction(output.Rule.ErrorAction)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting error_action: %s", err)
+	}
+
+	return diags
 }
 
-func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	if d.HasChanges(
-		"cloudwatch_alarm",
-		"cloudwatch_metric",
-		"description",
-		"dynamodb",
-		"dynamodbv2",
-		"elasticsearch",
-		"enabled",
-		"error_action",
-		"firehose",
-		"iot_analytics",
-		"iot_events",
-		"kinesis",
-		"lambda",
-		"republish",
-		"s3",
-		"step_functions",
-		"sns",
-		"sql",
-		"sql_version",
-		"sqs",
-	) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iot.ReplaceTopicRuleInput{
-			RuleName:         aws.String(d.Get("name").(string)),
-			TopicRulePayload: expandIotTopicRulePayload(d),
+			RuleName:         aws.String(d.Id()),
+			TopicRulePayload: expandTopicRulePayload(d),
 		}
 
-		_, err := conn.ReplaceTopicRule(input)
+		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.ReplaceTopicRule(ctx, input)
+			})
 
 		if err != nil {
-			return fmt.Errorf("error updating IoT Topic Rule (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "replacing IoT Topic Rule (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
-		}
-	}
-
-	return resourceTopicRuleRead(d, meta)
+	return append(diags, resourceTopicRuleRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceTopicRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	input := &iot.DeleteTopicRuleInput{
+	log.Printf("[INFO] Deleting IoT Topic Rule: %s", d.Id())
+	_, err := conn.DeleteTopicRule(ctx, &iot.DeleteTopicRuleInput{
 		RuleName: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteTopicRule(input)
+	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting IoT Topic Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Topic Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandIotPutItemInput(tfList []interface{}) *iot.PutItemInput {
+func findTopicRuleByName(ctx context.Context, conn *iot.Client, name string) (*iot.GetTopicRuleOutput, error) {
+	// GetTopicRule returns unhelpful errors such as
+	//	"An error occurred (UnauthorizedException) when calling the GetTopicRule operation: Access to topic rule 'xxxxxxxx' was denied"
+	// when querying for a rule that doesn't exist.
+	inputL := &iot.ListTopicRulesInput{}
+	var rule *awstypes.TopicRuleListItem
+
+	pages := iot.NewListTopicRulesPaginator(conn, inputL)
+pageLoop:
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Rules {
+			if aws.ToString(v.RuleName) == name {
+				rule = &v
+				break pageLoop
+			}
+		}
+	}
+
+	if rule == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	inputG := &iot.GetTopicRuleInput{
+		RuleName: aws.String(name),
+	}
+
+	output, err := conn.GetTopicRule(ctx, inputG)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: inputG,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(inputG)
+	}
+
+	return output, nil
+}
+
+func expandPutItemInput(tfList []interface{}) *awstypes.PutItemInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.PutItemInput{}
+	apiObject := &awstypes.PutItemInput{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTableName].(string); ok && v != "" {
 		apiObject.TableName = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotCloudwatchAlarmAction(tfList []interface{}) *iot.CloudwatchAlarmAction {
+func expandCloudWatchAlarmAction(tfList []interface{}) *awstypes.CloudwatchAlarmAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.CloudwatchAlarmAction{}
+	apiObject := &awstypes.CloudwatchAlarmAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["alarm_name"].(string); ok && v != "" {
 		apiObject.AlarmName = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -1344,15 +1512,38 @@ func expandIotCloudwatchAlarmAction(tfList []interface{}) *iot.CloudwatchAlarmAc
 	return apiObject
 }
 
-func expandIotCloudwatchMetricAction(tfList []interface{}) *iot.CloudwatchMetricAction {
+func expandCloudWatchLogsAction(tfList []interface{}) *awstypes.CloudwatchLogsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.CloudwatchMetricAction{}
+	apiObject := &awstypes.CloudwatchLogsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["metric_name"].(string); ok && v != "" {
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchMetricAction(tfList []interface{}) *awstypes.CloudwatchMetricAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CloudwatchMetricAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
 		apiObject.MetricName = aws.String(v)
 	}
 
@@ -1372,19 +1563,19 @@ func expandIotCloudwatchMetricAction(tfList []interface{}) *iot.CloudwatchMetric
 		apiObject.MetricValue = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotDynamoDBAction(tfList []interface{}) *iot.DynamoDBAction {
+func expandDynamoDBAction(tfList []interface{}) *awstypes.DynamoDBAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.DynamoDBAction{}
+	apiObject := &awstypes.DynamoDBAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["hash_key_field"].(string); ok && v != "" {
@@ -1392,7 +1583,7 @@ func expandIotDynamoDBAction(tfList []interface{}) *iot.DynamoDBAction {
 	}
 
 	if v, ok := tfMap["hash_key_type"].(string); ok && v != "" {
-		apiObject.HashKeyType = aws.String(v)
+		apiObject.HashKeyType = awstypes.DynamoKeyType(v)
 	}
 
 	if v, ok := tfMap["hash_key_value"].(string); ok && v != "" {
@@ -1412,56 +1603,56 @@ func expandIotDynamoDBAction(tfList []interface{}) *iot.DynamoDBAction {
 	}
 
 	if v, ok := tfMap["range_key_type"].(string); ok && v != "" {
-		apiObject.RangeKeyType = aws.String(v)
+		apiObject.RangeKeyType = awstypes.DynamoKeyType(v)
 	}
 
 	if v, ok := tfMap["range_key_value"].(string); ok && v != "" {
 		apiObject.RangeKeyValue = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTableName].(string); ok && v != "" {
 		apiObject.TableName = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotDynamoDBv2Action(tfList []interface{}) *iot.DynamoDBv2Action {
+func expandDynamoDBv2Action(tfList []interface{}) *awstypes.DynamoDBv2Action {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.DynamoDBv2Action{}
+	apiObject := &awstypes.DynamoDBv2Action{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["put_item"].([]interface{}); ok {
-		apiObject.PutItem = expandIotPutItemInput(v)
+		apiObject.PutItem = expandPutItemInput(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotElasticsearchAction(tfList []interface{}) *iot.ElasticsearchAction {
+func expandElasticsearchAction(tfList []interface{}) *awstypes.ElasticsearchAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.ElasticsearchAction{}
+	apiObject := &awstypes.ElasticsearchAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["endpoint"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEndpoint].(string); ok && v != "" {
 		apiObject.Endpoint = aws.String(v)
 	}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		apiObject.Id = aws.String(v)
 	}
 
@@ -1469,30 +1660,34 @@ func expandIotElasticsearchAction(tfList []interface{}) *iot.ElasticsearchAction
 		apiObject.Index = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotFirehoseAction(tfList []interface{}) *iot.FirehoseAction {
+func expandFirehoseAction(tfList []interface{}) *awstypes.FirehoseAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.FirehoseAction{}
+	apiObject := &awstypes.FirehoseAction{}
 	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["delivery_stream_name"].(string); ok && v != "" {
 		apiObject.DeliveryStreamName = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -1503,32 +1698,76 @@ func expandIotFirehoseAction(tfList []interface{}) *iot.FirehoseAction {
 	return apiObject
 }
 
-func expandIotIotAnalyticsAction(tfList []interface{}) *iot.IotAnalyticsAction {
+func expandHTTPAction(tfList []interface{}) *awstypes.HttpAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.IotAnalyticsAction{}
+	apiObject := &awstypes.HttpAction{}
 	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
+		apiObject.Url = aws.String(v)
+	}
+
+	if v, ok := tfMap["confirmation_url"].(string); ok && v != "" {
+		apiObject.ConfirmationUrl = aws.String(v)
+	}
+
+	if v, ok := tfMap["http_header"].([]interface{}); ok {
+		headerObjs := []awstypes.HttpActionHeader{}
+		for _, val := range v {
+			if m, ok := val.(map[string]interface{}); ok {
+				headerObj := awstypes.HttpActionHeader{}
+				if v, ok := m[names.AttrKey].(string); ok && v != "" {
+					headerObj.Key = aws.String(v)
+				}
+				if v, ok := m[names.AttrValue].(string); ok && v != "" {
+					headerObj.Value = aws.String(v)
+				}
+				headerObjs = append(headerObjs, headerObj)
+			}
+		}
+		apiObject.Headers = headerObjs
+	}
+
+	return apiObject
+}
+
+func expandAnalyticsAction(tfList []interface{}) *awstypes.IotAnalyticsAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.IotAnalyticsAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["channel_name"].(string); ok && v != "" {
 		apiObject.ChannelName = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotIotEventsAction(tfList []interface{}) *iot.IotEventsAction {
+func expandEventsAction(tfList []interface{}) *awstypes.IotEventsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.IotEventsAction{}
+	apiObject := &awstypes.IotEventsAction{}
 	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["input_name"].(string); ok && v != "" {
 		apiObject.InputName = aws.String(v)
@@ -1538,26 +1777,85 @@ func expandIotIotEventsAction(tfList []interface{}) *iot.IotEventsAction {
 		apiObject.MessageId = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotKinesisAction(tfList []interface{}) *iot.KinesisAction {
+func expandKafkaAction(tfList []interface{}) *awstypes.KafkaAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.KinesisAction{}
+	apiObject := &awstypes.KafkaAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["client_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.ClientProperties = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap[names.AttrDestinationARN].(string); ok && v != "" {
+		apiObject.DestinationArn = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
+		apiObject.Headers = expandKafkaHeader(v)
+	}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap["partition"].(string); ok && v != "" {
+		apiObject.Partition = aws.String(v)
+	}
+
+	if v, ok := tfMap["topic"].(string); ok && v != "" {
+		apiObject.Topic = aws.String(v)
+	}
+
+	if reflect.DeepEqual(&awstypes.KafkaAction{}, apiObject) {
+		return nil
+	}
+
+	return apiObject
+}
+
+func expandKafkaHeader(tfList []interface{}) []awstypes.KafkaActionHeader {
+	var apiObjects []awstypes.KafkaActionHeader
+	for _, elem := range tfList {
+		tfMap := elem.(map[string]interface{})
+
+		apiObject := awstypes.KafkaActionHeader{}
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			apiObject.Key = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandKinesisAction(tfList []interface{}) *awstypes.KinesisAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.KinesisAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["partition_key"].(string); ok && v != "" {
 		apiObject.PartitionKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -1568,34 +1866,34 @@ func expandIotKinesisAction(tfList []interface{}) *iot.KinesisAction {
 	return apiObject
 }
 
-func expandIotLambdaAction(tfList []interface{}) *iot.LambdaAction {
+func expandLambdaAction(tfList []interface{}) *awstypes.LambdaAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.LambdaAction{}
+	apiObject := &awstypes.LambdaAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["function_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFunctionARN].(string); ok && v != "" {
 		apiObject.FunctionArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotRepublishAction(tfList []interface{}) *iot.RepublishAction {
+func expandRepublishAction(tfList []interface{}) *awstypes.RepublishAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.RepublishAction{}
+	apiObject := &awstypes.RepublishAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["qos"].(int); ok {
-		apiObject.Qos = aws.Int64(int64(v))
+		apiObject.Qos = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -1606,65 +1904,69 @@ func expandIotRepublishAction(tfList []interface{}) *iot.RepublishAction {
 	return apiObject
 }
 
-func expandIotS3Action(tfList []interface{}) *iot.S3Action {
+func expandS3Action(tfList []interface{}) *awstypes.S3Action {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.S3Action{}
+	apiObject := &awstypes.S3Action{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap["canned_acl"].(string); ok && v != "" {
+		apiObject.CannedAcl = awstypes.CannedAccessControlList(v)
+	}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotSnsAction(tfList []interface{}) *iot.SnsAction {
+func expandSNSAction(tfList []interface{}) *awstypes.SnsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.SnsAction{}
+	apiObject := &awstypes.SnsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["message_format"].(string); ok && v != "" {
-		apiObject.MessageFormat = aws.String(v)
+		apiObject.MessageFormat = awstypes.MessageFormat(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["target_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTargetARN].(string); ok && v != "" {
 		apiObject.TargetArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotSqsAction(tfList []interface{}) *iot.SqsAction {
+func expandSQSAction(tfList []interface{}) *awstypes.SqsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.SqsAction{}
+	apiObject := &awstypes.SqsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["queue_url"].(string); ok && v != "" {
 		apiObject.QueueUrl = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -1675,12 +1977,12 @@ func expandIotSqsAction(tfList []interface{}) *iot.SqsAction {
 	return apiObject
 }
 
-func expandIotStepFunctionsAction(tfList []interface{}) *iot.StepFunctionsAction {
+func expandStepFunctionsAction(tfList []interface{}) *awstypes.StepFunctionsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := &iot.StepFunctionsAction{}
+	apiObject := &awstypes.StepFunctionsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["execution_name_prefix"].(string); ok && v != "" {
@@ -1691,357 +1993,515 @@ func expandIotStepFunctionsAction(tfList []interface{}) *iot.StepFunctionsAction
 		apiObject.StateMachineName = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
-	var actions []*iot.Action
+func expandTimestreamAction(tfList []interface{}) *awstypes.TimestreamAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TimestreamAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
+		apiObject.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["dimension"].(*schema.Set); ok {
+		apiObject.Dimensions = expandTimestreamDimensions(v)
+	}
+
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrTableName].(string); ok && v != "" {
+		apiObject.TableName = aws.String(v)
+	}
+
+	if v, ok := tfMap["timestamp"].([]interface{}); ok {
+		apiObject.Timestamp = expandTimestreamTimestamp(v)
+	}
+
+	return apiObject
+}
+
+func expandTimestreamDimensions(tfSet *schema.Set) []awstypes.TimestreamDimension {
+	if tfSet == nil || tfSet.Len() == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.TimestreamDimension, tfSet.Len())
+	for i, elem := range tfSet.List() {
+		if tfMap, ok := elem.(map[string]interface{}); ok {
+			apiObject := awstypes.TimestreamDimension{}
+
+			if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+				apiObject.Name = aws.String(v)
+			}
+
+			if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+				apiObject.Value = aws.String(v)
+			}
+
+			apiObjects[i] = apiObject
+		}
+	}
+
+	return apiObjects
+}
+
+func expandTimestreamTimestamp(tfList []interface{}) *awstypes.TimestreamTimestamp {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TimestreamTimestamp{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
+		apiObject.Unit = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
+	var actions []awstypes.Action
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("cloudwatch_alarm").(*schema.Set).List() {
-		action := expandIotCloudwatchAlarmAction([]interface{}{tfMapRaw})
+		action := expandCloudWatchAlarmAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{CloudwatchAlarm: action})
+		actions = append(actions, awstypes.Action{CloudwatchAlarm: action})
+	}
+
+	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get(names.AttrCloudWatchLogs).(*schema.Set).List() {
+		action := expandCloudWatchLogsAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, awstypes.Action{CloudwatchLogs: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("cloudwatch_metric").(*schema.Set).List() {
-		action := expandIotCloudwatchMetricAction([]interface{}{tfMapRaw})
+		action := expandCloudWatchMetricAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{CloudwatchMetric: action})
+		actions = append(actions, awstypes.Action{CloudwatchMetric: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("dynamodb").(*schema.Set).List() {
-		action := expandIotDynamoDBAction([]interface{}{tfMapRaw})
+		action := expandDynamoDBAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{DynamoDB: action})
+		actions = append(actions, awstypes.Action{DynamoDB: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("dynamodbv2").(*schema.Set).List() {
-		action := expandIotDynamoDBv2Action([]interface{}{tfMapRaw})
+		action := expandDynamoDBv2Action([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{DynamoDBv2: action})
+		actions = append(actions, awstypes.Action{DynamoDBv2: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("elasticsearch").(*schema.Set).List() {
-		action := expandIotElasticsearchAction([]interface{}{tfMapRaw})
+		action := expandElasticsearchAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{Elasticsearch: action})
+		actions = append(actions, awstypes.Action{Elasticsearch: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("firehose").(*schema.Set).List() {
-		action := expandIotFirehoseAction([]interface{}{tfMapRaw})
+		action := expandFirehoseAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{Firehose: action})
+		actions = append(actions, awstypes.Action{Firehose: action})
+	}
+
+	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("http").(*schema.Set).List() {
+		action := expandHTTPAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, awstypes.Action{Http: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("iot_analytics").(*schema.Set).List() {
-		action := expandIotIotAnalyticsAction([]interface{}{tfMapRaw})
+		action := expandAnalyticsAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{IotAnalytics: action})
+		actions = append(actions, awstypes.Action{IotAnalytics: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("iot_events").(*schema.Set).List() {
-		action := expandIotIotEventsAction([]interface{}{tfMapRaw})
+		action := expandEventsAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{IotEvents: action})
+		actions = append(actions, awstypes.Action{IotEvents: action})
+	}
+
+	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("kafka").(*schema.Set).List() {
+		action := expandKafkaAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, awstypes.Action{Kafka: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("kinesis").(*schema.Set).List() {
-		action := expandIotKinesisAction([]interface{}{tfMapRaw})
+		action := expandKinesisAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{Kinesis: action})
+		actions = append(actions, awstypes.Action{Kinesis: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("lambda").(*schema.Set).List() {
-		action := expandIotLambdaAction([]interface{}{tfMapRaw})
+		action := expandLambdaAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{Lambda: action})
+		actions = append(actions, awstypes.Action{Lambda: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("republish").(*schema.Set).List() {
-		action := expandIotRepublishAction([]interface{}{tfMapRaw})
+		action := expandRepublishAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{Republish: action})
+		actions = append(actions, awstypes.Action{Republish: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("s3").(*schema.Set).List() {
-		action := expandIotS3Action([]interface{}{tfMapRaw})
+		action := expandS3Action([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{S3: action})
+		actions = append(actions, awstypes.Action{S3: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("sns").(*schema.Set).List() {
-		action := expandIotSnsAction([]interface{}{tfMapRaw})
+		action := expandSNSAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{Sns: action})
+		actions = append(actions, awstypes.Action{Sns: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("sqs").(*schema.Set).List() {
-		action := expandIotSqsAction([]interface{}{tfMapRaw})
+		action := expandSQSAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{Sqs: action})
+		actions = append(actions, awstypes.Action{Sqs: action})
 	}
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("step_functions").(*schema.Set).List() {
-		action := expandIotStepFunctionsAction([]interface{}{tfMapRaw})
+		action := expandStepFunctionsAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
 		}
 
-		actions = append(actions, &iot.Action{StepFunctions: action})
+		actions = append(actions, awstypes.Action{StepFunctions: action})
+	}
+
+	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("timestream").(*schema.Set).List() {
+		action := expandTimestreamAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, awstypes.Action{Timestream: action})
 	}
 
 	// Prevent sending empty Actions:
 	// - missing required field, CreateTopicRuleInput.TopicRulePayload.Actions
 	if len(actions) == 0 {
-		actions = []*iot.Action{}
+		actions = []awstypes.Action{}
 	}
 
-	var iotErrorAction *iot.Action
-	errorAction := d.Get("error_action").([]interface{})
-	if len(errorAction) > 0 {
+	var iotErrorAction *awstypes.Action
+	if errorAction := d.Get("error_action").([]interface{}); len(errorAction) > 0 {
 		for k, v := range errorAction[0].(map[string]interface{}) {
 			switch k {
 			case "cloudwatch_alarm":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotCloudwatchAlarmAction([]interface{}{tfMapRaw})
+					action := expandCloudWatchAlarmAction([]interface{}{tfMapRaw})
+
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{CloudwatchAlarm: action}
+					iotErrorAction = &awstypes.Action{CloudwatchAlarm: action}
+				}
+			case "cloudwatch_logs":
+				for _, tfMapRaw := range v.([]interface{}) {
+					action := expandCloudWatchLogsAction([]interface{}{tfMapRaw})
 
+					if action == nil {
+						continue
+					}
+
+					iotErrorAction = &awstypes.Action{CloudwatchLogs: action}
 				}
 			case "cloudwatch_metric":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotCloudwatchMetricAction([]interface{}{tfMapRaw})
+					action := expandCloudWatchMetricAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{CloudwatchMetric: action}
+					iotErrorAction = &awstypes.Action{CloudwatchMetric: action}
 				}
 			case "dynamodb":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotDynamoDBAction([]interface{}{tfMapRaw})
+					action := expandDynamoDBAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{DynamoDB: action}
+					iotErrorAction = &awstypes.Action{DynamoDB: action}
 				}
 			case "dynamodbv2":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotDynamoDBv2Action([]interface{}{tfMapRaw})
+					action := expandDynamoDBv2Action([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{DynamoDBv2: action}
+					iotErrorAction = &awstypes.Action{DynamoDBv2: action}
 				}
 			case "elasticsearch":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotElasticsearchAction([]interface{}{tfMapRaw})
+					action := expandElasticsearchAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{Elasticsearch: action}
+					iotErrorAction = &awstypes.Action{Elasticsearch: action}
 				}
 			case "firehose":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotFirehoseAction([]interface{}{tfMapRaw})
+					action := expandFirehoseAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{Firehose: action}
+					iotErrorAction = &awstypes.Action{Firehose: action}
+				}
+			case "http":
+				for _, tfMapRaw := range v.([]interface{}) {
+					action := expandHTTPAction([]interface{}{tfMapRaw})
+
+					if action == nil {
+						continue
+					}
+
+					iotErrorAction = &awstypes.Action{Http: action}
 				}
 			case "iot_analytics":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotIotAnalyticsAction([]interface{}{tfMapRaw})
+					action := expandAnalyticsAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{IotAnalytics: action}
+					iotErrorAction = &awstypes.Action{IotAnalytics: action}
 				}
 			case "iot_events":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotIotEventsAction([]interface{}{tfMapRaw})
+					action := expandEventsAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{IotEvents: action}
+					iotErrorAction = &awstypes.Action{IotEvents: action}
+				}
+			case "kafka":
+				for _, tfMapRaw := range v.([]interface{}) {
+					action := expandKafkaAction([]interface{}{tfMapRaw})
+
+					if action == nil {
+						continue
+					}
+
+					iotErrorAction = &awstypes.Action{Kafka: action}
 				}
 			case "kinesis":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotKinesisAction([]interface{}{tfMapRaw})
+					action := expandKinesisAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{Kinesis: action}
+					iotErrorAction = &awstypes.Action{Kinesis: action}
 				}
 			case "lambda":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotLambdaAction([]interface{}{tfMapRaw})
+					action := expandLambdaAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{Lambda: action}
+					iotErrorAction = &awstypes.Action{Lambda: action}
 				}
 			case "republish":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotRepublishAction([]interface{}{tfMapRaw})
+					action := expandRepublishAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{Republish: action}
+					iotErrorAction = &awstypes.Action{Republish: action}
 				}
 			case "s3":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotS3Action([]interface{}{tfMapRaw})
+					action := expandS3Action([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{S3: action}
+					iotErrorAction = &awstypes.Action{S3: action}
 				}
 			case "sns":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotSnsAction([]interface{}{tfMapRaw})
+					action := expandSNSAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{Sns: action}
+					iotErrorAction = &awstypes.Action{Sns: action}
 				}
 			case "sqs":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotSqsAction([]interface{}{tfMapRaw})
+					action := expandSQSAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{Sqs: action}
+					iotErrorAction = &awstypes.Action{Sqs: action}
 				}
 			case "step_functions":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotStepFunctionsAction([]interface{}{tfMapRaw})
+					action := expandStepFunctionsAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
 					}
 
-					iotErrorAction = &iot.Action{StepFunctions: action}
+					iotErrorAction = &awstypes.Action{StepFunctions: action}
+				}
+			case "timestream":
+				for _, tfMapRaw := range v.([]interface{}) {
+					action := expandTimestreamAction([]interface{}{tfMapRaw})
+
+					if action == nil {
+						continue
+					}
+
+					iotErrorAction = &awstypes.Action{Timestream: action}
 				}
 			}
 		}
 	}
 
-	return &iot.TopicRulePayload{
+	return &awstypes.TopicRulePayload{
 		Actions:          actions,
 		AwsIotSqlVersion: aws.String(d.Get("sql_version").(string)),
-		Description:      aws.String(d.Get("description").(string)),
-		RuleDisabled:     aws.Bool(!d.Get("enabled").(bool)),
-		Sql:              aws.String(d.Get("sql").(string)),
+		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		ErrorAction:      iotErrorAction,
+		RuleDisabled:     aws.Bool(!d.Get(names.AttrEnabled).(bool)),
+		Sql:              aws.String(d.Get("sql").(string)),
 	}
 }
 
-func flattenIotCloudwatchAlarmAction(apiObject *iot.CloudwatchAlarmAction) []interface{} {
+func flattenCloudWatchAlarmAction(apiObject *awstypes.CloudwatchAlarmAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2049,59 +2509,86 @@ func flattenIotCloudwatchAlarmAction(apiObject *iot.CloudwatchAlarmAction) []int
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.AlarmName; v != nil {
-		tfMap["alarm_name"] = aws.StringValue(v)
+		tfMap["alarm_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.StateReason; v != nil {
-		tfMap["state_reason"] = aws.StringValue(v)
+		tfMap["state_reason"] = aws.ToString(v)
 	}
 
 	if v := apiObject.StateValue; v != nil {
-		tfMap["state_value"] = aws.StringValue(v)
+		tfMap["state_value"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotCloudWatchAlarmActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenCloudWatchAlarmActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.CloudwatchAlarm; v != nil {
-			results = append(results, flattenIotCloudwatchAlarmAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.CloudwatchAlarm; v != nil {
+			tfList = append(tfList, flattenCloudWatchAlarmAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
+}
+
+func flattenCloudWatchLogsAction(apiObject *awstypes.CloudwatchLogsAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
+	}
+
+	if v := apiObject.RoleArn; v != nil {
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotCloudwatchMetricActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenCloudWatchLogsActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.CloudwatchMetric; v != nil {
-			results = append(results, flattenIotCloudwatchMetricAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.CloudwatchLogs; v != nil {
+			tfList = append(tfList, flattenCloudWatchLogsAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotCloudwatchMetricAction(apiObject *iot.CloudwatchMetricAction) []interface{} {
+// Legacy root attribute handling
+func flattenCloudWatchMetricActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if v := apiObject.CloudwatchMetric; v != nil {
+			tfList = append(tfList, flattenCloudWatchMetricAction(v)...)
+		}
+	}
+
+	return tfList
+}
+
+func flattenCloudWatchMetricAction(apiObject *awstypes.CloudwatchMetricAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2109,50 +2596,46 @@ func flattenIotCloudwatchMetricAction(apiObject *iot.CloudwatchMetricAction) []i
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.MetricName; v != nil {
-		tfMap["metric_name"] = aws.StringValue(v)
+		tfMap[names.AttrMetricName] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricNamespace; v != nil {
-		tfMap["metric_namespace"] = aws.StringValue(v)
+		tfMap["metric_namespace"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricTimestamp; v != nil {
-		tfMap["metric_timestamp"] = aws.StringValue(v)
+		tfMap["metric_timestamp"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricUnit; v != nil {
-		tfMap["metric_unit"] = aws.StringValue(v)
+		tfMap["metric_unit"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricValue; v != nil {
-		tfMap["metric_value"] = aws.StringValue(v)
+		tfMap["metric_value"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotDynamoDbActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenDynamoDBActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.DynamoDB; v != nil {
-			results = append(results, flattenIotDynamoDBAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.DynamoDB; v != nil {
+			tfList = append(tfList, flattenDynamoDBAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotDynamoDBAction(apiObject *iot.DynamoDBAction) []interface{} {
+func flattenDynamoDBAction(apiObject *awstypes.DynamoDBAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2160,66 +2643,58 @@ func flattenIotDynamoDBAction(apiObject *iot.DynamoDBAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.HashKeyField; v != nil {
-		tfMap["hash_key_field"] = aws.StringValue(v)
+		tfMap["hash_key_field"] = aws.ToString(v)
 	}
 
-	if v := apiObject.HashKeyType; v != nil {
-		tfMap["hash_key_type"] = aws.StringValue(v)
-	}
+	tfMap["hash_key_type"] = apiObject.HashKeyType
 
 	if v := apiObject.HashKeyValue; v != nil {
-		tfMap["hash_key_value"] = aws.StringValue(v)
+		tfMap["hash_key_value"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PayloadField; v != nil {
-		tfMap["payload_field"] = aws.StringValue(v)
+		tfMap["payload_field"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Operation; v != nil {
-		tfMap["operation"] = aws.StringValue(v)
+		tfMap["operation"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RangeKeyField; v != nil {
-		tfMap["range_key_field"] = aws.StringValue(v)
+		tfMap["range_key_field"] = aws.ToString(v)
 	}
 
-	if v := apiObject.RangeKeyType; v != nil {
-		tfMap["range_key_type"] = aws.StringValue(v)
-	}
+	tfMap["range_key_type"] = apiObject.RangeKeyType
 
 	if v := apiObject.RangeKeyValue; v != nil {
-		tfMap["range_key_value"] = aws.StringValue(v)
+		tfMap["range_key_value"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.TableName; v != nil {
-		tfMap["table_name"] = aws.StringValue(v)
+		tfMap[names.AttrTableName] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotDynamoDbv2Actions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenDynamoDBv2Actions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.DynamoDBv2; v != nil {
-			results = append(results, flattenIotDynamoDBv2Action(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.DynamoDBv2; v != nil {
+			tfList = append(tfList, flattenDynamoDBv2Action(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotDynamoDBv2Action(apiObject *iot.DynamoDBv2Action) []interface{} {
+func flattenDynamoDBv2Action(apiObject *awstypes.DynamoDBv2Action) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2227,34 +2702,30 @@ func flattenIotDynamoDBv2Action(apiObject *iot.DynamoDBv2Action) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.PutItem; v != nil {
-		tfMap["put_item"] = flattenIotPutItemInput(v)
+		tfMap["put_item"] = flattenPutItemInput(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotElasticsearchActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenElasticsearchActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.Elasticsearch; v != nil {
-			results = append(results, flattenIotElasticsearchAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Elasticsearch; v != nil {
+			tfList = append(tfList, flattenElasticsearchAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotElasticsearchAction(apiObject *iot.ElasticsearchAction) []interface{} {
+func flattenElasticsearchAction(apiObject *awstypes.ElasticsearchAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2262,159 +2733,265 @@ func flattenIotElasticsearchAction(apiObject *iot.ElasticsearchAction) []interfa
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.Endpoint; v != nil {
-		tfMap["endpoint"] = aws.StringValue(v)
+		tfMap[names.AttrEndpoint] = aws.ToString(v)
 	}
 
 	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.StringValue(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Index; v != nil {
-		tfMap["index"] = aws.StringValue(v)
+		tfMap["index"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotFirehoseActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenFirehoseActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.Firehose; v != nil {
-			results = append(results, flattenIotFirehoseAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Firehose; v != nil {
+			tfList = append(tfList, flattenFirehoseAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotFirehoseAction(apiObject *iot.FirehoseAction) []interface{} {
+func flattenFirehoseAction(apiObject *awstypes.FirehoseAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := make(map[string]interface{})
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.ToBool(v)
+	}
+
 	if v := apiObject.DeliveryStreamName; v != nil {
-		tfMap["delivery_stream_name"] = aws.StringValue(v)
+		tfMap["delivery_stream_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.Separator; v != nil {
-		tfMap["separator"] = aws.StringValue(v)
+		tfMap["separator"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotIotAnalyticsActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenHTTPActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.IotAnalytics; v != nil {
-			results = append(results, flattenIotIotAnalyticsAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Http; v != nil {
+			tfList = append(tfList, flattenHTTPAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotIotAnalyticsAction(apiObject *iot.IotAnalyticsAction) []interface{} {
+func flattenHTTPAction(apiObject *awstypes.HttpAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := make(map[string]interface{})
 
+	if v := apiObject.Url; v != nil {
+		tfMap[names.AttrURL] = aws.ToString(v)
+	}
+
+	if v := apiObject.ConfirmationUrl; v != nil {
+		tfMap["confirmation_url"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Headers; v != nil {
+		headers := []map[string]string{}
+
+		for _, h := range v {
+			m := map[string]string{
+				names.AttrKey:   aws.ToString(h.Key),
+				names.AttrValue: aws.ToString(h.Value),
+			}
+			headers = append(headers, m)
+		}
+		tfMap["http_header"] = headers
+	}
+
+	return []interface{}{tfMap}
+}
+
+// Legacy root attribute handling
+func flattenAnalyticsActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if v := apiObject.IotAnalytics; v != nil {
+			tfList = append(tfList, flattenAnalyticsAction(v)...)
+		}
+	}
+
+	return tfList
+}
+
+func flattenAnalyticsAction(apiObject *awstypes.IotAnalyticsAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.ToBool(v)
+	}
+
 	if v := apiObject.ChannelName; v != nil {
-		tfMap["channel_name"] = aws.StringValue(v)
+		tfMap["channel_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotIotEventsActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenEventsActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.IotEvents; v != nil {
-			results = append(results, flattenIotIotEventsAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.IotEvents; v != nil {
+			tfList = append(tfList, flattenEventsAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotIotEventsAction(apiObject *iot.IotEventsAction) []interface{} {
+func flattenEventsAction(apiObject *awstypes.IotEventsAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := make(map[string]interface{})
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.ToBool(v)
+	}
+
 	if v := apiObject.InputName; v != nil {
-		tfMap["input_name"] = aws.StringValue(v)
+		tfMap["input_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MessageId; v != nil {
-		tfMap["message_id"] = aws.StringValue(v)
+		tfMap["message_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotKinesisActions(actions []*iot.Action) []interface{} {
+func flattenKafkaActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Kafka; v != nil {
+			tfList = append(tfList, flattenKafkaAction(v)...)
+		}
+	}
+
+	return tfList
+}
+
+func flattenKafkaAction(apiObject *awstypes.KafkaAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.ClientProperties; v != nil {
+		tfMap["client_properties"] = aws.StringMap(v)
+	}
+
+	if v := apiObject.DestinationArn; v != nil {
+		tfMap[names.AttrDestinationARN] = aws.ToString(v)
+	}
+
+	if v := apiObject.Headers; v != nil {
+		tfMap[names.AttrHeader] = flattenKafkaHeaders(v)
+	}
+
+	if v := apiObject.Key; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
+	}
+
+	if v := apiObject.Partition; v != nil {
+		tfMap["partition"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Topic; v != nil {
+		tfMap["topic"] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKafkaHeaders(apiObjects []awstypes.KafkaActionHeader) []interface{} {
 	results := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
+
+		if v := apiObject.Key; v != nil {
+			tfMap[names.AttrKey] = aws.ToString(v)
 		}
 
-		if v := action.Kinesis; v != nil {
-			results = append(results, flattenIotKinesisAction(v)...)
+		if v := apiObject.Value; v != nil {
+			tfMap[names.AttrValue] = aws.ToString(v)
 		}
+		results = append(results, tfMap)
 	}
 
 	return results
 }
 
-func flattenIotKinesisAction(apiObject *iot.KinesisAction) []interface{} {
+// Legacy root attribute handling
+func flattenKinesisActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Kinesis; v != nil {
+			tfList = append(tfList, flattenKinesisAction(v)...)
+		}
+	}
+
+	return tfList
+}
+
+func flattenKinesisAction(apiObject *awstypes.KinesisAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2422,38 +2999,34 @@ func flattenIotKinesisAction(apiObject *iot.KinesisAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.PartitionKey; v != nil {
-		tfMap["partition_key"] = aws.StringValue(v)
+		tfMap["partition_key"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.StreamName; v != nil {
-		tfMap["stream_name"] = aws.StringValue(v)
+		tfMap["stream_name"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotLambdaActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenLambdaActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.Lambda; v != nil {
-			results = append(results, flattenIotLambdaAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Lambda; v != nil {
+			tfList = append(tfList, flattenLambdaAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotLambdaAction(apiObject *iot.LambdaAction) []interface{} {
+func flattenLambdaAction(apiObject *awstypes.LambdaAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2461,13 +3034,13 @@ func flattenIotLambdaAction(apiObject *iot.LambdaAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.FunctionArn; v != nil {
-		tfMap["function_arn"] = aws.StringValue(v)
+		tfMap[names.AttrFunctionARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenIotPutItemInput(apiObject *iot.PutItemInput) []interface{} {
+func flattenPutItemInput(apiObject *awstypes.PutItemInput) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2475,30 +3048,26 @@ func flattenIotPutItemInput(apiObject *iot.PutItemInput) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.TableName; v != nil {
-		tfMap["table_name"] = aws.StringValue(v)
+		tfMap[names.AttrTableName] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotRepublishActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenRepublishActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.Republish; v != nil {
-			results = append(results, flattenIotRepublishAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Republish; v != nil {
+			tfList = append(tfList, flattenRepublishAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotRepublishAction(apiObject *iot.RepublishAction) []interface{} {
+func flattenRepublishAction(apiObject *awstypes.RepublishAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2506,38 +3075,34 @@ func flattenIotRepublishAction(apiObject *iot.RepublishAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.Qos; v != nil {
-		tfMap["qos"] = aws.Int64Value(v)
+		tfMap["qos"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.Topic; v != nil {
-		tfMap["topic"] = aws.StringValue(v)
+		tfMap["topic"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotS3Actions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenS3Actions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.S3; v != nil {
-			results = append(results, flattenIotS3Action(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.S3; v != nil {
+			tfList = append(tfList, flattenS3Action(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotS3Action(apiObject *iot.S3Action) []interface{} {
+func flattenS3Action(apiObject *awstypes.S3Action) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2545,77 +3110,69 @@ func flattenIotS3Action(apiObject *iot.S3Action) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.StringValue(v)
+		tfMap[names.AttrBucketName] = aws.ToString(v)
 	}
 
+	tfMap["canned_acl"] = apiObject.CannedAcl
+
 	if v := apiObject.Key; v != nil {
-		tfMap["key"] = aws.StringValue(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotSnsActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenSNSActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.Sns; v != nil {
-			results = append(results, flattenIotSnsAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Sns; v != nil {
+			tfList = append(tfList, flattenSNSAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotSnsAction(apiObject *iot.SnsAction) []interface{} {
+func flattenSNSAction(apiObject *awstypes.SnsAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := make(map[string]interface{})
 
-	if v := apiObject.MessageFormat; v != nil {
-		tfMap["message_format"] = aws.StringValue(v)
-	}
+	tfMap["message_format"] = apiObject.MessageFormat
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.TargetArn; v != nil {
-		tfMap["target_arn"] = aws.StringValue(v)
+		tfMap[names.AttrTargetARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotSqsActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenSQSActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.Sqs; v != nil {
-			results = append(results, flattenIotSqsAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Sqs; v != nil {
+			tfList = append(tfList, flattenSQSAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotSqsAction(apiObject *iot.SqsAction) []interface{} {
+func flattenSQSAction(apiObject *awstypes.SqsAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2623,109 +3180,34 @@ func flattenIotSqsAction(apiObject *iot.SqsAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.QueueUrl; v != nil {
-		tfMap["queue_url"] = aws.StringValue(v)
+		tfMap["queue_url"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.UseBase64; v != nil {
-		tfMap["use_base64"] = aws.BoolValue(v)
+		tfMap["use_base64"] = aws.ToBool(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenIotStepFunctionsActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
+func flattenStepFunctionsActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.StepFunctions; v != nil {
-			results = append(results, flattenIotStepFunctionsAction(v)...)
+	for _, apiObject := range apiObjects {
+		if v := apiObject.StepFunctions; v != nil {
+			tfList = append(tfList, flattenStepFunctionsAction(v)...)
 		}
 	}
 
-	return results
+	return tfList
 }
 
-func flattenIotErrorAction(errorAction *iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	if errorAction == nil {
-		return results
-	}
-	input := []*iot.Action{errorAction}
-	if errorAction.CloudwatchAlarm != nil {
-		results = append(results, map[string]interface{}{"cloudwatch_alarm": flattenIotCloudWatchAlarmActions(input)})
-		return results
-	}
-	if errorAction.CloudwatchMetric != nil {
-		results = append(results, map[string]interface{}{"cloudwatch_metric": flattenIotCloudwatchMetricActions(input)})
-		return results
-	}
-	if errorAction.DynamoDB != nil {
-		results = append(results, map[string]interface{}{"dynamodb": flattenIotDynamoDbActions(input)})
-		return results
-	}
-	if errorAction.DynamoDBv2 != nil {
-		results = append(results, map[string]interface{}{"dynamodbv2": flattenIotDynamoDbv2Actions(input)})
-		return results
-	}
-	if errorAction.Elasticsearch != nil {
-		results = append(results, map[string]interface{}{"elasticsearch": flattenIotElasticsearchActions(input)})
-		return results
-	}
-	if errorAction.Firehose != nil {
-		results = append(results, map[string]interface{}{"firehose": flattenIotFirehoseActions(input)})
-		return results
-	}
-	if errorAction.IotAnalytics != nil {
-		results = append(results, map[string]interface{}{"iot_analytics": flattenIotIotAnalyticsActions(input)})
-		return results
-	}
-	if errorAction.IotEvents != nil {
-		results = append(results, map[string]interface{}{"iot_events": flattenIotIotEventsActions(input)})
-		return results
-	}
-	if errorAction.Kinesis != nil {
-		results = append(results, map[string]interface{}{"kinesis": flattenIotKinesisActions(input)})
-		return results
-	}
-	if errorAction.Lambda != nil {
-		results = append(results, map[string]interface{}{"lambda": flattenIotLambdaActions(input)})
-		return results
-	}
-	if errorAction.Republish != nil {
-		results = append(results, map[string]interface{}{"republish": flattenIotRepublishActions(input)})
-		return results
-	}
-	if errorAction.S3 != nil {
-		results = append(results, map[string]interface{}{"s3": flattenIotS3Actions(input)})
-		return results
-	}
-	if errorAction.Sns != nil {
-		results = append(results, map[string]interface{}{"sns": flattenIotSnsActions(input)})
-		return results
-	}
-	if errorAction.Sqs != nil {
-		results = append(results, map[string]interface{}{"sqs": flattenIotSqsActions(input)})
-		return results
-	}
-	if errorAction.StepFunctions != nil {
-		results = append(results, map[string]interface{}{"step_functions": flattenIotStepFunctionsActions(input)})
-		return results
-	}
-
-	return results
-}
-
-func flattenIotStepFunctionsAction(apiObject *iot.StepFunctionsAction) []interface{} {
+func flattenStepFunctionsAction(apiObject *awstypes.StepFunctionsAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2733,16 +3215,189 @@ func flattenIotStepFunctionsAction(apiObject *iot.StepFunctionsAction) []interfa
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.ExecutionNamePrefix; v != nil {
-		tfMap["execution_name_prefix"] = aws.StringValue(v)
+		tfMap["execution_name_prefix"] = aws.ToString(v)
 	}
 
 	if v := apiObject.StateMachineName; v != nil {
-		tfMap["state_machine_name"] = aws.StringValue(v)
+		tfMap["state_machine_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
+}
+
+// Legacy root attribute handling
+func flattenTimestreamActions(apiObjects []awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if v := apiObject.Timestream; v != nil {
+			tfList = append(tfList, flattenTimestreamAction(v)...)
+		}
+	}
+
+	return tfList
+}
+
+func flattenTimestreamAction(apiObject *awstypes.TimestreamAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.DatabaseName; v != nil {
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
+	}
+
+	if v := apiObject.Dimensions; v != nil {
+		tfMap["dimension"] = flattenTimestreamDimensions(v)
+	}
+
+	if v := apiObject.RoleArn; v != nil {
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
+	}
+
+	if v := apiObject.TableName; v != nil {
+		tfMap[names.AttrTableName] = aws.ToString(v)
+	}
+
+	if v := apiObject.Timestamp; v != nil {
+		tfMap["timestamp"] = flattenTimestreamTimestamp(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTimestreamDimensions(apiObjects []awstypes.TimestreamDimension) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	tfList := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
+
+		if v := apiObject.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
+		}
+
+		if v := apiObject.Value; v != nil {
+			tfMap[names.AttrValue] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenTimestreamTimestamp(apiObject *awstypes.TimestreamTimestamp) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Unit; v != nil {
+		tfMap[names.AttrUnit] = aws.ToString(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenErrorAction(apiObject *awstypes.Action) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	if apiObject == nil {
+		return nil
+	}
+
+	input := []awstypes.Action{*apiObject}
+	if apiObject.CloudwatchAlarm != nil {
+		tfList = append(tfList, map[string]interface{}{"cloudwatch_alarm": flattenCloudWatchAlarmActions(input)})
+		return tfList
+	}
+	if apiObject.CloudwatchLogs != nil {
+		tfList = append(tfList, map[string]interface{}{names.AttrCloudWatchLogs: flattenCloudWatchLogsActions(input)})
+		return tfList
+	}
+	if apiObject.CloudwatchMetric != nil {
+		tfList = append(tfList, map[string]interface{}{"cloudwatch_metric": flattenCloudWatchMetricActions(input)})
+		return tfList
+	}
+	if apiObject.DynamoDB != nil {
+		tfList = append(tfList, map[string]interface{}{"dynamodb": flattenDynamoDBActions(input)})
+		return tfList
+	}
+	if apiObject.DynamoDBv2 != nil {
+		tfList = append(tfList, map[string]interface{}{"dynamodbv2": flattenDynamoDBv2Actions(input)})
+		return tfList
+	}
+	if apiObject.Elasticsearch != nil {
+		tfList = append(tfList, map[string]interface{}{"elasticsearch": flattenElasticsearchActions(input)})
+		return tfList
+	}
+	if apiObject.Firehose != nil {
+		tfList = append(tfList, map[string]interface{}{"firehose": flattenFirehoseActions(input)})
+		return tfList
+	}
+	if apiObject.Http != nil {
+		tfList = append(tfList, map[string]interface{}{"http": flattenHTTPActions(input)})
+		return tfList
+	}
+	if apiObject.IotAnalytics != nil {
+		tfList = append(tfList, map[string]interface{}{"iot_analytics": flattenAnalyticsActions(input)})
+		return tfList
+	}
+	if apiObject.IotEvents != nil {
+		tfList = append(tfList, map[string]interface{}{"iot_events": flattenEventsActions(input)})
+		return tfList
+	}
+	if apiObject.Kafka != nil {
+		tfList = append(tfList, map[string]interface{}{"kafka": flattenKafkaActions(input)})
+		return tfList
+	}
+	if apiObject.Kinesis != nil {
+		tfList = append(tfList, map[string]interface{}{"kinesis": flattenKinesisActions(input)})
+		return tfList
+	}
+	if apiObject.Lambda != nil {
+		tfList = append(tfList, map[string]interface{}{"lambda": flattenLambdaActions(input)})
+		return tfList
+	}
+	if apiObject.Republish != nil {
+		tfList = append(tfList, map[string]interface{}{"republish": flattenRepublishActions(input)})
+		return tfList
+	}
+	if apiObject.S3 != nil {
+		tfList = append(tfList, map[string]interface{}{"s3": flattenS3Actions(input)})
+		return tfList
+	}
+	if apiObject.Sns != nil {
+		tfList = append(tfList, map[string]interface{}{"sns": flattenSNSActions(input)})
+		return tfList
+	}
+	if apiObject.Sqs != nil {
+		tfList = append(tfList, map[string]interface{}{"sqs": flattenSQSActions(input)})
+		return tfList
+	}
+	if apiObject.StepFunctions != nil {
+		tfList = append(tfList, map[string]interface{}{"step_functions": flattenStepFunctionsActions(input)})
+		return tfList
+	}
+	if apiObject.Timestream != nil {
+		tfList = append(tfList, map[string]interface{}{"timestream": flattenTimestreamActions(input)})
+		return tfList
+	}
+
+	return tfList
 }

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add `skip_destroy` argument
+```

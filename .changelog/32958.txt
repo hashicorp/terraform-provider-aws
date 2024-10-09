@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appstream_fleet: Retry ConcurrentModificationException errors during creation
+```

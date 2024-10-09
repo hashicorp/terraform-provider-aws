@@ -1,135 +1,302 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log"
-	"regexp"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(rds.EndpointsID, testAccErrorCheckSkipRDS)
-
+	acctest.RegisterServiceErrorCheckFunc(names.RDSServiceID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipRDS(t *testing.T) resource.ErrorCheckFunc {
+func testAccClusterImportStep(n string) resource.TestStep {
+	return resource.TestStep{
+		ResourceName:      n,
+		ImportState:       true,
+		ImportStateVerify: true,
+		ImportStateVerifyIgnore: []string{
+			names.AttrAllowMajorVersionUpgrade,
+			names.AttrApplyImmediately,
+			"cluster_members",
+			"db_instance_parameter_group_name",
+			"enable_global_write_forwarding",
+			"enable_local_write_forwarding",
+			"manage_master_user_password",
+			"master_password",
+			"master_user_secret_kms_key_id",
+			"skip_final_snapshot",
+		},
+	}
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"engine mode serverless you requested is currently unavailable",
 		"engine mode multimaster you requested is currently unavailable",
 		"requested engine version was not found or does not support parallelquery functionality",
 		"Backtrack is not enabled for the aurora engine",
 		"Read replica DB clusters are not available in this region for engine aurora",
+		"no matching RDS Reserved Instance Offering found",
 	)
 }
 
 func TestAccRDSCluster_basic(t *testing.T) {
-	var dbCluster rds.DBCluster
-	clusterName := sdkacctest.RandomWithPrefix("tf-aurora-cluster")
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(clusterName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", clusterName)),
-					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
+					resource.TestCheckNoResourceAttr(resourceName, "ca_certificate_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, "ca_certificate_valid_till"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, ""),
+					resource.TestCheckResourceAttr(resourceName, "domain_iam_role_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccRDSCluster_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_identifierGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBCluster
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrClusterIdentifier, "tf-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccRDSCluster_identifierPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBCluster
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierPrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrClusterIdentifier, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccRDSCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2, dbCluster3 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
-	var dbCluster1, dbCluster2 rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
-	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
-	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
-	engine := "aurora-postgresql"
-	engineVersion1 := "10.11"
-	engineVersion2 := "11.7"
+	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceNameUpgrade := "data.aws_rds_engine_version.upgrade"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_AllowMajorVersionUpgrade(rName, true, engine, engineVersion1),
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
 				),
 			},
+			testAccClusterImportStep(resourceName),
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
-			{
-				Config: testAccClusterConfig_AllowMajorVersionUpgrade(rName, true, engine, engineVersion2),
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, "version_actual"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceNameUpgrade := "data.aws_rds_engine_version.upgrade"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, "version_actual"),
 				),
 			},
 		},
@@ -137,38 +304,37 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *testing.T) {
-	var dbCluster1, dbCluster2 rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
-	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
-	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
-	engine := "aurora-postgresql"
-	engineVersion1 := "11.9"
-	engineVersion2 := "12.4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion1, true),
+				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, false, tfrds.ClusterEngineAuroraPostgreSQL, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion2, true),
+				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, tfrds.ClusterEngineAuroraPostgreSQL, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
 		},
@@ -176,52 +342,38 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T) {
-	var dbCluster1, dbCluster2 rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
-	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
-	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
-	engine := "aurora-postgresql"
-	engineVersion1 := "10.11"
-	engineVersion2 := "11.7"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion1, false),
+				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, false, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
+			testAccClusterImportStep(resourceName),
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
-			{
-				Config: testAccClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion2, false),
+				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
 		},
@@ -229,27 +381,28 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 }
 
 func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
-	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
-	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
-	engine := "aurora-postgresql"
-	engineVersion1 := "11"
+	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_MajorVersionOnly(rName, false, engine, engineVersion1),
+				Config: testAccClusterConfig_majorVersionOnly(rName, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
 				),
 			},
 			{
@@ -257,12 +410,14 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
 					"cluster_identifier_prefix",
+					"cluster_members",
 					"db_instance_parameter_group_name",
 					"enable_global_write_forwarding",
-					"engine_version",
+					"enable_local_write_forwarding",
+					names.AttrEngineVersion,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -271,21 +426,359 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_availabilityZones(t *testing.T) {
-	var dbCluster rds.DBCluster
+// https://github.com/hashicorp/terraform-provider-aws/issues/30605
+func TestAccRDSCluster_minorVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_AvailabilityZones(rName),
+				Config: testAccClusterConfig_minorVersion(rName, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_minorVersion(rName, tfrds.ClusterEngineAuroraPostgreSQL, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_availabilityZones(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_availabilityZones(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_availabilityZones_caCertificateIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_valid_till"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageType(rName, "io1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageType(rName, "io2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io2"),
+				),
+			},
+		},
+	})
+}
+
+// For backwards compatibility, the control plane should always return a blank string even if sending "aurora" as the storage type
+func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageTypeAurora := "aurora"
+	storageTypeEmpty := ""
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeAuroraIopt1(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageType := "aurora-iopt1"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageType),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageTypeEmpty := ""
+	storageTypeAuroraIOPT1 := "aurora-iopt1"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageTypeNotDefined(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
+				),
+			},
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeAuroraIOPT1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_allocatedStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_allocatedStorage(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
+				),
+			},
+		},
+	})
+}
+
+// Verify storage_type from aurora-iopt1 to aurora
+func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageTypeAuroraIOPT1 := "aurora-iopt1"
+	storageTypeAurora := "aurora"
+	storageTypeEmpty := ""
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeAuroraIOPT1),
+				),
+			},
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_iops(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_iops(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_instance_class"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, false), // guaranteed to be a different instance class because the intersection of instance class lists is empty
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_instance_class"),
 				),
 			},
 		},
@@ -293,26 +786,27 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 }
 
 func TestAccRDSCluster_backtrackWindow(t *testing.T) {
-	var dbCluster rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_BacktrackWindow(43200),
+				Config: testAccClusterConfig_backtrackWindow(43200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "43200"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_BacktrackWindow(86400),
+				Config: testAccClusterConfig_backtrackWindow(86400),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "86400"),
 				),
 			},
@@ -320,67 +814,22 @@ func TestAccRDSCluster_backtrackWindow(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_clusterIdentifierPrefix(t *testing.T) {
-	var v rds.DBCluster
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_ClusterIdentifierPrefix("tf-test-"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestMatchResourceAttr(
-						resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRDSCluster_dbSubnetGroupName(t *testing.T) {
-	var dbCluster rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SubnetGroupName(rName),
+				Config: testAccClusterConfig_subnetGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_s3Restore(t *testing.T) {
-	var v rds.DBCluster
-	resourceName := "aws_rds_cluster.test"
-	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uniqueId := sdkacctest.RandomWithPrefix("tf-acc-s3-import-test")
-	bucketPrefix := sdkacctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_s3Restore(bucket, bucketPrefix, uniqueId),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -388,25 +837,57 @@ func TestAccRDSCluster_s3Restore(t *testing.T) {
 }
 
 func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
-	var v rds.DBCluster
-	var c rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-	parentId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restore-seed-test")
-	restoredId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restored-test")
+	var sourceDBCluster, dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.test"
+	resourceName := "aws_rds_cluster.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_pointInTimeRestoreSource(parentId, restoredId),
+				Config: testAccClusterConfig_pointInTimeRestoreSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists("aws_rds_cluster.test", &v),
-					testAccCheckClusterExists("aws_rds_cluster.restored_pit", &c),
-					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "cluster_identifier", restoredId),
-					resource.TestCheckResourceAttrPair("aws_rds_cluster.restored_pit", "engine", "aws_rds_cluster.test", "engine"),
+					testAccCheckClusterExists(ctx, sourceResourceName, &sourceDBCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, sourceResourceName, names.AttrEngine),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_pointInTimeRestoreViaResourceID(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var sourceDBCluster, dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.test"
+	resourceName := "aws_rds_cluster.restore"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_pointInTimeRestoreSourceViaResourceID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, sourceResourceName, &sourceDBCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, sourceResourceName, names.AttrEngine),
 				),
 			},
 		},
@@ -414,49 +895,29 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 }
 
 func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testing.T) {
-	var v rds.DBCluster
-	var c rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-	parentId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restore-seed-test")
-	restoredId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restored-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_pointInTimeRestoreSource_enabled_cloudWatch_logs_exports(parentId, restoredId, "audit"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists("aws_rds_cluster.test", &v),
-					testAccCheckClusterExists("aws_rds_cluster.restored_pit", &c),
-					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "cluster_identifier", restoredId),
-					resource.TestCheckResourceAttrPair("aws_rds_cluster.restored_pit", "engine", "aws_rds_cluster.test", "engine"),
-					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckTypeSetElemAttr("aws_rds_cluster.restored_pit", "enabled_cloudwatch_logs_exports.*", "audit"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_generatedName(t *testing.T) {
-	var v rds.DBCluster
-	resourceName := "aws_rds_cluster.test"
+	var sourceDBCluster, dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.test"
+	resourceName := "aws_rds_cluster.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_generatedName(),
+				Config: testAccClusterConfig_pointInTimeRestoreSource_enabledCloudWatchLogsExports(rName, "audit"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestMatchResourceAttr(
-						resourceName, "cluster_identifier", regexp.MustCompile("^tf-")),
+					testAccCheckClusterExists(ctx, sourceResourceName, &sourceDBCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
 		},
@@ -464,20 +925,21 @@ func TestAccRDSCluster_generatedName(t *testing.T) {
 }
 
 func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
-	var v rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	var v types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterSnapshot(rInt),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithFinalSnapshotConfig(rInt),
+				Config: testAccClusterConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 			},
 		},
@@ -488,54 +950,45 @@ func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/11568
 // Expected error updated to match API response
 func TestAccRDSCluster_missingUserNameCausesError(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterWithoutUserNameAndPasswordConfig(sdkacctest.RandInt()),
-				ExpectError: regexp.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
+				Config:      testAccClusterConfig_withoutUserNameAndPassword(sdkacctest.RandInt()),
+				ExpectError: regexache.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
 			},
 		},
 	})
 }
 
-func TestAccRDSCluster_tags(t *testing.T) {
-	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
+func TestAccRDSCluster_domain(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
+	domain := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterTags1Config(rName, "key1", "value1"),
+				Config: testAccClusterConfig_domain(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccClusterTags2Config(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccClusterTags1Config(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 		},
@@ -543,38 +996,39 @@ func TestAccRDSCluster_tags(t *testing.T) {
 }
 
 func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
-	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2, dbCluster3 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEnabledCloudWatchLogsExports1Config(rName, "audit"),
+				Config: testAccClusterConfig_enabledCloudWatchLogsExports1(rName, "audit"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
 			{
-				Config: testAccClusterEnabledCloudWatchLogsExports2Config(rName, "slowquery", "error"),
+				Config: testAccClusterConfig_enabledCloudWatchLogsExports2(rName, "slowquery", "error"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
-				Config: testAccClusterEnabledCloudWatchLogsExports1Config(rName, "error"),
+				Config: testAccClusterConfig_enabledCloudWatchLogsExports1(rName, "error"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster3),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster3),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
@@ -583,22 +1037,36 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 }
 
 func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEnabledCloudWatchLogsExportsPostgres1Config(rName, "postgresql"),
+				Config: testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, "postgresql"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, "postgresql", "upgrade"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "upgrade"),
 				),
 			},
 		},
@@ -606,36 +1074,37 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 }
 
 func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
-	var v rds.DBCluster
+	ctx := acctest.Context(t)
+	var v types.DBCluster
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterIncludingIAMRolesConfig(ri),
+				Config: testAccClusterConfig_includingIAMRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 			},
 			{
-				Config: testAccClusterAddIAMRolesConfig(ri),
+				Config: testAccClusterConfig_addIAMRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "iam_roles.#", "2"),
+						resourceName, "iam_roles.#", acctest.Ct2),
 				),
 			},
 			{
-				Config: testAccClusterRemoveIAMRolesConfig(ri),
+				Config: testAccClusterConfig_removeIAMRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "iam_roles.#", "1"),
+						resourceName, "iam_roles.#", acctest.Ct1),
 				),
 			},
 		},
@@ -643,21 +1112,56 @@ func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 }
 
 func TestAccRDSCluster_kmsKey(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
 	kmsKeyResourceName := "aws_kms_key.foo"
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_kmsKey(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_networkType(rName, "IPV4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_networkType(rName, "DUAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
 				),
 			},
 		},
@@ -665,23 +1169,21 @@ func TestAccRDSCluster_kmsKey(t *testing.T) {
 }
 
 func TestAccRDSCluster_encrypted(t *testing.T) {
-	var v rds.DBCluster
+	ctx := acctest.Context(t)
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_encrypted(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "storage_encrypted", "true"),
-					resource.TestCheckResourceAttr(
-						resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 		},
@@ -689,35 +1191,69 @@ func TestAccRDSCluster_encrypted(t *testing.T) {
 }
 
 func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
-	var v rds.DBCluster
+	ctx := acctest.Context(t)
+	var v types.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithCopyTagsToSnapshotConfig(rInt, true),
+				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccClusterWithCopyTagsToSnapshotConfig(rInt, false),
+				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccClusterWithCopyTagsToSnapshotConfig(rInt, true),
+				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_copyTagsToSnapshot_restorePointInTime(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBCluster
+	rInt := sdkacctest.RandInt()
+	resourceName := "aws_rds_cluster.test"
+	resourceName2 := "aws_rds_cluster.clone"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName2, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName2, &v),
+					resource.TestCheckResourceAttr(resourceName2, "copy_tags_to_snapshot", acctest.CtFalse),
 				),
 			},
 		},
@@ -725,8 +1261,13 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 }
 
 func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
-	var primaryCluster rds.DBCluster
-	var replicaCluster rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var primaryCluster types.DBCluster
+	var replicaCluster types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 	resourceName2 := "aws_rds_cluster.alternate"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -737,18 +1278,18 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider, &providers),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterReplicationSourceIdentifierKMSKeyIDConfig(rName),
+				Config: testAccClusterConfig_replicationSourceIDKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -756,38 +1297,39 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 }
 
 func TestAccRDSCluster_backupsUpdate(t *testing.T) {
-	var v rds.DBCluster
+	ctx := acctest.Context(t)
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	ri := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_backups(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "preferred_backup_window", "07:00-09:00"),
 					resource.TestCheckResourceAttr(
 						resourceName, "backup_retention_period", "5"),
 					resource.TestCheckResourceAttr(
-						resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
+						resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_backupsUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "preferred_backup_window", "03:00-09:00"),
 					resource.TestCheckResourceAttr(
-						resourceName, "backup_retention_period", "10"),
+						resourceName, "backup_retention_period", acctest.Ct10),
 					resource.TestCheckResourceAttr(
-						resourceName, "preferred_maintenance_window", "wed:01:00-wed:01:30"),
+						resourceName, names.AttrPreferredMaintenanceWindow, "wed:01:00-wed:01:30"),
 				),
 			},
 		},
@@ -795,21 +1337,22 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 }
 
 func TestAccRDSCluster_iamAuth(t *testing.T) {
-	var v rds.DBCluster
+	ctx := acctest.Context(t)
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_iamAuth(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "iam_database_authentication_enabled", "true"),
+						resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -817,28 +1360,29 @@ func TestAccRDSCluster_iamAuth(t *testing.T) {
 }
 
 func TestAccRDSCluster_deletionProtection(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_DeletionProtection(rName, true),
+				Config: testAccClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccClusterConfig_DeletionProtection(rName, false),
+				Config: testAccClusterConfig_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -846,101 +1390,39 @@ func TestAccRDSCluster_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineMode(t *testing.T) {
-	var dbCluster1, dbCluster2 rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_EngineMode(rName, "serverless"),
+				Config: testAccClusterConfig_engineMode_serverless(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct0),
 				),
 			},
 			{
-				Config: testAccClusterConfig_EngineMode(rName, "provisioned"),
+				Config: testAccClusterConfig_engineMode(rName, "provisioned"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_EngineMode_global(t *testing.T) {
-	var dbCluster1 rds.DBCluster
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_EngineMode_Global(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine_mode", "global"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_EngineMode_multiMaster(t *testing.T) {
-	var dbCluster1 rds.DBCluster
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_EngineMode_Multimaster(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine_mode", "multimaster"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_EngineMode_parallelQuery(t *testing.T) {
-	var dbCluster1 rds.DBCluster
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_EngineMode(rName, "parallelquery"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct0),
 				),
 			},
 		},
@@ -948,60 +1430,71 @@ func TestAccRDSCluster_EngineMode_parallelQuery(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineVersion(t *testing.T) {
-	var dbCluster rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_EngineVersion(false, rInt),
+				Config: testAccClusterConfig_engineVersion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
 			{
-				Config:      testAccClusterConfig_EngineVersion(true, rInt),
-				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
+				Config:      testAccClusterConfig_engineVersion(rName, true),
+				ExpectError: regexache.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
 	})
 }
 
 func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
-	var dbCluster rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
 	dataSourceNameUpgrade := "data.aws_rds_engine_version.upgrade"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_EngineVersionWithPrimaryInstance(false, rInt),
+				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, dataSourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
 			{
-				Config: testAccClusterConfig_EngineVersionWithPrimaryInstance(true, rInt),
+				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceNameUpgrade, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceNameUpgrade, "version"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, dataSourceNameUpgrade, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, names.AttrVersion),
 				),
 			},
 		},
@@ -1009,23 +1502,24 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_global(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_rds_global_cluster.test"
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName),
+				Config: testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, names.AttrID),
 				),
 			},
 		},
@@ -1033,56 +1527,58 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_global(t *testing.T) {
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_EngineMode_Global(rName),
+				Config: testAccClusterConfig_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 				),
 			},
 			{
-				Config:      testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName),
-				ExpectError: regexp.MustCompile(`Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
+				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
 			},
 		},
 	})
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_rds_global_cluster.test"
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName),
+				Config: testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccClusterConfig_EngineMode_Global(rName),
+				Config: testAccClusterConfig_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 				),
 			},
@@ -1091,7 +1587,8 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName1 := "aws_rds_global_cluster.test.0"
@@ -1099,44 +1596,45 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterResourceName1),
+				Config: testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterResourceName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName1, "id"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName1, names.AttrID),
 				),
 			},
 			{
-				Config:      testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
+				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterResourceName2),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
 			},
 		},
 	})
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	ctx := acctest.Context(t)
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_rds_global_cluster.test"
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Provisioned(rName),
+				Config: testAccClusterConfig_GlobalClusterID_EngineMode_provisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, names.AttrID),
 				),
 			},
 		},
@@ -1145,8 +1643,13 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13126
 func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+	var primaryDbCluster, secondaryDbCluster types.DBCluster
 
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
@@ -1157,19 +1660,19 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckGlobalCluster(t)
+			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_GlobalClusterIdentifier_PrimarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
+				Config: testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1178,8 +1681,13 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13715
 func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+	var primaryDbCluster, secondaryDbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceNamePrimary := "aws_rds_cluster.primary"
@@ -1187,19 +1695,19 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckGlobalCluster(t)
+			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_GlobalClusterIdentifier_ReplicationSourceIdentifier(rName),
+				Config: testAccClusterConfig_GlobalClusterID_replicationSourceID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1208,8 +1716,13 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14457
 func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+	var primaryDbCluster, secondaryDbCluster types.DBCluster
 
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
@@ -1220,20 +1733,124 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckGlobalCluster(t)
+			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_GlobalClusterIdentifier_SecondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary),
+				Config: testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
-					resource.TestCheckResourceAttr(resourceNameSecondary, "enable_global_write_forwarding", "true"),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceNameSecondary, "enable_global_write_forwarding", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_managedMasterPassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_managedMasterPasswordKMSKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "manage_master_user_password"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_managedMasterPassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "manage_master_user_password"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 				),
 			},
 		},
@@ -1241,28 +1858,29 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 }
 
 func TestAccRDSCluster_port(t *testing.T) {
-	var dbCluster1, dbCluster2 rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_Port(rInt, 5432),
+				Config: testAccClusterConfig_port(rName, 5432),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "5432"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_Port(rInt, 2345),
+				Config: testAccClusterConfig_port(rName, 2345),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "2345"),
 				),
 			},
 		},
@@ -1270,37 +1888,44 @@ func TestAccRDSCluster_port(t *testing.T) {
 }
 
 func TestAccRDSCluster_scaling(t *testing.T) {
-	var dbCluster rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_ScalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_ScalingConfiguration(rName, true, 256, 8, 86400, "ForceApplyCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 600, 86400, "ForceApplyCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "true"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "600"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
 				),
@@ -1309,27 +1934,67 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11698
-func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
-	var dbCluster rds.DBCluster
+func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_ScalingConfiguration_DefaultMinCapacity(rName, false, 128, 301, "RollbackCapacityChange"),
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 0.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0.5"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 128.0, 8.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "8.5"),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11698
+func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_ScalingConfiguration_defaultMinCapacity(rName, false, 128, 301, "RollbackCapacityChange"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
@@ -1339,8 +2004,13 @@ func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 }
 
 func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1348,17 +2018,17 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier(rName),
+				Config: testAccClusterConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -1366,8 +2036,13 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1375,56 +2050,28 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_DeletionProtection(rName, true),
+				Config: testAccClusterConfig_SnapshotID_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			// Ensure we disable deletion protection before attempting to delete :)
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_DeletionProtection(rName, false),
+				Config: testAccClusterConfig_SnapshotID_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceDbResourceName := "aws_rds_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_SnapshotIdentifier_EngineMode(rName, "parallelquery"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -1432,8 +2079,13 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) 
 }
 
 func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1441,17 +2093,17 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_EngineMode(rName, "provisioned"),
+				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "provisioned"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
 				),
 			},
@@ -1464,8 +2116,10 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 	// to initialize some data.
 	t.Skip("serverless does not support snapshot restore on an empty volume")
 
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1473,17 +2127,17 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_EngineMode(rName, "serverless"),
+				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "serverless"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
 				),
 			},
@@ -1493,8 +2147,13 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1503,18 +2162,18 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.upgrade"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_EngineVersion(rName, false),
+				Config: testAccClusterConfig_SnapshotID_engineVersion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
 		},
@@ -1523,8 +2182,13 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1533,18 +2197,18 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_EngineVersion(rName, true),
+				Config: testAccClusterConfig_SnapshotID_engineVersion(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
 		},
@@ -1552,8 +2216,13 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -1562,18 +2231,18 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_KMSKeyID(rName),
+				Config: testAccClusterConfig_SnapshotID_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -1581,8 +2250,13 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1590,17 +2264,17 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_MasterPassword(rName, "password1"),
+				Config: testAccClusterConfig_SnapshotID_masterPassword(rName, "password1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "password1"),
 				),
 			},
@@ -1609,8 +2283,13 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1618,17 +2297,17 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_MasterUsername(rName, "username1"),
+				Config: testAccClusterConfig_SnapshotID_masterUsername(rName, "username1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "foo"),
 				),
 				// It is not currently possible to update the master username in the RDS API
@@ -1639,8 +2318,13 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1648,17 +2332,17 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_PreferredBackupWindow(rName, "00:00-08:00"),
+				Config: testAccClusterConfig_SnapshotID_preferredBackupWindow(rName, "00:00-08:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "00:00-08:00"),
 				),
 			},
@@ -1667,8 +2351,16 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
+
+	// This config is version agnostic. Use it as a model for fixing version errors
+	// in other tests.
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1676,18 +2368,18 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_PreferredMaintenanceWindow(rName, "sun:01:00-sun:01:30"),
+				Config: testAccClusterConfig_SnapshotID_preferredMaintenanceWindow(rName, "sun:01:00-sun:01:30"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sun:01:00-sun:01:30"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "sun:01:00-sun:01:30"),
 				),
 			},
 		},
@@ -1695,8 +2387,13 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1704,19 +2401,19 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_Tags(rName),
+				Config: testAccClusterConfig_SnapshotID_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -1724,8 +2421,13 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1733,17 +2435,17 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_VPCSecurityGroupIDs(rName),
+				Config: testAccClusterConfig_SnapshotID_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -1755,8 +2457,13 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1764,19 +2471,19 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_VPCSecurityGroupIds_Tags(rName),
+				Config: testAccClusterConfig_SnapshotID_VPCSecurityGroupIds_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -1784,8 +2491,13 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
-	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -1794,19 +2506,19 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_SnapshotIdentifier_EncryptedRestore(rName),
+				Config: testAccClusterConfig_SnapshotID_encryptedRestore(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 		},
@@ -1814,163 +2526,425 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 }
 
 func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
-	var dbCluster rds.DBCluster
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_EnableHTTPEndpoint(rName, true),
+				Config: testAccClusterConfig_enableHTTPEndpoint(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "true"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccClusterConfig_EnableHTTPEndpoint(rName, false),
+				Config: testAccClusterConfig_enableHTTPEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "false"),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpoint(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckClusterDestroy(s *terraform.State) error {
-	return testAccCheckClusterDestroyWithProvider(s, acctest.Provider)
+func TestAccRDSCluster_enableHTTPEndpointProvisioned(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var dbCluster types.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).RDSConn
+func TestAccRDSCluster_password(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_cluster" {
-			continue
-		}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_password(rName, "valid-password-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_password", "valid-password-1"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_password(rName, "valid-password-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_password", "valid-password-2"),
+				),
+			},
+		},
+	})
+}
 
-		// Try to find the Group
-		var err error
-		resp, err := conn.DescribeDBClusters(
-			&rds.DescribeDBClustersInput{
-				DBClusterIdentifier: aws.String(rs.Primary.ID),
-			})
+func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
 
-		if err == nil {
-			if len(resp.DBClusters) != 0 &&
-				*resp.DBClusters[0].DBClusterIdentifier == rs.Primary.ID {
-				return fmt.Errorf("DB Cluster %s still exists", rs.Primary.ID)
-			}
-		}
+	backupWindowLength := 30 * time.Minute
+	clusterProvisionTime := 5 * time.Minute
 
-		// Return nil if the cluster is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "DBClusterNotFoundFault" {
+	// Unlike rds instance, there is no automated backup created when the cluster is deployed.
+	// However, we can forcefully create one by moving maintenance window behind the deployment.
+	now := time.Now().UTC()
+	backupWindowStart := now.Add(clusterProvisionTime)
+	backupWindowEnd := backupWindowStart.Add(backupWindowLength)
+	preferredBackupWindow := fmt.Sprintf(
+		"%02d:%02d-%02d:%02d",
+		backupWindowStart.Hour(),
+		backupWindowStart.Minute(),
+		backupWindowEnd.Hour(),
+		backupWindowEnd.Minute(),
+	)
+
+	waitUntilAutomatedBackupCreated := func(*terraform.State) error {
+		ticker := time.NewTicker(1 * time.Minute)
+		for {
+			select {
+			case <-time.After(backupWindowLength):
 				return nil
+			case <-ticker.C:
+				conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+				output, _ := conn.DescribeDBClusterSnapshots(ctx, &rds.DescribeDBClusterSnapshotsInput{
+					DBClusterIdentifier: aws.String(rName),
+					SnapshotType:        aws.String("automated"),
+				})
+				if output != nil && len(output.DBClusterSnapshots) > 0 {
+					snapshot := output.DBClusterSnapshots[0]
+					if aws.ToString(snapshot.Status) == "available" {
+						return nil
+					}
+				}
 			}
 		}
-
-		return err
 	}
 
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterAutomatedBackupsDelete(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_noDeleteAutomatedBackups(rName, preferredBackupWindow),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					waitUntilAutomatedBackupCreated,
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckClusterSnapshot(rInt int) resource.TestCheckFunc {
+func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineLifecycleSupport_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_performanceInsightsEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_performanceInsightsEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_performanceInsightsKMSKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_performanceInsightsKMSKeyID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_performanceInsightsRetentionPeriod(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "62"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
+	}
+}
+
+func testAccCheckClusterAutomatedBackupsDelete(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster" {
+				continue
+			}
+			describeOutput, err := conn.DescribeDBClusterSnapshots(ctx, &rds.DescribeDBClusterSnapshotsInput{
+				DBClusterIdentifier: aws.String(rs.Primary.Attributes[names.AttrClusterIdentifier]),
+				SnapshotType:        aws.String("automated"),
+			})
+			if err != nil {
+				return err
+			}
+
+			if describeOutput == nil || len(describeOutput.DBClusterSnapshots) == 0 {
+				return fmt.Errorf("Automated backup for %s not found", rs.Primary.Attributes[names.AttrClusterIdentifier])
+			}
+
+			_, err = conn.DeleteDBClusterAutomatedBackup(ctx, &rds.DeleteDBClusterAutomatedBackupInput{
+				DbClusterResourceId: aws.String(rs.Primary.Attributes["cluster_resource_id"]),
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
+	}
+}
+
+func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		conn := provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
 				continue
 			}
 
-			// Try and delete the snapshot before we check for the cluster not found
-			snapshot_identifier := fmt.Sprintf("tf-acctest-rdscluster-snapshot-%d", rInt)
+			_, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
-			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.RDSConn
-
-			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
-			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(
-				&rds.DeleteDBClusterSnapshotInput{
-					DBClusterSnapshotIdentifier: aws.String(snapshot_identifier),
-				})
-			if snapDeleteErr != nil {
-				return snapDeleteErr
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Try to find the Group
-			var err error
-			resp, err := conn.DescribeDBClusters(
-				&rds.DescribeDBClustersInput{
-					DBClusterIdentifier: aws.String(rs.Primary.ID),
-				})
-
-			if err == nil {
-				if len(resp.DBClusters) != 0 &&
-					*resp.DBClusters[0].DBClusterIdentifier == rs.Primary.ID {
-					return fmt.Errorf("DB Cluster %s still exists", rs.Primary.ID)
-				}
+			if err != nil {
+				return err
 			}
 
-			// Return nil if the cluster is already destroyed
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "DBClusterNotFoundFault" {
-					return nil
-				}
-			}
-
-			return err
+			return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckClusterExists(n string, v *rds.DBCluster) resource.TestCheckFunc {
-	return testAccCheckClusterExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
+func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster" {
+				continue
+			}
+
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
+			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, finalSnapshotID)
+			if err != nil {
+				return err
+			}
+
+			_, err = conn.DeleteDBClusterSnapshot(ctx, &rds.DeleteDBClusterSnapshotInput{
+				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckClusterExistsWithProvider(n string, v *rds.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *types.DBCluster) resource.TestCheckFunc {
+	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+}
+
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Instance ID is set")
-		}
+		conn := providerF().Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).RDSConn
-		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(rs.Primary.ID),
-		})
-
+		output, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == rs.Primary.ID {
-				*v = *c
-				return nil
-			}
-		}
+		*v = *output
 
-		return fmt.Errorf("DB Cluster (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *types.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+		if aws.ToTime(i.ClusterCreateTime).Equal(aws.ToTime(j.ClusterCreateTime)) {
 			return errors.New("RDS Cluster was not recreated")
 		}
 
@@ -1978,72 +2952,248 @@ func testAccCheckClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
 	}
 }
 
-func testAccClusterConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot             = true
-}
-`, rName)
+func testAccCheckClusterNotRecreated(i, j *types.DBCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.ToTime(i.ClusterCreateTime).Equal(aws.ToTime(j.ClusterCreateTime)) {
+			return errors.New("RDS Cluster was recreated")
+		}
+
+		return nil
+	}
 }
 
-func testAccClusterConfig_AllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string) string {
+func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_localWriteForwarding(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "enable_local_write_forwarding", acctest.CtTrue),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func testAccClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  allow_major_version_upgrade = %[1]t
-  apply_immediately           = true
-  cluster_identifier          = %[2]q
-  engine                      = %[3]q
-  engine_version              = %[4]q
-  master_password             = "mustbeeightcharaters"
-  master_username             = "test"
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  engine              = %[2]q
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  engine              = %[2]q
+  skip_final_snapshot = true
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, tagKey1, tagValue1)
+}
+
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  engine              = %[2]q
+  skip_final_snapshot = true
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccClusterConfig_identifierGenerated() string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  engine              = %[1]q
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+}
+`, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_identifierPrefix(identifierPrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier_prefix = %[1]q
+  engine                    = %[2]q
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  skip_final_snapshot       = true
+}
+`, identifierPrefix, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_managedMasterPassword(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier          = %[1]q
+  database_name               = "test"
+  manage_master_user_password = true
+  master_username             = "tfacctest"
+  engine                      = %[2]q
   skip_final_snapshot         = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_managedMasterPasswordKMSKey(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "example" {
+  description = "Terraform acc test %[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier            = %[1]q
+  database_name                 = "test"
+  engine                        = %[2]q
+  manage_master_user_password   = true
+  master_username               = "tfacctest"
+  master_user_secret_kms_key_id = aws_kms_key.example.arn
+  skip_final_snapshot           = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_allowMajorVersionUpgrade(rName string, engine string, upgrade, applyImmediately bool) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine                  = data.aws_rds_engine_version.upgrade.engine
+  latest                  = true
+  preferred_major_targets = [data.aws_rds_engine_version.upgrade.version_actual]
+}
+
+data "aws_rds_engine_version" "upgrade" {
+  engine = %[1]q
+}
+
+locals {
+  engine_version = %[2]t ? data.aws_rds_engine_version.upgrade.version_actual : data.aws_rds_engine_version.test.version_actual
 }
 
 data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r4.large"]
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = local.engine_version
+  preferred_instance_classes = [%[3]s]
+}
+
+resource "aws_rds_cluster" "test" {
+  allow_major_version_upgrade = true
+  apply_immediately           = %[4]t
+  cluster_identifier          = %[5]q
+  engine                      = data.aws_rds_engine_version.test.engine
+  engine_version              = local.engine_version
+  master_password             = "avoid-plaintext-passwords"
+  master_username             = "tfacctest"
+  skip_final_snapshot         = true
 }
 
 # Upgrading requires a healthy primary instance
 resource "aws_rds_cluster_instance" "test" {
+  apply_immediately  = %[4]t
   cluster_identifier = aws_rds_cluster.test.id
-  engine             = data.aws_rds_orderable_db_instance.test.engine
+  engine             = data.aws_rds_engine_version.test.engine
   engine_version     = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier         = %[2]q
+  identifier         = %[5]q
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 
   lifecycle {
     ignore_changes = [engine_version]
   }
 }
-`, allowMajorVersionUpgrade, rName, engine, engineVersion)
+`, engine, upgrade, mainInstanceClasses, applyImmediately, rName)
 }
 
-func testAccClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string, applyImmediate bool) string {
+func testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName string, upgrade bool, engine string, applyImmediate bool) string {
 	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  allow_major_version_upgrade      = %[1]t
-  apply_immediately                = true
-  cluster_identifier               = %[2]q
-  db_cluster_parameter_group_name  = aws_rds_cluster_parameter_group.test.name
-  db_instance_parameter_group_name = aws_db_parameter_group.test.name
-  engine                           = %[3]q
-  engine_version                   = %[4]q
-  master_password                  = "mustbeeightcharaters"
-  master_username                  = "test"
-  skip_final_snapshot              = true
+data "aws_rds_engine_version" "test" {
+  engine                  = data.aws_rds_engine_version.upgrade.engine
+  latest                  = true
+  preferred_major_targets = [data.aws_rds_engine_version.upgrade.version_actual]
+}
+
+data "aws_rds_engine_version" "upgrade" {
+  engine = %[1]q
+}
+
+locals {
+  parameter_group_family = %[2]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version         = %[2]t ? data.aws_rds_engine_version.upgrade.version_actual : data.aws_rds_engine_version.test.version_actual
 }
 
 data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r6g.large"]
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = local.engine_version
+  preferred_instance_classes = [%[3]s]
+}
+
+resource "aws_rds_cluster" "test" {
+  allow_major_version_upgrade      = true
+  apply_immediately                = true
+  cluster_identifier               = %[4]q
+  db_cluster_parameter_group_name  = aws_rds_cluster_parameter_group.test.name
+  db_instance_parameter_group_name = aws_db_parameter_group.test.name
+  engine                           = data.aws_rds_engine_version.test.engine
+  engine_version                   = local.engine_version
+  master_password                  = "mustbeeightcharaters"
+  master_username                  = "test"
+  skip_final_snapshot              = true
 }
 
 # Upgrading requires a healthy primary instance
@@ -2053,7 +3203,7 @@ resource "aws_rds_cluster_instance" "test" {
   db_parameter_group_name = aws_db_parameter_group.test.name
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier              = %[2]q
+  identifier              = %[4]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
 
   lifecycle {
@@ -2062,8 +3212,8 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 resource "aws_rds_cluster_parameter_group" "test" {
-  name_prefix = %[2]q
-  family      = %[6]q
+  name_prefix = %[4]q
+  family      = local.parameter_group_family
 
   lifecycle {
     create_before_destroy = true
@@ -2071,24 +3221,40 @@ resource "aws_rds_cluster_parameter_group" "test" {
 }
 
 resource "aws_db_parameter_group" "test" {
-  name_prefix = %[2]q
-  family      = %[6]q
+  name_prefix = %[4]q
+  family      = local.parameter_group_family
 
   lifecycle {
     create_before_destroy = true
   }
 }
-`, allowMajorVersionUpgrade, rName, engine, engineVersion, applyImmediate, engine+strings.Split(engineVersion, ".")[0])
+`, engine, upgrade, mainInstanceClasses, rName, applyImmediate)
 }
 
-func testAccClusterConfig_MajorVersionOnly(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string) string {
+func testAccClusterConfig_majorVersionOnly(rName string, engine string, allowMajorVersionUpgrade bool) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine                  = data.aws_rds_engine_version.upgrade.engine
+  latest                  = true
+  preferred_major_targets = [data.aws_rds_engine_version.upgrade.version_actual]
+}
+
+data "aws_rds_engine_version" "upgrade" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version_actual
+  preferred_instance_classes = [%[2]s]
+}
+
 resource "aws_rds_cluster" "test" {
-  allow_major_version_upgrade = %[1]t
+  allow_major_version_upgrade = %[3]t
   apply_immediately           = true
-  cluster_identifier          = %[2]q
-  engine                      = %[3]q
-  engine_version              = %[4]q
+  cluster_identifier          = %[4]q
+  engine                      = data.aws_rds_engine_version.test.engine
+  engine_version              = data.aws_rds_engine_version.test.version_actual
   master_password             = "mustbeeightcharaters"
   master_username             = "test"
   skip_final_snapshot         = true
@@ -2099,404 +3265,463 @@ resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = aws_rds_cluster.test.id
   engine             = aws_rds_cluster.test.engine
   engine_version     = aws_rds_cluster.test.engine_version
-  identifier         = %[2]q
-  instance_class     = "db.r4.large"
+  identifier         = %[4]q
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, allowMajorVersionUpgrade, rName, engine, engineVersion)
+`, engine, mainInstanceClasses, allowMajorVersionUpgrade, rName)
 }
 
-func testAccClusterConfig_AvailabilityZones(rName string) string {
+func testAccClusterConfig_minorVersion(rName, engine string, upgrade bool) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+data "aws_rds_engine_version" "test" {
+  engine                    = %[1]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_rds_engine_version.upgrade.version_actual]
+}
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+data "aws_rds_engine_version" "upgrade" {
+  engine = %[1]q
+}
+
+locals {
+  parameter_group_name = %[2]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version       = %[2]t ? data.aws_rds_engine_version.upgrade.version_actual : data.aws_rds_engine_version.test.version_actual
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = local.engine_version
+  preferred_instance_classes = [%[3]s]
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier               = %[4]q
+  engine                           = data.aws_rds_engine_version.test.engine
+  engine_version                   = local.engine_version
+  db_instance_parameter_group_name = "default.${local.parameter_group_name}"
+  master_username                  = "tfacctest"
+  master_password                  = %[4]q
+  skip_final_snapshot              = true
+}
+
+# Upgrading requires a healthy primary instance
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately       = true
+  cluster_identifier      = aws_rds_cluster.test.id
+  db_parameter_group_name = aws_rds_cluster.test.db_instance_parameter_group_name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[4]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+
+  lifecycle {
+    ignore_changes = [engine_version]
   }
 }
+`, engine, upgrade, mainInstanceClasses, rName)
+}
 
+func testAccClusterConfig_availabilityZones(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
   availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  cluster_identifier  = %q
-  master_password     = "mustbeeightcharaters"
-  master_username     = "test"
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
   skip_final_snapshot = true
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL))
 }
 
-func testAccClusterConfig_BacktrackWindow(backtrackWindow int) string {
-	return fmt.Sprintf(`
+func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
+	return acctest.ConfigCompose(testAccConfig_ClusterSubnetGroup(rName), fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[2]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[3]s]
+  supports_clusters          = true
+  supports_iops              = true
+}
+
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
-  backtrack_window          = %d
-  cluster_identifier_prefix = "tf-acc-test-"
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  ca_certificate_identifier = "rds-ca-2019"
+  cluster_identifier        = %[1]q
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage         = 100
+  iops                      = 1000
+  db_cluster_instance_class = "db.r6gd.xlarge"
+  master_password           = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
+  skip_final_snapshot       = true
+}
+`, rName, tfrds.ClusterEngineMySQL, mainInstanceClasses))
+}
+
+func testAccClusterConfig_storageType(rName string, sType string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = %[4]q
+  supports_iops              = true
+  supports_clusters          = true
+}
+
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  cluster_identifier        = %[3]q
+  db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage         = 100
+  iops                      = 1000
   master_password           = "mustbeeightcharaters"
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, backtrackWindow)
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, sType))
 }
 
-func testAccClusterConfig_ClusterIdentifierPrefix(clusterIdentifierPrefix string) string {
-	return fmt.Sprintf(`
+func testAccClusterConfig_allocatedStorage(rName string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io1"
+  supports_iops              = true
+  supports_clusters          = true
+}
+
 resource "aws_rds_cluster" "test" {
-  cluster_identifier_prefix = %q
-  master_username           = "root"
-  master_password           = "password"
+  apply_immediately         = true
+  cluster_identifier        = %[3]q
+  db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage         = 100
+  iops                      = 1000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
   skip_final_snapshot       = true
 }
-`, clusterIdentifierPrefix)
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
 }
 
-func testAccClusterConfig_SubnetGroupName(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+func testAccClusterConfig_iops(rName string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io1"
+  supports_iops              = true
+  supports_clusters          = true
 }
 
 resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  cluster_identifier        = %[3]q
+  db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage         = 100
+  iops                      = 1000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
+}
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
+}
+
+func testAccClusterConfig_dbClusterInstanceClass(rName string, oddClasses bool) string {
+	var halfClasses []string
+	start := 0
+	if oddClasses {
+		start = 1
+	}
+	for i := start; i < len(instanceClassesSlice); i += 2 {
+		halfClasses = append(halfClasses, instanceClassesSlice[i])
+	}
+	halfPreferredClasses := strings.Join(halfClasses, ", ")
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io1"
+  supports_iops              = true
+  supports_clusters          = true
+}
+
+# this test is about updating the instance class. not sure how to dynamically make it give a different value?
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  cluster_identifier        = %[3]q
+  db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  engine                    = %[1]q
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
+}
+`, tfrds.ClusterEngineMySQL, halfPreferredClasses, rName))
+}
+
+func testAccClusterConfig_backtrackWindow(backtrackWindow int) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  backtrack_window          = %[1]d
+  cluster_identifier_prefix = "tf-acc-test-"
+  engine                    = %[2]q
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
+}
+`, backtrackWindow, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_subnetGroupName(rName string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
-  master_username      = "root"
-  master_password      = "password"
+  engine               = %[2]q
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
   db_subnet_group_name = aws_db_subnet_group.test.name
   skip_final_snapshot  = true
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-rds-cluster-name-prefix"
-  }
+`, rName, tfrds.ClusterEngineAuroraMySQL))
 }
 
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-name-prefix-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-name-prefix-b"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
-}
-`, rName)
-}
-
-func testAccClusterConfig_s3Restore(bucketName string, bucketPrefix string, uniqueId string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_s3_bucket" "xtrabackup" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_object" "xtrabackup_db" {
-  bucket = aws_s3_bucket.xtrabackup.id
-  key    = "%[2]s/mysql-5-6-xtrabackup.tar.gz"
-  source = "./testdata/mysql-5-6-xtrabackup.tar.gz"
-  etag   = filemd5("./testdata/mysql-5-6-xtrabackup.tar.gz")
-}
-
-resource "aws_iam_role" "rds_s3_access_role" {
-  name = "%[3]s-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "rds.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "test" {
-  name = "%[3]s-policy"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:*"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.xtrabackup.arn}",
-        "${aws_s3_bucket.xtrabackup.arn}/*"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_policy_attachment" "test-attach" {
-  name = "%[3]s-policy-attachment"
-
-  roles = [
-    aws_iam_role.rds_s3_access_role.name,
-  ]
-
-  policy_arn = aws_iam_policy.test.arn
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier_prefix = "tf-test-"
-  master_username           = "root"
-  master_password           = "password"
-  skip_final_snapshot       = true
-
-  s3_import {
-    source_engine         = "mysql"
-    source_engine_version = "5.6"
-
-    bucket_name    = aws_s3_bucket.xtrabackup.bucket
-    bucket_prefix  = "%[2]s"
-    ingestion_role = aws_iam_role.rds_s3_access_role.arn
-  }
-}
-`, bucketName, bucketPrefix, uniqueId)
-}
-
-func testAccClusterConfig_generatedName() string {
-	return `
-resource "aws_rds_cluster" "test" {
-  master_username     = "root"
-  master_password     = "password"
-  skip_final_snapshot = true
-}
-`
-}
-
-func testAccClusterWithFinalSnapshotConfig(n int) string {
+func testAccClusterConfig_finalSnapshot(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  final_snapshot_identifier       = "tf-acctest-rdscluster-snapshot-%[1]d"
-
-  tags = {
-    Environment = "production"
-  }
+  cluster_identifier        = %[1]q
+  database_name             = "test"
+  engine                    = %[2]q
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  final_snapshot_identifier = %[1]q
 }
-`, n)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterWithoutUserNameAndPasswordConfig(n int) string {
+func testAccClusterConfig_withoutUserNameAndPassword(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier  = "tf-aurora-cluster-%d"
+  cluster_identifier  = "tf-aurora-cluster-%[1]d"
+  engine              = %[2]q
   database_name       = "mydb"
   skip_final_snapshot = true
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterConfig_pointInTimeRestoreSource(parentId, childId string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccClusterConfig_baseForPITR(rName string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "%[1]s"
-  master_username      = "root"
-  master_password      = "password"
+  cluster_identifier   = %[1]q
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
   db_subnet_group_name = aws_db_subnet_group.test.name
   skip_final_snapshot  = true
-  engine               = "aurora-mysql"
+  engine               = %[2]q
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL))
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "%[1]s-vpc"
-  }
-}
-
-resource "aws_subnet" "subnets" {
-  count             = length(data.aws_availability_zones.available.names)
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  tags = {
-    Name = "%[1]s-subnet-${count.index}"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = "%[1]s-db-subnet-group"
-  subnet_ids = aws_subnet.subnets[*].id
-}
-
-resource "aws_rds_cluster" "restored_pit" {
-  cluster_identifier  = "%s"
+func testAccClusterConfig_pointInTimeRestoreSource(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
+resource "aws_rds_cluster" "restore" {
+  cluster_identifier  = "%[1]s-restore"
   skip_final_snapshot = true
   engine              = aws_rds_cluster.test.engine
+
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     restore_type               = "full-copy"
     use_latest_restorable_time = true
   }
 }
-`, parentId, childId))
+`, rName))
 }
 
-func testAccClusterConfig_pointInTimeRestoreSource_enabled_cloudWatch_logs_exports(parentId, childId, enabledCloudwatchLogExports string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "%[1]s"
-  master_username      = "root"
-  master_password      = "password"
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  skip_final_snapshot  = true
-  engine               = "aurora-mysql"
-}
+func testAccClusterConfig_pointInTimeRestoreSourceViaResourceID(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
+resource "aws_rds_cluster" "restore" {
+  cluster_identifier  = "%[1]s-restore"
+  skip_final_snapshot = true
+  engine              = aws_rds_cluster.test.engine
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "%[1]s-vpc"
+  restore_to_point_in_time {
+    source_cluster_resource_id = aws_rds_cluster.test.cluster_resource_id
+    restore_type               = "full-copy"
+    use_latest_restorable_time = true
   }
 }
-
-resource "aws_subnet" "subnets" {
-  count             = length(data.aws_availability_zones.available.names)
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  tags = {
-    Name = "%[1]s-subnet-${count.index}"
-  }
+`, rName))
 }
 
-resource "aws_db_subnet_group" "test" {
-  name       = "%[1]s-db-subnet-group"
-  subnet_ids = aws_subnet.subnets[*].id
-}
-
-resource "aws_rds_cluster" "restored_pit" {
-  cluster_identifier              = "%s"
+func testAccClusterConfig_pointInTimeRestoreSource_enabledCloudWatchLogsExports(rName, enabledCloudwatchLogExports string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
+resource "aws_rds_cluster" "restore" {
+  cluster_identifier              = "%[1]s-restore"
   skip_final_snapshot             = true
   engine                          = aws_rds_cluster.test.engine
-  enabled_cloudwatch_logs_exports = [%q]
+  enabled_cloudwatch_logs_exports = [%[2]q]
+
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     restore_type               = "full-copy"
     use_latest_restorable_time = true
   }
 }
-`, parentId, childId, enabledCloudwatchLogExports))
+`, rName, enabledCloudwatchLogExports))
 }
 
-func testAccClusterTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccClusterConfig_domain(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		testAccConfig_ServiceRole(rName),
+		testAccConfig_DirectoryService(rName, domain),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier     = %[1]q
+  engine                 = %[2]q
+  master_username        = "tfacctest"
+  master_password        = "avoid-plaintext-passwords"
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+  domain                 = aws_directory_service_directory.directory.id
+  domain_iam_role_name   = aws_iam_role.role.name
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL),
+	)
+}
+
+func testAccClusterConfig_enabledCloudWatchLogsExports1(rName, enabledCloudwatchLogExports1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
-  skip_final_snapshot = true
-
-  tags = {
-    %q = %q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccClusterTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
-  skip_final_snapshot = true
-
-  tags = {
-    %q = %q
-    %q = %q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccClusterEnabledCloudWatchLogsExports1Config(rName, enabledCloudwatchLogExports1 string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  enabled_cloudwatch_logs_exports = [%q]
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q]
+  engine                          = %[3]q
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   skip_final_snapshot             = true
 }
-`, rName, enabledCloudwatchLogExports1)
+`, rName, enabledCloudwatchLogExports1, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterEnabledCloudWatchLogsExports2Config(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
+func testAccClusterConfig_enabledCloudWatchLogsExports2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  enabled_cloudwatch_logs_exports = [%q, %q]
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q, %[3]q]
+  engine                          = %[4]q
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   skip_final_snapshot             = true
 }
-`, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2)
+`, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterEnabledCloudWatchLogsExportsPostgres1Config(rName, enabledCloudwatchLogExports1 string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  enabled_cloudwatch_logs_exports = [%q]
-  engine                          = "aurora-postgresql"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  skip_final_snapshot             = true
+func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, enabledCloudwatchLogExports1 string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io1"
+  supports_iops              = true
+  supports_clusters          = true
 }
-`, rName, enabledCloudwatchLogExports1)
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[3]q
+  enabled_cloudwatch_logs_exports = [%[4]q]
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  skip_final_snapshot             = true
+  allocated_storage               = 100
+  storage_type                    = data.aws_rds_orderable_db_instance.test.storage_type
+  iops                            = 1000
+  db_cluster_instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name            = aws_db_subnet_group.test.name
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  engine_mode                     = "provisioned"
+  engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
+}
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, enabledCloudwatchLogExports1))
+}
+
+func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io1"
+  supports_iops              = true
+  supports_clusters          = true
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[3]q
+  enabled_cloudwatch_logs_exports = [%[4]q, %[5]q]
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  skip_final_snapshot             = true
+  allocated_storage               = 100
+  storage_type                    = data.aws_rds_orderable_db_instance.test.storage_type
+  iops                            = 1000
+  db_cluster_instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name            = aws_db_subnet_group.test.name
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  engine_mode                     = "provisioned"
+  engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
+}
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2))
 }
 
 func testAccClusterConfig_kmsKey(n int) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]d"
@@ -2510,7 +3735,7 @@ resource "aws_kms_key" "foo" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -2522,16 +3747,16 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  storage_encrypted               = true
-  kms_key_id                      = aws_kms_key.foo.arn
-  skip_final_snapshot             = true
+  cluster_identifier  = "tf-aurora-cluster-%[1]d"
+  database_name       = "mydb"
+  engine              = %[2]q
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  storage_encrypted   = true
+  kms_key_id          = aws_kms_key.foo.arn
+  skip_final_snapshot = true
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
 func testAccClusterConfig_encrypted(n int) string {
@@ -2539,19 +3764,21 @@ func testAccClusterConfig_encrypted(n int) string {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = "tf-aurora-cluster-%d"
   database_name       = "mydb"
+  engine              = %[2]q
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   storage_encrypted   = true
   skip_final_snapshot = true
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
 func testAccClusterConfig_backups(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier           = "tf-aurora-cluster-%d"
+  cluster_identifier           = "tf-aurora-cluster-%[1]d"
   database_name                = "mydb"
+  engine                       = %[2]q
   master_username              = "foo"
   master_password              = "mustbeeightcharaters"
   backup_retention_period      = 5
@@ -2559,14 +3786,15 @@ resource "aws_rds_cluster" "test" {
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot          = true
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
 func testAccClusterConfig_backupsUpdate(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier           = "tf-aurora-cluster-%d"
+  cluster_identifier           = "tf-aurora-cluster-%[1]d"
   database_name                = "mydb"
+  engine                       = %[2]q
   master_username              = "foo"
   master_password              = "mustbeeightcharaters"
   backup_retention_period      = 10
@@ -2575,78 +3803,79 @@ resource "aws_rds_cluster" "test" {
   apply_immediately            = true
   skip_final_snapshot          = true
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
 func testAccClusterConfig_iamAuth(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier                  = "tf-aurora-cluster-%d"
+  cluster_identifier                  = "tf-aurora-cluster-%[1]d"
   database_name                       = "mydb"
+  engine                              = %[2]q
   master_username                     = "foo"
   master_password                     = "mustbeeightcharaters"
   iam_database_authentication_enabled = true
   skip_final_snapshot                 = true
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterConfig_EngineVersion(upgrade bool, rInt int) string {
+func testAccClusterConfig_engineVersion(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "aurora-postgresql"
-  preferred_versions = ["9.6.3", "9.6.6", "9.6.8"]
+  engine                    = %[1]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_rds_engine_version.upgrade.version_actual]
 }
 
 data "aws_rds_engine_version" "upgrade" {
-  engine             = data.aws_rds_engine_version.test.engine
-  preferred_versions = data.aws_rds_engine_version.test.valid_upgrade_targets
+  engine = %[1]q
 }
 
 locals {
-  parameter_group_name = %[1]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
-  engine_version       = %[1]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
+  parameter_group_name = %[2]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version       = %[2]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%[2]d"
-  database_name                   = "mydb"
+  cluster_identifier              = %[3]q
+  database_name                   = "test"
   db_cluster_parameter_group_name = "default.${local.parameter_group_name}"
   engine                          = data.aws_rds_engine_version.test.engine
   engine_version                  = local.engine_version
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
+  master_password                 = "avoid-plaintext-passwords"
+  master_username                 = "tfacctest"
   skip_final_snapshot             = true
   apply_immediately               = true
 }
-`, upgrade, rInt)
+`, tfrds.ClusterEngineAuroraPostgreSQL, upgrade, rName)
 }
 
-func testAccClusterConfig_EngineVersionWithPrimaryInstance(upgrade bool, rInt int) string {
+func testAccClusterConfig_engineVersionPrimaryInstance(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "aurora-postgresql"
-  preferred_versions = ["10.7", "10.13", "11.6"]
+  engine                    = %[1]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_rds_engine_version.upgrade.version_actual]
 }
 
 data "aws_rds_engine_version" "upgrade" {
-  engine             = data.aws_rds_engine_version.test.engine
-  preferred_versions = data.aws_rds_engine_version.test.valid_upgrade_targets
+  engine = %[1]q
 }
 
 locals {
-  parameter_group_name = %[1]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
-  engine_version       = %[1]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
+  parameter_group_name = %[2]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version       = %[2]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%[2]d"
-  database_name                   = "mydb"
+  cluster_identifier              = %[3]q
+  database_name                   = "test"
   db_cluster_parameter_group_name = "default.${local.parameter_group_name}"
   engine                          = data.aws_rds_engine_version.test.engine
   engine_version                  = local.engine_version
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
+  master_password                 = "avoid-plaintext-passwords"
+  master_username                 = "tfacctest"
   skip_final_snapshot             = true
   apply_immediately               = true
 }
@@ -2654,127 +3883,33 @@ resource "aws_rds_cluster" "test" {
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.test.engine
   engine_version             = data.aws_rds_engine_version.test.version
-  preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.r4.large"]
+  preferred_instance_classes = [%[4]s]
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  identifier         = "tf-acc-test-%[2]d"
+  identifier         = %[3]q
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
   engine             = aws_rds_cluster.test.engine
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, upgrade, rInt)
+`, tfrds.ClusterEngineAuroraPostgreSQL, upgrade, rName, mainInstanceClasses)
 }
 
-func testAccClusterConfig_Port(rInt, port int) string {
+func testAccClusterConfig_port(rName string, port int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%d"
-  database_name                   = "mydb"
-  db_cluster_parameter_group_name = "default.aurora-postgresql11"
-  engine                          = "aurora-postgresql"
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
-  port                            = %d
-  skip_final_snapshot             = true
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = %[2]q
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
+  port                = %[3]d
+  skip_final_snapshot = true
 }
-`, rInt, port)
-}
-
-func testAccClusterIncludingIAMRolesConfig(n int) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "rds_sample_role" {
-  name = "rds_sample_role_%[1]d"
-  path = "/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "rds.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL, port)
 }
 
-resource "aws_iam_role_policy" "rds_policy" {
-  name = "rds_sample_role_policy_%[1]d"
-  role = aws_iam_role.rds_sample_role.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-
-resource "aws_iam_role" "another_rds_sample_role" {
-  name = "another_rds_sample_role_%[1]d"
-  path = "/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "rds.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "another_rds_policy" {
-  name = "another_rds_sample_role_policy_%[1]d"
-  role = aws_iam_role.another_rds_sample_role.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot             = true
-
-  tags = {
-    Environment = "production"
-  }
-
-  depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
-}
-`, n)
-}
-
-func testAccClusterAddIAMRolesConfig(n int) string {
+func testAccClusterConfig_includingIAMRoles(n int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "rds_sample_role" {
   name = "rds_sample_role_%[1]d"
@@ -2851,13 +3986,12 @@ EOF
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot             = true
-  iam_roles                       = [aws_iam_role.rds_sample_role.arn, aws_iam_role.another_rds_sample_role.arn]
+  cluster_identifier  = "tf-aurora-cluster-%[1]d"
+  database_name       = "mydb"
+  engine              = %[2]q
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
 
   tags = {
     Environment = "production"
@@ -2865,10 +3999,104 @@ resource "aws_rds_cluster" "test" {
 
   depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterRemoveIAMRolesConfig(n int) string {
+func testAccClusterConfig_addIAMRoles(n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "rds_sample_role" {
+  name = "rds_sample_role_%[1]d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "rds_policy" {
+  name = "rds_sample_role_policy_%[1]d"
+  role = aws_iam_role.rds_sample_role.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+resource "aws_iam_role" "another_rds_sample_role" {
+  name = "another_rds_sample_role_%[1]d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "another_rds_policy" {
+  name = "another_rds_sample_role_policy_%[1]d"
+  role = aws_iam_role.another_rds_sample_role.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = "tf-aurora-cluster-%[1]d"
+  database_name       = "mydb"
+  engine              = %[2]q
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+  iam_roles           = [aws_iam_role.rds_sample_role.arn, aws_iam_role.another_rds_sample_role.arn]
+
+  tags = {
+    Environment = "production"
+  }
+
+  depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
+}
+`, n, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_removeIAMRoles(n int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "another_rds_sample_role" {
   name = "another_rds_sample_role_%[1]d"
@@ -2908,13 +4136,13 @@ EOF
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot             = true
-  iam_roles                       = [aws_iam_role.another_rds_sample_role.arn]
+  cluster_identifier  = "tf-aurora-cluster-%[1]d"
+  database_name       = "mydb"
+  engine              = %[2]q
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+  iam_roles           = [aws_iam_role.another_rds_sample_role.arn]
 
   tags = {
     Environment = "production"
@@ -2922,14 +4150,12 @@ resource "aws_rds_cluster" "test" {
 
   depends_on = [aws_iam_role.another_rds_sample_role]
 }
-`, n)
+`, n, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterReplicationSourceIdentifierKMSKeyIDConfig(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
-data "aws_availability_zones" "alternate" {
+func testAccClusterConfig_replicationSourceIDKMSKeyID(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
   provider = "awsalternate"
 
   state = "available"
@@ -2941,12 +4167,22 @@ data "aws_availability_zones" "alternate" {
 }
 
 data "aws_caller_identity" "current" {}
-
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[2]s]
+}
+
 resource "aws_rds_cluster_parameter_group" "test" {
-  name        = %[1]q
-  family      = "aurora5.6"
+  name        = %[3]q
+  family      = data.aws_rds_engine_version.default.parameter_group_family
   description = "RDS default cluster parameter group"
 
   parameter {
@@ -2957,24 +4193,28 @@ resource "aws_rds_cluster_parameter_group" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "%[1]s-primary"
+  cluster_identifier              = "%[3]s-primary"
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
+  database_name                   = "test"
+  engine                          = data.aws_rds_engine_version.default.engine
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
   storage_encrypted               = true
   skip_final_snapshot             = true
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  identifier         = "%[1]s-primary"
+  identifier         = "%[3]s-primary"
   cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = "db.t2.small"
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
 }
 
-resource "aws_kms_key" "alternate" {
-  provider    = "awsalternate"
-  description = %[1]q
+resource "aws_kms_key" "test" {
+  provider = "awsalternate"
+
+  description = %[3]q
 
   policy = <<POLICY
 {
@@ -2985,7 +4225,7 @@ resource "aws_kms_key" "alternate" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -2993,41 +4233,46 @@ resource "aws_kms_key" "alternate" {
   ]
 }
   POLICY
-
 }
 
-resource "aws_vpc" "alternate" {
-  provider   = "awsalternate"
+resource "aws_vpc" "test" {
+  provider = "awsalternate"
+
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-acctest-rds-cluster-encrypted-cross-region-replica"
+    Name = %[3]q
   }
 }
 
-resource "aws_subnet" "alternate" {
-  provider          = "awsalternate"
-  count             = 3
-  vpc_id            = aws_vpc.alternate.id
-  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+resource "aws_subnet" "test" {
+  provider = "awsalternate"
+
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
 
   tags = {
-    Name = "tf-acc-rds-cluster-encrypted-cross-region-replica-${count.index}"
+    Name = %[3]q
   }
 }
 
-resource "aws_db_subnet_group" "alternate" {
-  provider   = "awsalternate"
-  name       = %[1]q
-  subnet_ids = aws_subnet.alternate[*].id
+resource "aws_db_subnet_group" "test" {
+  provider = "awsalternate"
+
+  name       = %[3]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "alternate" {
-  provider                      = "awsalternate"
-  cluster_identifier            = "%[1]s-replica"
-  db_subnet_group_name          = aws_db_subnet_group.alternate.name
-  kms_key_id                    = aws_kms_key.alternate.arn
+  provider = "awsalternate"
+
+  cluster_identifier            = "%[3]s-replica"
+  db_subnet_group_name          = aws_db_subnet_group.test.name
+  engine                        = %[1]q
+  kms_key_id                    = aws_kms_key.test.arn
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
@@ -3037,157 +4282,168 @@ resource "aws_rds_cluster" "alternate" {
     aws_rds_cluster_instance.test,
   ]
 }
-`, rName))
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rName))
 }
 
-func testAccClusterConfig_DeletionProtection(rName string, deletionProtection bool) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  deletion_protection = %t
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-`, rName, deletionProtection)
-}
-
-func testAccClusterConfig_EngineMode(rName, engineMode string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  engine_mode         = %q
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-
-  #   scaling_configuration {
-  # 	min_capacity = 2
-  #   }
-}
-`, rName, engineMode)
-}
-
-func testAccClusterConfig_EngineMode_Global(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  engine_mode         = "global"
-  engine_version      = "5.6.10a" # version compatible with engine_mode = "global"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-`, rName)
-}
-
-func testAccClusterConfig_EngineMode_Multimaster(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-rds-cluster-multimaster"
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-test-rds-cluster-multimaster"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-test-rds-cluster-multimaster"
-  }
-}
-
+func testAccClusterConfig_networkType(rName string, networkType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
-# multimaster requires db_subnet_group_name
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[2]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[3]s]
+  supported_network_types    = [%[4]q]
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
-  engine_mode          = "multimaster"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
+  network_type         = %[4]q
+  engine               = %[2]q
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  master_password      = "avoid-plaintext-passwords"
+  master_username      = "tfacctest"
   skip_final_snapshot  = true
+  apply_immediately    = true
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, networkType))
 }
 
-func testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName string) string {
+func testAccClusterConfig_deletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  deletion_protection = %[2]t
+  engine              = %[3]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+`, rName, deletionProtection, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_engineMode(rName, engineMode string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  engine_mode         = %[3]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, engineMode)
+}
+
+func testAccClusterConfig_engineMode_serverless(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  engine_mode         = "serverless"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+
+  scaling_configuration {
+    min_capacity = 2
+  }
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_EngineMode_global(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = %[2]q
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_GlobalClusterID_EngineMode_global(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
-  engine_version            = "5.6.10a" # version compatible with engine_mode = "global"
-  force_destroy             = true      # Partial configuration removal ordering fix for after Terraform 0.12
-  global_cluster_identifier = %[1]q
+  engine                    = %[1]q
+  engine_version            = data.aws_rds_engine_version.default.version
+  force_destroy             = true # Partial configuration removal ordering fix for after Terraform 0.12
+  global_cluster_identifier = %[2]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier        = %[1]q
+  cluster_identifier        = %[2]q
   global_cluster_identifier = aws_rds_global_cluster.test.id
-  engine_mode               = "global"
-  engine_version            = aws_rds_global_cluster.test.engine_version
-  master_password           = "barbarbarbar"
-  master_username           = "foo"
+  engine                    = %[1]q
+  engine_version            = data.aws_rds_engine_version.default.version
+  master_password           = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
   skip_final_snapshot       = true
 }
-`, rName)
+
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+`, tfrds.ClusterEngineAuroraMySQL, rName)
 }
 
-func testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterIdentifierResourceName string) string {
+func testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterIdentifierResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   count = 2
 
-  engine_version            = "5.6.10a" # version compatible with engine_mode = "global"
-  global_cluster_identifier = "%[1]s-${count.index}"
+  engine                    = %[1]q
+  engine_version            = data.aws_rds_engine_version.default.version
+  global_cluster_identifier = "%[2]s-${count.index}"
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier        = %[1]q
-  global_cluster_identifier = %[2]s.id
-  engine_mode               = "global"
-  engine_version            = %[2]s.engine_version
-  master_password           = "barbarbarbar"
-  master_username           = "foo"
+  cluster_identifier        = %[2]q
+  global_cluster_identifier = %[3]s.id
+  engine                    = %[1]q
+  engine_version            = data.aws_rds_engine_version.default.version
+  master_password           = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
   skip_final_snapshot       = true
 }
-`, rName, globalClusterIdentifierResourceName)
+
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+`, tfrds.ClusterEngineAuroraMySQL, rName, globalClusterIdentifierResourceName)
 }
 
-func testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Provisioned(rName string) string {
+func testAccClusterConfig_GlobalClusterID_EngineMode_provisioned(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  supported_engine_modes     = ["provisioned"]
+  supports_clusters          = true
+}
+
 resource "aws_rds_global_cluster" "test" {
-  engine                    = "aurora-postgresql"
-  engine_version            = "10.11"
-  global_cluster_identifier = %[1]q
+  engine                    = %[1]q
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  global_cluster_identifier = %[3]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier        = %[1]q
+  cluster_identifier        = %[3]q
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
   global_cluster_identifier = aws_rds_global_cluster.test.id
@@ -3195,10 +4451,10 @@ resource "aws_rds_cluster" "test" {
   master_username           = "foo"
   skip_final_snapshot       = true
 }
-`, rName)
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName)
 }
 
-func testAccClusterConfig_GlobalClusterIdentifier_PrimarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+func testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -3214,14 +4470,22 @@ data "aws_availability_zones" "alternate" {
   }
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  supports_clusters          = true
+  supports_global_databases  = true
+}
+
 resource "aws_rds_global_cluster" "test" {
-  global_cluster_identifier = "%[1]s"
-  engine                    = "aurora-mysql"
-  engine_version            = "5.7.mysql_aurora.2.07.1"
+  global_cluster_identifier = %[3]q
+  engine                    = %[1]q
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
 }
 
 resource "aws_rds_cluster" "primary" {
-  cluster_identifier        = "%[2]s"
+  cluster_identifier        = %[4]q
   database_name             = "mydb"
   master_username           = "foo"
   master_password           = "barbarbar"
@@ -3232,9 +4496,9 @@ resource "aws_rds_cluster" "primary" {
 }
 
 resource "aws_rds_cluster_instance" "primary" {
-  identifier         = "%[2]s"
+  identifier         = %[4]q
   cluster_identifier = aws_rds_cluster.primary.id
-  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   engine             = aws_rds_cluster.primary.engine
   engine_version     = aws_rds_cluster.primary.engine_version
 }
@@ -3244,7 +4508,7 @@ resource "aws_vpc" "alternate" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "%[3]s"
+    Name = %[5]q
   }
 }
 
@@ -3256,19 +4520,19 @@ resource "aws_subnet" "alternate" {
   cidr_block        = "10.0.${count.index}.0/24"
 
   tags = {
-    Name = "%[3]s"
+    Name = %[5]q
   }
 }
 
 resource "aws_db_subnet_group" "alternate" {
   provider   = "awsalternate"
-  name       = "%[3]s"
+  name       = %[5]q
   subnet_ids = aws_subnet.alternate[*].id
 }
 
 resource "aws_rds_cluster" "secondary" {
   provider                  = "awsalternate"
-  cluster_identifier        = "%[3]s"
+  cluster_identifier        = %[5]q
   db_subnet_group_name      = aws_db_subnet_group.alternate.name
   skip_final_snapshot       = true
   source_region             = data.aws_region.current.name
@@ -3286,16 +4550,16 @@ resource "aws_rds_cluster" "secondary" {
 
 resource "aws_rds_cluster_instance" "secondary" {
   provider           = "awsalternate"
-  identifier         = "%[3]s"
+  identifier         = %[5]q
   cluster_identifier = aws_rds_cluster.secondary.id
-  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
 }
-`, rNameGlobal, rNamePrimary, rNameSecondary))
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rNameGlobal, rNamePrimary, rNameSecondary))
 }
 
-func testAccClusterConfig_GlobalClusterIdentifier_SecondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+func testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -3311,14 +4575,22 @@ data "aws_availability_zones" "alternate" {
   }
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  supports_clusters          = true
+  supports_global_databases  = true
+}
+
 resource "aws_rds_global_cluster" "test" {
-  global_cluster_identifier = "%[1]s"
-  engine                    = "aurora-mysql"
-  engine_version            = "5.7.mysql_aurora.2.08.1"
+  global_cluster_identifier = %[3]q
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
 }
 
 resource "aws_rds_cluster" "primary" {
-  cluster_identifier        = "%[2]s"
+  cluster_identifier        = %[4]q
   database_name             = "mydb"
   master_username           = "foo"
   master_password           = "barbarbar"
@@ -3329,9 +4601,9 @@ resource "aws_rds_cluster" "primary" {
 }
 
 resource "aws_rds_cluster_instance" "primary" {
-  identifier         = "%[2]s"
+  identifier         = %[4]q
   cluster_identifier = aws_rds_cluster.primary.id
-  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   engine             = aws_rds_cluster.primary.engine
   engine_version     = aws_rds_cluster.primary.engine_version
 }
@@ -3341,7 +4613,7 @@ resource "aws_vpc" "alternate" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "%[3]s"
+    Name = %[5]q
   }
 }
 
@@ -3353,19 +4625,19 @@ resource "aws_subnet" "alternate" {
   cidr_block        = "10.0.${count.index}.0/24"
 
   tags = {
-    Name = "%[3]s"
+    Name = %[5]q
   }
 }
 
 resource "aws_db_subnet_group" "alternate" {
   provider   = "awsalternate"
-  name       = "%[3]s"
+  name       = %[5]q
   subnet_ids = aws_subnet.alternate[*].id
 }
 
 resource "aws_rds_cluster" "secondary" {
   provider                       = "awsalternate"
-  cluster_identifier             = "%[3]s"
+  cluster_identifier             = %[5]q
   db_subnet_group_name           = aws_db_subnet_group.alternate.name
   skip_final_snapshot            = true
   source_region                  = data.aws_region.current.name
@@ -3384,16 +4656,16 @@ resource "aws_rds_cluster" "secondary" {
 
 resource "aws_rds_cluster_instance" "secondary" {
   provider           = "awsalternate"
-  identifier         = "%[3]s"
+  identifier         = %[5]q
   cluster_identifier = aws_rds_cluster.secondary.id
-  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
 }
-`, rNameGlobal, rNamePrimary, rNameSecondary))
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rNameGlobal, rNamePrimary, rNameSecondary))
 }
 
-func testAccClusterConfig_GlobalClusterIdentifier_ReplicationSourceIdentifier(rName string) string {
+func testAccClusterConfig_GlobalClusterID_replicationSourceID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -3409,14 +4681,25 @@ data "aws_availability_zones" "alternate" {
   }
 }
 
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[2]s]
+  supports_global_databases  = true
+}
+
 resource "aws_rds_global_cluster" "test" {
-  global_cluster_identifier = %[1]q
-  engine                    = "aurora-postgresql"
-  engine_version            = "10.11"
+  global_cluster_identifier = %[3]q
+  engine                    = data.aws_rds_engine_version.default.engine
+  engine_version            = data.aws_rds_engine_version.default.version
 }
 
 resource "aws_rds_cluster" "primary" {
-  cluster_identifier        = "%[1]s-primary"
+  cluster_identifier        = "%[3]s-primary"
   database_name             = "mydb"
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
@@ -3430,8 +4713,8 @@ resource "aws_rds_cluster_instance" "primary" {
   cluster_identifier = aws_rds_cluster.primary.id
   engine             = aws_rds_cluster.primary.engine
   engine_version     = aws_rds_cluster.primary.engine_version
-  identifier         = "%[1]s-primary"
-  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  identifier         = "%[3]s-primary"
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_vpc" "alternate" {
@@ -3439,7 +4722,7 @@ resource "aws_vpc" "alternate" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = %[1]q
+    Name = %[3]q
   }
 }
 
@@ -3451,13 +4734,13 @@ resource "aws_subnet" "alternate" {
   cidr_block        = "10.0.${count.index}.0/24"
 
   tags = {
-    Name = %[1]q
+    Name = %[3]q
   }
 }
 
 resource "aws_db_subnet_group" "alternate" {
   provider   = "awsalternate"
-  name       = "%[1]s"
+  name       = %[3]q
   subnet_ids = aws_subnet.alternate[*].id
 }
 
@@ -3465,7 +4748,7 @@ resource "aws_rds_cluster" "secondary" {
   provider   = "awsalternate"
   depends_on = [aws_rds_cluster_instance.primary]
 
-  cluster_identifier            = "%[1]s-secondary"
+  cluster_identifier            = "%[3]s-secondary"
   db_subnet_group_name          = aws_db_subnet_group.alternate.name
   engine                        = aws_rds_global_cluster.test.engine
   engine_version                = aws_rds_global_cluster.test.engine_version
@@ -3481,134 +4764,172 @@ resource "aws_rds_cluster_instance" "secondary" {
   cluster_identifier = aws_rds_cluster.secondary.id
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
-  identifier         = "%[1]s-secondary"
+  identifier         = "%[3]s-secondary"
   instance_class     = aws_rds_cluster_instance.primary.instance_class
 }
-`, rName))
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName))
 }
 
-func testAccClusterConfig_ScalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int, timeoutAction string) string {
+func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause int, timeoutAction string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
   engine_mode         = "serverless"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
 
   scaling_configuration {
-    auto_pause               = %t
-    max_capacity             = %d
-    min_capacity             = %d
-    seconds_until_auto_pause = %d
-    timeout_action           = "%s"
+    auto_pause               = %[3]t
+    max_capacity             = %[4]d
+    min_capacity             = %[5]d
+    seconds_before_timeout   = %[6]d
+    seconds_until_auto_pause = %[7]d
+    timeout_action           = %[8]q
   }
 }
-`, rName, autoPause, maxCapacity, minCapacity, secondsUntilAutoPause, timeoutAction)
+`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause, timeoutAction)
 }
 
-func testAccClusterConfig_ScalingConfiguration_DefaultMinCapacity(rName string, autoPause bool, maxCapacity, secondsUntilAutoPause int, timeoutAction string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  engine_mode         = "serverless"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-
-  scaling_configuration {
-    auto_pause               = %t
-    max_capacity             = %d
-    seconds_until_auto_pause = %d
-    timeout_action           = "%s"
-  }
-}
-`, rName, autoPause, maxCapacity, secondsUntilAutoPause, timeoutAction)
-}
-
-func testAccClusterConfig_SnapshotIdentifier(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%[1]s-source"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %[1]q
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  skip_final_snapshot = true
-  snapshot_identifier = aws_db_cluster_snapshot.test.id
-}
-`, rName)
-}
-
-func testAccClusterConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%[1]s-source"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %[1]q
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  deletion_protection = %[2]t
-  skip_final_snapshot = true
-  snapshot_identifier = aws_db_cluster_snapshot.test.id
-}
-`, rName, deletionProtection)
-}
-
-func testAccClusterConfig_SnapshotIdentifier_EngineMode(rName, engineMode string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%[1]s-source"
-  engine_mode         = %[2]q
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %[1]q
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  engine_mode         = %[2]q
-  skip_final_snapshot = true
-  snapshot_identifier = aws_db_cluster_snapshot.test.id
-}
-`, rName, engineMode)
-}
-
-func testAccClusterConfig_SnapshotIdentifier_EngineVersion(rName string, same bool) string {
+func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "aurora-postgresql"
-  preferred_versions = ["11.4", "10.4", "9.6.6"]
+  engine      = %[1]q
+  latest      = true
+  include_all = true
+
+  filter {
+    name   = "engine-mode"
+    values = ["serverless"]
+  }
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[2]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = data.aws_rds_engine_version.test.version
+
+  serverlessv2_scaling_configuration {
+    max_capacity = %[3]f
+    min_capacity = %[4]f
+  }
+}
+`, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity)
+}
+
+func testAccClusterConfig_ScalingConfiguration_defaultMinCapacity(rName string, autoPause bool, maxCapacity, secondsUntilAutoPause int, timeoutAction string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  engine_mode         = "serverless"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+
+  scaling_configuration {
+    auto_pause               = %[3]t
+    max_capacity             = %[4]d
+    seconds_until_auto_pause = %[5]d
+    timeout_action           = %[6]q
+  }
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, secondsUntilAutoPause, timeoutAction)
+}
+
+func testAccClusterConfig_snapshotID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.source.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  skip_final_snapshot = true
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_SnapshotID_deletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.source.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  deletion_protection = %[3]t
+  skip_final_snapshot = true
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, deletionProtection)
+}
+
+func testAccClusterConfig_SnapshotID_engineMode(rName, engineMode string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
+  engine_mode         = %[3]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.source.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  engine_mode         = %[3]q
+  skip_final_snapshot = true
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, engineMode)
+}
+
+func testAccClusterConfig_SnapshotID_engineVersion(rName string, same bool) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine                    = data.aws_rds_engine_version.upgrade.engine
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_rds_engine_version.upgrade.version_actual]
 }
 
 data "aws_rds_engine_version" "upgrade" {
-  engine             = data.aws_rds_engine_version.test.engine
-  preferred_versions = data.aws_rds_engine_version.test.valid_upgrade_targets
+  engine = %[1]q
 }
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%[1]s-source"
+  cluster_identifier  = "%[2]s-source"
   engine              = data.aws_rds_engine_version.test.engine
   engine_version      = data.aws_rds_engine_version.test.version
   master_password     = "barbarbarbar"
@@ -3618,20 +4939,20 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %[1]q
+  db_cluster_snapshot_identifier = %[2]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
+  cluster_identifier  = %[2]q
   engine              = data.aws_rds_engine_version.test.engine
-  engine_version      = %[2]t ? data.aws_rds_engine_version.test.version : data.aws_rds_engine_version.upgrade.version
+  engine_version      = %[3]t ? data.aws_rds_engine_version.test.version : data.aws_rds_engine_version.upgrade.version
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, same)
+`, tfrds.ClusterEngineAuroraPostgreSQL, rName, same)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_KMSKeyID(rName string) string {
+func testAccClusterConfig_SnapshotID_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -3639,6 +4960,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3651,17 +4973,19 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
+  engine              = %[2]q
   kms_key_id          = aws_kms_key.test.arn
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_MasterPassword(rName, masterPassword string) string {
+func testAccClusterConfig_SnapshotID_masterPassword(rName, masterPassword string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3674,17 +4998,19 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
-  master_password     = %[2]q
+  engine              = %[2]q
+  master_password     = %[3]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, masterPassword)
+`, rName, tfrds.ClusterEngineAuroraMySQL, masterPassword)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_MasterUsername(rName, masterUsername string) string {
+func testAccClusterConfig_SnapshotID_masterUsername(rName, masterUsername string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3697,17 +5023,19 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
-  master_username     = %[2]q
+  engine              = %[2]q
+  master_username     = %[3]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, masterUsername)
+`, rName, tfrds.ClusterEngineAuroraMySQL, masterUsername)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_PreferredBackupWindow(rName, preferredBackupWindow string) string {
+func testAccClusterConfig_SnapshotID_preferredBackupWindow(rName, preferredBackupWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3720,41 +5048,51 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier           = %[1]q
-  preferred_backup_window      = %[2]q
+  engine                       = %[2]q
+  preferred_backup_window      = %[3]q
   preferred_maintenance_window = "sun:09:00-sun:09:30"
   skip_final_snapshot          = true
   snapshot_identifier          = aws_db_cluster_snapshot.test.id
 }
-`, rName, preferredBackupWindow)
+`, rName, tfrds.ClusterEngineAuroraMySQL, preferredBackupWindow)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_PreferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
+func testAccClusterConfig_SnapshotID_preferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
+	// This config will never need the version updated. Use as a model for changing the other
+	// tests.
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine = %[1]q
+}
+
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%[1]s-source"
+  cluster_identifier  = "%[2]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
+  engine              = data.aws_rds_engine_version.test.engine
 }
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %[1]q
+  db_cluster_snapshot_identifier = %[2]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier           = %[1]q
-  preferred_maintenance_window = %[2]q
+  cluster_identifier           = %[2]q
+  preferred_maintenance_window = %[3]q
   skip_final_snapshot          = true
   snapshot_identifier          = aws_db_cluster_snapshot.test.id
+  engine                       = data.aws_rds_engine_version.test.engine
 }
-`, rName, preferredMaintenanceWindow)
+`, tfrds.ClusterEngineAuroraMySQL, rName, preferredMaintenanceWindow)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_Tags(rName string) string {
+func testAccClusterConfig_SnapshotID_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3767,6 +5105,7 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
+  engine              = %[2]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 
@@ -3774,10 +5113,10 @@ resource "aws_rds_cluster" "test" {
     key1 = "value1"
   }
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_VPCSecurityGroupIDs(rName string) string {
+func testAccClusterConfig_SnapshotID_vpcSecurityGroupIDs(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc" "default" {
   default = true
@@ -3790,6 +5129,7 @@ data "aws_security_group" "default" {
 
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3802,14 +5142,15 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier     = %[1]q
+  engine                 = %[2]q
   skip_final_snapshot    = true
   snapshot_identifier    = aws_db_cluster_snapshot.test.id
   vpc_security_group_ids = [data.aws_security_group.default.id]
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_VPCSecurityGroupIds_Tags(rName string) string {
+func testAccClusterConfig_SnapshotID_VPCSecurityGroupIds_tags(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc" "default" {
   default = true
@@ -3822,6 +5163,7 @@ data "aws_security_group" "default" {
 
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3834,6 +5176,7 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier     = %[1]q
+  engine                 = %[2]q
   skip_final_snapshot    = true
   snapshot_identifier    = aws_db_cluster_snapshot.test.id
   vpc_security_group_ids = [data.aws_security_group.default.id]
@@ -3842,15 +5185,16 @@ resource "aws_rds_cluster" "test" {
     key1 = "value1"
   }
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterConfig_SnapshotIdentifier_EncryptedRestore(rName string) string {
+func testAccClusterConfig_SnapshotID_encryptedRestore(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3863,38 +5207,113 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
+  engine              = %[2]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 
   storage_encrypted = true
   kms_key_id        = aws_kms_key.test.arn
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterWithCopyTagsToSnapshotConfig(n int, f bool) string {
+func testAccClusterConfig_copyTagsToSnapshot(n int, f bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  copy_tags_to_snapshot           = %t
-  skip_final_snapshot             = true
+  cluster_identifier    = "tf-aurora-cluster-%[1]d"
+  engine                = %[2]q
+  database_name         = "mydb"
+  master_username       = "foo"
+  master_password       = "mustbeeightcharaters"
+  copy_tags_to_snapshot = %[3]t
+  skip_final_snapshot   = true
 }
-`, n, f)
+`, n, tfrds.ClusterEngineAuroraMySQL, f)
 }
 
-func testAccClusterConfig_EnableHTTPEndpoint(rName string, enableHttpEndpoint bool) string {
+func testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(n int, f bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier    = "tf-aurora-cluster-%[1]d"
+  engine                = %[2]q
+  database_name         = "mydb"
+  master_username       = "foo"
+  master_password       = "mustbeeightcharaters"
+  copy_tags_to_snapshot = true
+  skip_final_snapshot   = true
+}
+
+resource "aws_rds_cluster" "clone" {
+  cluster_identifier    = "tf-aurora-cluster-clone-%[1]d"
+  engine                = %[2]q
+  database_name         = "mydb"
+  master_username       = "foo"
+  master_password       = "mustbeeightcharaters"
+  copy_tags_to_snapshot = %[3]t
+  skip_final_snapshot   = true
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
+    use_latest_restorable_time = true
+  }
+}
+`, n, tfrds.ClusterEngineAuroraMySQL, f)
+}
+
+func testAccClusterConfig_auroraStorageType(rName, storageType string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  apply_immediately   = true
+  cluster_identifier  = %[2]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+  storage_type        = %[3]q
+}
+
+`, tfrds.ClusterEngineAuroraPostgreSQL, rName, storageType)
+}
+
+func testAccClusterConfig_auroraStorageTypeNotDefined(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "default" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[2]s]
+}
+
+resource "aws_rds_cluster" "test" {
+  apply_immediately   = true
+  cluster_identifier  = %[3]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+}
+
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName)
+}
+
+func testAccClusterConfig_enableHTTPEndpoint(rName string, enableHttpEndpoint bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  engine               = %[2]q
   engine_mode          = "serverless"
   master_password      = "barbarbarbar"
   master_username      = "foo"
   skip_final_snapshot  = true
-  enable_http_endpoint = %t
+  enable_http_endpoint = %[3]t
 
   scaling_configuration {
     auto_pause               = false
@@ -3904,5 +5323,221 @@ resource "aws_rds_cluster" "test" {
     timeout_action           = "RollbackCapacityChange"
   }
 }
-`, rName, enableHttpEndpoint)
+`, rName, tfrds.ClusterEngineAuroraMySQL, enableHttpEndpoint)
+}
+
+func testAccClusterConfig_enableHTTPEndpointProvisioned(rName string, enableHttpEndpoint bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  engine               = %[2]q
+  engine_mode          = "provisioned"
+  master_password      = "barbarbarbar"
+  master_username      = "foo"
+  skip_final_snapshot  = true
+  enable_http_endpoint = %[3]t
+
+  serverlessv2_scaling_configuration {
+    max_capacity = 1.0
+    min_capacity = 0.5
+  }
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL, enableHttpEndpoint)
+}
+
+func testAccClusterConfig_password(rName, password string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = %[2]q
+  engine              = %[3]q
+  skip_final_snapshot = true
+}
+`, rName, password, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccConfig_ClusterSubnetGroup(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 3),
+		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName),
+	)
+}
+
+func testAccConfig_ServiceRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+			"Service": [
+				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",				
+				"rds.${data.aws_partition.current.dns_suffix}"
+			]
+		},
+		"Effect": "Allow",
+		"Sid": ""
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "attatch-policy" {
+  role       = aws_iam_role.role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
+}
+`, rName)
+}
+
+func testAccConfig_DirectoryService(rName, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_directory_service_directory" "directory" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  }
+}
+
+data "aws_partition" "current" {}
+`, rName, domain)
+}
+
+func testAccClusterConfig_noDeleteAutomatedBackups(rName, preferredBackupWindow string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier       = %[1]q
+  database_name            = "test"
+  engine                   = %[2]q
+  master_username          = "tfacctest"
+  master_password          = "avoid-plaintext-passwords"
+  preferred_backup_window  = %[3]q
+  skip_final_snapshot      = true
+  delete_automated_backups = false
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, preferredBackupWindow)
+}
+
+func testAccClusterConfig_localWriteForwarding(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier            = %[1]q
+  database_name                 = "test"
+  engine                        = "aurora-mysql"
+  engine_version                = "8.0.mysql_aurora.3.04.0"
+  enable_local_write_forwarding = true
+  master_username               = "tfacctest"
+  master_password               = "avoid-plaintext-passwords"
+  skip_final_snapshot           = true
+}
+`, rName)
+}
+
+func testAccClusterConfig_engineLifecycleSupport_disabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier       = %[1]q
+  database_name            = "test"
+  engine                   = %[2]q
+  master_username          = "tfacctest"
+  master_password          = "avoid-plaintext-passwords"
+  skip_final_snapshot      = true
+  engine_lifecycle_support = "open-source-rds-extended-support-disabled"
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL)
+}
+
+func testAccClusterConfig_performanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier           = %[1]q
+  engine                       = %[3]q
+  db_cluster_instance_class    = "db.m6gd.large"
+  storage_type                 = "io1"
+  allocated_storage            = 100
+  iops                         = 1000
+  master_username              = "tfacctest"
+  master_password              = "avoid-plaintext-passwords"
+  skip_final_snapshot          = true
+  performance_insights_enabled = %[2]t
+}
+`, rName, performanceInsightsEnabled, tfrds.ClusterEngineMySQL)
+}
+
+func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  engine                          = %[2]q
+  db_cluster_instance_class       = "db.m6gd.large"
+  storage_type                    = "io1"
+  allocated_storage               = 100
+  iops                            = 1000
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  skip_final_snapshot             = true
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = aws_kms_key.test.arn
+}
+`, rName, tfrds.ClusterEngineMySQL)
+}
+
+func testAccClusterConfig_performanceInsightsRetentionPeriod(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier                    = %[1]q
+  engine                                = %[2]q
+  db_cluster_instance_class             = "db.m6gd.large"
+  storage_type                          = "io1"
+  allocated_storage                     = 100
+  iops                                  = 1000
+  master_username                       = "tfacctest"
+  master_password                       = "avoid-plaintext-passwords"
+  skip_final_snapshot                   = true
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 62
+}
+`, rName, tfrds.ClusterEngineMySQL)
 }

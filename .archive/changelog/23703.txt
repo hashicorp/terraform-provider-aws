@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Set `rule.id` as Computed to prevent drift when the value is not configured
+```
+
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Change `rule` configuration block to list instead of set
+```
+
+```release-note:note:
+resource/aws_s3_bucket_replication_configuration: The `rule.prefix` parameter has been deprecated. Use the `rule.filter` parameter instead.
+```

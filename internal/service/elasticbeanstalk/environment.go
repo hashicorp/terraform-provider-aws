@@ -1,39 +1,51 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
-	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func resourceOptionSetting() *schema.Resource {
+func settingSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"namespace": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"value": {
+			names.AttrNamespace: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -41,19 +53,47 @@ func resourceOptionSetting() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			names.AttrValue: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
-func ResourceEnvironment() *schema.Resource {
+const (
+	environmentTierWebServer = "WebServer"
+	environmentTierWorker    = "Worker"
+)
+
+func environmentTier_Values() []string {
+	return []string{
+		environmentTierWebServer,
+		environmentTierWorker,
+	}
+}
+
+const (
+	environmentTierTypeSQSHTTP  = "SQS/HTTP"
+	environmentTierTypeStandard = "Standard"
+)
+
+var (
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+)
+
+// @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
+func resourceEnvironment() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceEnvironmentCreate,
-		Read:   resourceEnvironmentRead,
-		Update: resourceEnvironmentUpdate,
-		Delete: resourceEnvironmentDelete,
+		CreateWithoutTimeout: resourceEnvironmentCreate,
+		ReadWithoutTimeout:   resourceEnvironmentRead,
+		UpdateWithoutTimeout: resourceEnvironmentUpdate,
+		DeleteWithoutTimeout: resourceEnvironmentDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -61,951 +101,769 @@ func ResourceEnvironment() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  EnvironmentMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"application": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"version_label": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"cname": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cname_prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-			},
-			"endpoint_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "WebServer",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					switch value {
-					case
-						"Worker",
-						"WebServer":
-						return
-					}
-					errors = append(errors, fmt.Errorf("%s is not a valid tier. Valid options are WebServer or Worker", value))
-					return
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"all_settings": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     settingSchema(),
+					Set:      hashSettingsValue,
 				},
-				ForceNew: true,
-			},
-			"setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     resourceOptionSetting(),
-				Set:      optionSettingValueHash,
-			},
-			"all_settings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     resourceOptionSetting(),
-				Set:      optionSettingValueHash,
-			},
-			"solution_stack_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"platform_arn", "template_name"},
-			},
-			"platform_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"solution_stack_name", "template_name"},
-			},
-			"template_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"solution_stack_name", "platform_arn"},
-			},
-			"wait_for_ready_timeout": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "20m",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					duration, err := time.ParseDuration(value)
-					if err != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be parsed as a duration: %s", k, err))
-					}
-					if duration < 0 {
-						errors = append(errors, fmt.Errorf(
-							"%q must be greater than zero", k))
-					}
-					return
+				"application": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			"poll_interval": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					duration, err := time.ParseDuration(value)
-					if err != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be parsed as a duration: %s", k, err))
-					}
-					if duration < 10*time.Second || duration > 60*time.Second {
-						errors = append(errors, fmt.Errorf(
-							"%q must be between 10s and 180s", k))
-					}
-					return
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"autoscaling_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"launch_configurations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"load_balancers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"queues": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"triggers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+				"autoscaling_groups": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"cname": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cname_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"endpoint_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instances": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"launch_configurations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"load_balancers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"platform_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"solution_stack_name", "template_name"},
+				},
+				"poll_interval": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:mnd // these are the limits set by AWS
+				},
+				"queues": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"setting": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     settingSchema(),
+					Set:      hashSettingsValue,
+				},
+				"solution_stack_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"platform_arn", "template_name"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"solution_stack_name", "platform_arn"},
+				},
+				"tier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      environmentTierWebServer,
+					ValidateFunc: validation.StringInSlice(environmentTier_Values(), false),
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"version_label": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"wait_for_ready_timeout": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          "20m",
+					ValidateDiagFunc: sdktypes.ValidateDuration,
+				},
+			}
 		},
 	}
 }
 
-func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	// Get values from config
-	name := d.Get("name").(string)
-	cnamePrefix := d.Get("cname_prefix").(string)
-	tier := d.Get("tier").(string)
-	app := d.Get("application").(string)
-	desc := d.Get("description").(string)
-	version := d.Get("version_label").(string)
-	settings := d.Get("setting").(*schema.Set)
-	solutionStack := d.Get("solution_stack_name").(string)
-	platformArn := d.Get("platform_arn").(string)
-	templateName := d.Get("template_name").(string)
-
-	createOpts := elasticbeanstalk.CreateEnvironmentInput{
+	name := d.Get(names.AttrName).(string)
+	input := &elasticbeanstalk.CreateEnvironmentInput{
+		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
-		ApplicationName: aws.String(app),
-		OptionSettings:  extractOptionSettings(settings),
-		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
+		Tags:            getTagsIn(ctx),
 	}
 
-	if desc != "" {
-		createOpts.Description = aws.String(desc)
+	if v := d.Get(names.AttrDescription); v.(string) != "" {
+		input.Description = aws.String(v.(string))
 	}
 
-	if cnamePrefix != "" {
-		if tier != "WebServer" {
-			return fmt.Errorf("cannot set cname_prefix for tier: %s", tier)
+	if v := d.Get("platform_arn"); v.(string) != "" {
+		input.PlatformArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
+		input.OptionSettings = expandConfigurationOptionSettings(v.(*schema.Set).List())
+	}
+
+	if v := d.Get("solution_stack_name"); v.(string) != "" {
+		input.SolutionStackName = aws.String(v.(string))
+	}
+
+	if v := d.Get("template_name"); v.(string) != "" {
+		input.TemplateName = aws.String(v.(string))
+	}
+
+	if v := d.Get("version_label"); v.(string) != "" {
+		input.VersionLabel = aws.String(v.(string))
+	}
+
+	tier := d.Get("tier").(string)
+
+	if v := d.Get("cname_prefix"); v.(string) != "" {
+		if tier != environmentTierWebServer {
+			return sdkdiag.AppendErrorf(diags, "cname_prefix conflicts with tier: %s", tier)
 		}
-		createOpts.CNAMEPrefix = aws.String(cnamePrefix)
+
+		input.CNAMEPrefix = aws.String(v.(string))
 	}
 
-	if tier != "" {
-		var tierType string
-
-		switch tier {
-		case "WebServer":
-			tierType = "Standard"
-		case "Worker":
-			tierType = "SQS/HTTP"
-		}
-		environmentTier := elasticbeanstalk.EnvironmentTier{
-			Name: aws.String(tier),
-			Type: aws.String(tierType),
-		}
-		createOpts.Tier = &environmentTier
+	var tierType string
+	switch tier {
+	case environmentTierWebServer:
+		tierType = environmentTierTypeStandard
+	case environmentTierWorker:
+		tierType = environmentTierTypeSQSHTTP
+	}
+	input.Tier = &awstypes.EnvironmentTier{
+		Name: aws.String(tier),
+		Type: aws.String(tierType),
 	}
 
-	if solutionStack != "" {
-		createOpts.SolutionStackName = aws.String(solutionStack)
-	}
+	opTime := time.Now()
+	output, err := conn.CreateEnvironment(ctx, input)
 
-	if platformArn != "" {
-		createOpts.PlatformArn = aws.String(platformArn)
-	}
-
-	if templateName != "" {
-		createOpts.TemplateName = aws.String(templateName)
-	}
-
-	if version != "" {
-		createOpts.VersionLabel = aws.String(version)
-	}
-
-	// Get the current time to filter getBeanstalkEnvironmentErrors messages
-	t := time.Now()
-	log.Printf("[DEBUG] Elastic Beanstalk Environment create opts: %s", createOpts)
-	resp, err := conn.CreateEnvironment(&createOpts)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Environment (%s): %s", name, err)
 	}
 
-	// Assign the application name as the resource ID
-	d.SetId(aws.StringValue(resp.EnvironmentId))
+	d.SetId(aws.ToString(output.EnvironmentId))
 
-	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
+	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
+	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
+
 	if err != nil {
 		pollInterval = 0
-		log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 	}
 
-	err = waitForElasticBeanstalkEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) create: %s", d.Id(), err)
+	}
+
+	err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elastic Beanstalk Environment (%s) to become ready: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 	}
 
-	envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
-	if err != nil {
-		return err
-	}
-	if envErrors != nil {
-		return envErrors
-	}
-
-	return resourceEnvironmentRead(d, meta)
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	envID := d.Id()
+	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	var hasChange bool
-
-	updateOpts := elasticbeanstalk.UpdateEnvironmentInput{
-		EnvironmentId: aws.String(envID),
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	if d.HasChange("description") {
-		hasChange = true
-		updateOpts.Description = aws.String(d.Get("description").(string))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChange("solution_stack_name") {
-		hasChange = true
-		if v, ok := d.GetOk("solution_stack_name"); ok {
-			updateOpts.SolutionStackName = aws.String(v.(string))
-		}
-	}
-
-	if d.HasChange("setting") {
-		hasChange = true
-		o, n := d.GetChange("setting")
-		if o == nil {
-			o = &schema.Set{F: optionSettingValueHash}
-		}
-		if n == nil {
-			n = &schema.Set{F: optionSettingValueHash}
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		rm := extractOptionSettings(os.Difference(ns))
-		add := extractOptionSettings(ns.Difference(os))
-
-		// Additions and removals of options are done in a single API call, so we
-		// can't do our normal "remove these" and then later "add these", re-adding
-		// any updated settings.
-		// Because of this, we need to exclude any settings in the "removable"
-		// settings that are also found in the "add" settings, otherwise they
-		// conflict. Here we loop through all the initial removables from the set
-		// difference, and create a new slice `remove` that contains those settings
-		// found in `rm` but not in `add`
-		var remove []*elasticbeanstalk.ConfigurationOptionSetting
-		if len(add) > 0 {
-			for _, r := range rm {
-				var update = false
-				for _, a := range add {
-					// ResourceNames are optional. Some defaults come with it, some do
-					// not. We need to guard against nil/empty in state as well as
-					// nil/empty from the API
-					if a.ResourceName != nil {
-						if r.ResourceName == nil {
-							continue
-						}
-						if *r.ResourceName != *a.ResourceName {
-							continue
-						}
-					}
-					if *r.Namespace == *a.Namespace && *r.OptionName == *a.OptionName {
-						log.Printf("[DEBUG] Updating Beanstalk setting (%s::%s) \"%s\" => \"%s\"", *a.Namespace, *a.OptionName, *r.Value, *a.Value)
-						update = true
-						break
-					}
-				}
-				// Only remove options that are not updates
-				if !update {
-					remove = append(remove, r)
-				}
-			}
-		} else {
-			remove = rm
-		}
-
-		for _, elem := range remove {
-			updateOpts.OptionsToRemove = append(updateOpts.OptionsToRemove, &elasticbeanstalk.OptionSpecification{
-				Namespace:  elem.Namespace,
-				OptionName: elem.OptionName,
-			})
-		}
-
-		updateOpts.OptionSettings = add
-	}
-
-	if d.HasChange("platform_arn") {
-		hasChange = true
-		if v, ok := d.GetOk("platform_arn"); ok {
-			updateOpts.PlatformArn = aws.String(v.(string))
-		}
-	}
-
-	if d.HasChange("template_name") {
-		hasChange = true
-		if v, ok := d.GetOk("template_name"); ok {
-			updateOpts.TemplateName = aws.String(v.(string))
-		}
-	}
-
-	if d.HasChange("version_label") {
-		hasChange = true
-		updateOpts.VersionLabel = aws.String(d.Get("version_label").(string))
-	}
-
-	if hasChange {
-		// Get the current time to filter getBeanstalkEnvironmentErrors messages
-		t := time.Now()
-		log.Printf("[DEBUG] Elastic Beanstalk Environment update opts: %s", updateOpts)
-		_, err := conn.UpdateEnvironment(&updateOpts)
-		if err != nil {
-			return err
-		}
-
-		waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
-		if err != nil {
-			return err
-		}
-		pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
-		if err != nil {
-			pollInterval = 0
-			log.Printf("[WARN] Error parsing poll_interval, using default backoff")
-		}
-
-		err = waitForElasticBeanstalkEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for Elastic Beanstalk Environment (%s) to become ready: %s",
-				d.Id(), err)
-		}
-
-		envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
-		if err != nil {
-			return err
-		}
-		if envErrors != nil {
-			return envErrors
-		}
-	}
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		// Get the current time to filter getBeanstalkEnvironmentErrors messages
-		t := time.Now()
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Elastic Beanstalk environment (%s) tags: %s", arn, err)
-		}
-
-		waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
-		if err != nil {
-			return err
-		}
-		pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
-		if err != nil {
-			pollInterval = 0
-			log.Printf("[WARN] Error parsing poll_interval, using default backoff")
-		}
-
-		err = waitForElasticBeanstalkEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
-		if err != nil {
-			return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become ready: %w", d.Id(), err)
-		}
-
-		envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
-		if err != nil {
-			return err
-		}
-		if envErrors != nil {
-			return envErrors
-		}
-	}
-
-	return resourceEnvironmentRead(d, meta)
-}
-
-func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	envID := d.Id()
-
-	log.Printf("[DEBUG] Elastic Beanstalk environment read %s: id %s", d.Get("name").(string), d.Id())
-
-	resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
-		EnvironmentIds: []*string{aws.String(envID)},
+	resources, err := conn.DescribeEnvironmentResources(ctx, &elasticbeanstalk.DescribeEnvironmentResourcesInput{
+		EnvironmentId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) resources: %s", d.Id(), err)
 	}
 
-	if len(resp.Environments) == 0 {
-		log.Printf("[DEBUG] Elastic Beanstalk environment properties: could not find environment %s", d.Id())
-
-		d.SetId("")
-		return nil
-	} else if len(resp.Environments) != 1 {
-		return fmt.Errorf("Error reading application properties: found %d environments, expected 1", len(resp.Environments))
+	applicationName := aws.ToString(env.ApplicationName)
+	environmentName := aws.ToString(env.EnvironmentName)
+	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: aws.String(applicationName),
+		EnvironmentName: aws.String(environmentName),
 	}
-
-	env := resp.Environments[0]
-
-	if *env.Status == "Terminated" {
-		log.Printf("[DEBUG] Elastic Beanstalk environment %s was terminated", d.Id())
-
-		d.SetId("")
-		return nil
-	}
-
-	resources, err := conn.DescribeEnvironmentResources(&elasticbeanstalk.DescribeEnvironmentResourcesInput{
-		EnvironmentId: aws.String(envID),
-	})
+	configurationSettings, err := findConfigurationSettings(ctx, conn, input)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) configuration settings: %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(env.EnvironmentArn)
-	d.Set("arn", arn)
-
-	if err := d.Set("name", env.EnvironmentName); err != nil {
-		return err
+	d.Set("application", applicationName)
+	d.Set(names.AttrARN, env.EnvironmentArn)
+	if err := d.Set("autoscaling_groups", flattenAutoScalingGroups(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
 	}
-
-	if err := d.Set("application", env.ApplicationName); err != nil {
-		return err
-	}
-
-	if err := d.Set("description", env.Description); err != nil {
-		return err
-	}
-
-	if err := d.Set("cname", env.CNAME); err != nil {
-		return err
-	}
-
-	if err := d.Set("version_label", env.VersionLabel); err != nil {
-		return err
-	}
-
-	if err := d.Set("tier", env.Tier.Name); err != nil {
-		return err
-	}
-
-	if env.CNAME != nil {
-		beanstalkCnamePrefixRegexp := regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?.(elasticbeanstalk.com|eb.amazonaws.com.cn)$`)
+	cname := aws.ToString(env.CNAME)
+	d.Set("cname", cname)
+	if cname != "" {
 		var cnamePrefix string
-		cnamePrefixMatch := beanstalkCnamePrefixRegexp.FindStringSubmatch(*env.CNAME)
 
-		if cnamePrefixMatch == nil {
-			cnamePrefix = ""
-		} else {
+		if cnamePrefixMatch := environmentCNAMERegex.FindStringSubmatch(cname); len(cnamePrefixMatch) > 1 {
 			cnamePrefix = cnamePrefixMatch[1]
 		}
 
-		if err := d.Set("cname_prefix", cnamePrefix); err != nil {
-			return err
-		}
+		d.Set("cname_prefix", cnamePrefix)
 	} else {
-		if err := d.Set("cname_prefix", ""); err != nil {
-			return err
+		d.Set("cname_prefix", "")
+	}
+	d.Set(names.AttrDescription, env.Description)
+	d.Set("endpoint_url", env.EndpointURL)
+	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instances: %s", err)
+	}
+	if err := d.Set("launch_configurations", flattenLaunchConfigurations(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting launch_configurations: %s", err)
+	}
+	if err := d.Set("load_balancers", flattenLoadBalancers(resources.EnvironmentResources.LoadBalancers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting load_balancers: %s", err)
+	}
+	d.Set(names.AttrName, environmentName)
+	d.Set("platform_arn", env.PlatformArn)
+	if err := d.Set("queues", flattenQueues(resources.EnvironmentResources.Queues)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting queues: %s", err)
+	}
+	d.Set("solution_stack_name", env.SolutionStackName)
+	d.Set("tier", env.Tier.Name)
+	if err := d.Set(names.AttrTriggers, flattenTriggers(resources.EnvironmentResources.Triggers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting triggers: %s", err)
+	}
+	d.Set("version_label", env.VersionLabel)
+
+	var configuredSettings []interface{}
+	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
+		configuredSettings = v.(*schema.Set).List()
+	}
+	apiSettings := flattenConfigurationOptionSettings(ctx, meta, configurationSettings.OptionSettings)
+	var settings []interface{}
+
+	for _, apiSetting := range apiSettings {
+		tfMap := apiSetting.(map[string]interface{})
+		isMatch := func(v interface{}) bool {
+			m := v.(map[string]interface{})
+
+			return m[names.AttrNamespace].(string) == tfMap[names.AttrNamespace].(string) &&
+				m[names.AttrName].(string) == tfMap[names.AttrName].(string) &&
+				m["resource"].(string) == tfMap["resource"].(string)
+		}
+		if slices.ContainsFunc(configuredSettings, isMatch) {
+			settings = append(settings, apiSetting)
 		}
 	}
 
-	if err := d.Set("solution_stack_name", env.SolutionStackName); err != nil {
-		return err
+	if err := d.Set("all_settings", apiSettings); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting all_settings: %s", err)
 	}
 
-	if err := d.Set("platform_arn", env.PlatformArn); err != nil {
-		return err
+	if err := d.Set("setting", settings); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
-	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
-		return err
-	}
-
-	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
-		return err
-	}
-	if err := d.Set("launch_configurations", flattenLc(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
-		return err
-	}
-	if err := d.Set("load_balancers", flattenELB(resources.EnvironmentResources.LoadBalancers)); err != nil {
-		return err
-	}
-	if err := d.Set("queues", flattenSQS(resources.EnvironmentResources.Queues)); err != nil {
-		return err
-	}
-	if err := d.Set("triggers", flattenTrigger(resources.EnvironmentResources.Triggers)); err != nil {
-		return err
-	}
-	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
-		return err
-	}
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Elastic Beanstalk environment (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return resourceEnvironmentSettingsRead(d, meta)
+	return diags
 }
 
-func fetchEnvironmentSettings(d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	app := d.Get("application").(string)
-	name := d.Get("name").(string)
+	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
-	resp, err := conn.DescribeConfigurationSettings(&elasticbeanstalk.DescribeConfigurationSettingsInput{
-		ApplicationName: aws.String(app),
-		EnvironmentName: aws.String(name),
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
+
+	if err != nil {
+		pollInterval = 0
+	}
+
+	opTime := time.Now()
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "poll_interval", "wait_for_ready_timeout") {
+		if d.HasChange(names.AttrTagsAll) {
+			if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) tags update: %s", d.Id(), err)
+			}
+		}
+
+		input := elasticbeanstalk.UpdateEnvironmentInput{
+			EnvironmentId: aws.String(d.Id()),
+		}
+
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("platform_arn") {
+			if v, ok := d.GetOk("platform_arn"); ok {
+				input.PlatformArn = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("setting") {
+			o, n := d.GetChange("setting")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+			add, del := expandConfigurationOptionSettings(ns.Difference(os).List()), expandConfigurationOptionSettings(os.Difference(ns).List())
+
+			// Additions and removals of options are done in a single API call, so we
+			// can't do our normal "remove these" and then later "add these", re-adding
+			// any updated settings.
+			// Because of this, we need to exclude any settings in the "removable"
+			// settings that are also found in the "add" settings, otherwise they
+			// conflict. Here we loop through all the initial removables from the set
+			// difference, and create a new slice `remove` that contains those settings
+			// found in `rm` but not in `add`
+			var remove []awstypes.ConfigurationOptionSetting
+			if len(add) > 0 {
+				for _, r := range del {
+					var update = false
+					for _, a := range add {
+						// ResourceNames are optional. Some defaults come with it, some do
+						// not. We need to guard against nil/empty in state as well as
+						// nil/empty from the API
+						if a.ResourceName != nil {
+							if r.ResourceName == nil {
+								continue
+							}
+							if aws.ToString(r.ResourceName) != aws.ToString(a.ResourceName) {
+								continue
+							}
+						}
+						if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) && aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
+							update = true
+							break
+						}
+					}
+					// Only remove options that are not updates
+					if !update {
+						remove = append(remove, r)
+					}
+				}
+			} else {
+				remove = del
+			}
+
+			for _, v := range remove {
+				input.OptionsToRemove = append(input.OptionsToRemove, awstypes.OptionSpecification{
+					Namespace:  v.Namespace,
+					OptionName: v.OptionName,
+				})
+			}
+
+			input.OptionSettings = add
+		}
+
+		if d.HasChange("solution_stack_name") {
+			if v, ok := d.GetOk("solution_stack_name"); ok {
+				input.SolutionStackName = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("template_name") {
+			if v, ok := d.GetOk("template_name"); ok {
+				input.TemplateName = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("version_label") {
+			input.VersionLabel = aws.String(d.Get("version_label").(string))
+		}
+
+		_, err := conn.UpdateEnvironment(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+		}
+	}
+
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
+	}
+
+	err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
+}
+
+func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
+
+	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
+
+	if err != nil {
+		pollInterval = 0
+	}
+
+	// Environment must be Ready before it can be deleted.
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		if tfresource.NotFound(err) {
+			return diags
+		}
+
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Deleting Elastic Beanstalk Environment: %s", d.Id())
+	_, err = conn.TerminateEnvironment(ctx, &elasticbeanstalk.TerminateEnvironmentInput{
+		EnvironmentId:      aws.String(d.Id()),
+		TerminateResources: aws.Bool(true),
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Environment found") {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitEnvironmentDeleted(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id string) (*awstypes.EnvironmentDescription, error) {
+	input := &elasticbeanstalk.DescribeEnvironmentsInput{
+		EnvironmentIds: []string{id},
+	}
+	output, err := findEnvironment(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == awstypes.EnvironmentStatusTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.EnvironmentId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput) (*awstypes.EnvironmentDescription, error) {
+	output, err := findEnvironments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEnvironments(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput) ([]awstypes.EnvironmentDescription, error) {
+	var output []awstypes.EnvironmentDescription
+
+	err := describeEnvironmentsPages(ctx, conn, input, func(page *elasticbeanstalk.DescribeEnvironmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Environments...)
+
+		return !lastPage
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(resp.ConfigurationSettings) != 1 {
-		return nil, fmt.Errorf("Error reading environment settings: received %d settings groups, expected 1", len(resp.ConfigurationSettings))
-	}
-
-	settings := &schema.Set{F: optionSettingValueHash}
-	for _, optionSetting := range resp.ConfigurationSettings[0].OptionSettings {
-		m := map[string]interface{}{}
-
-		if optionSetting.Namespace != nil {
-			m["namespace"] = *optionSetting.Namespace
-		} else {
-			return nil, fmt.Errorf("Error reading environment settings: option setting with no namespace: %v", optionSetting)
-		}
-
-		if optionSetting.OptionName != nil {
-			m["name"] = *optionSetting.OptionName
-		} else {
-			return nil, fmt.Errorf("Error reading environment settings: option setting with no name: %v", optionSetting)
-		}
-
-		if *optionSetting.Namespace == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
-			m["resource"] = *optionSetting.ResourceName
-		}
-
-		if optionSetting.Value != nil {
-			switch *optionSetting.OptionName {
-			case "SecurityGroups":
-				m["value"] = dropGeneratedSecurityGroup(*optionSetting.Value, meta)
-			case "Subnets", "ELBSubnets":
-				m["value"] = sortValues(*optionSetting.Value)
-			default:
-				m["value"] = *optionSetting.Value
-			}
-		}
-
-		settings.Add(m)
-	}
-
-	return settings, nil
+	return output, nil
 }
 
-func resourceEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Elastic Beanstalk environment settings read %s: id %s", d.Get("name").(string), d.Id())
+func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Client, id string, since time.Time) error {
+	input := &elasticbeanstalk.DescribeEventsInput{
+		EnvironmentId: aws.String(id),
+		Severity:      awstypes.EventSeverityError,
+		StartTime:     aws.Time(since),
+	}
+	output, err := findEvents(ctx, conn, input)
 
-	allSettings, err := fetchEnvironmentSettings(d, meta)
 	if err != nil {
 		return err
 	}
 
-	settings := d.Get("setting").(*schema.Set)
-
-	log.Printf("[DEBUG] Elastic Beanstalk allSettings: %s", allSettings.GoString())
-	log.Printf("[DEBUG] Elastic Beanstalk settings: %s", settings.GoString())
-
-	// perform the set operation with only name/namespace as keys, excluding value
-	// this is so we override things in the settings resource data key with updated values
-	// from the api.  we skip values we didn't know about before because there are so many
-	// defaults set by the eb api that we would delete many useful defaults.
-	//
-	// there is likely a better way to do this
-	allSettingsKeySet := schema.NewSet(optionSettingKeyHash, allSettings.List())
-	settingsKeySet := schema.NewSet(optionSettingKeyHash, settings.List())
-	updatedSettingsKeySet := allSettingsKeySet.Intersection(settingsKeySet)
-
-	log.Printf("[DEBUG] Elastic Beanstalk updatedSettingsKeySet: %s", updatedSettingsKeySet.GoString())
-
-	updatedSettings := schema.NewSet(optionSettingValueHash, updatedSettingsKeySet.List())
-
-	log.Printf("[DEBUG] Elastic Beanstalk updatedSettings: %s", updatedSettings.GoString())
-
-	if err := d.Set("all_settings", allSettings.List()); err != nil {
-		return err
-	}
-
-	if err := d.Set("setting", updatedSettings.List()); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
-
-	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
-	if err != nil {
-		return err
-	}
-	pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
-	if err != nil {
-		pollInterval = 0
-		log.Printf("[WARN] Error parsing poll_interval, using default backoff")
-	}
-
-	// The Environment needs to be in a Ready state before it can be terminated
-	err = waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn, d.Id(), waitForReadyTimeOut, pollInterval)
-	if err != nil {
-		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to be ready before terminating: %w", d.Id(), err)
-	}
-
-	return DeleteEnvironment(conn, d.Id(), waitForReadyTimeOut, pollInterval)
-}
-
-func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
-	opts := elasticbeanstalk.TerminateEnvironmentInput{
-		EnvironmentId:      aws.String(id),
-		TerminateResources: aws.Bool(true),
-	}
-	log.Printf("[DEBUG] Elastic Beanstalk Environment terminate opts: %s", opts)
-
-	_, err := conn.TerminateEnvironment(&opts)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
-			log.Printf("[DEBUG] Elastic Beanstalk Environment %q not found", id)
-			return nil
+	slices.SortFunc(output, func(a, b awstypes.EventDescription) int {
+		if a.EventDate.Before(aws.ToTime(b.EventDate)) {
+			return -1
 		}
-		return err
+		if a.EventDate.After(aws.ToTime(b.EventDate)) {
+			return 1
+		}
+		return 0
+	})
+
+	var errs []error
+
+	for _, v := range output {
+		errs = append(errs, fmt.Errorf("%s: %s", aws.ToTime(v.EventDate), aws.ToString(v.Message)))
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:      []string{"Terminating"},
-		Target:       []string{"Terminated"},
-		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
-		Timeout:      timeout,
-		Delay:        10 * time.Second,
-		PollInterval: pollInterval,
-		MinTimeout:   3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become terminated: %w", id, err)
-	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
-func waitForElasticBeanstalkEnvironmentReady(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration, startTime time.Time) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			elasticbeanstalk.EnvironmentStatusLaunching,
-			elasticbeanstalk.EnvironmentStatusUpdating,
-		},
-		Target:       []string{elasticbeanstalk.EnvironmentStatusReady},
-		Refresh:      elasticBeanstalkEnvironmentStateRefreshFunc(conn, id, startTime),
-		Timeout:      timeout,
-		Delay:        10 * time.Second,
-		PollInterval: pollInterval,
-		MinTimeout:   3 * time.Second,
-	}
+func findEvents(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEventsInput) ([]awstypes.EventDescription, error) {
+	var output []awstypes.EventDescription
 
-	_, err := stateConf.WaitForState()
-	return err
-}
+	pages := elasticbeanstalk.NewDescribeEventsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-func waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			elasticbeanstalk.EnvironmentStatusLaunching,
-			elasticbeanstalk.EnvironmentStatusTerminating,
-			elasticbeanstalk.EnvironmentStatusUpdating,
-		},
-		Target: []string{
-			elasticbeanstalk.EnvironmentStatusReady,
-			elasticbeanstalk.EnvironmentStatusTerminated,
-		},
-		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
-		Timeout:      timeout,
-		Delay:        10 * time.Second,
-		PollInterval: pollInterval,
-		MinTimeout:   3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-// elasticBeanstalkEnvironmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// the creation of the Beanstalk Environment
-func elasticBeanstalkEnvironmentStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string, t time.Time) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
-			EnvironmentIds: []*string{aws.String(environmentID)},
-		})
 		if err != nil {
-			log.Printf("[Err] Error waiting for Elastic Beanstalk Environment state: %s", err)
-			return -1, "failed", fmt.Errorf("error waiting for Elastic Beanstalk Environment state: %w", err)
+			return nil, err
 		}
 
-		if resp == nil || len(resp.Environments) == 0 {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
+		output = append(output, page.Events...)
+	}
+
+	return output, nil
+}
+
+func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEnvironmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		var env *elasticbeanstalk.EnvironmentDescription
-		for _, e := range resp.Environments {
-			if environmentID == aws.StringValue(e.EnvironmentId) {
-				env = e
-			}
-		}
-
-		if env == nil {
-			return -1, "failed", fmt.Errorf("Error finding Elastic Beanstalk Environment, environment not found")
-		}
-
-		envErrors, err := getBeanstalkEnvironmentErrors(conn, environmentID, t)
 		if err != nil {
-			return -1, "failed", err
-		}
-		if envErrors != nil {
-			return -1, "failed", envErrors
+			return nil, "", err
 		}
 
-		return env, aws.StringValue(env.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
-			EnvironmentIds: []*string{aws.String(environmentID)},
-		})
-		if err != nil {
-			log.Printf("[Err] Error waiting for Elastic Beanstalk Environment state: %s", err)
-			return -1, "failed", fmt.Errorf("error waiting for Elastic Beanstalk Environment state: %w", err)
-		}
-
-		if resp == nil || len(resp.Environments) == 0 {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		var env *elasticbeanstalk.EnvironmentDescription
-		for _, e := range resp.Environments {
-			if environmentID == aws.StringValue(e.EnvironmentId) {
-				env = e
-			}
-		}
-
-		if env == nil {
-			return -1, "failed", fmt.Errorf("Error finding Elastic Beanstalk Environment, environment not found")
-		}
-
-		return env, aws.StringValue(env.Status), nil
+func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:      enum.Slice(awstypes.EnvironmentStatusLaunching, awstypes.EnvironmentStatusUpdating),
+		Target:       enum.Slice(awstypes.EnvironmentStatusReady),
+		Refresh:      statusEnvironment(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        10 * time.Second,
+		PollInterval: pollInterval,
+		MinTimeout:   3 * time.Second,
 	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.EnvironmentDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-// we use the following two functions to allow us to split out defaults
-// as they become overridden from within the template
-func optionSettingValueHash(v interface{}) int {
-	rd := v.(map[string]interface{})
-	namespace := rd["namespace"].(string)
-	optionName := rd["name"].(string)
+func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:      enum.Slice(awstypes.EnvironmentStatusTerminating),
+		Target:       []string{},
+		Refresh:      statusEnvironment(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        10 * time.Second,
+		PollInterval: pollInterval,
+		MinTimeout:   3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.EnvironmentDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func hashSettingsValue(v interface{}) int {
+	tfMap := v.(map[string]interface{})
+	var str strings.Builder
+
+	str.WriteString(tfMap[names.AttrNamespace].(string))
+	str.WriteRune(':')
+	str.WriteString(tfMap[names.AttrName].(string))
 	var resourceName string
-	if v, ok := rd["resource"].(string); ok {
+	if v, ok := tfMap["resource"].(string); ok {
 		resourceName = v
 	}
-	value, _ := rd["value"].(string)
-	value, _ = structure.NormalizeJsonString(value)
-	hk := fmt.Sprintf("%s:%s%s=%s", namespace, optionName, resourceName, sortValues(value))
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingValueHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
-	return create.StringHashcode(hk)
-}
-
-func optionSettingKeyHash(v interface{}) int {
-	rd := v.(map[string]interface{})
-	namespace := rd["namespace"].(string)
-	optionName := rd["name"].(string)
-	var resourceName string
-	if v, ok := rd["resource"].(string); ok {
-		resourceName = v
-	}
-	hk := fmt.Sprintf("%s:%s%s", namespace, optionName, resourceName)
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingKeyHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
-	return create.StringHashcode(hk)
-}
-
-func sortValues(v string) string {
-	values := strings.Split(v, ",")
-	sort.Strings(values)
-	return strings.Join(values, ",")
-}
-
-func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptionSetting {
-	settings := []*elasticbeanstalk.ConfigurationOptionSetting{}
-
-	if s != nil {
-		for _, setting := range s.List() {
-			optionSetting := elasticbeanstalk.ConfigurationOptionSetting{
-				Namespace:  aws.String(setting.(map[string]interface{})["namespace"].(string)),
-				OptionName: aws.String(setting.(map[string]interface{})["name"].(string)),
-				Value:      aws.String(setting.(map[string]interface{})["value"].(string)),
-			}
-			if *optionSetting.Namespace == "aws:autoscaling:scheduledaction" {
-				if v, ok := setting.(map[string]interface{})["resource"].(string); ok && v != "" {
-					optionSetting.ResourceName = aws.String(v)
-				}
-			}
-			settings = append(settings, &optionSetting)
-		}
-	}
-
-	return settings
-}
-
-func dropGeneratedSecurityGroup(settingValue string, meta interface{}) string {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	groups := strings.Split(settingValue, ",")
-
-	// Check to see if groups are ec2-classic or vpc security groups
-	ec2Classic := true
-	beanstalkSGRegexp := regexp.MustCompile("sg-[0-9a-fA-F]{8}")
-	for _, g := range groups {
-		if beanstalkSGRegexp.MatchString(g) {
-			ec2Classic = false
-			break
-		}
-	}
-
-	var resp *ec2.DescribeSecurityGroupsOutput
-	var err error
-
-	if ec2Classic {
-		resp, err = conn.DescribeSecurityGroups(&ec2.DescribeSecurityGroupsInput{
-			GroupNames: aws.StringSlice(groups),
-		})
+	str.WriteString(resourceName)
+	str.WriteRune('=')
+	if value := tfMap[names.AttrValue].(string); json.Valid([]byte(value)) {
+		value, _ = structure.NormalizeJsonString(value)
+		str.WriteString(value)
 	} else {
-		resp, err = conn.DescribeSecurityGroups(&ec2.DescribeSecurityGroupsInput{
-			GroupIds: aws.StringSlice(groups),
-		})
+		values := strings.Split(value, ",")
+		sort.Strings(values)
+		str.WriteString(strings.Join(values, ","))
 	}
 
+	return create.StringHashcode(str.String())
+}
+
+func expandConfigurationOptionSettings(tfList []interface{}) []awstypes.ConfigurationOptionSetting {
+	apiObjects := []awstypes.ConfigurationOptionSetting{}
+
+	if tfList == nil {
+		return apiObjects
+	}
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObject := awstypes.ConfigurationOptionSetting{
+			Namespace:  aws.String(tfMap[names.AttrNamespace].(string)),
+			OptionName: aws.String(tfMap[names.AttrName].(string)),
+			Value:      aws.String(tfMap[names.AttrValue].(string)),
+		}
+
+		if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" {
+			if v, ok := tfMap["resource"].(string); ok && v != "" {
+				apiObject.ResourceName = aws.String(v)
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenConfigurationOptionSettings(ctx context.Context, meta interface{}, apiObjects []awstypes.ConfigurationOptionSetting) []interface{} {
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if apiObject.Namespace != nil {
+			tfMap[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
+		}
+
+		if apiObject.OptionName != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.OptionName)
+		}
+
+		if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" && apiObject.ResourceName != nil {
+			tfMap["resource"] = aws.ToString(apiObject.ResourceName)
+		} else {
+			tfMap["resource"] = ""
+		}
+
+		if value := aws.ToString(apiObject.Value); value != "" {
+			switch aws.ToString(apiObject.OptionName) {
+			case "SecurityGroups":
+				tfMap[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
+			case "Subnets", "ELBSubnets":
+				values := strings.Split(value, ",")
+				sort.Strings(values)
+				tfMap[names.AttrValue] = strings.Join(values, ",")
+			default:
+				tfMap[names.AttrValue] = value
+			}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingValue string) string {
+	input := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: strings.Split(settingValue, ","),
+	}
+
+	securityGroup, err := tfec2.FindSecurityGroups(ctx, conn, input)
+
 	if err != nil {
-		log.Printf("[DEBUG] Elastic Beanstalk error describing SecurityGroups: %v", err)
 		return settingValue
 	}
 
-	log.Printf("[DEBUG] Elastic Beanstalk using ec2-classic security-groups: %t", ec2Classic)
 	var legitGroups []string
-	for _, group := range resp.SecurityGroups {
-		log.Printf("[DEBUG] Elastic Beanstalk SecurityGroup: %v", *group.GroupName)
-		if !strings.HasPrefix(*group.GroupName, "awseb") {
-			if ec2Classic {
-				legitGroups = append(legitGroups, *group.GroupName)
-			} else {
-				legitGroups = append(legitGroups, *group.GroupId)
-			}
+	for _, group := range securityGroup {
+		if !strings.HasPrefix(aws.ToString(group.GroupName), "awseb") {
+			legitGroups = append(legitGroups, aws.ToString(group.GroupId))
 		}
 	}
 
@@ -1014,50 +872,38 @@ func dropGeneratedSecurityGroup(settingValue string, meta interface{}) string {
 	return strings.Join(legitGroups, ",")
 }
 
-type beanstalkEnvironmentError struct {
-	eventDate     *time.Time
-	environmentID string
-	message       *string
-}
-
-func (e beanstalkEnvironmentError) Error() string {
-	return e.eventDate.String() + " (" + e.environmentID + ") : " + *e.message
-}
-
-type beanstalkEnvironmentErrors []*beanstalkEnvironmentError
-
-func (e beanstalkEnvironmentErrors) Len() int      { return len(e) }
-func (e beanstalkEnvironmentErrors) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
-func (e beanstalkEnvironmentErrors) Less(i, j int) bool {
-	return e[i].eventDate.Before(*e[j].eventDate)
-}
-
-func getBeanstalkEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, environmentId string, t time.Time) (*multierror.Error, error) {
-	environmentErrors, err := conn.DescribeEvents(&elasticbeanstalk.DescribeEventsInput{
-		EnvironmentId: aws.String(environmentId),
-		Severity:      aws.String("ERROR"),
-		StartTime:     aws.Time(t),
+func flattenAutoScalingGroups(apiObjects []awstypes.AutoScalingGroup) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.AutoScalingGroup) string {
+		return aws.ToString(v.Name)
 	})
+}
 
-	if err != nil {
-		return nil, fmt.Errorf("unable to get Elastic Beanstalk Environment events: %w", err)
-	}
+func flattenLoadBalancers(apiObjects []awstypes.LoadBalancer) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.LoadBalancer) string {
+		return aws.ToString(v.Name)
+	})
+}
 
-	var events beanstalkEnvironmentErrors
-	for _, event := range environmentErrors.Events {
-		e := &beanstalkEnvironmentError{
-			eventDate:     event.EventDate,
-			environmentID: environmentId,
-			message:       event.Message,
-		}
-		events = append(events, e)
-	}
-	sort.Sort(events)
+func flattenInstances(apiObjects []awstypes.Instance) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Instance) string {
+		return aws.ToString(v.Id)
+	})
+}
 
-	var result *multierror.Error
-	for _, event := range events {
-		result = multierror.Append(result, event)
-	}
+func flattenLaunchConfigurations(apiObjects []awstypes.LaunchConfiguration) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.LaunchConfiguration) string {
+		return aws.ToString(v.Name)
+	})
+}
 
-	return result, nil
+func flattenQueues(apiObjects []awstypes.Queue) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Queue) string {
+		return aws.ToString(v.URL)
+	})
+}
+
+func flattenTriggers(apiObjects []awstypes.Trigger) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Trigger) string {
+		return aws.ToString(v.Name)
+	})
 }

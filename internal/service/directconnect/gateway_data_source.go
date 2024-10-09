@@ -1,29 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
-	"fmt"
+	"context"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceGateway() *schema.Resource {
+// @SDKDataSource("aws_dx_gateway", name="Gateway")
+func dataSourceGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGatewayRead,
+		ReadWithoutTimeout: dataSourceGatewayRead,
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,42 +40,24 @@ func DataSourceGateway() *schema.Resource {
 	}
 }
 
-func dataSourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
-	name := d.Get("name").(string)
+func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	gateways := make([]*directconnect.Gateway, 0)
-	// DescribeDirectConnectGatewaysInput does not have a name parameter for filtering
+	name := d.Get(names.AttrName).(string)
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
-	for {
-		output, err := conn.DescribeDirectConnectGateways(input)
-		if err != nil {
-			return fmt.Errorf("error reading Direct Connect Gateway: %w", err)
-		}
-		for _, gateway := range output.DirectConnectGateways {
-			if aws.StringValue(gateway.DirectConnectGatewayName) == name {
-				gateways = append(gateways, gateway)
-			}
-		}
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
+
+	gateway, err := findGateway(ctx, conn, input, func(v *awstypes.DirectConnectGateway) bool {
+		return aws.ToString(v.DirectConnectGatewayName) == name
+	})
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Direct Connect Gateway", err))
 	}
 
-	if len(gateways) == 0 {
-		return fmt.Errorf("Direct Connect Gateway not found for name: %s", name)
-	}
+	d.SetId(aws.ToString(gateway.DirectConnectGatewayId))
+	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(gateway.AmazonSideAsn), 10))
+	d.Set(names.AttrOwnerAccountID, gateway.OwnerAccount)
 
-	if len(gateways) > 1 {
-		return fmt.Errorf("Multiple Direct Connect Gateways found for name: %s", name)
-	}
-
-	gateway := gateways[0]
-
-	d.SetId(aws.StringValue(gateway.DirectConnectGatewayId))
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(gateway.AmazonSideAsn), 10))
-	d.Set("owner_account_id", gateway.OwnerAccount)
-
-	return nil
+	return diags
 }

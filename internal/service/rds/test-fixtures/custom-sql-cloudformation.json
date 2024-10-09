@@ -1,0 +1,1403 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "VpcCidr": {
+      "Type": "String",
+      "Description": "Specify an IPv4 CIDR block (or IP address range) for your VPC. The CIDR block size must have a size between /16 and /28",
+      "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+      "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+      "Default": "10.0.0.0/16"
+    },
+    "FirstSubnetCidr": {
+      "Type": "String",
+      "Description": "Specify an IPv4 CIDR block (or IP address range) for your first subnet. The CIDR block size must be within the IP range of the VPC, and have a size between /16 and /28",
+      "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+      "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+      "Default": "10.0.128.0/20"
+    },
+    "SecondSubnetCidr": {
+      "Type": "String", 
+      "Description": "Specify an IPv4 CIDR block (or IP address range) for your second subnet. The CIDR block size must be within the IP range of the VPC, not overlapping with the first subnet, and have a size between /16 and /28",
+      "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+      "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+      "Default": "10.0.144.0/20"
+    }
+  },
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Network configuration for RDS Custom for SQL Server" },
+          "Parameters" : [ "VpcCidr", "FirstSubnetCidr", "SecondSubnetCidr" ]
+        }
+      ],
+      "ParameterLabels" : {
+        "VpcCidr" : { "default" : "IPv4 CIDR block for VPC" },
+        "FirstSubnetCidr" : { "default" : "IPv4 CIDR block for 1 of 2 subnets" },
+        "SecondSubnetCidr" : { "default" : "IPv4 CIDR block for 2 of 2 subnets" }
+      }
+    }
+  },
+  "Mappings": {
+    "S3VPCEndpointRegionalPrefixLists": {
+      "ap-northeast-1": {
+        "prefixlistid": "pl-61a54008",
+        "prefixlistname": "com.amazonaws.ap-northeast-1.s3"
+      },
+      "ap-northeast-2": {
+        "prefixlistid": "pl-78a54011",
+        "prefixlistname": "com.amazonaws.ap-northeast-2.s3"
+      },
+      "ap-northeast-3": {
+        "prefixlistid": "pl-a4a540cd",
+        "prefixlistname": "com.amazonaws.ap-northeast-3.s3"
+      },
+      "ap-south-1": {
+        "prefixlistid": "pl-78a54011",
+        "prefixlistname": "com.amazonaws.ap-south-1.s3"
+      },
+      "ap-southeast-1": {
+        "prefixlistid": "pl-6fa54006",
+        "prefixlistname": "com.amazonaws.ap-southeast-1.s3"
+      },
+      "ap-southeast-2": {
+        "prefixlistid": "pl-6ca54005",
+        "prefixlistname": "com.amazonaws.ap-southeast-2.s3"
+      },
+      "ca-central-1": {
+        "prefixlistid": "pl-7da54014",
+        "prefixlistname": "com.amazonaws.ca-central-1.s3"
+      },
+      "cn-north-1": {
+        "prefixlistid": "pl-62a5400b",
+        "prefixlistname": "com.amazonaws.cn-north-1.s3"
+      },
+      "cn-northwest-1": {
+        "prefixlistid": "pl-79a54010",
+        "prefixlistname": "com.amazonaws.cn-northwest-1.s3"
+      },
+      "eu-central-1": {
+        "prefixlistid": "pl-6ea54007",
+        "prefixlistname": "com.amazonaws.eu-central-1.s3"
+      },
+      "eu-north-1": {
+        "prefixlistid": "pl-c3aa4faa",
+        "prefixlistname": "com.amazonaws.eu-north-1.s3"
+      },
+      "eu-west-1": {
+        "prefixlistid": "pl-6da54004",
+        "prefixlistname": "com.amazonaws.eu-west-1.s3"
+      },
+      "eu-west-2": {
+        "prefixlistid": "pl-7ca54015",
+        "prefixlistname": "com.amazonaws.eu-west-2.s3"
+      },
+      "eu-west-3": {
+        "prefixlistid": "pl-23ad484a",
+        "prefixlistname": "com.amazonaws.eu-west-3.s3"
+      },
+      "sa-east-1": {
+        "prefixlistid": "pl-6aa54003",
+        "prefixlistname": "com.amazonaws.sa-east-1.s3"
+      },
+      "us-east-1": {
+        "prefixlistid": "pl-63a5400a",
+        "prefixlistname": "com.amazonaws.us-east-1.s3"
+      },
+      "us-east-2": {
+        "prefixlistid": "pl-7ba54012",
+        "prefixlistname": "com.amazonaws.us-east-2.s3"
+      },
+      "us-west-1": {
+        "prefixlistid": "pl-6ba54002",
+        "prefixlistname": "com.amazonaws.us-west-1.s3"
+      },
+      "us-west-2": {
+        "prefixlistid": "pl-68a54001",
+        "prefixlistname": "com.amazonaws.us-west-2.s3"
+      }
+    }
+  },
+  "Conditions": {
+    "NVirginiaRegionCondition": {
+      "Fn::Equals": [{
+          "Ref": "AWS::Region"
+        },
+        "us-east-1"
+      ]
+    }
+  },
+  "Resources": {
+    "RDSCustomKMSKey": {
+      "Type": "AWS::KMS::Key",
+      "Properties": {
+        "Description": "KMS Key to encrypt RDS Custom instances",
+        "Enabled": true,
+        "EnableKeyRotation": false,
+        "PendingWindowInDays": 30,
+        "KeyPolicy": {
+          "Version": "2012-10-17",
+          "Id": "key-default-1",
+          "Statement": [
+            {
+              "Sid": "Enable IAM User Permissions",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+                }
+              },
+              "Action": "kms:*",
+              "Resource": "*"
+            }
+          ]
+        },
+        "KeySpec": "SYMMETRIC_DEFAULT",
+        "KeyUsage": "ENCRYPT_DECRYPT",
+        "MultiRegion": false
+      }
+    },
+    "RDSCustomKMSKeyAlias": {
+      "Type": "AWS::KMS::Alias",
+      "Properties": {
+        "AliasName": {
+          "Fn::Sub": "alias/${AWS::StackName}-kms-key"
+        },
+        "TargetKeyId": {
+          "Ref": "RDSCustomKMSKey"
+        }
+      },
+      "DependsOn": "RDSCustomKMSKey"
+    },
+    "RDSCustomSQLServerInstanceServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Sub": "AWSRDSCustom-${AWS::StackName}-${AWS::Region}"
+        },
+        "Description": "IAM role associated to instance profile used by RDS Custom instances",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "AWSRDSCustomEc2InstanceRolePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "ssmAgent1",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:GetDeployablePatchSnapshotForInstance",
+                    "ssm:ListAssociations",
+                    "ssm:PutInventory",
+                    "ssm:PutConfigurePackageResult",
+                    "ssm:UpdateInstanceInformation",
+                    "ssm:GetManifest"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "ssmAgent2",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:ListInstanceAssociations",
+                    "ssm:PutComplianceItems",
+                    "ssm:UpdateAssociationStatus",
+                    "ssm:DescribeAssociation",
+                    "ssm:UpdateInstanceAssociationStatus"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "aws:ResourceTag/AWSRDSCustom": "custom-sqlserver"
+                    }
+                  }
+                },
+                {
+                  "Sid": "ssmAgent3",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:UpdateAssociationStatus",
+                    "ssm:DescribeAssociation",
+                    "ssm:GetDocument",
+                    "ssm:DescribeDocument"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ssm:*:*:document/*"
+                  }
+                },
+                {
+                  "Sid": "ssmAgent4",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssmmessages:CreateControlChannel",
+                    "ssmmessages:CreateDataChannel",
+                    "ssmmessages:OpenControlChannel",
+                    "ssmmessages:OpenDataChannel"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "ssmAgent5",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2messages:AcknowledgeMessage",
+                    "ec2messages:DeleteMessage",
+                    "ec2messages:FailMessage",
+                    "ec2messages:GetEndpoint",
+                    "ec2messages:GetMessages",
+                    "ec2messages:SendReply"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "ssmAgent6",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ssm:*:*:parameter/*"
+                  }
+                },
+                {
+                  "Sid": "ssmAgent7",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:UpdateInstanceAssociationStatus",
+                    "ssm:DescribeAssociation"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ssm:*:*:association/*"
+                  }
+                },
+                {
+                  "Sid": "eccSnapshot1",
+                  "Effect": "Allow",
+                  "Action": "ec2:CreateSnapshot",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:volume/*"
+                    }
+                  ],
+                  "Condition": {
+                    "StringLike": {
+                      "aws:ResourceTag/AWSRDSCustom": "custom-sqlserver"
+                    }
+                  }
+                },
+                {
+                  "Sid": "eccSnapshot2",
+                  "Effect": "Allow",
+                  "Action": "ec2:CreateSnapshot",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}::snapshot/*"
+                    }
+                  ],
+                  "Condition": {
+                    "StringLike": {
+                      "aws:RequestTag/AWSRDSCustom": "custom-sqlserver"
+                    }
+                  }
+                },
+                {
+                  "Sid": "eccCreateTag",
+                  "Effect": "Allow",
+                  "Action": "ec2:CreateTags",
+                  "Resource": "*",
+                  "Condition": {
+                    "StringLike": {
+                      "aws:RequestTag/AWSRDSCustom": "custom-sqlserver",
+                      "ec2:CreateAction": [
+                        "CreateSnapshot"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "Sid": "s3BucketAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:putObject",
+                    "s3:getObject",
+                    "s3:getObjectVersion",
+                    "s3:AbortMultipartUpload"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::do-not-delete-rds-custom-*/*"
+                    }
+                  ]
+                },
+                {
+                  "Sid": "customerCMKEncryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:GenerateDataKey*"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [ "RDSCustomKMSKey", "Arn" ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "readSecretsFromCP",
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue",
+                    "secretsmanager:DescribeSecret"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:do-not-delete-rds-custom-*"
+                    }
+                  ],
+                  "Condition": {
+                    "StringLike": {
+                      "aws:ResourceTag/AWSRDSCustom": "custom-sqlserver"
+                    }
+                  }
+                },
+                {
+                  "Sid": "publishCWMetrics",
+                  "Effect": "Allow",
+                  "Action": "cloudwatch:PutMetricData",
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "cloudwatch:namespace": "rdscustom/rds-custom-sqlserver-agent"
+                    }
+                  }
+                },
+                {
+                  "Sid": "putEventsToEventBus",
+                  "Effect": "Allow",
+                  "Action": "events:PutEvents",
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
+                  "Sid": "cwlOperations1",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutRetentionPolicy",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams",
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:rds-custom-instance-*"
+                  }
+                },
+                {
+                  "Sid": "cwlOperations2",
+                  "Effect": "Allow",
+                  "Action": "logs:DescribeLogGroups",
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "DependsOn": "RDSCustomKMSKey"
+    },
+    "RDSCustomSQLServerInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "InstanceProfileName": {
+          "Fn::Sub": "AWSRDSCustom-${AWS::StackName}-${AWS::Region}"
+        },
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "RDSCustomSQLServerInstanceServiceRole"
+          }
+        ]
+      },
+      "DependsOn": "RDSCustomSQLServerInstanceServiceRole"
+    },
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+          "Ref": "VpcCidr"
+        },
+        "InstanceTenancy": "default",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-vpc"
+            }
+          }
+        ]
+      }
+    },
+    "DHCPOptions": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainName": {
+          "Fn::If": [
+            "NVirginiaRegionCondition",
+            "ec2.internal",
+            {
+              "Fn::Join": [
+                "",
+                [{
+                    "Ref": "AWS::Region"
+                  },
+                  ".compute.internal"
+                ]
+              ]
+            }
+          ]
+        },
+        "DomainNameServers": [
+          "AmazonProvidedDNS"
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-dhcp"
+            }
+          }
+        ]
+      }
+    },
+    "VPCDHCPOptionsAssociation": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "DhcpOptionsId": {
+          "Ref": "DHCPOptions"
+        }
+      },
+      "DependsOn": "DHCPOptions"
+    },
+    "FirstSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Ref": "FirstSubnetCidr"
+        },
+        "AvailabilityZone": {
+          "Fn::Select" : [ "0", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ]
+        },
+        "MapPublicIpOnLaunch" : false,
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-subnet-1"
+            }
+          }
+        ]
+      },
+      "DependsOn": "VPC"
+    },
+    "SecondSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Ref": "SecondSubnetCidr"
+        },
+        "AvailabilityZone": {
+          "Fn::Select" : [ "1", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ]
+        },
+        "MapPublicIpOnLaunch" : false,
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-subnet-2"
+            }
+          }
+        ]
+      },
+      "DependsOn": "VPC"
+    },
+    "PrivateRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-route-table"
+            }
+          }
+        ]
+      },
+      "DependsOn": "VPC"
+    },
+    "PrivateRouteTableSubnet1Association": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "FirstSubnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable"
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "PrivateRouteTable"]
+    },
+    "PrivateRouteTableSubnet2Association": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "SecondSubnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable"
+        }
+      },
+      "DependsOn": [ "SecondSubnet", "PrivateRouteTable"]
+    },
+    "PrivateNetworkACL": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-network-acl"
+            }
+          }
+        ]
+      },
+      "DependsOn": "VPC"
+    },
+    "PrivateNetworkACLHttpsInboundRule": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PrivateNetworkACL"
+        },
+        "RuleNumber": 10,
+        "Protocol": 6,
+        "RuleAction": "allow",
+        "CidrBlock": "0.0.0.0/0",
+        "PortRange": {
+          "From": 32768,
+          "To": 65535
+        }
+      },
+      "DependsOn": "PrivateNetworkACL"
+    },
+    "PrivateNetworkACLHttpsOutboundRule": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PrivateNetworkACL"
+        },
+        "RuleNumber": 10,
+        "Protocol": 6,
+        "Egress": true,
+        "RuleAction": "allow",
+        "CidrBlock": "0.0.0.0/0",
+        "PortRange": {
+          "From": 443,
+          "To": 443
+        }
+      },
+      "DependsOn": "PrivateNetworkACL"
+    },
+    "PrivateNetworkACLDenyAllInboundRule": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PrivateNetworkACL"
+        },
+        "RuleNumber": 20,
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "CidrBlock": "0.0.0.0/0"
+      },
+      "DependsOn": "PrivateNetworkACL"
+    },
+    "PrivateNetworkACLDenyAllOutboundRule": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PrivateNetworkACL"
+        },
+        "RuleNumber": 20,
+        "Protocol": -1,
+        "Egress": true,
+        "RuleAction": "deny",
+        "CidrBlock": "0.0.0.0/0"
+      },
+      "DependsOn": "PrivateNetworkACL"
+    },
+    "PrivateNetworkAclSubnet1Association" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "FirstSubnet" },
+        "NetworkAclId" : { "Ref" : "PrivateNetworkACL" }
+      },
+      "DependsOn": [ "FirstSubnet", "PrivateNetworkACL"]
+    },
+    "PrivateNetworkAclSubnet2Association" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SecondSubnet" },
+        "NetworkAclId" : { "Ref" : "PrivateNetworkACL" }
+      },
+      "DependsOn": [ "SecondSubnet", "PrivateNetworkACL"]
+    },
+    "RDSCustomSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupName": {
+              "Fn::Sub": "${AWS::StackName}-rds-custom-instance-sg"
+        },
+        "GroupDescription" : "Security group attached to RDS Custom DB instance",
+        "VpcId" : {"Ref" : "VPC"}
+      },
+      "DependsOn": "VPC"
+    },
+    "VPCEndpointSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupName": {
+              "Fn::Sub": "${AWS::StackName}-vpc-endpoint-sg"
+        },
+        "GroupDescription" : "Security group attached to VPC endpoints in RDS Custom VPC",
+        "VpcId" : {"Ref" : "VPC"}
+      },
+      "DependsOn": "VPC"
+    },
+    "VPCEndpointSecurityGroupIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "VPCEndpointSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 443,
+        "ToPort": 443,
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "RDSCustomSecurityGroup",
+            "GroupId"
+          ]
+        }
+      },
+      "DependsOn": "VPCEndpointSecurityGroup"
+    },
+    "RDSCustomSecurityGroupVpceEgress": {
+     "Type": "AWS::EC2::SecurityGroupEgress",
+     "Properties":{
+      "IpProtocol": "tcp",
+        "FromPort": 443,
+        "ToPort": 443,
+        "DestinationSecurityGroupId": {
+          "Fn::GetAtt": [
+            "VPCEndpointSecurityGroup",
+            "GroupId"
+          ]
+        },
+        "GroupId": {
+          "Ref": "RDSCustomSecurityGroup"
+        }
+      },
+      "DependsOn": "RDSCustomSecurityGroup"
+    },
+    "RDSCustomSecurityGroupS3Egress": {
+     "Type": "AWS::EC2::SecurityGroupEgress",
+     "Properties":{
+      "IpProtocol": "tcp",
+        "FromPort": 443,
+        "ToPort": 443,
+        "DestinationPrefixListId": {
+          "Fn::FindInMap": [
+            "S3VPCEndpointRegionalPrefixLists",
+            {
+              "Ref": "AWS::Region"
+            },
+            "prefixlistid"
+          ]
+        },
+        "GroupId": {
+          "Ref": "RDSCustomSecurityGroup"
+        }
+      },
+      "DependsOn": "RDSCustomSecurityGroup"
+    },
+    "DBSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupName": {
+          "Fn::Sub": "${AWS::StackName}-db-subnet-group"
+        },
+        "DBSubnetGroupDescription": "DB Subnet Group for RDS Custom Private Network",
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ]
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet"]
+    },
+    "vpceS3": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "RouteTableIds": [
+          {
+            "Ref": "PrivateRouteTable"
+          }
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.s3"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:putObject",
+                "s3:getObject",
+                "s3:getObjectVersion",
+                "s3:AbortMultipartUpload"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::do-not-delete-rds-custom-*/*"
+                }
+              ],
+              "Principal": "*",
+              "Condition": {
+                "ArnEquals": {
+                  "aws:PrincipalArn": {
+                    "Fn::GetAtt": [
+                      "RDSCustomSQLServerInstanceServiceRole",
+                      "Arn"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::aws-windows-downloads-${AWS::Region}/*"
+                },
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::amazon-ssm-${AWS::Region}/*"
+                },
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::${AWS::Region}-birdwatcher-prod/*"
+                },
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::aws-ssm-distributor-file-${AWS::Region}/*"
+                },
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::aws-ssm-document-attachments-${AWS::Region}/*"
+                },
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::aws-ssm-${AWS::Region}/*"
+                },
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::amazoncloudwatch-agent-${AWS::Region}/*"
+                },
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:s3:::aws-rds-custom-sqlserver-${AWS::Region}/*"
+                }
+              ],
+              "Principal": "*"
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "PrivateRouteTable", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceEC2": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.ec2"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "ec2:CreateSnapshot",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:volume/*"
+                }
+              ],
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Condition": {
+                "StringLike": {
+                  "aws:ResourceTag/AWSRDSCustom": "custom-sqlserver"
+                }
+              }
+            },
+            {
+              "Action": "ec2:CreateSnapshot",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}::snapshot/*"
+                }
+              ],
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Condition": {
+                "StringLike": {
+                  "aws:RequestTag/AWSRDSCustom": "custom-sqlserver"
+                }
+              }
+            },
+            {
+              "Action": "ec2:CreateTags",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Condition": {
+                "StringLike": {
+                  "aws:RequestTag/AWSRDSCustom": "custom-sqlserver",
+                  "ec2:CreateAction": [
+                    "CreateSnapshot"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceEC2Messages": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.ec2messages"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "ec2messages:AcknowledgeMessage",
+                "ec2messages:DeleteMessage",
+                "ec2messages:FailMessage",
+                "ec2messages:GetEndpoint",
+                "ec2messages:GetMessages",
+                "ec2messages:SendReply"
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceMonitoring": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.monitoring"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "cloudwatch:namespace": "rdscustom/rds-custom-sqlserver-agent"
+                }
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceSSM": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.ssm"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetDeployablePatchSnapshotForInstance",
+                "ssm:ListAssociations",
+                "ssm:PutInventory",
+                "ssm:PutConfigurePackageResult",
+                "ssm:UpdateInstanceInformation",
+                "ssm:GetManifest"
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            },
+            {
+              "Action": [
+                "ssm:ListInstanceAssociations",
+                "ssm:PutComplianceItems",
+                "ssm:UpdateAssociationStatus",
+                "ssm:DescribeAssociation",
+                "ssm:UpdateInstanceAssociationStatus"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Condition": {
+                "StringLike": {
+                  "aws:ResourceTag/AWSRDSCustom": "custom-sqlserver"
+                }
+              }
+            },
+            {
+              "Action": [
+                "ssm:UpdateAssociationStatus",
+                "ssm:DescribeAssociation",
+                "ssm:GetDocument",
+                "ssm:DescribeDocument"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:ssm:*:*:document/*"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:ssm:*:*:parameter/*"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            },
+            {
+              "Action": [
+                "ssm:UpdateInstanceAssociationStatus",
+                "ssm:DescribeAssociation"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:ssm:*:*:association/*"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceSSMMessages": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.ssmmessages"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel"
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceLogs": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.logs"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "logs:PutRetentionPolicy",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:CreateLogStream",
+                "logs:CreateLogGroup"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:rds-custom-instance-*"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            },
+            {
+              "Action": "logs:DescribeLogGroups",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceEvents": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.events"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "*",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    },
+    "vpceSecretsManager": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcEndpointType": "Interface",
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {"Ref": "VPCEndpointSecurityGroup"}
+        ],
+        "SubnetIds": [
+          {"Ref": "FirstSubnet"},
+          {"Ref": "SecondSubnet"}
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.secretsmanager"
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:do-not-delete-rds-custom-*"                
+              },
+              "Principal": {
+                "AWS": { 
+                  "Fn::GetAtt": [
+                    "RDSCustomSQLServerInstanceServiceRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Condition": {
+                "StringLike": {
+                  "aws:ResourceTag/AWSRDSCustom": "custom-sqlserver"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": [ "FirstSubnet", "SecondSubnet", "VPCEndpointSecurityGroup", "RDSCustomSQLServerInstanceServiceRole" ]
+    }
+  },
+  "Outputs": {
+    "DBSubnetGroup" : {
+      "Description" : "DB Subnet group specified while creating an RDS Custom instance by using the parameter --db-subnet-group-name.",
+      "Value" : {"Ref": "DBSubnetGroup"}
+    },
+    "VPC" : {
+      "Description" : "VPC for which DB Subnet Group is created.",
+      "Value" : {
+        "Fn::Sub": [
+          "${VPCId}",
+          {
+            "VPCId": { "Ref": "VPC" }
+          }
+        ]
+      }
+    },
+    "RDSCustomSecurityGroup" : {
+      "Description" : "Security group to be attached to the RDS Custom instances while creating an RDS Custom instance by using the parameter --vpc-security-group-ids.",
+      "Value" : {
+        "Fn::Sub": [
+          "${SGId}",
+          {
+            "SGId": { "Ref": "RDSCustomSecurityGroup" }
+          }
+        ]
+      }
+    },
+    "RDSCustomSQLServerInstanceProfile" : {
+      "Description" : "Instance IAM profile specified while creating an RDS Custom instance by using the parameter --custom-iam-instance-profile.",
+      "Value" : {"Ref": "RDSCustomSQLServerInstanceProfile"}
+    },
+    "RDSCustomSQLServerKMSKey" : {
+      "Description" : "KMS key to encrypt data managed by RDS Custom instances, specified while creating an RDS Custom instance by using the parameter --kms-key-id.",
+      "Value" : {
+        "Fn::Sub": [ 
+          "${Key}",
+          { 
+            "Key": { "Fn::GetAtt" : [ "RDSCustomKMSKey", "Arn" ] }
+          }
+        ]
+      }
+    }
+  }
+}

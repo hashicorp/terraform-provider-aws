@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_iot_thing_type: Fix error during plan when resource is manually deleted
+```
+
+```release-note:bug
+resource/aws_cloudwatch_event_bus_policy: Fix error during plan when the associated aws_cloudwatch_event_bus resource is manually deleted
+```

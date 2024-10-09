@@ -1,0 +1,7 @@
+```release-note:note
+data-source/aws_service_discovery_service: The `tags_all` attribute has been deprecated and will be removed in a future version
+```
+
+```release-note:note
+data-source/aws_quicksight_data_set: The `tags_all` attribute has been deprecated and will be removed in a future version
+```

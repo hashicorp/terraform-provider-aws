@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_security_group: Improve respect for delete timeout set by user and retry of certain errors
+```

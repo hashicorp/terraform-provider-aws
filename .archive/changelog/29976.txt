@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_budgets_action: Extend and add configurable timeouts for create and update
+```

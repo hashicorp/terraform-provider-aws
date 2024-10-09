@@ -1,39 +1,54 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceResourcePolicy() *schema.Resource {
+// @SDKResource("aws_networkfirewall_resource_policy", name="Resource Policy")
+func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourcePolicyPut,
-		ReadContext:   resourceResourcePolicyRead,
-		UpdateContext: resourceResourcePolicyPut,
-		DeleteContext: resourceResourcePolicyDelete,
+		CreateWithoutTimeout: resourceResourcePolicyPut,
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut,
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			names.AttrPolicy: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -44,68 +59,106 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	resourceArn := d.Get("resource_arn").(string)
-	input := &networkfirewall.PutResourcePolicyInput{
-		ResourceArn: aws.String(resourceArn),
-		Policy:      aws.String(d.Get("policy").(string)),
-	}
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	log.Printf("[DEBUG] Putting NetworkFirewall Resource Policy for resource: %s", resourceArn)
-
-	_, err := conn.PutResourcePolicyWithContext(ctx, input)
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error putting NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(resourceArn)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
+	input := &networkfirewall.PutResourcePolicyInput{
+		Policy:      aws.String(policy),
+		ResourceArn: aws.String(resourceARN),
+	}
 
-	return resourceResourcePolicyRead(ctx, d, meta)
+	_, err = conn.PutResourcePolicy(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "putting NetworkFirewall Resource Policy (%s): %s", resourceARN, err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId(resourceARN)
+	}
+
+	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	resourceArn := d.Id()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
+	policy, err := findResourcePolicyByARN(ctx, conn, d.Id())
 
-	policy, err := FindResourcePolicy(ctx, conn, resourceArn)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] NetworkFirewall Resource Policy (for resource: %s) not found, removing from state", resourceArn)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] NetworkFirewall Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	if policy == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policy)
-	d.Set("resource_arn", resourceArn)
+	d.Set(names.AttrPolicy, policyToSet)
+	d.Set(names.AttrResourceARN, d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy for resource: %s", d.Id())
+	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy: %s", d.Id())
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidResourcePolicyException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteResourcePolicy(ctx, &networkfirewall.DeleteResourcePolicyInput{
+			ResourceArn: aws.String(d.Id()),
+		})
+	}, "The supplied policy does not match RAM managed permissions")
 
-	input := &networkfirewall.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(d.Id()),
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
-
-	_, err := conn.DeleteResourcePolicyWithContext(ctx, input)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Resource Policy (for resource: %s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findResourcePolicyByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*string, error) {
+	input := &networkfirewall.DescribeResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeResourcePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Policy, nil
 }

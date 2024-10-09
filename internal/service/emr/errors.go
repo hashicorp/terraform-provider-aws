@@ -1,5 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 const (
-	ErrCodeClusterNotFound = "ClusterNotFound"
+	errCodeAccessDeniedException     = "AccessDeniedException"
+	errCodeClusterNotFound           = "ClusterNotFound"
+	errCodeUnknownOperationException = "UnknownOperationException"
+	errCodeValidationException       = "ValidationException"
 )

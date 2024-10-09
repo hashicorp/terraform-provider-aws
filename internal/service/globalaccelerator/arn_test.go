@@ -1,13 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator_test
 
 import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func TestEndpointGroupARNToListenerARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputARN      string
@@ -17,22 +23,22 @@ func TestEndpointGroupARNToListenerARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2::123456789012:accelerator/a-123/listener/l-456/endpoint-group/eg-789", //lintignore:AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service globalaccelerator`),
+			ExpectedError: regexache.MustCompile(`expected service globalaccelerator`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
 			InputARN:      "arn:aws:globalaccelerator::123456789012:accelerator/a-123/listener/l-456", //lintignore:AWSAT005
-			ExpectedError: regexp.MustCompile(`expected at least 6 resource parts`),
+			ExpectedError: regexache.MustCompile(`expected at least 6 resource parts`),
 		},
 		{
 			TestName:    "valid ARN",
@@ -43,6 +49,8 @@ func TestEndpointGroupARNToListenerARN(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfglobalaccelerator.EndpointGroupARNToListenerARN(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
@@ -65,6 +73,8 @@ func TestEndpointGroupARNToListenerARN(t *testing.T) {
 }
 
 func TestListenerOrEndpointGroupARNToAcceleratorARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputARN      string
@@ -74,22 +84,22 @@ func TestListenerOrEndpointGroupARNToAcceleratorARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2::123456789012:accelerator/a-123/listener/l-456", //lintignore:AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service globalaccelerator`),
+			ExpectedError: regexache.MustCompile(`expected service globalaccelerator`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
 			InputARN:      "arn:aws:globalaccelerator::123456789012:accelerator/a-123", //lintignore:AWSAT005
-			ExpectedError: regexp.MustCompile(`expected at least 4 resource parts`),
+			ExpectedError: regexache.MustCompile(`expected at least 4 resource parts`),
 		},
 		{
 			TestName:    "valid listener ARN",
@@ -105,6 +115,8 @@ func TestListenerOrEndpointGroupARNToAcceleratorARN(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfglobalaccelerator.ListenerOrEndpointGroupARNToAcceleratorARN(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {

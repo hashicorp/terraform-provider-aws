@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_appstream_stack: Fix panic on user_settings update
+```
+
+```release-note:bug
+resource/aws_appstream_stack: Prevent unnecessary replacements on update
+```

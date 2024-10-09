@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Enable `font_configuration` to be set for table header styles
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Enable `font_configuration` to be set for table header styles
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Enable `font_configuration` to be set for table header styles
+```

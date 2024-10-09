@@ -1,23 +1,21 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
 
 import (
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_autoscaling_group", &resource.Sweeper{
 		Name: "aws_autoscaling_group",
 		F:    sweepGroups,
@@ -25,98 +23,91 @@ func init() {
 
 	resource.AddTestSweepers("aws_launch_configuration", &resource.Sweeper{
 		Name:         "aws_launch_configuration",
-		Dependencies: []string{"aws_autoscaling_group"},
 		F:            sweepLaunchConfigurations,
+		Dependencies: []string{"aws_autoscaling_group"},
 	})
 }
 
 func sweepGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
+	conn := client.AutoScalingClient(ctx)
+	input := &autoscaling.DescribeAutoScalingGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
+	pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Auto Scaling Group sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Auto Scaling Groups in Sweeper: %s", err)
-	}
 
-	if len(resp.AutoScalingGroups) == 0 {
-		log.Print("[DEBUG] No Auto Scaling Groups to sweep")
-		return nil
-	}
-
-	for _, asg := range resp.AutoScalingGroups {
-		deleteopts := autoscaling.DeleteAutoScalingGroupInput{
-			AutoScalingGroupName: asg.AutoScalingGroupName,
-			ForceDelete:          aws.Bool(true),
-		}
-
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			if _, err := conn.DeleteAutoScalingGroup(&deleteopts); err != nil {
-				if awserr, ok := err.(awserr.Error); ok {
-					switch awserr.Code() {
-					case "InvalidGroup.NotFound":
-						return nil
-					case "ResourceInUse", "ScalingActivityInProgress":
-						return resource.RetryableError(awserr)
-					}
-				}
-
-				// Didn't recognize the error, so shouldn't retry.
-				return resource.NonRetryableError(err)
-			}
-			// Successful delete
-			return nil
-		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error listing Auto Scaling Groups (%s): %w", region, err)
 		}
+
+		for _, v := range page.AutoScalingGroups {
+			r := resourceGroup()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.AutoScalingGroupName))
+			d.Set(names.AttrForceDelete, true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Auto Scaling Groups (%s): %w", region, err)
 	}
 
 	return nil
 }
 
 func sweepLaunchConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
+	conn := client.AutoScalingClient(ctx)
+	input := &autoscaling.DescribeLaunchConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	resp, err := conn.DescribeLaunchConfigurations(&autoscaling.DescribeLaunchConfigurationsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AutoScaling Launch Configuration sweep for %s: %s", region, err)
+	pages := autoscaling.NewDescribeLaunchConfigurationsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Auto Scaling Launch Configuration sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving launch configuration: %s", err)
-	}
 
-	if len(resp.LaunchConfigurations) == 0 {
-		log.Print("[DEBUG] No aws launch configurations to sweep")
-		return nil
-	}
-
-	for _, lc := range resp.LaunchConfigurations {
-		name := aws.StringValue(lc.LaunchConfigurationName)
-
-		log.Printf("[INFO] Deleting Launch Configuration: %s", name)
-		_, err := conn.DeleteLaunchConfiguration(
-			&autoscaling.DeleteLaunchConfigurationInput{
-				LaunchConfigurationName: aws.String(name),
-			})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
-				return nil
-			}
-			return err
+			return fmt.Errorf("error listing Auto Scaling Launch Configurations (%s): %w", region, err)
 		}
+
+		for _, v := range page.LaunchConfigurations {
+			r := resourceLaunchConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.LaunchConfigurationName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Auto Scaling Launch Configurations (%s): %w", region, err)
 	}
 
 	return nil

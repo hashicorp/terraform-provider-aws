@@ -1,51 +1,66 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDomain() *schema.Resource {
+// @SDKResource("aws_elasticsearch_domain", name="Domain")
+// @Tags(identifierAttribute="id")
+func resourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainCreate,
-		Read:   resourceDomainRead,
-		Update: resourceDomainUpdate,
-		Delete: resourceDomainDelete,
+		CreateWithoutTimeout: resourceDomainCreate,
+		ReadWithoutTimeout:   resourceDomainRead,
+		UpdateWithoutTimeout: resourceDomainUpdate,
+		DeleteWithoutTimeout: resourceDomainDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceDomainImport,
+			StateContext: resourceDomainImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("elasticsearch_version", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("elasticsearch_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				newVersion := d.Get("elasticsearch_version").(string)
-				domainName := d.Get("domain_name").(string)
+				domainName := d.Get(names.AttrDomainName).(string)
 
-				conn := meta.(*conns.AWSClient).ElasticsearchConn
-				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
+				conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
+				resp, err := conn.GetCompatibleElasticsearchVersions(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
 				if err != nil {
@@ -56,22 +71,44 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
-					if aws.StringValue(targetVersion) == newVersion {
+					if targetVersion == newVersion {
 						return false
 					}
 				}
 				return true
+			}),
+			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// cannot disable (at all) or enable if < 6.7 without forcenew
+				o, n := d.GetChange("encrypt_at_rest.0.enabled")
+				if o.(bool) && !n.(bool) {
+					return true
+				}
+
+				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
+			}),
+			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				o, n := d.GetChange("node_to_node_encryption.0.enabled")
+				if o.(bool) && !n.(bool) {
+					return true
+				}
+
+				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
 			}),
 			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"advanced_options": {
 				Type:     schema.TypeMap,
@@ -86,7 +123,7 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 							ForceNew: true,
@@ -122,138 +159,63 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
-					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
-						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_endpoint_options": {
+			"auto_tune_options": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enforce_https": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
+						"desired_state": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AutoTuneDesiredState](),
 						},
-						"tls_security_policy": {
-							Type:     schema.TypeString,
+						"maintenance_schedule": {
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								elasticsearch.TLSSecurityPolicyPolicyMinTls10201907,
-								elasticsearch.TLSSecurityPolicyPolicyMinTls12201907,
-							}, false),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cron_expression_for_recurrence": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									names.AttrDuration: {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrUnit: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
+												},
+												names.AttrValue: {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+									"start_at": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsRFC3339Time,
+									},
+								},
+							},
 						},
-						"custom_endpoint_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"custom_endpoint": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: isCustomEndpointDisabled,
-						},
-						"custom_endpoint_certificate_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateFunc:     verify.ValidARN,
-							DiffSuppressFunc: isCustomEndpointDisabled,
-						},
-					},
-				},
-			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kibana_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ebs_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ebs_enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"iops": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"volume_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.StringInSlice([]string{
-									elasticsearch.VolumeTypeStandard,
-									elasticsearch.VolumeTypeGp2,
-									elasticsearch.VolumeTypeIo1,
-								}, false),
-							),
-						},
-					},
-				},
-			},
-			"encrypt_at_rest": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"kms_key_id": {
+						"rollback_on_disable": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ForceNew:         true,
-							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
-						},
-					},
-				},
-			},
-			"node_to_node_encryption": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
+							ValidateDiagFunc: enum.Validate[awstypes.RollbackOnDisable](),
 						},
 					},
 				},
@@ -265,6 +227,21 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cold_storage_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -280,15 +257,29 @@ func ResourceDomain() *schema.Resource {
 							Optional:         true,
 							DiffSuppressFunc: isDedicatedMasterDisabled,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  elasticsearch.ESPartitionInstanceTypeM3MediumElasticsearch,
+							Default:  awstypes.ESPartitionInstanceTypeM3MediumElasticsearch,
+						},
+						"warm_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 150),
+						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"warm_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(warmPartitionInstanceType_Values(), false),
 						},
 						"zone_awareness_config": {
 							Type:             schema.TypeList,
@@ -310,97 +301,117 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"warm_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 150),
-						},
-						"warm_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								elasticsearch.ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch,
-								elasticsearch.ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch,
-								"ultrawarm1.xlarge.elasticsearch",
-							}, false),
-						},
 					},
 				},
 			},
-			"snapshot_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+			"cognito_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"automated_snapshot_start_hour": {
-							Type:     schema.TypeInt,
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"identity_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrRoleARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						names.AttrUserPoolID: {
+							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"vpc_options": {
+			"domain_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDomainName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
+					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
+						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
+			},
+			"domain_endpoint_options": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+						"custom_endpoint": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: isCustomEndpointDisabled,
 						},
-						"security_group_ids": {
-							Type:     schema.TypeSet,
+						"custom_endpoint_certificate_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateFunc:     verify.ValidARN,
+							DiffSuppressFunc: isCustomEndpointDisabled,
+						},
+						"custom_endpoint_enabled": {
+							Type:     schema.TypeBool,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+							Default:  false,
 						},
-						"subnet_ids": {
-							Type:     schema.TypeSet,
+						"enforce_https": {
+							Type:     schema.TypeBool,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+							Default:  true,
 						},
-						"vpc_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+						"tls_security_policy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TLSSecurityPolicy](),
 						},
 					},
 				},
 			},
-			"log_publishing_options": {
-				Type:     schema.TypeSet,
+			"ebs_options": {
+				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"log_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elasticsearch.LogType_Values(), false),
-						},
-						"cloudwatch_log_group_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"enabled": {
+						"ebs_enabled": {
 							Type:     schema.TypeBool,
+							Required: true,
+						},
+						names.AttrIOPS: {
+							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  true,
+							Computed: true,
+						},
+						names.AttrThroughput: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntAtLeast(125),
+						},
+						names.AttrVolumeSize: {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						names.AttrVolumeType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 						},
 					},
 				},
@@ -410,642 +421,803 @@ func ResourceDomain() *schema.Resource {
 				Optional: true,
 				Default:  "1.5",
 			},
-			"cognito_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				ForceNew:         false,
-				MaxItems:         1,
-				DiffSuppressFunc: esCognitoOptionsDiffSuppress,
+			"encrypt_at_rest": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"user_pool_id": {
-							Type:     schema.TypeString,
 							Required: true,
 						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+						names.AttrKMSKeyID: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: suppressEquivalentKMSKeyIDs,
 						},
 					},
 				},
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kibana_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_publishing_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCloudWatchLogGroupARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"log_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+						},
+					},
+				},
+			},
+			"node_to_node_encryption": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
+			"snapshot_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"automated_snapshot_start_hour": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"vpc_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAvailabilityZones: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrSecurityGroupIDs: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrSubnetIDs: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrVPCID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-func resourceDomainImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("domain_name", d.Id())
-	return []*schema.ResourceData{d}, nil
-}
-
-func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
-	// and might cause duplicate domain to appear in state
-	resp, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	})
+	// and might cause duplicate domain to appear in state.
+	name := d.Get(names.AttrDomainName).(string)
+	_, err := findDomainByName(ctx, conn, name)
+
 	if err == nil {
-		return fmt.Errorf("Elasticsearch domain %s already exists", aws.StringValue(resp.DomainStatus.DomainName))
+		return sdkdiag.AppendErrorf(diags, "Elasticsearch Domain (%s) already exists", name)
 	}
 
-	input := elasticsearch.CreateElasticsearchDomainInput{
-		DomainName:           aws.String(d.Get("domain_name").(string)),
+	input := &elasticsearch.CreateElasticsearchDomainInput{
+		DomainName:           aws.String(name),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
+		TagList:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
-		input.AccessPolicies = aws.String(v.(string))
+		policy, err := structure.NormalizeJsonString(v.(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input.AccessPolicies = aws.String(policy)
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		input.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.AdvancedOptions = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
 		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("ebs_options"); ok {
-		options := v.([]interface{})
-
-		if len(options) == 1 {
-			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside ebs_options")
-			}
-
-			s := options[0].(map[string]interface{})
-			input.EBSOptions = expandEBSOptions(s)
-		}
-	}
-
-	if v, ok := d.GetOk("encrypt_at_rest"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
-		}
-
-		s := options[0].(map[string]interface{})
-		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
+		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
-		config := v.([]interface{})
-
-		if len(config) == 1 {
-			if config[0] == nil {
-				return fmt.Errorf("At least one field is expected inside cluster_config")
-			}
-			m := config[0].(map[string]interface{})
-			input.ElasticsearchClusterConfig = expandESClusterConfig(m)
-		}
-	}
-
-	if v, ok := d.GetOk("node_to_node_encryption"); ok {
-		options := v.([]interface{})
-
-		s := options[0].(map[string]interface{})
-		input.NodeToNodeEncryptionOptions = expandESNodeToNodeEncryptionOptions(s)
-	}
-
-	if v, ok := d.GetOk("snapshot_options"); ok {
-		options := v.([]interface{})
-
-		if len(options) == 1 {
-			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside snapshot_options")
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
 			}
 
-			o := options[0].(map[string]interface{})
-
-			snapshotOptions := elasticsearch.SnapshotOptions{
-				AutomatedSnapshotStartHour: aws.Int64(int64(o["automated_snapshot_start_hour"].(int))),
-			}
-
-			input.SnapshotOptions = &snapshotOptions
+			input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(v[0].(map[string]interface{}))
 		}
-	}
-
-	if v, ok := d.GetOk("vpc_options"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return fmt.Errorf("At least one field is expected inside vpc_options")
-		}
-
-		s := options[0].(map[string]interface{})
-		input.VPCOptions = expandVPCOptions(s)
-	}
-
-	if v, ok := d.GetOk("log_publishing_options"); ok {
-		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
-		options := v.(*schema.Set).List()
-		for _, vv := range options {
-			lo := vv.(map[string]interface{})
-			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
-				CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
-				Enabled:                   aws.Bool(lo["enabled"].(bool)),
-			}
-		}
-	}
-
-	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
 		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Elasticsearch domain: %s", input)
+	if v, ok := d.GetOk("domain_endpoint_options"); ok {
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
+	}
 
-	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
-	var out *elasticsearch.CreateElasticsearchDomainOutput
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		out, err = conn.CreateElasticsearchDomain(&input)
+	if v, ok := d.GetOk("ebs_options"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside ebs_options")
+			}
+
+			input.EBSOptions = expandEBSOptions(v[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("encrypt_at_rest"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
+			}
+
+			input.EncryptionAtRestOptions = expandEncryptAtRestOptions(v[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("log_publishing_options"); ok {
+		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("node_to_node_encryption"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside node_to_node_encryption")
+			}
+
+			input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(v[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("snapshot_options"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside snapshot_options")
+			}
+
+			tfMap := v[0].(map[string]interface{})
+
+			input.SnapshotOptions = &awstypes.SnapshotOptions{
+				AutomatedSnapshotStartHour: aws.Int32(int32(tfMap["automated_snapshot_start_hour"].(int))),
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("vpc_options"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
+			}
+
+			input.VPCOptions = expandVPCOptions(v[0].(map[string]interface{}))
+		}
+	}
+
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateElasticsearchDomain(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidTypeException](err, "Error setting policy") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "enable a service-linked role to give Amazon ES permissions") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Domain is still being deleted") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Amazon Elasticsearch must be allowed to use the passed role") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role has not propagated yet") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Authentication error") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Unauthorized Operation: Elasticsearch must be authorised to describe") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role must authorize Amazon Elasticsearch to describe") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Elasticsearch Domain (%s): %s", name, err)
+	}
+
+	d.SetId(aws.ToString(outputRaw.(*elasticsearch.CreateElasticsearchDomainOutput).DomainStatus.ARN))
+
+	if _, err := waitDomainCreated(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) create: %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
+		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+			AutoTuneOptions: expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{})),
+			DomainName:      aws.String(name),
+		}
+
+		_, err = conn.UpdateElasticsearchDomainConfig(ctx, input)
+
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
-				log.Printf("[DEBUG] Retrying creation of Elasticsearch domain %s", aws.StringValue(input.DomainName))
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
+			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) Config: %s", d.Id(), err)
 		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateElasticsearchDomain(&input)
-	}
-	if err != nil {
-		return fmt.Errorf("Error creating Elasticsearch domain: %s", err)
-	}
 
-	d.SetId(aws.StringValue(out.DomainStatus.ARN))
-
-	// Whilst the domain is being created, we can initialise the tags.
-	// This should mean that if the creation fails (eg because your token expired
-	// whilst the operation is being performed), we still get the required tags on
-	// the resources.
-	if len(tags) > 0 {
-		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+		if _, err := waitDomainConfigUpdated(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 		}
 	}
 
-	log.Printf("[DEBUG] Waiting for Elasticsearch domain %q to be created", d.Id())
-	err = WaitForDomainCreation(conn, d.Get("domain_name").(string), d.Id())
-	if err != nil {
-		return err
-	}
-
-	log.Printf("[DEBUG] Elasticsearch domain %q created", d.Id())
-
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName, arn string) error {
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(domainName),
-	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-		if !aws.BoolValue(out.DomainStatus.Processing) && (out.DomainStatus.Endpoint != nil || out.DomainStatus.Endpoints != nil) {
-			return nil
-		}
+	name := d.Get(names.AttrDomainName).(string)
+	ds, err := findDomainByName(ctx, conn, name)
 
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for the domain to be created", arn))
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return fmt.Errorf("Error describing Elasticsearch domain: %s", err)
-		}
-		if !aws.BoolValue(out.DomainStatus.Processing) && (out.DomainStatus.Endpoint != nil || out.DomainStatus.Endpoints != nil) {
-			return nil
-		}
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be created: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s): %s", d.Id(), err)
 	}
-	return nil
-}
 
-func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+	output, err := conn.DescribeElasticsearchDomainConfig(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
+		DomainName: aws.String(name),
 	})
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ResourceNotFoundException" {
-			log.Printf("[INFO] Elasticsearch Domain %q not found", d.Get("domain_name").(string))
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) config: %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", out)
+	dc := output.DomainConfig
 
-	ds := out.DomainStatus
-
-	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
-		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
+	if v := aws.ToString(ds.AccessPolicies); v != "" {
+		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), v)
 		if err != nil {
-			return fmt.Errorf("access policies contain an invalid JSON: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
+
 		d.Set("access_policies", policies)
 	}
-	err = d.Set("advanced_options", verify.PointersMapToStringList(ds.AdvancedOptions))
-	if err != nil {
-		return err
+	if err := d.Set("advanced_options", advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.FlattenStringValueMap(ds.AdvancedOptions))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
-	d.SetId(aws.StringValue(ds.ARN))
-	d.Set("domain_id", ds.DomainId)
-	d.Set("domain_name", ds.DomainName)
-	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
-
-	err = d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions))
-	if err != nil {
-		return err
-	}
-	err = d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions))
-	if err != nil {
-		return err
-	}
-	err = d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig))
-	if err != nil {
-		return err
-	}
-	err = d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions))
-	if err != nil {
-		return err
-	}
-	err = d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions))
-	if err != nil {
-		return err
-	}
-
 	// Populate AdvancedSecurityOptions with values returned from
 	// DescribeElasticsearchDomainConfig, if enabled, else use
 	// values from resource; additionally, append MasterUserOptions
 	// from resource as they are not returned from the API
 	if ds.AdvancedSecurityOptions != nil {
 		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
-		if !aws.BoolValue(ds.AdvancedSecurityOptions.Enabled) {
+		if !aws.ToBool(ds.AdvancedSecurityOptions.Enabled) {
 			advSecOpts[0]["internal_user_database_enabled"] = getUserDBEnabled(d)
 		}
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
 
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
-			return fmt.Errorf("error setting advanced_security_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
 	}
-
+	d.Set(names.AttrARN, ds.ARN)
+	if v := dc.AutoTuneOptions; v != nil {
+		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
+		}
+	}
+	if err := d.Set("cluster_config", flattenElasticsearchClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
+	}
+	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
+	}
+	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
+	}
+	d.Set("domain_id", ds.DomainId)
+	d.Set(names.AttrDomainName, ds.DomainName)
+	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
+	}
+	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
+	if err := d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
+	}
+	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
+	}
+	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
+	}
 	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
-		return fmt.Errorf("error setting snapshot_options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
 	}
-
 	if ds.VPCOptions != nil {
-		err = d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions))
-		if err != nil {
-			return err
+		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
-		endpoints := verify.PointersMapToStringList(ds.Endpoints)
-		err = d.Set("endpoint", endpoints["vpc"])
-		if err != nil {
-			return err
-		}
+
+		endpoints := flex.FlattenStringValueMap(ds.Endpoints)
+		d.Set(names.AttrEndpoint, endpoints["vpc"])
+
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
-			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
-			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
 		}
 	}
 
-	if ds.LogPublishingOptions != nil {
-		m := make([]map[string]interface{}, 0)
-		for k, val := range ds.LogPublishingOptions {
-			mm := map[string]interface{}{}
-			mm["log_type"] = k
-			if val.CloudWatchLogsLogGroupArn != nil {
-				mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
-			}
-			mm["enabled"] = aws.BoolValue(val.Enabled)
-			m = append(m, mm)
-		}
-		d.Set("log_publishing_options", m)
-	}
-
-	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
-		return fmt.Errorf("error setting domain_endpoint_options: %s", err)
-	}
-
-	d.Set("arn", ds.ARN)
-
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	input := elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-
-	if d.HasChange("access_policies") {
-		input.AccessPolicies = aws.String(d.Get("access_policies").(string))
-	}
-
-	if d.HasChange("advanced_options") {
-		input.AdvancedOptions = flex.ExpandStringMap(d.Get("advanced_options").(map[string]interface{}))
-	}
-
-	if d.HasChange("advanced_security_options") {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
-	}
-
-	if d.HasChange("domain_endpoint_options") {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
-	}
-
-	if d.HasChanges("ebs_options", "cluster_config") {
-		options := d.Get("ebs_options").([]interface{})
-
-		if len(options) == 1 {
-			s := options[0].(map[string]interface{})
-			input.EBSOptions = expandEBSOptions(s)
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		name := d.Get(names.AttrDomainName).(string)
+		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+			DomainName: aws.String(name),
 		}
 
-		if d.HasChange("cluster_config") {
-			config := d.Get("cluster_config").([]interface{})
+		if d.HasChange("access_policies") {
+			o, n := d.GetChange("access_policies")
 
-			if len(config) == 1 {
-				m := config[0].(map[string]interface{})
-				input.ElasticsearchClusterConfig = expandESClusterConfig(m)
+			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
+				input.AccessPolicies = aws.String(d.Get("access_policies").(string))
 			}
 		}
 
-	}
+		if d.HasChange("advanced_options") {
+			input.AdvancedOptions = flex.ExpandStringValueMap(d.Get("advanced_options").(map[string]interface{}))
+		}
 
-	if d.HasChange("snapshot_options") {
-		options := d.Get("snapshot_options").([]interface{})
+		if d.HasChange("advanced_security_options") {
+			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
+		}
 
-		if len(options) == 1 {
-			o := options[0].(map[string]interface{})
+		if d.HasChange("auto_tune_options") {
+			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
+		}
 
-			snapshotOptions := elasticsearch.SnapshotOptions{
-				AutomatedSnapshotStartHour: aws.Int64(int64(o["automated_snapshot_start_hour"].(int))),
+		if d.HasChange("domain_endpoint_options") {
+			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
+		}
+
+		if d.HasChanges("ebs_options", "cluster_config") {
+			if v := d.Get("ebs_options").([]interface{}); len(v) == 1 {
+				input.EBSOptions = expandEBSOptions(v[0].(map[string]interface{}))
 			}
 
-			input.SnapshotOptions = &snapshotOptions
-		}
-	}
+			if d.HasChange("cluster_config") {
+				if v := d.Get("cluster_config").([]interface{}); len(v) == 1 {
+					input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(v[0].(map[string]interface{}))
 
-	if d.HasChange("vpc_options") {
-		options := d.Get("vpc_options").([]interface{})
-		s := options[0].(map[string]interface{})
-		input.VPCOptions = expandVPCOptions(s)
-	}
-
-	if d.HasChange("cognito_options") {
-		options := d.Get("cognito_options").([]interface{})
-		input.CognitoOptions = expandCognitoOptions(options)
-	}
-
-	if d.HasChange("log_publishing_options") {
-		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
-		options := d.Get("log_publishing_options").(*schema.Set).List()
-		for _, vv := range options {
-			lo := vv.(map[string]interface{})
-			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
-				CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
-				Enabled:                   aws.Bool(lo["enabled"].(bool)),
+					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
+					if semver.LessThan(d.Get("elasticsearch_version").(string), "7.9") {
+						input.ElasticsearchClusterConfig.ColdStorageOptions = nil
+					}
+				}
 			}
 		}
-	}
 
-	_, err := conn.UpdateElasticsearchDomainConfig(&input)
-	if err != nil {
-		return err
-	}
-
-	descInput := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
-		out, err = conn.DescribeElasticsearchDomain(descInput)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if !aws.BoolValue(out.DomainStatus.Processing) {
-			return nil
-		}
-
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeElasticsearchDomain(descInput)
-		if err != nil {
-			return fmt.Errorf("Error describing Elasticsearch domain: %s", err)
-		}
-		if !aws.BoolValue(out.DomainStatus.Processing) {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain changes to be processed: %s", err)
-	}
-
-	if d.HasChange("elasticsearch_version") {
-		upgradeInput := elasticsearch.UpgradeElasticsearchDomainInput{
-			DomainName:    aws.String(d.Get("domain_name").(string)),
-			TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
-		}
-
-		_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
-		if err != nil {
-			return fmt.Errorf("Failed to upgrade elasticsearch domain: %s", err)
-		}
-
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{elasticsearch.UpgradeStatusInProgress},
-			Target:  []string{elasticsearch.UpgradeStatusSucceeded},
-			Refresh: func() (interface{}, string, error) {
-				out, err := conn.GetUpgradeStatus(&elasticsearch.GetUpgradeStatusInput{
-					DomainName: aws.String(d.Get("domain_name").(string)),
-				})
-				if err != nil {
-					return nil, "", err
+		if d.HasChange("encrypt_at_rest") {
+			input.EncryptionAtRestOptions = nil
+			if v, ok := d.GetOk("encrypt_at_rest"); ok {
+				v := v.([]interface{})
+				if v[0] == nil {
+					return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
 				}
 
-				// Elasticsearch upgrades consist of multiple steps:
-				// https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-version-migration.html
-				// Prevent false positive completion where the UpgradeStep is not the final UPGRADE step.
-				if aws.StringValue(out.StepStatus) == elasticsearch.UpgradeStatusSucceeded && aws.StringValue(out.UpgradeStep) != elasticsearch.UpgradeStepUpgrade {
-					return out, elasticsearch.UpgradeStatusInProgress, nil
+				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(v[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("node_to_node_encryption") {
+			input.NodeToNodeEncryptionOptions = nil
+			if v, ok := d.GetOk("node_to_node_encryption"); ok {
+				v := v.([]interface{})
+				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(v[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("snapshot_options") {
+			if v := d.Get("snapshot_options").([]interface{}); len(v) == 1 {
+				tfMap := v[0].(map[string]interface{})
+
+				snapshotOptions := &awstypes.SnapshotOptions{
+					AutomatedSnapshotStartHour: aws.Int32(int32(tfMap["automated_snapshot_start_hour"].(int))),
 				}
 
-				return out, aws.StringValue(out.StepStatus), nil
-			},
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second, // The upgrade status isn't instantly available for the current upgrade so will either be nil or reflect a previous upgrade
+				input.SnapshotOptions = snapshotOptions
+			}
 		}
-		_, waitErr := stateConf.WaitForState()
-		if waitErr != nil {
-			return waitErr
+
+		if d.HasChange("vpc_options") {
+			v := d.Get("vpc_options").([]interface{})
+			input.VPCOptions = expandVPCOptions(v[0].(map[string]interface{}))
+		}
+
+		if d.HasChange("cognito_options") {
+			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]interface{}))
+		}
+
+		if d.HasChange("log_publishing_options") {
+			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
+		}
+
+		_, err := conn.UpdateElasticsearchDomainConfig(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) Config: %s", d.Id(), err)
+		}
+
+		if _, err := waitDomainConfigUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
+		}
+
+		if d.HasChange("elasticsearch_version") {
+			input := &elasticsearch.UpgradeElasticsearchDomainInput{
+				DomainName:    aws.String(name),
+				TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
+			}
+
+			_, err := conn.UpgradeElasticsearchDomain(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "upgrading Elasticsearch Domain (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitUpgradeSucceeded(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) upgrade: %s", d.Id(), err)
+			}
 		}
 	}
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	domainName := d.Get("domain_name").(string)
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Elasticsearch domain: %q", domainName)
-	_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
-		DomainName: aws.String(domainName),
+	name := d.Get(names.AttrDomainName).(string)
+
+	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
+	_, err := conn.DeleteElasticsearchDomain(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
+		DomainName: aws.String(name),
 	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return err
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Waiting for Elasticsearch domain %q to be deleted", domainName)
-	err = resourceDomainDeleteWaiter(domainName, conn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain (%s): %s", d.Id(), err)
+	}
 
-	return err
+	if _, err := waitDomainDeleted(ctx, conn, name, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceDomainDeleteWaiter(domainName string, conn *elasticsearch.ElasticsearchService) error {
+func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
+
+	d.Set(names.AttrDomainName, d.Id())
+
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(aws.ToString(ds.ARN))
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func findDomainByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainStatus, error) {
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(domainName),
+		DomainName: aws.String(name),
 	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err := resource.Retry(90*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
+	output, err := findDomain(ctx, conn, input)
 
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		if out.DomainStatus != nil && !aws.BoolValue(out.DomainStatus.Processing) {
-			return nil
-		}
-
-		return resource.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
-			return fmt.Errorf("Error describing Elasticsearch domain: %s", err)
-		}
-		if out.DomainStatus != nil && !aws.BoolValue(out.DomainStatus.Processing) {
-			return nil
-		}
-	}
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be deleted: %s", err)
+		return nil, err
 	}
-	return nil
+
+	if aws.ToBool(output.Deleted) {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
-func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
+func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.DescribeElasticsearchDomainInput) (*awstypes.ElasticsearchDomainStatus, error) {
+	output, err := conn.DescribeElasticsearchDomain(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainStatus, nil
+}
+
+func findDomainConfigByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainConfig, error) {
+	input := &elasticsearch.DescribeElasticsearchDomainConfigInput{
+		DomainName: aws.String(name),
+	}
+
+	return findDomainConfig(ctx, conn, input)
+}
+
+func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.DescribeElasticsearchDomainConfigInput) (*awstypes.ElasticsearchDomainConfig, error) {
+	output, err := conn.DescribeElasticsearchDomainConfig(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainConfig, nil
+}
+
+func findDomainUpgradeStatusByName(ctx context.Context, conn *elasticsearch.Client, name string) (*elasticsearch.GetUpgradeStatusOutput, error) {
+	input := &elasticsearch.GetUpgradeStatusInput{
+		DomainName: aws.String(name),
+	}
+
+	return findDomainUpgradeStatus(ctx, conn, input)
+}
+
+func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.GetUpgradeStatusInput) (*elasticsearch.GetUpgradeStatusOutput, error) {
+	output, err := conn.GetUpgradeStatus(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call findDomainByName here as the domain's Deleted flag will be set while DomainProcessingStatus is "Deleting".
+		input := &elasticsearch.DescribeElasticsearchDomainInput{
+			DomainName: aws.String(name),
+		}
+		output, err := findDomain(ctx, conn, input)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.DomainProcessingStatus), nil
+	}
+}
+
+func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDomainUpgradeStatusByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Elasticsearch upgrades consist of multiple steps:
+		// https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-version-migration.html
+		// Prevent false positive completion where the UpgradeStep is not the final UPGRADE step.
+		status := output.StepStatus
+		if status == awstypes.UpgradeStatusSucceeded && output.UpgradeStep != awstypes.UpgradeStepUpgrade {
+			status = awstypes.UpgradeStatusInProgress
+		}
+
+		return output, string(status), nil
+	}
+}
+
+func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.UpgradeStatusInProgress),
+		Target:     enum.Slice(awstypes.UpgradeStatusSucceeded, awstypes.UpgradeStatusSucceededWithIssues),
+		Refresh:    statusDomainUpgrade(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*elasticsearch.GetUpgradeStatusOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeCreating),
+		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
+		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
+		if v := output.ChangeProgressDetails; v != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying),
+		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
+		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
+		if v := output.ChangeProgressDetails; v != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainDeleted(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeDeleting),
+		Target:  []string{},
+		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
+		if v := output.ChangeProgressDetails; v != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func warmPartitionInstanceType_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.ESWarmPartitionInstanceType](), "ultrawarm1.xlarge.elasticsearch")
+}
+
+// inPlaceEncryptionEnableVersion returns true if, based on version, encryption
+// can be enabled in place (without ForceNew)
+func inPlaceEncryptionEnableVersion(version string) bool {
+	return semver.GreaterThanOrEqual(version, "6.7")
+}
+
+func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) bool {
 	// The Elasticsearch API accepts a short KMS key id but always returns the ARN of the key.
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.
@@ -1053,167 +1225,224 @@ func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) boo
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_plugin/kibana/"
-}
-
-func esCognitoOptionsDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
-	if old == "1" && new == "0" {
-		return true
-	}
-	return false
+	return d.Get(names.AttrEndpoint).(string) + "/_plugin/kibana/"
 }
 
 func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
-	v, ok := d.GetOk("cluster_config")
-	if ok {
-		clusterConfig := v.([]interface{})[0].(map[string]interface{})
-		return !clusterConfig["dedicated_master_enabled"].(bool)
+	if v, ok := d.GetOk("cluster_config"); ok {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		return !tfMap["dedicated_master_enabled"].(bool)
 	}
 	return false
 }
 
 func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
-	v, ok := d.GetOk("domain_endpoint_options")
-	if ok {
-		domainEndpointOptions := v.([]interface{})[0].(map[string]interface{})
-		return !domainEndpointOptions["custom_endpoint_enabled"].(bool)
+	if v, ok := d.GetOk("domain_endpoint_options"); ok {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		return !tfMap["custom_endpoint_enabled"].(bool)
 	}
 	return false
 }
 
-func expandESNodeToNodeEncryptionOptions(s map[string]interface{}) *elasticsearch.NodeToNodeEncryptionOptions {
-	options := elasticsearch.NodeToNodeEncryptionOptions{}
+func expandNodeToNodeEncryptionOptions(tfMap map[string]interface{}) *awstypes.NodeToNodeEncryptionOptions {
+	apiObject := &awstypes.NodeToNodeEncryptionOptions{}
 
-	if v, ok := s["enabled"]; ok {
-		options.Enabled = aws.Bool(v.(bool))
+	if v, ok := tfMap[names.AttrEnabled]; ok {
+		apiObject.Enabled = aws.Bool(v.(bool))
 	}
-	return &options
+
+	return apiObject
 }
 
-func flattenESNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionOptions) []map[string]interface{} {
-	if o == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{}
-	if o.Enabled != nil {
-		m["enabled"] = aws.BoolValue(o.Enabled)
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func expandESClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
-	config := elasticsearch.ElasticsearchClusterConfig{}
-
-	if v, ok := m["dedicated_master_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["dedicated_master_count"]; ok && v.(int) > 0 {
-				config.DedicatedMasterCount = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["dedicated_master_type"]; ok && v.(string) != "" {
-				config.DedicatedMasterType = aws.String(v.(string))
-			}
-		}
-	}
-
-	if v, ok := m["instance_count"]; ok {
-		config.InstanceCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["instance_type"]; ok {
-		config.InstanceType = aws.String(v.(string))
-	}
-
-	if v, ok := m["zone_awareness_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandElasticsearchZoneAwarenessConfig(v.([]interface{}))
-			}
-		}
-	}
-
-	if v, ok := m["warm_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.WarmEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["warm_count"]; ok {
-				config.WarmCount = aws.Int64(int64(v.(int)))
-			}
-
-			if v, ok := m["warm_type"]; ok {
-				config.WarmType = aws.String(v.(string))
-			}
-		}
-	}
-
-	return &config
-}
-
-func expandElasticsearchZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	zoneAwarenessConfig := &elasticsearch.ZoneAwarenessConfig{}
-
-	if v, ok := m["availability_zone_count"]; ok && v.(int) > 0 {
-		zoneAwarenessConfig.AvailabilityZoneCount = aws.Int64(int64(v.(int)))
-	}
-
-	return zoneAwarenessConfig
-}
-
-func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{
-		"zone_awareness_config":  flattenElasticsearchZoneAwarenessConfig(c.ZoneAwarenessConfig),
-		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
-	}
-
-	if c.DedicatedMasterCount != nil {
-		m["dedicated_master_count"] = aws.Int64Value(c.DedicatedMasterCount)
-	}
-	if c.DedicatedMasterEnabled != nil {
-		m["dedicated_master_enabled"] = aws.BoolValue(c.DedicatedMasterEnabled)
-	}
-	if c.DedicatedMasterType != nil {
-		m["dedicated_master_type"] = aws.StringValue(c.DedicatedMasterType)
-	}
-	if c.InstanceCount != nil {
-		m["instance_count"] = aws.Int64Value(c.InstanceCount)
-	}
-	if c.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(c.InstanceType)
-	}
-	if c.WarmEnabled != nil {
-		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)
-	}
-	if c.WarmCount != nil {
-		m["warm_count"] = aws.Int64Value(c.WarmCount)
-	}
-	if c.WarmType != nil {
-		m["warm_type"] = aws.StringValue(c.WarmType)
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
-	if zoneAwarenessConfig == nil {
+func flattenNodeToNodeEncryptionOptions(apiObject *awstypes.NodeToNodeEncryptionOptions) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"availability_zone_count": aws.Int64Value(zoneAwarenessConfig.AvailabilityZoneCount),
+	tfMap := map[string]interface{}{}
+
+	if apiObject.Enabled != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(apiObject.Enabled)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
+}
+
+func expandElasticsearchClusterConfig(tfMap map[string]interface{}) *awstypes.ElasticsearchClusterConfig { // nosemgrep:ci.elasticsearch-in-func-name
+	apiObject := &awstypes.ElasticsearchClusterConfig{}
+
+	if v, ok := tfMap["cold_storage_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ColdStorageOptions = expandColdStorageOptions(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["dedicated_master_enabled"]; ok {
+		isEnabled := v.(bool)
+		apiObject.DedicatedMasterEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := tfMap["dedicated_master_count"]; ok && v.(int) > 0 {
+				apiObject.DedicatedMasterCount = aws.Int32(int32(v.(int)))
+			}
+			if v, ok := tfMap["dedicated_master_type"]; ok && v.(string) != "" {
+				apiObject.DedicatedMasterType = awstypes.ESPartitionInstanceType(v.(string))
+			}
+		}
+	}
+
+	if v, ok := tfMap[names.AttrInstanceCount]; ok {
+		apiObject.InstanceCount = aws.Int32(int32(v.(int)))
+	}
+	if v, ok := tfMap[names.AttrInstanceType]; ok {
+		apiObject.InstanceType = awstypes.ESPartitionInstanceType(v.(string))
+	}
+
+	if v, ok := tfMap["zone_awareness_enabled"]; ok {
+		isEnabled := v.(bool)
+		apiObject.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := tfMap["zone_awareness_config"]; ok {
+				apiObject.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
+			}
+		}
+	}
+
+	if v, ok := tfMap["warm_enabled"]; ok {
+		isEnabled := v.(bool)
+		apiObject.WarmEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := tfMap["warm_count"]; ok {
+				apiObject.WarmCount = aws.Int32(int32(v.(int)))
+			}
+
+			if v, ok := tfMap["warm_type"]; ok {
+				apiObject.WarmType = awstypes.ESWarmPartitionInstanceType(v.(string))
+			}
+		}
+	}
+
+	return apiObject
+}
+
+func expandColdStorageOptions(tfMap map[string]interface{}) *awstypes.ColdStorageOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ColdStorageOptions{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandZoneAwarenessConfig(tfList []interface{}) *awstypes.ZoneAwarenessConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.ZoneAwarenessConfig{}
+
+	if v, ok := tfMap["availability_zone_count"]; ok && v.(int) > 0 {
+		apiObject.AvailabilityZoneCount = aws.Int32(int32(v.(int)))
+	}
+
+	return apiObject
+}
+
+func flattenElasticsearchClusterConfig(apiObject *awstypes.ElasticsearchClusterConfig) []interface{} { // nosemgrep:ci.elasticsearch-in-func-name
+	tfMap := map[string]interface{}{
+		"zone_awareness_config":  flattenZoneAwarenessConfig(apiObject.ZoneAwarenessConfig),
+		"zone_awareness_enabled": aws.ToBool(apiObject.ZoneAwarenessEnabled),
+	}
+
+	if apiObject.ColdStorageOptions != nil {
+		tfMap["cold_storage_options"] = flattenColdStorageOptions(apiObject.ColdStorageOptions)
+	}
+	if apiObject.DedicatedMasterCount != nil {
+		tfMap["dedicated_master_count"] = aws.ToInt32(apiObject.DedicatedMasterCount)
+	}
+	if apiObject.DedicatedMasterEnabled != nil {
+		tfMap["dedicated_master_enabled"] = aws.ToBool(apiObject.DedicatedMasterEnabled)
+	}
+	tfMap["dedicated_master_type"] = apiObject.DedicatedMasterType
+	if apiObject.InstanceCount != nil {
+		tfMap[names.AttrInstanceCount] = aws.ToInt32(apiObject.InstanceCount)
+	}
+	tfMap[names.AttrInstanceType] = apiObject.InstanceType
+	if apiObject.WarmEnabled != nil {
+		tfMap["warm_enabled"] = aws.ToBool(apiObject.WarmEnabled)
+	}
+	if apiObject.WarmCount != nil {
+		tfMap["warm_count"] = aws.ToInt32(apiObject.WarmCount)
+	}
+	tfMap["warm_type"] = string(apiObject.WarmType)
+
+	return []interface{}{tfMap}
+}
+
+func flattenColdStorageOptions(apiObject *awstypes.ColdStorageOptions) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenZoneAwarenessConfig(apiObject *awstypes.ZoneAwarenessConfig) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"availability_zone_count": aws.ToInt32(apiObject.AvailabilityZoneCount),
+	}
+
+	return []interface{}{tfMap}
+}
+
+// advancedOptionsIgnoreDefault checks for defaults in the n map and, if
+// they don't exist in the o map, it deletes them. AWS returns default advanced
+// options that cause perpetual diffs.
+func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interface{}) map[string]interface{} {
+	for k, v := range n {
+		switch fmt.Sprintf("%s=%s", k, v) {
+		case "override_main_response_version=false":
+			if _, ok := o[k]; !ok {
+				delete(n, "override_main_response_version")
+			}
+		case "rest.action.multi.allow_explicit_index=true":
+			if _, ok := o[k]; !ok {
+				delete(n, "rest.action.multi.allow_explicit_index")
+			}
+		}
+	}
+
+	return n
+}
+
+// ebsVolumeTypePermitsIopsInput returns true if the volume type supports the Iops input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports IOPS (ex. gp3) to one that doesn't (ex. gp2).
+func ebsVolumeTypePermitsIopsInput(volumeType string) bool {
+	permittedTypes := enum.Slice(awstypes.VolumeTypeGp3, awstypes.VolumeTypeIo1)
+	return slices.Contains(permittedTypes, volumeType)
+}
+
+// ebsVolumeTypePermitsThroughputInput returns true if the volume type supports the Throughput input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
+func ebsVolumeTypePermitsThroughputInput(volumeType string) bool {
+	permittedTypes := enum.Slice(awstypes.VolumeTypeGp3)
+	return slices.Contains(permittedTypes, volumeType)
 }

@@ -30,7 +30,7 @@ resource "aws_macie2_classification_job" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `schedule_frequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `job_type` property to `ONE_TIME`. (documented below)
 * `custom_data_identifier_ids` -  (Optional) The custom data identifiers to use for data analysis and classification.
@@ -52,13 +52,50 @@ The `schedule_frequency` object supports the following:
 
 The `s3_job_definition` object supports the following:
 
-* `bucket_definitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. (documented below)
+* `bucket_criteria` - (Optional) The property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. (documented below)
+* `bucket_definitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. (documented below)
 * `scoping` -  (Optional) The property- and tag-based conditions that determine which objects to include or exclude from the analysis. (documented below)
+
+### bucket_criteria Configuration Block
+
+The `bucket_criteria` object supports the following:
+
+* `excludes` -  (Optional) The property- or tag-based conditions that determine which S3 buckets to exclude from the analysis. (documented below)
+* `includes` -  (Optional) The property- or tag-based conditions that determine which S3 buckets to include in the analysis. (documented below)
+
+The `excludes` and `includes` object supports the following:
+
+* `and` -  (Optional) An array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. (documented below)
+
+The `and` object supports the following:
+
+* `simple_criterion` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an S3 buckets from the job. (documented below)
+* `tag_criterion` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 buckets from the job. (documented below)
+
+The `simple_criterion` object supports the following:
+
+* `comparator` -  (Required) The operator to use in a condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator)
+* `key` -  (Required) The object property to use in the condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionkeyforjob)
+* `values` -  (Required) An array that lists the values to use in the condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionforjob)
+
+The `tag_criterion` object supports the following:
+
+* `comparator` -  (Required) The operator to use in the condition. Valid combination and values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator)
+* `tag_values` -  (Required) The  tag key and value pairs to use in the condition. One or more blocks are allowed. (documented below)
+
+The `tag_values` object supports the following:
+
+* `key` - (Required) The tag key.
+* `value` - (Required) The tag value.
+
+### bucket_definitions Configuration Block
 
 The `bucket_definitions` object supports the following:
 
 * `account_id` -  (Required) The unique identifier for the AWS account that owns the buckets.
 * `buckets` -  (Required) An array that lists the names of the buckets.
+
+### scoping Configuration Block
 
 The `scoping` object supports the following:
 
@@ -71,8 +108,8 @@ The `excludes` and `includes` object supports the following:
 
 The `and` object supports the following:
 
-* `simple_scope_term` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job.  (documented below)
-* `tag_scope_term` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job.  (documented below)
+* `simple_scope_term` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. (documented below)
+* `tag_scope_term` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. (documented below)
 
 The `simple_scope_term` object supports the following:
 
@@ -84,22 +121,30 @@ The `tag_scope_term` object supports the following:
 
 * `comparator` -  (Optional) The operator to use in the condition.
 * `tag_values` -  (Optional) The tag keys or tag key and value pairs to use in the condition.
-* `key` -  (Optional) The tag key to use in the condition.
-* `target` -  (Optional) The type of object to apply the condition to.
+* `key` -  (Required) The tag key to use in the condition. The only valid value is `TAG`.
+* `target` -  (Required) The type of object to apply the condition to. The only valid value is `S3_OBJECT`.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie classification job.
 * `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
-* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
+* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be canceled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
 
 ## Import
 
-`aws_macie2_classification_job` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_job` using the id. For example:
 
+```terraform
+import {
+  to = aws_macie2_classification_job.example
+  id = "abcd1"
+}
 ```
-$ terraform import aws_macie2_classification_job.example abcd1
+
+Using `terraform import`, import `aws_macie2_classification_job` using the id. For example:
+
+```console
+% terraform import aws_macie2_classification_job.example abcd1
 ```

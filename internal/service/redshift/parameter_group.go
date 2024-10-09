@@ -1,77 +1,85 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceParameterGroup() *schema.Resource {
+// @SDKResource("aws_redshift_parameter_group", name="Parameter Group")
+// @Tags(identifierAttribute="arn")
+func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceParameterGroupCreate,
-		Read:   resourceParameterGroupRead,
-		Update: resourceParameterGroupUpdate,
-		Delete: resourceParameterGroupDelete,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`(?i)^[a-z]`), "first character must be a letter"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-
-			"parameter": {
+			names.AttrFamily: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z]`), "first character must be a letter"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
+			},
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -79,170 +87,222 @@ func ResourceParameterGroup() *schema.Resource {
 				},
 				Set: resourceParameterHash,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	createOpts := redshift.CreateClusterParameterGroupInput{
-		ParameterGroupName:   aws.String(d.Get("name").(string)),
-		ParameterGroupFamily: aws.String(d.Get("family").(string)),
-		Description:          aws.String(d.Get("description").(string)),
-		Tags:                 Tags(tags.IgnoreAWS()),
+	name := d.Get(names.AttrName).(string)
+	input := &redshift.CreateClusterParameterGroupInput{
+		Description:          aws.String(d.Get(names.AttrDescription).(string)),
+		ParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
+		ParameterGroupName:   aws.String(name),
+		Tags:                 getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Create Redshift Parameter Group: %#v", createOpts)
-	_, err := conn.CreateClusterParameterGroup(&createOpts)
+	_, err := conn.CreateClusterParameterGroup(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Redshift Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Parameter Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(createOpts.ParameterGroupName))
+	d.SetId(name)
 
-	if v := d.Get("parameter").(*schema.Set); v.Len() > 0 {
-		parameters := ExpandParameters(v.List())
-
-		modifyOpts := redshift.ModifyClusterParameterGroupInput{
+	if v := d.Get(names.AttrParameter).(*schema.Set); v.Len() > 0 {
+		input := &redshift.ModifyClusterParameterGroupInput{
 			ParameterGroupName: aws.String(d.Id()),
-			Parameters:         parameters,
+			Parameters:         expandParameters(v.List()),
 		}
 
-		if _, err := conn.ModifyClusterParameterGroup(&modifyOpts); err != nil {
-			return fmt.Errorf("error adding Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
+		_, err := conn.ModifyClusterParameterGroup(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 		}
 	}
 
-	return resourceParameterGroupRead(d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	describeOpts := redshift.DescribeClusterParameterGroupsInput{
-		ParameterGroupName: aws.String(d.Id()),
-	}
+	parameterGroup, err := findParameterGroupByName(ctx, conn, d.Id())
 
-	describeResp, err := conn.DescribeClusterParameterGroups(&describeOpts)
-	if err != nil {
-		return err
-	}
-
-	if len(describeResp.ParameterGroups) != 1 ||
-		aws.StringValue(describeResp.ParameterGroups[0].ParameterGroupName) != d.Id() {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Redshift Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.ParameterGroups)
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
+		Service:   names.Redshift,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
 	}.String()
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, parameterGroup.Description)
+	d.Set(names.AttrFamily, parameterGroup.ParameterGroupFamily)
+	d.Set(names.AttrName, parameterGroup.ParameterGroupName)
 
-	d.Set("arn", arn)
+	setTagsOut(ctx, parameterGroup.Tags)
 
-	d.Set("name", describeResp.ParameterGroups[0].ParameterGroupName)
-	d.Set("family", describeResp.ParameterGroups[0].ParameterGroupFamily)
-	d.Set("description", describeResp.ParameterGroups[0].Description)
-	tags := KeyValueTags(describeResp.ParameterGroups[0].Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	describeParametersOpts := redshift.DescribeClusterParametersInput{
+	input := &redshift.DescribeClusterParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
 		Source:             aws.String("user"),
 	}
 
-	describeParametersResp, err := conn.DescribeClusterParameters(&describeParametersOpts)
+	output, err := conn.DescribeClusterParameters(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
-	return nil
+	d.Set(names.AttrParameter, flattenParameters(output.Parameters))
+
+	return diags
 }
 
-func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		if o == nil {
 			o = new(schema.Set)
 		}
 		if n == nil {
 			n = new(schema.Set)
 		}
-
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		// Expand the "parameter" set to aws-sdk-go compat []redshift.Parameter
-		parameters := ExpandParameters(ns.Difference(os).List())
-
+		parameters := expandParameters(ns.Difference(os).List())
 		if len(parameters) > 0 {
-			modifyOpts := redshift.ModifyClusterParameterGroupInput{
-				ParameterGroupName: aws.String(d.Get("name").(string)),
+			input := &redshift.ModifyClusterParameterGroupInput{
+				ParameterGroupName: aws.String(d.Id()),
 				Parameters:         parameters,
 			}
 
-			log.Printf("[DEBUG] Modify Redshift Parameter Group: %s", modifyOpts)
-			_, err := conn.ModifyClusterParameterGroup(&modifyOpts)
+			_, err := conn.ModifyClusterParameterGroup(ctx, input)
+
 			if err != nil {
-				return fmt.Errorf("Error modifying Redshift Parameter Group: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
+}
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
+
+	log.Printf("[DEBUG] Deleting Redshift Parameter Group: %s", d.Id())
+	_, err := conn.DeleteClusterParameterGroup(ctx, &redshift.DeleteClusterParameterGroupInput{
+		ParameterGroupName: aws.String(d.Id()),
+	})
+	if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Parameter Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.ClusterParameterGroup, error) {
+	input := &redshift.DescribeClusterParameterGroupsInput{
+		ParameterGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeClusterParameterGroups(ctx, input)
+
+	if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return resourceParameterGroupRead(d, meta)
-}
-
-func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-
-	_, err := conn.DeleteClusterParameterGroup(&redshift.DeleteClusterParameterGroupInput{
-		ParameterGroupName: aws.String(d.Id()),
-	})
-	if err != nil && tfawserr.ErrMessageContains(err, "RedshiftParameterGroupNotFoundFault", "") {
-		return nil
+	if err != nil {
+		return nil, err
 	}
-	return err
+
+	if output == nil || len(output.ParameterGroups) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	parameterGroup := output.ParameterGroups[0]
+
+	// Eventual consistency check.
+	if aws.ToString(parameterGroup.ParameterGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return &parameterGroup, nil
 }
 
 func resourceParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["value"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrValue].(string))))
 
 	return create.StringHashcode(buf.String())
+}
+
+func expandParameters(configured []interface{}) []awstypes.Parameter {
+	var parameters []awstypes.Parameter
+
+	// Loop over our configured parameters and create
+	// an array of aws-sdk-go compatible objects
+	for _, pRaw := range configured {
+		data := pRaw.(map[string]interface{})
+
+		if data[names.AttrName].(string) == "" {
+			continue
+		}
+
+		p := awstypes.Parameter{
+			ParameterName:  aws.String(data[names.AttrName].(string)),
+			ParameterValue: aws.String(data[names.AttrValue].(string)),
+		}
+
+		parameters = append(parameters, p)
+	}
+
+	return parameters
+}
+
+func flattenParameters(list []awstypes.Parameter) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, i := range list {
+		result = append(result, map[string]interface{}{
+			names.AttrName:  aws.ToString(i.ParameterName),
+			names.AttrValue: aws.ToString(i.ParameterValue),
+		})
+	}
+	return result
 }

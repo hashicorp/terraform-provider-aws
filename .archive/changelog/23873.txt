@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `ephemeral_storage` argument
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `ephemeral_storage` attribute
+```

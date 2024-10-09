@@ -6,7 +6,7 @@ description: |-
   Provides information on a Service Catalog Constraint
 ---
 
-# Data source: aws_servicecatalog_constraint
+# Data Source: aws_servicecatalog_constraint
 
 Provides information on a Service Catalog Constraint.
 
@@ -31,9 +31,9 @@ The following arguments are optional:
 
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the constraint.
 * `owner` - Owner of the constraint.

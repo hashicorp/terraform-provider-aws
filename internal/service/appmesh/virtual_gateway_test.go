@@ -1,58 +1,64 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccVirtualGateway_basic(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfig(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_basic(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -61,22 +67,23 @@ func testAccVirtualGateway_basic(t *testing.T) {
 }
 
 func testAccVirtualGateway_disappears(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfig(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_basic(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualGateway(), resourceName),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,91 +92,92 @@ func testAccVirtualGateway_disappears(t *testing.T) {
 }
 
 func testAccVirtualGateway_BackendDefaults(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigBackendDefaults(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_backendDefaults(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.*", "8443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigBackendDefaultsUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_backendDefaultsUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.*", "443"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.*", "8443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/etc/ssl/certs/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -178,62 +186,63 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 }
 
 func testAccVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigBackendDefaultsCertificate(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_backendDefaultsCertificate(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.0.file.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.0.file.0.certificate_chain", "/cert_chain.pem"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.0.file.0.private_key", "tell-nobody"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.0.sds.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.subject_alternative_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.subject_alternative_names.0.match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.subject_alternative_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.subject_alternative_names.0.match.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "def.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds.0.secret_name", "restricted"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -242,75 +251,76 @@ func testAccVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 }
 
 func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerConnectionPool(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_listenerConnectionPool(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.grpc.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.grpc.0.max_requests", "4"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http2.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.grpc.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.grpc.0.max_requests", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http2.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "grpc"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerConnectionPoolUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_listenerConnectionPoolUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.grpc.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.grpc.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http.0.max_connections", "8"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http.0.max_pending_requests", "16"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http2.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.0.http2.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -319,80 +329,81 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 }
 
 func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerHealthChecks(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_listenerHealthChecks(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.healthy_threshold", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.interval_millis", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.path", "/ping"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "http2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.timeout_millis", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "5"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "grpc"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerHealthChecksUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_listenerHealthChecksUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.healthy_threshold", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.interval_millis", "7000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.path", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "grpc"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.timeout_millis", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "9"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -401,8 +412,9 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 }
 
 func testAccVirtualGateway_ListenerTLS(t *testing.T) {
-	var v appmesh.VirtualGatewayData
-	var ca acmpca.CertificateAuthority
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
+	var ca acmpca_types.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
@@ -412,96 +424,96 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsFile(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_listenerTLSFile(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.0.certificate_chain", "/cert_chain.pem"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.0.private_key", "/key.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "PERMISSIVE"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAppmeshVirtualGatewayConfigRootCA(domain),
+				Config: testAccVirtualGatewayConfig_rootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmCAResourceName, &ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &ca),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
+				Config: testAccVirtualGatewayConfig_listenerTLSACM(meshName, vgName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.0.certificate_arn", acmCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.0.certificate_arn", acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "STRICT"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
+				Config: testAccVirtualGatewayConfig_listenerTLSACM(meshName, vgName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &ca),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -510,97 +522,247 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 }
 
 func testAccVirtualGateway_ListenerValidation(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerValidation(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_listenerValidation(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.0.secret_name", "very-secret"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "PERMISSIVE"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "abc.example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "xyz.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerValidationUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfig_listenerValidationUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.0.secret_name", "top-secret"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "STRICT"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.0.secret_name", "confidential"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+				),
+			},
+		},
+	})
+}
+
+func testAccVirtualGateway_MultiListenerValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
+	resourceName := "aws_appmesh_virtual_gateway.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualGatewayConfig_multiListenerValidation(meshName, vgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.0.secret_name", "very-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "abc.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "xyz.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.0.secret_name", "very-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "abc.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "xyz.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVirtualGatewayConfig_multiListenerValidationUpdated(meshName, vgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.0.secret_name", "very-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "STRICT"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "abc.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "xyz.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.file.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.0.secret_name", "very-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.mode", "STRICT"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "abc.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "xyz.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.acm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.sds.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 		},
@@ -608,170 +770,172 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 }
 
 func testAccVirtualGateway_Logging(t *testing.T) {
-	var v appmesh.VirtualGatewayData
+	ctx := acctest.Context(t)
+	var v awstypes.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigLogging(meshName, vgName, "/dev/stdout"),
+				Config: testAccVirtualGatewayConfig_logging(meshName, vgName, "/dev/stdout"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.path", "/dev/stdout"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigLogging(meshName, vgName, "/tmp/access.log"),
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVirtualGatewayConfig_logging(meshName, vgName, "/tmp/access.log"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.path", "/tmp/access.log"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccVirtualGateway_Tags(t *testing.T) {
-	var v appmesh.VirtualGatewayData
-	resourceName := "aws_appmesh_virtual_gateway.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppmeshVirtualGatewayConfigTags1(meshName, vgName, "key1", "value1"),
+				Config: testAccVirtualGatewayConfig_loggingWithFormat(meshName, vgName, "/tmp/access.log"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAppmeshVirtualGatewayConfigTags2(meshName, vgName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAppmeshVirtualGatewayConfigTags1(meshName, vgName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.0.json.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.0.json.0.key", "k1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.0.json.0.value", "v1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.0.text", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.path", "/tmp/access.log"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appmesh_virtual_node" {
-			continue
-		}
-
-		_, err := tfappmesh.FindVirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
-		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("App Mesh virtual gateway still exists: %s", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
+func testAccCheckVirtualGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
 
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appmesh_virtual_gateway" {
+				continue
+			}
+
+			_, err := tfappmesh.FindVirtualGatewayByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("App Mesh Virtual Gateway %s still exists", rs.Primary.ID)
 		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No App Mesh virtual gateway ID is set")
-		}
-
-		out, err := tfappmesh.FindVirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
-		if err != nil {
-			return err
-		}
-
-		*v = *out
 
 		return nil
 	}
 }
 
-func testAccAppmeshVirtualGatewayConfig(meshName, vgName string) string {
+func testAccCheckVirtualGatewayExists(ctx context.Context, n string, v *awstypes.VirtualGatewayData) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
+
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No App Mesh Virtual Gateway ID is set")
+		}
+
+		output, err := tfappmesh.FindVirtualGatewayByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccVirtualGatewayImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes[names.AttrName]), nil
+	}
+}
+
+func testAccVirtualGatewayConfig_basic(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -793,7 +957,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigBackendDefaults(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_backendDefaults(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -831,7 +995,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigBackendDefaultsUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_backendDefaultsUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -869,7 +1033,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigBackendDefaultsCertificate(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_backendDefaultsCertificate(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -918,7 +1082,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerConnectionPool(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_listenerConnectionPool(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -946,7 +1110,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerConnectionPoolUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_listenerConnectionPoolUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -975,7 +1139,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerHealthChecks(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_listenerHealthChecks(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1006,7 +1170,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerHealthChecksUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_listenerHealthChecksUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1037,7 +1201,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigRootCA(domain string) string {
+func testAccVirtualGatewayConfig_rootCA(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -1055,9 +1219,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, domain)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain string) string {
+func testAccVirtualGatewayConfig_listenerTLSACM(meshName, vgName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAppmeshVirtualGatewayConfigRootCA(domain),
+		testAccVirtualGatewayConfig_rootCA(domain),
 		fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1094,7 +1258,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName, domain))
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerTlsFile(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_listenerTLSFile(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1127,7 +1291,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerValidation(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_listenerValidation(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1173,7 +1337,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerValidationUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfig_listenerValidationUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1213,7 +1377,163 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigLogging(meshName, vgName, path string) string {
+func testAccVirtualGatewayConfig_multiListenerValidation(meshName, vgName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_appmesh_virtual_gateway" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
+
+        mode = "PERMISSIVE"
+
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
+
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
+
+        mode = "PERMISSIVE"
+
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
+
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+`, meshName, vgName)
+}
+
+func testAccVirtualGatewayConfig_multiListenerValidationUpdated(meshName, vgName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_appmesh_virtual_gateway" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
+
+        mode = "STRICT"
+
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
+
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
+
+        mode = "STRICT"
+
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
+
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, meshName, vgName)
+}
+
+func testAccVirtualGatewayConfig_logging(meshName, vgName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1243,7 +1563,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName, path)
 }
 
-func testAccAppmeshVirtualGatewayConfigTags1(meshName, vgName, tagKey1, tagValue1 string) string {
+func testAccVirtualGatewayConfig_loggingWithFormat(meshName, vgName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1260,38 +1580,22 @@ resource "aws_appmesh_virtual_gateway" "test" {
         protocol = "http"
       }
     }
-  }
 
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, meshName, vgName, tagKey1, tagValue1)
-}
+    logging {
+      access_log {
+        file {
+          path = %[3]q
 
-func testAccAppmeshVirtualGatewayConfigTags2(meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_gateway" "test" {
-  name      = %[2]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
+          format {
+            json {
+              key   = "k1"
+              value = "v1"
+            }
+          }
+        }
       }
     }
   }
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
 }
-`, meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, meshName, vgName, path)
 }

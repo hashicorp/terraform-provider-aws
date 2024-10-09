@@ -1,0 +1,3 @@
+```release-note:note
+provider: Updates to Go 1.22. This is the last Go release that will run on macOS 10.15 Catalina
+```

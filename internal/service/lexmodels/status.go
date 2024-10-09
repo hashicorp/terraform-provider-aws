@@ -1,22 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
-	lexModelBuildingServiceStatusCreated  = "CREATED"
-	lexModelBuildingServiceStatusNotFound = "NOTFOUND"
-	lexModelBuildingServiceStatusUnknown  = "UNKNOWN"
+	serviceStatusCreated  = "CREATED"
+	serviceStatusNotFound = "NOTFOUND"
+	serviceStatusUnknown  = "UNKNOWN"
 )
 
-func statusBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
+func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindBotVersionByName(conn, name, version)
+		output, err := findBotVersionByName(ctx, conn, name, version)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -26,13 +32,13 @@ func statusBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, nam
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusLexSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
+func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSlotTypeVersionByName(conn, name, version)
+		output, err := findSlotTypeVersionByName(ctx, conn, name, version)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -42,46 +48,46 @@ func statusLexSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, na
 			return nil, "", err
 		}
 
-		return output, lexModelBuildingServiceStatusCreated, nil
+		return output, serviceStatusCreated, nil
 	}
 }
 
-func statusLexIntent(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.GetIntentVersions(&lexmodelbuildingservice.GetIntentVersionsInput{
+		output, err := conn.GetIntentVersions(ctx, &lexmodelbuildingservice.GetIntentVersionsInput{
 			Name: aws.String(id),
 		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, serviceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, lexModelBuildingServiceStatusUnknown, err
+			return nil, serviceStatusUnknown, err
 		}
 
 		if output == nil || len(output.Intents) == 0 {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+			return nil, serviceStatusNotFound, nil
 		}
 
-		return output, lexModelBuildingServiceStatusCreated, nil
+		return output, serviceStatusCreated, nil
 	}
 }
 
-func statusLexBotAlias(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
+func statusBotAlias(ctx context.Context, conn *lexmodelbuildingservice.Client, botAliasName, botName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
+		output, err := conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),
 		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, serviceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, lexModelBuildingServiceStatusUnknown, err
+			return nil, serviceStatusUnknown, err
 		}
 		if output == nil {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+			return nil, serviceStatusNotFound, nil
 		}
 
-		return output, lexModelBuildingServiceStatusCreated, nil
+		return output, serviceStatusCreated, nil
 	}
 }

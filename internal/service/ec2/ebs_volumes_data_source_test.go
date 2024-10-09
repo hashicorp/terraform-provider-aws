@@ -1,65 +1,79 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
-	rInt := sdkacctest.RandIntRange(0, 256)
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeIDsDataSourceConfig(rInt),
-			},
-			{
-				Config: testAccEBSVolumeIDsWithDataSourceDataSourceConfig(rInt),
+				Config: testAccEBSVolumesDataSourceConfig_volumeIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ebs_volumes.subject_under_test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_tags", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_filter", "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.empty", "ids.#", acctest.Ct0),
 				),
-			},
-			{
-				// Force the destroy to not refresh the data source (leading to an error)
-				Config: testAccEBSVolumeIDsDataSourceConfig(rInt),
 			},
 		},
 	})
 }
 
-func testAccEBSVolumeIDsWithDataSourceDataSourceConfig(rInt int) string {
-	return fmt.Sprintf(`
-%s
-
-data "aws_ebs_volumes" "subject_under_test" {
-  tags = {
-    TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
-  }
-}
-`, testAccEBSVolumeIDsDataSourceConfig(rInt), rInt)
-}
-
-func testAccEBSVolumeIDsDataSourceConfig(rInt int) string {
-	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
+func testAccEBSVolumesDataSourceConfig_volumeIDs(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_ebs_volume" "volume" {
+resource "aws_ebs_volume" "test" {
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
-    TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
+    Name = %[1]q
   }
 }
-`, rInt)
+
+data "aws_ebs_volumes" "by_tags" {
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_ebs_volume.test[0], aws_ebs_volume.test[1]]
+}
+
+data "aws_ebs_volumes" "by_filter" {
+  filter {
+    name   = "volume-id"
+    values = [aws_ebs_volume.test[0].id]
+  }
+
+  depends_on = [aws_ebs_volume.test[0], aws_ebs_volume.test[1]]
+}
+
+data "aws_ebs_volumes" "empty" {
+  filter {
+    name   = "create-time"
+    values = ["2000-01-01T00:00:00.000Z"]
+  }
+
+  depends_on = [aws_ebs_volume.test[0], aws_ebs_volume.test[1]]
+}
+`, rName))
 }

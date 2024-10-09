@@ -1,0 +1,3 @@
+```release-note:new-resource
+ aws_db_snapshot_copy
+ ```

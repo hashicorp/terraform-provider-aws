@@ -1,61 +1,72 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // add sweeper to delete known test servicecat products
 
 func TestAccServiceCatalogProduct_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProductDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
+					testAccCheckProductExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
-					resource.TestCheckResourceAttr(resourceName, "has_default_path", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "owner", "ägare"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "has_default_path", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "ägare"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.disable_template_validation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.disable_template_validation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_url"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
-					resource.TestCheckResourceAttr(resourceName, "status", tfservicecatalog.StatusCreated),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(awstypes.ProvisioningArtifactTypeCloudFormationTemplate)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfservicecatalog.StatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_email", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "support_url", domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ProductTypeCloudFormationTemplate)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -63,7 +74,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
-					"provisioning_artifact_parameters",
+					"provisioning_artifact_parameters.0.disable_template_validation",
 				},
 			},
 		},
@@ -71,22 +82,23 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 }
 
 func TestAccServiceCatalogProduct_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProductDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductConfig_basic(rName, rName, rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProduct(), resourceName),
+					testAccCheckProductExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,92 +107,63 @@ func TestAccServiceCatalogProduct_disappears(t *testing.T) {
 }
 
 func TestAccServiceCatalogProduct_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProductDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
+					testAccCheckProductExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				Config: testAccProductConfig_basic(rName, "ny beskrivning", "ny supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "ny beskrivning"),
+					testAccCheckProductExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "ny beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "ny supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
-			},
-		},
-	})
-}
-
-func TestAccServiceCatalogProduct_updateTags(t *testing.T) {
-	resourceName := "aws_servicecatalog_product.test"
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProductDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccProductConfig_updateTags(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Yak", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "natural"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
 }
 
 func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProductDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
+					testAccCheckProductExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_physical_id"),
@@ -188,9 +171,9 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 						resourceName,
 						"provisioning_artifact_parameters.0.template_physical_id",
 						"cloudformation",
-						regexp.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
+						regexache.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
 					),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(awstypes.ProvisioningArtifactTypeCloudFormationTemplate)),
 				),
 			},
 			{
@@ -199,44 +182,46 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
-					"provisioning_artifact_parameters",
+					"provisioning_artifact_parameters.0.disable_template_validation",
 				},
 			},
 		},
 	})
 }
 
-func testAccCheckProductDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+func testAccCheckProductDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_product" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_product" {
+				continue
+			}
+
+			input := &servicecatalog.DescribeProductAsAdminInput{
+				Id: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeProductAsAdmin(ctx, input)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Service Catalog Product (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Service Catalog Product (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &servicecatalog.DescribeProductAsAdminInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeProductAsAdmin(input)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Service Catalog Product (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Service Catalog Product (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckProductExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckProductExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -244,13 +229,13 @@ func testAccCheckProductExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeProductAsAdmin(input)
+		_, err := conn.DescribeProductAsAdmin(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Product (%s): %w", rs.Primary.ID, err)
@@ -264,11 +249,10 @@ func testAccProductTemplateURLBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
@@ -315,42 +299,8 @@ resource "aws_servicecatalog_product" "test" {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, description, supportDescription, domain, email))
-}
-
-func testAccProductConfig_updateTags(rName, description, supportDescription, domain, email string) string {
-	return acctest.ConfigCompose(testAccProductTemplateURLBaseConfig(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_servicecatalog_product" "test" {
-  description         = %[2]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = %[3]q
-  support_email       = %[5]q
-  support_url         = %[4]q
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    Yak         = %[1]q
-    Environment = "natural"
   }
 }
 `, rName, description, supportDescription, domain, email))
@@ -399,10 +349,6 @@ resource "aws_servicecatalog_product" "test" {
     name                 = %[1]q
     template_physical_id = aws_cloudformation_stack.test.id
     type                 = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    Name = %[1]q
   }
 }
 `, rName, domain, email)

@@ -1,66 +1,79 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceEventCategories() *schema.Resource {
+// @SDKDataSource("aws_db_event_categories", name="Event Categories")
+func dataSourceEventCategories() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEventCategoriesRead,
+		ReadWithoutTimeout: dataSourceEventCategoriesRead,
 
 		Schema: map[string]*schema.Schema{
-			"source_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"event_categories": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+			},
+			names.AttrSourceType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.SourceType](),
 			},
 		},
 	}
 }
 
-func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceEventCategoriesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	req := &rds.DescribeEventCategoriesInput{}
+	input := &rds.DescribeEventCategoriesInput{}
 
-	if sourceType := d.Get("source_type").(string); sourceType != "" {
-		req.SourceType = aws.String(sourceType)
+	if v, ok := d.GetOk(names.AttrSourceType); ok {
+		input.SourceType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Describe Event Categories %s\n", req)
-	resp, err := conn.DescribeEventCategories(req)
+	output, err := findEventCategoriesMaps(ctx, conn, input)
+
 	if err != nil {
-		return err
-	}
-
-	if resp == nil || len(resp.EventCategoriesMapList) == 0 {
-		return fmt.Errorf("Event Categories not found")
-	}
-
-	eventCategories := make([]string, 0)
-
-	for _, eventMap := range resp.EventCategoriesMapList {
-		for _, v := range eventMap.EventCategories {
-			eventCategories = append(eventCategories, aws.StringValue(v))
-		}
+		return sdkdiag.AppendErrorf(diags, "reading RDS Event Categories: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	if err := d.Set("event_categories", eventCategories); err != nil {
-		return fmt.Errorf("Error setting Event Categories: %w", err)
+	d.Set("event_categories", slices.Concat(tfslices.ApplyToAll(output, func(v types.EventCategoriesMap) []string {
+		return v.EventCategories
+	})...))
+
+	return diags
+}
+
+func findEventCategoriesMaps(ctx context.Context, conn *rds.Client, input *rds.DescribeEventCategoriesInput) ([]types.EventCategoriesMap, error) {
+	output, err := conn.DescribeEventCategories(ctx, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
 
+	return output.EventCategoriesMapList, nil
 }

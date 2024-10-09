@@ -1,78 +1,101 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
-	sName := fmt.Sprintf("test-db-instance-%d", sdkacctest.RandInt())
-	var opsdb opsworks.RdsDbInstance
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v awstypes.RdsDbInstance
+	resourceName := "aws_opsworks_rds_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRDSDBDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRDSDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSDBInstance(sName, "foo", "barbarbarbar"),
+				Config: testAccRDSDBInstanceConfig_basic(rName, "user1", "password1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "foo",
-					),
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "db_password", "password1"),
+					resource.TestCheckResourceAttr(resourceName, "db_user", "user1"),
 				),
 			},
 			{
-				Config: testAccRDSDBInstance(sName, "bar", "barbarbarbar"),
+				Config: testAccRDSDBInstanceConfig_basic(rName, "user2", "password1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "bar",
-					),
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "db_password", "password1"),
+					resource.TestCheckResourceAttr(resourceName, "db_user", "user2"),
 				),
 			},
 			{
-				Config: testAccRDSDBInstance(sName, "bar", "foofoofoofoofoo"),
+				Config: testAccRDSDBInstanceConfig_basic(rName, "user2", "password2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "bar",
-					),
-				),
-			},
-			{
-				Config: testAccRDSDBInstanceForceNew(sName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "foo",
-					),
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "db_password", "password2"),
+					resource.TestCheckResourceAttr(resourceName, "db_user", "user2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRDSDBExists(
-	n string, opsdb *opsworks.RdsDbInstance) resource.TestCheckFunc {
+func TestAccOpsWorksRDSDBInstance_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v awstypes.RdsDbInstance
+	resourceName := "aws_opsworks_rds_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRDSDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRDSDBInstanceConfig_basic(rName, "user1", "password1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceRDSDBInstance(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *awstypes.RdsDbInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,150 +103,85 @@ func testAccCheckRDSDBExists(
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No OpsWorks RDS DB Instance ID is set")
 		}
 
-		if _, ok := rs.Primary.Attributes["stack_id"]; !ok {
-			return fmt.Errorf("Rds Db stack id is missing, should be set.")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-		params := &opsworks.DescribeRdsDbInstancesInput{
-			StackId: aws.String(rs.Primary.Attributes["stack_id"]),
-		}
-		resp, err := conn.DescribeRdsDbInstances(params)
+		output, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
 
 		if err != nil {
 			return err
 		}
 
-		if v := len(resp.RdsDbInstances); v != 1 {
-			return fmt.Errorf("Expected 1 response returned, got %d", v)
-		}
-
-		*opsdb = *resp.RdsDbInstances[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckCreateRDSDBAttributes(
-	opsdb *opsworks.RdsDbInstance, user string) resource.TestCheckFunc {
+func testAccCheckRDSDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *opsdb.DbUser != user {
-			return fmt.Errorf("Unnexpected user: %s", *opsdb.DbUser)
-		}
-		if *opsdb.Engine != "mysql" {
-			return fmt.Errorf("Unnexpected engine: %s", *opsdb.Engine)
-		}
-		return nil
-	}
-}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-func testAccCheckRDSDBDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_rds_db_instance" {
-			continue
-		}
-
-		req := &opsworks.DescribeRdsDbInstancesInput{
-			StackId: aws.String(rs.Primary.Attributes["stack_id"]),
-		}
-
-		resp, err := client.DescribeRdsDbInstances(req)
-		if err == nil {
-			if len(resp.RdsDbInstances) > 0 {
-				return fmt.Errorf("OpsWorks Rds db instances  still exist.")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_rds_db_instance" {
+				continue
 			}
-		}
 
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() != "ResourceNotFoundException" {
+			_, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("OpsWorks RDS DB Instance %s still exists", rs.Primary.ID)
 		}
+
+		return nil
 	}
-	return nil
 }
 
-func testAccRDSDBInstance(name, userName, password string) string {
-	return fmt.Sprintf(`
-resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-
-  rds_db_instance_arn = aws_db_instance.bar.arn
-  db_user             = "%s"
-  db_password         = "%s"
-}
-%s
-%s
-`, userName, password, testAccStackVPCCreateConfig(name), testAccDBInstanceBasicConfig())
+func testAccRDSDBInstanceConfig_basic(rName, userName, password string) string {
+	return acctest.ConfigCompose(testAccStackConfig_basic(rName), fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
 }
 
-func testAccRDSDBInstanceForceNew(name string) string {
-	return fmt.Sprintf(`
-resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-
-  rds_db_instance_arn = aws_db_instance.foo.arn
-  db_user             = "foo"
-  db_password         = "foofoofoofoo"
-}
-%s
-
-resource "aws_db_instance" "foo" {
-  allocated_storage    = 10
-  engine               = "mysql"
-  engine_version       = "5.6.35"
-  instance_class       = "db.t2.micro"
-  name                 = "baz"
-  password             = "foofoofoofoo"
-  username             = "foo"
-  parameter_group_name = "default.mysql5.6"
-
-  skip_final_snapshot = true
-}
-`, testAccStackVPCCreateConfig(name))
-}
-
-func testAccDBInstanceBasicConfig() string {
-	return acctest.ConfigCompose(testAccDBInstanceConfig_orderableClassMySQL(), `
-resource "aws_db_instance" "bar" {
-  allocated_storage       = 10
-  backup_retention_period = 0
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
-  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz"
-  parameter_group_name    = "default.mysql5.6"
-  password                = "barbarbarbar"
-  skip_final_snapshot     = true
-  username                = "foo"
-
-  # Maintenance Window is stored in lower case in the API, though not strictly
-  # documented. Terraform will downcase this to match (as opposed to throw a
-  # validation error).
-  maintenance_window = "Fri:09:00-Fri:09:30"
-}
-`)
-}
-
-func testAccDBInstanceConfig_orderableClass(engine, version, license string) string {
-	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = "general-public-license"
   storage_type   = "standard"
 
   preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t2.medium"]
 }
-`, engine, version, license)
+
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 0
+  db_name                 = "test"
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  maintenance_window      = "Fri:09:00-Fri:09:30"
+  parameter_group_name    = "default.mysql8.0"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 }
 
-func testAccDBInstanceConfig_orderableClassMySQL() string {
-	return testAccDBInstanceConfig_orderableClass("mysql", "5.6.35", "general-public-license")
+resource "aws_opsworks_rds_db_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
+
+  rds_db_instance_arn = aws_db_instance.test.arn
+  db_user             = %[2]q
+  db_password         = %[3]q
+}
+`, rName, userName, password))
 }

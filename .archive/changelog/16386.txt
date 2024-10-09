@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_internet_gateway_attachment
+```
+
+```release-note:note
+resource/aws_internet_gateway: Set `vpc_id` as Computed to prevent drift when the `aws_internet_gateway_attachment` resource is used
+```

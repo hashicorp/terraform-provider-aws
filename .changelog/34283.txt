@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sagemaker_feature_group: Add `offline_store_config.s3_storage_config.resolved_output_s3_uri`, `online_store_config.storage_type` and `online_store_config.ttl_duration` arguments
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_feature_group: Allow `online_store_config.ttl_duration` to be updated in-place
+```

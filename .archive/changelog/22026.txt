@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Fix `MalformedXML` errors for replication rules using XML schema V1
+```

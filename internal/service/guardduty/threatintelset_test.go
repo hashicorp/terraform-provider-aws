@@ -1,22 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccThreatintelset_basic(t *testing.T) {
+func testAccThreatIntelSet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
 	keyName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
 	keyName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
@@ -25,20 +32,23 @@ func testAccThreatintelset_basic(t *testing.T) {
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThreatintelsetDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
+				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThreatintelsetExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/threatintelset/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName1),
-					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
-					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckThreatIntelSetExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName1),
+					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtTrue),
+					resource.TestMatchResourceAttr(resourceName, names.AttrLocation, regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -47,34 +57,38 @@ func testAccThreatintelset_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName2, threatintelsetName2, false),
+				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName2, threatintelsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThreatintelsetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName2),
-					resource.TestCheckResourceAttr(resourceName, "activate", "false"),
-					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
+					testAccCheckThreatIntelSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName2),
+					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtFalse),
+					resource.TestMatchResourceAttr(resourceName, names.AttrLocation, regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
 				),
 			},
 		},
 	})
 }
 
-func testAccThreatintelset_tags(t *testing.T) {
+func testAccThreatIntelSet_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThreatintelsetDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyThreatintelsetConfigTags1(rName, "key1", "value1"),
+				Config: testAccThreatIntelSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThreatintelsetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckThreatIntelSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -83,69 +97,71 @@ func testAccThreatintelset_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyThreatintelsetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccThreatIntelSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThreatintelsetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckThreatIntelSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccGuardDutyThreatintelsetConfigTags1(rName, "key2", "value2"),
+				Config: testAccThreatIntelSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThreatintelsetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckThreatIntelSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckThreatintelsetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+func testAccCheckThreatIntelSetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_threatintelset" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_threatintelset" {
+				continue
+			}
 
-		threatIntelSetId, detectorId, err := tfguardduty.DecodeThreatintelsetID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		input := &guardduty.GetThreatIntelSetInput{
-			ThreatIntelSetId: aws.String(threatIntelSetId),
-			DetectorId:       aws.String(detectorId),
-		}
+			threatIntelSetId, detectorId, err := tfguardduty.DecodeThreatIntelSetID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+			input := &guardduty.GetThreatIntelSetInput{
+				ThreatIntelSetId: aws.String(threatIntelSetId),
+				DetectorId:       aws.String(detectorId),
+			}
 
-		resp, err := conn.GetThreatIntelSet(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+			resp, err := conn.GetThreatIntelSet(ctx, input)
+			if err != nil {
+				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+					return nil
+				}
+				return err
+			}
+
+			if resp.Status == awstypes.ThreatIntelSetStatusDeletePending || resp.Status == awstypes.ThreatIntelSetStatusDeleted {
 				return nil
 			}
-			return err
+
+			return fmt.Errorf("Expected GuardDuty ThreatIntelSet to be destroyed, %s found", rs.Primary.ID)
 		}
 
-		if *resp.Status == guardduty.ThreatIntelSetStatusDeletePending || *resp.Status == guardduty.ThreatIntelSetStatusDeleted {
-			return nil
-		}
-
-		return fmt.Errorf("Expected GuardDuty ThreatIntelSet to be destroyed, %s found", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckThreatintelsetExists(name string) resource.TestCheckFunc {
+func testAccCheckThreatIntelSetExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		threatIntelSetId, detectorId, err := tfguardduty.DecodeThreatintelsetID(rs.Primary.ID)
+		threatIntelSetId, detectorId, err := tfguardduty.DecodeThreatIntelSetID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -155,92 +171,124 @@ func testAccCheckThreatintelsetExists(name string) resource.TestCheckFunc {
 			ThreatIntelSetId: aws.String(threatIntelSetId),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
-		_, err = conn.GetThreatIntelSet(input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		_, err = conn.GetThreatIntelSet(ctx, input)
 		return err
 	}
 }
 
-func testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName, threatintelsetName string, activate bool) string {
+func testAccThreatIntelSetConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_guardduty_detector" "test" {}
-
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
-  bucket        = "%s"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_object" "test" {
-  acl     = "public-read"
-  content = "10.0.0.0/8\n"
-  bucket  = aws_s3_bucket.test.id
-  key     = "%s"
-}
-
-resource "aws_guardduty_threatintelset" "test" {
-  name        = "%s"
-  detector_id = aws_guardduty_detector.test.id
-  format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-  activate    = %t
-}
-`, bucketName, keyName, threatintelsetName, activate)
-}
-
-func testAccGuardDutyThreatintelsetConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_guardduty_detector" "test" {}
-
-resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  depends_on = [
+    aws_s3_bucket_ownership_controls.test,
+    aws_s3_bucket_public_access_block.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+`, rName)
+}
+
+func testAccThreatIntelSetConfig_basic(bucketName, keyName, threatintelsetName string, activate bool) string {
+	return acctest.ConfigCompose(testAccThreatIntelSetConfig_base(bucketName),
+		fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {}
+
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
+
+  depends_on = [
+    aws_s3_bucket_acl.test,
+  ]
+}
+
+resource "aws_guardduty_threatintelset" "test" {
+  name        = %[2]q
+  detector_id = aws_guardduty_detector.test.id
+  format      = "TXT"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+  activate    = %[3]t
+}
+`, keyName, threatintelsetName, activate))
+}
+
+func testAccThreatIntelSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccThreatIntelSetConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {}
+
+resource "aws_s3_object" "test" {
+  acl     = "public-read"
+  content = "10.0.0.0/8\n"
+  bucket  = aws_s3_bucket.test.id
+  key     = %[1]q
+
+  depends_on = [
+    aws_s3_bucket_acl.test,
+  ]
 }
 
 resource "aws_guardduty_threatintelset" "test" {
   activate    = true
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   name        = %[1]q
 
   tags = {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccGuardDutyThreatintelsetConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+func testAccThreatIntelSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccThreatIntelSetConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {}
 
-resource "aws_s3_bucket" "test" {
-  acl           = "private"
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
+
+  depends_on = [
+    aws_s3_bucket_acl.test,
+  ]
 }
 
 resource "aws_guardduty_threatintelset" "test" {
   activate    = true
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   name        = %[1]q
 
   tags = {
@@ -248,5 +296,5 @@ resource "aws_guardduty_threatintelset" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

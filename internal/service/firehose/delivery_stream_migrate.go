@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose
 
 import (
@@ -5,6 +8,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func MigrateState(
@@ -12,13 +16,13 @@ func MigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Kinesis Firehose Delivery Stream State v0; migrating to v1")
-		return migrateKinesisFirehoseV0toV1(is)
+		return migrateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateKinesisFirehoseV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() {
 		log.Println("[DEBUG] Empty Kinesis Firehose Delivery State; nothing to migrate.")
 		return is, nil
@@ -30,7 +34,7 @@ func migrateKinesisFirehoseV0toV1(is *terraform.InstanceState) (*terraform.Insta
 	// grab initial values
 	is.Attributes["s3_configuration.#"] = "1"
 	// Required parameters
-	is.Attributes["s3_configuration.0.role_arn"] = is.Attributes["role_arn"]
+	is.Attributes["s3_configuration.0.role_arn"] = is.Attributes[names.AttrRoleARN]
 	is.Attributes["s3_configuration.0.bucket_arn"] = is.Attributes["s3_bucket_arn"]
 
 	// Optional parameters
@@ -47,7 +51,7 @@ func migrateKinesisFirehoseV0toV1(is *terraform.InstanceState) (*terraform.Insta
 		is.Attributes["s3_configuration.0.prefix"] = is.Attributes["s3_prefix"]
 	}
 
-	delete(is.Attributes, "role_arn")
+	delete(is.Attributes, names.AttrRoleARN)
 	delete(is.Attributes, "s3_bucket_arn")
 	delete(is.Attributes, "s3_buffer_size")
 	delete(is.Attributes, "s3_data_compression")

@@ -1,66 +1,64 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSelection() *schema.Resource {
+// @SDKDataSource("aws_backup_selection", name="Selection")
+func dataSourceSelection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSelectionRead,
+		ReadWithoutTimeout: dataSourceSelectionRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrIAMRoleARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"plan_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			names.AttrResources: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"selection_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"iam_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resources": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 		},
 	}
 }
 
-func dataSourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	input := &backup.GetBackupSelectionInput{
-		BackupPlanId: aws.String(d.Get("plan_id").(string)),
-		SelectionId:  aws.String(d.Get("selection_id").(string)),
-	}
+	planID, selectionID := d.Get("plan_id").(string), d.Get("selection_id").(string)
+	output, err := findSelectionByTwoPartKey(ctx, conn, planID, selectionID)
 
-	resp, err := conn.GetBackupSelection(input)
 	if err != nil {
-		return fmt.Errorf("Error getting Backup Selection: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Selection (%s): %s", selectionID, err)
 	}
 
-	d.SetId(aws.StringValue(resp.SelectionId))
-	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
-	d.Set("name", resp.BackupSelection.SelectionName)
+	d.SetId(selectionID)
+	d.Set(names.AttrIAMRoleARN, output.IamRoleArn)
+	d.Set(names.AttrName, output.SelectionName)
+	d.Set(names.AttrResources, output.Resources)
 
-	if resp.BackupSelection.Resources != nil {
-		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
-			return fmt.Errorf("error setting resources: %w", err)
-		}
-	}
-
-	return nil
+	return diags
 }

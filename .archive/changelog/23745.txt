@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_athena_database: Add `acl_configuration` and `expected_bucket_owner` arguments
+```
+
+```release-note:bug
+resource/aws_athena_database: Remove from state on resource Read if deleted outside of Terraform
+```
+
+```release-note:enhancement
+resource/aws_athena_database: Do not recreate the resource if `bucket` changes
+```
+
+```release-note:enhancement
+resource/aws_athena_database: Add `comment` argument to support database descriptions
+```

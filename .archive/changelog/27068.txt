@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_event_target: Add `capacity_provider_strategy` configuration block to the `ecs_target` configuration block
+```

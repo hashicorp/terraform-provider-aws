@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_ecs_cluster: The `capacity_providers` and `default_capacity_provider_strategy` attributes have been removed
+```

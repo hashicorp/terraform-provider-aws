@@ -1,36 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_inspector_assessment_target")
 func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAssessmentTargetCreate,
-		Read:   resourceAssessmentTargetRead,
-		Update: resourceAssessmentTargetUpdate,
-		Delete: resourceAssessmentTargetDelete,
+		CreateWithoutTimeout: resourceAssessmentTargetCreate,
+		ReadWithoutTimeout:   resourceAssessmentTargetRead,
+		UpdateWithoutTimeout: resourceAssessmentTargetUpdate,
+		DeleteWithoutTimeout: resourceAssessmentTargetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,104 +50,111 @@ func ResourceAssessmentTarget() *schema.Resource {
 	}
 }
 
-func resourceAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+const (
+	ResNameAssessmentTarget = "Assessment Target"
+)
+
+func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	input := &inspector.CreateAssessmentTargetInput{
-		AssessmentTargetName: aws.String(d.Get("name").(string)),
+		AssessmentTargetName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("resource_group_arn"); ok {
 		input.ResourceGroupArn = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateAssessmentTarget(input)
+	resp, err := conn.CreateAssessmentTarget(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Inspector Classic Assessment Target: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.AssessmentTargetArn))
+	d.SetId(aws.ToString(resp.AssessmentTargetArn))
 
-	return resourceAssessmentTargetRead(d, meta)
+	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	assessmentTarget, err := DescribeAssessmentTarget(conn, d.Id())
+	assessmentTarget, err := FindAssessmentTargetByID(ctx, conn, d.Id())
+	if errs.IsA[*retry.NotFoundError](err) {
+		log.Printf("[WARN] Inspector Classic Assessment Target (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Inspector Classic Assessment Target (%s): %s", d.Id(), err)
 	}
 
-	if assessmentTarget == nil {
-		log.Printf("[WARN] Inspector Assessment Target (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("arn", assessmentTarget.Arn)
-	d.Set("name", assessmentTarget.Name)
+	d.Set(names.AttrARN, assessmentTarget.Arn)
+	d.Set(names.AttrName, assessmentTarget.Name)
 	d.Set("resource_group_arn", assessmentTarget.ResourceGroupArn)
 
-	return nil
+	return diags
 }
 
-func resourceAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
-		AssessmentTargetName: aws.String(d.Get("name").(string)),
+		AssessmentTargetName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("resource_group_arn"); ok {
 		input.ResourceGroupArn = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateAssessmentTarget(&input)
+	_, err := conn.UpdateAssessmentTarget(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error updating Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Inspector Classic Assessment Target (%s): %s", d.Id(), err)
 	}
 
-	return resourceAssessmentTargetRead(d, meta)
+	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteAssessmentTarget(input)
+	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
+		_, err := conn.DeleteAssessmentTarget(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
-			return resource.RetryableError(err)
+		if errs.IsA[*awstypes.AssessmentRunInProgressException](err) {
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteAssessmentTarget(input)
+		_, err = conn.DeleteAssessmentTarget(ctx, input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Inspector Classic Assessment Target: %s", err)
 	}
-	return nil
+	return diags
 }
 
-func DescribeAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector.AssessmentTarget, error) {
+func FindAssessmentTargetByID(ctx context.Context, conn *inspector.Client, arn string) (*awstypes.AssessmentTarget, error) {
 	input := &inspector.DescribeAssessmentTargetsInput{
-		AssessmentTargetArns: []*string{aws.String(arn)},
+		AssessmentTargetArns: []string{arn},
 	}
 
-	output, err := conn.DescribeAssessmentTargets(input)
+	output, err := conn.DescribeAssessmentTargets(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, inspector.ErrCodeInvalidInputException, "") {
+	if errs.IsA[*awstypes.InvalidInputException](err) {
 		return nil, nil
 	}
 
@@ -147,13 +162,13 @@ func DescribeAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector
 		return nil, err
 	}
 
-	var assessmentTarget *inspector.AssessmentTarget
 	for _, target := range output.AssessmentTargets {
-		if aws.StringValue(target.Arn) == arn {
-			assessmentTarget = target
-			break
+		if aws.ToString(target.Arn) == arn {
+			return &target, nil
 		}
 	}
 
-	return assessmentTarget, nil
+	return nil, &retry.NotFoundError{
+		LastRequest: input,
+	}
 }

@@ -1,39 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
-	resourceName := "aws_directory_service_log_subscription.subscription"
-	logGroupName := "ad-service-log-subscription-test"
+func TestAccDSLogSubscription_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_directory_service_log_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLogSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
-			// test create
 			{
-				Config: testAccDirectoryServiceLogSubscriptionConfig(logGroupName),
+				Config: testAccLogSubscriptionConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogSubscriptionExists(
-						resourceName,
-						logGroupName,
-					),
+					testAccCheckLogSubscriptionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, rName),
 				),
 			},
-			// test import
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -43,128 +46,100 @@ func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckLogSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+func TestAccDSLogSubscription_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_directory_service_log_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_log_subscription" {
-			continue
-		}
-
-		res, err := conn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
-			DirectoryId: aws.String(rs.Primary.ID),
-		})
-
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if len(res.LogSubscriptions) > 0 {
-			return fmt.Errorf("Expected AWS Directory Service Log Subscription to be gone, but was still found")
-		}
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogSubscriptionConfig_basic(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogSubscriptionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceLogSubscription(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckLogSubscriptionExists(name string, logGroupName string) resource.TestCheckFunc {
+func testAccCheckLogSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_directory_service_log_subscription" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+			_, err := tfds.FindLogSubscriptionByID(ctx, conn, rs.Primary.ID)
 
-		res, err := conn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
-			DirectoryId: aws.String(rs.Primary.ID),
-		})
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return err
+			}
 
-		if len(res.LogSubscriptions) == 0 {
-			return fmt.Errorf("No Log subscription found")
-		}
-
-		if *(res.LogSubscriptions[0].LogGroupName) != logGroupName {
-			return fmt.Errorf("Expected Log subscription not found")
+			return fmt.Errorf("Directory Service Log Subscription %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccDirectoryServiceLogSubscriptionConfig(logGroupName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccCheckLogSubscriptionExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+
+		_, err := tfds.FindLogSubscriptionByID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
 }
 
-resource "aws_directory_service_directory" "bar" {
-  name     = "corp.notexample.com"
+func testAccLogSubscriptionConfig_basic(rName, domain string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_directory_service_log_subscription" "test" {
+  directory_id   = aws_directory_service_directory.test.id
+  log_group_name = aws_cloudwatch_log_group.test.name
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = %[2]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
-    vpc_id     = aws_vpc.main.id
-    subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 
   tags = {
-    Name = "terraform-testacc-directory-service-log-subscription"
+    Name = %[1]q
   }
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-log-subscription"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-log-subscription"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-log-subscription"
-  }
-}
-
-resource "aws_cloudwatch_log_group" "logs" {
-  name              = "%s"
+resource "aws_cloudwatch_log_group" "test" {
+  name              = %[1]q
   retention_in_days = 1
 }
 
-data "aws_iam_policy_document" "ad-log-policy" {
+data "aws_iam_policy_document" "test" {
   statement {
     actions = [
       "logs:CreateLogStream",
@@ -176,20 +151,15 @@ data "aws_iam_policy_document" "ad-log-policy" {
       type        = "Service"
     }
 
-    resources = ["${aws_cloudwatch_log_group.logs.arn}:*"]
+    resources = ["${aws_cloudwatch_log_group.test.arn}:*"]
 
     effect = "Allow"
   }
 }
 
-resource "aws_cloudwatch_log_resource_policy" "ad-log-policy" {
-  policy_document = data.aws_iam_policy_document.ad-log-policy.json
-  policy_name     = "ad-log-policy"
+resource "aws_cloudwatch_log_resource_policy" "test" {
+  policy_document = data.aws_iam_policy_document.test.json
+  policy_name     = %[1]q
 }
-
-resource "aws_directory_service_log_subscription" "subscription" {
-  directory_id   = aws_directory_service_directory.bar.id
-  log_group_name = aws_cloudwatch_log_group.logs.name
-}
-`, logGroupName)
+`, rName, domain))
 }

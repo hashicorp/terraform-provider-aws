@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add support for `nodejs16.x` `runtime` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for `nodejs16.x` `compatible_runtimes` value
+```
