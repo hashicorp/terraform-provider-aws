@@ -13,7 +13,6 @@ import (
 
 func TestAccAMPScraperConfigurationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	dataSourceName := "data.aws_prometheus_scraper_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{

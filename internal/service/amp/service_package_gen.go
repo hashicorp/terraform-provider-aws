@@ -17,8 +17,8 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceScraperConfiguration,
-			Name:    "ScraperConfiguration",
+			Factory: newScraperConfigurationDataSource,
+			Name:    "Default Scraper Configuration",
 		},
 	}
 }

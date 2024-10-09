@@ -10,64 +10,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource(name="ScraperConfiguration")
-func newDataSourceScraperConfiguration(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceScraperConfiguration{}, nil
+// @FrameworkDataSource(name="Default Scraper Configuration")
+func newScraperConfigurationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &scraperConfigurationDataSource{}, nil
 }
 
-const (
-	DSNameScraperConfiguration = "ScraperConfiguration Data Source"
-)
-
-type dataSourceScraperConfiguration struct {
+type scraperConfigurationDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceScraperConfiguration) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_prometheus_scraper_configuration"
+func (*scraperConfigurationDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_prometheus_scraper_configuration"
 }
 
-func (d *dataSourceScraperConfiguration) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *scraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"default": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
 
-func (d *dataSourceScraperConfiguration) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *scraperConfigurationDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data scraperConfigurationDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := d.Meta().AMPClient(ctx)
 
-	var data dataSourceScraperConfigurationData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	out, err := findScraperConfiguration(ctx, conn)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AMP, create.ErrActionReading, DSNameScraperConfiguration, "", err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("reading Prometheus Default Scraper Configuration", err.Error())
+
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, conn.Options().BaseEndpoint)
-	data.Default = flex.StringValueToFramework(ctx, string(out))
+	data.ID = fwflex.StringToFramework(ctx, conn.Options().BaseEndpoint)
+	data.Default = fwflex.StringValueToFramework(ctx, string(out))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func findScraperConfiguration(ctx context.Context, conn *amp.Client) ([]byte, error) {
@@ -85,7 +78,7 @@ func findScraperConfiguration(ctx context.Context, conn *amp.Client) ([]byte, er
 	return out.Configuration, err
 }
 
-type dataSourceScraperConfigurationData struct {
+type scraperConfigurationDataSourceModel struct {
 	Default types.String `tfsdk:"default"`
 	ID      types.String `tfsdk:"id"`
 }
