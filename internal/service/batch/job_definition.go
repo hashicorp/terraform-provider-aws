@@ -42,10 +42,7 @@ func ResourceJobDefinition() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
-					orderedProps, _ := expandBatchJobContainerProperties(v.(string))
-					(*containerProperties)(orderedProps).OrderEnvironmentVariables()
-					unnormalizedJson, _ := flattenBatchContainerProperties(orderedProps)
-					json, _ := structure.NormalizeJsonString(unnormalizedJson)
+					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -248,7 +245,6 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", jobDefinition.JobDefinitionArn)
 
-	(*containerProperties)(jobDefinition.ContainerProperties).OrderEnvironmentVariables()
 	containerProperties, err := flattenBatchContainerProperties(jobDefinition.ContainerProperties)
 
 	if err != nil {

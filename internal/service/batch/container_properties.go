@@ -15,7 +15,9 @@ type containerProperties batch.ContainerProperties
 
 func (cp *containerProperties) Reduce() error {
 	// Deal with Environment objects which may be re-ordered in the API
-	cp.OrderEnvironmentVariables()
+	sort.Slice(cp.Environment, func(i, j int) bool {
+		return aws.StringValue(cp.Environment[i].Name) < aws.StringValue(cp.Environment[j].Name)
+	})
 
 	// Prevent difference of API response that adds an empty array when not configured during the request
 	if len(cp.Command) == 0 {
@@ -142,10 +144,4 @@ func EquivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	}
 
 	return equal, nil
-}
-
-func (cp *containerProperties) OrderEnvironmentVariables() {
-	sort.Slice(cp.Environment, func(i, j int) bool {
-		return aws.StringValue(cp.Environment[i].Name) < aws.StringValue(cp.Environment[j].Name)
-	})
 }
