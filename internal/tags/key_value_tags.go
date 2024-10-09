@@ -833,7 +833,9 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 	if configExists {
 		c, err := GetAnyAttr(cf, tagsAttr, setFunc)
 		if err != nil {
-			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
+			// in situations with imports and computed attributes where there's no
+			// matching config, return the tags unchanged
+			return tags
 		}
 
 		// if the config is null just return the incoming tags
