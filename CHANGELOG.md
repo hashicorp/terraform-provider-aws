@@ -6,6 +6,7 @@ FEATURES:
 * **New Resource:** `aws_backup_restore_testing_plan` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
 * **New Resource:** `aws_backup_restore_testing_selection` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
 * **New Resource:** `aws_datazone_user_profile` ([#38810](https://github.com/hashicorp/terraform-provider-aws/issues/38810))
+* **New Resource:** `aws_pinpointsmsvoicev2_configuration_set` ([#39620](https://github.com/hashicorp/terraform-provider-aws/issues/39620))
 * **New Resource:** `aws_route53profiles_association` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 * **New Resource:** `aws_route53profiles_profile` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 * **New Resource:** `aws_route53profiles_resource_association` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
@@ -13,12 +14,18 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_backup_plan: Add `rule.schedule_expression_timezone` attribute ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* data-source/aws_eip: Add `ipam_pool_id` attribute ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
 * resource/aws_backup_plan: Add `rule.schedule_expression_timezone` argument ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* resource/aws_eip: Add `ipam_pool_id` argument in support of [public IPAM pools](https://docs.aws.amazon.com/vpc/latest/ipam/tutorials-eip-pool.html) ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
+* resource/aws_vpc_ipam: Add `enable_private_gua` argument ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
+* resource/aws_vpc_ipv6_cidr_block_association: Add `ip_source` and `ipv6_address_attribute` attributes ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 
 BUG FIXES:
 
 * resource/aws_elasticache_replication_group: Fix `security_group_names` causing resource replacement after import ([#39591](https://github.com/hashicorp/terraform-provider-aws/issues/39591))
 * resource/aws_securityhub_automation_rule: Increase `criteria.aws_account_id`, `criteria.generator_id`, `criteria.resource_id`, and `criteria.title` max length from `20` to `100` ([#39616](https://github.com/hashicorp/terraform-provider-aws/issues/39616))
+* resource/aws_vpc_ipam_pool: Change `publicly_advertisable` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
+* resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip` errors ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 
 ## 5.70.0 (October  4, 2024)
 
