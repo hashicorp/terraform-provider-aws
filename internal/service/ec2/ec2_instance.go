@@ -1336,9 +1336,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-		if err := d.Set("volume_tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		if err := d.Set("volume_tags", tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, "volume_tags", nil).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
 		}
+		//if err := d.Set("volume_tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		//	return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
+		//}
 	}
 
 	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
