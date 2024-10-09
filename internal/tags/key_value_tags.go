@@ -765,9 +765,9 @@ type configTag struct {
 	source tagSource
 }
 
-// GetAnyAttrWithFunc traverses the cty.Value based on the attr string and returns the attribute.
+// GetAnyAttr traverses the cty.Value based on the attr string and returns the attribute.
 // It takes an additional function parameter to determine whether to return a set element.
-func GetAnyAttrWithFunc(value cty.Value, attr string, shouldReturnSetElement func(string, cty.Value) bool) (cty.Value, error) {
+func GetAnyAttr(value cty.Value, attr string, shouldReturnSetElement func(string, cty.Value) bool) (cty.Value, error) {
 	// Base case: if attr is empty, return the current value
 	if attr == "" {
 		return value, nil
@@ -799,7 +799,7 @@ func GetAnyAttrWithFunc(value cty.Value, attr string, shouldReturnSetElement fun
 			for it.Next() {
 				_, v := it.Element()
 				if shouldReturnSetElement(indexStr, v) {
-					return GetAnyAttrWithFunc(v, rest, shouldReturnSetElement)
+					return GetAnyAttr(v, rest, shouldReturnSetElement)
 				}
 			}
 			return cty.NilVal, fmt.Errorf("set element not found for attribute %s", attrName)
@@ -818,7 +818,7 @@ func GetAnyAttrWithFunc(value cty.Value, attr string, shouldReturnSetElement fun
 			return cty.NilVal, fmt.Errorf("index %d out of range for attribute %s", index, attrName)
 		}
 
-		return GetAnyAttrWithFunc(value.Index(cty.NumberIntVal(int64(index))), rest, shouldReturnSetElement)
+		return GetAnyAttr(value.Index(cty.NumberIntVal(int64(index))), rest, shouldReturnSetElement)
 	}
 
 	// Handle regular attribute
@@ -826,50 +826,7 @@ func GetAnyAttrWithFunc(value cty.Value, attr string, shouldReturnSetElement fun
 		return cty.NilVal, fmt.Errorf("attribute %s not found", part)
 	}
 
-	return GetAnyAttrWithFunc(value.GetAttr(part), rest, shouldReturnSetElement)
-}
-
-// GetAnyAttr traverses the cty.Value based on the attr string and returns the attribute.
-func GetAnyAttr(value cty.Value, attr string) (cty.Value, error) {
-	parts := strings.Split(attr, ".")
-	currentValue := value
-
-	for _, part := range parts {
-		if strings.Contains(part, "[") && strings.Contains(part, "]") {
-			// Handle indexed attribute
-			attrName := part[:strings.Index(part, "[")]
-			indexStr := part[strings.Index(part, "[")+1 : strings.Index(part, "]")]
-			index, err := strconv.Atoi(indexStr)
-			if err != nil {
-				return cty.NilVal, fmt.Errorf("invalid index: %s", indexStr)
-			}
-
-			if !currentValue.Type().HasAttribute(attrName) {
-				return cty.NilVal, fmt.Errorf("attribute %s not found", attrName)
-			}
-
-			currentValue = currentValue.GetAttr(attrName)
-
-			if !currentValue.Type().IsListType() && !currentValue.Type().IsTupleType() && !currentValue.Type().IsSetType() {
-				return cty.NilVal, fmt.Errorf("attribute %s is not a list or tuple", attrName)
-			}
-
-			if index >= currentValue.LengthInt() {
-				return cty.NilVal, fmt.Errorf("index %d out of range for attribute %s", index, attrName)
-			}
-
-			currentValue = currentValue.Index(cty.NumberIntVal(int64(index)))
-			continue
-		}
-
-		// Handle regular attribute
-		if !currentValue.Type().HasAttribute(part) {
-			return cty.NilVal, fmt.Errorf("attribute %s not found", part)
-		}
-		currentValue = currentValue.GetAttr(part)
-	}
-
-	return currentValue, nil
+	return GetAnyAttr(value.GetAttr(part), rest, shouldReturnSetElement)
 }
 
 // ResolveDuplicates resolves differences between incoming tags, defaultTags, and ignoreConfig
@@ -888,7 +845,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 	configTags := make(map[string]configTag)
 	if configExists {
 		//c := cf.GetAttr(tagsAttr)
-		c, err := GetAnyAttrWithFunc(cf, tagsAttr, setFunc)
+		c, err := GetAnyAttr(cf, tagsAttr, setFunc)
 		if err != nil {
 			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
 		}
@@ -906,7 +863,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 
 	if pl := d.GetRawPlan(); !pl.IsNull() && pl.IsKnown() {
 		//c := pl.GetAttr(tagsAttr)
-		c, err := GetAnyAttrWithFunc(pl, tagsAttr, setFunc)
+		c, err := GetAnyAttr(pl, tagsAttr, setFunc)
 		if err != nil {
 			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
 		}
@@ -917,7 +874,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 
 	if st := d.GetRawState(); !st.IsNull() && st.IsKnown() {
 		//c := st.GetAttr(tagsAttr)
-		c, err := GetAnyAttrWithFunc(st, tagsAttr, setFunc)
+		c, err := GetAnyAttr(st, tagsAttr, setFunc)
 		if err != nil {
 			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
 		}
