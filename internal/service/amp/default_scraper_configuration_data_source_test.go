@@ -26,7 +26,7 @@ func TestAccAMPDefaultScraperConfigurationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDefaultScraperConfigurationDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "configuration"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrConfiguration),
 				),
 			},
 		},

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(aws_prometheus_default_scraper_configuration, name="Default Scraper Configuration")
@@ -31,7 +32,7 @@ func (*defaultScraperConfigurationDataSource) Metadata(_ context.Context, reques
 func (d *defaultScraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"configuration": schema.StringAttribute{
+			names.AttrConfiguration: schema.StringAttribute{
 				Computed: true,
 			},
 		},
