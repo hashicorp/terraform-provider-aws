@@ -402,7 +402,7 @@ func TestAccRoute53ResolverRule_forward_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ipv6": "2001:6b0:7::18",
+						"ipv6":         "2001:6b0:7::18",
 						names.AttrPort: "53",
 					}),
 				),
@@ -423,11 +423,11 @@ func TestAccRoute53ResolverRule_forward_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ipv6": "2001:6b0:7::18",
+						"ipv6":         "2001:6b0:7::18",
 						names.AttrPort: "53",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ipv6": "2001:6b0:7::19",
+						"ipv6":         "2001:6b0:7::19",
 						names.AttrPort: "54",
 					}),
 				),
@@ -443,11 +443,11 @@ func TestAccRoute53ResolverRule_forward_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ipv6": "2001:6b0:7::18",
+						"ipv6":         "2001:6b0:7::18",
 						names.AttrPort: "53",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ipv6": "2001:6b0:7::19",
+						"ipv6":         "2001:6b0:7::19",
 						names.AttrPort: "54",
 					}),
 				),
@@ -529,7 +529,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ipv6": "2001:6b0:7::18",
+						"ipv6":         "2001:6b0:7::18",
 						names.AttrPort: "53",
 					}),
 				),
@@ -545,7 +545,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ipv6": "2001:6b0:7::18",
+						"ipv6":         "2001:6b0:7::18",
 						names.AttrPort: "53",
 					}),
 				),
