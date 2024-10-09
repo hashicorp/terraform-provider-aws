@@ -1270,6 +1270,47 @@ func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_IPv6_supportIPv6Addresses(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCount := 0
+	updatedCount := 3
+	finalCount := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ipv6_addresses(rName, originalCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", fmt.Sprint(originalCount)),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ipv6_addresses(rName, updatedCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", fmt.Sprint(updatedCount)),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ipv6_addresses(rName, finalCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", fmt.Sprint(finalCount)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var original, updated awstypes.Instance
@@ -6657,6 +6698,26 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_ipv6_addresses(rName string, addressCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceVPCIPv6Config(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  subnet_id     = aws_subnet.test.id
+  instance_type = "t3.small"
+  ipv6_addresses = [
+    for i in range(%[2]d) :
+    cidrhost(aws_subnet.test.ipv6_cidr_block, 10 + i)
+  ]
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, addressCount))
 }
 
 func testAccInstanceConfig_ipv6Support(rName string) string {
