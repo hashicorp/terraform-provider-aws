@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.29.2
-	github.com/aws/aws-sdk-go-v2/service/glue v1.100.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.100.2
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.1
