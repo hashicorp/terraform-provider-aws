@@ -208,7 +208,6 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.WorkforceName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Updating SageMaker Workteam: %#v", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateWorkteam(ctx, input)
 	}, ErrCodeValidationException)
@@ -280,7 +279,6 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(d.Get("worker_access_configuration").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating SageMaker Workteam: %#v", input)
 		_, err := conn.UpdateWorkteam(ctx, input)
 
 		if err != nil {
