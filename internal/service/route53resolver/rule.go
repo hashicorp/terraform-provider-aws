@@ -92,8 +92,13 @@ func resourceRule() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"ip": {
 							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsIPAddress,
+							Optional:     true,
+							ValidateFunc: validation.IsIPv4Address,
+						},
+						"ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsIPv6Address,
 						},
 						names.AttrPort: {
 							Type:         schema.TypeInt,
@@ -377,6 +382,9 @@ func expandRuleTargetIPs(vTargetIps *schema.Set) []awstypes.TargetAddress {
 		if vIp, ok := mTargetIp["ip"].(string); ok && vIp != "" {
 			targetAddress.Ip = aws.String(vIp)
 		}
+		if vIpv6, ok := mTargetIp["ipv6"].(string); ok && vIpv6 != "" {
+			targetAddress.Ipv6 = aws.String(vIpv6)
+		}
 		if vPort, ok := mTargetIp[names.AttrPort].(int); ok {
 			targetAddress.Port = aws.Int32(int32(vPort))
 		}
@@ -400,6 +408,7 @@ func flattenRuleTargetIPs(targetAddresses []awstypes.TargetAddress) []interface{
 	for _, targetAddress := range targetAddresses {
 		mTargetIp := map[string]interface{}{
 			"ip":               aws.ToString(targetAddress.Ip),
+			"ipv6":             aws.ToString(targetAddress.Ipv6),
 			names.AttrPort:     int(aws.ToInt32(targetAddress.Port)),
 			names.AttrProtocol: targetAddress.Protocol,
 		}
