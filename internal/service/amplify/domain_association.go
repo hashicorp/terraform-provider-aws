@@ -62,6 +62,7 @@ func resourceDomainAssociation() *schema.Resource {
 						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
+							Default:          "AMPLIFY_MANAGED",
 							ValidateDiagFunc: enum.Validate[types.CertificateType](),
 						},
 						"custom_certificate_arn": {
