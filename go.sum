@@ -50,8 +50,8 @@ github.com/aws/aws-sdk-go-v2/service/account v1.21.2 h1:13GT3QC+Mnqm1EgMN7o892Tm
 github.com/aws/aws-sdk-go-v2/service/account v1.21.2/go.mod h1:VT0EPglK25daFaI4vfLQZu96HpeY6cH/Wt5/UZULD8M=
 github.com/aws/aws-sdk-go-v2/service/acm v1.30.2 h1:LNCRNr5Ha6OUcnV4licXm/V9/fUyto85nQdQSscC09g=
 github.com/aws/aws-sdk-go-v2/service/acm v1.30.2/go.mod h1:wRBzxEW2vsJMJAuV7yWEHGzo/KycX3t02mUVm6P8qHY=
-github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.1 h1:16pq1nRoFKjGzhGBFMARpABnY3hGt+FRa49atWo2XMo=
-github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.1/go.mod h1:UJbrlsBgBz/30u/4UdF5rmRZujQ+u7GXtBffl+W/pmo=
+github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.2 h1:MH5iaMO1kqD9dm4eCNWbK86fzJB/XiE/5FoISrY0sjM=
+github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.2/go.mod h1:vWSvubH4BhEG1Vl6lLUVHZzRo7lgIM7/oJpBv6hN5i4=
 github.com/aws/aws-sdk-go-v2/service/amp v1.29.1 h1:GzOB+sCKLhQw8sNs485pjPIFcs+sLVrs3pdSrf0RwxU=
 github.com/aws/aws-sdk-go-v2/service/amp v1.29.1/go.mod h1:yBrGr74soSZAkxzJC7s94gL2gGFf7h/Vb1ObQwpl01U=
 github.com/aws/aws-sdk-go-v2/service/amplify v1.26.1 h1:ZRR85fXlR+oVZ4rL9oLpfzhytOfk8bTMj74p6y1Ly8w=
