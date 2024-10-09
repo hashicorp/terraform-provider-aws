@@ -130,6 +130,34 @@ func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ZoneDataSource_tagsOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	rInt := sdkacctest.RandInt()
+	resourceName := "aws_route53_zone.test"
+	dataSourceName := "data.aws_route53_zone.test"
+
+	fqdn := acctest.RandomFQDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneDataSourceConfig_tagsOnly(fqdn, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
@@ -244,6 +272,28 @@ data "aws_route53_zone" "test" {
   tags = {
     Environment = "tf-acc-test-%[2]d"
   }
+}
+`, fqdn, rInt)
+}
+
+func testAccZoneDataSourceConfig_tagsOnly(fqdn string, rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+
+  tags = {
+    Environment = "tf-acc-test-%[2]d"
+    Name        = "tf-acc-test-%[2]d"
+  }
+}
+
+data "aws_route53_zone" "test" {
+  tags = {
+    Environment = "tf-acc-test-%[2]d"
+    Name        = "tf-acc-test-%[2]d"
+  }
+
+  depends_on = [aws_route53_zone.test]
 }
 `, fqdn, rInt)
 }
