@@ -7165,6 +7165,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfig_blockDeviceTagsDefault3EBS(defTg, ebsTg1, ebsTg2, ebsTg3 map[string]string) string {
+	//lintignore:AT004
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
