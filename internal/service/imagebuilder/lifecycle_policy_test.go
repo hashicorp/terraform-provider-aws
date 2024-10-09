@@ -424,7 +424,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     exclusion_rules {
       amis {
         is_public = true
-        regions   = ["${data.aws_region.current.name}"]
+        regions   = [data.aws_region.current.name]
         last_launched {
           unit  = "WEEKS"
           value = 2
