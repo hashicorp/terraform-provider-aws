@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAMPScraperConfigurationDataSource_basic(t *testing.T) {
+func TestAccAMPDefaultScraperConfigurationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_prometheus_scraper_configuration.test"
+	dataSourceName := "data.aws_prometheus_default_scraper_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -24,17 +24,17 @@ func TestAccAMPScraperConfigurationDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfigurationDataSourceConfig_basic(),
+				Config: testAccDefaultScraperConfigurationDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "default"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "configuration"),
 				),
 			},
 		},
 	})
 }
 
-func testAccScraperConfigurationDataSourceConfig_basic() string {
+func testAccDefaultScraperConfigurationDataSourceConfig_basic() string {
 	return `
-data "aws_prometheus_scraper_configuration" "test" {}
+data "aws_prometheus_default_scraper_configuration" "test" {}
 `
 }

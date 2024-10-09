@@ -13,35 +13,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Default Scraper Configuration")
-func newScraperConfigurationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &scraperConfigurationDataSource{}, nil
+// @FrameworkDataSource(aws_prometheus_default_scraper_configuration, name="Default Scraper Configuration")
+func newDefaultScraperConfigurationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &defaultScraperConfigurationDataSource{}, nil
 }
 
-type scraperConfigurationDataSource struct {
+type defaultScraperConfigurationDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*scraperConfigurationDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_prometheus_scraper_configuration"
+func (*defaultScraperConfigurationDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_prometheus_default_scraper_configuration"
 }
 
-func (d *scraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *defaultScraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"default": schema.StringAttribute{
+			"configuration": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
 
-func (d *scraperConfigurationDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data scraperConfigurationDataSourceModel
+func (d *defaultScraperConfigurationDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data defaultScraperConfigurationDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -49,7 +47,7 @@ func (d *scraperConfigurationDataSource) Read(ctx context.Context, request datas
 
 	conn := d.Meta().AMPClient(ctx)
 
-	out, err := findScraperConfiguration(ctx, conn)
+	out, err := findDefaultScraperConfiguration(ctx, conn)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Prometheus Default Scraper Configuration", err.Error())
@@ -57,28 +55,26 @@ func (d *scraperConfigurationDataSource) Read(ctx context.Context, request datas
 		return
 	}
 
-	data.ID = fwflex.StringToFramework(ctx, conn.Options().BaseEndpoint)
-	data.Default = fwflex.StringValueToFramework(ctx, string(out))
+	data.Configuration = fwflex.StringValueToFramework(ctx, string(out))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func findScraperConfiguration(ctx context.Context, conn *amp.Client) ([]byte, error) {
+func findDefaultScraperConfiguration(ctx context.Context, conn *amp.Client) ([]byte, error) {
 	input := &amp.GetDefaultScraperConfigurationInput{}
+	output, err := conn.GetDefaultScraperConfiguration(ctx, input)
 
-	out, err := conn.GetDefaultScraperConfiguration(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
+	if output == nil || output.Configuration == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Configuration, err
+	return output.Configuration, err
 }
 
-type scraperConfigurationDataSourceModel struct {
-	Default types.String `tfsdk:"default"`
-	ID      types.String `tfsdk:"id"`
+type defaultScraperConfigurationDataSourceModel struct {
+	Configuration types.String `tfsdk:"configuration"`
 }

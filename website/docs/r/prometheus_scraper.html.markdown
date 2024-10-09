@@ -103,7 +103,7 @@ service managed scrape configuration.
 of your scraper.
 
 ```terraform
-data "aws_prometheus_scraper_configuration" "example" {}
+data "aws_prometheus_default_scraper_configuration" "example" {}
 
 resource "aws_prometheus_scraper" "example" {
 
@@ -113,7 +113,7 @@ resource "aws_prometheus_scraper" "example" {
     }
   }
 
-  scrape_configuration = data.aws_prometheus_scraper_configuration.example.default
+  scrape_configuration = data.aws_prometheus_scraper_configuration.example.configuration
 
   source {
     eks {
