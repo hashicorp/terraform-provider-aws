@@ -203,7 +203,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.27.1
