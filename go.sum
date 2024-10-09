@@ -466,8 +466,8 @@ github.com/aws/aws-sdk-go-v2/service/securitylake v1.18.2 h1:gblmbYSKUUXGILoPnve
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.18.2/go.mod h1:eFTWkaOAqxfh9XGytxTXk5eY6h6HKLoTwzy0pMjvsdI=
 github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.24.2 h1:kZH4TxPNznySgGp9HaHNdWnpTnn8cFBNaBYu4ViN6PI=
 github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.24.2/go.mod h1:SH6092ZWTtelRGD0bARMsUNN2FQI/RrCcX/TQZLDZjA=
-github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.1 h1:VBB3OMmAUHSYrbdYFXrRCZIhBuYmT0Nj+GyTGmwNaAs=
-github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.1/go.mod h1:d240WPXwr71aheedA3e1oNn1TI0YQbST9/oRlt2grko=
+github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.2 h1:Ha2hl68rwYzdl6GpcL0IIHuKlj0ITIO0AY0/3fLdz9w=
+github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.2/go.mod h1:8KTapzksjoy6waovzU71HzD/QiR2hJzPGyGFVfhwKhc=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.30.1 h1:LsznptbfALbXav1YX8PcxbY0r3XVIJhTrAvArud3Pio=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.30.1/go.mod h1:Hcw30Kzs1CBHG4wS/C90aVWNQxt48SNFyRpO8p+H394=
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.33.1 h1:QRaE6W0KuU5GUGgklly1YK7Owhw3J7ZpO6wFsXpCMJQ=
