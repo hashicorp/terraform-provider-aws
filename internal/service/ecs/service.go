@@ -221,6 +221,30 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"vpc_lattice_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+						"target_group_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+						"port_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 			"ordered_placement_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -736,6 +760,30 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"vpc_lattice_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+						"target_group_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+						"port_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 			"ordered_placement_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1140,6 +1188,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EnableECSManagedTags:     d.Get("enable_ecs_managed_tags").(bool),
 		EnableExecuteCommand:     d.Get("enable_execute_command").(bool),
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{})),
+		VpcLatticeConfigurations: expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set)),
 		SchedulingStrategy:       schedulingStrategy,
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
@@ -1342,6 +1391,17 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
+
+	if service.Deployments != nil {
+		for _, deployment := range service.Deployments {
+			if aws.ToString(deployment.Status) == "PRIMARY" {
+				if err := d.Set("vpc_lattice_configuration", flattenVpcLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configuration: %s", err)
+				}
+			}
+		}
+	}
+
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
 	}
@@ -1460,6 +1520,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
 		}
 
+		if d.HasChange("vpc_lattice_configuration") {
+			input.VpcLatticeConfigurations = expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set))
+		}
+
 		if d.HasChange("ordered_placement_strategy") {
 			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementStrategy
 			// To remove an existing placement strategy, specify an empty object.
@@ -1576,6 +1640,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Drain the ECS service.
 	if status != serviceStatusDraining && service.SchedulingStrategy != awstypes.SchedulingStrategyDaemon && !forceDelete {
+
 		input := &ecs.UpdateServiceInput{
 			Cluster:      aws.String(cluster),
 			DesiredCount: aws.Int32(0),
@@ -2094,6 +2159,47 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 	}
 
 	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
+}
+
+func expandVpcLatticeConfiguration(configured *schema.Set) []awstypes.VpcLatticeConfiguration {
+	if configured == nil || configured.Len() == 0 {
+		return nil
+	}
+
+	var vpcLatticeConfigurations []awstypes.VpcLatticeConfiguration
+
+	for _, rawConfig := range configured.List() {
+		config := rawConfig.(map[string]interface{})
+
+		vpcLatticeConfiguration := awstypes.VpcLatticeConfiguration{
+			RoleArn:        aws.String(config["role_arn"].(string)),
+			TargetGroupArn: aws.String(config["target_group_arn"].(string)),
+			PortName:       aws.String(config["port_name"].(string)),
+		}
+
+		vpcLatticeConfigurations = append(vpcLatticeConfigurations, vpcLatticeConfiguration)
+	}
+
+	return vpcLatticeConfigurations
+}
+
+func flattenVpcLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var result []map[string]interface{}
+
+	for _, apiObject := range apiObjects {
+		resultItem := map[string]interface{}{
+			"role_arn":         aws.ToString(apiObject.RoleArn),
+			"target_group_arn": aws.ToString(apiObject.TargetGroupArn),
+			"port_name":        aws.ToString(apiObject.PortName),
+		}
+		result = append(result, resultItem)
+	}
+
+	return result
 }
 
 func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConstraint, error) {
