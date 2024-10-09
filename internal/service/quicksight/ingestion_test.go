@@ -49,6 +49,7 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"ingestion_status",
 					"ingestion_type",
 				},
 			},

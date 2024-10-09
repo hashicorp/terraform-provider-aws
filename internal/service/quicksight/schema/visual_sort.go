@@ -13,12 +13,12 @@ import (
 
 const fieldSortOptionsMaxItems100 = 100
 
-func fieldSortOptionsSchema(maxItems int) *schema.Schema {
+var fieldSortOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
 		MinItems: 1,
-		MaxItems: maxItems,
+		MaxItems: fieldSortOptionsMaxItems100,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"column_sort": columnSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
@@ -26,7 +26,7 @@ func fieldSortOptionsSchema(maxItems int) *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
