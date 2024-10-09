@@ -1611,7 +1611,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomesie"),
 				),
 			},
-			{ // 1 defaultTags + 1 volumeTags
+			{ // 1 defaultTags + 1 volumeTags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithOneKey1, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1621,7 +1621,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
 				),
 			},
-			{ // 1 defaultTags + 2 volumeTags
+			{ // 1 defaultTags + 2 volumeTags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithTwoKeys, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1632,7 +1632,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.jelly", "bean"),
 				),
 			},
-			{ // 1 defaultTags
+			{ // 1 defaultTags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1641,7 +1641,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
 				),
 			},
-			{ // no tags
+			{ // no tags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(emptyMap, emptyMap, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1802,6 +1802,65 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBDOverlaps(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2.tags.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2.tags_all.%", acctest.Ct4),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	emptyMap := map[string]string{}
+	defTags := map[string]string{"brodo": "baggins", "jelly": "bean"}
+	volTags1 := map[string]string{"every": "gnomesie"}
+	volTags2 := map[string]string{"brodo": "baggins"}
+	volTags3 := map[string]string{"every": "gnomesie", "iz": "paws", "gigi": "kitty", "brodo": "baggins", "jelly": "bean"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // 2 defaultTags + 1 volumeTags (no overlap)
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags1, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.every", "gnomesie"),
+				),
+			},
+			{ // 2 defaultTags + 1 volumeTags (overlap)
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags2, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
+				),
+			},
+			{ // 2 defaultTags + 5 volumeTags (overlap)
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),  // overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.jelly", "bean"),     // overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.every", "gnomesie"), // non-overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.iz", "paws"),        // non-overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.gigi", "kitty"),     // non-overlap
+				),
+			},
+			{ // 2 defaultTags + 5 volumeTags (overlap)
+				Config:   testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
+				PlanOnly: true,
 			},
 		},
 	})
