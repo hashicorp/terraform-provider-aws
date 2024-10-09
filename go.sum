@@ -100,8 +100,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.20.2 h1:5lZExZBtvE/iWK387JSMbfLW
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.20.2/go.mod h1:o0EnsM4cr3V+xf+dQw3TzeqOSYkxxq7VgGnDsgyjgBw=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.23.2 h1:xy4po1FFPotL07BNMDNDrgivQB9rxi6/rV2+Q4qQQ5M=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.23.2/go.mod h1:gYKKDvLQt8S5EdovDwxZBDTVWa4aC86GixDtsmxcZqM=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.28.1 h1:3tE4izjGAT4+M7oy0lwwV/zarwSOx7pJ00COaSD/v0U=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.28.1/go.mod h1:Rjz9/AE9OwkSGMer1ko3NPIib6kkiHYxoJ4wDPeDCAE=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.28.2 h1:bHYXDkOhPR44ewGRD+7jU6zAvgqAJfNWQ5tsMp4C+UE=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.28.2/go.mod h1:VS+/KtauBBdzOBHe4v7LjF0lHb4l5f+/Bwlq6aG/LJ0=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.8.1 h1:v1Ir0M7VcEF+sR8S8k2nn9RiEa3NzExw/fPAH0nohtg=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.8.1/go.mod h1:MBYxC6CIOGqfioN11st4SHw2uutemGtT6SyfulPSU9A=
 github.com/aws/aws-sdk-go-v2/service/chime v1.34.1 h1:uIDL87ysZhLfdEkmDgHDw82qs89bIrfZqjlaFKwVo9Y=
