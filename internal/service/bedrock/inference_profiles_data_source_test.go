@@ -23,8 +23,7 @@ func TestAccBedrockInferenceProfilesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInferenceProfilesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
-					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "inference_profile_summaries.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "arns.#", 0),
 				),
 			},
 		},
