@@ -372,8 +372,8 @@ github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.2 h1:WaaJYhNXeXI/pdx62
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.2/go.mod h1:HpouLKtTJTbB4xn7Kp0Za6/7y+pD/QkJPmDMWMznOBU=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.2 h1:bZZgfwJfgtiYpf+rGkTA16rWZF13bSMoFVVwJ0o1i9k=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.2/go.mod h1:g5NacEyOp1B18ks9/u+qafG4VIJyjUD2mMZMxR82vVg=
-github.com/aws/aws-sdk-go-v2/service/oam v1.15.1 h1:PovwSD+eGF4gXv3qCy7p+d2zAVrbbS1KYtsmnurlfyU=
-github.com/aws/aws-sdk-go-v2/service/oam v1.15.1/go.mod h1:pQ2qmVjik4MsSwCBJ6LjczevGhPjADMzq9i7zWKoy3g=
+github.com/aws/aws-sdk-go-v2/service/oam v1.15.2 h1:9PoWP9MgyH3aV6b3PzqxbGpIEXD5XK5nO/vcLAvFvlk=
+github.com/aws/aws-sdk-go-v2/service/oam v1.15.2/go.mod h1:K61mfb55d0NrVru1SR3CEnrUdBnhUH3g2LnpujRgg34=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.41.1 h1:oKHcfpevtIe7erlyx3iMk321aus4ktnreX2/Y3pMrNA=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.41.1/go.mod h1:8B7eSyVWbyR65SzoE+YUqh5b0APYbPzunmV+L5T8alM=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.16.1 h1:zPbQsW0+aG6iHJUCSUiJ5mzCA95k1wpgQOKygqFrGNE=
