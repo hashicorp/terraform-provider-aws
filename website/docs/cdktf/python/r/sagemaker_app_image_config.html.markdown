@@ -142,4 +142,4 @@ Using `terraform import`, import SageMaker App Image Configs using the `name`. F
 % terraform import aws_sagemaker_app_image_config.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9429a9cc03d7ec0fcf7b8aa8c2f67d848723638aac59ec4cbe96a3aad3ce1f5c -->
+<!-- cache-key: cdktf-0.20.9 input-9429a9cc03d7ec0fcf7b8aa8c2f67d848723638aac59ec4cbe96a3aad3ce1f5c -->

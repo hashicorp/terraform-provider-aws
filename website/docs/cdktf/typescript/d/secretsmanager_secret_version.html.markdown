@@ -100,4 +100,4 @@ This data source exports the following attributes in addition to the arguments a
 * `secretBinary` - Decrypted part of the protected secret information that was originally provided as a binary.
 * `versionId` - Unique identifier of this version of the secret.
 
-<!-- cache-key: cdktf-0.20.1 input-e4e3782fdb0598a229742f4b10930527d75b81d8043a7552d4209b49f43234dd -->
+<!-- cache-key: cdktf-0.20.9 input-e4e3782fdb0598a229742f4b10930527d75b81d8043a7552d4209b49f43234dd -->

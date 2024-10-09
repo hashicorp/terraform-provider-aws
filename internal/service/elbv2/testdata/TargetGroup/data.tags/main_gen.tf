@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_lb_target_group" "test" {
   arn = aws_lb_target_group.test.arn
 }

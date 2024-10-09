@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `message_types` - Events to receive notifications for.
 * `severities` - Severity levels to receive notifications for.
 
-<!-- cache-key: cdktf-0.20.1 input-78cadd26ed90ab20f01b2dbc792c6469d1c96085b8c332d5476c85e4951770d2 -->
+<!-- cache-key: cdktf-0.20.9 input-78cadd26ed90ab20f01b2dbc792c6469d1c96085b8c332d5476c85e4951770d2 -->

@@ -145,6 +145,10 @@ The following arguments are optional:
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [`jupyter_server_app_settings` Block](#jupyter_server_app_settings-block) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [`kernel_gateway_app_settings` Block](#kernel_gateway_app_settings-block) below.
 * `security_groups` - (Optional) The security groups for the Amazon Virtual Private Cloud that the space uses for communication.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [`jupyter_lab_app_settings` Block](#jupyter_lab_app_settings-block) below.
+* `space_storage_settings` - (Optional) The storage settings for a private space. See [`space_storage_settings` Block](#space_storage_settings-block) below.
+* `custom_posix_user_config` - (Optional) Details about the POSIX identity that is used for file system operations. See [`custom_posix_user_config` Block](#custom_posix_user_config-block) below.
+* `custom_file_system_config` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. See [`custom_file_system_config` Block](#custom_file_system_config-block) below.
 
 ### `default_user_settings` Block
 
@@ -164,6 +168,7 @@ The following arguments are optional:
 * `space_storage_settings` - (Optional) The storage settings for a private space. See [`space_storage_settings` Block](#space_storage_settings-block) below.
 * `studio_web_portal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [`tensor_board_app_settings` Block](#tensor_board_app_settings-block) below.
+* `studio_web_portal_settings` - (Optional) The Studio Web Portal settings. See [`studio_web_portal_settings` Block](#studio_web_portal_settings-block) below.
 
 #### `space_storage_settings` Block
 
@@ -186,7 +191,6 @@ The following arguments are optional:
 #### `canvas_app_settings` Block
 
 * `direct_deploy_settings` - (Optional) The model deployment settings for the SageMaker Canvas application. See [`direct_deploy_settings` Block](#direct_deploy_settings-block) below.
-* `generative_ai_settings` - (Optional) The generative AI settings for the SageMaker Canvas application. See [`generative_ai_settings` Block](#generative_ai_settings-block) below.
 * `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [`identity_provider_oauth_settings` Block](#identity_provider_oauth_settings-block) below.
 * `kendra_settings` - (Optional) The settings for document querying. See [`kendra_settings` Block](#kendra_settings-block) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [`model_register_settings` Block](#model_register_settings-block) below.
@@ -201,11 +205,7 @@ The following arguments are optional:
 
 ##### `direct_deploy_settings` Block
 
-* `status` - (Optional) Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
-
-##### `generative_ai_settings` Block
-
-* `amazon_bedrock_role_arn` - (Optional) The ARN of an Amazon Web Services IAM role that allows fine-tuning of large language models (LLMs) in Amazon Bedrock. The IAM role should have Amazon S3 read and write permissions, as well as a trust relationship that establishes bedrock.amazonaws.com as a service principal.
+* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### `kendra_settings` Block
 
@@ -261,6 +261,11 @@ The following arguments are optional:
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [`custom_image` Block](#custom_image-block) below.
 
+#### `studio_web_portal_settings` Block
+
+* `hidden_app_types` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
+* `hidden_ml_tools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
+
 ##### `code_repository` Block
 
 * `repository_url` - (Optional) The URL of the Git repository.
@@ -296,9 +301,15 @@ The following arguments are optional:
 
 ### `domain_settings` Block
 
+* `docker_settings` - (Optional) A collection of settings that configure the domain’s Docker interaction. see [`docker_settings` Block](#docker_settings-block) below.
 * `execution_role_identity_config` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
 * `r_studio_server_pro_domain_settings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [`r_studio_server_pro_domain_settings` Block](#r_studio_server_pro_domain_settings-block) below.
 * `security_group_ids` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
+
+#### `docker_settings` Block
+
+* `enable_docker_access` - (Optional) Indicates whether the domain can access Docker. Valid values are `ENABLED` and `DISABLED`.
+* `vpc_only_trusted_accounts` - (Optional) The list of Amazon Web Services accounts that are trusted when the domain is created in VPC-only mode.
 
 #### `r_studio_server_pro_domain_settings` Block
 
@@ -349,4 +360,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-888b29765c78136a5dfabf8748cce1605dbe6705ed2be06764d7f9fb568fcfae -->
+<!-- cache-key: cdktf-0.20.9 input-a391c557b44e35eab3a9ff9d883168c7a69f825a68d65476363ebdae427cb3e8 -->

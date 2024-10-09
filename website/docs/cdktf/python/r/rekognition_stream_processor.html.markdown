@@ -369,4 +369,4 @@ Using `terraform import`, import Rekognition Stream Processor using the `name`. 
 % terraform import aws_rekognition_stream_processor.example my-stream 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3270ebf829691bb33fec57b588e584a3c7fc51a209426c171b198c7a90bc81f -->
+<!-- cache-key: cdktf-0.20.9 input-01b4576ff8dd725ded900ab4e8ec80d8be87c4f4ba6e909a09c45d59b613bfae -->

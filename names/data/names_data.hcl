@@ -1801,6 +1801,34 @@ service "codecommit" {
   brand                    = "AWS"
 }
 
+service "codeconnections" {
+  cli_v2_command {
+    aws_cli_v2_command           = "codeconnections"
+    aws_cli_v2_command_no_dashes = "codeconnections"
+  }
+
+  sdk {
+    id = "CodeConnections"
+  }
+
+  names {
+    provider_name_upper = "CodeConnections"
+    human_friendly      = "CodeConnections"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConnections"
+  }
+
+  resource_prefix {
+    correct = "aws_codeconnections_"
+  }
+
+  provider_package_correct = "codeconnections"
+  doc_prefix               = ["codeconnections_"]
+  brand                    = "AWS"
+}
+
 service "deploy" {
   go_packages {
     v1_package = "codedeploy"
@@ -6554,6 +6582,38 @@ service "pinpointsmsvoice" {
   not_implemented          = true
 }
 
+service "pinpointsmsvoicev2" {
+  cli_v2_command {
+    aws_cli_v2_command           = "pinpoint-sms-voice-v2"
+    aws_cli_v2_command_no_dashes = "pinpointsmsvoicev2"
+  }
+
+  sdk {
+    id = "Pinpoint SMS Voice v2"
+  }
+
+  names {
+    provider_name_upper = "PinpointSMSVoiceV2"
+    human_friendly      = "End User Messaging SMS"
+  }
+
+  client {
+    go_v1_client_typename = "PinpointSMSVoiceV2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "DescribePhoneNumbers"
+  }
+
+  resource_prefix {
+    correct = "aws_pinpointsmsvoicev2_"
+  }
+
+  provider_package_correct = "pinpointsmsvoicev2"
+  doc_prefix               = ["pinpointsmsvoicev2_"]
+  brand                    = "AWS"
+}
+
 service "pipes" {
   sdk {
     id = "Pipes"
@@ -8267,6 +8327,34 @@ service "ssmsap" {
 
   provider_package_correct = "ssmsap"
   doc_prefix               = ["ssmsap_"]
+  brand                    = "AWS"
+}
+
+service "ssmquicksetup" {
+  cli_v2_command {
+    aws_cli_v2_command           = "ssm-quicksetup"
+    aws_cli_v2_command_no_dashes = "ssmquicksetup"
+  }
+
+  sdk {
+    id = "SSM QuickSetup"
+  }
+
+  names {
+    provider_name_upper = "SSMQuickSetup"
+    human_friendly      = "SSM Quick Setup"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConfigurationManagers"
+  }
+
+  resource_prefix {
+    correct = "aws_ssmquicksetup_"
+  }
+
+  provider_package_correct = "ssmquicksetup"
+  doc_prefix               = ["ssmquicksetup_"]
   brand                    = "AWS"
 }
 

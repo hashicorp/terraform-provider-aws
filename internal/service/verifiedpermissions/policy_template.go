@@ -223,8 +223,8 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 	})
 
 	input := &verifiedpermissions.DeletePolicyTemplateInput{
-		PolicyStoreId:    aws.String(state.PolicyStoreID.ValueString()),
-		PolicyTemplateId: aws.String(state.PolicyTemplateID.ValueString()),
+		PolicyStoreId:    state.PolicyStoreID.ValueStringPointer(),
+		PolicyTemplateId: state.PolicyTemplateID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePolicyTemplate(ctx, input)

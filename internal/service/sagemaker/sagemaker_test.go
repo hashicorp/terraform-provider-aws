@@ -128,6 +128,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			acctest.CtDisappears:        testAccWorkteam_disappears,
 			"tags":                      testAccWorkteam_tags,
 			"CognitoConfig":             testAccWorkteam_cognitoConfig,
+			"CognitoOmitWorkforceName":  testAccWorkteam_cognitoOmitWorkforceName,
 			"NotificationConfig":        testAccWorkteam_notificationConfig,
 			"WorkerAccessConfiguration": testAccWorkteam_workerAccessConfiguration,
 			"OidcConfig":                testAccWorkteam_oidcConfig,

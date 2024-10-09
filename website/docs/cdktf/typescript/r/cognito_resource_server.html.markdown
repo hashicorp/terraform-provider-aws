@@ -129,4 +129,4 @@ Using `terraform import`, import `aws_cognito_resource_server` using their User 
 % terraform import aws_cognito_resource_server.example "us-west-2_abc123|https://example.com"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-856d9cab649aaa6104183bfcc330f7d63dfc6e10b98ba89d9fd544f7fa7fecb6 -->
+<!-- cache-key: cdktf-0.20.9 input-856d9cab649aaa6104183bfcc330f7d63dfc6e10b98ba89d9fd544f7fa7fecb6 -->

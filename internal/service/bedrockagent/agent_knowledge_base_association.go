@@ -121,7 +121,12 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 	}
 
 	// Set values for unknowns.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Knowledge Base Association", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
@@ -288,6 +293,12 @@ func (m *agentKnowledgeBaseAssociationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentKnowledgeBaseAssociationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AgentID.ValueString(), m.AgentVersion.ValueString(), m.KnowledgeBaseID.ValueString()}, agentKnowledgeBaseAssociationResourceIDPartCount, false)))
+func (m *agentKnowledgeBaseAssociationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AgentID.ValueString(),
+		m.AgentVersion.ValueString(),
+		m.KnowledgeBaseID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentKnowledgeBaseAssociationResourceIDPartCount, false)
 }

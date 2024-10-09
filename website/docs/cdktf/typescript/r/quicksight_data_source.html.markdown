@@ -56,7 +56,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `awsAccountId` - (Optional, Forces new resource) The ID for the AWS account that the data source is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
-* `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. Currently, only credentials based on user name and password are supported. See [Credentials](#credentials-argument-reference) below for more details.
+* `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
 * `sslProperties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [SSL Properties](#ssl_properties-argument-reference) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -64,9 +64,10 @@ The following arguments are optional:
 
 ### credentials Argument Reference
 
-* `copySourceArn` (Optional, Conflicts with `credentialPair`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
+* `copySourceArn` (Optional, Conflicts with `credentialPair` and `secretArn`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
 When the value is not null, the `credentialPair` from the data source in the ARN is used.
-* `credentialPair` (Optional, Conflicts with `copySourceArn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
+* `credentialPair` (Optional, Conflicts with `copySourceArn` and `secretArn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
+* `secretArn` (Optional, Conflicts with `copySourceArn` and `credentialPair`) - The Amazon Resource Name (ARN) of the secret associated with the data source in Amazon Secrets Manager.
 
 ### credential_pair Argument Reference
 
@@ -268,4 +269,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-732cebf6b94f654b8b8908760776dbdf9c7af425b6776f784b27505e58ab770c -->
+<!-- cache-key: cdktf-0.20.9 input-c03af6ff31ed75df225f166782f3175243a0d74ce90961f6621fe586d1eded0b -->

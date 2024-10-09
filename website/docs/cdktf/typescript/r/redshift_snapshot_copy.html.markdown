@@ -87,4 +87,4 @@ Using `terraform import`, import Redshift Snapshot Copy using the `id`. For exam
 % terraform import aws_redshift_snapshot_copy.example cluster-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1dff7706ee2b35f7be957abe90c7084c9f3efd26e47065e0ac3bdd3ab9677bbf -->
+<!-- cache-key: cdktf-0.20.9 input-1dff7706ee2b35f7be957abe90c7084c9f3efd26e47065e0ac3bdd3ab9677bbf -->

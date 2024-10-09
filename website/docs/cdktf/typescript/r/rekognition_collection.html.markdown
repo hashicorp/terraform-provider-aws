@@ -93,4 +93,4 @@ Using `terraform import`, import Rekognition Collection using the `example_id_ar
 % terraform import aws_rekognition_collection.example collection-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e93746c92e7d7250b0634ef2b685e01c3fb3dbcdb9e923b38199736f6578f3be -->
+<!-- cache-key: cdktf-0.20.9 input-e93746c92e7d7250b0634ef2b685e01c3fb3dbcdb9e923b38199736f6578f3be -->

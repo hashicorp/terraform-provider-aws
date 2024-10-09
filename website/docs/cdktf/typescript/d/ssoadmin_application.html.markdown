@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `portalOptions` - Options for the portal associated with an application. See the `aws_ssoadmin_application` [resource documentation](../r/ssoadmin_application.html.markdown#portal_options-argument-reference). The attributes are the same.
 * `status` - Status of the application.
 
-<!-- cache-key: cdktf-0.20.1 input-0d07cfe6432527b9115d7fc49e2aad9b81dacbb2fee9606812ff5efd006c2f93 -->
+<!-- cache-key: cdktf-0.20.9 input-0d07cfe6432527b9115d7fc49e2aad9b81dacbb2fee9606812ff5efd006c2f93 -->

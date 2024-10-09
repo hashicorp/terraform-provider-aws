@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_updated_date` - The date the Policy Store was last updated.
 * `validation_settings` - Validation settings for the policy store.
 
-<!-- cache-key: cdktf-0.20.1 input-124cfcb9a32266b12f988ce523b4ee94b88beeb1bf65cce66ff1e20154ba2a18 -->
+<!-- cache-key: cdktf-0.20.9 input-124cfcb9a32266b12f988ce523b4ee94b88beeb1bf65cce66ff1e20154ba2a18 -->

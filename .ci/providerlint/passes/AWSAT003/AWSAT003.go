@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -41,8 +41,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		(*ast.BasicLit)(nil),
 	}
 
-	resolver := endpoints.DefaultResolver()
-	partitions := resolver.(endpoints.EnumPartitions).Partitions()
+	partitions := endpoints.DefaultPartitions()
 	var regions []string
 
 	for _, p := range partitions {

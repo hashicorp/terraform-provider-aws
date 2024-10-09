@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Access Policy)
 func newResourceAccessPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAccessPolicy{}, nil
 }
@@ -218,7 +218,7 @@ func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRe
 
 	_, err := conn.DeleteAccessPolicy(ctx, &opensearchserverless.DeleteAccessPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(state.Name.ValueString()),
+		Name:        state.Name.ValueStringPointer(),
 		Type:        awstypes.AccessPolicyType(state.Type.ValueString()),
 	})
 

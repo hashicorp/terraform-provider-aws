@@ -95,4 +95,4 @@ Using `terraform import`, import App Runner default auto scaling configurations 
 % terraform import aws_apprunner_default_auto_scaling_configuration_version.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4c79955898bfd3eaa506b9ca0c64e46b64e2bee7808155f130883a62e8fa702e -->
+<!-- cache-key: cdktf-0.20.9 input-4c79955898bfd3eaa506b9ca0c64e46b64e2bee7808155f130883a62e8fa702e -->

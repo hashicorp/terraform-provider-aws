@@ -52,6 +52,7 @@ import (
 	codebuild_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codebuild"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	codecommit_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecommit"
+	codeconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeconnections"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	codegurureviewer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
@@ -173,6 +174,7 @@ import (
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pcs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcs"
 	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	pinpointsmsvoicev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -222,6 +224,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	ssmquicksetup_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmquicksetup"
 	ssmsap_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmsap"
 	sso_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sso"
 	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
@@ -443,6 +446,10 @@ func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.
 
 func (c *AWSClient) CodeCommitClient(ctx context.Context) *codecommit_sdkv2.Client {
 	return errs.Must(client[*codecommit_sdkv2.Client](ctx, c, names.CodeCommit, make(map[string]any)))
+}
+
+func (c *AWSClient) CodeConnectionsClient(ctx context.Context) *codeconnections_sdkv2.Client {
+	return errs.Must(client[*codeconnections_sdkv2.Client](ctx, c, names.CodeConnections, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler_sdkv2.Client {
@@ -929,6 +936,10 @@ func (c *AWSClient) PinpointClient(ctx context.Context) *pinpoint_sdkv2.Client {
 	return errs.Must(client[*pinpoint_sdkv2.Client](ctx, c, names.Pinpoint, make(map[string]any)))
 }
 
+func (c *AWSClient) PinpointSMSVoiceV2Client(ctx context.Context) *pinpointsmsvoicev2_sdkv2.Client {
+	return errs.Must(client[*pinpointsmsvoicev2_sdkv2.Client](ctx, c, names.PinpointSMSVoiceV2, make(map[string]any)))
+}
+
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
 	return errs.Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes, make(map[string]any)))
 }
@@ -1071,6 +1082,10 @@ func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts_sdkv2.Cl
 
 func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.Client {
 	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents, make(map[string]any)))
+}
+
+func (c *AWSClient) SSMQuickSetupClient(ctx context.Context) *ssmquicksetup_sdkv2.Client {
+	return errs.Must(client[*ssmquicksetup_sdkv2.Client](ctx, c, names.SSMQuickSetup, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMSAPClient(ctx context.Context) *ssmsap_sdkv2.Client {
