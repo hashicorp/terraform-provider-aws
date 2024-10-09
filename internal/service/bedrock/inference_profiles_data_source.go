@@ -6,15 +6,14 @@ package bedrock
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,16 +26,17 @@ type inferenceProfilesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*inferenceProfilesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *inferenceProfilesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_bedrock_inference_profiles"
 }
 
 func (d *inferenceProfilesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARNs: schema.ListAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
+			names.AttrID: framework.IDAttribute(),
+			"inference_profile_summaries": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileSummaryModel](ctx),
+				Computed:   true,
 			},
 		},
 	}
@@ -52,39 +52,45 @@ func (d *inferenceProfilesDataSource) Read(ctx context.Context, request datasour
 	conn := d.Meta().BedrockClient(ctx)
 
 	input := &bedrock.ListInferenceProfilesInput{}
-	inferenceProfiles, err := findInferencesProfiles(ctx, conn, input)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := conn.ListInferenceProfiles(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("listing Bedrock Inference Profiles", err.Error())
 		return
 	}
 
-	arns := tfslices.ApplyToAll(inferenceProfiles, func(v awstypes.InferenceProfileSummary) string {
-		return aws.ToString(v.InferenceProfileArn)
-	})
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	data.ARNs = fwflex.FlattenFrameworkStringValueList(ctx, arns)
+	data.ID = types.StringValue(d.Meta().Region)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func findInferencesProfiles(ctx context.Context, conn *bedrock.Client, input *bedrock.ListInferenceProfilesInput) ([]awstypes.InferenceProfileSummary, error) {
-	var output []awstypes.InferenceProfileSummary
-
-	pages := bedrock.NewListInferenceProfilesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.InferenceProfileSummaries...)
-	}
-
-	return output, nil
+type inferenceProfilesDataSourceModel struct {
+	ID                        types.String                                                  `tfsdk:"id"`
+	InferenceProfileSummaries fwtypes.ListNestedObjectValueOf[inferenceProfileSummaryModel] `tfsdk:"inference_profile_summaries"`
 }
 
-type inferenceProfilesDataSourceModel struct {
-	ARNs types.List `tfsdk:"arns"`
+type inferenceProfileSummaryModel struct {
+	CreatedAt            timetypes.RFC3339                                            `tfsdk:"created_at"`
+	Description          types.String                                                 `tfsdk:"description"`
+	InferenceProfileArn  types.String                                                 `tfsdk:"inference_profile_arn"`
+	InferenceProfileId   types.String                                                 `tfsdk:"inference_profile_id"`
+	InferenceProfileName types.String                                                 `tfsdk:"inference_profile_name"`
+	Models               fwtypes.ListNestedObjectValueOf[inferenceProfilesModelModel] `tfsdk:"models"`
+	Status               types.String                                                 `tfsdk:"status"`
+	Type                 types.String                                                 `tfsdk:"type"`
+	UpdatedAt            timetypes.RFC3339                                            `tfsdk:"updated_at"`
+}
+
+type inferenceProfilesModelModel struct {
+	ModelArn types.String `tfsdk:"model_arn"`
 }
