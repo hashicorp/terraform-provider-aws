@@ -294,8 +294,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.2 h1:t7iUP9+4wdc5lt
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.2/go.mod h1:/niFCtmuQNxqx9v8WAPq5qh7EH25U4BF6tjoyq9bObM=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.2 h1:xJHlK/z+GvDyg00iTPst712qXeuhjTmFlykiNtqntpE=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.2/go.mod h1:e+Y8h3BJX1RxbQKMS2dw4W2fWwYioFjJFvSeuKur4os=
-github.com/aws/aws-sdk-go-v2/service/iot v1.59.1 h1:pXWhrvZ11Zm/8FQ7AmlSY8X5aJhJJgKW4ZL1w9eipxs=
-github.com/aws/aws-sdk-go-v2/service/iot v1.59.1/go.mod h1:RNXDvg/ymXGANAH05onkfoEwix0usnD1DFwPbosyquE=
+github.com/aws/aws-sdk-go-v2/service/iot v1.59.2 h1:/7aj7hTACUzhZrV0xyhkqTTio2B8xlp3Nwjz320be7o=
+github.com/aws/aws-sdk-go-v2/service/iot v1.59.2/go.mod h1:HMcOghRLfP5gKyJKmLYlfR0FEFL/2lqjyUNZ7MtnwLw=
 github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.1 h1:XvVUQkekVUSDbVzSmf7g0Pw9V4bogXcxxKfcemnXhcg=
 github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.1/go.mod h1:h+0ydNBCRDHVZoSF4YwbwM272MjuLxSE5soHk5PHU0Q=
 github.com/aws/aws-sdk-go-v2/service/iotevents v1.27.1 h1:TVJZUHAkp5+vhCjiUDE22y4MiqNHtzcrR9pa6nr12bc=
