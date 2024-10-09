@@ -497,27 +497,6 @@ func (tags KeyValueTags) RemoveDefaultConfig(dc *DefaultConfig) KeyValueTags {
 	return result
 }
 
-// RemoveUniquelyDefaultConfig returns tags unique to the default config. In other words, if a tag is
-// present in both the default config and the tags, it will NOT be removed because it's defined in the
-// tags to avoid perpetual diffs. For example, if the default tags are A, B, C, D and the tags are C, D,
-// E, F, tags should be returned as C, D, E, F. If the default tags are A, B, C, D and the tags are A, B,
-// C, D, E, F, tags should be returned as C, D, E, F.
-func (tags KeyValueTags) RemoveUniquelyDefaultConfig(dc *DefaultConfig) KeyValueTags {
-	if dc == nil || dc.Tags == nil {
-		return tags
-	}
-
-	result := make(KeyValueTags)
-
-	for k, v := range tags {
-		if defaultVal, ok := dc.Tags[k]; !ok || !v.Equal(defaultVal) {
-			result[k] = v
-		}
-	}
-
-	return result
-}
-
 // String returns the default string representation of the KeyValueTags.
 func (tags KeyValueTags) String() string {
 	var builder strings.Builder
@@ -844,7 +823,6 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 
 	configTags := make(map[string]configTag)
 	if configExists {
-		//c := cf.GetAttr(tagsAttr)
 		c, err := GetAnyAttr(cf, tagsAttr, setFunc)
 		if err != nil {
 			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
@@ -862,7 +840,6 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 	}
 
 	if pl := d.GetRawPlan(); !pl.IsNull() && pl.IsKnown() {
-		//c := pl.GetAttr(tagsAttr)
 		c, err := GetAnyAttr(pl, tagsAttr, setFunc)
 		if err != nil {
 			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
@@ -873,7 +850,6 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 	}
 
 	if st := d.GetRawState(); !st.IsNull() && st.IsKnown() {
-		//c := st.GetAttr(tagsAttr)
 		c, err := GetAnyAttr(st, tagsAttr, setFunc)
 		if err != nil {
 			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
