@@ -92,7 +92,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerWorkteam_cognitoOmitWorkforceName(t *testing.T) {
+func testAccWorkteam_cognitoOmitWorkforceName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
