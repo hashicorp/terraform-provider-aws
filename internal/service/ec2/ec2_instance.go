@@ -2377,10 +2377,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 
 					if ebd[names.AttrDeviceName] == aws.ToString(instanceBd.DeviceName) {
 						bd[names.AttrTags] = tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, fmt.Sprintf("ebs_block_device[%s].tags", aws.ToString(instanceBd.DeviceName)), func(attr string, val cty.Value) bool {
-							if val.GetAttr("device_name").AsString() == attr {
-								return true
-							}
-							return false
+							return val.GetAttr(names.AttrDeviceName).AsString() == attr
 						}).Map()
 						break
 					}
