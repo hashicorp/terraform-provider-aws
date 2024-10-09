@@ -7,8 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +20,6 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
-// @Tags
 func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachineRead,
@@ -195,14 +195,13 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 
 func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.StorageVirtualMachineIds = aws.StringSlice([]string{v.(string)})
+		input.StorageVirtualMachineIds = []string{v.(string)}
 	}
 
 	input.Filters = newStorageVirtualMachineFilterList(
@@ -213,17 +212,18 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 		input.Filters = nil
 	}
 
-	svm, err := findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*fsx.StorageVirtualMachine]())
+	svm, err := findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machine: %s", err)
 	}
 
-	d.SetId(aws.StringValue(svm.StorageVirtualMachineId))
+	d.SetId(aws.ToString(svm.StorageVirtualMachineId))
 	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, svm.ActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
-	d.Set(names.AttrARN, svm.ResourceARN)
+	arn := aws.ToString(svm.ResourceARN)
+	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreationTime, svm.CreationTime.Format(time.RFC3339))
 	if err := d.Set(names.AttrEndpoints, flattenSvmEndpoints(svm.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
@@ -240,17 +240,20 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	// SVM tags aren't set in the Describe response.
 	// setTagsOut(ctx, svm.Tags)
 
-	tags := KeyValueTags(ctx, svm.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags, err := listTags(ctx, conn, arn)
 
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for ONTAP Storage Virtual Machine (%s): %s", arn, err)
+	}
+
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags
 }
 
-func flattenLifecycleTransitionReason(rs *fsx.LifecycleTransitionReason) []interface{} {
+func flattenLifecycleTransitionReason(rs *awstypes.LifecycleTransitionReason) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -258,7 +261,7 @@ func flattenLifecycleTransitionReason(rs *fsx.LifecycleTransitionReason) []inter
 	m := make(map[string]interface{})
 
 	if rs.Message != nil {
-		m[names.AttrMessage] = aws.StringValue(rs.Message)
+		m[names.AttrMessage] = aws.ToString(rs.Message)
 	}
 
 	return []interface{}{m}

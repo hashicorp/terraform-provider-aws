@@ -39,6 +39,8 @@ func testAccFirewallConfigDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccFirewallConfigConfig_basic(rName), `
 data "aws_route53_resolver_firewall_config" "test" {
   resource_id = aws_vpc.test.id
+
+  depends_on = [aws_route53_resolver_firewall_config.test]
 }
 `)
 }

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedulingPolicy1 batch.SchedulingPolicyDetail
+	var schedulingPolicy1 awstypes.SchedulingPolicyDetail
 	resourceName := "aws_batch_scheduling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -69,7 +69,7 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 
 func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedulingPolicy1 batch.SchedulingPolicyDetail
+	var schedulingPolicy1 awstypes.SchedulingPolicyDetail
 	resourceName := "aws_batch_scheduling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -91,18 +91,14 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, v *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
+func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, v *awstypes.SchedulingPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Batch Scheduling Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 		output, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -122,7 +118,7 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 			if rs.Type != "aws_batch_scheduling_policy" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 			_, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -136,6 +132,7 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 
 			return fmt.Errorf("Batch Scheduling Policy %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

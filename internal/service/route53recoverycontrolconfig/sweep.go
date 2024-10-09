@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -50,33 +50,30 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.Route53RecoveryControlConfigConn(ctx)
+	conn := client.Route53RecoveryControlConfigClient(ctx)
 	input := &r53rcc.ListClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := r53rcc.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route53 Recovery Control Config Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err)
 		}
 
 		for _, v := range page.Clusters {
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ClusterArn))
+			d.SetId(aws.ToString(v.ClusterArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Recovery Control Config Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -94,14 +91,22 @@ func sweepControlPanels(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.Route53RecoveryControlConfigConn(ctx)
+	conn := client.Route53RecoveryControlConfigClient(ctx)
 	input := &r53rcc.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := r53rcc.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route53 Recovery Control Config Control Panel sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err))
 		}
 
 		for _, v := range page.Clusters {
@@ -109,45 +114,31 @@ func sweepControlPanels(region string) error {
 				ClusterArn: v.ClusterArn,
 			}
 
-			err := conn.ListControlPanelsPagesWithContext(ctx, input, func(page *r53rcc.ListControlPanelsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := r53rcc.NewListControlPanelsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Control Panels (%s): %w", region, err))
 				}
 
 				for _, v := range page.ControlPanels {
-					if aws.BoolValue(v.DefaultControlPanel) {
+					if aws.ToBool(v.DefaultControlPanel) {
 						continue
 					}
 
-					r := ResourceControlPanel()
+					r := resourceControlPanel()
 					d := r.Data(nil)
-					d.SetId(aws.StringValue(v.ControlPanelArn))
+					d.SetId(aws.ToString(v.ControlPanelArn))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Control Panels (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Recovery Control Config Control Panel sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -165,14 +156,22 @@ func sweepRoutingControls(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.Route53RecoveryControlConfigConn(ctx)
+	conn := client.Route53RecoveryControlConfigClient(ctx)
 	input := &r53rcc.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := r53rcc.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route53 Recovery Control Config Routing Control sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err))
 		}
 
 		for _, v := range page.Clusters {
@@ -180,9 +179,16 @@ func sweepRoutingControls(region string) error {
 				ClusterArn: v.ClusterArn,
 			}
 
-			err := conn.ListControlPanelsPagesWithContext(ctx, input, func(page *r53rcc.ListControlPanelsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := r53rcc.NewListControlPanelsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Control Panels (%s): %w", region, err))
 				}
 
 				for _, v := range page.ControlPanels {
@@ -190,53 +196,29 @@ func sweepRoutingControls(region string) error {
 						ControlPanelArn: v.ControlPanelArn,
 					}
 
-					err := conn.ListRoutingControlsPagesWithContext(ctx, input, func(page *r53rcc.ListRoutingControlsOutput, lastPage bool) bool {
-						if page == nil {
-							return !lastPage
+					pages := r53rcc.NewListRoutingControlsPaginator(conn, input)
+					for pages.HasMorePages() {
+						page, err := pages.NextPage(ctx)
+
+						if awsv2.SkipSweepError(err) {
+							continue
+						}
+
+						if err != nil {
+							sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Routing Controls (%s): %w", region, err))
 						}
 
 						for _, v := range page.RoutingControls {
-							r := ResourceRoutingControl()
+							r := resourceRoutingControl()
 							d := r.Data(nil)
-							d.SetId(aws.StringValue(v.RoutingControlArn))
+							d.SetId(aws.ToString(v.RoutingControlArn))
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 						}
-
-						return !lastPage
-					})
-
-					if awsv1.SkipSweepError(err) {
-						continue
-					}
-
-					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Routing Controls (%s): %w", region, err))
 					}
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Control Panels (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Recovery Control Config Routing Control sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -254,14 +236,22 @@ func sweepSafetyRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.Route53RecoveryControlConfigConn(ctx)
+	conn := client.Route53RecoveryControlConfigClient(ctx)
 	input := &r53rcc.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := r53rcc.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route53 Recovery Control Config Safety Rule sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err))
 		}
 
 		for _, v := range page.Clusters {
@@ -269,9 +259,16 @@ func sweepSafetyRules(region string) error {
 				ClusterArn: v.ClusterArn,
 			}
 
-			err := conn.ListControlPanelsPagesWithContext(ctx, input, func(page *r53rcc.ListControlPanelsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := r53rcc.NewListControlPanelsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Control Panels (%s): %w", region, err))
 				}
 
 				for _, v := range page.ControlPanels {
@@ -279,59 +276,35 @@ func sweepSafetyRules(region string) error {
 						ControlPanelArn: v.ControlPanelArn,
 					}
 
-					err := conn.ListSafetyRulesPagesWithContext(ctx, input, func(page *r53rcc.ListSafetyRulesOutput, lastPage bool) bool {
-						if page == nil {
-							return !lastPage
+					pages := r53rcc.NewListSafetyRulesPaginator(conn, input)
+					for pages.HasMorePages() {
+						page, err := pages.NextPage(ctx)
+
+						if awsv2.SkipSweepError(err) {
+							continue
+						}
+
+						if err != nil {
+							sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Safety Rules (%s): %w", region, err))
 						}
 
 						for _, v := range page.SafetyRules {
-							r := ResourceSafetyRule()
+							r := resourceSafetyRule()
 							d := r.Data(nil)
 							if v.ASSERTION != nil {
-								d.SetId(aws.StringValue(v.ASSERTION.SafetyRuleArn))
+								d.SetId(aws.ToString(v.ASSERTION.SafetyRuleArn))
 							} else if v.GATING != nil {
-								d.SetId(aws.StringValue(v.GATING.SafetyRuleArn))
+								d.SetId(aws.ToString(v.GATING.SafetyRuleArn))
 							} else {
 								continue
 							}
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 						}
-
-						return !lastPage
-					})
-
-					if awsv1.SkipSweepError(err) {
-						continue
-					}
-
-					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Safety Rules (%s): %w", region, err))
 					}
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Control Panels (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Recovery Control Config Safety Rule sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Recovery Control Config Clusters (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

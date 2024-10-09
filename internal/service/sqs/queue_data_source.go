@@ -23,6 +23,7 @@ import (
 )
 
 // @SDKDataSource("aws_sqs_queue")
+// @Tags(identifierAttribute="url")
 func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
@@ -48,7 +49,6 @@ func dataSourceQueue() *schema.Resource {
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	urlOutput, err := findQueueURLByName(ctx, conn, name)
@@ -68,8 +68,6 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, attributesOutput)
 	d.Set(names.AttrURL, queueURL)
 
-	tags, err := listTags(ctx, conn, queueURL)
-
 	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		// Some partitions may not support tagging, giving error
 		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
@@ -78,10 +76,6 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for SQS Queue (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

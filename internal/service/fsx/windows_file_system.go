@@ -11,15 +11,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -92,16 +94,16 @@ func resourceWindowsFileSystem() *schema.Resource {
 							},
 						},
 						"file_access_audit_log_level": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      fsx.WindowsAccessAuditLogLevelDisabled,
-							ValidateFunc: validation.StringInSlice(fsx.WindowsAccessAuditLogLevel_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.WindowsAccessAuditLogLevelDisabled,
+							ValidateDiagFunc: enum.Validate[awstypes.WindowsAccessAuditLogLevel](),
 						},
 						"file_share_access_audit_log_level": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      fsx.WindowsAccessAuditLogLevelDisabled,
-							ValidateFunc: validation.StringInSlice(fsx.WindowsAccessAuditLogLevel_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.WindowsAccessAuditLogLevelDisabled,
+							ValidateDiagFunc: enum.Validate[awstypes.WindowsAccessAuditLogLevel](),
 						},
 					},
 				},
@@ -133,11 +135,11 @@ func resourceWindowsFileSystem() *schema.Resource {
 				),
 			},
 			"deployment_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      fsx.WindowsDeploymentTypeSingleAz1,
-				ValidateFunc: validation.StringInSlice(fsx.WindowsDeploymentType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.WindowsDeploymentTypeSingleAz1,
+				ValidateDiagFunc: enum.Validate[awstypes.WindowsDeploymentType](),
 			},
 			"disk_iops_configuration": {
 				Type:     schema.TypeList,
@@ -153,10 +155,10 @@ func resourceWindowsFileSystem() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 350000),
 						},
 						names.AttrMode: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      fsx.DiskIopsConfigurationModeAutomatic,
-							ValidateFunc: validation.StringInSlice(fsx.DiskIopsConfigurationMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.DiskIopsConfigurationModeAutomatic,
+							ValidateDiagFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
 						},
 					},
 				},
@@ -165,6 +167,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"final_backup_tags": tftags.TagsSchema(),
 			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -260,11 +263,11 @@ func resourceWindowsFileSystem() *schema.Resource {
 				ValidateFunc: validation.IntBetween(32, 65536),
 			},
 			names.AttrStorageType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      fsx.StorageTypeSsd,
-				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.StorageTypeSsd,
+				ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
 			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
@@ -301,28 +304,28 @@ func resourceWindowsFileSystem() *schema.Resource {
 
 func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	inputC := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
-		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
-		SubnetIds:          flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
+		FileSystemType:     awstypes.FileSystemTypeWindows,
+		StorageCapacity:    aws.Int32(int32(d.Get("storage_capacity").(int))),
+		SubnetIds:          flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:               getTagsIn(ctx),
-		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
-			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
+		WindowsConfiguration: &awstypes.CreateFileSystemWindowsConfiguration{
+			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
-			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
+			ThroughputCapacity:           aws.Int32(int32(d.Get("throughput_capacity").(int))),
 		},
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		SubnetIds:          flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
+		SubnetIds:          flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:               getTagsIn(ctx),
-		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
-			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
+		WindowsConfiguration: &awstypes.CreateFileSystemWindowsConfiguration{
+			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
-			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
+			ThroughputCapacity:           aws.Int32(int32(d.Get("throughput_capacity").(int))),
 		},
 	}
 
@@ -332,8 +335,8 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
-		inputC.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
-		inputB.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
+		inputC.WindowsConfiguration.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputB.WindowsConfiguration.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("audit_log_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -352,8 +355,8 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("deployment_type"); ok {
-		inputC.WindowsConfiguration.DeploymentType = aws.String(v.(string))
-		inputB.WindowsConfiguration.DeploymentType = aws.String(v.(string))
+		inputC.WindowsConfiguration.DeploymentType = awstypes.WindowsDeploymentType(v.(string))
+		inputB.WindowsConfiguration.DeploymentType = awstypes.WindowsDeploymentType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -367,8 +370,8 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		inputC.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-		inputB.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		inputC.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputB.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("self_managed_active_directory"); ok {
@@ -377,8 +380,8 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk(names.AttrStorageType); ok {
-		inputC.StorageType = aws.String(v.(string))
-		inputB.StorageType = aws.String(v.(string))
+		inputC.StorageType = awstypes.StorageType(v.(string))
+		inputB.StorageType = awstypes.StorageType(v.(string))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -390,21 +393,21 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		backupID := v.(string)
 		inputB.BackupId = aws.String(backupID)
 
-		output, err := conn.CreateFileSystemFromBackupWithContext(ctx, inputB)
+		output, err := conn.CreateFileSystemFromBackup(ctx, inputB)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating FSx for Windows File Server File System from backup (%s): %s", backupID, err)
 		}
 
-		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
+		d.SetId(aws.ToString(output.FileSystem.FileSystemId))
 	} else {
-		output, err := conn.CreateFileSystemWithContext(ctx, inputC)
+		output, err := conn.CreateFileSystem(ctx, inputC)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating FSx for Windows File Server File System: %s", err)
 		}
 
-		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
+		d.SetId(aws.ToString(output.FileSystem.FileSystemId))
 	}
 
 	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -416,7 +419,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	filesystem, err := findWindowsFileSystemByID(ctx, conn, d.Id())
 
@@ -433,7 +436,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	windowsConfig := filesystem.WindowsConfiguration
 
 	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
-	d.Set("aliases", aws.StringValueSlice(expandAliasValues(windowsConfig.Aliases)))
+	d.Set("aliases", expandAliasValues(windowsConfig.Aliases))
 	d.Set(names.AttrARN, filesystem.ResourceARN)
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
@@ -447,7 +450,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
-	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
+	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
 	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
@@ -457,7 +460,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
 	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
 	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", windowsConfig.WeeklyMaintenanceStartTime)
@@ -469,7 +472,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	if d.HasChange("aliases") {
 		o, n := d.GetChange("aliases")
@@ -478,35 +481,35 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(add) > 0 {
 			input := &fsx.AssociateFileSystemAliasesInput{
-				Aliases:      aws.StringSlice(add),
+				Aliases:      add,
 				FileSystemId: aws.String(d.Id()),
 			}
 
-			_, err := conn.AssociateFileSystemAliasesWithContext(ctx, input)
+			_, err := conn.AssociateFileSystemAliases(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "associating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
 			}
 
-			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, err)
+			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), awstypes.AdministrativeActionTypeFileSystemAliasAssociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), awstypes.AdministrativeActionTypeFileSystemAliasAssociation, err)
 			}
 		}
 
 		if len(del) > 0 {
 			input := &fsx.DisassociateFileSystemAliasesInput{
-				Aliases:      aws.StringSlice(del),
+				Aliases:      del,
 				FileSystemId: aws.String(d.Id()),
 			}
 
-			_, err := conn.DisassociateFileSystemAliasesWithContext(ctx, input)
+			_, err := conn.DisassociateFileSystemAliases(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disassociating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
 			}
 
-			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, err)
+			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), awstypes.AdministrativeActionTypeFileSystemAliasDisassociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), awstypes.AdministrativeActionTypeFileSystemAliasDisassociation, err)
 			}
 		}
 	}
@@ -519,13 +522,13 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			input := &fsx.UpdateFileSystemInput{
 				ClientRequestToken: aws.String(id.UniqueId()),
 				FileSystemId:       aws.String(d.Id()),
-				WindowsConfiguration: &fsx.UpdateFileSystemWindowsConfiguration{
-					ThroughputCapacity: aws.Int64(int64(n)),
+				WindowsConfiguration: &awstypes.UpdateFileSystemWindowsConfiguration{
+					ThroughputCapacity: aws.Int32(int32(n)),
 				},
 			}
 
 			startTime := time.Now()
-			_, err := conn.UpdateFileSystemWithContext(ctx, input)
+			_, err := conn.UpdateFileSystem(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s) ThroughputCapacity: %s", d.Id(), err)
@@ -535,17 +538,23 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) update: %s", d.Id(), err)
 			}
 
-			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
+			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, err)
 			}
 		}
 	}
 
-	if d.HasChangesExcept("aliases", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		"aliases",
+		"final_backup_tags",
+		"skip_final_backup",
+		names.AttrTags,
+		names.AttrTagsAll,
+	) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
-			WindowsConfiguration: &fsx.UpdateFileSystemWindowsConfiguration{},
+			WindowsConfiguration: &awstypes.UpdateFileSystemWindowsConfiguration{},
 		}
 
 		if d.HasChange("audit_log_configuration") {
@@ -553,7 +562,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
-			input.WindowsConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
+			input.WindowsConfiguration.AutomaticBackupRetentionDays = aws.Int32(int32(d.Get("automatic_backup_retention_days").(int)))
 		}
 
 		if d.HasChange("daily_automatic_backup_start_time") {
@@ -569,11 +578,11 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+			input.StorageCapacity = aws.Int32(int32(d.Get("storage_capacity").(int)))
 		}
 
 		if d.HasChange("throughput_capacity") {
-			input.WindowsConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
+			input.WindowsConfiguration.ThroughputCapacity = aws.Int32(int32(d.Get("throughput_capacity").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
@@ -581,7 +590,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		startTime := time.Now()
-		_, err := conn.UpdateFileSystemWithContext(ctx, input)
+		_, err := conn.UpdateFileSystem(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s): %s", d.Id(), err)
@@ -591,8 +600,8 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) update: %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
+		if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, err)
 		}
 	}
 
@@ -601,20 +610,24 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.DeleteFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemId:       aws.String(d.Id()),
-		WindowsConfiguration: &fsx.DeleteFileSystemWindowsConfiguration{
+		WindowsConfiguration: &awstypes.DeleteFileSystemWindowsConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
 		},
 	}
 
-	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())
-	_, err := conn.DeleteFileSystemWithContext(ctx, input)
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.WindowsConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+	}
 
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
+	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())
+	_, err := conn.DeleteFileSystem(ctx, input)
+
+	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags
 	}
 
@@ -629,7 +642,7 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandAliasValues(aliases []*fsx.Alias) []*string {
+func expandAliasValues(aliases []awstypes.Alias) []*string {
 	var alternateDNSNames []*string
 
 	for _, alias := range aliases {
@@ -640,15 +653,15 @@ func expandAliasValues(aliases []*fsx.Alias) []*string {
 	return alternateDNSNames
 }
 
-func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.SelfManagedActiveDirectoryConfiguration {
+func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *awstypes.SelfManagedActiveDirectoryConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	data := l[0].(map[string]interface{})
-	req := &fsx.SelfManagedActiveDirectoryConfiguration{
+	req := &awstypes.SelfManagedActiveDirectoryConfiguration{
 		DomainName: aws.String(data[names.AttrDomainName].(string)),
-		DnsIps:     flex.ExpandStringSet(data["dns_ips"].(*schema.Set)),
+		DnsIps:     flex.ExpandStringValueSet(data["dns_ips"].(*schema.Set)),
 		Password:   aws.String(data[names.AttrPassword].(string)),
 		UserName:   aws.String(data[names.AttrUsername].(string)),
 	}
@@ -664,16 +677,16 @@ func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.S
 	return req
 }
 
-func expandSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fsx.SelfManagedActiveDirectoryConfigurationUpdates {
+func expandSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *awstypes.SelfManagedActiveDirectoryConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	data := l[0].(map[string]interface{})
-	req := &fsx.SelfManagedActiveDirectoryConfigurationUpdates{}
+	req := &awstypes.SelfManagedActiveDirectoryConfigurationUpdates{}
 
 	if v, ok := data["dns_ips"].(*schema.Set); ok && v.Len() > 0 {
-		req.DnsIps = flex.ExpandStringSet(v)
+		req.DnsIps = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := data[names.AttrPassword].(string); ok && v != "" {
@@ -687,7 +700,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fsx.S
 	return req
 }
 
-func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adopts *fsx.SelfManagedActiveDirectoryAttributes) []map[string]interface{} {
+func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adopts *awstypes.SelfManagedActiveDirectoryAttributes) []map[string]interface{} {
 	if adopts == nil {
 		return []map[string]interface{}{}
 	}
@@ -699,18 +712,18 @@ func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adop
 	// See also: flattenEmrKerberosAttributes
 
 	m := map[string]interface{}{
-		"dns_ips":                                aws.StringValueSlice(adopts.DnsIps),
-		names.AttrDomainName:                     aws.StringValue(adopts.DomainName),
-		"file_system_administrators_group":       aws.StringValue(adopts.FileSystemAdministratorsGroup),
-		"organizational_unit_distinguished_name": aws.StringValue(adopts.OrganizationalUnitDistinguishedName),
+		"dns_ips":                                adopts.DnsIps,
+		names.AttrDomainName:                     aws.ToString(adopts.DomainName),
+		"file_system_administrators_group":       aws.ToString(adopts.FileSystemAdministratorsGroup),
+		"organizational_unit_distinguished_name": aws.ToString(adopts.OrganizationalUnitDistinguishedName),
 		names.AttrPassword:                       d.Get("self_managed_active_directory.0.password").(string),
-		names.AttrUsername:                       aws.StringValue(adopts.UserName),
+		names.AttrUsername:                       aws.ToString(adopts.UserName),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAuditLogCreateConfiguration {
+func expandWindowsAuditLogCreateConfiguration(l []interface{}) *awstypes.WindowsAuditLogCreateConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -723,13 +736,13 @@ func expandWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAudit
 		return nil
 	}
 
-	req := &fsx.WindowsAuditLogCreateConfiguration{
-		FileAccessAuditLogLevel:      aws.String(fileAccessAuditLogLevel),
-		FileShareAccessAuditLogLevel: aws.String(fileShareAccessAuditLogLevel),
+	req := &awstypes.WindowsAuditLogCreateConfiguration{
+		FileAccessAuditLogLevel:      awstypes.WindowsAccessAuditLogLevel(fileAccessAuditLogLevel),
+		FileShareAccessAuditLogLevel: awstypes.WindowsAccessAuditLogLevel(fileShareAccessAuditLogLevel),
 	}
 
 	// audit_log_destination cannot be included in the request if the log levels are disabled
-	if fileAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled && fileShareAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled {
+	if fileAccessAuditLogLevel == string(awstypes.WindowsAccessAuditLogLevelDisabled) && fileShareAccessAuditLogLevel == string(awstypes.WindowsAccessAuditLogLevelDisabled) {
 		return req
 	}
 
@@ -740,43 +753,43 @@ func expandWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAudit
 	return req
 }
 
-func flattenWindowsAuditLogConfiguration(adopts *fsx.WindowsAuditLogConfiguration) []map[string]interface{} {
+func flattenWindowsAuditLogConfiguration(adopts *awstypes.WindowsAuditLogConfiguration) []map[string]interface{} {
 	if adopts == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"file_access_audit_log_level":       aws.StringValue(adopts.FileAccessAuditLogLevel),
-		"file_share_access_audit_log_level": aws.StringValue(adopts.FileShareAccessAuditLogLevel),
+		"file_access_audit_log_level":       string(adopts.FileAccessAuditLogLevel),
+		"file_share_access_audit_log_level": string(adopts.FileShareAccessAuditLogLevel),
 	}
 
 	if adopts.AuditLogDestination != nil {
-		m["audit_log_destination"] = aws.StringValue(adopts.AuditLogDestination)
+		m["audit_log_destination"] = aws.ToString(adopts.AuditLogDestination)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandWindowsDiskIopsConfiguration(l []interface{}) *fsx.DiskIopsConfiguration {
+func expandWindowsDiskIopsConfiguration(l []interface{}) *awstypes.DiskIopsConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	data := l[0].(map[string]interface{})
-	req := &fsx.DiskIopsConfiguration{}
+	req := &awstypes.DiskIopsConfiguration{}
 
 	if v, ok := data[names.AttrIOPS].(int); ok {
 		req.Iops = aws.Int64(int64(v))
 	}
 
 	if v, ok := data[names.AttrMode].(string); ok && v != "" {
-		req.Mode = aws.String(v)
+		req.Mode = awstypes.DiskIopsConfigurationMode(v)
 	}
 
 	return req
 }
 
-func flattenWindowsDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
+func flattenWindowsDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -784,11 +797,9 @@ func flattenWindowsDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interf
 	m := map[string]interface{}{}
 
 	if rs.Iops != nil {
-		m[names.AttrIOPS] = aws.Int64Value(rs.Iops)
+		m[names.AttrIOPS] = aws.ToInt64(rs.Iops)
 	}
-	if rs.Mode != nil {
-		m[names.AttrMode] = aws.StringValue(rs.Mode)
-	}
+	m[names.AttrMode] = string(rs.Mode)
 
 	return []interface{}{m}
 }
@@ -808,8 +819,8 @@ func windowsAuditLogStateFunc(v interface{}) string {
 	return value
 }
 
-func findWindowsFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
-	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeWindows)
+func findWindowsFileSystemByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.FileSystem, error) {
+	output, err := findFileSystemByIDAndType(ctx, conn, id, awstypes.FileSystemTypeWindows)
 
 	if err != nil {
 		return nil, err

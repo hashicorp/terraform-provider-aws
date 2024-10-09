@@ -1,14 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ec2_test
+package ec2
 
 import (
 	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,11 +58,10 @@ func TestInstanceProfileARNToName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfec2.InstanceProfileARNToName(testCase.InputARN)
+			got, err := instanceProfileARNToName(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())

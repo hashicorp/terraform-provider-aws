@@ -73,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
     * `iot:Data-ATS`: `IDENTIFIER-ats.iot.REGION.amazonaws.com`
     * `iot:Jobs`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`
 
-<!-- cache-key: cdktf-0.20.1 input-56c8383801b044a75be3c89aa515472690d24408a38b21081a32c8735b9a3414 -->
+<!-- cache-key: cdktf-0.20.9 input-56c8383801b044a75be3c89aa515472690d24408a38b21081a32c8735b9a3414 -->

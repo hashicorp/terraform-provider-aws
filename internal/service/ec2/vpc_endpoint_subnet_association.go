@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_subnet_association")
-func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_subnet_association", name="VPC Endpoint Subnet Association")
+func resourceVPCEndpointSubnetAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSubnetAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSubnetAssociationRead,
@@ -90,9 +90,9 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Subnet Association (%s): %s", id, err)
 	}
 
-	d.SetId(VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
+	d.SetId(vpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
 
-	_, err = waitVPCEndpointAvailableV2(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
+	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
@@ -110,7 +110,7 @@ func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.Res
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
-	err := findVPCEndpointSubnetAssociationExistsV2(ctx, conn, endpointID, subnetID)
+	err := findVPCEndpointSubnetAssociationExists(ctx, conn, endpointID, subnetID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Subnet Association (%s) not found, removing from state", id)
@@ -150,7 +150,7 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "deleting VPC Endpoint Subnet Association (%s): %s", id, err)
 	}
 
-	_, err = waitVPCEndpointAvailableV2(ctx, conn, endpointID, d.Timeout(schema.TimeoutDelete))
+	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
@@ -169,7 +169,7 @@ func resourceVPCEndpointSubnetAssociationImport(ctx context.Context, d *schema.R
 	subnetID := parts[1]
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Subnet (%s) Association", endpointID, subnetID)
 
-	d.SetId(VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
+	d.SetId(vpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
 	d.Set(names.AttrVPCEndpointID, endpointID)
 	d.Set(names.AttrSubnetID, subnetID)
 

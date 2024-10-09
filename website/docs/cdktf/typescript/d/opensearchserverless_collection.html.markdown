@@ -52,10 +52,12 @@ This data source exports the following attributes in addition to the arguments a
 * `createdDate` - Date the Collection was created.
 * `dashboardEndpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `description` - Description of the collection.
+* `failureCode` - A failure code associated with the collection.
+* `failureReason` - A failure reason associated with the collection.
 * `kmsKeyArn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `lastModifiedDate` - Date the Collection was last modified.
 * `standbyReplicas` - Indicates whether standby replicas should be used for a collection.
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.
 
-<!-- cache-key: cdktf-0.20.1 input-79e6c503e86fe55805958b61d9a2c695b0a69c2339520c66ae6030c95e6cff54 -->
+<!-- cache-key: cdktf-0.20.9 input-773c4f4c82e5aba517ec43bce8ca59c03354cd73fbc2f9496ce75f162ef2ac0f -->

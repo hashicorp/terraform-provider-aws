@@ -106,4 +106,4 @@ Using `terraform import`, import Lake Formation Data Cells Filter using the `id`
 % terraform import aws_lakeformation_data_cells_filter.example database_name,name,table_catalog_id,table_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-90a60f5519ebcb7059d4d20667167c76c44a101f6078b3622f7b7f6e54918452 -->
+<!-- cache-key: cdktf-0.20.9 input-90a60f5519ebcb7059d4d20667167c76c44a101f6078b3622f7b7f6e54918452 -->

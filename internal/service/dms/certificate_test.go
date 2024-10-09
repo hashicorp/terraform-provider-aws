@@ -147,7 +147,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 			_, err := tfdms.FindCertificateByID(ctx, conn, rs.Primary.ID)
 
@@ -173,7 +173,7 @@ func testAccCertificateExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindCertificateByID(ctx, conn, rs.Primary.ID)
 

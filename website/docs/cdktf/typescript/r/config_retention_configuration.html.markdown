@@ -79,4 +79,4 @@ Using `terraform import`, import the AWS Config retention configuration using th
 % terraform import aws_config_retention_configuration.example default
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-88006c84e252788c1b1b45524f16429e26ae45e417e3388435149648cc3849f4 -->
+<!-- cache-key: cdktf-0.20.9 input-88006c84e252788c1b1b45524f16429e26ae45e417e3388435149648cc3849f4 -->

@@ -115,7 +115,7 @@ func TestAccELBBackendServerPolicy_update(t *testing.T) {
 
 func testAccCheckBackendServerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_backend_policy" {
@@ -123,7 +123,6 @@ func testAccCheckBackendServerPolicyDestroy(ctx context.Context) resource.TestCh
 			}
 
 			lbName, instancePort, err := tfelb.BackendServerPolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -152,17 +151,12 @@ func testAccCheckBackendServerPolicyExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic Backend Server Policy ID is set")
-		}
-
 		lbName, instancePort, err := tfelb.BackendServerPolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
 
@@ -189,6 +183,10 @@ resource "aws_iam_server_certificate" "test" {
   name             = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_load_balancer_policy" "test0" {

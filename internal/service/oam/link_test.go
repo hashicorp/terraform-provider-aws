@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerLink_basic(t *testing.T) {
+func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -67,7 +67,7 @@ func TestAccObservabilityAccessManagerLink_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAccessManagerLink_disappears(t *testing.T) {
+func testAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -100,7 +100,7 @@ func TestAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
+func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -159,7 +159,7 @@ func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
+func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -209,6 +209,110 @@ func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var link oam.GetLinkOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_oam_link.test"
+	filter1 := "LogGroupName LIKE 'aws/lambda/%' OR LogGroupName LIKE 'AWSLogs%'"
+	filter2 := "LogGroupName NOT IN ('Private-Log-Group', 'Private-Log-Group-2')"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinkConfig_logGroupConfiguration(rName, filter1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkExists(ctx, resourceName, &link),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.0.filter", filter1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLinkConfig_logGroupConfiguration(rName, filter2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkExists(ctx, resourceName, &link),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.0.filter", filter2),
+				),
+			},
+		},
+	})
+}
+
+func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var link oam.GetLinkOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_oam_link.test"
+	filter1 := "Namespace IN ('AWS/EC2', 'AWS/ELB', 'AWS/S3')"
+	filter2 := "Namespace NOT LIKE 'AWS/%'"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinkConfig_metricConfiguration(rName, filter1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkExists(ctx, resourceName, &link),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.0.filter", filter1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLinkConfig_metricConfiguration(rName, filter2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkExists(ctx, resourceName, &link),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.0.filter", filter2),
+				),
 			},
 		},
 	})
@@ -483,4 +587,118 @@ resource "aws_oam_link" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccLinkConfig_logGroupConfiguration(rName, filter string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "source" {}
+data "aws_partition" "source" {}
+
+data "aws_caller_identity" "monitoring" {
+  provider = "awsalternate"
+}
+data "aws_partition" "monitoring" {
+  provider = "awsalternate"
+}
+
+resource "aws_oam_sink" "test" {
+  provider = "awsalternate"
+
+  name = %[1]q
+}
+
+resource "aws_oam_sink_policy" "test" {
+  provider = "awsalternate"
+
+  sink_identifier = aws_oam_sink.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["oam:CreateLink", "oam:UpdateLink"]
+        Effect   = "Allow"
+        Resource = "*"
+        Principal = {
+          "AWS" = "arn:${data.aws_partition.source.partition}:iam::${data.aws_caller_identity.source.account_id}:root"
+        }
+        Condition = {
+          "ForAnyValue:StringEquals" = {
+            "oam:ResourceTypes" = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_oam_link" "test" {
+  label_template = "$AccountName"
+  link_configuration {
+    log_group_configuration {
+      filter = %[2]q
+    }
+  }
+  resource_types  = ["AWS::Logs::LogGroup"]
+  sink_identifier = aws_oam_sink.test.id
+}
+`, rName, filter))
+}
+
+func testAccLinkConfig_metricConfiguration(rName, filter string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "source" {}
+data "aws_partition" "source" {}
+
+data "aws_caller_identity" "monitoring" {
+  provider = "awsalternate"
+}
+data "aws_partition" "monitoring" {
+  provider = "awsalternate"
+}
+
+resource "aws_oam_sink" "test" {
+  provider = "awsalternate"
+
+  name = %[1]q
+}
+
+resource "aws_oam_sink_policy" "test" {
+  provider = "awsalternate"
+
+  sink_identifier = aws_oam_sink.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["oam:CreateLink", "oam:UpdateLink"]
+        Effect   = "Allow"
+        Resource = "*"
+        Principal = {
+          "AWS" = "arn:${data.aws_partition.source.partition}:iam::${data.aws_caller_identity.source.account_id}:root"
+        }
+        Condition = {
+          "ForAnyValue:StringEquals" = {
+            "oam:ResourceTypes" = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_oam_link" "test" {
+  label_template = "$AccountName"
+  link_configuration {
+    metric_configuration {
+      filter = %[2]q
+    }
+  }
+  resource_types  = ["AWS::CloudWatch::Metric"]
+  sink_identifier = aws_oam_sink.test.id
+}
+`, rName, filter))
 }

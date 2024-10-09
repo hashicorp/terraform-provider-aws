@@ -19,7 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_ecr_repository", name="Repository")
-// @Tags(identifierAttribute="arn"))
+// @Tags(identifierAttribute="arn")
 func dataSourceRepository() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryRead,

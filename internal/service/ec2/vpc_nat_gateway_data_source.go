@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_nat_gateway")
-func DataSourceNATGateway() *schema.Resource {
+// @SDKDataSource("aws_nat_gateway", name="NAT Gateway")
+func dataSourceNATGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNATGatewayRead,
 
@@ -93,7 +93,7 @@ func DataSourceNATGateway() *schema.Resource {
 }
 
 func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	var diags diag.Diagnostics
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -109,7 +109,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.NatGatewayIds = aws.StringSlice([]string{v.(string)})
+		input.NatGatewayIds = []string{v.(string)}
 	}
 
 	if tags, ok := d.GetOk(names.AttrTags); ok {
@@ -126,13 +126,13 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.Filter = nil
 	}
 
-	ngw, err := FindNATGateway(ctx, conn, input)
+	ngw, err := findNATGateway(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 NAT Gateway", err))
 	}
 
-	d.SetId(aws.StringValue(ngw.NatGatewayId))
+	d.SetId(aws.ToString(ngw.NatGatewayId))
 	d.Set("connectivity_type", ngw.ConnectivityType)
 	d.Set(names.AttrState, ngw.State)
 	d.Set(names.AttrSubnetID, ngw.SubnetId)
@@ -142,17 +142,17 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	for _, address := range ngw.NatGatewayAddresses {
 		// Length check guarantees the attributes are always set (#30865).
-		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ngw.NatGatewayAddresses) == 1 {
+		if isPrimary := aws.ToBool(address.IsPrimary); isPrimary || len(ngw.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set(names.AttrAssociationID, address.AssociationId)
 			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
 		} else if !isPrimary {
-			if allocationID := aws.StringValue(address.AllocationId); allocationID != "" {
+			if allocationID := aws.ToString(address.AllocationId); allocationID != "" {
 				secondaryAllocationIDs = append(secondaryAllocationIDs, allocationID)
 			}
-			if privateIP := aws.StringValue(address.PrivateIp); privateIP != "" {
+			if privateIP := aws.ToString(address.PrivateIp); privateIP != "" {
 				secondaryPrivateIPAddresses = append(secondaryPrivateIPAddresses, privateIP)
 			}
 		}
@@ -162,7 +162,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

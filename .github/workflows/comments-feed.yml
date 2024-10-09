@@ -1,0 +1,51 @@
+name: Comment Automations
+
+permissions:
+  contents: read
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Community Check
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.comment.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Maintainer Comment
+        if: |
+          steps.community_check.outputs.maintainer == 'true'
+          && github.actor != 'dependabot[bot]'
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          COMMENT_AUTHOR_URL: ${{ github.event.comment.user.html_url }}
+          COMMENT_AUTHOR_LOGIN: ${{ github.event.comment.user.login }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format(':yellingatcat1: <{0}|{1}> <{2}|commented> on <{3}|{4}>', env.COMMENT_AUTHOR_URL, env.COMMENT_AUTHOR_LOGIN, env.COMMENT_URL, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                  }
+                }
+              ]
+            }

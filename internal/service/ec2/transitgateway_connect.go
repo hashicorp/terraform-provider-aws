@@ -92,7 +92,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 		Options: &awstypes.CreateTransitGatewayConnectRequestOptions{
 			Protocol: awstypes.ProtocolValue(d.Get(names.AttrProtocol).(string)),
 		},
-		TagSpecifications:                   getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:                   getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayAttachment),
 		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
 	}
 
@@ -202,7 +202,7 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrTransitGatewayID, transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	setTagsOutV2(ctx, transitGatewayConnect.Tags)
+	setTagsOut(ctx, transitGatewayConnect.Tags)
 
 	return diags
 }

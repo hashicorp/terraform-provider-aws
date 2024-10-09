@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -218,7 +218,7 @@ func testAccFilter_disappears(t *testing.T) {
 
 func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_filter" {
@@ -235,9 +235,9 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 				FilterName: aws.String(filterName),
 			}
 
-			_, err = conn.GetFilterWithContext(ctx, input)
+			_, err = conn.GetFilter(ctx, input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 					return nil
 				}
 				return err
@@ -266,12 +266,12 @@ func testAccCheckFilterExists(ctx context.Context, name string, filter *guarddut
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 		input := guardduty.GetFilterInput{
 			DetectorId: aws.String(detectorID),
 			FilterName: aws.String(name),
 		}
-		filter, err = conn.GetFilterWithContext(ctx, &input)
+		filter, err = conn.GetFilter(ctx, &input)
 
 		return err
 	}
@@ -456,7 +456,7 @@ func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context) resource
 				return err
 			}
 
-			if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && output.CertificateAuthority.Status != acmpca_types.CertificateAuthorityStatusDeleted {
+			if output != nil && output.CertificateAuthority != nil && aws.ToString(output.CertificateAuthority.Arn) == rs.Primary.ID && output.CertificateAuthority.Status != acmpca_types.CertificateAuthorityStatusDeleted {
 				return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, string(output.CertificateAuthority.Status))
 			}
 		}

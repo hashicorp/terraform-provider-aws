@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -46,6 +47,7 @@ const (
 
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -102,6 +104,11 @@ func resourceTable() *schema.Resource {
 					return nil
 				}
 
+				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
+					diff.Get("restore_source_table_arn") != "" {
+					return nil
+				}
+
 				var errs []error
 				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
 					errs = append(errs, err)
@@ -116,6 +123,10 @@ func resourceTable() *schema.Resource {
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta interface{}) bool {
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
+			validateTTLCustomDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -307,7 +318,7 @@ func resourceTable() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"restore_source_name"},
+				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"input_compression_type": {
@@ -378,10 +389,16 @@ func resourceTable() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
 			},
+			"restore_source_table_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"import_table", "restore_source_name"},
+			},
 			"restore_source_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"import_table"},
+				ConflictsWith: []string{"import_table", "restore_source_table_arn"},
 			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
@@ -450,7 +467,7 @@ func resourceTable() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"attribute_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
@@ -482,10 +499,20 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	if v, ok := d.GetOk("restore_source_name"); ok {
+	sourceName, nameOk := d.GetOk("restore_source_name")
+	sourceArn, arnOk := d.GetOk("restore_source_table_arn")
+
+	if nameOk || arnOk {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
-			SourceTableName: aws.String(v.(string)),
 			TargetTableName: aws.String(tableName),
+		}
+
+		if nameOk {
+			input.SourceTableName = aws.String(sourceName.(string))
+		}
+
+		if arnOk {
+			input.SourceTableArn = aws.String(sourceArn.(string))
 		}
 
 		if v, ok := d.GetOk("restore_date_time"); ok {
@@ -1046,33 +1073,34 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("server_side_encryption") {
-		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+		if replicas, sseSpecification := d.Get("replica").(*schema.Set), expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})); replicas.Len() > 0 && sseSpecification.KMSMasterKeyId != nil {
 			log.Printf("[DEBUG] Using SSE update on replicas")
 			var replicaInputs []awstypes.ReplicationGroupUpdate
-			var replicaRegions []string
 			for _, replica := range replicas.List() {
 				tfMap, ok := replica.(map[string]interface{})
 				if !ok {
 					continue
 				}
-				var regionName string
-				var KMSMasterKeyId string
-				if v, ok := tfMap["region_name"].(string); ok {
-					regionName = v
-					replicaRegions = append(replicaRegions, v)
+
+				region, ok := tfMap["region_name"].(string)
+				if !ok {
+					continue
 				}
-				if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
-					KMSMasterKeyId = v
+
+				key, ok := tfMap[names.AttrKMSKeyARN].(string)
+				if !ok || key == "" {
+					continue
 				}
+
 				var input = &awstypes.UpdateReplicationGroupMemberAction{
-					RegionName:     aws.String(regionName),
-					KMSMasterKeyId: aws.String(KMSMasterKeyId),
+					RegionName:     aws.String(region),
+					KMSMasterKeyId: aws.String(key),
 				}
 				var update = awstypes.ReplicationGroupUpdate{Update: input}
 				replicaInputs = append(replicaInputs, update)
 			}
 			var input = &awstypes.UpdateReplicationGroupMemberAction{
-				KMSMasterKeyId: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId,
+				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
 				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
 			}
 			var update = awstypes.ReplicationGroupUpdate{Update: input}
@@ -1084,27 +1112,40 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
 			}
+		} else {
+			log.Printf("[DEBUG] Using normal update for SSE")
+			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+				TableName:        aws.String(d.Id()),
+				SSESpecification: sseSpecification,
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
+			}
+		}
+
+		// since we don't update replicas unless there is a KMS key, we need to wait for replica
+		// updates for the scenario where 1) there are replicas, 2) we are updating SSE (such as
+		// disabling), and 3) we have no KMS key
+		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+			var replicaRegions []string
+			for _, replica := range replicas.List() {
+				tfMap, ok := replica.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if v, ok := tfMap["region_name"].(string); ok {
+					replicaRegions = append(replicaRegions, v)
+				}
+			}
 			for _, region := range replicaRegions {
 				if _, err := waitReplicaSSEUpdated(ctx, conn, region, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) replica SSE update in region %q: %s", d.Id(), region, err)
 				}
 			}
-			if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
-			}
-		} else {
-			log.Printf("[DEBUG] Using normal update for SSE")
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
-				TableName:        aws.String(d.Id()),
-				SSESpecification: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
-			})
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
-			}
+		}
 
-			if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
-			}
+		if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
 		}
 	}
 
@@ -1876,7 +1917,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 		return sseList
 	}
 
-	if sse[names.AttrKMSKeyARN].(string) == dk {
+	if v, ok := sse[names.AttrKMSKeyARN].(string); ok && v == dk {
 		sse[names.AttrKMSKeyARN] = ""
 		return []interface{}{sse}
 	}
@@ -2388,4 +2429,65 @@ func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) e
 		}
 	}
 	return nil
+}
+
+func validateTTLCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	ttlPath := cty.GetAttrPath("ttl")
+	ttl := configRaw.GetAttr("ttl")
+	if ttl.IsKnown() && !ttl.IsNull() {
+		if ttl.LengthInt() == 1 {
+			idx := cty.NumberIntVal(0)
+			ttl := ttl.Index(idx)
+			ttlPath := ttlPath.Index(idx)
+			ttlPlantimeValidate(ttlPath, ttl, &diags)
+		}
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
+	attribute := ttl.GetAttr("attribute_name")
+	if !attribute.IsKnown() {
+		return
+	}
+
+	enabled := ttl.GetAttr(names.AttrEnabled)
+	if !enabled.IsKnown() {
+		return
+	}
+	if enabled.IsNull() {
+		return
+	}
+
+	if enabled.True() {
+		if attribute.IsNull() {
+			*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+				ttlPath.GetAttr("attribute_name"),
+				ttlPath.GetAttr(names.AttrEnabled),
+				"true",
+			))
+		} else if attribute.AsString() == "" {
+			*diags = append(*diags, errs.NewInvalidValueAttributeErrorf(
+				ttlPath.GetAttr("attribute_name"),
+				"Attribute %q cannot have an empty value",
+				errs.PathString(ttlPath.GetAttr("attribute_name")),
+			))
+		}
+	} else {
+		if !(attribute.IsNull() || attribute.AsString() == "") {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(
+				ttlPath.GetAttr("attribute_name"),
+				ttlPath.GetAttr(names.AttrEnabled),
+				"false",
+			))
+		}
+	}
 }

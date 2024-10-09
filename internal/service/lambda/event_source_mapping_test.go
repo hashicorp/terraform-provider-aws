@@ -45,14 +45,17 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisBatchSize(rName, "100"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					// arn not set in US GovCloud.
+					// resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", acctest.Ct0),
 				),
@@ -79,6 +82,83 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceNameUpdated, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceNameUpdated, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_KMSKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	functionResourceName := "aws_lambda_function.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pattern := `{"Region": [{"prefix": "us-"}]}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_sqsKMSKeyARN(rName, pattern),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_sqs_queue.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventSourceMappingConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccEventSourceMappingConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1409,7 +1489,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName)
 }
@@ -1461,7 +1541,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName)
 }
@@ -1524,7 +1604,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName)
 }
@@ -1669,7 +1749,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
@@ -1727,7 +1807,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_security_group" "test" {
@@ -1830,7 +1910,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_mq_broker" "test" {
@@ -1931,7 +2011,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_docdb_subnet_group" "test" {
@@ -1953,6 +2033,45 @@ resource "aws_docdb_cluster" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccEventSourceMappingConfig_sqsKMSKeyARN(rName, pattern string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = "%[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled          = true
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+  kms_key_arn      = aws_kms_key.test.arn
+
+  filter_criteria {
+    filter {
+      pattern = %[2]q
+    }
+  }
+}
+`, rName, pattern))
 }
 
 func testAccEventSourceMappingConfig_kinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
@@ -2084,6 +2203,37 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, batchSize))
 }
 
+func testAccEventSourceMappingConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled           = true
+  event_source_arn  = aws_kinesis_stream.test.arn
+  function_name     = aws_lambda_function.test.function_name
+  starting_position = "TRIM_HORIZON"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccEventSourceMappingConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled           = true
+  event_source_arn  = aws_kinesis_stream.test.arn
+  function_name     = aws_lambda_function.test.function_name
+  starting_position = "TRIM_HORIZON"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
 func testAccEventSourceMappingConfig_kinesisUpdateFunctionName(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test_update" {
@@ -2091,7 +2241,7 @@ resource "aws_lambda_function" "test_update" {
   function_name = "%[1]s-update"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
@@ -2160,7 +2310,7 @@ resource "aws_lambda_function" "test_update" {
   function_name = "%[1]s-update"
   role          = aws_iam_role.test_update.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
@@ -2466,7 +2616,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 
   filter_criteria {
     filter {
-      pattern = %q
+      pattern = %[1]q
     }
   }
 }
@@ -2481,11 +2631,11 @@ resource "aws_lambda_event_source_mapping" "test" {
 
   filter_criteria {
     filter {
-      pattern = %q
+      pattern = %[1]q
     }
 
     filter {
-      pattern = %q
+      pattern = %[2]q
     }
   }
 }

@@ -10,13 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +29,7 @@ import (
 
 // @SDKResource("aws_directory_service_region", name="Region")
 // @Tags
-func ResourceRegion() *schema.Resource {
+func resourceRegion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionCreate,
 		ReadWithoutTimeout:   resourceRegionRead,
@@ -92,12 +95,11 @@ func ResourceRegion() *schema.Resource {
 
 func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	directoryID := d.Get("directory_id").(string)
 	regionName := d.Get("region_name").(string)
-	id := RegionCreateResourceID(directoryID, regionName)
+	id := regionCreateResourceID(directoryID, regionName)
 	input := &directoryservice.AddRegionInput{
 		DirectoryId: aws.String(directoryID),
 		RegionName:  aws.String(regionName),
@@ -107,7 +109,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.VPCSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.AddRegionWithContext(ctx, input)
+	_, err := conn.AddRegion(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Directory Service Region (%s): %s", id, err)
@@ -119,16 +121,18 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Region (%s) create: %s", d.Id(), err)
 	}
 
-	regionConn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
+	optFn := func(o *directoryservice.Options) {
+		o.Region = regionName
+	}
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		if err := createTags(ctx, regionConn, directoryID, tags); err != nil {
+		if err := createTags(ctx, conn, directoryID, tags, optFn); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
 	}
 
 	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
-		if err := updateNumberOfDomainControllers(ctx, regionConn, directoryID, v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := updateNumberOfDomainControllers(ctx, conn, directoryID, v.(int), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -138,16 +142,14 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
-
-	directoryID, regionName, err := RegionParseResourceID(d.Id())
-
+	directoryID, regionName, err := regionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	region, err := FindRegion(ctx, conn, directoryID, regionName)
+	region, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Region (%s) not found, removing from state", d.Id())
@@ -170,9 +172,11 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("vpc_settings", nil)
 	}
 
-	regionConn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
+	optFn := func(o *directoryservice.Options) {
+		o.Region = regionName
+	}
 
-	tags, err := listTags(ctx, regionConn, directoryID)
+	tags, err := listTags(ctx, conn, directoryID, optFn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", directoryID, err)
@@ -185,17 +189,20 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	directoryID, regionName, err := RegionParseResourceID(d.Id())
-
+	directoryID, regionName, err := regionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	conn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
+	// The Region must be updated using a client in the region.
+	optFn := func(o *directoryservice.Options) {
+		o.Region = regionName
+	}
 
 	if d.HasChange("desired_number_of_domain_controllers") {
-		if err := updateNumberOfDomainControllers(ctx, conn, directoryID, d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateNumberOfDomainControllers(ctx, conn, directoryID, d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -203,7 +210,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange(names.AttrTagsAll) {
 		o, n := d.GetChange(names.AttrTagsAll)
 
-		if err := updateTags(ctx, conn, directoryID, o, n); err != nil {
+		if err := updateTags(ctx, conn, directoryID, o, n, optFn); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
 	}
@@ -213,21 +220,23 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	directoryID, regionName, err := RegionParseResourceID(d.Id())
-
+	directoryID, regionName, err := regionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// The Region must be removed using a client in the region.
-	conn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
+	optFn := func(o *directoryservice.Options) {
+		o.Region = regionName
+	}
 
-	_, err = conn.RemoveRegionWithContext(ctx, &directoryservice.RemoveRegionInput{
+	_, err = conn.RemoveRegion(ctx, &directoryservice.RemoveRegionInput{
 		DirectoryId: aws.String(directoryID),
-	})
+	}, optFn)
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
+	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags
 	}
 
@@ -235,28 +244,134 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Region (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitRegionDeleted(ctx, conn, directoryID, regionName, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitRegionDeleted(ctx, conn, directoryID, regionName, d.Timeout(schema.TimeoutDelete), optFn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Region (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-const regionIDSeparator = "," // nosemgrep:ci.ds-in-const-name,ci.ds-in-var-name
+const regionResourceIDSeparator = "," // nosemgrep:ci.ds-in-const-name,ci.ds-in-var-name
 
-func RegionCreateResourceID(directoryID, regionName string) string {
+func regionCreateResourceID(directoryID, regionName string) string {
 	parts := []string{directoryID, regionName}
-	id := strings.Join(parts, regionIDSeparator)
+	id := strings.Join(parts, regionResourceIDSeparator)
 
 	return id
 }
 
-func RegionParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, regionIDSeparator)
+func regionParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, regionResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DirectoryID%[2]sRegionName", id, regionIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DIRECTORY_ID%[2]sREGION_NAME", id, regionResourceIDSeparator)
+}
+
+func findRegion(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeRegionsInput, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
+	output, err := findRegions(ctx, conn, input, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRegions(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeRegionsInput, optFns ...func(*directoryservice.Options)) ([]awstypes.RegionDescription, error) {
+	var output []awstypes.RegionDescription
+
+	pages := directoryservice.NewDescribeRegionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RegionsDescription...)
+	}
+
+	return output, nil
+}
+
+func findRegionByTwoPartKey(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
+	input := &directoryservice.DescribeRegionsInput{
+		DirectoryId: aws.String(directoryID),
+		RegionName:  aws.String(regionName),
+	}
+
+	output, err := findRegion(ctx, conn, input, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == awstypes.DirectoryStageDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName, optFns...)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitRegionCreated(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DirectoryStageRequested, awstypes.DirectoryStageCreating, awstypes.DirectoryStageCreated),
+		Target:  enum.Slice(awstypes.DirectoryStageActive),
+		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RegionDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRegionDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
+		Target:  []string{},
+		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RegionDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }

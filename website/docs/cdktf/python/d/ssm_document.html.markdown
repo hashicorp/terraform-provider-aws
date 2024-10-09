@@ -73,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content` - The content for the SSM document in JSON or YAML format.
 * `document_type` - The type of the document.
 
-<!-- cache-key: cdktf-0.20.1 input-b79cad94249d0d17a6bba99318ef3a5682c698db4bbaa5f76329e198f232d2ee -->
+<!-- cache-key: cdktf-0.20.9 input-b79cad94249d0d17a6bba99318ef3a5682c698db4bbaa5f76329e198f232d2ee -->

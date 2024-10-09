@@ -18,6 +18,8 @@ import (
 
 // @SDKDataSource("aws_api_gateway_domain_name", name="Domain Name")
 // @Tags
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
+// @Testing(tlsKey=true, tlsKeyDomain="rName")
 func dataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainNameRead,

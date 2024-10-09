@@ -205,22 +205,25 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 ### Specifying a filter based on object size
 
-Object size values are in bytes. Maximum filter size is 5TB. Some storage classes have minimum object size limitations, for more information, see [Comparing the Amazon S3 storage classes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html#sc-compare).
+Object size values are in bytes. Maximum filter size is 5TB. Amazon S3 applies a default behavior to your Lifecycle configuration that prevents objects smaller than 128 KB from being transitioned to any storage class. You can allow smaller objects to transition by adding a minimum size (`object_size_greater_than`) or a maximum size (`object_size_less_than`) filter that specifies a smaller size to the configuration. This example allows any object smaller than 128 KB to transition to the S3 Glacier Instant Retrieval storage class:
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
   bucket = aws_s3_bucket.bucket.id
 
   rule {
-    id = "rule-1"
+    id = "Allow small object transitions"
 
     filter {
-      object_size_greater_than = 500
+      object_size_greater_than = 1
     }
 
-    # ... other transition/expiration actions ...
-
     status = "Enabled"
+
+    transition {
+      days          = 365
+      storage_class = "GLACIER_IR"
+    }
   }
 }
 ```
@@ -367,6 +370,7 @@ This resource supports the following arguments:
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `expected_bucket_owner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
 * `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
+* `transition_default_minimum_object_size` - (Optional) The default minimum object size behavior applied to the lifecycle configuration. Valid values: `all_storage_classes_128K` (default), `varies_by_storage_class`. To customize the minimum object size for any transition you can add a `filter` that specifies a custom `object_size_greater_than` or `object_size_less_than` value. Custom filters always take precedence over the default transition behavior.
 
 ### rule
 
@@ -444,7 +448,7 @@ The `transition` configuration block supports the following arguments:
 
 The `and` configuration block supports the following arguments:
 
-* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified.
+* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified. Defaults to 128000 (128 KB) for all `storage_class` values unless `transition_default_minimum_object_size` specifies otherwise.
 * `object_size_less_than` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
 * `tags` - (Optional) Key-value map of resource tags. All of these tags must exist in the object's tag set in order for the rule to apply.

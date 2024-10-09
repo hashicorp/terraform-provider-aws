@@ -6,7 +6,7 @@ package ecs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,8 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecs_cluster")
-func DataSourceCluster() *schema.Resource {
+// @SDKDataSource("aws_ecs_cluster", name="Cluster")
+// @Tags
+func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
 
@@ -80,29 +81,21 @@ func DataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get(names.AttrClusterName).(string))
+	cluster, err := findClusterByNameOrARN(ctx, conn, clusterName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", clusterName, err)
 	}
 
-	d.SetId(aws.StringValue(cluster.ClusterArn))
-	d.Set(names.AttrARN, cluster.ClusterArn)
+	arn := aws.ToString(cluster.ClusterArn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("pending_tasks_count", cluster.PendingTasksCount)
-	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
-	d.Set(names.AttrStatus, cluster.Status)
-
-	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
+	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	if cluster.ServiceConnectDefaults != nil {
 		if err := d.Set("service_connect_defaults", []interface{}{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting service_connect_defaults: %s", err)
@@ -110,10 +103,12 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("service_connect_defaults", nil)
 	}
-
 	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
+	d.Set(names.AttrStatus, cluster.Status)
+
+	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }

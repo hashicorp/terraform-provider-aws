@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccVPCSubnet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -66,7 +66,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 
 func TestAccVPCSubnet_tags_defaultAndIgnoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -104,7 +104,7 @@ func TestAccVPCSubnet_tags_defaultAndIgnoreTags(t *testing.T) {
 
 func TestAccVPCSubnet_tags_ignoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -136,7 +136,7 @@ func TestAccVPCSubnet_tags_ignoreTags(t *testing.T) {
 
 func TestAccVPCSubnet_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.Subnet
+	var before, after awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -178,7 +178,7 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 
 func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -223,7 +223,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 
 func TestAccVPCSubnet_availabilityZoneID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -252,7 +252,7 @@ func TestAccVPCSubnet_availabilityZoneID(t *testing.T) {
 
 func TestAccVPCSubnet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -276,7 +276,7 @@ func TestAccVPCSubnet_disappears(t *testing.T) {
 
 func TestAccVPCSubnet_customerOwnedIPv4Pool(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	coipDataSourceName := "data.aws_ec2_coip_pool.test"
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -305,7 +305,7 @@ func TestAccVPCSubnet_customerOwnedIPv4Pool(t *testing.T) {
 
 func TestAccVPCSubnet_mapCustomerOwnedIPOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -333,7 +333,7 @@ func TestAccVPCSubnet_mapCustomerOwnedIPOnLaunch(t *testing.T) {
 
 func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -375,7 +375,7 @@ func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 
 func TestAccVPCSubnet_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -404,7 +404,7 @@ func TestAccVPCSubnet_outpost(t *testing.T) {
 
 func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -446,7 +446,7 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 
 func TestAccVPCSubnet_ipv4ToIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -482,7 +482,7 @@ func TestAccVPCSubnet_ipv4ToIPv6(t *testing.T) {
 
 func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -524,7 +524,7 @@ func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
 
 func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subnet ec2.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -572,7 +572,7 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 
 func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -600,35 +600,35 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 	})
 }
 
-func testAccCheckSubnetIPv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetIPv6BeforeUpdate(subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
 			return fmt.Errorf("Expected IPV6 CIDR Block Association")
 		}
 
-		if !aws.BoolValue(subnet.AssignIpv6AddressOnCreation) {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.BoolValue(subnet.AssignIpv6AddressOnCreation))
+		if !aws.ToBool(subnet.AssignIpv6AddressOnCreation) {
+			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.ToBool(subnet.AssignIpv6AddressOnCreation))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSubnetIPv6AfterUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetIPv6AfterUpdate(subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.BoolValue(subnet.AssignIpv6AddressOnCreation) {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.BoolValue(subnet.AssignIpv6AddressOnCreation))
+		if aws.ToBool(subnet.AssignIpv6AddressOnCreation) {
+			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.ToBool(subnet.AssignIpv6AddressOnCreation))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSubnetNotRecreated(t *testing.T, before, after *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetNotRecreated(t *testing.T, before, after *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(before.SubnetId) != aws.StringValue(after.SubnetId) {
+		if aws.ToString(before.SubnetId) != aws.ToString(after.SubnetId) {
 			t.Fatalf("Expected SubnetIDs not to change, but both got before: %s and after: %s",
-				aws.StringValue(before.SubnetId), aws.StringValue(after.SubnetId))
+				aws.ToString(before.SubnetId), aws.ToString(after.SubnetId))
 		}
 		return nil
 	}
@@ -636,7 +636,7 @@ func testAccCheckSubnetNotRecreated(t *testing.T, before, after *ec2.Subnet) res
 
 func testAccCheckSubnetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -660,7 +660,7 @@ func testAccCheckSubnetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSubnetExists(ctx context.Context, n string, v *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetExists(ctx context.Context, n string, v *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -671,7 +671,7 @@ func testAccCheckSubnetExists(ctx context.Context, n string, v *ec2.Subnet) reso
 			return fmt.Errorf("No EC2 Subnet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSubnetByID(ctx, conn, rs.Primary.ID)
 
@@ -685,11 +685,11 @@ func testAccCheckSubnetExists(ctx context.Context, n string, v *ec2.Subnet) reso
 	}
 }
 
-func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *ec2.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *awstypes.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.UpdateTags(ctx, conn, aws.StringValue(subnet.SubnetId), oldTags, newTags)
+		return tfec2.UpdateTags(ctx, conn, aws.ToString(subnet.SubnetId), oldTags, newTags)
 	}
 }
 

@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_managed_prefix_list")
-func DataSourceManagedPrefixList() *schema.Resource {
+// @SDKDataSource("aws_ec2_managed_prefix_list", name="Managed Prefix List")
+func dataSourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceManagedPrefixListRead,
 
@@ -83,7 +83,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeManagedPrefixListsInput{
@@ -93,7 +93,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.PrefixListIds = aws.StringSlice([]string{v.(string)})
+		input.PrefixListIds = []string{v.(string)}
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -105,15 +105,15 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 		input.Filters = nil
 	}
 
-	pl, err := FindManagedPrefixList(ctx, conn, input)
+	pl, err := findManagedPrefixList(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Managed Prefix List", err))
 	}
 
-	d.SetId(aws.StringValue(pl.PrefixListId))
+	d.SetId(aws.ToString(pl.PrefixListId))
 
-	prefixListEntries, err := FindManagedPrefixListEntriesByID(ctx, conn, d.Id())
+	prefixListEntries, err := findManagedPrefixListEntriesByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix List (%s) Entries: %s", d.Id(), err)
@@ -129,7 +129,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrOwnerID, pl.OwnerId)
 	d.Set(names.AttrVersion, pl.Version)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

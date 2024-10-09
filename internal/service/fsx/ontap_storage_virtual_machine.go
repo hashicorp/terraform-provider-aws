@@ -9,15 +9,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
@@ -210,10 +212,10 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 47),
 			},
 			"root_volume_security_style": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(fsx.StorageVirtualMachineRootVolumeSecurityStyle_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
 			},
 			"subtype": {
 				Type:     schema.TypeString,
@@ -239,7 +241,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 
 func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &fsx.CreateStorageVirtualMachineInput{
@@ -253,20 +255,20 @@ func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk("root_volume_security_style"); ok {
-		input.RootVolumeSecurityStyle = aws.String(v.(string))
+		input.RootVolumeSecurityStyle = awstypes.StorageVirtualMachineRootVolumeSecurityStyle(v.(string))
 	}
 
 	if v, ok := d.GetOk("svm_admin_password"); ok {
 		input.SvmAdminPassword = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateStorageVirtualMachineWithContext(ctx, input)
+	output, err := conn.CreateStorageVirtualMachine(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx ONTAP Storage Virtual Machine (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.StorageVirtualMachine.StorageVirtualMachineId))
+	d.SetId(aws.ToString(output.StorageVirtualMachine.StorageVirtualMachineId))
 
 	if _, err := waitStorageVirtualMachineCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Storage Virtual Machine (%s) create: %s", d.Id(), err)
@@ -277,7 +279,7 @@ func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 
 func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	storageVirtualMachine, err := findStorageVirtualMachineByID(ctx, conn, d.Id())
 
@@ -314,7 +316,7 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 
 func resourceONTAPStorageVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateStorageVirtualMachineInput{
@@ -330,7 +332,7 @@ func resourceONTAPStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 			input.SvmAdminPassword = aws.String(d.Get("svm_admin_password").(string))
 		}
 
-		_, err := conn.UpdateStorageVirtualMachineWithContext(ctx, input)
+		_, err := conn.UpdateStorageVirtualMachine(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP Storage Virtual Machine (%s): %s", d.Id(), err)
@@ -346,14 +348,14 @@ func resourceONTAPStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 
 func resourceONTAPStorageVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Storage Virtual Machine: %s", d.Id())
-	_, err := conn.DeleteStorageVirtualMachineWithContext(ctx, &fsx.DeleteStorageVirtualMachineInput{
+	_, err := conn.DeleteStorageVirtualMachine(ctx, &fsx.DeleteStorageVirtualMachineInput{
 		StorageVirtualMachineId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
+	if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
 		return diags
 	}
 
@@ -368,14 +370,142 @@ func resourceONTAPStorageVirtualMachineDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func expandCreateSvmActiveDirectoryConfiguration(cfg []interface{}) *fsx.CreateSvmActiveDirectoryConfiguration {
+func findStorageVirtualMachineByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.StorageVirtualMachine, error) {
+	input := &fsx.DescribeStorageVirtualMachinesInput{
+		StorageVirtualMachineIds: []string{id},
+	}
+
+	return findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
+}
+
+func findStorageVirtualMachine(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*awstypes.StorageVirtualMachine]) (*awstypes.StorageVirtualMachine, error) {
+	output, err := findStorageVirtualMachines(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*awstypes.StorageVirtualMachine]) ([]awstypes.StorageVirtualMachine, error) {
+	var output []awstypes.StorageVirtualMachine
+
+	pages := fsx.NewDescribeStorageVirtualMachinesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.StorageVirtualMachines {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findStorageVirtualMachineByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Lifecycle), nil
+	}
+}
+
+func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending),
+		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecyclePending),
+		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
+		Target:  []string{},
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandCreateSvmActiveDirectoryConfiguration(cfg []interface{}) *awstypes.CreateSvmActiveDirectoryConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
 
 	conf := cfg[0].(map[string]interface{})
 
-	out := fsx.CreateSvmActiveDirectoryConfiguration{}
+	out := awstypes.CreateSvmActiveDirectoryConfiguration{}
 
 	if v, ok := conf["netbios_name"].(string); ok && len(v) > 0 {
 		out.NetBiosName = aws.String(v)
@@ -388,17 +518,17 @@ func expandCreateSvmActiveDirectoryConfiguration(cfg []interface{}) *fsx.CreateS
 	return &out
 }
 
-func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfManagedActiveDirectoryConfiguration {
+func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *awstypes.SelfManagedActiveDirectoryConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
 
 	conf := cfg[0].(map[string]interface{})
 
-	out := fsx.SelfManagedActiveDirectoryConfiguration{}
+	out := awstypes.SelfManagedActiveDirectoryConfiguration{}
 
 	if v, ok := conf["dns_ips"].(*schema.Set); ok {
-		out.DnsIps = flex.ExpandStringSet(v)
+		out.DnsIps = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
@@ -424,14 +554,14 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 	return &out
 }
 
-func expandUpdateSvmActiveDirectoryConfiguration(cfg []interface{}) *fsx.UpdateSvmActiveDirectoryConfiguration {
+func expandUpdateSvmActiveDirectoryConfiguration(cfg []interface{}) *awstypes.UpdateSvmActiveDirectoryConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
 
 	conf := cfg[0].(map[string]interface{})
 
-	out := fsx.UpdateSvmActiveDirectoryConfiguration{}
+	out := awstypes.UpdateSvmActiveDirectoryConfiguration{}
 
 	if v, ok := conf["netbios_name"].(string); ok && len(v) > 0 {
 		out.NetBiosName = aws.String(v)
@@ -444,17 +574,17 @@ func expandUpdateSvmActiveDirectoryConfiguration(cfg []interface{}) *fsx.UpdateS
 	return &out
 }
 
-func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fsx.SelfManagedActiveDirectoryConfigurationUpdates {
+func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *awstypes.SelfManagedActiveDirectoryConfigurationUpdates {
 	if len(cfg) < 1 {
 		return nil
 	}
 
 	conf := cfg[0].(map[string]interface{})
 
-	out := fsx.SelfManagedActiveDirectoryConfigurationUpdates{}
+	out := awstypes.SelfManagedActiveDirectoryConfigurationUpdates{}
 
 	if v, ok := conf["dns_ips"].(*schema.Set); ok {
-		out.DnsIps = flex.ExpandStringSet(v)
+		out.DnsIps = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
@@ -480,7 +610,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 	return &out
 }
 
-func flattenSvmActiveDirectoryConfiguration(d *schema.ResourceData, rs *fsx.SvmActiveDirectoryConfiguration) []interface{} {
+func flattenSvmActiveDirectoryConfiguration(d *schema.ResourceData, rs *awstypes.SvmActiveDirectoryConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -497,28 +627,28 @@ func flattenSvmActiveDirectoryConfiguration(d *schema.ResourceData, rs *fsx.SvmA
 	return []interface{}{m}
 }
 
-func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx.SelfManagedActiveDirectoryAttributes) []interface{} {
+func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *awstypes.SelfManagedActiveDirectoryAttributes) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.DnsIps != nil {
-		m["dns_ips"] = aws.StringValueSlice(rs.DnsIps)
+		m["dns_ips"] = rs.DnsIps
 	}
 
 	if rs.DomainName != nil {
-		m[names.AttrDomainName] = aws.StringValue(rs.DomainName)
+		m[names.AttrDomainName] = aws.ToString(rs.DomainName)
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {
 		if _, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"); ok {
-			m["organizational_unit_distinguished_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
+			m["organizational_unit_distinguished_name"] = aws.ToString(rs.OrganizationalUnitDistinguishedName)
 		}
 	}
 
 	if rs.UserName != nil {
-		m[names.AttrUsername] = aws.StringValue(rs.UserName)
+		m[names.AttrUsername] = aws.ToString(rs.UserName)
 	}
 
 	// Since we are in a configuration block and the FSx API does not return
@@ -536,7 +666,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	return []interface{}{m}
 }
 
-func flattenSvmEndpoints(rs *fsx.SvmEndpoints) []interface{} {
+func flattenSvmEndpoints(rs *awstypes.SvmEndpoints) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -557,149 +687,18 @@ func flattenSvmEndpoints(rs *fsx.SvmEndpoints) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenSvmEndpoint(rs *fsx.SvmEndpoint) []interface{} {
+func flattenSvmEndpoint(rs *awstypes.SvmEndpoint) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.DNSName != nil {
-		m[names.AttrDNSName] = aws.StringValue(rs.DNSName)
+		m[names.AttrDNSName] = aws.ToString(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
-		m[names.AttrIPAddresses] = flex.FlattenStringSet(rs.IpAddresses)
+		m[names.AttrIPAddresses] = flex.FlattenStringValueSet(rs.IpAddresses)
 	}
 
 	return []interface{}{m}
-}
-
-func findStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
-	input := &fsx.DescribeStorageVirtualMachinesInput{
-		StorageVirtualMachineIds: []*string{aws.String(id)},
-	}
-
-	return findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*fsx.StorageVirtualMachine]())
-}
-
-func findStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*fsx.StorageVirtualMachine]) (*fsx.StorageVirtualMachine, error) {
-	output, err := findStorageVirtualMachines(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findStorageVirtualMachines(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*fsx.StorageVirtualMachine]) ([]*fsx.StorageVirtualMachine, error) {
-	var output []*fsx.StorageVirtualMachine
-
-	err := conn.DescribeStorageVirtualMachinesPagesWithContext(ctx, input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.StorageVirtualMachines {
-			if v != nil && filter(v) {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findStorageVirtualMachineByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Lifecycle), nil
-	}
-}
-
-func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.StorageVirtualMachineLifecycleCreating, fsx.StorageVirtualMachineLifecyclePending},
-		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
-		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.StorageVirtualMachineLifecyclePending},
-		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
-		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleDeleting},
-		Target:  []string{},
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
-		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
 }

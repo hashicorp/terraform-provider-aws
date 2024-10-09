@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerSink_basic(t *testing.T) {
+func testAccObservabilityAccessManagerSink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -62,7 +62,7 @@ func TestAccObservabilityAccessManagerSink_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAccessManagerSink_disappears(t *testing.T) {
+func testAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -94,7 +94,7 @@ func TestAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAccessManagerSink_tags(t *testing.T) {
+func testAccObservabilityAccessManagerSink_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

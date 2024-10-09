@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccGlueJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 	roleResourceName := "aws_iam_role.test"
@@ -60,7 +60,7 @@ func TestAccGlueJob_basic(t *testing.T) {
 
 func TestAccGlueJob_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -84,7 +84,7 @@ func TestAccGlueJob_disappears(t *testing.T) {
 
 func TestAccGlueJob_basicStreaming(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 	roleResourceName := "aws_iam_role.test"
@@ -122,7 +122,7 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 
 func TestAccGlueJob_command(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -159,7 +159,7 @@ func TestAccGlueJob_command(t *testing.T) {
 
 func TestAccGlueJob_defaultArguments(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -198,7 +198,7 @@ func TestAccGlueJob_defaultArguments(t *testing.T) {
 
 func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -237,7 +237,7 @@ func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 
 func TestAccGlueJob_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -272,7 +272,7 @@ func TestAccGlueJob_description(t *testing.T) {
 
 func TestAccGlueJob_glueVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -314,7 +314,7 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 
 func TestAccGlueJob_executionClass(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -349,7 +349,7 @@ func TestAccGlueJob_executionClass(t *testing.T) {
 
 func TestAccGlueJob_executionProperty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -388,9 +388,75 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 	})
 }
 
+func TestAccGlueJob_jobRunQueuingEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_jobRunQueuingEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "job_run_queuing_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobConfig_jobRunQueuingEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "job_run_queuing_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueJob_maintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+	maintenanceWindow := "Sun:23"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_maintenanceWindow(rName, maintenanceWindow),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "Sun:23"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueJob_maxRetries(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -429,7 +495,7 @@ func TestAccGlueJob_maxRetries(t *testing.T) {
 
 func TestAccGlueJob_notificationProperty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -470,7 +536,7 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 
 func TestAccGlueJob_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -516,7 +582,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 
 func TestAccGlueJob_streamingTimeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -551,7 +617,7 @@ func TestAccGlueJob_streamingTimeout(t *testing.T) {
 
 func TestAccGlueJob_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -586,7 +652,7 @@ func TestAccGlueJob_timeout(t *testing.T) {
 
 func TestAccGlueJob_security(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -621,7 +687,7 @@ func TestAccGlueJob_security(t *testing.T) {
 
 func TestAccGlueJob_workerType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -677,7 +743,7 @@ func TestAccGlueJob_workerType(t *testing.T) {
 
 func TestAccGlueJob_pythonShell(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -743,7 +809,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 
 func TestAccGlueJob_rayJob(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -771,7 +837,7 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 
 func TestAccGlueJob_maxCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var job glue.Job
+	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
@@ -807,7 +873,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 	})
 }
 
-func testAccCheckJobExists(ctx context.Context, n string, v *glue.Job) resource.TestCheckFunc {
+func testAccCheckJobExists(ctx context.Context, n string, v *awstypes.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -818,7 +884,7 @@ func testAccCheckJobExists(ctx context.Context, n string, v *glue.Job) resource.
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		output, err := tfglue.FindJobByName(ctx, conn, rs.Primary.ID)
 
@@ -839,7 +905,7 @@ func testAccCheckJobDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 			_, err := tfglue.FindJobByName(ctx, conn, rs.Primary.ID)
 
@@ -1042,6 +1108,23 @@ resource "aws_glue_job" "test" {
 `, rName, maxConcurrentRuns))
 }
 
+func testAccJobConfig_maintenanceWindow(rName, maintenanceWindow string) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  name               = %[2]q
+  role_arn           = aws_iam_role.test.arn
+  maintenance_window = %[2]q
+
+  command {
+    name            = "gluestreaming"
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, maintenanceWindow))
+}
+
 func testAccJobConfig_maxRetries(rName string, maxRetries int) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
@@ -1112,13 +1195,28 @@ resource "aws_glue_job" "test" {
 `, rName))
 }
 
+func testAccJobConfig_jobRunQueuingEnabled(rName string, jobRunQueuingEnabled bool) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  max_capacity            = 10
+  name                    = %[1]q
+  role_arn                = aws_iam_role.test.arn
+  job_run_queuing_enabled = %[2]t
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, jobRunQueuingEnabled))
+}
+
 func testAccJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
-  name              = %[1]q
-  number_of_workers = 1
-  role_arn          = aws_iam_role.test.arn
-  worker_type       = "Standard"
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"

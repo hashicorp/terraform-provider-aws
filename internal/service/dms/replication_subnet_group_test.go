@@ -132,7 +132,7 @@ func testAccCheckReplicationSubnetGroupExists(ctx context.Context, n string) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindReplicationSubnetGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -142,7 +142,7 @@ func testAccCheckReplicationSubnetGroupExists(ctx context.Context, n string) res
 
 func testAccCheckReplicationSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_replication_subnet_group" {

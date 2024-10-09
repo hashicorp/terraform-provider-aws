@@ -9,13 +9,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,7 +26,7 @@ import (
 
 // @SDKResource("aws_route53recoveryreadiness_readiness_check", name="Readiness Check")
 // @Tags(identifierAttribute="arn")
-func ResourceReadinessCheck() *schema.Resource {
+func resourceReadinessCheck() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReadinessCheckCreate,
 		ReadWithoutTimeout:   resourceReadinessCheckRead,
@@ -63,7 +64,7 @@ func ResourceReadinessCheck() *schema.Resource {
 
 func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	name := d.Get("readiness_check_name").(string)
 	input := &route53recoveryreadiness.CreateReadinessCheckInput{
@@ -71,15 +72,15 @@ func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, m
 		ResourceSetName:    aws.String(d.Get("resource_set_name").(string)),
 	}
 
-	output, err := conn.CreateReadinessCheckWithContext(ctx, input)
+	output, err := conn.CreateReadinessCheck(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Readiness Readiness Check (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ReadinessCheckName))
+	d.SetId(aws.ToString(output.ReadinessCheckName))
 
-	if err := createTags(ctx, conn, aws.StringValue(output.ReadinessCheckArn), getTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.ToString(output.ReadinessCheckArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Readiness Check (%s) tags: %s", d.Id(), err)
 	}
 
@@ -88,15 +89,11 @@ func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReadinessCheckRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
-	input := &route53recoveryreadiness.GetReadinessCheckInput{
-		ReadinessCheckName: aws.String(d.Id()),
-	}
+	output, err := findReadinessCheckByName(ctx, conn, d.Id())
 
-	resp, err := conn.GetReadinessCheckWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Recovery Readiness Readiness Check (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -106,16 +103,16 @@ func resourceReadinessCheckRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Readiness Check (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, resp.ReadinessCheckArn)
-	d.Set("readiness_check_name", resp.ReadinessCheckName)
-	d.Set("resource_set_name", resp.ResourceSet)
+	d.Set(names.AttrARN, output.ReadinessCheckArn)
+	d.Set("readiness_check_name", output.ReadinessCheckName)
+	d.Set("resource_set_name", output.ResourceSet)
 
 	return diags
 }
 
 func resourceReadinessCheckUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateReadinessCheckInput{
@@ -123,7 +120,7 @@ func resourceReadinessCheckUpdate(ctx context.Context, d *schema.ResourceData, m
 			ResourceSetName:    aws.String(d.Get("resource_set_name").(string)),
 		}
 
-		_, err := conn.UpdateReadinessCheckWithContext(ctx, input)
+		_, err := conn.UpdateReadinessCheck(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Readiness Check (%s): %s", d.Id(), err)
@@ -135,14 +132,14 @@ func resourceReadinessCheckUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReadinessCheckDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Recovery Readiness Readiness Check: %s", d.Id())
-	_, err := conn.DeleteReadinessCheckWithContext(ctx, &route53recoveryreadiness.DeleteReadinessCheckInput{
+	_, err := conn.DeleteReadinessCheck(ctx, &route53recoveryreadiness.DeleteReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -150,27 +147,47 @@ func resourceReadinessCheckDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Readiness Readiness Check (%s): %s", d.Id(), err)
 	}
 
-	gcinput := &route53recoveryreadiness.GetReadinessCheckInput{
-		ReadinessCheckName: aws.String(d.Id()),
-	}
 	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
-		_, err := conn.GetReadinessCheckWithContext(ctx, gcinput)
+		_, err = findReadinessCheckByName(ctx, conn, d.Id())
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				return nil
 			}
 			return retry.NonRetryableError(err)
 		}
-		return retry.RetryableError(fmt.Errorf("Route 53 Recovery Readiness ReadinessCheck (%s) still exists", d.Id()))
+		return retry.RetryableError(fmt.Errorf("Route 53 Recovery Readiness Readiness Check (%s) still exists", d.Id()))
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.GetReadinessCheckWithContext(ctx, gcinput)
+		_, err = findReadinessCheckByName(ctx, conn, d.Id())
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Recovery Readiness ReadinessCheck (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Recovery Readiness Readiness Check (%s) deletion: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findReadinessCheckByName(ctx context.Context, conn *route53recoveryreadiness.Client, name string) (*route53recoveryreadiness.GetReadinessCheckOutput, error) {
+	input := &route53recoveryreadiness.GetReadinessCheckInput{
+		ReadinessCheckName: aws.String(name),
+	}
+
+	output, err := conn.GetReadinessCheck(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

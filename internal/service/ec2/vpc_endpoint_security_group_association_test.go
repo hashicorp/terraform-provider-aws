@@ -125,7 +125,7 @@ func testAccCheckVPCEndpointSecurityGroupAssociationDestroy(ctx context.Context)
 				continue
 			}
 
-			err := tfec2.FindVPCEndpointSecurityGroupAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
+			err := tfec2.FindVPCEndpointSecurityGroupAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -155,13 +155,13 @@ func testAccCheckVPCEndpointSecurityGroupAssociationExists(ctx context.Context, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindVPCEndpointByIDV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID])
+		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID])
 
 		if err != nil {
 			return err
 		}
 
-		err = tfec2.FindVPCEndpointSecurityGroupAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
+		err = tfec2.FindVPCEndpointSecurityGroupAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
 
 		if err != nil {
 			return err

@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -47,10 +48,10 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v2"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct0),
@@ -421,10 +422,10 @@ func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al1-v1"),
+				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v2"),
 				),
 			},
 		},
@@ -641,11 +642,10 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 		CheckDestroy:             testAccCheckNotebookInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.medium"),
+				Config: testAccNotebookInstanceConfig_acceleratorType(rName, string(awstypes.InstanceTypeMlInf1Xlarge)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeMlInf1Xlarge)),
 				),
 			},
 			{
@@ -654,18 +654,17 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.large"),
+				Config: testAccNotebookInstanceConfig_acceleratorType(rName, string(awstypes.InstanceTypeMlInf12xlarge)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeMlInf12xlarge)),
 				),
 			},
 			{
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeMlT2Medium)),
 				),
 			},
 		},
@@ -674,7 +673,7 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 
 func testAccCheckNotebookInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_notebook_instance" {
@@ -709,7 +708,7 @@ func testAccCheckNotebookInstanceExists(ctx context.Context, n string, v *sagema
 			return fmt.Errorf("No SageMaker Notebook Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindNotebookInstanceByName(ctx, conn, rs.Primary.ID)
 
@@ -725,7 +724,7 @@ func testAccCheckNotebookInstanceExists(ctx context.Context, n string, v *sagema
 
 func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
+		if !aws.ToTime(i.CreationTime).Equal(aws.ToTime(j.CreationTime)) {
 			return errors.New("SageMaker Notebook Instance was recreated")
 		}
 
@@ -735,7 +734,7 @@ func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookIn
 
 func testAccCheckNotebookInstanceRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
+		if aws.ToTime(i.CreationTime).Equal(aws.ToTime(j.CreationTime)) {
 			return errors.New("SageMaker Notebook Instance was not recreated")
 		}
 
@@ -999,10 +998,9 @@ resource "aws_sagemaker_notebook_instance" "test" {
 func testAccNotebookInstanceConfig_acceleratorType(rName, acceleratorType string) string {
 	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
-  name              = %[1]q
-  role_arn          = aws_iam_role.test.arn
-  instance_type     = "ml.t2.xlarge"
-  accelerator_types = [%[2]q]
+  name          = %[1]q
+  role_arn      = aws_iam_role.test.arn
+  instance_type = %[2]q
 }
   `, rName, acceleratorType))
 }

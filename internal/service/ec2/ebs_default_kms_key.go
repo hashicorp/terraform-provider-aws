@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ebs_default_kms_key")
-func ResourceEBSDefaultKMSKey() *schema.Resource {
+// @SDKResource("aws_ebs_default_kms_key", name="EBS Default KMS Key")
+func resourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSDefaultKMSKeyCreate,
 		ReadWithoutTimeout:   resourceEBSDefaultKMSKeyRead,

@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -244,7 +245,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_policy" {
@@ -275,7 +276,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *iot.GetPolicyOut
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		output, err := tfiot.FindPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -296,7 +297,7 @@ func testAccCheckPolicyVersionIDs(ctx context.Context, n string, want []string) 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		output, err := tfiot.FindPolicyVersionsByName(ctx, conn, rs.Primary.ID)
 
@@ -304,8 +305,8 @@ func testAccCheckPolicyVersionIDs(ctx context.Context, n string, want []string) 
 			return err
 		}
 
-		got := tfslices.ApplyToAll(output, func(v *iot.PolicyVersion) string {
-			return aws.StringValue(v.VersionId)
+		got := tfslices.ApplyToAll(output, func(v awstypes.PolicyVersion) string {
+			return aws.ToString(v.VersionId)
 		})
 
 		if !cmp.Equal(got, want, cmpopts.SortSlices(func(i, j string) bool {

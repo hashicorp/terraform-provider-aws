@@ -5,7 +5,24 @@ package ecs
 
 // Exports for use in tests only.
 var (
-	ResourceTag = resourceTag
+	ResourceAccountSettingDefault    = resourceAccountSettingDefault
+	ResourceCapacityProvider         = resourceCapacityProvider
+	ResourceCluster                  = resourceCluster
+	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
+	ResourceService                  = resourceService
+	ResourceTag                      = resourceTag
+	ResourceTaskDefinition           = resourceTaskDefinition
+	ResourceTaskSet                  = resourceTaskSet
 
-	FindTag = findTag
+	ClusterNameFromARN                      = clusterNameFromARN
+	FindCapacityProviderByARN               = findCapacityProviderByARN
+	FindClusterByNameOrARN                  = findClusterByNameOrARN
+	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
+	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
+	FindTag                                 = findTag
+	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
+	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
+	RoleNameFromARN                         = roleNameFromARN
+	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
+	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
 )

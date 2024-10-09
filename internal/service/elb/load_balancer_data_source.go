@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elb")
-func DataSourceLoadBalancer() *schema.Resource {
+// @SDKDataSource("aws_elb", name="Classic Load Balancer")
+func dataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
 		Schema: map[string]*schema.Schema{
@@ -144,29 +144,24 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"instance_protocol": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"lb_port": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"lb_protocol": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"ssl_certificate_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
-				Set: ListenerHash,
 			},
 
 			names.AttrSecurityGroups: {
@@ -208,24 +203,24 @@ func DataSourceLoadBalancer() *schema.Resource {
 
 func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
-	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get(names.AttrName).(string)
-	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s): %s", lbName, err)
 	}
 
-	d.SetId(aws.StringValue(lb.LoadBalancerName))
+	d.SetId(aws.ToString(lb.LoadBalancerName))
 
-	input := &elb.DescribeLoadBalancerAttributesInput{
+	input := &elasticloadbalancing.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, input)
+	output, err := conn.DescribeLoadBalancerAttributes(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
@@ -247,25 +242,25 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	var scheme bool
 	if lb.Scheme != nil {
-		scheme = aws.StringValue(lb.Scheme) == "internal"
+		scheme = aws.ToString(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
-	d.Set(names.AttrAvailabilityZones, flex.FlattenStringList(lb.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, flex.FlattenStringValueList(lb.AvailabilityZones))
 	d.Set("instances", flattenInstances(lb.Instances))
-	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
-	d.Set(names.AttrSecurityGroups, flex.FlattenStringList(lb.SecurityGroups))
+	d.Set("listener", flattenListenerDescriptions(lb.ListenerDescriptions))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueList(lb.SecurityGroups))
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
-		if lb.SourceSecurityGroup.OwnerAlias != nil && aws.StringValue(lb.SourceSecurityGroup.OwnerAlias) != "" {
-			group = aws.String(aws.StringValue(lb.SourceSecurityGroup.OwnerAlias) + "/" + aws.StringValue(lb.SourceSecurityGroup.GroupName))
+		if lb.SourceSecurityGroup.OwnerAlias != nil && aws.ToString(lb.SourceSecurityGroup.OwnerAlias) != "" {
+			group = aws.String(aws.ToString(lb.SourceSecurityGroup.OwnerAlias) + "/" + aws.ToString(lb.SourceSecurityGroup.GroupName))
 		}
 		d.Set("source_security_group", group)
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		var elbVpc string
 		if lb.VPCId != nil {
-			elbVpc = aws.StringValue(lb.VPCId)
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc, aws.StringValue(lb.SourceSecurityGroup.OwnerAlias))
+			elbVpc = aws.ToString(lb.VPCId)
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, ec2conn, aws.ToString(lb.SourceSecurityGroup.GroupName), elbVpc, aws.ToString(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "looking up ELB Security Group ID: %s", err)
 			} else {
@@ -273,7 +268,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 	}
-	d.Set(names.AttrSubnets, flex.FlattenStringList(lb.Subnets))
+	d.Set(names.AttrSubnets, flex.FlattenStringValueList(lb.Subnets))
 	if lbAttrs.ConnectionSettings != nil {
 		d.Set("idle_timeout", lbAttrs.ConnectionSettings.IdleTimeout)
 	}
@@ -297,7 +292,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		_, n := d.GetChange("access_logs")
 		elbal := lbAttrs.AccessLog
 		nl := n.([]interface{})
-		if len(nl) == 0 && !aws.BoolValue(elbal.Enabled) {
+		if len(nl) == 0 && !elbal.Enabled {
 			elbal = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
@@ -306,8 +301,8 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	for _, attr := range lbAttrs.AdditionalAttributes {
-		switch aws.StringValue(attr.Key) {
-		case "elb.http.desyncmitigationmode":
+		switch aws.ToString(attr.Key) {
+		case loadBalancerAttributeDesyncMitigationMode:
 			d.Set("desync_mitigation_mode", attr.Value)
 		}
 	}
@@ -324,8 +319,8 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	// There's only one health check, so save that to state as we
 	// currently can
-	if aws.StringValue(lb.HealthCheck.Target) != "" {
-		d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck))
+	if aws.ToString(lb.HealthCheck.Target) != "" {
+		d.Set(names.AttrHealthCheck, flattenHealthCheck(lb.HealthCheck))
 	}
 
 	return diags

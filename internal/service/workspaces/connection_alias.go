@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -104,7 +103,7 @@ func (r *resourceConnectionAlias) Create(ctx context.Context, req resource.Creat
 	}
 
 	in := &workspaces.CreateConnectionAliasInput{
-		ConnectionString: aws.String(plan.ConnectionString.ValueString()),
+		ConnectionString: plan.ConnectionString.ValueStringPointer(),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -188,7 +187,7 @@ func (r *resourceConnectionAlias) Delete(ctx context.Context, req resource.Delet
 	}
 
 	in := &workspaces.DeleteConnectionAliasInput{
-		AliasId: aws.String(state.ID.ValueString()),
+		AliasId: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteConnectionAlias(ctx, in)
@@ -307,7 +306,7 @@ type resourceConnectionAliasData struct {
 	ConnectionString types.String   `tfsdk:"connection_string"`
 	OwnerAccountId   types.String   `tfsdk:"owner_account_id"`
 	State            types.String   `tfsdk:"state"`
-	Tags             types.Map      `tfsdk:"tags"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
+	Tags             tftags.Map     `tfsdk:"tags"`
+	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }

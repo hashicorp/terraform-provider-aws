@@ -56,11 +56,10 @@ func TestReadLFTagID(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			catalogID, tagKey, err := tflakeformation.ReadLFTagID(test.val)
+			catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(test.val)
 
 			if err == nil && test.expectError {
 				t.Fatal("expected error")
@@ -254,7 +253,7 @@ func testAccCheckLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			catalogID, tagKey, err := tflakeformation.ReadLFTagID(rs.Primary.ID)
+			catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
@@ -289,7 +288,7 @@ func testAccCheckLFTagExists(ctx context.Context, name string) resource.TestChec
 			return fmt.Errorf("no ID is set")
 		}
 
-		catalogID, tagKey, err := tflakeformation.ReadLFTagID(rs.Primary.ID)
+		catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -317,7 +316,7 @@ func testAccCheckLFTagValuesLen(ctx context.Context, name string, expectedLength
 			return fmt.Errorf("no ID is set")
 		}
 
-		catalogID, tagKey, err := tflakeformation.ReadLFTagID(rs.Primary.ID)
+		catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

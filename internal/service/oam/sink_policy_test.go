@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
+func testAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -83,7 +83,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
+func testAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

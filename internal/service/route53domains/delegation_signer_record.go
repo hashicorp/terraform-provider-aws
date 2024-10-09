@@ -149,7 +149,12 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 
 	// Set values for unknowns.
 	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -206,8 +211,8 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 	conn := r.Meta().Route53DomainsClient(ctx)
 
 	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &route53domains.DisassociateDelegationSignerFromDomainInput{
-		DomainName: aws.String(data.DomainName.ValueString()),
-		Id:         aws.String(data.DNSSECKeyID.ValueString()),
+		DomainName: data.DomainName.ValueStringPointer(),
+		Id:         data.DNSSECKeyID.ValueStringPointer(),
 	})
 
 	if err != nil {
@@ -257,6 +262,11 @@ func (data *delegationSignerRecordResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *delegationSignerRecordResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DomainName.ValueString(), data.DNSSECKeyID.ValueString()}, delegationSignerRecordResourceIDPartCount, false)))
+func (data *delegationSignerRecordResourceModel) setID() (string, error) {
+	parts := []string{
+		data.DomainName.ValueString(),
+		data.DNSSECKeyID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, delegationSignerRecordResourceIDPartCount, false)
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "Agents for Amazon Bedrock"
+subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_knowledge_base_association"
 description: |-
@@ -40,6 +40,13 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Agent ID, agent version, and knowledge base ID separated by `,`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 

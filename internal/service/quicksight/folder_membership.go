@@ -9,11 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,31 +20,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Folder Membership")
-func newResourceFolderMembership(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceFolderMembership{}, nil
+func newFolderMembershipResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &folderMembershipResource{}, nil
 }
 
 const (
-	ResNameFolderMembership = "Folder Membership"
+	resNameFolderMembership = "Folder Membership"
 )
 
-type resourceFolderMembership struct {
+type folderMembershipResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
+	framework.WithImportByID
 }
 
-func (r *resourceFolderMembership) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *folderMembershipResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_quicksight_folder_membership"
 }
 
-func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *folderMembershipResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAWSAccountID: schema.StringAttribute{
@@ -76,15 +78,15 @@ func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.Sche
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(quicksight.MemberType_Values()...),
+					enum.FrameworkValidate[awstypes.MemberType](),
 				},
 			},
 		},
 	}
 }
 
-func (r *resourceFolderMembership) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+func (r *folderMembershipResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var plan resourceFolderMembershipData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -95,39 +97,37 @@ func (r *resourceFolderMembership) Create(ctx context.Context, req resource.Crea
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
 		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
 	}
-	plan.ID = types.StringValue(createFolderMembershipID(
-		plan.AWSAccountID.ValueString(), plan.FolderID.ValueString(),
-		plan.MemberType.ValueString(), plan.MemberID.ValueString(),
-	))
-
+	awsAccountID, folderID, memberType, memberID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.FolderID), flex.StringValueFromFramework(ctx, plan.MemberType), flex.StringValueFromFramework(ctx, plan.MemberID)
 	in := &quicksight.CreateFolderMembershipInput{
-		AwsAccountId: aws.String(plan.AWSAccountID.ValueString()),
-		FolderId:     aws.String(plan.FolderID.ValueString()),
-		MemberId:     aws.String(plan.MemberID.ValueString()),
-		MemberType:   aws.String(plan.MemberType.ValueString()),
+		AwsAccountId: aws.String(awsAccountID),
+		FolderId:     aws.String(folderID),
+		MemberId:     aws.String(memberID),
+		MemberType:   awstypes.MemberType(memberType),
 	}
 
-	out, err := conn.CreateFolderMembershipWithContext(ctx, in)
+	out, err := conn.CreateFolderMembership(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameFolderMembership, plan.MemberID.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameFolderMembership, plan.MemberID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.FolderMember == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameFolderMembership, plan.MemberID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameFolderMembership, plan.MemberID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
+	plan.ID = flex.StringValueToFramework(ctx, folderMembershipCreateResourceID(awsAccountID, folderID, memberType, memberID))
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceFolderMembership) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+func (r *folderMembershipResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceFolderMembershipData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -135,31 +135,29 @@ func (r *resourceFolderMembership) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := FindFolderMembershipByID(ctx, conn, state.ID.ValueString())
+	awsAccountID, folderID, memberType, memberID, err := folderMembershipParseResourceID(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameFolderMembership, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	out, err := findFolderMembershipByFourPartKey(ctx, conn, awsAccountID, folderID, memberType, memberID)
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, ResNameFolderMembership, state.ID.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, resNameFolderMembership, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	state.MemberID = flex.StringToFramework(ctx, out.MemberId)
-
-	// To support import, parse the ID for the component keys and set
-	// individual values in state
-	awsAccountID, folderID, memberType, _, err := ParseFolderMembershipID(state.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, ResNameIngestion, state.ID.String(), nil),
-			err.Error(),
-		)
-		return
-	}
 	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
 	state.FolderID = flex.StringValueToFramework(ctx, folderID)
 	state.MemberType = flex.StringValueToFramework(ctx, memberType)
@@ -167,12 +165,8 @@ func (r *resourceFolderMembership) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// There is no update API, so this method is a no-op
-func (r *resourceFolderMembership) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
-
-func (r *resourceFolderMembership) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+func (r *folderMembershipResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceFolderMembershipData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -180,81 +174,100 @@ func (r *resourceFolderMembership) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	in := &quicksight.DeleteFolderMembershipInput{
-		AwsAccountId: aws.String(state.AWSAccountID.ValueString()),
-		FolderId:     aws.String(state.FolderID.ValueString()),
-		MemberId:     aws.String(state.MemberID.ValueString()),
-		MemberType:   aws.String(state.MemberType.ValueString()),
+	awsAccountID, folderID, memberType, memberID, err := folderMembershipParseResourceID(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameFolderMembership, state.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	_, err := conn.DeleteFolderMembershipWithContext(ctx, in)
+	_, err = conn.DeleteFolderMembership(ctx, &quicksight.DeleteFolderMembershipInput{
+		AwsAccountId: aws.String(awsAccountID),
+		FolderId:     aws.String(folderID),
+		MemberId:     aws.String(memberID),
+		MemberType:   awstypes.MemberType(memberType),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-			return
-		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, ResNameFolderMembership, state.ID.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameFolderMembership, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceFolderMembership) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func FindFolderMembershipByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.MemberIdArnPair, error) {
-	awsAccountID, folderID, _, memberID, err := ParseFolderMembershipID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	in := &quicksight.ListFolderMembersInput{
+func findFolderMembershipByFourPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, folderID, memberType, memberID string) (*awstypes.MemberIdArnPair, error) {
+	input := &quicksight.ListFolderMembersInput{
 		AwsAccountId: aws.String(awsAccountID),
 		FolderId:     aws.String(folderID),
 	}
 
-	// There is no Get/Describe API for a single folder member, so utilize the
-	// ListFolderMembers API to get all members and check for the presence of the
-	// configured member ID
-	out, err := conn.ListFolderMembersWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
+	return findFolderMembership(ctx, conn, input, func(v *awstypes.MemberIdArnPair) bool {
+		return aws.ToString(v.MemberId) == memberID
+	})
+}
+
+func findFolderMembership(ctx context.Context, conn *quicksight.Client, input *quicksight.ListFolderMembersInput, filter tfslices.Predicate[*awstypes.MemberIdArnPair]) (*awstypes.MemberIdArnPair, error) {
+	output, err := findFolderMemberships(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
 
-	for _, member := range out.FolderMemberList {
-		if aws.StringValue(member.MemberId) == memberID {
-			return member, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFolderMemberships(ctx context.Context, conn *quicksight.Client, input *quicksight.ListFolderMembersInput, filter tfslices.Predicate[*awstypes.MemberIdArnPair]) ([]awstypes.MemberIdArnPair, error) {
+	var output []awstypes.MemberIdArnPair
+
+	pages := quicksight.NewListFolderMembersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.FolderMemberList {
+			if filter(&v) {
+				output = append(output, v)
+			}
 		}
 	}
 
-	return nil, &retry.NotFoundError{
-		LastError:   errors.New("member ID not found in folder"),
-		LastRequest: in,
-	}
+	return output, nil
 }
 
-func ParseFolderMembershipID(id string) (string, string, string, string, error) {
-	parts := strings.SplitN(id, ",", 4)
+const folderMembershipResourceIDSeparator = ","
+
+func folderMembershipCreateResourceID(awsAccountID, folderID, memberType, memberID string) string {
+	parts := []string{awsAccountID, folderID, memberType, memberID}
+	id := strings.Join(parts, folderMembershipResourceIDSeparator)
+
+	return id
+}
+
+func folderMembershipParseResourceID(id string) (string, string, string, string, error) {
+	parts := strings.SplitN(id, folderMembershipResourceIDSeparator, 4)
+
 	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
-		return "", "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,FOLDER_ID,MEMBER_TYPE,MEMBER_ID", id)
+		return "", "", "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected AWS_ACCOUNT_ID%[2]sFOLDER_ID%[2]sMEMBER_TYPE%[2]sMEMBER_ID", id, folderMembershipResourceIDSeparator)
 	}
 	return parts[0], parts[1], parts[2], parts[3], nil
-}
-
-func createFolderMembershipID(awsAccountID, folderID, memberType, memberID string) string {
-	return strings.Join([]string{awsAccountID, folderID, memberType, memberID}, ",")
 }
 
 type resourceFolderMembershipData struct {

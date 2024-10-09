@@ -96,4 +96,4 @@ Using `terraform import`, import Network Insights Analyzes using the `id`. For e
 % terraform import aws_ec2_network_insights_analysis.test nia-0462085c957f11a55
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3063c975278b92355095dba4f28ceb3bf6d912cc122c65aa893f7f35c8cbcee9 -->
+<!-- cache-key: cdktf-0.20.9 input-3063c975278b92355095dba4f28ceb3bf6d912cc122c65aa893f7f35c8cbcee9 -->

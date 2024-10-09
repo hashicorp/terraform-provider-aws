@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
-<!-- cache-key: cdktf-0.20.1 input-e89700b62df039f36c49f7f24832619d2b205441f8e47870c78f8a6f079765fb -->
+<!-- cache-key: cdktf-0.20.9 input-e89700b62df039f36c49f7f24832619d2b205441f8e47870c78f8a6f079765fb -->
