@@ -1,25 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_instance_profile")
-func DataSourceInstanceProfile() *schema.Resource {
+// @SDKDataSource("aws_iam_instance_profile", name="Instance Profile")
+func dataSourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceProfileRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -27,15 +29,15 @@ func DataSourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,33 +55,22 @@ func DataSourceInstanceProfile() *schema.Resource {
 
 func dataSourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
+	instanceProfile, err := findInstanceProfileByName(ctx, conn, name)
 
-	req := &iam.GetInstanceProfileInput{
-		InstanceProfileName: aws.String(name),
-	}
-
-	log.Printf("[DEBUG] Reading IAM Instance Profile: %s", req)
-	resp, err := conn.GetInstanceProfileWithContext(ctx, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting instance profiles: %s", err)
-	}
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "no IAM instance profile found")
+		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", name, err)
 	}
 
-	instanceProfile := resp.InstanceProfile
-
-	d.SetId(aws.StringValue(instanceProfile.InstanceProfileId))
-	d.Set("arn", instanceProfile.Arn)
+	d.SetId(aws.ToString(instanceProfile.InstanceProfileId))
+	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", fmt.Sprintf("%v", instanceProfile.CreateDate))
-	d.Set("path", instanceProfile.Path)
-
+	d.Set(names.AttrPath, instanceProfile.Path)
 	if len(instanceProfile.Roles) > 0 {
 		role := instanceProfile.Roles[0]
-		d.Set("role_arn", role.Arn)
+		d.Set(names.AttrRoleARN, role.Arn)
 		d.Set("role_id", role.RoleId)
 		d.Set("role_name", role.RoleName)
 	}

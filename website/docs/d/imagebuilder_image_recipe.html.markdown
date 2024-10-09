@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `arn` - (Required) ARN of the image recipe.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `block_device_mapping` - Set of objects with block device mappings for the image recipe.
     * `device_name` - Name of the device. For example, `/dev/sda` or `/dev/xvdb`.

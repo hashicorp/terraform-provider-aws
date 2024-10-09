@@ -1,5 +1,5 @@
 issues:
-  max-per-linter: 0
+  max-issues-per-linter: 0
   max-same-issues: 0
 
 linters:
@@ -8,4 +8,4 @@ linters:
     - gofmt
 
 run:
-  timeout: 10m
+  timeout: 30m

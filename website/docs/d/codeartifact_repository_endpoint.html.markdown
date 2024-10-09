@@ -22,15 +22,15 @@ data "aws_codeartifact_repository_endpoint" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `domain` - (Required) Name of the domain that contains the repository.
 * `repository` - (Required) Name of the repository.
 * `format` - (Required) Which endpoint of a repository to return. A repository has one endpoint for each package format: `npm`, `pypi`, `maven`, and `nuget`.
 * `domain_owner` - (Optional) Account number of the AWS account that owns the domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `repository_endpoint` - URL of the returned endpoint.

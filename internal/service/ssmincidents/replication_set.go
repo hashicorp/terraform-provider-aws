@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents
 
 import (
@@ -9,9 +12,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,7 +30,8 @@ const (
 	ResNameReplicationSet = "Replication Set"
 )
 
-// @SDKResource("aws_ssmincidents_replication_set")
+// @SDKResource("aws_ssmincidents_replication_set", name="Replication Set")
+// @Tags(identifierAttribute="id")
 func ResourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSetCreate,
@@ -42,38 +46,38 @@ func ResourceReplicationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          "DefaultKey",
 							ValidateDiagFunc: validateNonAliasARN,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_message": {
+						names.AttrStatusMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			// all other computed fields in alphabetic order
 			"created_by": {
 				Type:     schema.TypeString,
@@ -87,7 +91,7 @@ func ResourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,27 +105,22 @@ func ResourceReplicationSet() *schema.Resource {
 	}
 }
 
-func resourceReplicationSetCreate(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateReplicationSetInput{
-		Regions: expandRegions(d.Get("region").(*schema.Set).List()),
+		Regions: expandRegions(d.Get(names.AttrRegion).(*schema.Set).List()),
+		Tags:    getTagsIn(ctx),
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(context, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAWS().Map()
-	}
-
-	createReplicationSetOutput, err := client.CreateReplicationSet(context, input)
+	createReplicationSetOutput, err := client.CreateReplicationSet(ctx, input)
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", err)
 	}
 
 	if createReplicationSetOutput == nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(createReplicationSetOutput.Arn))
@@ -130,111 +129,99 @@ func resourceReplicationSetCreate(context context.Context, d *schema.ResourceDat
 		Arn: aws.String(d.Id()),
 	}
 
-	if err := ssmincidents.NewWaitForReplicationSetActiveWaiter(client).Wait(context, getReplicationSetInput, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForCreation, ResNameReplicationSet, d.Id(), err)
+	if err := ssmincidents.NewWaitForReplicationSetActiveWaiter(client).Wait(ctx, getReplicationSetInput, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionWaitingForCreation, ResNameReplicationSet, d.Id(), err)
 	}
 
-	return resourceReplicationSetRead(context, d, meta)
+	return append(diags, resourceReplicationSetRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSetRead(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	replicationSet, err := FindReplicationSetByID(context, client, d.Id())
+	replicationSet, err := FindReplicationSetByID(ctx, client, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSMIncidents ReplicationSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
 	}
 
-	d.Set("arn", replicationSet.Arn)
+	d.Set(names.AttrARN, replicationSet.Arn)
 	d.Set("created_by", replicationSet.CreatedBy)
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
-	d.Set("status", replicationSet.Status)
-
-	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
+	if err := d.Set(names.AttrRegion, flattenRegions(replicationSet.RegionMap)); err != nil {
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
+	d.Set(names.AttrStatus, replicationSet.Status)
 
-	if diagErr := setResourceDataTags(context, d, meta, client, ResNameReplicationSet); diagErr != nil {
-		return diagErr
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReplicationSetUpdate(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	if d.HasChanges("region") {
+	if d.HasChanges(names.AttrRegion) {
 		input := &ssmincidents.UpdateReplicationSetInput{
 			Arn: aws.String(d.Id()),
 		}
 
 		if err := updateRegionsInput(d, input); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet (%s): %#v", d.Id(), input)
-		_, err := client.UpdateReplicationSet(context, input)
+		_, err := client.UpdateReplicationSet(ctx, input)
 		if err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 
 		getReplicationSetInput := &ssmincidents.GetReplicationSetInput{
 			Arn: aws.String(d.Id()),
 		}
 
-		if err := ssmincidents.NewWaitForReplicationSetActiveWaiter(client).Wait(context, getReplicationSetInput, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(), err)
+		if err := ssmincidents.NewWaitForReplicationSetActiveWaiter(client).Wait(ctx, getReplicationSetInput, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(), err)
 		}
 	}
 
-	// tags_all does not detect changes when tag value is "" while this change is detected by tags
-	if d.HasChanges("tags_all", "tags") {
-		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
-
-		if err := updateResourceTags(context, client, d); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
-		}
-	}
-
-	return resourceReplicationSetRead(context, d, meta)
+	return append(diags, resourceReplicationSetRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSetDelete(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	log.Printf("[INFO] Deleting SSMIncidents ReplicationSet %s", d.Id())
-
-	_, err := client.DeleteReplicationSet(context, &ssmincidents.DeleteReplicationSetInput{
+	log.Printf("[INFO] Deleting SSMIncidents ReplicationSet: %s", d.Id())
+	_, err := client.DeleteReplicationSet(ctx, &ssmincidents.DeleteReplicationSetInput{
 		Arn: aws.String(d.Id()),
 	})
 
 	if err != nil {
 		var notFoundError *types.ResourceNotFoundException
 		if errors.As(err, &notFoundError) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SSMIncidents, create.ErrActionDeleting, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionDeleting, ResNameReplicationSet, d.Id(), err)
 	}
 
 	getReplicationSetInput := &ssmincidents.GetReplicationSetInput{
 		Arn: aws.String(d.Id()),
 	}
 
-	if err := ssmincidents.NewWaitForReplicationSetDeletedWaiter(client).Wait(context, getReplicationSetInput, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForDeletion, ResNameReplicationSet, d.Id(), err)
+	if err := ssmincidents.NewWaitForReplicationSetDeletedWaiter(client).Wait(ctx, getReplicationSetInput, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionWaitingForDeletion, ResNameReplicationSet, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // converts a list of regions to a map which maps region name to kms key arn
@@ -242,8 +229,8 @@ func regionListToRegionMap(list []interface{}) map[string]string {
 	regionMap := make(map[string]string)
 	for _, region := range list {
 		regionData := region.(map[string]interface{})
-		regionName := regionData["name"].(string)
-		regionMap[regionName] = regionData["kms_key_arn"].(string)
+		regionName := regionData[names.AttrName].(string)
+		regionMap[regionName] = regionData[names.AttrKMSKeyARN].(string)
 	}
 
 	return regionMap
@@ -252,7 +239,7 @@ func regionListToRegionMap(list []interface{}) map[string]string {
 // updates UpdateReplicationSetInput to include any required actions
 // invalid updates return errors from AWS Api
 func updateRegionsInput(d *schema.ResourceData, input *ssmincidents.UpdateReplicationSetInput) error {
-	old, new := d.GetChange("region")
+	old, new := d.GetChange(names.AttrRegion)
 	oldRegions := regionListToRegionMap(old.(*schema.Set).List())
 	newRegions := regionListToRegionMap(new.(*schema.Set).List())
 
@@ -295,10 +282,10 @@ func updateRegionsInput(d *schema.ResourceData, input *ssmincidents.UpdateReplic
 	return nil
 }
 
-func resourceReplicationSetImport(context context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+func resourceReplicationSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	arn, err := getReplicationSetARN(context, client)
+	arn, err := getReplicationSetARN(ctx, client)
 
 	if err != nil {
 		return nil, err

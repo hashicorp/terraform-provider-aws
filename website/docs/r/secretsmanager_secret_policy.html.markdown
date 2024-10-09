@@ -51,16 +51,25 @@ The following arguments are optional:
 
 * `block_public_policy` - (Optional) Makes an optional API call to Zelkova to validate the Resource Policy to prevent broad access to your secret.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the secret.
 
 ## Import
 
-`aws_secretsmanager_secret_policy` can be imported by using the secret Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_policy` using the secret Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_secretsmanager_secret_policy.example
+  id = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+}
 ```
-$ terraform import aws_secretsmanager_secret_policy.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
+
+Using `terraform import`, import `aws_secretsmanager_secret_policy` using the secret Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_secretsmanager_secret_policy.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```

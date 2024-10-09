@@ -1,17 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -23,19 +27,22 @@ import (
 // serializing tests so that we do not hit the lightsail rate limit for distributions
 func TestAccLightsailDistribution_serial(t *testing.T) {
 	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"distribution": {
-			"basic":                   testAccDistribution_basic,
-			"disappears":              testAccDistribution_disappears,
+			acctest.CtBasic:           testAccDistribution_basic,
+			acctest.CtDisappears:      testAccDistribution_disappears,
 			"is_enabled":              testAccDistribution_isEnabled,
 			"cache_behavior":          testAccDistribution_cacheBehavior,
 			"cache_behavior_settings": testAccDistribution_cacheBehaviorSettings,
 			"default_cache_behavior":  testAccDistribution_defaultCacheBehavior,
 			"ip_address_type":         testAccDistribution_ipAddressType,
 			"tags":                    testAccDistribution_tags,
+			"keyOnlyTags":             testAccDistribution_keyOnlyTags,
 		},
 	}
 
@@ -51,11 +58,11 @@ func testAccDistribution_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,40 +70,40 @@ func testAccDistribution_basic(t *testing.T) {
 				Config: testAccDistributionConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "alternative_domain_names.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Distribution/*`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "alternative_domain_names.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`Distribution/*`)),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.cached_http_methods", "GET,HEAD"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.default_ttl", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.option", "none"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.maximum_ttl", "31536000"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.behavior", "cache"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.region_name"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.name", bucketName),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.region_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.resource_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin_public_dns"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 				),
 			},
@@ -114,25 +121,23 @@ func testAccDistribution_isEnabled(t *testing.T) {
 	resourceName := "aws_lightsail_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	isEnabled := "true"
-	isDisabled := "false"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isDisabled),
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", isDisabled),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -141,10 +146,10 @@ func testAccDistribution_isEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isEnabled),
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", isEnabled),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -163,11 +168,11 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -175,9 +180,9 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 				Config: testAccDistributionConfig_cacheBehavior1(rName, bucketName, path1, behaviorCache),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
-						"path": path1,
+						names.AttrPath: path1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						"behavior": behaviorCache,
@@ -193,15 +198,15 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 				Config: testAccDistributionConfig_cacheBehavior2(rName, bucketName, path1, behaviorCache, path2, behaviorCache),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
-						"path": path1,
+						names.AttrPath: path1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						"behavior": behaviorCache,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
-						"path": path2,
+						names.AttrPath: path2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						"behavior": behaviorCache,
@@ -222,11 +227,11 @@ func testAccDistribution_defaultCacheBehavior(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -234,7 +239,7 @@ func testAccDistribution_defaultCacheBehavior(t *testing.T) {
 				Config: testAccDistributionConfig_defaultCacheBehaviorDontCache(rName, instanceName, ipName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_cache_behavior.*", map[string]string{
 						"behavior": "dont-cache",
 					}),
@@ -249,7 +254,7 @@ func testAccDistribution_defaultCacheBehavior(t *testing.T) {
 				Config: testAccDistributionConfig_defaultCacheBehaviorCache(rName, instanceName, ipName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_cache_behavior.*", map[string]string{
 						"behavior": "cache",
 					}),
@@ -268,19 +273,19 @@ func testAccDistribution_ipAddressType(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, lightsail.IpAddressTypeIpv4),
+				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, string(types.IpAddressTypeIpv4)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", lightsail.IpAddressTypeIpv4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(types.IpAddressTypeIpv4)),
 				),
 			},
 			{
@@ -289,10 +294,10 @@ func testAccDistribution_ipAddressType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, lightsail.IpAddressTypeDualstack),
+				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, string(types.IpAddressTypeDualstack)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", lightsail.IpAddressTypeDualstack),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(types.IpAddressTypeDualstack)),
 				),
 			},
 		},
@@ -304,7 +309,6 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 	resourceName := "aws_lightsail_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	allow1 := "test"
 	allow2 := "special"
 	header1 := "Host"
 	header2 := "Origin"
@@ -312,35 +316,35 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_cacheBehaviorSettings(rName, bucketName, allow1, allow2, header1, header2),
+				Config: testAccDistributionConfig_cacheBehaviorSettings(rName, bucketName, "test", allow2, header1, header2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.cached_http_methods", "GET,HEAD,OPTIONS"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.default_ttl", "50000"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.maximum_ttl", "100000"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.option", "allow-list"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.*", allow1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.*", "test"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.*", allow2),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "allow-list"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header2),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "true"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", allow1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtTrue),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", "test"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", allow2),
 				),
 			},
@@ -353,24 +357,24 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 				Config: testAccDistributionConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.cached_http_methods", "GET,HEAD"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.default_ttl", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.maximum_ttl", "31536000"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.option", "none"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
 				),
 			},
 		},
@@ -386,20 +390,20 @@ func testAccDistribution_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_tags1(rName, bucketName, "key1", "value1"),
+				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -408,20 +412,72 @@ func testAccDistribution_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfig_tags2(rName, bucketName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDistributionConfig_tags2(rName, bucketName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDistributionConfig_tags1(rName, bucketName, "key2", "value2"),
+				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccDistribution_keyOnlyTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test key-only tag if/when the CreateDistribution validation bug is fixed
+			{
+				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_tags2(rName, bucketName, acctest.CtKey1, "", acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 		},
@@ -437,11 +493,11 @@ func testAccDistribution_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -459,7 +515,7 @@ func testAccDistribution_disappears(t *testing.T) {
 
 func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_distribution" {
@@ -494,7 +550,7 @@ func testAccCheckDistributionExists(ctx context.Context, name string) resource.T
 			return create.Error(names.Lightsail, create.ErrActionCheckingExistence, tflightsail.ResNameDistribution, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 		resp, err := tflightsail.FindDistributionByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

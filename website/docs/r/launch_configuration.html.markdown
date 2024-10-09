@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
-!> **WARNING:** The use of launch configurations is discouraged in favour of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
+!> **WARNING:** The use of launch configurations is discouraged in favor of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
 
 -> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
 
@@ -163,8 +163,6 @@ The following arguments are optional:
 * `spot_price` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.
 * `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
 * `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
-* `vpc_classic_link_id` - (Optional) The ID of a ClassicLink-enabled VPC. Only applies to EC2-Classic instances. (eg. `vpc-2730681a`)
-* `vpc_classic_link_security_groups` - (Optional) The IDs of one or more security groups for the specified ClassicLink-enabled VPC (eg. `sg-46ae3d11`).
 
 ## Block devices
 
@@ -218,9 +216,9 @@ Modifying any of the `ebs_block_device` settings requires resource replacement.
 * `volume_size` - (Optional) The size of the volume in gigabytes.
 * `volume_type` - (Optional) The type of volume. Can be `standard`, `gp2`, `gp3`, `st1`, `sc1` or `io1`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the launch configuration.
 * `arn` - The Amazon Resource Name of the launch configuration.
@@ -232,8 +230,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch configurations can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import launch configurations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_launch_configuration.as_conf
+  id = "terraform-lg-123456"
+}
 ```
-$ terraform import aws_launch_configuration.as_conf terraform-lg-123456
+
+Using `terraform import`, import launch configurations using the `name`. For example:
+
+```console
+% terraform import aws_launch_configuration.as_conf terraform-lg-123456
 ```

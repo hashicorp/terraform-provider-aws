@@ -1,21 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
@@ -26,7 +31,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,7 +67,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +76,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -80,7 +85,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -94,7 +99,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -103,7 +108,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -118,7 +123,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -140,13 +145,13 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name),
-				ExpectError: regexp.MustCompile(`Error validating ambiguous role resolution`),
+				ExpectError: regexache.MustCompile(`validating ambiguous role resolution`),
 			},
 		},
 	})
@@ -158,13 +163,13 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name),
-				ExpectError: regexp.MustCompile(`mapping_rule is required for Rules`),
+				ExpectError: regexache.MustCompile(`mapping_rule is required for Rules`),
 			},
 		},
 	})
@@ -176,13 +181,13 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name),
-				ExpectError: regexp.MustCompile(`mapping_rule must not be set for Token based role mapping`),
+				ExpectError: regexache.MustCompile(`mapping_rule must not be set for Token based role mapping`),
 			},
 		},
 	})
@@ -199,9 +204,9 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 			return errors.New("No Cognito Identity Pool Roles Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		_, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+		_, err := conn.GetIdentityPoolRoles(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
 		})
 
@@ -211,19 +216,19 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 
 func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
 				continue
 			}
 
-			_, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+			_, err := conn.GetIdentityPoolRoles(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
 				IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
 			})
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err
@@ -234,7 +239,7 @@ func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccPoolRolesAttachmentConfig(name string) string {
+func testAccPoolRolesAttachmentConfig_base(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
@@ -351,7 +356,7 @@ EOF
 }
 
 func testAccPoolRolesAttachmentConfig_basic(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -363,7 +368,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappings(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -388,7 +393,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsUpdated(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -420,7 +425,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -444,7 +449,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -462,7 +467,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 

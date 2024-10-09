@@ -12,6 +12,8 @@ Provides an SES configuration set resource.
 
 ## Example Usage
 
+### Basic Example
+
 ```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
@@ -26,6 +28,18 @@ resource "aws_ses_configuration_set" "test" {
 
   delivery_options {
     tls_policy = "Require"
+  }
+}
+```
+
+### Tracking Options
+
+```terraform
+resource "aws_ses_configuration_set" "test" {
+  name = "some-configuration-set-test"
+
+  tracking_options {
+    custom_redirect_domain = "sub.example.com"
   }
 }
 ```
@@ -51,9 +65,9 @@ The following argument is optional:
 
 * `custom_redirect_domain` - (Optional) Custom subdomain that is used to redirect email recipients to the Amazon SES event tracking domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - SES configuration set ARN.
 * `id` - SES configuration set name.
@@ -61,8 +75,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SES Configuration Sets can be imported using their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES Configuration Sets using their `name`. For example:
 
+```terraform
+import {
+  to = aws_ses_configuration_set.test
+  id = "some-configuration-set-test"
+}
 ```
-$ terraform import aws_ses_configuration_set.test some-configuration-set-test
+
+Using `terraform import`, import SES Configuration Sets using their `name`. For example:
+
+```console
+% terraform import aws_ses_configuration_set.test some-configuration-set-test
 ```

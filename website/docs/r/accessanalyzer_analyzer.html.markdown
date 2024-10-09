@@ -43,12 +43,21 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `configuration` - (Optional) A block that specifies the configuration of the analyzer. [Documented below](#configuration-argument-reference)
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT` or `ORGANIZATION`. Defaults to `ACCOUNT`.
+* `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT`, `ORGANIZATION`, `ACCOUNT_UNUSED_ACCESS `, `ORGANIZATION_UNUSED_ACCESS`. Defaults to `ACCOUNT`.
 
-## Attributes Reference
+### `configuration` Argument Reference
 
-In addition to all arguments above, the following attributes are exported:
+* `unused_access` - A block that specifies the configuration of an unused access analyzer for an AWS organization or account. [Documented below](#unused_access-argument-reference)
+
+### `unused_access` Argument Reference
+
+* `unused_access_age` - The specified access age in days for which to generate findings for unused access.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Analyzer.
 * `id` - Analyzer name.
@@ -56,8 +65,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Access Analyzer Analyzers can be imported using the `analyzer_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Access Analyzer Analyzers using the `analyzer_name`. For example:
 
+```terraform
+import {
+  to = aws_accessanalyzer_analyzer.example
+  id = "example"
+}
 ```
-$ terraform import aws_accessanalyzer_analyzer.example example
+
+Using `terraform import`, import Access Analyzer Analyzers using the `analyzer_name`. For example:
+
+```console
+% terraform import aws_accessanalyzer_analyzer.example example
 ```

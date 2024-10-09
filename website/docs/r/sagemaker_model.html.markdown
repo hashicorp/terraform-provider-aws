@@ -46,7 +46,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
@@ -59,13 +59,17 @@ The following arguments are supported:
 
 The `primary_container` and `container` block both support:
 
-* `image` - (Required) The registry path where the inference code image is stored in Amazon ECR.
+* `image` - (Optional) The registry path where the inference code image is stored in Amazon ECR.
 * `mode` - (Optional) The container hosts value `SingleModel/MultiModel`. The default value is `SingleModel`.
 * `model_data_url` - (Optional) The URL for the S3 location where model artifacts are stored.
+* `model_package_name` - (Optional) The Amazon Resource Name (ARN) of the model package to use to create the model.
+* `model_data_source` - (Optional) The location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker Developer Guide_.
 * `container_hostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
 * `image_config` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
+* `inference_specification_name` - (Optional) The inference specification name in the model package version.
+* `multi_model_config` - (Optional) Specifies additional configuration for multi-model endpoints. see [Multi Model Config](#multi-model-config).
 
 ### Image Config
 
@@ -76,13 +80,32 @@ The `primary_container` and `container` block both support:
 
 * `repository_credentials_provider_arn` - (Required) The Amazon Resource Name (ARN) of an AWS Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an AWS Lambda function, see [Create a Lambda function with the console](https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) in the _AWS Lambda Developer Guide_.
 
+### Model Data Source
+
+* `s3_data_source` - (Required) The S3 location of model data to deploy.
+
+#### S3 Data Source
+
+* `compression_type` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
+* `s3_data_type` - (Required) The type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
+* `s3_uri` - (Required) The S3 path of model data to deploy.
+* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block]. see [Model Access Config](#model-access-config).
+
+##### Model Access Config
+
+* `accept_eula` - (Required) Specifies agreement to the model end-user license agreement (EULA). The AcceptEula value must be explicitly defined as `true` in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
+
+### Multi Model Config
+
+* `model_cache_setting` - (Optional) Whether to cache models for a multi-model endpoint. By default, multi-model endpoints cache models so that a model does not have to be loaded into memory each time it is invoked. Some use cases do not benefit from model caching. For example, if an endpoint hosts a large number of models that are each invoked infrequently, the endpoint might perform better if you disable model caching. To disable model caching, set the value of this parameter to `Disabled`. Allowed values are: `Enabled` and `Disabled`.
+
 ## Inference Execution Config
 
 * `mode` - (Required) How containers in a multi-container are run. The following values are valid `Serial` and `Direct`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the model.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this model.
@@ -90,8 +113,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Models can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import models using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_model.test_model
+  id = "model-foo"
+}
 ```
-$ terraform import aws_sagemaker_model.test_model model-foo
+
+Using `terraform import`, import models using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_model.test_model model-foo
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog_test
 
 import (
@@ -5,12 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationsAccess_basic(t *testing.T) {
@@ -23,7 +27,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationsAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -31,7 +35,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 				Config: testAccOrganizationsAccessConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationsAccessExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -40,7 +44,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 
 func testAccCheckOrganizationsAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_organizations_access" {
@@ -72,7 +76,7 @@ func testAccCheckOrganizationsAccessExists(ctx context.Context, resourceName str
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		output, err := tfservicecatalog.WaitOrganizationsAccessStable(ctx, conn, tfservicecatalog.OrganizationsAccessStableTimeout)
 
@@ -84,11 +88,11 @@ func testAccCheckOrganizationsAccessExists(ctx context.Context, resourceName str
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): empty response", rs.Primary.ID)
 		}
 
-		if output != servicecatalog.AccessStatusEnabled && rs.Primary.Attributes["enabled"] == "true" {
+		if output != string(awstypes.AccessStatusEnabled) && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtTrue {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 
-		if output == servicecatalog.AccessStatusEnabled && rs.Primary.Attributes["enabled"] == "false" {
+		if output == string(awstypes.AccessStatusEnabled) && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtFalse {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 

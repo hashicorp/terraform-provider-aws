@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -7,29 +10,32 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_spot_instance_request", name="Spot Instance Request")
 // @Tags(identifierAttribute="id")
-func ResourceSpotInstanceRequest() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceSpotInstanceRequest() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotInstanceRequestCreate,
 		ReadWithoutTimeout:   resourceSpotInstanceRequestRead,
-		DeleteWithoutTimeout: resourceSpotInstanceRequestDelete,
 		UpdateWithoutTimeout: resourceSpotInstanceRequestUpdate,
+		DeleteWithoutTimeout: resourceSpotInstanceRequestDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -37,27 +43,60 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Read:   schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: func() map[string]*schema.Schema {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
-			s := ResourceInstance().Schema
+			s := resourceInstance().SchemaMap()
 
-			// Everything on a spot instance is ForceNew except tags
+			// Everything on a spot instance is ForceNew (except tags/tags_all).
 			for k, v := range s {
-				if k == "tags" || k == "tags_all" {
+				if v.Computed && !v.Optional {
 					continue
 				}
-				v.ForceNew = true
+				// tags_all is Optional+Computed.
+				if k == names.AttrTags || k == names.AttrTagsAll || k == "volume_tags" {
+					continue
+				}
+				// Copy-on-write
+				x := *v // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				x.ForceNew = true
+				s[k] = &x
 			}
 
-			s["volume_tags"] = &schema.Schema{
-				Type:     schema.TypeMap,
+			// Remove attributes added for spot instances.
+			delete(s, "instance_lifecycle")
+			delete(s, "instance_market_options")
+			delete(s, "spot_instance_request_id")
+
+			s["block_duration_minutes"] = &schema.Schema{
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntDivisibleBy(60),
+			}
+			s["instance_interruption_behavior"] = &schema.Schema{
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.InstanceInterruptionBehaviorTerminate,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.InstanceInterruptionBehavior](),
+			}
+			s["launch_group"] = &schema.Schema{
+				Type:     schema.TypeString,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				ForceNew: true,
 			}
-
+			s["spot_bid_status"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
+			s["spot_instance_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
 			s["spot_price"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -70,46 +109,15 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 					return big.NewFloat(oldFloat).Cmp(big.NewFloat(newFloat)) == 0
 				},
 			}
-			s["spot_type"] = &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.SpotInstanceTypePersistent,
-				ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
-			}
-			s["wait_for_fulfillment"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			}
-			s["launch_group"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			}
-			s["spot_bid_status"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
 			s["spot_request_state"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			}
-			s["spot_instance_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
-			s["block_duration_minutes"] = &schema.Schema{
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntDivisibleBy(60),
-			}
-			s["instance_interruption_behavior"] = &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.InstanceInterruptionBehaviorTerminate,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+			s["spot_type"] = &schema.Schema{
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.SpotInstanceTypePersistent,
+				ValidateDiagFunc: enum.Validate[awstypes.SpotInstanceType](),
 			}
 			s["valid_from"] = &schema.Schema{
 				Type:         schema.TypeString,
@@ -125,6 +133,12 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
+			s["wait_for_fulfillment"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			}
+
 			return s
 		}(),
 
@@ -136,21 +150,21 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "requesting EC2 Spot Instances: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	spotOpts := &ec2.RequestSpotInstancesInput{
+	input := &ec2.RequestSpotInstancesInput{
 		ClientToken: aws.String(id.UniqueId()),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
 		// Users can get equivalent behavior out of TF's "count" meta-parameter.
-		InstanceCount:                aws.Int64(1),
-		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behavior").(string)),
-		LaunchSpecification: &ec2.RequestSpotLaunchSpecification{
+		InstanceCount:                aws.Int32(1),
+		InstanceInterruptionBehavior: awstypes.InstanceInterruptionBehavior(d.Get("instance_interruption_behavior").(string)),
+		LaunchSpecification: &awstypes.RequestSpotLaunchSpecification{
 			BlockDeviceMappings: instanceOpts.BlockDeviceMappings,
 			EbsOptimized:        instanceOpts.EBSOptimized,
 			Monitoring:          instanceOpts.Monitoring,
@@ -165,103 +179,74 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 			NetworkInterfaces:   instanceOpts.NetworkInterfaces,
 		},
 		SpotPrice:         aws.String(d.Get("spot_price").(string)),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSpotInstancesRequest),
-		Type:              aws.String(d.Get("spot_type").(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSpotInstancesRequest),
+		Type:              awstypes.SpotInstanceType(d.Get("spot_type").(string)),
 	}
 
 	if v, ok := d.GetOk("block_duration_minutes"); ok {
-		spotOpts.BlockDurationMinutes = aws.Int64(int64(v.(int)))
+		input.BlockDurationMinutes = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("launch_group"); ok {
-		spotOpts.LaunchGroup = aws.String(v.(string))
+		input.LaunchGroup = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
-		validFrom, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "requesting EC2 Spot Instances: %s", err)
-		}
-		spotOpts.ValidFrom = aws.Time(validFrom)
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		input.ValidFrom = aws.Time(v)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		validUntil, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "requesting EC2 Spot Instances: %s", err)
-		}
-		spotOpts.ValidUntil = aws.Time(validUntil)
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		input.ValidUntil = aws.Time(v)
 	}
 
 	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set or set to 'terminate'
-	if v, exists := d.GetOkExists("instance_interruption_behavior"); v.(string) == ec2.InstanceInterruptionBehaviorTerminate || !exists {
-		spotOpts.LaunchSpecification.Placement = instanceOpts.SpotPlacement
+	if v, exists := d.GetOkExists("instance_interruption_behavior"); v.(string) == string(awstypes.InstanceInterruptionBehaviorTerminate) || !exists {
+		input.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
 
-	// Make the spot instance request
-	var resp *ec2.RequestSpotInstancesOutput
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		resp, err = conn.RequestSpotInstancesWithContext(ctx, spotOpts)
-		// IAM instance profiles can take ~10 seconds to propagate in AWS:
-		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-			log.Printf("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
-			return retry.RetryableError(err)
-		}
-		// IAM roles can also take time to propagate in AWS:
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", " has no associated IAM Roles") {
-			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
-			return retry.RetryableError(err)
-		}
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
+	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func() (interface{}, error) {
+			return conn.RequestSpotInstances(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// IAM instance profiles can take ~10 seconds to propagate in AWS:
+			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
+				return true, err
+			}
 
-	if tfresource.TimedOut(err) {
-		resp, err = conn.RequestSpotInstancesWithContext(ctx, spotOpts)
-	}
+			// IAM roles can also take time to propagate in AWS:
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "requesting EC2 Spot Instances: %s", err)
-	}
-	if len(resp.SpotInstanceRequests) != 1 {
-		return sdkdiag.AppendErrorf(diags, "Expected response with length 1, got: %s", resp)
+		return sdkdiag.AppendErrorf(diags, "requesting EC2 Spot Instance: %s", err)
 	}
 
-	sir := resp.SpotInstanceRequests[0]
-	d.SetId(aws.StringValue(sir.SpotInstanceRequestId))
+	d.SetId(aws.ToString(outputRaw.(*ec2.RequestSpotInstancesOutput).SpotInstanceRequests[0].SpotInstanceRequestId))
 
 	if d.Get("wait_for_fulfillment").(bool) {
-		spotStateConf := &retry.StateChangeConf{
-			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-bid-status.html
-			Pending:    []string{"start", "pending-evaluation", "pending-fulfillment"},
-			Target:     []string{"fulfilled"},
-			Refresh:    SpotInstanceStateRefreshFunc(ctx, conn, sir),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		log.Printf("[DEBUG] waiting for spot bid to resolve... this may take several minutes.")
-		_, err = spotStateConf.WaitForStateContext(ctx)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error while waiting for spot request (%s) to resolve: %s", sir, err)
+		if _, err := waitSpotInstanceRequestFulfilled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Spot Instance Request (%s) to be fulfilled: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceSpotInstanceRequestRead(ctx, d, meta)...)
 }
 
-// Update spot state, etc
 func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindSpotInstanceRequestByID(ctx, conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return findSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -274,7 +259,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", d.Id(), err)
 	}
 
-	request := outputRaw.(*ec2.SpotInstanceRequest)
+	request := outputRaw.(*awstypes.SpotInstanceRequest)
 
 	d.Set("spot_bid_status", request.Status.Code)
 	// Instance ID is not set if the request is still pending
@@ -291,89 +276,16 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	SetTagsOut(ctx, request.Tags)
+	setTagsOut(ctx, request.Tags)
 
 	d.Set("instance_interruption_behavior", request.InstanceInterruptionBehavior)
-	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
-	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(time.RFC3339))
+	d.Set("valid_from", aws.ToTime(request.ValidFrom).Format(time.RFC3339))
+	d.Set("valid_until", aws.ToTime(request.ValidUntil).Format(time.RFC3339))
 	d.Set("spot_type", request.Type)
 	d.Set("spot_price", request.SpotPrice)
 	d.Set("key_name", request.LaunchSpecification.KeyName)
-	d.Set("instance_type", request.LaunchSpecification.InstanceType)
+	d.Set(names.AttrInstanceType, request.LaunchSpecification.InstanceType)
 	d.Set("ami", request.LaunchSpecification.ImageId)
-
-	return diags
-}
-
-func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	instance, err := FindInstanceByID(ctx, conn, d.Get("spot_instance_id").(string))
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set("public_dns", instance.PublicDnsName)
-	d.Set("public_ip", instance.PublicIpAddress)
-	d.Set("private_dns", instance.PrivateDnsName)
-	d.Set("private_ip", instance.PrivateIpAddress)
-	d.Set("source_dest_check", instance.SourceDestCheck)
-
-	// set connection information
-	if instance.PublicIpAddress != nil {
-		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": *instance.PublicIpAddress,
-		})
-	} else if instance.PrivateIpAddress != nil {
-		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": *instance.PrivateIpAddress,
-		})
-	}
-	if err := readBlockDevices(ctx, d, instance, conn); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	var ipv6Addresses []string
-	if len(instance.NetworkInterfaces) > 0 {
-		for _, ni := range instance.NetworkInterfaces {
-			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				d.Set("subnet_id", ni.SubnetId)
-				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
-				d.Set("associate_public_ip_address", ni.Association != nil)
-				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
-
-				for _, address := range ni.Ipv6Addresses {
-					ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
-				}
-			}
-		}
-	} else {
-		d.Set("subnet_id", instance.SubnetId)
-		d.Set("primary_network_interface_id", "")
-	}
-
-	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
-		log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
-	}
-
-	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.StringValue(instance.InstanceId), err)
-	}
-
-	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(ctx, *instance.InstanceId, conn)
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-		d.Set("password_data", passwordData)
-	} else {
-		d.Set("get_password_data", false)
-		d.Set("password_data", nil)
-	}
 
 	return diags
 }
@@ -388,19 +300,23 @@ func resourceSpotInstanceRequestUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	log.Printf("[INFO] Cancelling spot request: %s", d.Id())
-	_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{
-		SpotInstanceRequestIds: []*string{aws.String(d.Id())},
+	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
+	_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+		SpotInstanceRequestIds: []string{d.Id()},
 	})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error cancelling spot request (%s): %s", d.Id(), err)
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
+		return diags
 	}
 
-	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
-		if err := terminateInstance(ctx, conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Instance Request (%s): %s", d.Id(), err)
+	}
+
+	if instanceID := d.Get("spot_instance_id").(string); instanceID != "" {
+		if err := terminateInstance(ctx, conn, instanceID, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -408,31 +324,75 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-// SpotInstanceStateRefreshFunc returns a retry.StateRefreshFunc that is used to watch
-// an EC2 spot instance request
-func SpotInstanceStateRefreshFunc(ctx context.Context, conn *ec2.EC2, sir *ec2.SpotInstanceRequest) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeSpotInstanceRequestsWithContext(ctx, &ec2.DescribeSpotInstanceRequestsInput{
-			SpotInstanceRequestIds: []*string{sir.SpotInstanceRequestId},
-		})
+func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidSpotInstanceRequestID.NotFound") {
-				// Set this to nil as if we didn't find anything.
-				resp = nil
-			} else {
-				log.Printf("Error on StateRefresh: %s", err)
-				return nil, "", err
+	instance, err := findInstanceByID(ctx, conn, d.Get("spot_instance_id").(string))
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set("public_dns", instance.PublicDnsName)
+	d.Set("public_ip", instance.PublicIpAddress)
+	d.Set("private_dns", instance.PrivateDnsName)
+	d.Set("private_ip", instance.PrivateIpAddress)
+	d.Set("source_dest_check", instance.SourceDestCheck)
+
+	// set connection information
+	if instance.PublicIpAddress != nil {
+		d.SetConnInfo(map[string]string{
+			names.AttrType: "ssh",
+			"host":         *instance.PublicIpAddress,
+		})
+	} else if instance.PrivateIpAddress != nil {
+		d.SetConnInfo(map[string]string{
+			names.AttrType: "ssh",
+			"host":         *instance.PrivateIpAddress,
+		})
+	}
+	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	var ipv6Addresses []string
+	if len(instance.NetworkInterfaces) > 0 {
+		for _, ni := range instance.NetworkInterfaces {
+			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
+				d.Set(names.AttrSubnetID, ni.SubnetId)
+				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
+				d.Set("associate_public_ip_address", ni.Association != nil)
+				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
+
+				for _, address := range ni.Ipv6Addresses {
+					ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
+				}
 			}
 		}
-
-		if resp == nil || len(resp.SpotInstanceRequests) == 0 {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our request yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		req := resp.SpotInstanceRequests[0]
-		return req, *req.Status.Code, nil
+	} else {
+		d.Set(names.AttrSubnetID, instance.SubnetId)
+		d.Set("primary_network_interface_id", "")
 	}
+
+	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
+		log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
+	}
+
+	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.ToString(instance.InstanceId), err)
+	}
+
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getInstancePasswordData(ctx, *instance.InstanceId, conn, d.Timeout(schema.TimeoutRead))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		d.Set("password_data", passwordData)
+	} else {
+		d.Set("get_password_data", false)
+		d.Set("password_data", nil)
+	}
+
+	return diags
 }

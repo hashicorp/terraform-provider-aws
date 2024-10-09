@@ -48,17 +48,17 @@ resource "aws_dynamodb_table" "example" {
 
 ~> **Note:** Names included in `item` are represented internally with everything but letters removed. There is the possibility of collisions if two names, once filtered, are the same. For example, the names `your-name-here` and `yournamehere` will overlap and cause an error.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `hash_key` - (Required) Hash key to use for lookups and identification of the item
 * `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute. Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
 * `range_key` - (Optional) Range key to use for lookups and identification of the item. Required if there is range key defined in the table.
 * `table_name` - (Required) Name of the table to contain the item.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ## Import
 
-DynamoDB table items cannot be imported.
+You cannot import DynamoDB table items.

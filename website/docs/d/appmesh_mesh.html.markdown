@@ -29,14 +29,14 @@ data "aws_appmesh_mesh" "simple" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the service mesh.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service mesh.
 * `created_date` - Creation date of the service mesh.

@@ -11,6 +11,7 @@ description: |-
 Provides details about a specific Amazon Connect Hours of Operation.
 
 ## Example Usage
+
 By `name`
 
 ```hcl
@@ -33,20 +34,19 @@ data "aws_connect_hours_of_operation" "test" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `hours_of_operation_id` - (Optional) Returns information on a specific Hours of Operation by hours of operation id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Hours of Operation by name
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Hours of Operation.
 * `config` - Configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below. Config blocks are documented below.
 * `description` - Description of the Hours of Operation.
-* `hours_of_operation_arn` - (**Deprecated**) ARN of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `instance_id` - Identifier of the hosting Amazon Connect Instance.
 * `name` - Name of the Hours of Operation.

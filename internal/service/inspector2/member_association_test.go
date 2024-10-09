@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2_test
 
 import (
@@ -5,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
@@ -22,11 +26,11 @@ func testAccMemberAssociation_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,6 +38,10 @@ func testAccMemberAssociation_basic(t *testing.T) {
 				Config: testAccMemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_caller_identity.member", names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "delegated_admin_account_id", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", string(types.RelationshipStatusEnabled)),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -53,11 +61,11 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,11 +88,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Inspector2 Member Association ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
@@ -94,7 +98,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 
 func testAccCheckMemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_member_association" {

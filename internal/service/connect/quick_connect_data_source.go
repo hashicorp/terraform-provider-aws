@@ -1,41 +1,52 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_quick_connect")
-func DataSourceQuickConnect() *schema.Resource {
+// @SDKDataSource("aws_connect_quick_connect", name="Quick Connect")
+// @Tags
+func dataSourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQuickConnectRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "quick_connect_id"},
+				ExactlyOneOf: []string{names.AttrName, "quick_connect_id"},
 			},
 			"quick_connect_config": {
 				Type:     schema.TypeList,
@@ -97,100 +108,103 @@ func DataSourceQuickConnect() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"quick_connect_id", "name"},
+				ExactlyOneOf: []string{"quick_connect_id", names.AttrName},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &connect.DescribeQuickConnectInput{
 		InstanceId: aws.String(instanceID),
 	}
 
 	if v, ok := d.GetOk("quick_connect_id"); ok {
 		input.QuickConnectId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		quickConnectSummary, err := dataSourceGetQuickConnectSummaryByName(ctx, conn, instanceID, name)
+		quickConnectSummary, err := findQuickConnectSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Quick Connect Summary by name (%s): %w", name, err))
-		}
-
-		if quickConnectSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Quick Connect Summary by name (%s): not found", name))
+			return sdkdiag.AppendErrorf(diags, "reading Connect Quick Connect (%s) summary: %s", name, err)
 		}
 
 		input.QuickConnectId = quickConnectSummary.Id
 	}
 
-	resp, err := conn.DescribeQuickConnectWithContext(ctx, input)
+	quickConnect, err := findQuickConnect(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Quick Connect: %s", err)
 	}
 
-	if resp == nil || resp.QuickConnect == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect: empty response"))
-	}
-
-	quickConnect := resp.QuickConnect
-
-	d.Set("arn", quickConnect.QuickConnectARN)
-	d.Set("description", quickConnect.Description)
-	d.Set("name", quickConnect.Name)
-	d.Set("quick_connect_id", quickConnect.QuickConnectId)
-
+	quickConnectID := aws.ToString(quickConnect.QuickConnectId)
+	id := quickConnectCreateResourceID(instanceID, quickConnectID)
+	d.SetId(id)
+	d.Set(names.AttrARN, quickConnect.QuickConnectARN)
+	d.Set(names.AttrDescription, quickConnect.Description)
+	d.Set(names.AttrName, quickConnect.Name)
 	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(quickConnect.QuickConnectConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting quick_connect_config: %s", err))
+		return sdkdiag.AppendErrorf(diags, "setting quick_connect_config: %s", err)
 	}
+	d.Set("quick_connect_id", quickConnectID)
 
-	if err := d.Set("tags", KeyValueTags(ctx, quickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
-	}
+	setTagsOut(ctx, quickConnect.Tags)
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(quickConnect.QuickConnectId)))
-
-	return nil
+	return diags
 }
 
-func dataSourceGetQuickConnectSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QuickConnectSummary, error) {
-	var result *connect.QuickConnectSummary
-
+func findQuickConnectSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.QuickConnectSummary, error) {
+	const maxResults = 60
 	input := &connect.ListQuickConnectsInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListQuickConnectsMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListQuickConnectsPagesWithContext(ctx, input, func(page *connect.ListQuickConnectsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, cf := range page.QuickConnectSummaryList {
-			if cf == nil {
-				continue
-			}
-
-			if aws.StringValue(cf.Name) == name {
-				result = cf
-				return false
-			}
-		}
-
-		return !lastPage
+	return findQuickConnectSummary(ctx, conn, input, func(v *awstypes.QuickConnectSummary) bool {
+		return aws.ToString(v.Name) == name
 	})
+}
+
+func findQuickConnectSummary(ctx context.Context, conn *connect.Client, input *connect.ListQuickConnectsInput, filter tfslices.Predicate[*awstypes.QuickConnectSummary]) (*awstypes.QuickConnectSummary, error) {
+	output, err := findQuickConnectSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findQuickConnectSummaries(ctx context.Context, conn *connect.Client, input *connect.ListQuickConnectsInput, filter tfslices.Predicate[*awstypes.QuickConnectSummary]) ([]awstypes.QuickConnectSummary, error) {
+	var output []awstypes.QuickConnectSummary
+
+	pages := connect.NewListQuickConnectsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.QuickConnectSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

@@ -10,6 +10,7 @@ description: |-
 
 Terraform resource for managing an Amazon File Cache cache.
 See the [Create File Cache](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileCache.html) for more information.
+
 ## Example Usage
 
 ```terraform
@@ -64,7 +65,7 @@ A list of up to 8 configurations for data repository associations (DRAs) to be c
 
 #### Data Repository Association arguments
 
-The following arguments are supported for `data_repository_association` configuration block:
+The `data_repository_association` configuration block supports the following arguments:
 
 * `file_cache_path` - (Required) A path on the cache that points to a high-level directory (such as /ns1/) or subdirectory (such as /ns1/subdir/) that will be mapped 1-1 with DataRepositoryPath. The leading forward slash in the name is required. Two data repository associations cannot have overlapping cache paths. For example, if a data repository is associated with cache path /ns1/, then you cannot link another data repository with cache path /ns1/ns2. This path specifies where in your cache files will be exported from. This cache directory can be linked to only one data repository, and no data repository other can be linked to the directory. Note: The cache path can only be set to root (/) on an NFS DRA when DataRepositorySubdirectories is specified. If you specify root (/) as the cache path, you can create only one DRA on the cache. The cache path cannot be set to root (/) for an S3 DRA.
 * `data_repository_path` - (Optional) The path to the S3 or NFS data repository that links to the cache.
@@ -73,14 +74,14 @@ The following arguments are supported for `data_repository_association` configur
 
 #### NFS arguments
 
-The following arguments are supported for `nfs` configuration block:
+The `nfs` configuration block supports the following arguments:
 
 * `version` - (Required) - The version of the NFS (Network File System) protocol of the NFS data repository. The only supported value is NFS3, which indicates that the data repository must support the NFSv3 protocol. The only supported value is `NFS3`.
 * `dns_ips` - (Optional) - A list of up to 2 IP addresses of DNS servers used to resolve the NFS file system domain name. The provided IP addresses can either be the IP addresses of a DNS forwarder or resolver that the customer manages and runs inside the customer VPC, or the IP addresses of the on-premises DNS servers.
 
 #### Lustre Configuration arguments
 
-The following arguments are supported for `lustre_configuration` configuration block:
+The `lustre_configuration` configuration block supports the following arguments:
 
 * `deployment_type` - (Required) Specifies the cache deployment type. The only supported value is `CACHE_1`.
 * `metadata_configuration` - (Required) The configuration for a Lustre MDT (Metadata Target) storage volume. See the [`metadata_configuration`](#metadata-configuration-arguments) block.
@@ -89,13 +90,13 @@ The following arguments are supported for `lustre_configuration` configuration b
 
 #### Metadata Configuration arguments
 
-The following arguments are supported for `metadata_configuration` configuration block:
+The `metadata_configuration` configuration block supports the following arguments:
 
 * `storage_capacity` - (Required) The storage capacity of the Lustre MDT (Metadata Target) storage volume in gibibytes (GiB). The only supported value is `2400` GiB.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) for the resource.
 * `data_repository_association_ids` - A list of IDs of data repository associations that are associated with this cache.
@@ -115,8 +116,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amazon File Cache cache can be imported using the resource `id`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon File Cache cache using the resource `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_file_cache.example
+  id = "fc-8012925589"
+}
 ```
-$ terraform import aws_fsx_file_cache.example fc-8012925589
+
+Using `terraform import`, import Amazon File Cache cache using the resource `id`. For example:
+
+```console
+% terraform import aws_fsx_file_cache.example fc-8012925589
 ```

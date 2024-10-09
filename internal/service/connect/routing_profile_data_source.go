@@ -1,24 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_routing_profile")
-func DataSourceRoutingProfile() *schema.Resource {
+// @SDKDataSource("aws_connect_routing_profile", name="Routing Profile")
+// @Tags
+func dataSourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoutingProfileRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -26,11 +37,11 @@ func DataSourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -51,11 +62,11 @@ func DataSourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "routing_profile_id"},
+				ExactlyOneOf: []string{names.AttrName, "routing_profile_id"},
 			},
 			"queue_configs": {
 				Type:     schema.TypeSet,
@@ -70,7 +81,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -93,111 +104,115 @@ func DataSourceRoutingProfile() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"routing_profile_id", "name"},
+				ExactlyOneOf: []string{"routing_profile_id", names.AttrName},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &connect.DescribeRoutingProfileInput{
 		InstanceId: aws.String(instanceID),
 	}
 
 	if v, ok := d.GetOk("routing_profile_id"); ok {
 		input.RoutingProfileId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		routingProfileSummary, err := dataSourceGetRoutingProfileSummaryByName(ctx, conn, instanceID, name)
+		routingProfileSummary, err := findRoutingProfileSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Summary by name (%s): %w", name, err))
-		}
-
-		if routingProfileSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Summary by name (%s): not found", name))
+			return sdkdiag.AppendErrorf(diags, "reading Connect Routing Profile (%s) summary: %s", name, err)
 		}
 
 		input.RoutingProfileId = routingProfileSummary.Id
 	}
 
-	resp, err := conn.DescribeRoutingProfileWithContext(ctx, input)
+	routingProfile, err := findRoutingProfile(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Routing Profile: %s", err)
 	}
 
-	if resp == nil || resp.RoutingProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile: empty response"))
-	}
-
-	routingProfile := resp.RoutingProfile
-
-	if err := d.Set("media_concurrencies", flattenRoutingProfileMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.Set("arn", routingProfile.RoutingProfileArn)
+	routingProfileID := aws.ToString(routingProfile.RoutingProfileId)
+	id := routingProfileCreateResourceID(instanceID, routingProfileID)
+	d.SetId(id)
+	d.Set(names.AttrARN, routingProfile.RoutingProfileArn)
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
-	d.Set("description", routingProfile.Description)
-	d.Set("instance_id", instanceID)
-	d.Set("name", routingProfile.Name)
-	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
+	d.Set(names.AttrDescription, routingProfile.Description)
+	d.Set(names.AttrInstanceID, instanceID)
+	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
+	}
+	d.Set(names.AttrName, routingProfile.Name)
+	d.Set("routing_profile_id", routingProfileID)
 
-	// getting the routing profile queues uses a separate API: ListRoutingProfileQueues
-	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, *routingProfile.RoutingProfileId)
+	queueConfigs, err := findRoutingConfigQueueConfigSummariesByTwoPartKey(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", *routingProfile.RoutingProfileId, err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Routing Profile (%s) Queue Config summaries: %s", d.Id(), err)
 	}
 
-	d.Set("queue_configs", queueConfigs)
-
-	if err := d.Set("tags", KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+	if err := d.Set("queue_configs", flattenRoutingConfigQueueConfigSummaries(queueConfigs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting queue_configs: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(routingProfile.RoutingProfileId)))
+	setTagsOut(ctx, routingProfile.Tags)
 
-	return nil
+	return diags
 }
 
-func dataSourceGetRoutingProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.RoutingProfileSummary, error) {
-	var result *connect.RoutingProfileSummary
-
+func findRoutingProfileSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.RoutingProfileSummary, error) {
+	const maxResults = 60
 	input := &connect.ListRoutingProfilesInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListRoutingProfilesMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListRoutingProfilesPagesWithContext(ctx, input, func(page *connect.ListRoutingProfilesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, qs := range page.RoutingProfileSummaryList {
-			if qs == nil {
-				continue
-			}
-
-			if aws.StringValue(qs.Name) == name {
-				result = qs
-				return false
-			}
-		}
-
-		return !lastPage
+	return findRoutingProfileSummary(ctx, conn, input, func(v *awstypes.RoutingProfileSummary) bool {
+		return aws.ToString(v.Name) == name
 	})
+}
+
+func findRoutingProfileSummary(ctx context.Context, conn *connect.Client, input *connect.ListRoutingProfilesInput, filter tfslices.Predicate[*awstypes.RoutingProfileSummary]) (*awstypes.RoutingProfileSummary, error) {
+	output, err := findRoutingProfileSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRoutingProfileSummaries(ctx context.Context, conn *connect.Client, input *connect.ListRoutingProfilesInput, filter tfslices.Predicate[*awstypes.RoutingProfileSummary]) ([]awstypes.RoutingProfileSummary, error) {
+	var output []awstypes.RoutingProfileSummary
+
+	pages := connect.NewListRoutingProfilesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.RoutingProfileSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

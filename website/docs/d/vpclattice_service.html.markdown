@@ -16,18 +16,21 @@ Terraform data source for managing an AWS VPC Lattice Service.
 
 ```terraform
 data "aws_vpclattice_service" "example" {
+  name = "example"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+The arguments of this data source act as filters for querying the available VPC lattice services.
+The given filters must match exactly one VPC lattice service whose data will be exported as attributes.
 
-* `service_identifier` - (Required) ID or Amazon Resource Name (ARN) of the service network
+* `name` - (Optional) Service name.
+* `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service.
 * `auth_type` - Type of IAM policy. Either `NONE` or `AWS_IAM`.

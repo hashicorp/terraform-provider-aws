@@ -10,6 +10,8 @@ description: |-
 
 Provides a MediaStore Container Policy.
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ```terraform
@@ -50,19 +52,28 @@ resource "aws_media_store_container_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `container_name` - (Required) The name of the container.
 * `policy` - (Required) The contents of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-MediaStore Container Policy can be imported using the MediaStore Container Name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaStore Container Policy using the MediaStore Container Name. For example:
 
+```terraform
+import {
+  to = aws_media_store_container_policy.example
+  id = "example"
+}
 ```
-$ terraform import aws_media_store_container_policy.example example
+
+Using `terraform import`, import MediaStore Container Policy using the MediaStore Container Name. For example:
+
+```console
+% terraform import aws_media_store_container_policy.example example
 ```

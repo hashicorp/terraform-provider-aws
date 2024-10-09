@@ -11,6 +11,7 @@ description: |-
 Provides details about a specific Amazon Connect Contact Flow.
 
 ## Example Usage
+
 By name
 
 ```hcl
@@ -33,15 +34,15 @@ data "aws_connect_contact_flow" "test" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_id` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `contact_flow_id` - (Optional) Returns information on a specific Contact Flow by contact flow id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Contact Flow by name
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Contact Flow.
 * `content` - Logic of the Contact Flow.

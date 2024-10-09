@@ -36,7 +36,7 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the set
 * `xss_match_tuple` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
@@ -53,16 +53,25 @@ The following arguments are supported:
 * `data` - (Optional) When the value of `type` is `HEADER`, enter the name of the header that you want the WAF to search, for example, `User-Agent` or `Referer`. If the value of `type` is any other value, omit `data`.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified stringE.g., `HEADER` or `METHOD`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Regional WAF XSS Match Set.
 
 ## Import
 
-AWS WAF Regional XSS Match can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS WAF Regional XSS Match using the `id`. For example:
 
-```sh
-$ terraform import aws_wafregional_xss_match_set.example 12345abcde
+```terraform
+import {
+  to = aws_wafregional_xss_match_set.example
+  id = "12345abcde"
+}
+```
+
+Using `terraform import`, import AWS WAF Regional XSS Match using the `id`. For example:
+
+```console
+% terraform import aws_wafregional_xss_match_set.example 12345abcde
 ```

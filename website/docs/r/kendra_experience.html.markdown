@@ -71,9 +71,9 @@ The `user_identity_configuration` configuration block supports the following arg
 
 * `identity_attribute_name` - (Required) The AWS SSO field name that contains the identifiers of your users, such as their emails.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifiers of the experience and index separated by a slash (`/`).
 * `arn` - ARN of the Experience.
@@ -93,8 +93,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kendra Experience can be imported using the unique identifiers of the experience and index separated by a slash (`/`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_kendra_experience.example
+  id = "1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f"
+}
 ```
-$ terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
+
+Using `terraform import`, import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```

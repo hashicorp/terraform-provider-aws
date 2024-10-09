@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -8,13 +11,17 @@ import (
 	"encoding/pem"
 	"fmt"
 	"strings"
+	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/crypto/ssh"
 )
 
 // RandSSHKeyPair generates a public and private SSH key pair. The public key is
 // returned in OpenSSH format, and the private key is PEM encoded.
-// Copied from github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest,
+// Copied from github.com/hashicorp/terraform-plugin-testing/helper/acctest,
 // with the addition of the key size.
 func RandSSHKeyPairSize(keySize int, comment string) (string, string, error) {
 	privateKey, privateKeyPEM, err := genPrivateKey(keySize)
@@ -52,4 +59,14 @@ func pemEncode(b []byte, block string) (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.IAMServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"no identity-based policy allows the iam:SetSecurityTokenServicePreferences action",
+	)
 }

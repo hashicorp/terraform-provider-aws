@@ -57,20 +57,21 @@ locals {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) A description for the IPAM.
 * `operating_regions` - (Required) Determines which locales can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. You **must** set your provider block region as an operating_region.
+* `tier` - (Optional) specifies the IPAM tier. Valid options include `free` and `advanced`. Default is `advanced`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 
 ### operating_regions
 
 * `region_name` - (Required) The name of the Region you want to add to the IPAM.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of IPAM
 * `id` - The ID of the IPAM
@@ -84,8 +85,17 @@ IP space. The public scope is intended for all internet-routable IP space.
 
 ## Import
 
-IPAMs can be imported using the `ipam id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAMs using the IPAM `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam.example
+  id = "ipam-0178368ad2146a492"
+}
 ```
-$ terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
+
+Using `terraform import`, import IPAMs using the IPAM `id`. For example:
+
+```console
+% terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```

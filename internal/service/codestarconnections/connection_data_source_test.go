@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codestarconnections_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeStarConnectionsConnectionDataSource_basic(t *testing.T) {
@@ -20,26 +23,26 @@ func TestAccCodeStarConnectionsConnectionDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "provider_type", dataSourceName, "provider_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_status", dataSourceName, "connection_status"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName2, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName2, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName2, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "provider_type", dataSourceName2, "provider_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName2, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_status", dataSourceName2, "connection_status"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName2, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName2, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -55,15 +58,15 @@ func TestAccCodeStarConnectionsConnectionDataSource_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

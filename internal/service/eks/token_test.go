@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 /*
 This file is a hard copy of:
 https://github.com/kubernetes-sigs/aws-iam-authenticator/blob/7547c74e660f8d34d9980f2c69aa008eed1f48d0/pkg/token/token_test.go
@@ -22,6 +25,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func validationErrorTest(t *testing.T, token string, expectedErr string) {
@@ -197,7 +202,7 @@ func TestVerifyBodyReadError(t *testing.T) {
 			Transport: &roundTripper{
 				err: nil,
 				resp: &http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       errorReadCloser{},
 				},
 			},
@@ -219,7 +224,7 @@ func TestVerifyUnmarshalJSONError(t *testing.T) {
 func TestVerifyInvalidCanonicalARNError(t *testing.T) {
 	t.Parallel()
 
-	_, err := newVerifier(200, jsonResponse("arn", "1000", "userid"), nil).Verify(validToken)
+	_, err := newVerifier(200, jsonResponse(names.AttrARN, "1000", "userid"), nil).Verify(validToken)
 	errorContains(t, err, "arn \"arn\" is invalid:")
 	assertSTSError(t, err)
 }

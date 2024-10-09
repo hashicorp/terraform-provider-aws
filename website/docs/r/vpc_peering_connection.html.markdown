@@ -103,11 +103,11 @@ can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) a
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `peer_owner_id` - (Optional) The AWS account ID of the owner of the peer VPC.
-   Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `peer_vpc_id` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
+* `peer_owner_id` - (Optional) The AWS account ID of the target peer VPC.
+   Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.
+* `peer_vpc_id` - (Required) The ID of the target VPC with which you are creating the VPC Peering Connection.
 * `vpc_id` - (Required) The ID of the requester VPC.
 * `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
 * `peer_region` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `auto_accept` must be `false`,
@@ -125,16 +125,10 @@ must have support for the DNS hostnames enabled. This can be done using the [`en
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
 private IP addresses when queried from instances in the peer VPC.
-* `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
-with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
-to the remote VPC.
-* `allow_vpc_to_remote_classic_link` - (Optional) Allow a local VPC to communicate with a linked EC2-Classic
-instance in a peer VPC. This enables an outbound communication from the local VPC to the remote ClassicLink
-connection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.
@@ -156,10 +150,19 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 ## Import
 
-VPC Peering resources can be imported using the `vpc peering id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Peering resources using the VPC peering `id`. For example:
 
-```sh
-$ terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
+```terraform
+import {
+  to = aws_vpc_peering_connection.test_connection
+  id = "pcx-111aaa111"
+}
+```
+
+Using `terraform import`, import VPC Peering resources using the VPC peering `id`. For example:
+
+```console
+% terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
 
 [1]: /docs/providers/aws/index.html

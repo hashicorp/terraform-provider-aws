@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # First account
 aws_first_access_key = "AAAAAAAAAAAAAAAAAAA"
 aws_first_secret_key = "SuperSecretKeyForAccount1"

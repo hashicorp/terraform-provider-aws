@@ -89,16 +89,31 @@ resource "aws_network_interface_sg_attachment" "sg_attachment" {
 * `security_group_id` - (Required) The ID of the security group.
 * `network_interface_id` - (Required) The ID of the network interface to attach to.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `3m`)
+- `read` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
-Network Interface Security Group attachments can be imported using the associated network interface ID and security group ID, separated by an underscore (`_`).
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interface Security Group attachments using the associated network interface ID and security group ID, separated by an underscore (`_`). For example:
 
-For example:
-
+```terraform
+import {
+  to = aws_network_interface_sg_attachment.sg_attachment
+  id = "eni-1234567890abcdef0_sg-1234567890abcdef0"
+}
 ```
-$ terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0
+
+Using `terraform import`, import Network Interface Security Group attachments using the associated network interface ID and security group ID, separated by an underscore (`_`). For example:
+
+```console
+% terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0
 ```

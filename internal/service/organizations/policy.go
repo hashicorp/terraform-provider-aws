@@ -1,19 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +27,7 @@ import (
 
 // @SDKResource("aws_organizations_policy", name="Policy")
 // @Tags(identifierAttribute="id")
-func ResourcePolicy() *schema.Resource {
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -34,36 +39,37 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+			names.AttrContent: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validation.StringIsJSON,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      organizations.PolicyTypeServiceControlPolicy,
-				ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.PolicyTypeServiceControlPolicy,
+				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
 			},
 		},
 
@@ -72,85 +78,55 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &organizations.CreatePolicyInput{
-		Content:     aws.String(d.Get("content").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Content:     aws.String(d.Get(names.AttrContent).(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Name:        aws.String(name),
-		Type:        aws.String(d.Get("type").(string)),
-		Tags:        GetTagsIn(ctx),
+		Type:        awstypes.PolicyType(d.Get(names.AttrType).(string)),
+		Tags:        getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Organizations Policy (%s): %v", name, input)
-
-	var err error
-	var resp *organizations.CreatePolicyOutput
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		resp, err = conn.CreatePolicyWithContext(ctx, input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
-				log.Printf("[DEBUG] Retrying creating Organizations Policy (%s): %s", name, err)
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (interface{}, error) {
+		return conn.CreatePolicy(ctx, input)
 	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreatePolicyWithContext(ctx, input)
-	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Organizations Policy (%s): %w", name, err))
+		return sdkdiag.AppendErrorf(diags, "creating Organizations Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Policy.PolicySummary.Id))
+	d.SetId(aws.ToString(outputRaw.(*organizations.CreatePolicyOutput).Policy.PolicySummary.Id))
 
-	return resourcePolicyRead(ctx, d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	input := &organizations.DescribePolicyInput{
-		PolicyId: aws.String(d.Id()),
-	}
+	policy, err := findPolicyByID(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading Organizations policy: %s", input)
-	resp, err := conn.DescribePolicyWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
-		log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Organizations Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Organizations Policy (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy (%s): %s", d.Id(), err)
 	}
 
-	if resp.Policy == nil || resp.Policy.PolicySummary == nil {
-		if !d.IsNewResource() {
-			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
+	policySummary := policy.PolicySummary
+	d.Set(names.AttrARN, policySummary.Arn)
+	d.Set(names.AttrContent, policy.Content)
+	d.Set(names.AttrDescription, policySummary.Description)
+	d.Set(names.AttrName, policySummary.Name)
+	d.Set(names.AttrType, policySummary.Type)
 
-		return diag.FromErr(&retry.NotFoundError{})
-	}
-
-	d.Set("arn", resp.Policy.PolicySummary.Arn)
-	d.Set("content", resp.Policy.Content)
-	d.Set("description", resp.Policy.PolicySummary.Description)
-	d.Set("name", resp.Policy.PolicySummary.Name)
-	d.Set("type", resp.Policy.PolicySummary.Type)
-
-	if aws.BoolValue(resp.Policy.PolicySummary.AwsManaged) {
+	if policySummary.AwsManaged {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
@@ -164,70 +140,98 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	input := &organizations.UpdatePolicyInput{
-		PolicyId: aws.String(d.Id()),
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &organizations.UpdatePolicyInput{
+			PolicyId: aws.String(d.Id()),
+		}
+
+		if d.HasChange(names.AttrContent) {
+			input.Content = aws.String(d.Get(names.AttrContent).(string))
+		}
+
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		_, err := conn.UpdatePolicy(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Organizations Policy (%s): %s", d.Id(), err)
+		}
 	}
 
-	if d.HasChange("content") {
-		input.Content = aws.String(d.Get("content").(string))
-	}
-
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("name") {
-		input.Name = aws.String(d.Get("name").(string))
-	}
-
-	log.Printf("[DEBUG] Updating Organizations Policy: %s", input)
-	_, err := conn.UpdatePolicyWithContext(ctx, input)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Organizations policy (%s): %w", d.Id(), err))
-	}
-
-	return resourcePolicyRead(ctx, d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy: %s", d.Id())
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
-
-	input := &organizations.DeletePolicyInput{
+	log.Printf("[DEBUG] Deleting Organizations Policy: %s", d.Id())
+	_, err := conn.DeletePolicy(ctx, &organizations.DeletePolicyInput{
 		PolicyId: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.PolicyNotFoundException](err) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Deleting Organizations Policy: %s", input)
-	_, err := conn.DeletePolicyWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Organizations Policy (%s): %s", d.Id(), err)
 	}
+
 	return nil
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	input := &organizations.DescribePolicyInput{
-		PolicyId: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribePolicyWithContext(ctx, input)
+	policy, err := findPolicyByID(ctx, conn, d.Id())
+
 	if err != nil {
 		return nil, err
 	}
 
-	if aws.BoolValue(resp.Policy.PolicySummary.AwsManaged) {
-		return nil, fmt.Errorf("AWS-managed Organizations policy (%s) cannot be imported. Use the policy ID directly in your configuration.", d.Id())
+	if policy.PolicySummary.AwsManaged {
+		return nil, fmt.Errorf("AWS-managed Organizations policy (%s) cannot be imported. Use the policy ID directly in your configuration", d.Id())
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findPolicyByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.Policy, error) {
+	input := &organizations.DescribePolicyInput{
+		PolicyId: aws.String(id),
+	}
+
+	output, err := conn.DescribePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil || output.Policy.PolicySummary == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Policy, nil
 }

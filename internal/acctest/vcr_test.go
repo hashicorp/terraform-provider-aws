@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest_test
 
 import (
@@ -6,13 +9,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestRandInt(t *testing.T) { //nolint:paralleltest
+func TestRandInt(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	t.Setenv("VCR_PATH", t.TempDir())
 
 	t.Setenv("VCR_MODE", "RECORDING")
 	rec1 := acctest.RandInt(t)
 	rec2 := acctest.RandInt(t)
-	acctest.CloseVCRRecorder(t)
+	acctest.CloseVCRRecorder(ctx, t)
 
 	t.Setenv("VCR_MODE", "REPLAYING")
 	rep1 := acctest.RandInt(t)
@@ -26,13 +31,15 @@ func TestRandInt(t *testing.T) { //nolint:paralleltest
 	}
 }
 
-func TestRandomWithPrefix(t *testing.T) { //nolint:paralleltest
+func TestRandomWithPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	t.Setenv("VCR_PATH", t.TempDir())
 
 	t.Setenv("VCR_MODE", "RECORDING")
 	rec1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rec2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	acctest.CloseVCRRecorder(t)
+	acctest.CloseVCRRecorder(ctx, t)
 
 	t.Setenv("VCR_MODE", "REPLAYING")
 	rep1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

@@ -10,6 +10,8 @@ description: |-
 
 Provides a S3 bucket [analytics configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/analytics-storage-class.html) resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add analytics configuration for entire S3 bucket and export results to a second S3 bucket
@@ -35,7 +37,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket" "analytics" {
-  bucket = "analytics destination"
+  bucket = "analytics-destination"
 }
 ```
 
@@ -63,7 +65,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket this analytics configuration is associated with.
 * `name` - (Required) Unique identifier of the analytics configuration for the bucket.
@@ -95,14 +97,23 @@ The `s3_bucket_destination` configuration supports the following:
 * `format` - (Optional) Output format of exported analytics data. Allowed values: `CSV`. Default value: `CSV`.
 * `prefix` - (Optional) Prefix to append to exported analytics data.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket analytics configurations can be imported using `bucket:analytics`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket analytics configurations using `bucket:analytics`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket
+  id = "my-bucket:EntireBucket"
+}
 ```
-$ terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
+
+Using `terraform import`, import S3 bucket analytics configurations using `bucket:analytics`. For example:
+
+```console
+% terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

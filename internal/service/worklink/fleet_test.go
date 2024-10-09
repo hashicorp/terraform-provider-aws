@@ -1,32 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/worklink"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWorkLinkFleet_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,9 +40,9 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
+					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "company_code"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -49,13 +55,15 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_displayName(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,14 +71,14 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 				Config: testAccFleetConfig_displayName(suffix, "display1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "display1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "display1"),
 				),
 			},
 			{
 				Config: testAccFleetConfig_displayName(suffix, "display2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "display2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "display2"),
 				),
 			},
 			{
@@ -83,13 +91,15 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,14 +107,14 @@ func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "false"),
+					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
+					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", acctest.CtTrue),
 				),
 			},
 			{
@@ -117,13 +127,15 @@ func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +143,7 @@ func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 				Config: testAccFleetConfig_auditStreamARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_stream_arn", "aws_kinesis_stream.test_stream", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_stream_arn", "aws_kinesis_stream.test_stream", names.AttrARN),
 				),
 			},
 			{
@@ -144,13 +156,15 @@ func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_network(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,20 +172,20 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 				Config: testAccFleetConfig_network(rName, "192.168.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccFleetConfig_network(rName, "10.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -181,20 +195,22 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 			},
 			{
 				Config:      testAccFleetConfig_basic(rName),
-				ExpectError: regexp.MustCompile(`Company Network Configuration cannot be removed`),
+				ExpectError: regexache.MustCompile(`Company Network Configuration cannot be removed`),
 			},
 		},
 	})
 }
 
 func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -202,7 +218,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 				Config: testAccFleetConfig_deviceCaCertificate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 			{
@@ -222,6 +238,8 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
@@ -229,7 +247,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -237,7 +255,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 				Config: testAccFleetConfig_identityProvider(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider.0.type", "SAML"),
 				),
 			},
@@ -248,20 +266,22 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 			},
 			{
 				Config:      testAccFleetConfig_basic(rName),
-				ExpectError: regexp.MustCompile(`Identity Provider Configuration cannot be removed`),
+				ExpectError: regexache.MustCompile(`Identity Provider Configuration cannot be removed`),
 			},
 		},
 	})
 }
 
 func TestAccWorkLinkFleet_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -288,13 +308,13 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkClient(ctx)
 
 		input := &worklink.DeleteFleetInput{
 			FleetArn: aws.String(rs.Primary.ID),
 		}
 
-		if _, err := conn.DeleteFleetWithContext(ctx, input); err != nil {
+		if _, err := conn.DeleteFleet(ctx, input); err != nil {
 			return err
 		}
 
@@ -315,25 +335,23 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_worklink_fleet" {
 				continue
 			}
 
-			_, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
-				FleetArn: aws.String(rs.Primary.ID),
-			})
+			_, err := tfworklink.FindFleetByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				// Return nil if the Worklink Fleet is already destroyed
-				if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-					return nil
-				}
-
 				return err
 			}
+
 			return fmt.Errorf("Worklink Fleet %s still exists", rs.Primary.ID)
 		}
 
@@ -352,23 +370,25 @@ func testAccCheckFleetExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No Worklink Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
-		_, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
-			FleetArn: aws.String(rs.Primary.ID),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkClient(ctx)
+		_, err := tfworklink.FindFleetByARN(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
 
 		return err
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkClient(ctx)
 
 	input := &worklink.ListFleetsInput{
-		MaxResults: aws.Int64(1),
+		MaxResults: aws.Int32(1),
 	}
 
-	_, err := conn.ListFleetsWithContext(ctx, input)
+	_, err := conn.ListFleets(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

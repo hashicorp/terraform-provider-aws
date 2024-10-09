@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -16,9 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
@@ -43,19 +47,19 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 			"action_plan_title": schema.StringAttribute{
 				Computed: true,
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"testing_information": schema.StringAttribute{
 				Computed: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.ControlType](),
@@ -82,7 +86,7 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 						"source_set_up_option": schema.StringAttribute{
 							Computed: true,
 						},
-						"source_type": schema.StringAttribute{
+						names.AttrSourceType: schema.StringAttribute{
 							Computed: true,
 						},
 						"troubleshooting_text": schema.StringAttribute{
@@ -113,7 +117,7 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 }
 
 func (d *dataSourceControl) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().AuditManagerClient()
+	conn := d.Meta().AuditManagerClient(ctx)
 
 	var data dataSourceControlData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -171,7 +175,7 @@ type dataSourceControlData struct {
 	Description            types.String `tfsdk:"description"`
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
-	Tags                   types.Map    `tfsdk:"tags"`
+	Tags                   tftags.Map   `tfsdk:"tags"`
 	TestingInformation     types.String `tfsdk:"testing_information"`
 	Type                   types.String `tfsdk:"type"`
 }
@@ -199,7 +203,7 @@ func (rd *dataSourceControlData) refreshFromOutput(ctx context.Context, meta *co
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	return diags
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table_item: Would report spurious diffs when List and Map attributes were changed out-of-band
+```

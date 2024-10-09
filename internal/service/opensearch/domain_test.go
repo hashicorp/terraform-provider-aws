@@ -1,22 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
@@ -24,17 +28,16 @@ func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		volumeType string
+		volumeType awstypes.VolumeType
 		want       bool
 	}{
 		{"empty", "", false},
-		{"gp2", opensearchservice.VolumeTypeGp2, false},
-		{"gp3", opensearchservice.VolumeTypeGp3, true},
-		{"io1", opensearchservice.VolumeTypeIo1, true},
-		{"standard", opensearchservice.VolumeTypeStandard, false},
+		{"gp2", awstypes.VolumeTypeGp2, false},
+		{"gp3", awstypes.VolumeTypeGp3, true},
+		{"io1", awstypes.VolumeTypeIo1, true},
+		{"standard", awstypes.VolumeTypeStandard, false},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -50,17 +53,16 @@ func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		volumeType string
+		volumeType awstypes.VolumeType
 		want       bool
 	}{
 		{"empty", "", false},
-		{"gp2", opensearchservice.VolumeTypeGp2, false},
-		{"gp3", opensearchservice.VolumeTypeGp3, true},
-		{"io1", opensearchservice.VolumeTypeIo1, false},
-		{"standard", opensearchservice.VolumeTypeStandard, false},
+		{"gp2", awstypes.VolumeTypeGp2, false},
+		{"gp3", awstypes.VolumeTypeGp3, true},
+		{"io1", awstypes.VolumeTypeIo1, false},
+		{"standard", awstypes.VolumeTypeStandard, false},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -104,7 +106,6 @@ func TestParseEngineVersion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -135,13 +136,13 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,11 +150,12 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1"),
-					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", acctest.Ct0),
 				),
 			},
 			{
@@ -168,12 +170,12 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 
 func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -207,7 +209,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 	customEndpoint := fmt.Sprintf("%s.example.com", rName)
@@ -217,7 +219,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -225,10 +227,10 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -259,13 +261,13 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 
 func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain1, domain2, domain3, domain4 opensearchservice.DomainStatus
+	var domain1, domain2, domain3, domain4 awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -273,9 +275,9 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_clusterZoneAwarenessAZCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -289,9 +291,9 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -299,8 +301,8 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -308,9 +310,9 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain4),
 					testAccCheckDomainNotRecreated(&domain3, &domain4), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -323,13 +325,13 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -338,7 +340,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "false",
+						names.AttrEnabled: acctest.CtFalse,
 					})),
 			},
 			{
@@ -352,7 +354,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "true",
+						names.AttrEnabled: acctest.CtTrue,
 					})),
 			},
 		},
@@ -361,13 +363,13 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 
 func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -375,8 +377,8 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.medium.search", false, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", ""),
 				),
 			},
@@ -384,7 +386,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.medium.search", true, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "6"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.search"),
 				),
@@ -399,7 +401,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.medium.search", true, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.search"),
 				),
@@ -408,7 +410,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.large.search", true, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.large.search"),
 				),
@@ -419,13 +421,13 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 
 func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -463,13 +465,13 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var input opensearchservice.DomainStatus
+	var input awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -498,23 +500,59 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 		}})
 }
 
+func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
-			_, err := conn.DeleteDomainWithContext(ctx, &opensearchservice.DeleteDomainInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+			_, err := conn.DeleteDomain(ctx, &opensearch.DeleteDomainInput{
 				DomainName: aws.String(rName),
 			})
 			return err
@@ -523,12 +561,12 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Create duplicate
-					conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
-					_, err := conn.CreateDomainWithContext(ctx, &opensearchservice.CreateDomainInput{
+					conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+					_, err := conn.CreateDomain(ctx, &opensearch.CreateDomainInput{
 						DomainName: aws.String(rName),
-						EBSOptions: &opensearchservice.EBSOptions{
+						EBSOptions: &awstypes.EBSOptions{
 							EBSEnabled: aws.Bool(true),
-							VolumeSize: aws.Int64(10),
+							VolumeSize: aws.Int32(10),
 						},
 					})
 					if err != nil {
@@ -543,8 +581,9 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1")),
-				ExpectError: regexp.MustCompile(`domain .+ already exists`),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+				),
+				ExpectError: regexache.MustCompile(`OpenSearch Domain ".+" already exists`),
 			},
 		},
 	})
@@ -556,13 +595,13 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -571,7 +610,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
-						resourceName, "engine_version", "Elasticsearch_2.3"),
+						resourceName, names.AttrEngineVersion, "Elasticsearch_2.3"),
 				),
 			},
 			{
@@ -590,13 +629,13 @@ func TestAccOpenSearchDomain_complex(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -622,13 +661,13 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -650,13 +689,13 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 
 func TestAccOpenSearchDomain_VPC_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -690,13 +729,13 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -722,38 +761,146 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_VPC_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_vpcIPAddressType(rName, "dualstack"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint_v2", regexache.MustCompile(`.+?\.on\.aws\/_dashboards`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint_v2", regexache.MustCompile(`.+?\.on\.aws`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_vpcIPAddressType(rName, "ipv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckNoResourceAttr(resourceName, "dashboard_endpoint_v2"),
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_v2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_ipAddressType(rName, "dualstack"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint_v2", regexache.MustCompile(`.+?\.on\.aws\/_dashboards`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint_v2", regexache.MustCompile(`.+?\.on\.aws`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_ipAddressType(rName, "ipv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckNoResourceAttr(resourceName, "dashboard_endpoint_v2"),
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_v2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime),
+				Config: testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.7"),
-					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.start_at", autoTuneStartAtTime),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.value", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.unit", "HOURS"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.cron_expression_for_recurrence", "cron(0 0 ? * 1 *)"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_autoTuneOptionsUseOffPeakWindow(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", acctest.CtTrue),
 				),
 			},
 			{
@@ -772,13 +919,13 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -810,13 +957,13 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_anonymousAuth(t *testing.T)
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -855,13 +1002,13 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -893,13 +1040,13 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -930,23 +1077,23 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, opensearchservice.LogTypeIndexSlowLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeIndexSlowLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": opensearchservice.LogTypeIndexSlowLogs,
+						"log_type": string(awstypes.LogTypeIndexSlowLogs),
 					}),
 				),
 			},
@@ -966,23 +1113,23 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, opensearchservice.LogTypeSearchSlowLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeSearchSlowLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": opensearchservice.LogTypeSearchSlowLogs,
+						"log_type": string(awstypes.LogTypeSearchSlowLogs),
 					}),
 				),
 			},
@@ -1002,23 +1149,23 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, opensearchservice.LogTypeEsApplicationLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeEsApplicationLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": opensearchservice.LogTypeEsApplicationLogs,
+						"log_type": string(awstypes.LogTypeEsApplicationLogs),
 					}),
 				),
 			},
@@ -1038,23 +1185,23 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, opensearchservice.LogTypeAuditLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeAuditLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": opensearchservice.LogTypeAuditLogs,
+						"log_type": string(awstypes.LogTypeAuditLogs),
 					}),
 				),
 			},
@@ -1076,17 +1223,17 @@ func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckCognitoIdentityProvider(ctx, t)
+			acctest.PreCheckCognitoIdentityProvider(ctx, t)
 			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1120,17 +1267,17 @@ func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckCognitoIdentityProvider(ctx, t)
+			acctest.PreCheckCognitoIdentityProvider(ctx, t)
 			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1164,13 +1311,13 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1190,19 +1337,64 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_Policy_addPrincipal(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	resourceName := "aws_opensearch_domain.test"
+	rName := testAccRandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_policyDocument(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_policyDocument(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           rName,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"access_policies"}, // Principals is a set, and `structure.NormalizeJsonString` doesn't guarantee order
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1226,13 +1418,13 @@ func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1259,13 +1451,13 @@ func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1292,25 +1484,25 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 opensearchservice.DomainStatus
+	var domain1, domain2 awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", true),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
@@ -1318,7 +1510,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
@@ -1334,13 +1526,13 @@ func TestAccOpenSearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 opensearchservice.DomainStatus
+	var domain1, domain2 awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1368,13 +1560,13 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1401,25 +1593,25 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 opensearchservice.DomainStatus
+	var domain1, domain2 awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", true),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
@@ -1427,7 +1619,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
@@ -1443,13 +1635,13 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 opensearchservice.DomainStatus
+	var domain1, domain2 awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1478,28 +1670,32 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_tags(t *testing.T) {
+func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDomainConfig_offPeakWindowOptions(rName, 9, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", "9"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", "30"),
 				),
 			},
 			{
@@ -1509,20 +1705,78 @@ func TestAccOpenSearchDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_offPeakWindowOptions(rName, 10, 15),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", "15"),
 				),
 			},
 			{
-				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDomainConfig_offPeakWindowOptions(rName, 0, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccDomainConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1535,13 +1789,13 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var input opensearchservice.DomainStatus
+	var input awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1591,13 +1845,13 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var input opensearchservice.DomainStatus
+	var input awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1605,9 +1859,9 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 				Config: testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp3"),
 				),
 			},
@@ -1621,9 +1875,9 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 				Config: testAccDomainConfig_clusterEBSVolumeGP2(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
 				),
 			},
@@ -1637,13 +1891,13 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1651,12 +1905,12 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 				Config: testAccDomainConfig_disabledEBSNullVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_type", "i3.xlarge.search"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", ""),
 				),
 			},
@@ -1672,13 +1926,13 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 
 func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain1, domain2, domain3 opensearchservice.DomainStatus
+	var domain1, domain2, domain3 awstypes.DomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1686,7 +1940,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Config: testAccDomainConfig_clusterUpdateVersion(rName, "Elasticsearch_5.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_5.5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_5.5"),
 				),
 			},
 			{
@@ -1700,7 +1954,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_5.6"),
 				),
 			},
 			{
@@ -1708,12 +1962,45 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.3"),
 				),
 			},
 		}})
 }
 
+func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_softwareUpdateOptions(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccDomainConfig_softwareUpdateOptions(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1725,7 +2012,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1744,20 +2031,20 @@ func testAccRandomDomainName() string {
 	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1)))
 }
 
-func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls string, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls awstypes.TLSSecurityPolicy, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		options := status.DomainEndpointOptions
 		if *options.EnforceHTTPS != enforceHTTPS {
 			return fmt.Errorf("EnforceHTTPS differ. Given: %t, Expected: %t", *options.EnforceHTTPS, enforceHTTPS)
 		}
-		if *options.TLSSecurityPolicy != tls {
-			return fmt.Errorf("TLSSecurityPolicy differ. Given: %s, Expected: %s", *options.TLSSecurityPolicy, tls)
+		if options.TLSSecurityPolicy != tls {
+			return fmt.Errorf("TLSSecurityPolicy differ. Given: %s, Expected: %s", options.TLSSecurityPolicy, tls)
 		}
 		return nil
 	}
 }
 
-func testAccCheckCustomEndpoint(n string, customEndpointEnabled bool, customEndpoint string, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckCustomEndpoint(n string, customEndpointEnabled bool, customEndpoint string, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1780,7 +2067,7 @@ func testAccCheckCustomEndpoint(n string, customEndpointEnabled bool, customEndp
 	}
 }
 
-func testAccCheckNumberOfSecurityGroups(numberOfSecurityGroups int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckNumberOfSecurityGroups(numberOfSecurityGroups int, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
 		if count != numberOfSecurityGroups {
@@ -1790,37 +2077,37 @@ func testAccCheckNumberOfSecurityGroups(numberOfSecurityGroups int, status *open
 	}
 }
 
-func testAccCheckEBSVolumeThroughput(ebsVolumeThroughput int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeThroughput(ebsVolumeThroughput int, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
-		if *conf.Throughput != int64(ebsVolumeThroughput) {
+		if aws.ToInt32(conf.Throughput) != int32(ebsVolumeThroughput) {
 			return fmt.Errorf("EBS throughput differ. Given: %d, Expected: %d", *conf.Throughput, ebsVolumeThroughput)
 		}
 		return nil
 	}
 }
 
-func testAccCheckEBSVolumeIops(ebsVolumeIops int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeIops(ebsVolumeIops int, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
-		if *conf.Iops != int64(ebsVolumeIops) {
+		if aws.ToInt32(conf.Iops) != int32(ebsVolumeIops) {
 			return fmt.Errorf("EBS IOPS differ. Given: %d, Expected: %d", *conf.Iops, ebsVolumeIops)
 		}
 		return nil
 	}
 }
 
-func testAccCheckEBSVolumeSize(ebsVolumeSize int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeSize(ebsVolumeSize int, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
-		if *conf.VolumeSize != int64(ebsVolumeSize) {
+		if aws.ToInt32(conf.VolumeSize) != int32(ebsVolumeSize) {
 			return fmt.Errorf("EBS volume size differ. Given: %d, Expected: %d", *conf.VolumeSize, ebsVolumeSize)
 		}
 		return nil
 	}
 }
 
-func testAccCheckEBSVolumeEnabled(ebsEnabled bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeEnabled(ebsEnabled bool, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
 		if *conf.EBSEnabled != ebsEnabled {
@@ -1830,73 +2117,73 @@ func testAccCheckEBSVolumeEnabled(ebsEnabled bool, status *opensearchservice.Dom
 	}
 }
 
-func testAccCheckSnapshotHour(snapshotHour int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckSnapshotHour(snapshotHour int, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.SnapshotOptions
-		if *conf.AutomatedSnapshotStartHour != int64(snapshotHour) {
+		if aws.ToInt32(conf.AutomatedSnapshotStartHour) != int32(snapshotHour) {
 			return fmt.Errorf("Snapshots start hour differ. Given: %d, Expected: %d", *conf.AutomatedSnapshotStartHour, snapshotHour)
 		}
 		return nil
 	}
 }
 
-func testAccCheckNumberOfInstances(numberOfInstances int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckNumberOfInstances(numberOfInstances int, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.ClusterConfig
-		if *conf.InstanceCount != int64(numberOfInstances) {
+		if aws.ToInt32(conf.InstanceCount) != int32(numberOfInstances) {
 			return fmt.Errorf("Number of instances differ. Given: %d, Expected: %d", *conf.InstanceCount, numberOfInstances)
 		}
 		return nil
 	}
 }
 
-func testAccCheckDomainEncrypted(encrypted bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainEncrypted(encrypted bool, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EncryptionAtRestOptions
-		if aws.BoolValue(conf.Enabled) != encrypted {
+		if aws.ToBool(conf.Enabled) != encrypted {
 			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
 		}
 		return nil
 	}
 }
 
-func testAccCheckNodeToNodeEncrypted(encrypted bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckNodeToNodeEncrypted(encrypted bool, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		options := status.NodeToNodeEncryptionOptions
-		if aws.BoolValue(options.Enabled) != encrypted {
-			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
+		if aws.ToBool(options.Enabled) != encrypted {
+			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.ToBool(options.Enabled), encrypted)
 		}
 		return nil
 	}
 }
 
-func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, anonymousAuthEnabled bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, anonymousAuthEnabled bool, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.AdvancedSecurityOptions
 
-		if aws.BoolValue(conf.Enabled) != enabled {
+		if aws.ToBool(conf.Enabled) != enabled {
 			return fmt.Errorf(
 				"AdvancedSecurityOptions.Enabled not set properly. Given: %t, Expected: %t",
-				aws.BoolValue(conf.Enabled),
+				aws.ToBool(conf.Enabled),
 				enabled,
 			)
 		}
 
-		if aws.BoolValue(conf.Enabled) {
-			if aws.BoolValue(conf.InternalUserDatabaseEnabled) != userDbEnabled {
+		if aws.ToBool(conf.Enabled) {
+			if aws.ToBool(conf.InternalUserDatabaseEnabled) != userDbEnabled {
 				return fmt.Errorf(
 					"AdvancedSecurityOptions.InternalUserDatabaseEnabled not set properly. Given: %t, Expected: %t",
-					aws.BoolValue(conf.InternalUserDatabaseEnabled),
+					aws.ToBool(conf.InternalUserDatabaseEnabled),
 					userDbEnabled,
 				)
 			}
 		}
 
-		if aws.BoolValue(conf.Enabled) {
-			if aws.BoolValue(conf.AnonymousAuthEnabled) != anonymousAuthEnabled {
+		if aws.ToBool(conf.Enabled) {
+			if aws.ToBool(conf.AnonymousAuthEnabled) != anonymousAuthEnabled {
 				return fmt.Errorf(
 					"AdvancedSecurityOptions.AnonymousAuthEnabled not set properly. Given: %t, Expected: %t",
-					aws.BoolValue(conf.AnonymousAuthEnabled),
+					aws.ToBool(conf.AnonymousAuthEnabled),
 					anonymousAuthEnabled,
 				)
 			}
@@ -1906,7 +2193,7 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, anony
 	}
 }
 
-func testAccCheckCognitoOptions(enabled bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckCognitoOptions(enabled bool, status *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.CognitoOptions
 		if *conf.Enabled != enabled {
@@ -1916,7 +2203,7 @@ func testAccCheckCognitoOptions(enabled bool, status *opensearchservice.DomainSt
 	}
 }
 
-func testAccCheckDomainExists(ctx context.Context, n string, domain *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string, domain *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1927,8 +2214,8 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *opensearchs
 			return fmt.Errorf("No OpenSearch Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
-		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
@@ -1944,32 +2231,32 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *opensearchs
 // the same name, if it's created within any reasonable time after deletion.
 // Also, domain ID is not unique and is simply the domain name so won't work
 // for this check either.
-func testAccCheckDomainNotRecreated(domain1, domain2 *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainNotRecreated(domain1, domain2 *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-			ic, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
+			ic, err := conn.DescribeDomainConfig(&opensearch.DescribeDomainConfigInput{
 				DomainName: domain1.DomainName,
 			})
 			if err != nil {
-				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.StringValue(domain1.DomainName), err)
+				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.ToString(domain1.DomainName), err)
 			}
 
-			jc, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
+			jc, err := conn.DescribeDomainConfig(&opensearch.DescribeDomainConfigInput{
 				DomainName: domain2.DomainName,
 			})
 			if err != nil {
-				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.StringValue(domain2.DomainName), err)
+				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.ToString(domain2.DomainName), err)
 			}
 
-			if aws.StringValue(domain1.Endpoint) != aws.StringValue(domain2.Endpoint) || !aws.TimeValue(ic.DomainConfig.ClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jc.DomainConfig.ClusterConfig.Status.CreationDate)) {
+			if aws.ToString(domain1.Endpoint) != aws.ToString(domain2.Endpoint) || !aws.ToTime(ic.DomainConfig.ClusterConfig.Status.CreationDate).Equal(aws.ToTime(jc.DomainConfig.ClusterConfig.Status.CreationDate)) {
 				return fmt.Errorf("domain (%s) was recreated, before endpoint (%s, create time: %s), after endpoint (%s, create time: %s)",
-					aws.StringValue(domain1.DomainName),
-					aws.StringValue(domain1.Endpoint),
-					aws.TimeValue(ic.DomainConfig.ClusterConfig.Status.CreationDate),
-					aws.StringValue(domain2.Endpoint),
-					aws.TimeValue(jc.DomainConfig.ClusterConfig.Status.CreationDate),
+					aws.ToString(domain1.DomainName),
+					aws.ToString(domain1.Endpoint),
+					aws.ToTime(ic.DomainConfig.ClusterConfig.Status.CreationDate),
+					aws.ToString(domain2.Endpoint),
+					aws.ToTime(jc.DomainConfig.ClusterConfig.Status.CreationDate),
 				)
 			}
 		*/
@@ -1985,8 +2272,8 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
-			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2015,24 +2302,6 @@ func testAccPreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T) {
 	acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice")
 }
 
-func testAccPreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
-
-	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(1),
-	}
-
-	_, err := conn.ListUserPoolsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
@@ -2046,7 +2315,21 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime string) string {
+func testAccDomainConfig_ipAddressType(rName, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name     = %[1]q
+  ip_address_type = %[2]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, ipAddressType)
+}
+
+func testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name    = %[1]q
@@ -2070,10 +2353,29 @@ resource "aws_opensearch_domain" "test" {
     }
 
     rollback_on_disable = "NO_ROLLBACK"
-
   }
 }
 `, rName, autoTuneStartAtTime)
+}
+
+func testAccDomainConfig_autoTuneOptionsUseOffPeakWindow(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_6.7"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  auto_tune_options {
+    desired_state       = "ENABLED"
+    rollback_on_disable = "NO_ROLLBACK"
+    use_off_peak_window = true
+  }
+}
+`, rName)
 }
 
 func testAccDomainConfig_disabledEBSNullVolume(rName string) string {
@@ -2289,6 +2591,45 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccDomainConfig_multiAzWithStandbyEnabled(rName string, enableStandby bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "OpenSearch_2.7"
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-0-2019-07"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 20
+  }
+
+  auto_tune_options {
+    desired_state       = "ENABLED"
+    rollback_on_disable = "NO_ROLLBACK"
+  }
+
+  cluster_config {
+    zone_awareness_enabled   = true
+    instance_count           = 3
+    instance_type            = "m6g.large.search"
+    dedicated_master_enabled = true
+    dedicated_master_count   = 3
+    dedicated_master_type    = "m6g.large.search"
+
+    zone_awareness_config {
+      availability_zone_count = 3
+    }
+
+    multi_az_with_standby_enabled = %[2]t
+  }
+}
+`, rName, enableStandby)
 }
 
 func testAccDomainConfig_clusterUpdate(rName string, instanceInt, snapshotInt int) string {
@@ -2609,6 +2950,51 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
+func testAccDomainConfig_policyDocument(rName string, roleCount int) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  access_policies = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions   = ["es:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:es:*"]
+    principals {
+      type        = "AWS"
+      identifiers = aws_iam_role.test[*].arn
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  count              = %[2]d
+  name               = "%[1]s-${count.index}"
+  assume_role_policy = data.aws_iam_policy_document.role.json
+}
+
+data "aws_iam_policy_document" "role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+`, rName, roleCount)
+}
+
 func testAccDomainConfig_encryptAtRestDefaultKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
@@ -2791,6 +3177,72 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDomainConfig_vpcIPAddressType(rName, ipAddressType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "192.168.0.0/22"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "192.168.0.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 4, 0)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "192.168.1.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 4, 1)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test2" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name     = %[1]q
+  ip_address_type = %[2]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_count         = 2
+    zone_awareness_enabled = true
+    instance_type          = "t2.small.search"
+  }
+
+  vpc_options {
+    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
+    subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
+  }
+}
+`, rName, ipAddressType))
 }
 
 func testAccDomainConfig_vpcUpdate1(rName string) string {
@@ -3217,7 +3669,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 
 func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 	var auditLogsConfig string
-	if logType == opensearchservice.LogTypeAuditLogs {
+	if logType == string(awstypes.LogTypeAuditLogs) {
 		auditLogsConfig = `
 	  	advanced_security_options {
 			enabled                        = true
@@ -3324,8 +3776,6 @@ resource "aws_iam_role_policy_attachment" "test" {
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
-  engine_version = "OpenSearch_1.1"
-
   %[2]s
 
   ebs_options {
@@ -3339,4 +3789,44 @@ resource "aws_opensearch_domain" "test" {
   ]
 }
 `, rName, cognitoOptions)
+}
+
+func testAccDomainConfig_offPeakWindowOptions(rName string, h, m int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_6.7"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  off_peak_window_options {
+    off_peak_window {
+      window_start_time {
+        hours   = %[2]d
+        minutes = %[3]d
+      }
+    }
+  }
+}
+`, rName, h, m)
+}
+
+func testAccDomainConfig_softwareUpdateOptions(rName string, option bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  software_update_options {
+    auto_software_update_enabled = %[2]t
+  }
+}
+`, rName, option)
 }

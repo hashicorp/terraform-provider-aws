@@ -40,7 +40,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `name` - (Required) The name or description of the rule.
@@ -64,9 +64,9 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 * `data_id` - (Required) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
 * `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Regional Rate Based Rule.
 * `arn` - The ARN of the WAF Regional Rate Based Rule.
@@ -74,8 +74,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF Regional Rate Based Rule can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rate Based Rule using the id. For example:
 
+```terraform
+import {
+  to = aws_wafregional_rate_based_rule.wafrule
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_wafregional_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import WAF Regional Rate Based Rule using the id. For example:
+
+```console
+% terraform import aws_wafregional_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

@@ -21,7 +21,7 @@ resource "aws_db_instance" "prod" {
   engine               = "mysql"
   engine_version       = "5.6.17"
   instance_class       = "db.t2.micro"
-  name                 = "mydb"
+  db_name              = "mydb"
   username             = "foo"
   password             = "bar"
   db_subnet_group_name = "my_database_subnet_group"
@@ -29,14 +29,14 @@ resource "aws_db_instance" "prod" {
 }
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
-  db_instance_identifier = aws_db_instance.prod.id
+  db_instance_identifier = aws_db_instance.prod.identifier
   most_recent            = true
 }
 
 # Use the latest production snapshot to create a dev instance.
 resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
-  name                = "mydbdev"
+  db_name             = "mydbdev"
   snapshot_identifier = data.aws_db_snapshot.latest_prod_snapshot.id
 
   lifecycle {
@@ -49,29 +49,26 @@ resource "aws_db_instance" "dev" {
 
 ~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
-
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance
-
 * `db_snapshot_identifier` - (Optional) Returns information on a specific snapshot_id.
-
 * `snapshot_type` - (Optional) Type of snapshots to be returned. If you don't specify a SnapshotType
 value, then both automated and manual snapshots are returned. Shared and public DB snapshots are not
 included in the returned results by default. Possible values are, `automated`, `manual`, `shared`, `public` and `awsbackup`.
-
 * `include_shared` - (Optional) Set this value to true to include shared manual DB snapshots from other
 AWS accounts that this AWS account has been given permission to copy or restore, otherwise set this value to false.
 The default is `false`.
-
 * `include_public` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
+  a pair on the desired DB snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Snapshot ID.
 * `allocated_storage` - Allocated storage size in gigabytes (GB).
@@ -89,4 +86,5 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Status of this DB snapshot.
 * `storage_type` - Storage type associated with DB snapshot.
 * `vpc_id` - ID of the VPC associated with the DB snapshot.
-* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
+* `original_snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.

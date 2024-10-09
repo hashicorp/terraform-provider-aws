@@ -13,18 +13,302 @@ Manages a single-Region or multi-Region primary KMS key.
 ~> **NOTE on KMS Key Policy:** KMS Key Policy can be configured in either the standalone resource [`aws_kms_key_policy`](kms_key_policy.html)
 or with the parameter `policy` in this resource.
 Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
+### Symmetric Encryption KMS Key
+
 ```terraform
-resource "aws_kms_key" "a" {
-  description             = "KMS key 1"
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "example" {
+  description             = "An example symmetric encryption KMS key"
+  enable_key_rotation     = true
+  deletion_window_in_days = 20
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-default-1"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow administration of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/Alice"
+        },
+        Action = [
+          "kms:ReplicateKey",
+          "kms:Create*",
+          "kms:Describe*",
+          "kms:Enable*",
+          "kms:List*",
+          "kms:Put*",
+          "kms:Update*",
+          "kms:Revoke*",
+          "kms:Disable*",
+          "kms:Get*",
+          "kms:Delete*",
+          "kms:ScheduleKeyDeletion",
+          "kms:CancelKeyDeletion"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/Bob"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+```
+
+### Symmetric Encryption KMS Key With Standalone Policy Resource
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "example" {
+  description             = "An example symmetric encryption KMS key"
+  enable_key_rotation     = true
+  deletion_window_in_days = 20
+}
+
+resource "aws_kms_key_policy" "example" {
+  key_id = aws_kms_key.example.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-default-1"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      }
+    ]
+  })
+}
+```
+
+### Asymmetric KMS Key
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "example" {
+  description              = "RSA-3072 asymmetric KMS key for signing and verification"
+  customer_master_key_spec = "RSA_3072"
+  key_usage                = "SIGN_VERIFY"
+  enable_key_rotation      = false
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-default-1"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow administration of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Admin"
+        },
+        Action = [
+          "kms:Create*",
+          "kms:Describe*",
+          "kms:Enable*",
+          "kms:List*",
+          "kms:Put*",
+          "kms:Update*",
+          "kms:Revoke*",
+          "kms:Disable*",
+          "kms:Get*",
+          "kms:Delete*",
+          "kms:ScheduleKeyDeletion",
+          "kms:CancelKeyDeletion"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Developer"
+        },
+        Action = [
+          "kms:Sign",
+          "kms:Verify",
+          "kms:DescribeKey"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+```
+
+### HMAC KMS key
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "example" {
+  description              = "HMAC_384 key for tokens"
+  customer_master_key_spec = "HMAC_384"
+  key_usage                = "GENERATE_VERIFY_MAC"
+  enable_key_rotation      = false
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-default-1"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow administration of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Admin"
+        },
+        Action = [
+          "kms:Create*",
+          "kms:Describe*",
+          "kms:Enable*",
+          "kms:List*",
+          "kms:Put*",
+          "kms:Update*",
+          "kms:Revoke*",
+          "kms:Disable*",
+          "kms:Get*",
+          "kms:Delete*",
+          "kms:ScheduleKeyDeletion",
+          "kms:CancelKeyDeletion"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Developer"
+        },
+        Action = [
+          "kms:GenerateMac",
+          "kms:VerifyMac",
+          "kms:DescribeKey"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+```
+
+### Multi-Region Primary Key
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "example" {
+  description             = "An example multi-Region primary key"
+  multi_region            = true
+  enable_key_rotation     = true
   deletion_window_in_days = 10
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-default-1"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow administration of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/Alice"
+        },
+        Action = [
+          "kms:ReplicateKey",
+          "kms:Create*",
+          "kms:Describe*",
+          "kms:Enable*",
+          "kms:List*",
+          "kms:Put*",
+          "kms:Update*",
+          "kms:Revoke*",
+          "kms:Disable*",
+          "kms:Get*",
+          "kms:Delete*",
+          "kms:ScheduleKeyDeletion",
+          "kms:CancelKeyDeletion"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/Bob"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) The description of the key as viewed in AWS console.
 * `key_usage` - (Optional) Specifies the intended use of the key. Valid values: `ENCRYPT_DECRYPT`, `SIGN_VERIFY`, or `GENERATE_VERIFY_MAC`.
@@ -44,22 +328,41 @@ The default value is `false`.
 If you specify a value, it must be between `7` and `30`, inclusive. If you do not specify a value, it defaults to `30`.
 If the KMS key is a multi-Region primary key with replicas, the waiting period begins when the last of its replica keys is deleted. Otherwise, the waiting period begins immediately.
 * `is_enabled` - (Optional) Specifies whether the key is enabled. Defaults to `true`.
-* `enable_key_rotation` - (Optional) Specifies whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html) is enabled. Defaults to `false`.
+* `enable_key_rotation` - (Optional, required to be enabled if `rotation_period_in_days` is specified) Specifies whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html) is enabled. Defaults to `false`.
+* `rotation_period_in_days` - (Optional) Custom period of time between each rotation date. Must be a number between 90 and 2560 (inclusive).
 * `multi_region` - (Optional) Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `xks_key_id` - (Optional) Identifies the external key that serves as key material for the KMS key in an external key store.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the key.
 * `key_id` - The globally unique identifier for the key.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+~> **Note:** There are a variety of default timeouts set internally. If you set a shorter custom timeout than one of the defaults, the custom timeout will not be respected as the longer of the custom or internal default will be used.
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
+
 ## Import
 
-KMS Keys can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS Keys using the `id`. For example:
 
+```terraform
+import {
+  to = aws_kms_key.a
+  id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
 ```
-$ terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
+
+Using `terraform import`, import KMS Keys using the `id`. For example:
+
+```console
+% terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```

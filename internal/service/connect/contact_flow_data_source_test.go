@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccContactFlowDataSource_contactFlowID(t *testing.T) {
@@ -18,21 +21,21 @@ func testAccContactFlowDataSource_contactFlowID(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowDataSourceConfig_id(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "contact_flow_id", resourceName, "contact_flow_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "content", resourceName, "content"),
-					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrContent, resourceName, names.AttrContent),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -48,28 +51,28 @@ func testAccContactFlowDataSource_name(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowDataSourceConfig_name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "contact_flow_id", resourceName, "contact_flow_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "content", resourceName, "content"),
-					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrContent, resourceName, names.AttrContent),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
 	})
 }
 
-func testAccContactFlowBaseDataSourceConfig(rName, rName2 string) string {
+func testAccContactFlowDataSourceConfig_base(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -94,7 +97,7 @@ resource "aws_connect_contact_flow" "test" {
 }
 
 func testAccContactFlowDataSourceConfig_id(rName, rName2 string) string {
-	return fmt.Sprintf(testAccContactFlowBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccContactFlowDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id     = aws_connect_instance.test.id
   contact_flow_id = aws_connect_contact_flow.test.contact_flow_id
@@ -103,7 +106,7 @@ data "aws_connect_contact_flow" "test" {
 }
 
 func testAccContactFlowDataSourceConfig_name(rName, rName2 string) string {
-	return fmt.Sprintf(testAccContactFlowBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccContactFlowDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
   name        = aws_connect_contact_flow.test.name

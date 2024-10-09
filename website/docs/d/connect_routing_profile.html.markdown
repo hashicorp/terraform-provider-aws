@@ -34,15 +34,15 @@ data "aws_connect_routing_profile" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `routing_profile_id` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instance_id` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
 * `routing_profile_id` - (Optional) Returns information on a specific Routing Profile by Routing Profile id
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Routing Profile.
 * `default_outbound_queue_id` - Specifies the default outbound queue for the Routing Profile.

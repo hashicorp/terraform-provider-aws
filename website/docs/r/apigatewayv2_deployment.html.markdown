@@ -54,25 +54,34 @@ resource "aws_apigatewayv2_deployment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `description` - (Optional) Description for the deployment resource. Must be less than or equal to 1024 characters in length.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Deployment identifier.
 * `auto_deployed` - Whether the deployment was automatically released.
 
 ## Import
 
-`aws_apigatewayv2_deployment` can be imported by using the API identifier and deployment identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_deployment.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
 ```
 
 The `triggers` argument cannot be imported.

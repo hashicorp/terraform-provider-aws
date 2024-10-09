@@ -10,6 +10,8 @@ description: |-
 
 Provides a AWS Transfer User resource. Managing SSH keys can be accomplished with the [`aws_transfer_ssh_key` resource](/docs/providers/aws/r/transfer_ssh_key.html).
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ```terraform
@@ -51,7 +53,7 @@ data "aws_iam_policy_document" "foo" {
 resource "aws_iam_role_policy" "foo" {
   name   = "tf-test-transfer-user-iam-policy"
   role   = aws_iam_role.foo.id
-  policy = data.aws_iam_role_policy.foo.json
+  policy = data.aws_iam_policy_document.foo.json
 }
 
 resource "aws_transfer_user" "foo" {
@@ -69,7 +71,7 @@ resource "aws_transfer_user" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Required) The name used for log in to your SFTP server.
@@ -78,7 +80,7 @@ The following arguments are supported:
 * `home_directory_type` - (Optional) The type of landing directory (folder) you mapped for your users' home directory. Valid values are `PATH` and `LOGICAL`.
 * `policy` - (Optional) An IAM JSON policy document that scopes down user access to portions of their Amazon S3 bucket. IAM variables you can use inside this policy include `${Transfer:UserName}`, `${Transfer:HomeDirectory}`, and `${Transfer:HomeBucket}`. Since the IAM variable syntax matches Terraform's interpolation syntax, they must be escaped inside Terraform configuration strings (`$${Transfer:UserName}`).  These are evaluated on-the-fly when navigating the bucket.
 * `posix_profile` - (Optional) Specifies the full POSIX identity, including user ID (Uid), group ID (Gid), and any secondary groups IDs (SecondaryGids), that controls your users' access to your Amazon EFS file systems. See [Posix Profile](#posix-profile) below.
-* `role` - (Required) Amazon Resource Name (ARN) of an IAM role that allows the service to controls your user’s access to your Amazon S3 bucket.
+* `role` - (Required) Amazon Resource Name (ARN) of an IAM role that allows the service to control your user’s access to your Amazon S3 bucket.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Home Directory Mappings
@@ -101,8 +103,9 @@ home_directory_mappings {
 * `uid` - (Required) The POSIX user ID used for all EFS operations by this user.
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
-## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer User
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -115,8 +118,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transfer Users can be imported using the `server_id` and `user_name` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_transfer_user.bar
+  id = "s-12345678/test-username"
+}
 ```
-$ terraform import aws_transfer_user.bar s-12345678/test-username
+
+Using `terraform import`, import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
+
+```console
+% terraform import aws_transfer_user.bar s-12345678/test-username
 ```

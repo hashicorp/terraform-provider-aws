@@ -10,7 +10,9 @@ description: |-
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 
-~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
+~> **NOTE:** S3 Buckets only support a single notification configuration resource. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. This resource will overwrite any existing event notifications configured for the S3 bucket it's associated with. See the example "Trigger multiple Lambda functions" for an option of how to configure multiple triggers within this resource.
+
+-> This resource cannot be used with S3 directory buckets.
 
 ## Example Usage
 
@@ -133,7 +135,7 @@ resource "aws_lambda_function" "func" {
   function_name = "example_lambda_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "go1.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -158,14 +160,16 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ```terraform
 data "aws_iam_policy_document" "assume_role" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["lambda.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
-
-  actions = ["sts:AssumeRole"]
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -186,7 +190,7 @@ resource "aws_lambda_function" "func1" {
   function_name = "example_lambda_name1"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "go1.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_permission" "allow_bucket2" {
@@ -305,6 +309,19 @@ For Terraform's [JSON syntax](https://www.terraform.io/docs/configuration/syntax
 }
 ```
 
+### Emit events to EventBridge
+
+```terraform
+resource "aws_s3_bucket" "bucket" {
+  bucket = "your-bucket-name"
+}
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket      = aws_s3_bucket.bucket.id
+  eventbridge = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -313,7 +330,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications.
+* `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.
 * `topic` - (Optional) Notification configuration to SNS Topic. See below.
@@ -342,14 +359,23 @@ The following arguments are optional:
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `topic_arn` - (Required) SNS topic ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket notification can be imported using the `bucket`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket notification using the `bucket`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_notification.bucket_notification
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket_notification.bucket_notification bucket-name
+
+Using `terraform import`, import S3 bucket notification using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```

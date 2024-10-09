@@ -55,9 +55,9 @@ The following arguments are optional:
 * `ops_item_sns_topic_arn` - (Optional) SNS topic provided to Application Insights that is associated to the created opsItem. Allows you to receive notifications for updates to the opsItem.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Application.
 * `id` - Name of the resource group.
@@ -65,8 +65,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ApplicationInsights Applications can be imported using the `resource_group_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ApplicationInsights Applications using the `resource_group_name`. For example:
 
+```terraform
+import {
+  to = aws_applicationinsights_application.some
+  id = "some-application"
+}
 ```
-$ terraform import aws_applicationinsights_application.some some-application
+
+Using `terraform import`, import ApplicationInsights Applications using the `resource_group_name`. For example:
+
+```console
+% terraform import aws_applicationinsights_application.some some-application
 ```

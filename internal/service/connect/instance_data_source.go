@@ -1,25 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_instance")
-func DataSourceInstance() *schema.Resource {
+// @SDKDataSource("aws_connect_instance", name="Instance")
+// @Tags
+func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +45,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,13 +65,13 @@ func DataSourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_alias", "instance_id"},
+				ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_id", "instance_alias"},
+				ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
 			},
 			"multi_party_conference_enabled": {
 				Type:     schema.TypeBool,
@@ -71,14 +81,15 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			// "use_custom_tts_voices_enabled": {
 			// 	Type:     schema.TypeBool,
 			// 	Computed: true,
@@ -88,44 +99,29 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	var matchedInstance *connect.Instance
+	var matchedInstance *awstypes.Instance
 
-	if v, ok := d.GetOk("instance_id"); ok {
-		instanceId := v.(string)
-
-		input := connect.DescribeInstanceInput{
-			InstanceId: aws.String(instanceId),
-		}
-
-		log.Printf("[DEBUG] Reading Connect Instance by instance_id: %s", input)
-
-		output, err := conn.DescribeInstanceWithContext(ctx, &input)
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
+		instanceID := v.(string)
+		instance, err := findInstanceByID(ctx, conn, instanceID)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): %w", instanceId, err))
+			return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s): %s", instanceID, err)
 		}
 
-		if output == nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): empty output", instanceId))
-		}
-
-		matchedInstance = output.Instance
+		matchedInstance = instance
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
-
-		instanceSummary, err := dataSourceGetInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
+		instanceSummary, err := findInstanceSummaryByAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): %w", instanceAlias, err))
+			return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s) summary: %s", instanceAlias, err)
 		}
 
-		if instanceSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias))
-		}
-
-		matchedInstance = &connect.Instance{
+		matchedInstance = &awstypes.Instance{
 			Arn:                    instanceSummary.Arn,
 			CreatedTime:            instanceSummary.CreatedTime,
 			Id:                     instanceSummary.Id,
@@ -138,77 +134,72 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if matchedInstance == nil {
-		return diag.FromErr(fmt.Errorf("no Connect Instance found for query, try adjusting your search criteria"))
+	d.SetId(aws.ToString(matchedInstance.Id))
+	d.Set(names.AttrARN, matchedInstance.Arn)
+	if matchedInstance.CreatedTime != nil {
+		d.Set(names.AttrCreatedTime, matchedInstance.CreatedTime.Format(time.RFC3339))
 	}
-
-	d.SetId(aws.StringValue(matchedInstance.Id))
-
-	d.Set("arn", matchedInstance.Arn)
-	d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
 	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
-	d.Set("service_role", matchedInstance.ServiceRole)
-	d.Set("status", matchedInstance.InstanceStatus)
+	d.Set(names.AttrServiceRole, matchedInstance.ServiceRole)
+	d.Set(names.AttrStatus, matchedInstance.InstanceStatus)
 
-	for att := range InstanceAttributeMapping() {
-		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error reading Connect Instance (%s) attribute (%s): %w", d.Id(), att, err))
-		}
-		d.Set(InstanceAttributeMapping()[att], value)
+	if err := readInstanceAttributes(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	setTagsOut(ctx, matchedInstance.Tags)
+
+	return diags
 }
 
-func dataSourceGetInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
-	var result *connect.InstanceSummary
-
+func findInstanceSummaryByAlias(ctx context.Context, conn *connect.Client, alias string) (*awstypes.InstanceSummary, error) {
+	const maxResults = 10
 	input := &connect.ListInstancesInput{
-		MaxResults: aws.Int64(ListInstancesMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *connect.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, is := range page.InstanceSummaryList {
-			if is == nil {
-				continue
-			}
-
-			if aws.StringValue(is.InstanceAlias) == instanceAlias {
-				result = is
-				return false
-			}
-		}
-
-		return !lastPage
+	return findInstanceSummary(ctx, conn, input, func(v *awstypes.InstanceSummary) bool {
+		return aws.ToString(v.InstanceAlias) == alias
 	})
+}
+
+func findInstanceSummary(ctx context.Context, conn *connect.Client, input *connect.ListInstancesInput, filter tfslices.Predicate[*awstypes.InstanceSummary]) (*awstypes.InstanceSummary, error) {
+	output, err := findInstanceSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func dataSourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {
-	input := &connect.DescribeInstanceAttributeInput{
-		InstanceId:    aws.String(instanceID),
-		AttributeType: aws.String(attributeType),
+func findInstanceSummaries(ctx context.Context, conn *connect.Client, input *connect.ListInstancesInput, filter tfslices.Predicate[*awstypes.InstanceSummary]) ([]awstypes.InstanceSummary, error) {
+	var output []awstypes.InstanceSummary
+
+	pages := connect.NewListInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.InstanceSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	out, err := conn.DescribeInstanceAttributeWithContext(ctx, input)
-
-	if err != nil {
-		return false, err
-	}
-
-	result, parseErr := strconv.ParseBool(*out.Attribute.Value)
-	return result, parseErr
+	return output, nil
 }

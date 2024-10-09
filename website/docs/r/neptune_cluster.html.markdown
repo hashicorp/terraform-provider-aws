@@ -37,7 +37,7 @@ See the AWS [Docs](https://docs.aws.amazon.com/neptune/latest/userguide/limits.h
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allow_major_version_upgrade` - (Optional) Specifies whether upgrades between different major versions are allowed. You must set it to `true` when providing an `engine_version` parameter that uses a different major version than the DB cluster's current version. Default is `false`.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
@@ -46,7 +46,7 @@ The following arguments are supported:
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `copy_tags_to_snapshot` - (Optional) If set to true, tags are copied to any snapshot of the DB cluster that is created.
-* `enable_cloudwatch_logs_exports` - (Optional) A list of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit`.
+* `enable_cloudwatch_logs_exports` - (Optional) A list of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit` and `slowquery`.
 * `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
 * `engine_version` - (Optional) The database engine version.
 * `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
@@ -57,12 +57,13 @@ The following arguments are supported:
 * `neptune_subnet_group_name` - (Optional) A Neptune subnet group to associate with this Neptune instance.
 * `neptune_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `neptune_instance_parameter_group_name` - (Optional) The name of the DB parameter group to apply to all instances of the DB cluster.
+* `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
 * `port` - (Optional) The port on which the Neptune accepts connections. Default is `8182`.
 * `replication_source_identifier` - (Optional) ARN of a source Neptune cluster or Neptune instance if this Neptune cluster is to be created as a Read Replica.
 * `skip_final_snapshot` - (Optional) Determines whether a final Neptune snapshot is created before the Neptune cluster is deleted. If true is specified, no Neptune snapshot is created. If false is specified, a Neptune snapshot is created before the Neptune cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
-* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot.
+* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 * `storage_encrypted` - (Optional) Specifies whether the Neptune cluster is encrypted. The default is `false` if not specified.
 * `tags` - (Optional) A map of tags to assign to the Neptune cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
@@ -97,9 +98,9 @@ resource "aws_neptune_cluster_instance" "example" {
 * `min_capacity`: (default: **2.5**) The minimum Neptune Capacity Units (NCUs) for this cluster. Must be greater or equal than **1**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
 * `max_capacity`: (default: **128**) The maximum Neptune Capacity Units (NCUs) for this cluster. Must be lower or equal than **128**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Neptune Cluster Amazon Resource Name (ARN)
 * `cluster_resource_id` - The Neptune Cluster Resource ID
@@ -121,8 +122,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_neptune_cluster` can be imported by using the cluster identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_cluster` using the cluster identifier. For example:
 
+```terraform
+import {
+  to = aws_neptune_cluster.example
+  id = "my-cluster"
+}
 ```
-$ terraform import aws_neptune_cluster.example my-cluster
+
+Using `terraform import`, import `aws_neptune_cluster` using the cluster identifier. For example:
+
+```console
+% terraform import aws_neptune_cluster.example my-cluster
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider_test
 
 import (
@@ -7,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
-// go test -bench=BenchmarkProtoV5ProviderServerFactory -benchtime 1x -benchmem -run=B -v ./internal/provider
+// go test -bench=BenchmarkProtoV5ProviderServerFactory -benchtime 1x -benchmem -run=Bench -v ./internal/provider
 func BenchmarkProtoV5ProviderServerFactory(b *testing.B) {
 	_, p, err := provider.ProtoV5ProviderServerFactory(context.Background())
 

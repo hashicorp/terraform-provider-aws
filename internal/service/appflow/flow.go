@@ -1,38 +1,57 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow
 
 import (
 	"context"
 	"log"
-	"regexp"
+	"slices"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appflow"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/appflow"
+	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	AttrObjectPath = "object_path"
-)
-
-// @SDKResource("aws_appflow_flow")
-func ResourceFlow() *schema.Resource {
+// @SDKResource("aws_appflow_flow", name="Flow")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
+func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
 		ReadWithoutTimeout:   resourceFlowRead,
 		UpdateWithoutTimeout: resourceFlowUpdate,
 		DeleteWithoutTimeout: resourceFlowDelete,
+
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				p, err := arn.Parse(d.Id())
+				if err != nil {
+					return nil, err
+				}
+				name := strings.TrimPrefix(p.Resource, "flow/")
+				d.Set(names.AttrName, name)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -40,36 +59,30 @@ func ResourceFlow() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
-			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[\w!@#\-.?,\s]*`), "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w!@#\-.?,\s]*`), "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
 			},
 			"destination_flow_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"api_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
+							ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
 						},
 						"connector_profile_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[\w\/!@#+=.-]+`), "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
+							ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[\w\/!@#+=.-]+`), "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 						},
 						"connector_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appflow.ConnectorType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ConnectorType](),
 						},
 						"destination_connector_properties": {
 							Type:     schema.TypeList,
@@ -86,19 +99,19 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 128),
-														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+														validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
 													},
 												},
 												"entity_name": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
 												},
 												"error_handling_config": {
 													Type:     schema.TypeList,
@@ -106,12 +119,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -128,13 +141,13 @@ func ResourceFlow() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
 												"write_operation_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.WriteOperationType](),
 												},
 											},
 										},
@@ -145,15 +158,15 @@ func ResourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"domain_name": {
+												names.AttrDomainName: {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
 												},
 												"object_type_name": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 255)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 255)),
 												},
 											},
 										},
@@ -170,12 +183,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -190,7 +203,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -207,12 +220,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -227,7 +240,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -252,12 +265,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -272,7 +285,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -283,7 +296,7 @@ func ResourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -294,12 +307,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -314,12 +327,12 @@ func ResourceFlow() *schema.Resource {
 												"intermediate_bucket_name": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -327,59 +340,79 @@ func ResourceFlow() *schema.Resource {
 									"s3": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"s3_output_format_config": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"aggregation_config": {
 																Type:     schema.TypeList,
 																Optional: true,
+																Computed: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"aggregation_type": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringInSlice(appflow.AggregationType_Values(), false),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[types.AggregationType](),
+																		},
+																		"target_file_size": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Computed: true,
 																		},
 																	},
 																},
 															},
 															"file_type": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringInSlice(appflow.FileType_Values(), false),
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.FileType](),
 															},
 															"prefix_config": {
 																Type:     schema.TypeList,
 																Optional: true,
+																Computed: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
+																		"prefix_hierarchy": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem: &schema.Schema{
+																				Type:             schema.TypeString,
+																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
+																			},
+																		},
 																		"prefix_format": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringInSlice(appflow.PrefixFormat_Values(), false),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.PrefixFormat](),
 																		},
 																		"prefix_type": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringInSlice(appflow.PrefixType_Values(), false),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.PrefixType](),
 																		},
 																	},
 																},
@@ -387,6 +420,7 @@ func ResourceFlow() *schema.Resource {
 															"preserve_source_data_typing": {
 																Type:     schema.TypeBool,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -406,12 +440,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -428,18 +462,18 @@ func ResourceFlow() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 												"write_operation_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.WriteOperationType](),
 												},
 											},
 										},
@@ -456,12 +490,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -478,13 +512,13 @@ func ResourceFlow() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
-												AttrObjectPath: {
+												"object_path": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 												"success_response_handling_config": {
 													Type:     schema.TypeList,
@@ -492,12 +526,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -506,9 +540,9 @@ func ResourceFlow() *schema.Resource {
 													},
 												},
 												"write_operation_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.WriteOperationType](),
 												},
 											},
 										},
@@ -519,7 +553,7 @@ func ResourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -530,12 +564,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -550,12 +584,12 @@ func ResourceFlow() *schema.Resource {
 												"intermediate_bucket_name": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -566,12 +600,12 @@ func ResourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`^(upsolver-appflow)\S*`), "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`^(upsolver-appflow)\S*`), "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -589,17 +623,17 @@ func ResourceFlow() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"aggregation_type": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringInSlice(appflow.AggregationType_Values(), false),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.AggregationType](),
 																		},
 																	},
 																},
 															},
 															"file_type": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringInSlice(appflow.FileType_Values(), false),
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.FileType](),
 															},
 															"prefix_config": {
 																Type:     schema.TypeList,
@@ -607,15 +641,24 @@ func ResourceFlow() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
+																		"prefix_hierarchy": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem: &schema.Schema{
+																				Type:             schema.TypeString,
+																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
+																			},
+																		},
 																		"prefix_format": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringInSlice(appflow.PrefixFormat_Values(), false),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.PrefixFormat](),
 																		},
 																		"prefix_type": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appflow.PrefixType_Values(), false),
+																			Type:             schema.TypeString,
+																			Required:         true,
+																			ValidateDiagFunc: enum.Validate[types.PrefixType](),
 																		},
 																	},
 																},
@@ -638,12 +681,12 @@ func ResourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -660,18 +703,18 @@ func ResourceFlow() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 												"write_operation_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.WriteOperationType](),
 												},
 											},
 										},
@@ -682,12 +725,22 @@ func ResourceFlow() *schema.Resource {
 					},
 				},
 			},
+			"flow_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kms_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`arn:.*:kms:.*:[0-9]+:.*`), "must be a valid ARN of a Key Management Services (KMS) key"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`arn:.*:kms:.*:[0-9]+:.*`), "must be a valid ARN of a Key Management Services (KMS) key"),
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 			},
 			"source_flow_config": {
 				Type:     schema.TypeList,
@@ -698,17 +751,17 @@ func ResourceFlow() *schema.Resource {
 						"api_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
+							ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
 						},
 						"connector_profile_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[\w\/!@#+=.-]+`), "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
+							ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[\w\/!@#+=.-]+`), "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 						},
 						"connector_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appflow.ConnectorType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ConnectorType](),
 						},
 						"incremental_pull_config": {
 							Type:     schema.TypeList,
@@ -739,7 +792,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -753,19 +806,19 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 128),
-														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+														validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
 													},
 												},
 												"entity_name": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
 												},
 											},
 										},
@@ -779,7 +832,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -793,7 +846,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -807,7 +860,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -821,7 +874,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -835,7 +888,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -843,17 +896,20 @@ func ResourceFlow() *schema.Resource {
 									"s3": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+													ForceNew:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
-													Optional:     true,
+													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"s3_input_format_config": {
@@ -863,9 +919,9 @@ func ResourceFlow() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"s3_input_file_type": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringInSlice(appflow.S3InputFileType_Values(), false),
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.S3InputFileType](),
 															},
 														},
 													},
@@ -890,7 +946,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -901,10 +957,10 @@ func ResourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												AttrObjectPath: {
+												"object_path": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -918,7 +974,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -932,7 +988,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -946,7 +1002,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -960,7 +1016,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -974,7 +1030,7 @@ func ResourceFlow() *schema.Resource {
 												"document_type": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[\s\w_-]+`), "must contain only alphanumeric, underscore (_), and hyphen (-) characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[\s\w_-]+`), "must contain only alphanumeric, underscore (_), and hyphen (-) characters"), validation.StringLenBetween(1, 512)),
 												},
 												"include_all_versions": {
 													Type:     schema.TypeBool,
@@ -991,7 +1047,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -1005,7 +1061,7 @@ func ResourceFlow() *schema.Resource {
 												"object": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
 											},
 										},
@@ -1016,6 +1072,8 @@ func ResourceFlow() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"task": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -1027,84 +1085,84 @@ func ResourceFlow() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"amplitude": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.AmplitudeConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.AmplitudeConnectorOperator](),
 									},
 									"custom_connector": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.Operator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.Operator](),
 									},
 									"datadog": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.DatadogConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.DatadogConnectorOperator](),
 									},
 									"dynatrace": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.DynatraceConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.DynatraceConnectorOperator](),
 									},
 									"google_analytics": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.GoogleAnalyticsConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.GoogleAnalyticsConnectorOperator](),
 									},
 									"infor_nexus": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.InforNexusConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InforNexusConnectorOperator](),
 									},
 									"marketo": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.MarketoConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.MarketoConnectorOperator](),
 									},
 									"s3": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.S3ConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.S3ConnectorOperator](),
 									},
 									"salesforce": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.SalesforceConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.SalesforceConnectorOperator](),
 									},
 									"sapo_data": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.SAPODataConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.SAPODataConnectorOperator](),
 									},
 									"service_now": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.ServiceNowConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.ServiceNowConnectorOperator](),
 									},
 									"singular": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.SingularConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.SingularConnectorOperator](),
 									},
 									"slack": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.SlackConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.SlackConnectorOperator](),
 									},
 									"trendmicro": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.TrendmicroConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.TrendmicroConnectorOperator](),
 									},
 									"veeva": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.VeevaConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.VeevaConnectorOperator](),
 									},
 									"zendesk": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.ZendeskConnectorOperator_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.ZendeskConnectorOperator](),
 									},
 								},
 							},
@@ -1116,10 +1174,23 @@ func ResourceFlow() *schema.Resource {
 						},
 						"source_fields": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 2048),
+							},
+							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+								if v, ok := d.Get("task").(*schema.Set); ok && v.Len() == 1 {
+									if tl, ok := v.List()[0].(map[string]interface{}); ok && len(tl) > 0 {
+										if sf, ok := tl["source_fields"].([]interface{}); ok && len(sf) == 1 {
+											if sf[0] == "" {
+												return oldValue == "0" && newValue == "1"
+											}
+										}
+									}
+								}
+								return false
 							},
 						},
 						"task_properties": {
@@ -1131,9 +1202,9 @@ func ResourceFlow() *schema.Resource {
 							},
 						},
 						"task_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appflow.TaskType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.TaskType](),
 						},
 					},
 				},
@@ -1158,9 +1229,9 @@ func ResourceFlow() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"data_pull_mode": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appflow.DataPullMode_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.DataPullMode](),
 												},
 												"first_execution_from": {
 													Type:         schema.TypeString,
@@ -1172,7 +1243,7 @@ func ResourceFlow() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IsRFC3339Time,
 												},
-												"schedule_expression": {
+												names.AttrScheduleExpression: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 256),
@@ -1199,15 +1270,45 @@ func ResourceFlow() *schema.Resource {
 							},
 						},
 						"trigger_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appflow.TriggerType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.TriggerType](),
 						},
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"metadata_catalog_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"glue_data_catalog": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrDatabaseName: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									names.AttrRoleARN: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+									},
+									"table_prefix": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -1215,242 +1316,298 @@ func ResourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	var diags diag.Diagnostics
 
-	in := &appflow.CreateFlowInput{
-		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
+	input := &appflow.CreateFlowInput{
+		FlowName:                  aws.String(name),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
+		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}
 
+	if v, ok := d.GetOk("metadata_catalog_config"); ok {
+		input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
-		in.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kms_arn"); ok {
-		in.KmsArn = aws.String(v.(string))
+		input.KmsArn = aws.String(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	out, err := conn.CreateFlowWithContext(ctx, in)
+	output, err := conn.CreateFlow(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Appflow Flow (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating AppFlow Flow (%s): %s", name, err)
 	}
 
-	if out == nil || out.FlowArn == nil {
-		return diag.Errorf("creating Appflow Flow (%s): empty output", d.Get(names.AttrName).(string))
-	}
+	d.SetId(aws.ToString(output.FlowArn))
 
-	d.SetId(aws.StringValue(out.FlowArn))
-
-	return resourceFlowRead(ctx, d, meta)
+	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	var diags diag.Diagnostics
 
-	out, err := FindFlowByARN(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
+
+	flowDefinition, err := findFlowByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Get(names.AttrName))
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("finding AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
-	in := &appflow.DescribeFlowInput{
-		FlowName: out.FlowName,
-	}
-
-	out2, err := conn.DescribeFlowWithContext(ctx, in)
+	output, err := findFlowByName(ctx, conn, aws.ToString(flowDefinition.FlowName))
 
 	if err != nil {
-		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
-	d.Set(names.AttrName, out.FlowName)
-	d.Set(names.AttrARN, out2.FlowArn)
-	d.Set(names.AttrDescription, out2.Description)
-
-	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(out2.DestinationFlowConfigList)); err != nil {
-		return diag.Errorf("error setting destination_flow_config: %s", err)
+	d.Set(names.AttrARN, output.FlowArn)
+	d.Set(names.AttrDescription, output.Description)
+	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(output.DestinationFlowConfigList)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting destination_flow_config: %s", err)
 	}
-
-	d.Set("kms_arn", out2.KmsArn)
-
-	if out2.SourceFlowConfig != nil {
-		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(out2.SourceFlowConfig)}); err != nil {
-			return diag.Errorf("error setting source_flow_config: %s", err)
+	d.Set("flow_status", output.FlowStatus)
+	d.Set("kms_arn", output.KmsArn)
+	d.Set(names.AttrName, output.FlowName)
+	if output.SourceFlowConfig != nil {
+		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(output.SourceFlowConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting source_flow_config: %s", err)
 		}
 	} else {
 		d.Set("source_flow_config", nil)
 	}
-
-	if err := d.Set("task", flattenTasks(out2.Tasks)); err != nil {
-		return diag.Errorf("error setting task: %s", err)
+	if err := d.Set("task", flattenTasks(output.Tasks)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting task: %s", err)
 	}
-
-	if out2.TriggerConfig != nil {
-		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(out2.TriggerConfig)}); err != nil {
-			return diag.Errorf("error setting trigger_config: %s", err)
+	if output.TriggerConfig != nil {
+		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(output.TriggerConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting trigger_config: %s", err)
 		}
 	} else {
 		d.Set("trigger_config", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("listing tags for AppFlow Flow (%s): %s", d.Id(), err)
+	if output.MetadataCatalogConfig != nil {
+		if err := d.Set("metadata_catalog_config", flattenMetadataCatalogConfig(output.MetadataCatalogConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting metadata_catalog_config: %s", err)
+		}
+	} else {
+		d.Set("metadata_catalog_config", nil)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, output.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	var diags diag.Diagnostics
 
-	in := &appflow.UpdateFlowInput{
-		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
-		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
-		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
-		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
-	}
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	if d.HasChange(names.AttrDescription) {
-		in.Description = aws.String(d.Get(names.AttrDescription).(string))
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &appflow.UpdateFlowInput{
+			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
+			FlowName:                  aws.String(d.Get(names.AttrName).(string)),
+			SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
+			Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
+			TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
+		}
 
-	log.Printf("[DEBUG] Updating AppFlow Flow (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateFlowWithContext(ctx, in)
+		if v, ok := d.GetOk("metadata_catalog_config"); ok {
+			input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
+		}
 
-	if err != nil {
-		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
-	}
+		// always send description when updating a task
+		if v, ok := d.GetOk(names.AttrDescription); ok {
+			input.Description = aws.String(v.(string))
+		}
 
-	arn := d.Get(names.AttrARN).(string)
+		_, err := conn.UpdateFlow(ctx, input)
 
-	if d.HasChange(names.AttrTagsAll) {
-		o, n := d.GetChange(names.AttrTagsAll)
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("error updating tags: %s", err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 		}
 	}
 
-	return resourceFlowRead(ctx, d, meta)
+	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	var diags diag.Diagnostics
 
-	out, _ := FindFlowByARN(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
-
-	_, err := conn.DeleteFlowWithContext(ctx, &appflow.DeleteFlowInput{
-		FlowName: out.FlowName,
+	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
+	_, err := conn.DeleteFlow(ctx, &appflow.DeleteFlowInput{
+		FlowName: aws.String(d.Get(names.AttrName).(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
-	if err := FlowDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for AppFlow Flow (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitFlowDeleted(ctx, conn, d.Get(names.AttrName).(string)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for AppFlow Flow (%s) delete: %s", d.Get(names.AttrName), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandErrorHandlingConfig(tfMap map[string]interface{}) *appflow.ErrorHandlingConfig {
+func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*appflow.DescribeFlowOutput, error) {
+	input := &appflow.DescribeFlowInput{
+		FlowName: aws.String(name),
+	}
+
+	output, err := conn.DescribeFlow(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.FlowStatus; status == types.FlowStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusFlow(ctx context.Context, conn *appflow.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFlowByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.FlowStatus), nil
+	}
+}
+
+func waitFlowDeleted(ctx context.Context, conn *appflow.Client, name string) (*types.FlowDefinition, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{},
+		Refresh: statusFlow(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.FlowDefinition); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandErrorHandlingConfig(tfMap map[string]interface{}) *types.ErrorHandlingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.ErrorHandlingConfig{}
+	a := &types.ErrorHandlingConfig{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
 	if v, ok := tfMap["fail_on_first_destination_error"].(bool); ok {
-		a.FailOnFirstDestinationError = aws.Bool(v)
+		a.FailOnFirstDestinationError = v
 	}
 
 	return a
 }
 
-func expandAggregationConfig(tfMap map[string]interface{}) *appflow.AggregationConfig {
+func expandAggregationConfig(tfMap map[string]interface{}) *types.AggregationConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.AggregationConfig{}
+	a := &types.AggregationConfig{}
 
 	if v, ok := tfMap["aggregation_type"].(string); ok && v != "" {
-		a.AggregationType = aws.String(v)
+		a.AggregationType = types.AggregationType(v)
+	}
+
+	if v, ok := tfMap["target_file_size"].(int); ok && v != 0 {
+		a.TargetFileSize = aws.Int64(int64(v))
 	}
 
 	return a
 }
 
-func expandPrefixConfig(tfMap map[string]interface{}) *appflow.PrefixConfig {
+func expandPrefixConfig(tfMap map[string]interface{}) *types.PrefixConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.PrefixConfig{}
+	a := &types.PrefixConfig{}
 
 	if v, ok := tfMap["prefix_format"].(string); ok && v != "" {
-		a.PrefixFormat = aws.String(v)
+		a.PrefixFormat = types.PrefixFormat(v)
 	}
 
 	if v, ok := tfMap["prefix_type"].(string); ok && v != "" {
-		a.PrefixType = aws.String(v)
+		a.PrefixType = types.PrefixType(v)
+	}
+
+	if v, ok := tfMap["prefix_hierarchy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.PathPrefixHierarchy = flex.ExpandStringyValueList[types.PathPrefix](v)
 	}
 
 	return a
 }
 
-func expandDestinationFlowConfigs(tfList []interface{}) []*appflow.DestinationFlowConfig {
+func expandDestinationFlowConfigs(tfList []interface{}) []types.DestinationFlowConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []*appflow.DestinationFlowConfig
+	var s []types.DestinationFlowConfig
 
 	for _, r := range tfList {
 		m, ok := r.(map[string]interface{})
@@ -1465,18 +1622,18 @@ func expandDestinationFlowConfigs(tfList []interface{}) []*appflow.DestinationFl
 			continue
 		}
 
-		s = append(s, a)
+		s = append(s, *a)
 	}
 
 	return s
 }
 
-func expandDestinationFlowConfig(tfMap map[string]interface{}) *appflow.DestinationFlowConfig {
+func expandDestinationFlowConfig(tfMap map[string]interface{}) *types.DestinationFlowConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.DestinationFlowConfig{}
+	a := &types.DestinationFlowConfig{}
 
 	if v, ok := tfMap["api_version"].(string); ok && v != "" {
 		a.ApiVersion = aws.String(v)
@@ -1487,118 +1644,121 @@ func expandDestinationFlowConfig(tfMap map[string]interface{}) *appflow.Destinat
 	}
 
 	if v, ok := tfMap["connector_type"].(string); ok && v != "" {
-		a.ConnectorType = aws.String(v)
+		a.ConnectorType = types.ConnectorType(v)
+	} else {
+		// https://github.com/hashicorp/terraform-provider-aws/issues/26491.
+		return nil
 	}
 
-	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.DestinationConnectorProperties = expandDestinationConnectorProperties(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func expandDestinationConnectorProperties(tfMap map[string]interface{}) *appflow.DestinationConnectorProperties {
+func expandDestinationConnectorProperties(tfMap map[string]interface{}) *types.DestinationConnectorProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.DestinationConnectorProperties{}
+	a := &types.DestinationConnectorProperties{}
 
-	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.CustomConnector = expandCustomConnectorDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["customer_profiles"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["customer_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.CustomerProfiles = expandCustomerProfilesDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["event_bridge"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["event_bridge"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.EventBridge = expandEventBridgeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["honeycode"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["honeycode"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Honeycode = expandHoneycodeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
 	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
 	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
-	if v, ok := tfMap["lookout_metrics"].([]interface{}); ok && len(v) > 0 {
-		a.LookoutMetrics = v[0].(*appflow.LookoutMetricsDestinationProperties)
+	if v, ok := tfMap["lookout_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.LookoutMetrics = v[0].(*types.LookoutMetricsDestinationProperties)
 	}
 
-	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Marketo = expandMarketoDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["redshift"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["redshift"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Redshift = expandRedshiftDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3 = expandS3DestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Salesforce = expandSalesforceDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SAPOData = expandSAPODataDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Snowflake = expandSnowflakeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["upsolver"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["upsolver"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Upsolver = expandUpsolverDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Zendesk = expandZendeskDestinationProperties(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func expandCustomConnectorDestinationProperties(tfMap map[string]interface{}) *appflow.CustomConnectorDestinationProperties {
+func expandCustomConnectorDestinationProperties(tfMap map[string]interface{}) *types.CustomConnectorDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.CustomConnectorDestinationProperties{}
+	a := &types.CustomConnectorDestinationProperties{}
 
 	if v, ok := tfMap["custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
-		a.CustomProperties = flex.ExpandStringMap(v)
+		a.CustomProperties = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["entity_name"].(string); ok && v != "" {
 		a.EntityName = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
-		a.IdFieldNames = flex.ExpandStringList(v)
+		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
-		a.WriteOperationType = aws.String(v)
+		a.WriteOperationType = types.WriteOperationType(v)
 	}
 
 	return a
 }
 
-func expandCustomerProfilesDestinationProperties(tfMap map[string]interface{}) *appflow.CustomerProfilesDestinationProperties {
+func expandCustomerProfilesDestinationProperties(tfMap map[string]interface{}) *types.CustomerProfilesDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.CustomerProfilesDestinationProperties{}
+	a := &types.CustomerProfilesDestinationProperties{}
 
-	if v, ok := tfMap["domain_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDomainName].(string); ok && v != "" {
 		a.DomainName = aws.String(v)
 	}
 
@@ -1609,14 +1769,14 @@ func expandCustomerProfilesDestinationProperties(tfMap map[string]interface{}) *
 	return a
 }
 
-func expandEventBridgeDestinationProperties(tfMap map[string]interface{}) *appflow.EventBridgeDestinationProperties {
+func expandEventBridgeDestinationProperties(tfMap map[string]interface{}) *types.EventBridgeDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.EventBridgeDestinationProperties{}
+	a := &types.EventBridgeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1627,14 +1787,14 @@ func expandEventBridgeDestinationProperties(tfMap map[string]interface{}) *appfl
 	return a
 }
 
-func expandHoneycodeDestinationProperties(tfMap map[string]interface{}) *appflow.HoneycodeDestinationProperties {
+func expandHoneycodeDestinationProperties(tfMap map[string]interface{}) *types.HoneycodeDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.HoneycodeDestinationProperties{}
+	a := &types.HoneycodeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1645,14 +1805,14 @@ func expandHoneycodeDestinationProperties(tfMap map[string]interface{}) *appflow
 	return a
 }
 
-func expandMarketoDestinationProperties(tfMap map[string]interface{}) *appflow.MarketoDestinationProperties {
+func expandMarketoDestinationProperties(tfMap map[string]interface{}) *types.MarketoDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.MarketoDestinationProperties{}
+	a := &types.MarketoDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1663,18 +1823,18 @@ func expandMarketoDestinationProperties(tfMap map[string]interface{}) *appflow.M
 	return a
 }
 
-func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *appflow.RedshiftDestinationProperties {
+func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *types.RedshiftDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.RedshiftDestinationProperties{}
+	a := &types.RedshiftDestinationProperties{}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1689,44 +1849,44 @@ func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *appflow.
 	return a
 }
 
-func expandS3DestinationProperties(tfMap map[string]interface{}) *appflow.S3DestinationProperties {
+func expandS3DestinationProperties(tfMap map[string]interface{}) *types.S3DestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.S3DestinationProperties{}
+	a := &types.S3DestinationProperties{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3OutputFormatConfig = expandS3OutputFormatConfig(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func expandS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.S3OutputFormatConfig {
+func expandS3OutputFormatConfig(tfMap map[string]interface{}) *types.S3OutputFormatConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.S3OutputFormatConfig{}
+	a := &types.S3OutputFormatConfig{}
 
-	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["file_type"].(string); ok && v != "" {
-		a.FileType = aws.String(v)
+		a.FileType = types.FileType(v)
 	}
 
-	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1737,19 +1897,19 @@ func expandS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.S3OutputF
 	return a
 }
 
-func expandSalesforceDestinationProperties(tfMap map[string]interface{}) *appflow.SalesforceDestinationProperties {
+func expandSalesforceDestinationProperties(tfMap map[string]interface{}) *types.SalesforceDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SalesforceDestinationProperties{}
+	a := &types.SalesforceDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
-		a.IdFieldNames = flex.ExpandStringList(v)
+		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -1757,72 +1917,72 @@ func expandSalesforceDestinationProperties(tfMap map[string]interface{}) *appflo
 	}
 
 	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
-		a.WriteOperationType = aws.String(v)
+		a.WriteOperationType = types.WriteOperationType(v)
 	}
 
 	return a
 }
 
-func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *appflow.SAPODataDestinationProperties {
+func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *types.SAPODataDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SAPODataDestinationProperties{}
+	a := &types.SAPODataDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
-		a.IdFieldNames = flex.ExpandStringList(v)
+		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := tfMap[AttrObjectPath].(string); ok && v != "" {
+	if v, ok := tfMap["object_path"].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
 	}
 
-	if v, ok := tfMap["success_response_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["success_response_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SuccessResponseHandlingConfig = expandSuccessResponseHandlingConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
-		a.WriteOperationType = aws.String(v)
+		a.WriteOperationType = types.WriteOperationType(v)
 	}
 
 	return a
 }
 
-func expandSuccessResponseHandlingConfig(tfMap map[string]interface{}) *appflow.SuccessResponseHandlingConfig {
+func expandSuccessResponseHandlingConfig(tfMap map[string]interface{}) *types.SuccessResponseHandlingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SuccessResponseHandlingConfig{}
+	a := &types.SuccessResponseHandlingConfig{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
 	return a
 }
 
-func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *appflow.SnowflakeDestinationProperties {
+func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *types.SnowflakeDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SnowflakeDestinationProperties{}
+	a := &types.SnowflakeDestinationProperties{}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1837,63 +1997,63 @@ func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *appflow
 	return a
 }
 
-func expandUpsolverDestinationProperties(tfMap map[string]interface{}) *appflow.UpsolverDestinationProperties {
+func expandUpsolverDestinationProperties(tfMap map[string]interface{}) *types.UpsolverDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.UpsolverDestinationProperties{}
+	a := &types.UpsolverDestinationProperties{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3OutputFormatConfig = expandUpsolverS3OutputFormatConfig(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.UpsolverS3OutputFormatConfig {
+func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *types.UpsolverS3OutputFormatConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.UpsolverS3OutputFormatConfig{}
+	a := &types.UpsolverS3OutputFormatConfig{}
 
-	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["file_type"].(string); ok && v != "" {
-		a.FileType = aws.String(v)
+		a.FileType = types.FileType(v)
 	}
 
-	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func expandZendeskDestinationProperties(tfMap map[string]interface{}) *appflow.ZendeskDestinationProperties {
+func expandZendeskDestinationProperties(tfMap map[string]interface{}) *types.ZendeskDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.ZendeskDestinationProperties{}
+	a := &types.ZendeskDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
-		a.IdFieldNames = flex.ExpandStringList(v)
+		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -1901,18 +2061,18 @@ func expandZendeskDestinationProperties(tfMap map[string]interface{}) *appflow.Z
 	}
 
 	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
-		a.WriteOperationType = aws.String(v)
+		a.WriteOperationType = types.WriteOperationType(v)
 	}
 
 	return a
 }
 
-func expandSourceFlowConfig(tfMap map[string]interface{}) *appflow.SourceFlowConfig {
+func expandSourceFlowConfig(tfMap map[string]interface{}) *types.SourceFlowConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SourceFlowConfig{}
+	a := &types.SourceFlowConfig{}
 
 	if v, ok := tfMap["api_version"].(string); ok && v != "" {
 		a.ApiVersion = aws.String(v)
@@ -1923,10 +2083,10 @@ func expandSourceFlowConfig(tfMap map[string]interface{}) *appflow.SourceFlowCon
 	}
 
 	if v, ok := tfMap["connector_type"].(string); ok && v != "" {
-		a.ConnectorType = aws.String(v)
+		a.ConnectorType = types.ConnectorType(v)
 	}
 
-	if v, ok := tfMap["incremental_pull_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["incremental_pull_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.IncrementalPullConfig = expandIncrementalPullConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1937,12 +2097,12 @@ func expandSourceFlowConfig(tfMap map[string]interface{}) *appflow.SourceFlowCon
 	return a
 }
 
-func expandIncrementalPullConfig(tfMap map[string]interface{}) *appflow.IncrementalPullConfig {
+func expandIncrementalPullConfig(tfMap map[string]interface{}) *types.IncrementalPullConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.IncrementalPullConfig{}
+	a := &types.IncrementalPullConfig{}
 
 	if v, ok := tfMap["datetime_type_field_name"].(string); ok && v != "" {
 		a.DatetimeTypeFieldName = aws.String(v)
@@ -1951,86 +2111,86 @@ func expandIncrementalPullConfig(tfMap map[string]interface{}) *appflow.Incremen
 	return a
 }
 
-func expandSourceConnectorProperties(tfMap map[string]interface{}) *appflow.SourceConnectorProperties {
+func expandSourceConnectorProperties(tfMap map[string]interface{}) *types.SourceConnectorProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SourceConnectorProperties{}
+	a := &types.SourceConnectorProperties{}
 
-	if v, ok := tfMap["amplitude"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["amplitude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Amplitude = expandAmplitudeSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.CustomConnector = expandCustomConnectorSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["datadog"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["datadog"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Datadog = expandDatadogSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["dynatrace"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dynatrace"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Dynatrace = expandDynatraceSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["google_analytics"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["google_analytics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.GoogleAnalytics = expandGoogleAnalyticsSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["infor_nexus"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["infor_nexus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.InforNexus = expandInforNexusSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Marketo = expandMarketoSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3 = expandS3SourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SAPOData = expandSAPODataSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Salesforce = expandSalesforceSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["service_now"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["service_now"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ServiceNow = expandServiceNowSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["singular"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["singular"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Singular = expandSingularSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["slack"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["slack"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Slack = expandSlackSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["trendmicro"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["trendmicro"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Trendmicro = expandTrendmicroSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["veeva"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["veeva"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Veeva = expandVeevaSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Zendesk = expandZendeskSourceProperties(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func expandAmplitudeSourceProperties(tfMap map[string]interface{}) *appflow.AmplitudeSourceProperties {
+func expandAmplitudeSourceProperties(tfMap map[string]interface{}) *types.AmplitudeSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.AmplitudeSourceProperties{}
+	a := &types.AmplitudeSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2039,15 +2199,15 @@ func expandAmplitudeSourceProperties(tfMap map[string]interface{}) *appflow.Ampl
 	return a
 }
 
-func expandCustomConnectorSourceProperties(tfMap map[string]interface{}) *appflow.CustomConnectorSourceProperties {
+func expandCustomConnectorSourceProperties(tfMap map[string]interface{}) *types.CustomConnectorSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.CustomConnectorSourceProperties{}
+	a := &types.CustomConnectorSourceProperties{}
 
 	if v, ok := tfMap["custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
-		a.CustomProperties = flex.ExpandStringMap(v)
+		a.CustomProperties = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["entity_name"].(string); ok && v != "" {
@@ -2057,12 +2217,12 @@ func expandCustomConnectorSourceProperties(tfMap map[string]interface{}) *appflo
 	return a
 }
 
-func expandDatadogSourceProperties(tfMap map[string]interface{}) *appflow.DatadogSourceProperties {
+func expandDatadogSourceProperties(tfMap map[string]interface{}) *types.DatadogSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.DatadogSourceProperties{}
+	a := &types.DatadogSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2071,12 +2231,12 @@ func expandDatadogSourceProperties(tfMap map[string]interface{}) *appflow.Datado
 	return a
 }
 
-func expandDynatraceSourceProperties(tfMap map[string]interface{}) *appflow.DynatraceSourceProperties {
+func expandDynatraceSourceProperties(tfMap map[string]interface{}) *types.DynatraceSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.DynatraceSourceProperties{}
+	a := &types.DynatraceSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2085,12 +2245,12 @@ func expandDynatraceSourceProperties(tfMap map[string]interface{}) *appflow.Dyna
 	return a
 }
 
-func expandGoogleAnalyticsSourceProperties(tfMap map[string]interface{}) *appflow.GoogleAnalyticsSourceProperties {
+func expandGoogleAnalyticsSourceProperties(tfMap map[string]interface{}) *types.GoogleAnalyticsSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.GoogleAnalyticsSourceProperties{}
+	a := &types.GoogleAnalyticsSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2099,12 +2259,12 @@ func expandGoogleAnalyticsSourceProperties(tfMap map[string]interface{}) *appflo
 	return a
 }
 
-func expandInforNexusSourceProperties(tfMap map[string]interface{}) *appflow.InforNexusSourceProperties {
+func expandInforNexusSourceProperties(tfMap map[string]interface{}) *types.InforNexusSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.InforNexusSourceProperties{}
+	a := &types.InforNexusSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2113,12 +2273,12 @@ func expandInforNexusSourceProperties(tfMap map[string]interface{}) *appflow.Inf
 	return a
 }
 
-func expandMarketoSourceProperties(tfMap map[string]interface{}) *appflow.MarketoSourceProperties {
+func expandMarketoSourceProperties(tfMap map[string]interface{}) *types.MarketoSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.MarketoSourceProperties{}
+	a := &types.MarketoSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2127,55 +2287,55 @@ func expandMarketoSourceProperties(tfMap map[string]interface{}) *appflow.Market
 	return a
 }
 
-func expandS3SourceProperties(tfMap map[string]interface{}) *appflow.S3SourceProperties {
+func expandS3SourceProperties(tfMap map[string]interface{}) *types.S3SourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.S3SourceProperties{}
+	a := &types.S3SourceProperties{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_input_format_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_input_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3InputFormatConfig = expandS3InputFormatConfig(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func expandS3InputFormatConfig(tfMap map[string]interface{}) *appflow.S3InputFormatConfig {
+func expandS3InputFormatConfig(tfMap map[string]interface{}) *types.S3InputFormatConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.S3InputFormatConfig{}
+	a := &types.S3InputFormatConfig{}
 
 	if v, ok := tfMap["s3_input_file_type"].(string); ok && v != "" {
-		a.S3InputFileType = aws.String(v)
+		a.S3InputFileType = types.S3InputFileType(v)
 	}
 
 	return a
 }
 
-func expandSalesforceSourceProperties(tfMap map[string]interface{}) *appflow.SalesforceSourceProperties {
+func expandSalesforceSourceProperties(tfMap map[string]interface{}) *types.SalesforceSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SalesforceSourceProperties{}
+	a := &types.SalesforceSourceProperties{}
 
 	if v, ok := tfMap["enable_dynamic_field_update"].(bool); ok {
-		a.EnableDynamicFieldUpdate = aws.Bool(v)
+		a.EnableDynamicFieldUpdate = v
 	}
 
 	if v, ok := tfMap["include_deleted_records"].(bool); ok {
-		a.IncludeDeletedRecords = aws.Bool(v)
+		a.IncludeDeletedRecords = v
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -2185,26 +2345,26 @@ func expandSalesforceSourceProperties(tfMap map[string]interface{}) *appflow.Sal
 	return a
 }
 
-func expandSAPODataSourceProperties(tfMap map[string]interface{}) *appflow.SAPODataSourceProperties {
+func expandSAPODataSourceProperties(tfMap map[string]interface{}) *types.SAPODataSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SAPODataSourceProperties{}
+	a := &types.SAPODataSourceProperties{}
 
-	if v, ok := tfMap[AttrObjectPath].(string); ok && v != "" {
+	if v, ok := tfMap["object_path"].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
 	}
 
 	return a
 }
 
-func expandServiceNowSourceProperties(tfMap map[string]interface{}) *appflow.ServiceNowSourceProperties {
+func expandServiceNowSourceProperties(tfMap map[string]interface{}) *types.ServiceNowSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.ServiceNowSourceProperties{}
+	a := &types.ServiceNowSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2213,12 +2373,12 @@ func expandServiceNowSourceProperties(tfMap map[string]interface{}) *appflow.Ser
 	return a
 }
 
-func expandSingularSourceProperties(tfMap map[string]interface{}) *appflow.SingularSourceProperties {
+func expandSingularSourceProperties(tfMap map[string]interface{}) *types.SingularSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SingularSourceProperties{}
+	a := &types.SingularSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2227,12 +2387,12 @@ func expandSingularSourceProperties(tfMap map[string]interface{}) *appflow.Singu
 	return a
 }
 
-func expandSlackSourceProperties(tfMap map[string]interface{}) *appflow.SlackSourceProperties {
+func expandSlackSourceProperties(tfMap map[string]interface{}) *types.SlackSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.SlackSourceProperties{}
+	a := &types.SlackSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2241,12 +2401,12 @@ func expandSlackSourceProperties(tfMap map[string]interface{}) *appflow.SlackSou
 	return a
 }
 
-func expandTrendmicroSourceProperties(tfMap map[string]interface{}) *appflow.TrendmicroSourceProperties {
+func expandTrendmicroSourceProperties(tfMap map[string]interface{}) *types.TrendmicroSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.TrendmicroSourceProperties{}
+	a := &types.TrendmicroSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2255,27 +2415,27 @@ func expandTrendmicroSourceProperties(tfMap map[string]interface{}) *appflow.Tre
 	return a
 }
 
-func expandVeevaSourceProperties(tfMap map[string]interface{}) *appflow.VeevaSourceProperties {
+func expandVeevaSourceProperties(tfMap map[string]interface{}) *types.VeevaSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.VeevaSourceProperties{}
+	a := &types.VeevaSourceProperties{}
 
 	if v, ok := tfMap["document_type"].(string); ok && v != "" {
 		a.DocumentType = aws.String(v)
 	}
 
 	if v, ok := tfMap["include_all_versions"].(bool); ok {
-		a.IncludeAllVersions = aws.Bool(v)
+		a.IncludeAllVersions = v
 	}
 
 	if v, ok := tfMap["include_renditions"].(bool); ok {
-		a.IncludeRenditions = aws.Bool(v)
+		a.IncludeRenditions = v
 	}
 
 	if v, ok := tfMap["include_source_files"].(bool); ok {
-		a.IncludeSourceFiles = aws.Bool(v)
+		a.IncludeSourceFiles = v
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -2285,12 +2445,12 @@ func expandVeevaSourceProperties(tfMap map[string]interface{}) *appflow.VeevaSou
 	return a
 }
 
-func expandZendeskSourceProperties(tfMap map[string]interface{}) *appflow.ZendeskSourceProperties {
+func expandZendeskSourceProperties(tfMap map[string]interface{}) *types.ZendeskSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.ZendeskSourceProperties{}
+	a := &types.ZendeskSourceProperties{}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
@@ -2299,12 +2459,12 @@ func expandZendeskSourceProperties(tfMap map[string]interface{}) *appflow.Zendes
 	return a
 }
 
-func expandTasks(tfList []interface{}) []*appflow.Task {
+func expandTasks(tfList []interface{}) []types.Task {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []*appflow.Task
+	var s []types.Task
 
 	for _, r := range tfList {
 		m, ok := r.(map[string]interface{})
@@ -2319,20 +2479,20 @@ func expandTasks(tfList []interface{}) []*appflow.Task {
 			continue
 		}
 
-		s = append(s, a)
+		s = append(s, *a)
 	}
 
 	return s
 }
 
-func expandTask(tfMap map[string]interface{}) *appflow.Task {
+func expandTask(tfMap map[string]interface{}) *types.Task {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.Task{}
+	a := &types.Task{}
 
-	if v, ok := tfMap["connector_operator"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["connector_operator"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ConnectorOperator = expandConnectorOperator(v[0].(map[string]interface{}))
 	}
 
@@ -2341,121 +2501,126 @@ func expandTask(tfMap map[string]interface{}) *appflow.Task {
 	}
 
 	if v, ok := tfMap["source_fields"].([]interface{}); ok && len(v) > 0 {
-		a.SourceFields = flex.ExpandStringList(v)
+		a.SourceFields = flex.ExpandStringValueList(v)
+	} else {
+		a.SourceFields = []string{} // send an empty object if source_fields is empty (required by API)
 	}
 
 	if v, ok := tfMap["task_properties"].(map[string]interface{}); ok && len(v) > 0 {
-		a.TaskProperties = flex.ExpandStringMap(v)
+		a.TaskProperties = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["task_type"].(string); ok && v != "" {
-		a.TaskType = aws.String(v)
+		a.TaskType = types.TaskType(v)
+	} else {
+		// https://github.com/hashicorp/terraform-provider-aws/issues/28237.
+		return nil
 	}
 
 	return a
 }
 
-func expandConnectorOperator(tfMap map[string]interface{}) *appflow.ConnectorOperator {
+func expandConnectorOperator(tfMap map[string]interface{}) *types.ConnectorOperator {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.ConnectorOperator{}
+	a := &types.ConnectorOperator{}
 
 	if v, ok := tfMap["amplitude"].(string); ok && v != "" {
-		a.Amplitude = aws.String(v)
+		a.Amplitude = types.AmplitudeConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["custom_connector"].(string); ok && v != "" {
-		a.CustomConnector = aws.String(v)
+		a.CustomConnector = types.Operator(v)
 	}
 
 	if v, ok := tfMap["datadog"].(string); ok && v != "" {
-		a.Datadog = aws.String(v)
+		a.Datadog = types.DatadogConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["dynatrace"].(string); ok && v != "" {
-		a.Dynatrace = aws.String(v)
+		a.Dynatrace = types.DynatraceConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["google_analytics"].(string); ok && v != "" {
-		a.GoogleAnalytics = aws.String(v)
+		a.GoogleAnalytics = types.GoogleAnalyticsConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["infor_nexus"].(string); ok && v != "" {
-		a.InforNexus = aws.String(v)
+		a.InforNexus = types.InforNexusConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["marketo"].(string); ok && v != "" {
-		a.Marketo = aws.String(v)
+		a.Marketo = types.MarketoConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["s3"].(string); ok && v != "" {
-		a.S3 = aws.String(v)
+		a.S3 = types.S3ConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["sapo_data"].(string); ok && v != "" {
-		a.SAPOData = aws.String(v)
+		a.SAPOData = types.SAPODataConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["salesforce"].(string); ok && v != "" {
-		a.Salesforce = aws.String(v)
+		a.Salesforce = types.SalesforceConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["service_now"].(string); ok && v != "" {
-		a.ServiceNow = aws.String(v)
+		a.ServiceNow = types.ServiceNowConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["singular"].(string); ok && v != "" {
-		a.Singular = aws.String(v)
+		a.Singular = types.SingularConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["slack"].(string); ok && v != "" {
-		a.Slack = aws.String(v)
+		a.Slack = types.SlackConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["trendmicro"].(string); ok && v != "" {
-		a.Trendmicro = aws.String(v)
+		a.Trendmicro = types.TrendmicroConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["veeva"].(string); ok && v != "" {
-		a.Veeva = aws.String(v)
+		a.Veeva = types.VeevaConnectorOperator(v)
 	}
 
 	if v, ok := tfMap["zendesk"].(string); ok && v != "" {
-		a.Zendesk = aws.String(v)
+		a.Zendesk = types.ZendeskConnectorOperator(v)
 	}
 
 	return a
 }
 
-func expandTriggerConfig(tfMap map[string]interface{}) *appflow.TriggerConfig {
+func expandTriggerConfig(tfMap map[string]interface{}) *types.TriggerConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.TriggerConfig{}
+	a := &types.TriggerConfig{}
 
-	if v, ok := tfMap["trigger_properties"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["trigger_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.TriggerProperties = expandTriggerProperties(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["trigger_type"].(string); ok && v != "" {
-		a.TriggerType = aws.String(v)
+		a.TriggerType = types.TriggerType(v)
 	}
 
 	return a
 }
 
-func expandTriggerProperties(tfMap map[string]interface{}) *appflow.TriggerProperties {
+func expandTriggerProperties(tfMap map[string]interface{}) *types.TriggerProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.TriggerProperties{}
+	a := &types.TriggerProperties{}
 
 	// Only return TriggerProperties if nested field is non-empty
-	if v, ok := tfMap["scheduled"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scheduled"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Scheduled = expandScheduledTriggerProperties(v[0].(map[string]interface{}))
 		return a
 	}
@@ -2463,15 +2628,15 @@ func expandTriggerProperties(tfMap map[string]interface{}) *appflow.TriggerPrope
 	return nil
 }
 
-func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.ScheduledTriggerProperties {
+func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.ScheduledTriggerProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.ScheduledTriggerProperties{}
+	a := &types.ScheduledTriggerProperties{}
 
 	if v, ok := tfMap["data_pull_mode"].(string); ok && v != "" {
-		a.DataPullMode = aws.String(v)
+		a.DataPullMode = types.DataPullMode(v)
 	}
 
 	if v, ok := tfMap["first_execution_from"].(string); ok && v != "" {
@@ -2486,7 +2651,7 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.Sch
 		a.ScheduleEndTime = aws.Time(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		a.ScheduleExpression = aws.String(v)
 	}
 
@@ -2507,7 +2672,71 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.Sch
 	return a
 }
 
-func flattenErrorHandlingConfig(errorHandlingConfig *appflow.ErrorHandlingConfig) map[string]interface{} {
+func expandMetadataCatalogConfig(tfList []any) *types.MetadataCatalogConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+
+	a := &types.MetadataCatalogConfig{}
+
+	if v, ok := m["glue_data_catalog"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.GlueDataCatalog = expandGlueDataCatalog(v[0].(map[string]any))
+	}
+
+	return a
+}
+
+func expandGlueDataCatalog(tfMap map[string]interface{}) *types.GlueDataCatalogConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.GlueDataCatalogConfig{}
+
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
+		a.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		a.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["table_prefix"].(string); ok && v != "" {
+		a.TablePrefix = aws.String(v)
+	}
+
+	return a
+}
+
+func flattenMetadataCatalogConfig(in *types.MetadataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"glue_data_catalog": flattenGlueDataCatalog(in.GlueDataCatalog),
+	}
+
+	return []any{m}
+}
+
+func flattenGlueDataCatalog(in *types.GlueDataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		names.AttrDatabaseName: in.DatabaseName,
+		names.AttrRoleARN:      in.RoleArn,
+		"table_prefix":         in.TablePrefix,
+	}
+
+	return []any{m}
+}
+
+func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) map[string]interface{} {
 	if errorHandlingConfig == nil {
 		return nil
 	}
@@ -2515,53 +2744,46 @@ func flattenErrorHandlingConfig(errorHandlingConfig *appflow.ErrorHandlingConfig
 	m := map[string]interface{}{}
 
 	if v := errorHandlingConfig.BucketName; v != nil {
-		m["bucket_name"] = aws.StringValue(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := errorHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValue(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
-	if v := errorHandlingConfig.FailOnFirstDestinationError; v != nil {
-		m["fail_on_first_destination_error"] = aws.BoolValue(v)
-	}
+	m["fail_on_first_destination_error"] = errorHandlingConfig.FailOnFirstDestinationError
 
 	return m
 }
 
-func flattenPrefixConfig(prefixConfig *appflow.PrefixConfig) map[string]interface{} {
+func flattenPrefixConfig(prefixConfig *types.PrefixConfig) map[string]interface{} {
 	if prefixConfig == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := prefixConfig.PrefixFormat; v != nil {
-		m["prefix_format"] = aws.StringValue(v)
-	}
-
-	if v := prefixConfig.PrefixType; v != nil {
-		m["prefix_type"] = aws.StringValue(v)
-	}
+	m["prefix_format"] = prefixConfig.PrefixFormat
+	m["prefix_type"] = prefixConfig.PrefixType
+	m["prefix_hierarchy"] = flex.FlattenStringyValueList(prefixConfig.PathPrefixHierarchy)
 
 	return m
 }
 
-func flattenAggregationConfig(aggregationConfig *appflow.AggregationConfig) map[string]interface{} {
+func flattenAggregationConfig(aggregationConfig *types.AggregationConfig) map[string]interface{} {
 	if aggregationConfig == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := aggregationConfig.AggregationType; v != nil {
-		m["aggregation_type"] = aws.StringValue(v)
-	}
+	m["aggregation_type"] = aggregationConfig.AggregationType
+	m["target_file_size"] = aggregationConfig.TargetFileSize
 
 	return m
 }
 
-func flattenDestinationFlowConfigs(destinationFlowConfigs []*appflow.DestinationFlowConfig) []interface{} {
+func flattenDestinationFlowConfigs(destinationFlowConfigs []types.DestinationFlowConfig) []interface{} {
 	if len(destinationFlowConfigs) == 0 {
 		return nil
 	}
@@ -2569,34 +2791,24 @@ func flattenDestinationFlowConfigs(destinationFlowConfigs []*appflow.Destination
 	var l []interface{}
 
 	for _, destinationFlowConfig := range destinationFlowConfigs {
-		if destinationFlowConfig == nil {
-			continue
-		}
-
 		l = append(l, flattenDestinationFlowConfig(destinationFlowConfig))
 	}
 
 	return l
 }
 
-func flattenDestinationFlowConfig(destinationFlowConfig *appflow.DestinationFlowConfig) map[string]interface{} {
-	if destinationFlowConfig == nil {
-		return nil
-	}
-
+func flattenDestinationFlowConfig(destinationFlowConfig types.DestinationFlowConfig) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := destinationFlowConfig.ApiVersion; v != nil {
-		m["api_version"] = aws.StringValue(v)
+		m["api_version"] = aws.ToString(v)
 	}
 
 	if v := destinationFlowConfig.ConnectorProfileName; v != nil {
-		m["connector_profile_name"] = aws.StringValue(v)
+		m["connector_profile_name"] = aws.ToString(v)
 	}
 
-	if v := destinationFlowConfig.ConnectorType; v != nil {
-		m["connector_type"] = aws.StringValue(v)
-	}
+	m["connector_type"] = destinationFlowConfig.ConnectorType
 
 	if v := destinationFlowConfig.DestinationConnectorProperties; v != nil {
 		m["destination_connector_properties"] = []interface{}{flattenDestinationConnectorProperties(v)}
@@ -2605,7 +2817,7 @@ func flattenDestinationFlowConfig(destinationFlowConfig *appflow.DestinationFlow
 	return m
 }
 
-func flattenDestinationConnectorProperties(destinationConnectorProperties *appflow.DestinationConnectorProperties) map[string]interface{} {
+func flattenDestinationConnectorProperties(destinationConnectorProperties *types.DestinationConnectorProperties) map[string]interface{} {
 	if destinationConnectorProperties == nil {
 		return nil
 	}
@@ -2669,7 +2881,7 @@ func flattenDestinationConnectorProperties(destinationConnectorProperties *appfl
 	return m
 }
 
-func flattenCustomConnectorDestinationProperties(customConnectorDestinationProperties *appflow.CustomConnectorDestinationProperties) map[string]interface{} {
+func flattenCustomConnectorDestinationProperties(customConnectorDestinationProperties *types.CustomConnectorDestinationProperties) map[string]interface{} {
 	if customConnectorDestinationProperties == nil {
 		return nil
 	}
@@ -2677,11 +2889,11 @@ func flattenCustomConnectorDestinationProperties(customConnectorDestinationPrope
 	m := map[string]interface{}{}
 
 	if v := customConnectorDestinationProperties.CustomProperties; v != nil {
-		m["custom_properties"] = aws.StringValueMap(v)
+		m["custom_properties"] = v
 	}
 
 	if v := customConnectorDestinationProperties.EntityName; v != nil {
-		m["entity_name"] = aws.StringValue(v)
+		m["entity_name"] = aws.ToString(v)
 	}
 
 	if v := customConnectorDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -2689,17 +2901,15 @@ func flattenCustomConnectorDestinationProperties(customConnectorDestinationPrope
 	}
 
 	if v := customConnectorDestinationProperties.IdFieldNames; v != nil {
-		m["id_field_names"] = aws.StringValueSlice(v)
+		m["id_field_names"] = v
 	}
 
-	if v := customConnectorDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.StringValue(v)
-	}
+	m["write_operation_type"] = customConnectorDestinationProperties.WriteOperationType
 
 	return m
 }
 
-func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationProperties *appflow.CustomerProfilesDestinationProperties) map[string]interface{} {
+func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationProperties *types.CustomerProfilesDestinationProperties) map[string]interface{} {
 	if customerProfilesDestinationProperties == nil {
 		return nil
 	}
@@ -2707,17 +2917,17 @@ func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationPro
 	m := map[string]interface{}{}
 
 	if v := customerProfilesDestinationProperties.DomainName; v != nil {
-		m["domain_name"] = aws.StringValue(v)
+		m[names.AttrDomainName] = aws.ToString(v)
 	}
 
 	if v := customerProfilesDestinationProperties.ObjectTypeName; v != nil {
-		m["object_type_name"] = aws.StringValue(v)
+		m["object_type_name"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *appflow.EventBridgeDestinationProperties) map[string]interface{} {
+func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *types.EventBridgeDestinationProperties) map[string]interface{} {
 	if eventBridgeDestinationProperties == nil {
 		return nil
 	}
@@ -2729,13 +2939,13 @@ func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *a
 	}
 
 	if v := eventBridgeDestinationProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *appflow.HoneycodeDestinationProperties) map[string]interface{} {
+func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *types.HoneycodeDestinationProperties) map[string]interface{} {
 	if honeycodeDestinationProperties == nil {
 		return nil
 	}
@@ -2747,13 +2957,13 @@ func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *appfl
 	}
 
 	if v := honeycodeDestinationProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenMarketoDestinationProperties(marketoDestinationProperties *appflow.MarketoDestinationProperties) map[string]interface{} {
+func flattenMarketoDestinationProperties(marketoDestinationProperties *types.MarketoDestinationProperties) map[string]interface{} {
 	if marketoDestinationProperties == nil {
 		return nil
 	}
@@ -2765,13 +2975,13 @@ func flattenMarketoDestinationProperties(marketoDestinationProperties *appflow.M
 	}
 
 	if v := marketoDestinationProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenRedshiftDestinationProperties(redshiftDestinationProperties *appflow.RedshiftDestinationProperties) map[string]interface{} {
+func flattenRedshiftDestinationProperties(redshiftDestinationProperties *types.RedshiftDestinationProperties) map[string]interface{} {
 	if redshiftDestinationProperties == nil {
 		return nil
 	}
@@ -2779,7 +2989,7 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *appflow
 	m := map[string]interface{}{}
 
 	if v := redshiftDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValue(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := redshiftDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -2787,17 +2997,17 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *appflow
 	}
 
 	if v := redshiftDestinationProperties.IntermediateBucketName; v != nil {
-		m["intermediate_bucket_name"] = aws.StringValue(v)
+		m["intermediate_bucket_name"] = aws.ToString(v)
 	}
 
 	if v := redshiftDestinationProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenS3DestinationProperties(s3DestinationProperties *appflow.S3DestinationProperties) map[string]interface{} {
+func flattenS3DestinationProperties(s3DestinationProperties *types.S3DestinationProperties) map[string]interface{} {
 	if s3DestinationProperties == nil {
 		return nil
 	}
@@ -2805,11 +3015,11 @@ func flattenS3DestinationProperties(s3DestinationProperties *appflow.S3Destinati
 	m := map[string]interface{}{}
 
 	if v := s3DestinationProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.StringValue(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := s3DestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValue(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := s3DestinationProperties.S3OutputFormatConfig; v != nil {
@@ -2819,7 +3029,7 @@ func flattenS3DestinationProperties(s3DestinationProperties *appflow.S3Destinati
 	return m
 }
 
-func flattenS3OutputFormatConfig(s3OutputFormatConfig *appflow.S3OutputFormatConfig) map[string]interface{} {
+func flattenS3OutputFormatConfig(s3OutputFormatConfig *types.S3OutputFormatConfig) map[string]interface{} {
 	if s3OutputFormatConfig == nil {
 		return nil
 	}
@@ -2830,22 +3040,18 @@ func flattenS3OutputFormatConfig(s3OutputFormatConfig *appflow.S3OutputFormatCon
 		m["aggregation_config"] = []interface{}{flattenAggregationConfig(v)}
 	}
 
-	if v := s3OutputFormatConfig.FileType; v != nil {
-		m["file_type"] = aws.StringValue(v)
-	}
+	m["file_type"] = s3OutputFormatConfig.FileType
 
 	if v := s3OutputFormatConfig.PrefixConfig; v != nil {
 		m["prefix_config"] = []interface{}{flattenPrefixConfig(v)}
 	}
 
-	if v := s3OutputFormatConfig.PreserveSourceDataTyping; v != nil {
-		m["preserve_source_data_typing"] = aws.BoolValue(v)
-	}
+	m["preserve_source_data_typing"] = s3OutputFormatConfig.PreserveSourceDataTyping
 
 	return m
 }
 
-func flattenSalesforceDestinationProperties(salesforceDestinationProperties *appflow.SalesforceDestinationProperties) map[string]interface{} {
+func flattenSalesforceDestinationProperties(salesforceDestinationProperties *types.SalesforceDestinationProperties) map[string]interface{} {
 	if salesforceDestinationProperties == nil {
 		return nil
 	}
@@ -2857,21 +3063,19 @@ func flattenSalesforceDestinationProperties(salesforceDestinationProperties *app
 	}
 
 	if v := salesforceDestinationProperties.IdFieldNames; v != nil {
-		m["id_field_names"] = aws.StringValueSlice(v)
+		m["id_field_names"] = v
 	}
 
 	if v := salesforceDestinationProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
-	if v := salesforceDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.StringValue(v)
-	}
+	m["write_operation_type"] = salesforceDestinationProperties.WriteOperationType
 
 	return m
 }
 
-func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *appflow.SAPODataDestinationProperties) map[string]interface{} {
+func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *types.SAPODataDestinationProperties) map[string]interface{} {
 	if SAPODataDestinationProperties == nil {
 		return nil
 	}
@@ -2883,25 +3087,23 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *appflow
 	}
 
 	if v := SAPODataDestinationProperties.IdFieldNames; v != nil {
-		m["id_field_names"] = aws.StringValueSlice(v)
+		m["id_field_names"] = v
 	}
 
 	if v := SAPODataDestinationProperties.ObjectPath; v != nil {
-		m[AttrObjectPath] = aws.StringValue(v)
+		m["object_path"] = aws.ToString(v)
 	}
 
 	if v := SAPODataDestinationProperties.SuccessResponseHandlingConfig; v != nil {
 		m["success_response_handling_config"] = []interface{}{flattenSuccessResponseHandlingConfig(v)}
 	}
 
-	if v := SAPODataDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.StringValue(v)
-	}
+	m["write_operation_type"] = SAPODataDestinationProperties.WriteOperationType
 
 	return m
 }
 
-func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *appflow.SuccessResponseHandlingConfig) map[string]interface{} {
+func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *types.SuccessResponseHandlingConfig) map[string]interface{} {
 	if successResponseHandlingConfig == nil {
 		return nil
 	}
@@ -2909,17 +3111,17 @@ func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *appflow
 	m := map[string]interface{}{}
 
 	if v := successResponseHandlingConfig.BucketName; v != nil {
-		m["bucket_name"] = aws.StringValue(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := successResponseHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValue(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *appflow.SnowflakeDestinationProperties) map[string]interface{} {
+func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *types.SnowflakeDestinationProperties) map[string]interface{} {
 	if snowflakeDestinationProperties == nil {
 		return nil
 	}
@@ -2927,7 +3129,7 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *appfl
 	m := map[string]interface{}{}
 
 	if v := snowflakeDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValue(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := snowflakeDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -2935,17 +3137,17 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *appfl
 	}
 
 	if v := snowflakeDestinationProperties.IntermediateBucketName; v != nil {
-		m["intermediate_bucket_name"] = aws.StringValue(v)
+		m["intermediate_bucket_name"] = aws.ToString(v)
 	}
 
 	if v := snowflakeDestinationProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenUpsolverDestinationProperties(upsolverDestinationProperties *appflow.UpsolverDestinationProperties) map[string]interface{} {
+func flattenUpsolverDestinationProperties(upsolverDestinationProperties *types.UpsolverDestinationProperties) map[string]interface{} {
 	if upsolverDestinationProperties == nil {
 		return nil
 	}
@@ -2953,11 +3155,11 @@ func flattenUpsolverDestinationProperties(upsolverDestinationProperties *appflow
 	m := map[string]interface{}{}
 
 	if v := upsolverDestinationProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.StringValue(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := upsolverDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValue(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := upsolverDestinationProperties.S3OutputFormatConfig; v != nil {
@@ -2967,7 +3169,7 @@ func flattenUpsolverDestinationProperties(upsolverDestinationProperties *appflow
 	return m
 }
 
-func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *appflow.UpsolverS3OutputFormatConfig) map[string]interface{} {
+func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *types.UpsolverS3OutputFormatConfig) map[string]interface{} {
 	if upsolverS3OutputFormatConfig == nil {
 		return nil
 	}
@@ -2978,9 +3180,7 @@ func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *appflow.U
 		m["aggregation_config"] = []interface{}{flattenAggregationConfig(v)}
 	}
 
-	if v := upsolverS3OutputFormatConfig.FileType; v != nil {
-		m["file_type"] = aws.StringValue(v)
-	}
+	m["file_type"] = upsolverS3OutputFormatConfig.FileType
 
 	if v := upsolverS3OutputFormatConfig.PrefixConfig; v != nil {
 		m["prefix_config"] = []interface{}{flattenPrefixConfig(v)}
@@ -2989,7 +3189,7 @@ func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *appflow.U
 	return m
 }
 
-func flattenZendeskDestinationProperties(zendeskDestinationProperties *appflow.ZendeskDestinationProperties) map[string]interface{} {
+func flattenZendeskDestinationProperties(zendeskDestinationProperties *types.ZendeskDestinationProperties) map[string]interface{} {
 	if zendeskDestinationProperties == nil {
 		return nil
 	}
@@ -3001,21 +3201,19 @@ func flattenZendeskDestinationProperties(zendeskDestinationProperties *appflow.Z
 	}
 
 	if v := zendeskDestinationProperties.IdFieldNames; v != nil {
-		m["id_field_names"] = aws.StringValueSlice(v)
+		m["id_field_names"] = v
 	}
 
 	if v := zendeskDestinationProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
-	if v := zendeskDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.StringValue(v)
-	}
+	m["write_operation_type"] = zendeskDestinationProperties.WriteOperationType
 
 	return m
 }
 
-func flattenSourceFlowConfig(sourceFlowConfig *appflow.SourceFlowConfig) map[string]interface{} {
+func flattenSourceFlowConfig(sourceFlowConfig *types.SourceFlowConfig) map[string]interface{} {
 	if sourceFlowConfig == nil {
 		return nil
 	}
@@ -3023,16 +3221,14 @@ func flattenSourceFlowConfig(sourceFlowConfig *appflow.SourceFlowConfig) map[str
 	m := map[string]interface{}{}
 
 	if v := sourceFlowConfig.ApiVersion; v != nil {
-		m["api_version"] = aws.StringValue(v)
+		m["api_version"] = aws.ToString(v)
 	}
 
 	if v := sourceFlowConfig.ConnectorProfileName; v != nil {
-		m["connector_profile_name"] = aws.StringValue(v)
+		m["connector_profile_name"] = aws.ToString(v)
 	}
 
-	if v := sourceFlowConfig.ConnectorType; v != nil {
-		m["connector_type"] = aws.StringValue(v)
-	}
+	m["connector_type"] = sourceFlowConfig.ConnectorType
 
 	if v := sourceFlowConfig.IncrementalPullConfig; v != nil {
 		m["incremental_pull_config"] = []interface{}{flattenIncrementalPullConfig(v)}
@@ -3045,7 +3241,7 @@ func flattenSourceFlowConfig(sourceFlowConfig *appflow.SourceFlowConfig) map[str
 	return m
 }
 
-func flattenIncrementalPullConfig(incrementalPullConfig *appflow.IncrementalPullConfig) map[string]interface{} {
+func flattenIncrementalPullConfig(incrementalPullConfig *types.IncrementalPullConfig) map[string]interface{} {
 	if incrementalPullConfig == nil {
 		return nil
 	}
@@ -3053,13 +3249,13 @@ func flattenIncrementalPullConfig(incrementalPullConfig *appflow.IncrementalPull
 	m := map[string]interface{}{}
 
 	if v := incrementalPullConfig.DatetimeTypeFieldName; v != nil {
-		m["datetime_type_field_name"] = aws.StringValue(v)
+		m["datetime_type_field_name"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenSourceConnectorProperties(sourceConnectorProperties *appflow.SourceConnectorProperties) map[string]interface{} {
+func flattenSourceConnectorProperties(sourceConnectorProperties *types.SourceConnectorProperties) map[string]interface{} {
 	if sourceConnectorProperties == nil {
 		return nil
 	}
@@ -3133,7 +3329,7 @@ func flattenSourceConnectorProperties(sourceConnectorProperties *appflow.SourceC
 	return m
 }
 
-func flattenAmplitudeSourceProperties(amplitudeSourceProperties *appflow.AmplitudeSourceProperties) map[string]interface{} {
+func flattenAmplitudeSourceProperties(amplitudeSourceProperties *types.AmplitudeSourceProperties) map[string]interface{} {
 	if amplitudeSourceProperties == nil {
 		return nil
 	}
@@ -3141,13 +3337,13 @@ func flattenAmplitudeSourceProperties(amplitudeSourceProperties *appflow.Amplitu
 	m := map[string]interface{}{}
 
 	if v := amplitudeSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *appflow.CustomConnectorSourceProperties) map[string]interface{} {
+func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *types.CustomConnectorSourceProperties) map[string]interface{} {
 	if customConnectorSourceProperties == nil {
 		return nil
 	}
@@ -3155,17 +3351,17 @@ func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *app
 	m := map[string]interface{}{}
 
 	if v := customConnectorSourceProperties.CustomProperties; v != nil {
-		m["custom_properties"] = aws.StringValueMap(v)
+		m["custom_properties"] = v
 	}
 
 	if v := customConnectorSourceProperties.EntityName; v != nil {
-		m["entity_name"] = aws.StringValue(v)
+		m["entity_name"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenDatadogSourceProperties(datadogSourceProperties *appflow.DatadogSourceProperties) map[string]interface{} {
+func flattenDatadogSourceProperties(datadogSourceProperties *types.DatadogSourceProperties) map[string]interface{} {
 	if datadogSourceProperties == nil {
 		return nil
 	}
@@ -3173,13 +3369,13 @@ func flattenDatadogSourceProperties(datadogSourceProperties *appflow.DatadogSour
 	m := map[string]interface{}{}
 
 	if v := datadogSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenDynatraceSourceProperties(dynatraceSourceProperties *appflow.DynatraceSourceProperties) map[string]interface{} {
+func flattenDynatraceSourceProperties(dynatraceSourceProperties *types.DynatraceSourceProperties) map[string]interface{} {
 	if dynatraceSourceProperties == nil {
 		return nil
 	}
@@ -3187,13 +3383,13 @@ func flattenDynatraceSourceProperties(dynatraceSourceProperties *appflow.Dynatra
 	m := map[string]interface{}{}
 
 	if v := dynatraceSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *appflow.GoogleAnalyticsSourceProperties) map[string]interface{} {
+func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *types.GoogleAnalyticsSourceProperties) map[string]interface{} {
 	if googleAnalyticsSourceProperties == nil {
 		return nil
 	}
@@ -3201,13 +3397,13 @@ func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *app
 	m := map[string]interface{}{}
 
 	if v := googleAnalyticsSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenInforNexusSourceProperties(inforNexusSourceProperties *appflow.InforNexusSourceProperties) map[string]interface{} {
+func flattenInforNexusSourceProperties(inforNexusSourceProperties *types.InforNexusSourceProperties) map[string]interface{} {
 	if inforNexusSourceProperties == nil {
 		return nil
 	}
@@ -3215,13 +3411,13 @@ func flattenInforNexusSourceProperties(inforNexusSourceProperties *appflow.Infor
 	m := map[string]interface{}{}
 
 	if v := inforNexusSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenMarketoSourceProperties(marketoSourceProperties *appflow.MarketoSourceProperties) map[string]interface{} {
+func flattenMarketoSourceProperties(marketoSourceProperties *types.MarketoSourceProperties) map[string]interface{} {
 	if marketoSourceProperties == nil {
 		return nil
 	}
@@ -3229,13 +3425,13 @@ func flattenMarketoSourceProperties(marketoSourceProperties *appflow.MarketoSour
 	m := map[string]interface{}{}
 
 	if v := marketoSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenS3SourceProperties(s3SourceProperties *appflow.S3SourceProperties) map[string]interface{} {
+func flattenS3SourceProperties(s3SourceProperties *types.S3SourceProperties) map[string]interface{} {
 	if s3SourceProperties == nil {
 		return nil
 	}
@@ -3243,11 +3439,11 @@ func flattenS3SourceProperties(s3SourceProperties *appflow.S3SourceProperties) m
 	m := map[string]interface{}{}
 
 	if v := s3SourceProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.StringValue(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := s3SourceProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValue(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := s3SourceProperties.S3InputFormatConfig; v != nil {
@@ -3257,43 +3453,36 @@ func flattenS3SourceProperties(s3SourceProperties *appflow.S3SourceProperties) m
 	return m
 }
 
-func flattenS3InputFormatConfig(s3InputFormatConfig *appflow.S3InputFormatConfig) map[string]interface{} {
+func flattenS3InputFormatConfig(s3InputFormatConfig *types.S3InputFormatConfig) map[string]interface{} {
 	if s3InputFormatConfig == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := s3InputFormatConfig.S3InputFileType; v != nil {
-		m["s3_input_file_type"] = aws.StringValue(v)
-	}
+	m["s3_input_file_type"] = s3InputFormatConfig.S3InputFileType
 
 	return m
 }
 
-func flattenSalesforceSourceProperties(salesforceSourceProperties *appflow.SalesforceSourceProperties) map[string]interface{} {
+func flattenSalesforceSourceProperties(salesforceSourceProperties *types.SalesforceSourceProperties) map[string]interface{} {
 	if salesforceSourceProperties == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := salesforceSourceProperties.EnableDynamicFieldUpdate; v != nil {
-		m["enable_dynamic_field_update"] = aws.BoolValue(v)
-	}
-
-	if v := salesforceSourceProperties.IncludeDeletedRecords; v != nil {
-		m["include_deleted_records"] = aws.BoolValue(v)
-	}
+	m["enable_dynamic_field_update"] = salesforceSourceProperties.EnableDynamicFieldUpdate
+	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
 
 	if v := salesforceSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenSAPODataSourceProperties(sapoDataSourceProperties *appflow.SAPODataSourceProperties) map[string]interface{} {
+func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSourceProperties) map[string]interface{} {
 	if sapoDataSourceProperties == nil {
 		return nil
 	}
@@ -3301,13 +3490,13 @@ func flattenSAPODataSourceProperties(sapoDataSourceProperties *appflow.SAPODataS
 	m := map[string]interface{}{}
 
 	if v := sapoDataSourceProperties.ObjectPath; v != nil {
-		m[AttrObjectPath] = aws.StringValue(v)
+		m["object_path"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenServiceNowSourceProperties(serviceNowSourceProperties *appflow.ServiceNowSourceProperties) map[string]interface{} {
+func flattenServiceNowSourceProperties(serviceNowSourceProperties *types.ServiceNowSourceProperties) map[string]interface{} {
 	if serviceNowSourceProperties == nil {
 		return nil
 	}
@@ -3315,13 +3504,13 @@ func flattenServiceNowSourceProperties(serviceNowSourceProperties *appflow.Servi
 	m := map[string]interface{}{}
 
 	if v := serviceNowSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenSingularSourceProperties(singularSourceProperties *appflow.SingularSourceProperties) map[string]interface{} {
+func flattenSingularSourceProperties(singularSourceProperties *types.SingularSourceProperties) map[string]interface{} {
 	if singularSourceProperties == nil {
 		return nil
 	}
@@ -3329,13 +3518,13 @@ func flattenSingularSourceProperties(singularSourceProperties *appflow.SingularS
 	m := map[string]interface{}{}
 
 	if v := singularSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenSlackSourceProperties(slackSourceProperties *appflow.SlackSourceProperties) map[string]interface{} {
+func flattenSlackSourceProperties(slackSourceProperties *types.SlackSourceProperties) map[string]interface{} {
 	if slackSourceProperties == nil {
 		return nil
 	}
@@ -3343,13 +3532,13 @@ func flattenSlackSourceProperties(slackSourceProperties *appflow.SlackSourceProp
 	m := map[string]interface{}{}
 
 	if v := slackSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenTrendmicroSourceProperties(trendmicroSourceProperties *appflow.TrendmicroSourceProperties) map[string]interface{} {
+func flattenTrendmicroSourceProperties(trendmicroSourceProperties *types.TrendmicroSourceProperties) map[string]interface{} {
 	if trendmicroSourceProperties == nil {
 		return nil
 	}
@@ -3357,13 +3546,13 @@ func flattenTrendmicroSourceProperties(trendmicroSourceProperties *appflow.Trend
 	m := map[string]interface{}{}
 
 	if v := trendmicroSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenVeevaSourceProperties(veevaSourceProperties *appflow.VeevaSourceProperties) map[string]interface{} {
+func flattenVeevaSourceProperties(veevaSourceProperties *types.VeevaSourceProperties) map[string]interface{} {
 	if veevaSourceProperties == nil {
 		return nil
 	}
@@ -3371,29 +3560,21 @@ func flattenVeevaSourceProperties(veevaSourceProperties *appflow.VeevaSourceProp
 	m := map[string]interface{}{}
 
 	if v := veevaSourceProperties.DocumentType; v != nil {
-		m["document_type"] = aws.StringValue(v)
+		m["document_type"] = aws.ToString(v)
 	}
 
-	if v := veevaSourceProperties.IncludeAllVersions; v != nil {
-		m["include_all_versions"] = aws.BoolValue(v)
-	}
-
-	if v := veevaSourceProperties.IncludeRenditions; v != nil {
-		m["include_renditions"] = aws.BoolValue(v)
-	}
-
-	if v := veevaSourceProperties.IncludeSourceFiles; v != nil {
-		m["include_source_files"] = aws.BoolValue(v)
-	}
+	m["include_all_versions"] = veevaSourceProperties.IncludeAllVersions
+	m["include_renditions"] = veevaSourceProperties.IncludeRenditions
+	m["include_source_files"] = veevaSourceProperties.IncludeSourceFiles
 
 	if v := veevaSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenZendeskSourceProperties(zendeskSourceProperties *appflow.ZendeskSourceProperties) map[string]interface{} {
+func flattenZendeskSourceProperties(zendeskSourceProperties *types.ZendeskSourceProperties) map[string]interface{} {
 	if zendeskSourceProperties == nil {
 		return nil
 	}
@@ -3401,32 +3582,37 @@ func flattenZendeskSourceProperties(zendeskSourceProperties *appflow.ZendeskSour
 	m := map[string]interface{}{}
 
 	if v := zendeskSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+		m["object"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenTasks(tasks []*appflow.Task) []interface{} {
+func flattenTasks(tasks []types.Task) []interface{} {
 	if len(tasks) == 0 {
 		return nil
 	}
 
 	var l []interface{}
 
-	for _, task := range tasks {
-		if task == nil {
-			continue
-		}
+	t := slices.IndexFunc(tasks, func(t types.Task) bool {
+		return t.TaskType == types.TaskTypeMapAll
+	})
 
+	if t != -1 {
+		l = append(l, flattenTask(tasks[t]))
+		return l
+	}
+
+	for _, task := range tasks {
 		l = append(l, flattenTask(task))
 	}
 
 	return l
 }
 
-func flattenTask(task *appflow.Task) map[string]interface{} {
-	if task == nil {
+func flattenTask(task types.Task) map[string]interface{} {
+	if itypes.IsZero(&task) {
 		return nil
 	}
 
@@ -3437,99 +3623,50 @@ func flattenTask(task *appflow.Task) map[string]interface{} {
 	}
 
 	if v := task.DestinationField; v != nil {
-		m["destination_field"] = aws.StringValue(v)
+		m["destination_field"] = aws.ToString(v)
 	}
 
 	if v := task.SourceFields; v != nil {
-		m["source_fields"] = aws.StringValueSlice(v)
+		m["source_fields"] = v
 	}
 
 	if v := task.TaskProperties; v != nil {
-		m["task_properties"] = aws.StringValueMap(v)
+		m["task_properties"] = flex.FlattenStringValueMap(v)
 	}
 
-	if v := task.TaskType; v != nil {
-		m["task_type"] = aws.StringValue(v)
-	}
+	m["task_type"] = task.TaskType
 
 	return m
 }
 
-func flattenConnectorOperator(connectorOperator *appflow.ConnectorOperator) map[string]interface{} {
+func flattenConnectorOperator(connectorOperator *types.ConnectorOperator) map[string]interface{} {
 	if connectorOperator == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := connectorOperator.Amplitude; v != nil {
-		m["amplitude"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.CustomConnector; v != nil {
-		m["custom_connector"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Datadog; v != nil {
-		m["datadog"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Dynatrace; v != nil {
-		m["dynatrace"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.GoogleAnalytics; v != nil {
-		m["google_analytics"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.InforNexus; v != nil {
-		m["infor_nexus"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Marketo; v != nil {
-		m["marketo"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.S3; v != nil {
-		m["s3"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Salesforce; v != nil {
-		m["salesforce"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.SAPOData; v != nil {
-		m["sapo_data"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.ServiceNow; v != nil {
-		m["service_now"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Singular; v != nil {
-		m["singular"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Slack; v != nil {
-		m["slack"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Trendmicro; v != nil {
-		m["trendmicro"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Veeva; v != nil {
-		m["veeva"] = aws.StringValue(v)
-	}
-
-	if v := connectorOperator.Zendesk; v != nil {
-		m["zendesk"] = aws.StringValue(v)
-	}
+	m["amplitude"] = connectorOperator.Amplitude
+	m["custom_connector"] = connectorOperator.CustomConnector
+	m["datadog"] = connectorOperator.Datadog
+	m["dynatrace"] = connectorOperator.Dynatrace
+	m["google_analytics"] = connectorOperator.GoogleAnalytics
+	m["infor_nexus"] = connectorOperator.InforNexus
+	m["marketo"] = connectorOperator.Marketo
+	m["s3"] = connectorOperator.S3
+	m["salesforce"] = connectorOperator.Salesforce
+	m["sapo_data"] = connectorOperator.SAPOData
+	m["service_now"] = connectorOperator.ServiceNow
+	m["singular"] = connectorOperator.Singular
+	m["slack"] = connectorOperator.Slack
+	m["trendmicro"] = connectorOperator.Trendmicro
+	m["veeva"] = connectorOperator.Veeva
+	m["zendesk"] = connectorOperator.Zendesk
 
 	return m
 }
 
-func flattenTriggerConfig(triggerConfig *appflow.TriggerConfig) map[string]interface{} {
+func flattenTriggerConfig(triggerConfig *types.TriggerConfig) map[string]interface{} {
 	if triggerConfig == nil {
 		return nil
 	}
@@ -3540,14 +3677,12 @@ func flattenTriggerConfig(triggerConfig *appflow.TriggerConfig) map[string]inter
 		m["trigger_properties"] = []interface{}{flattenTriggerProperties(v)}
 	}
 
-	if v := triggerConfig.TriggerType; v != nil {
-		m["trigger_type"] = aws.StringValue(v)
-	}
+	m["trigger_type"] = triggerConfig.TriggerType
 
 	return m
 }
 
-func flattenTriggerProperties(triggerProperties *appflow.TriggerProperties) map[string]interface{} {
+func flattenTriggerProperties(triggerProperties *types.TriggerProperties) map[string]interface{} {
 	if triggerProperties == nil {
 		return nil
 	}
@@ -3561,39 +3696,37 @@ func flattenTriggerProperties(triggerProperties *appflow.TriggerProperties) map[
 	return m
 }
 
-func flattenScheduled(scheduledTriggerProperties *appflow.ScheduledTriggerProperties) map[string]interface{} {
+func flattenScheduled(scheduledTriggerProperties *types.ScheduledTriggerProperties) map[string]interface{} {
 	if scheduledTriggerProperties == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := scheduledTriggerProperties.DataPullMode; v != nil {
-		m["data_pull_mode"] = aws.StringValue(v)
-	}
+	m["data_pull_mode"] = scheduledTriggerProperties.DataPullMode
 
 	if v := scheduledTriggerProperties.FirstExecutionFrom; v != nil {
-		m["first_execution_from"] = aws.TimeValue(v).Format(time.RFC3339)
+		m["first_execution_from"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleEndTime; v != nil {
-		m["schedule_end_time"] = aws.TimeValue(v).Format(time.RFC3339)
+		m["schedule_end_time"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.StringValue(v)
+		m[names.AttrScheduleExpression] = aws.ToString(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleOffset; v != nil {
-		m["schedule_offset"] = aws.Int64Value(v)
+		m["schedule_offset"] = aws.ToInt64(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleStartTime; v != nil {
-		m["schedule_start_time"] = aws.TimeValue(v).Format(time.RFC3339)
+		m["schedule_start_time"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := scheduledTriggerProperties.Timezone; v != nil {
-		m["timezone"] = aws.StringValue(v)
+		m["timezone"] = aws.ToString(v)
 	}
 
 	return m

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codeartifact_domain: Change the type of asset_size_bytes to `TypeString` instead of `TypeInt` to prevent `value out of range` panic
+```

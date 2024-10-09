@@ -241,7 +241,9 @@ output "scala_code" {
 * `value` - (Required) Value of the argument or property.
 * `param` - (Optional) Boolean if the value is used as a parameter. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `python_script` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.

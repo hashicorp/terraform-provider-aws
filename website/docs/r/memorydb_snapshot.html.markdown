@@ -23,7 +23,7 @@ resource "aws_memorydb_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_name` - (Required, Forces new resource) Name of the MemoryDB cluster to take a snapshot of.
 * `name` - (Optional, Forces new resource) Name of the snapshot. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
@@ -31,9 +31,9 @@ The following arguments are supported:
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the snapshot at rest.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the snapshot.
 * `arn` - The ARN of the snapshot.
@@ -63,8 +63,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `name` to import a snapshot. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a snapshot using the `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_snapshot.example
+  id = "my-snapshot"
+}
 ```
-$ terraform import aws_memorydb_snapshot.example my-snapshot
+
+Using `terraform import`, import a snapshot using the `name`. For example:
+
+```console
+% terraform import aws_memorydb_snapshot.example my-snapshot
 ```

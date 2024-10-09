@@ -1,8 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidDashboardName(t *testing.T) {
@@ -14,7 +19,7 @@ func TestValidDashboardName(t *testing.T) {
 		"hello-world-012345",
 	}
 	for _, v := range validNames {
-		_, errors := validDashboardName(v, "name")
+		_, errors := validDashboardName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CloudWatch dashboard name: %q", v, errors)
 		}
@@ -27,7 +32,7 @@ func TestValidDashboardName(t *testing.T) {
 		strings.Repeat("W", 256), // > 255
 	}
 	for _, v := range invalidNames {
-		_, errors := validDashboardName(v, "name")
+		_, errors := validDashboardName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CloudWatch dashboard name", v)
 		}

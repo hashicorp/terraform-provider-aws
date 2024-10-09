@@ -20,6 +20,12 @@ For more information see the Amazon S3 User Guide on [`Lifecycle Configuration E
 
 ~> **NOTE:** S3 Buckets only support a single lifecycle configuration. Declaring multiple `aws_s3_bucket_lifecycle_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
+~> **NOTE:** Lifecycle configurations may take some time to fully propagate to all AWS S3 systems.
+Running Terraform operations shortly after creating a lifecycle configuration may result in changes that affect configuration idempotence.
+See the Amazon S3 User Guide on [setting lifecycle configuration on a bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/how-to-set-lifecycle-configuration-intro.html).
+
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### With neither a filter nor prefix specified
@@ -199,22 +205,25 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 ### Specifying a filter based on object size
 
-Object size values are in bytes. Maximum filter size is 5TB. Some storage classes have minimum object size limitations, for more information, see [Comparing the Amazon S3 storage classes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html#sc-compare).
+Object size values are in bytes. Maximum filter size is 5TB. Amazon S3 applies a default behavior to your Lifecycle configuration that prevents objects smaller than 128 KB from being transitioned to any storage class. You can allow smaller objects to transition by adding a minimum size (`object_size_greater_than`) or a maximum size (`object_size_less_than`) filter that specifies a smaller size to the configuration. This example allows any object smaller than 128 KB to transition to the S3 Glacier Instant Retrieval storage class:
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
   bucket = aws_s3_bucket.bucket.id
 
   rule {
-    id = "rule-1"
+    id = "Allow small object transitions"
 
     filter {
-      object_size_greater_than = 500
+      object_size_greater_than = 1
     }
 
-    # ... other transition/expiration actions ...
-
     status = "Enabled"
+
+    transition {
+      days          = 365
+      storage_class = "GLACIER_IR"
+    }
   }
 }
 ```
@@ -356,11 +365,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-config" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `expected_bucket_owner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
 * `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
+* `transition_default_minimum_object_size` - (Optional) The default minimum object size behavior applied to the lifecycle configuration. Valid values: `all_storage_classes_128K` (default), `varies_by_storage_class`. To customize the minimum object size for any transition you can add a `filter` that specifies a custom `object_size_greater_than` or `object_size_less_than` value. Custom filters always take precedence over the default transition behavior.
 
 ### rule
 
@@ -393,7 +403,7 @@ The `abort_incomplete_multipart_upload` configuration block supports the followi
 
 The `expiration` configuration block supports the following arguments:
 
-* `date` - (Optional) Date the object is to be moved or deleted. Should be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `date` - (Optional) Date the object is to be moved or deleted. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `2023-08-22`.
 * `days` - (Optional) Lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer.
 * `expired_object_delete_marker` - (Optional, Conflicts with `date` and `days`) Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to `true`, the delete marker will be expired; if set to `false` the policy takes no action.
 
@@ -430,7 +440,7 @@ The `transition` configuration block supports the following arguments:
 
 ~> **Note:** Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
 
-* `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) and set to midnight UTC e.g. `2023-01-13T00:00:00Z`.
+* `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `2023-08-22`.
 * `days` - (Optional, Conflicts with `date`) Number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
 * `storage_class` - Class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
@@ -438,7 +448,7 @@ The `transition` configuration block supports the following arguments:
 
 The `and` configuration block supports the following arguments:
 
-* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified.
+* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified. Defaults to 128000 (128 KB) for all `storage_class` values unless `transition_default_minimum_object_size` specifies otherwise.
 * `object_size_less_than` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
 * `tags` - (Optional) Key-value map of resource tags. All of these tags must exist in the object's tag set in order for the rule to apply.
@@ -450,26 +460,44 @@ The `tag` configuration block supports the following arguments:
 * `key` - (Required) Name of the object key.
 * `value` - (Required) Value of the tag.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
-S3 bucket lifecycle configuration can be imported in one of two ways.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider,
-the S3 bucket lifecycle configuration resource should be imported using the `bucket` e.g.,
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
-```sh
-$ terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name
+```terraform
+import {
+  to = aws_s3_bucket_lifecycle_configuration.example
+  id = "bucket-name"
+}
 ```
 
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider,
-the S3 bucket lifecycle configuration resource should be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
 
+```terraform
+import {
+  to = aws_s3_bucket_lifecycle_configuration.example
+  id = "bucket-name,123456789012"
+}
 ```
-$ terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
+
+**Using `terraform import` to import** S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+
+```console
+% terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name
+```
+
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+```console
+% terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```

@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDiffSuppressKeyId(t *testing.T) {
+func TestDiffSuppressKeyID(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
@@ -58,11 +63,10 @@ func TestDiffSuppressKeyId(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual := DiffSuppressKey("field", testcase.old, testcase.new, nil)
+			actual := diffSuppressKey(names.AttrField, testcase.old, testcase.new, nil)
 
 			if e := testcase.expectSuppress; actual != e {
 				t.Fatalf("expected %t, got %t", e, actual)

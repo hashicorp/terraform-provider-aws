@@ -1,23 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_core_network_policy_attachment")
-func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
+// @SDKResource("aws_networkmanager_core_network_policy_attachment", name="Core Network Policy Attachment")
+func resourceCoreNetworkPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceCoreNetworkPolicyAttachmentRead,
@@ -39,7 +44,7 @@ func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "must be a valid Core Network ID"),
+					validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "must be a valid Core Network ID"),
 				),
 			},
 			"policy_document": {
@@ -55,7 +60,7 @@ func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 					return json
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,56 +75,61 @@ func resourceCoreNetworkPolicyAttachmentCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
 
-	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+
+	coreNetwork, err := findCoreNetworkByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Core Network %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Core Network (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s): %s", d.Id(), err)
 	}
 
 	d.Set("core_network_id", coreNetwork.CoreNetworkId)
-	d.Set("state", coreNetwork.State)
+	d.Set(names.AttrState, coreNetwork.State)
 
 	// getting the policy document uses a different API call
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id())
+	// pass in latestPolicyVersionId to get the latest version id by default
+	coreNetworkPolicy, err := findCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), aws.Int32(latestPolicyVersionID))
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)
 	} else if err != nil {
-		return diag.Errorf("reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
 	} else {
-		encodedPolicyDocument, err := protocol.EncodeJSONValue(coreNetworkPolicy.PolicyDocument, protocol.NoEscape)
+		encodedPolicyDocument, err := structure.NormalizeJsonString(aws.ToString(coreNetworkPolicy.PolicyDocument))
 
 		if err != nil {
-			return diag.Errorf("encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
 		}
 
 		d.Set("policy_document", encodedPolicyDocument)
 	}
-	return nil
+	return diags
 }
 
 func resourceCoreNetworkPolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChange("policy_document") {
-		err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
+		err := putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceCoreNetworkPolicyAttachmentRead(ctx, d, meta)
+	return append(diags, resourceCoreNetworkPolicyAttachmentRead(ctx, d, meta)...)
 }

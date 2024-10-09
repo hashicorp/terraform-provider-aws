@@ -109,7 +109,7 @@ resource "aws_launch_template" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
@@ -119,9 +119,9 @@ The following arguments are supported:
   Specification](#credit-specification) below for more details.
 * `default_version` - (Optional) Default Version of the launch template.
 * `description` - (Optional) Description of the launch template.
-* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
+* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-stop-protection.html).
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
-  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
+  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
 * `elastic_gpu_specifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
@@ -130,7 +130,7 @@ The following arguments are supported:
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `image_id` - (Optional) The AMI from which to launch the instance.
+* `image_id` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instance_market_options` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -152,7 +152,7 @@ The following arguments are supported:
 * `ram_disk_id` - (Optional) The ID of the RAM disk.
 * `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
-* `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
+* `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details. Default tags [are currently not propagated to ASG created resources](https://github.com/hashicorp/terraform-provider-aws/issues/32328) so you may wish to inject your default tags into this variable against the relevant child resource types created.
 * `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `update_default_version` - (Optional) Whether to update Default Version each update. Conflicts with `default_version`.
 * `user_data` - (Optional) The base64-encoded user data to provide when launching the instance.
@@ -178,7 +178,7 @@ Each `block_device_mappings` supports the following:
 The `ebs` block supports the following:
 
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination.
-  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
+  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/preserving-volumes-on-termination.html) for more information.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
@@ -207,9 +207,11 @@ The `capacity_reservation_target` block supports the following:
 
 The `cpu_options` block supports the following:
 
+* `amd_sev_snp` - Indicates whether to enable the instance for AMD SEV-SNP. AMD SEV-SNP is supported with M6a, R6a, and C6a instance types only. Valid values are `enabled` and `disabled`.
 * `core_count` - The number of CPU cores for the instance.
-* `threads_per_core` - The number of threads per CPU core. To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
-Otherwise, specify the default value of 2.
+* `threads_per_core` - The number of threads per CPU core.
+  To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
+  Otherwise, specify the default value of 2.
 
 Both number of CPU cores and threads per core must be specified. Valid number of CPU cores and threads per core for the instance type can be found in the [CPU Options Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html?shortFooter=true#cpu-options-supported-instances-values)
 
@@ -219,7 +221,10 @@ Credit specification can be applied/modified to the EC2 Instance at any time.
 
 The `credit_specification` block supports the following:
 
-* `cpu_credits` - The credit option for CPU usage. Can be `"standard"` or `"unlimited"`. T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
+* `cpu_credits` - The credit option for CPU usage.
+  Can be `standard` or `unlimited`.
+  T3 instances are launched as `unlimited` by default.
+  T2 instances are launched as `standard` by default.
 
 ### Elastic GPU
 
@@ -227,7 +232,7 @@ Attach an elastic GPU the instance.
 
 The `elastic_gpu_specifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 
@@ -258,7 +263,7 @@ to attach.
 
 The `iam_instance_profile` block supports the following:
 
-* `arn` - The Amazon Resource Name (ARN) of the instance profile.
+* `arn` - The Amazon Resource Name (ARN) of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements
@@ -346,6 +351,7 @@ This configuration block supports the following:
       * ssd - solid state drive
     ```
 
+* `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spot_max_price_percentage_over_lowest_price`
 * `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
@@ -360,9 +366,9 @@ This configuration block supports the following:
     * `max` - (Optional) Maximum.
 * `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
 
-    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.  
+    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `max_spot_price_as_percentage_of_optimal_on_demand_price`
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `total_local_storage_gb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
@@ -413,8 +419,8 @@ The `metadata_options` block supports the following:
 * `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
-* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
-* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
+* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. Can be `"enabled"` or `"disabled"`.
+* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. Can be `"enabled"` or `"disabled"`.
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
@@ -449,6 +455,7 @@ Each `network_interfaces` block supports the following:
 * `ipv6_prefixes` - (Optional) One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
 * `network_interface_id` - (Optional) The ID of the network interface to attach.
 * `network_card_index` - (Optional) The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
+* `primary_ipv6` - (Optional) Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `private_ip_address` - (Optional) The primary private IPv4 address.
 * `ipv4_address_count` - (Optional) The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
 * `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
@@ -487,9 +494,9 @@ Each `tag_specifications` block supports the following:
 * `resource_type` - (Optional) The type of resource to tag.
 * `tags` -(Optional)  A map of tags to assign to the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
@@ -498,8 +505,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Launch Templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_launch_template.web
+  id = "lt-12345678"
+}
 ```
-$ terraform import aws_launch_template.web lt-12345678
+
+Using `terraform import`, import Launch Templates using the `id`. For example:
+
+```console
+% terraform import aws_launch_template.web lt-12345678
 ```

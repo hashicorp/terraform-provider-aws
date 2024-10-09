@@ -84,9 +84,9 @@ resource "aws_iam_role" "firehose_role" {
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-msk-broker-logs-stream"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }
@@ -201,7 +201,7 @@ resource "aws_msk_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `cluster_name` - (Required) Name of the MSK cluster.
@@ -213,12 +213,12 @@ The following arguments are supported:
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See below.
 * `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See below.
+* `storage_mode` - (Optional) Controls storage mode for supported storage tiers. Valid values are: `LOCAL` or `TIERED`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### broker_node_group_info Argument Reference
 
 * `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
-* `ebs_volume_size` - (Optional, **Deprecated** use `storage_info.ebs_storage_info.volume_size` instead) The size in GiB of the EBS volume for the data drive on each broker node.
 * `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
@@ -228,10 +228,25 @@ The following arguments are supported:
 ### broker_node_group_info connectivity_info Argument Reference
 
 * `public_access` - (Optional) Access control settings for brokers. See below.
+* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See below.
 
 ### connectivity_info public_access Argument Reference
 
-* `type` - (Optional) Public access type. Valida values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
+* `type` - (Optional) Public access type. Valid values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
+
+### connectivity_info vpc_connectivity Argument Reference
+
+* `client_authentication` - (Optional) Includes all client authentication information for VPC connectivity. See below.
+
+### vpc_connectivity client_authentication Argument Reference
+
+* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See below.
+* `tls` - (Optional) Enables TLS authentication for VPC connectivity.
+
+### vpc_connectivity client_authentication sasl Argument Reference
+
+* `iam` - (Optional) Enables SASL/IAM authentication for VPC connectivity.
+* `scram` - (Optional) Enables SASL/SCRAM authentication for VPC connectivity.
 
 ### broker_node_group_info storage_info Argument Reference
 
@@ -314,9 +329,9 @@ The following arguments are supported:
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
 * `prefix` - (Optional) Prefix to append to the folder name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the MSK cluster.
 * `bootstrap_brokers` - Comma separated list of one or more hostname:port pairs of kafka brokers suitable to bootstrap connectivity to the kafka cluster. Contains a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts values alphabetically. AWS may not always return all endpoints so this value is not guaranteed to be stable across applies.
@@ -326,10 +341,13 @@ In addition to all arguments above, the following attributes are exported:
 * `bootstrap_brokers_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.iam` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_tls` - One or more DNS names (or IP addresses) and TLS port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_sasl_iam` - A string containing one or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_sasl_scram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `cluster_uuid` - UUID of the MSK cluster, for use in IAM policies.
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `storage_mode` - Controls storage mode for supported storage tiers. Valid values are: `LOCAL` or `TIERED`.
 * `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 * `zookeeper_connect_string_tls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
@@ -339,13 +357,22 @@ In addition to all arguments above, the following attributes are exported:
 
 * `create` - (Default `120m`)
 * `update` - (Default `120m`)
-Note that the `update` timeout is used separately for `ebs_volume_size`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
+Note that the `update` timeout is used separately for `storage_info`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
 * `delete` - (Default `120m`)
 
 ## Import
 
-MSK clusters can be imported using the cluster `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK clusters using the cluster `arn`. For example:
 
+```terraform
+import {
+  to = aws_msk_cluster.example
+  id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+}
 ```
-$ terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+
+Using `terraform import`, import MSK clusters using the cluster `arn`. For example:
+
+```console
+% terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```

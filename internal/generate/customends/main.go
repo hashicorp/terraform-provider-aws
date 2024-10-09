@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -9,72 +12,67 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
-//go:embed custom_endpoints_header.tmpl
+//go:embed custom_endpoints_header.gtpl
 var header string
 
-//go:embed custom_endpoints_footer.tmpl
+//go:embed custom_endpoints_footer.gtpl
 var footer string
 
-type ServiceDatum struct {
-	ProviderPackage string
-	Aliases         []string
+type serviceDatum struct {
+	HumanFriendly    string
+	ProviderPackage  string
+	Aliases          []string
+	TfAwsEnvVar      string
+	DeprecatedEnvVar string
+	AwsEnvVar        string
+	SharedConfigKey  string
 }
 
 type TemplateData struct {
-	Services []ServiceDatum
+	Services []serviceDatum
 }
 
 func main() {
 	const (
-		filename      = `../../../website/docs/guides/custom-service-endpoints.html.md`
-		namesDataFile = "../../../names/names_data.csv"
+		filename = `../../../website/docs/guides/custom-service-endpoints.html.markdown`
 	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
-	data, err := common.ReadAllCSVData(namesDataFile)
-
+	data, err := data.ReadAllServiceData()
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
-
-		sd := ServiceDatum{
-			ProviderPackage: p,
-		}
-
-		if l[names.ColAliases] != "" {
-			sd.Aliases = strings.Split(l[names.ColAliases], ";")
+		sd := serviceDatum{
+			HumanFriendly:    l.HumanFriendly(),
+			ProviderPackage:  l.ProviderPackage(),
+			Aliases:          l.Aliases(),
+			TfAwsEnvVar:      l.TFAWSEnvVar(),
+			DeprecatedEnvVar: l.DeprecatedEnvVar(),
+			AwsEnvVar:        l.AWSServiceEnvVar(),
+			SharedConfigKey:  l.AWSConfigParameter(),
 		}
 
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
+	sort.Slice(td.Services, func(i, j int) bool {
 		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
 	})
 
@@ -89,5 +87,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

@@ -25,9 +25,9 @@ data "aws_ssmincidents_replication_set" "example" {}
 
 No arguments are required.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resouce Name (ARN) of the replication set.
 * `tags` - All tags applied to the replication set.

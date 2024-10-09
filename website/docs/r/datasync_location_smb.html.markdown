@@ -28,7 +28,7 @@ resource "aws_datasync_location_smb" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `domain` - (Optional) The name of the Windows domain the SMB server belongs to.
@@ -41,21 +41,30 @@ The following arguments are supported:
 
 ### mount_options Argument Reference
 
-The following arguments are supported inside the `mount_options` configuration block:
+The `mount_options` configuration block supports the following arguments:
 
 * `version` - (Optional) The specific SMB version that you want DataSync to use for mounting your SMB share. Valid values: `AUTOMATIC`, `SMB2`, and `SMB3`. Default: `AUTOMATIC`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-`aws_datasync_location_smb` can be imported by using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_smb` using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_location_smb.example
+  id = "arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
+
+Using `terraform import`, import `aws_datasync_location_smb` using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```

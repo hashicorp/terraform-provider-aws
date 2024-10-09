@@ -31,7 +31,7 @@ data "aws_launch_template" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `id` - (Optional) ID of the specific launch template to retrieve.
@@ -40,14 +40,14 @@ The following arguments are supported:
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeLaunchTemplates API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLaunchTemplates.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the launch template.
 

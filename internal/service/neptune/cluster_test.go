@@ -1,21 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccClusterImportStep(n string) resource.TestStep {
@@ -24,26 +29,27 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportState:       true,
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
-			"allow_major_version_upgrade",
-			"apply_immediately",
-			"cluster_identifier_prefix",
-			"final_snapshot_identifier",
+			names.AttrAllowMajorVersionUpgrade,
+			names.AttrApplyImmediately,
+			names.AttrFinalSnapshotIdentifier,
+			"cluster_members",
 			"neptune_instance_parameter_group_name",
 			"skip_final_snapshot",
 			"snapshot_identifier",
+			"cluster_members",
 		},
 	}
 }
 
 func TestAccNeptuneCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	var dbCluster awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -51,17 +57,42 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.2"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrFinalSnapshotIdentifier),
+					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.3"),
+					resource.TestCheckNoResourceAttr(resourceName, "neptune_instance_parameter_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_subnet_group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8182"),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replication_source_identifier", ""),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -69,15 +100,129 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccNeptuneCluster_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_identifierGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrClusterIdentifier, "tf-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccNeptuneCluster_identifierPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierPrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrClusterIdentifier, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccNeptuneCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +230,7 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_copyTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -93,53 +238,29 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_copyTags(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccClusterConfig_copyTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
-		},
-	})
-}
-
-func TestAccNeptuneCluster_namePrefix(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v neptune.DBCluster
-	rName := "tf-test-"
-	resourceName := "aws_neptune_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_namePrefix(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
-				),
-			},
-			testAccClusterImportStep(resourceName),
 		},
 	})
 }
 
 func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -147,7 +268,7 @@ func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 				Config: testAccClusterConfig_serverlessConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "4.5"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "12.5"),
 				),
@@ -159,13 +280,13 @@ func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 
 func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
 		Steps: []resource.TestStep{
@@ -180,57 +301,15 @@ func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccNeptuneCluster_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v neptune.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
-	resourceName := "aws_neptune_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			testAccClusterImportStep(resourceName),
-			{
-				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -244,14 +323,14 @@ func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 				Config: testAccClusterConfig_addIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccClusterConfig_removeIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct1),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -261,14 +340,14 @@ func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 
 func TestAccNeptuneCluster_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	keyResourceName := "aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,7 +355,7 @@ func TestAccNeptuneCluster_kmsKey(t *testing.T) {
 				Config: testAccClusterConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyResourceName, names.AttrARN),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -286,13 +365,13 @@ func TestAccNeptuneCluster_kmsKey(t *testing.T) {
 
 func TestAccNeptuneCluster_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -300,7 +379,7 @@ func TestAccNeptuneCluster_encrypted(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -310,13 +389,13 @@ func TestAccNeptuneCluster_encrypted(t *testing.T) {
 
 func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -326,7 +405,7 @@ func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "07:00-09:00"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
 				),
 			},
 			{
@@ -334,8 +413,8 @@ func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "03:00-09:00"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "10"),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "wed:01:00-wed:01:30"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "wed:01:00-wed:01:30"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -345,13 +424,13 @@ func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 
 func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -359,7 +438,7 @@ func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 				Config: testAccClusterConfig_iamAuth(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -369,13 +448,13 @@ func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 
 func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -390,15 +469,16 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 				Config: testAccClusterConfig_cloudWatchLogsExports(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enable_cloudwatch_logs_exports.*", "audit"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enable_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct0),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -408,29 +488,29 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 
 func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1", "default.neptune1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.1.0.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.1.0.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.5.1", "default.neptune1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.1.1.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.5.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.1.1.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -440,29 +520,29 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 
 func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1", "default.neptune1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.1.1.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.1.1.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
 			{
-				Config: testAccClusterConfig_engineMajorVersionUpdate(rName, "1.1.1.0", "default.neptune1"),
+				Config: testAccClusterConfig_engineMajorVersionUpdate(rName, "1.2.0.1", "default.neptune1.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.2.0.1"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -473,7 +553,7 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster neptune.DBCluster
+	var primaryDbCluster, secondaryDbCluster awstypes.DBCluster
 
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
@@ -488,7 +568,7 @@ func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *t
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -505,13 +585,13 @@ func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *t
 
 func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -519,7 +599,7 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -527,39 +607,15 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
-			},
-		},
-	})
-}
-
-func TestAccNeptuneCluster_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
-	resourceName := "aws_neptune_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -567,14 +623,15 @@ func TestAccNeptuneCluster_disappears(t *testing.T) {
 
 func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
+	keyResourceName := "aws_kms_key.test2"
 	parameterGroupResourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -583,11 +640,12 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct2),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -595,22 +653,47 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
-	}
+func TestAccNeptuneCluster_storageType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageType(rName, "standard"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_storageType(rName, "iopt1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "iopt1"),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
-	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster" {
 				continue
 			}
 
-			_, err := tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+			_, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -627,24 +710,20 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *neptune.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.DBCluster) resource.TestCheckFunc {
 	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *neptune.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *awstypes.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Neptune Cluster ID is set")
-		}
+		conn := providerF().Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
-		conn := providerF().Meta().(*conns.AWSClient).NeptuneConn()
-
-		output, err := tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -663,16 +742,16 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
-			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, finalSnapshotID)
 
 			if err != nil {
 				return err
 			}
 
-			_, err = conn.DeleteDBClusterSnapshotWithContext(ctx, &neptune.DeleteDBClusterSnapshotInput{
+			_, err = conn.DeleteDBClusterSnapshot(ctx, &neptune.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -680,7 +759,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				return err
 			}
 
-			_, err = tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+			_, err = tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -708,24 +787,72 @@ locals {
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
 }
 `, rName))
+}
+
+func testAccClusterConfig_identifierGenerated() string {
+	return `
+resource "aws_neptune_cluster" "test" {
+  engine              = "neptune"
+  skip_final_snapshot = true
+}
+`
+}
+
+func testAccClusterConfig_identifierPrefix(prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier_prefix = %[1]q
+  engine                    = "neptune"
+  skip_final_snapshot       = true
+}
+`, prefix)
+}
+
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccClusterConfig_copyTags(rName string, copy bool) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
-  copy_tags_to_snapshot                = %[2]t
+  cluster_identifier    = %[1]q
+  availability_zones    = local.availability_zone_names
+  engine                = "neptune"
+  skip_final_snapshot   = true
+  copy_tags_to_snapshot = %[2]t
 }
 `, rName, copy))
 }
@@ -733,35 +860,21 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_deleteProtection(rName string, isProtected bool) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
-  deletion_protection                  = %[2]t
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
+  deletion_protection = %[2]t
 }
 `, rName, isProtected))
-}
-
-func testAccClusterConfig_namePrefix(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier_prefix            = %[1]q
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
-}
-`, rName)
 }
 
 func testAccClusterConfig_serverlessConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier_prefix            = %[1]q
-  engine                               = "neptune"
-  engine_version                       = "1.2.0.1"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
+  cluster_identifier_prefix = %[1]q
+  engine                    = "neptune"
+  skip_final_snapshot       = true
 
   serverless_v2_scaling_configuration {
     min_capacity = 4.5
@@ -774,45 +887,11 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_finalSnapshot(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  final_snapshot_identifier            = %[1]q
+  cluster_identifier        = %[1]q
+  availability_zones        = local.availability_zone_names
+  final_snapshot_identifier = %[1]q
 }
 `, rName))
-}
-
-func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccClusterConfig_includingIAMRoles(rName string) string {
@@ -892,10 +971,9 @@ EOF
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  skip_final_snapshot = true
 
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
@@ -984,8 +1062,6 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn, aws_iam_role.test-2.arn]
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
 `, rName))
@@ -1036,8 +1112,6 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn]
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-
   depends_on = [aws_iam_role.test]
 }
 `, rName))
@@ -1045,6 +1119,46 @@ resource "aws_neptune_cluster" "test" {
 
 func testAccClusterConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "kms_admin" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/NeptuneFullAccess"]
+
+  inline_policy {
+    name = "kms-perms-for-neptune"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncryptTo",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:CreateGrant",
+          "kms:ReEncryptFrom",
+          "kms:DescribeKey"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -1054,27 +1168,64 @@ resource "aws_kms_key" "test" {
   "Id": "kms-tf-1",
   "Statement": [
     {
-      "Sid": "Enable IAM User Permissions",
+      "Sid": "Enable Permissions for root principal",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
+    },
+    {
+      "Sid": "Allow use of the key for Neptune",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.kms_admin.arn}"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:ReEncryptTo",
+        "kms:GenerateDataKeyWithoutPlaintext",
+        "kms:CreateGrant",
+        "kms:ReEncryptFrom",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "Deny use of the key for non Neptune",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "${aws_iam_role.kms_admin.arn}"
+      },
+      "Action": [
+        "kms:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+        }
+      }
     }
   ]
 }
- POLICY
-
+POLICY
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  storage_encrypted                    = true
-  kms_key_arn                          = aws_kms_key.test.arn
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  storage_encrypted   = true
+  kms_key_arn         = aws_kms_key.test.arn
+  skip_final_snapshot = true
 }
 `, rName))
 }
@@ -1086,8 +1237,6 @@ resource "aws_neptune_cluster" "test" {
   availability_zones  = local.availability_zone_names
   storage_encrypted   = true
   skip_final_snapshot = true
-
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1101,8 +1250,6 @@ resource "aws_neptune_cluster" "test" {
   preferred_backup_window      = "07:00-09:00"
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot          = true
-
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1117,8 +1264,6 @@ resource "aws_neptune_cluster" "test" {
   preferred_maintenance_window = "wed:01:00-wed:01:30"
   apply_immediately            = true
   skip_final_snapshot          = true
-
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1130,8 +1275,6 @@ resource "aws_neptune_cluster" "test" {
   availability_zones                  = local.availability_zone_names
   iam_database_authentication_enabled = true
   skip_final_snapshot                 = true
-
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1142,9 +1285,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier             = %[1]q
   availability_zones             = local.availability_zone_names
   skip_final_snapshot            = true
-  enable_cloudwatch_logs_exports = ["audit"]
-
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  enable_cloudwatch_logs_exports = ["audit", "slowquery"]
 }
 `, rName))
 }
@@ -1156,16 +1297,15 @@ data "aws_neptune_orderable_db_instance" "test" {
   engine_version = aws_neptune_cluster.test.engine_version
   license_model  = "amazon-license"
 
-  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r4.large"]
+  preferred_instance_classes = ["db.t4g.medium", "db.r6g.large", "db.r5.large", "db.t3.medium", "db.r4.large"]
 }
 
 resource "aws_neptune_cluster_instance" "test" {
-  identifier                   = %[1]q
-  cluster_identifier           = aws_neptune_cluster.test.id
-  apply_immediately            = true
-  instance_class               = data.aws_neptune_orderable_db_instance.test.instance_class
-  neptune_parameter_group_name = aws_neptune_cluster.test.neptune_cluster_parameter_group_name
-  promotion_tier               = "3"
+  identifier         = %[1]q
+  cluster_identifier = aws_neptune_cluster.test.id
+  apply_immediately  = true
+  instance_class     = data.aws_neptune_orderable_db_instance.test.instance_class
+  promotion_tier     = "3"
 }
 `, rName))
 }
@@ -1214,24 +1354,21 @@ data "aws_availability_zones" "alternate" {
 resource "aws_neptune_global_cluster" "test" {
   global_cluster_identifier = %[1]q
   engine                    = "neptune"
-  engine_version            = "1.2.0.0"
 }
 
 resource "aws_neptune_cluster" "primary" {
-  cluster_identifier                   = %[2]q
-  skip_final_snapshot                  = true
-  global_cluster_identifier            = aws_neptune_global_cluster.test.id
-  engine                               = aws_neptune_global_cluster.test.engine
-  engine_version                       = aws_neptune_global_cluster.test.engine_version
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  cluster_identifier        = %[2]q
+  skip_final_snapshot       = true
+  global_cluster_identifier = aws_neptune_global_cluster.test.id
+  engine                    = aws_neptune_global_cluster.test.engine
+  engine_version            = aws_neptune_global_cluster.test.engine_version
 }
 
 resource "aws_neptune_cluster_instance" "primary" {
-  identifier                   = %[2]q
-  cluster_identifier           = aws_neptune_cluster.primary.id
-  instance_class               = "db.r5.large"
-  neptune_parameter_group_name = "default.neptune1.2"
-  engine_version               = aws_neptune_global_cluster.test.engine_version
+  identifier         = %[2]q
+  cluster_identifier = aws_neptune_cluster.primary.id
+  instance_class     = "db.r6g.large"
+  engine_version     = aws_neptune_global_cluster.test.engine_version
 }
 
 resource "aws_vpc" "alternate" {
@@ -1261,16 +1398,14 @@ resource "aws_neptune_subnet_group" "alternate" {
   subnet_ids = aws_subnet.alternate[*].id
 }
 
-
 resource "aws_neptune_cluster" "secondary" {
-  provider                             = "awsalternate"
-  cluster_identifier                   = %[3]q
-  skip_final_snapshot                  = true
-  neptune_subnet_group_name            = aws_neptune_subnet_group.alternate.name
-  global_cluster_identifier            = aws_neptune_global_cluster.test.id
-  engine                               = aws_neptune_global_cluster.test.engine
-  engine_version                       = aws_neptune_global_cluster.test.engine_version
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  provider                  = "awsalternate"
+  cluster_identifier        = %[3]q
+  skip_final_snapshot       = true
+  neptune_subnet_group_name = aws_neptune_subnet_group.alternate.name
+  global_cluster_identifier = aws_neptune_global_cluster.test.id
+  engine                    = aws_neptune_global_cluster.test.engine
+  engine_version            = aws_neptune_global_cluster.test.engine_version
 
   depends_on = [aws_neptune_cluster_instance.primary]
 
@@ -1280,18 +1415,179 @@ resource "aws_neptune_cluster" "secondary" {
 }
 
 resource "aws_neptune_cluster_instance" "secondary" {
-  provider                     = "awsalternate"
-  identifier                   = %[3]q
-  cluster_identifier           = aws_neptune_cluster.secondary.id
-  neptune_parameter_group_name = "default.neptune1.2"
-  engine_version               = aws_neptune_global_cluster.test.engine_version
-  instance_class               = "db.r5.large"
+  provider           = "awsalternate"
+  identifier         = %[3]q
+  cluster_identifier = aws_neptune_cluster.secondary.id
+  engine_version     = aws_neptune_global_cluster.test.engine_version
+  instance_class     = "db.r6g.large"
 }
 `, rNameGlobal, rNamePrimary, rNameSecondary))
 }
 
 func testAccClusterConfig_restoreFromSnapshot(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "kms_admin" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/NeptuneFullAccess"]
+
+  inline_policy {
+    name = "kms-perms-for-neptune"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncryptTo",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:CreateGrant",
+          "kms:ReEncryptFrom",
+          "kms:DescribeKey"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+
+resource "aws_kms_key" "test1" {
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable Permissions for root principal",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow use of the key for Neptune",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.kms_admin.arn}"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:ReEncryptTo",
+        "kms:GenerateDataKeyWithoutPlaintext",
+        "kms:CreateGrant",
+        "kms:ReEncryptFrom",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "Deny use of the key for non Neptune",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "${aws_iam_role.kms_admin.arn}"
+      },
+      "Action": [
+        "kms:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_kms_key" "test2" {
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-2",
+  "Statement": [
+    {
+      "Sid": "Enable Permissions for root principal",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow use of the key for Neptune",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.kms_admin.arn}"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:ReEncryptTo",
+        "kms:GenerateDataKeyWithoutPlaintext",
+        "kms:CreateGrant",
+        "kms:ReEncryptFrom",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "Deny use of the key for non Neptune",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "${aws_iam_role.kms_admin.arn}"
+      },
+      "Action": [
+        "kms:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
 resource "aws_default_vpc" "test" {}
 
 resource "aws_security_group" "test" {
@@ -1306,9 +1602,10 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_neptune_cluster" "source" {
-  cluster_identifier                   = "%[1]s-src"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
+  cluster_identifier  = "%[1]s-src"
+  skip_final_snapshot = true
+  storage_encrypted   = true
+  kms_key_arn         = aws_kms_key.test1.arn
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {
@@ -1317,7 +1614,7 @@ resource "aws_neptune_cluster_snapshot" "test" {
 }
 
 resource "aws_neptune_cluster_parameter_group" "test" {
-  family = "neptune1.2"
+  family = join("", ["neptune", split(".", aws_neptune_cluster_snapshot.test.engine_version)[0], ".", split(".", aws_neptune_cluster_snapshot.test.engine_version)[1]])
   name   = %[1]q
 
   parameter {
@@ -1327,10 +1624,11 @@ resource "aws_neptune_cluster_parameter_group" "test" {
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier  = %[1]q
-  skip_final_snapshot = true
-  snapshot_identifier = aws_neptune_cluster_snapshot.test.id
-
+  cluster_identifier                   = %[1]q
+  skip_final_snapshot                  = true
+  storage_encrypted                    = true
+  snapshot_identifier                  = aws_neptune_cluster_snapshot.test.id
+  kms_key_arn                          = aws_kms_key.test2.arn
   backup_retention_period              = 5
   neptune_cluster_parameter_group_name = aws_neptune_cluster_parameter_group.test.id
   vpc_security_group_ids               = aws_security_group.test[*].id
@@ -1340,4 +1638,17 @@ resource "aws_neptune_cluster" "test" {
   }
 }
 `, rName)
+}
+
+func testAccClusterConfig_storageType(rName, storageType string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
+  storage_type        = %[2]q
+  apply_immediately   = true
+}
+`, rName, storageType))
 }

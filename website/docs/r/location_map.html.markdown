@@ -40,9 +40,9 @@ The following arguments are required:
 
 * `style` - (Required) Specifies the map style selected from an available data provider. Valid values can be found in the [Location Service CreateMap API Reference](https://docs.aws.amazon.com/location/latest/APIReference/API_CreateMap.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_time` - The timestamp for when the map resource was created in ISO 8601 format.
 * `map_arn` - The Amazon Resource Name (ARN) for the map resource. Used to specify a resource across all AWS.
@@ -51,8 +51,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_location_map` resources can be imported using the map name, e.g.:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_location_map` resources using the map name. For example:
 
+```terraform
+import {
+  to = aws_location_map.example
+  id = "example"
+}
 ```
-$ terraform import aws_location_map.example example
+
+Using `terraform import`, import `aws_location_map` resources using the map name. For example:
+
+```console
+% terraform import aws_location_map.example example
 ```

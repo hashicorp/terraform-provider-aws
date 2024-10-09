@@ -1,0 +1,28 @@
+name: "Feed: Release Tag"
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+jobs:
+  tag-created:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        id: slack
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":tag: <https://github.com/${{ github.event.pusher.name }}|${{ github.event.pusher.name }}> pushed tag <https://github.com/hashicorp/terraform-provider-aws/tree/${{ github.event.ref }}|${{ github.event.ref }}>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

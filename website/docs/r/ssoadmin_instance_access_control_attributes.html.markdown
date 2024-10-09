@@ -34,7 +34,7 @@ resource "aws_ssoadmin_instance_access_control_attributes" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance.
 * `attribute` - (Required) See [AccessControlAttribute](#accesscontrolattribute) for more details.
@@ -48,16 +48,25 @@ The following arguments are supported:
 
 * `source` - (Required) The identity source to use when mapping a specified attribute to AWS SSO.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the Instance Access Control Attribute `instance_arn`.
 
 ## Import
 
-SSO Account Assignments can be imported using the `instance_arn`
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Account Assignments using the `instance_arn`. For example:
 
+```terraform
+import {
+  to = aws_ssoadmin_instance_access_control_attributes.example
+  id = "arn:aws:sso:::instance/ssoins-0123456789abcdef"
+}
 ```
-$ terraform import aws_ssoadmin_instance_access_control_attributes.example arn:aws:sso:::instance/ssoins-0123456789abcdef
+
+Using `terraform import`, import SSO Account Assignments using the `instance_arn`. For example:
+
+```console
+% terraform import aws_ssoadmin_instance_access_control_attributes.example arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```

@@ -6,7 +6,7 @@ description: |-
   Use this data source to retrieve information about a CloudFront response headers policy.
 ---
 
-# Data source: aws_cloudfront_response_headers_policy
+# Data Source: aws_cloudfront_response_headers_policy
 
 Use this data source to retrieve information about a CloudFront cache policy.
 
@@ -32,19 +32,20 @@ data "aws_cloudfront_response_headers_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Optional) Unique name to identify the response headers policy.
 * `id` - (Optional) Identifier for the response headers policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `comment` - Comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `etag` - Current version of the response headers policy.
 * `cors_config` - Configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
-* `custom_headers_config` - Object that contains an attribute `items` that contains a list of Custom Headers See [Custom Header](#custom-header) for more information.
+* `custom_headers_config` - Object that contains an attribute `items` that contains a list of Custom Headers. See [Custom Header](#custom-header) for more information.
+* `remove_headers_config` - Object that contains an attribute `items` that contains a list of Remove Headers. See [Remove Header](#remove-header) for more information.
 * `security_headers_config` - A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
 * `server_timing_headers_config` - (Optional) Configuration for enabling the Server-Timing header in HTTP responses sent from CloudFront. See [Server Timing Headers Config](#server-timing-headers-config) for more information.
 
@@ -62,6 +63,10 @@ In addition to all arguments above, the following attributes are exported:
 * `header` - HTTP response header name.
 * `override` - Whether CloudFront overrides a response header with the same name received from the origin with the header specifies here.
 * `value` - Value for the HTTP response header.
+
+### Remove Header
+
+* `header` - The HTTP header name.
 
 ### Security Headers Config
 

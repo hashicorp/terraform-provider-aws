@@ -8,6 +8,10 @@ description: |-
 
 # Resource: aws_worklink_fleet
 
+Provides a AWS WorkLink Fleet resource.
+
+!> **WARNING:** The `aws_worklink_fleet` resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead.
+
 ## Example Usage
 
 Basic usage:
@@ -47,7 +51,7 @@ resource "aws_worklink_fleet" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A region-unique name for the AMI.
 * `audit_stream_arn` - (Optional) The ARN of the Amazon Kinesis data stream that receives the audit events. Kinesis data stream name must begin with `"AmazonWorkLink-"`.
@@ -72,9 +76,9 @@ The following arguments are supported:
 * `type` - (Required) The type of identity provider.
 * `saml_metadata` - (Required) The SAML metadata document provided by the customer’s identity provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the created WorkLink Fleet.
 * `arn` - The ARN of the created WorkLink Fleet.
@@ -84,8 +88,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WorkLink can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkLink using the ARN. For example:
 
+```terraform
+import {
+  to = aws_worklink_fleet.test
+  id = "arn:aws:worklink::123456789012:fleet/example"
+}
 ```
-$ terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example
+
+Using `terraform import`, import WorkLink using the ARN. For example:
+
+```console
+% terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example
 ```

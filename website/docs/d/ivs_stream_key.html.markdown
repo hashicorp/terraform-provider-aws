@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `channel_arn` - (Required) ARN of the Channel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Stream Key.
 * `tags` - Map of tags assigned to the resource.

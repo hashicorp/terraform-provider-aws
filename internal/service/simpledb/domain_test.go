@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package simpledb_test
 
 import (
@@ -6,13 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/simpledb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsimpledb "github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSimpleDBDomain_basic(t *testing.T) {
@@ -22,7 +26,7 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SimpleDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -30,7 +34,7 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -49,7 +53,7 @@ func TestAccSimpleDBDomain_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SimpleDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +76,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
-		ErrorCheck:   acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SimpleDBServiceID),
 		CheckDestroy: testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -85,7 +89,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -99,7 +103,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 
 func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_simpledb_domain" {
@@ -134,7 +138,7 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("No SimpleDB Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn(ctx)
 
 		_, err := tfsimpledb.FindDomainByName(ctx, conn, rs.Primary.ID)
 

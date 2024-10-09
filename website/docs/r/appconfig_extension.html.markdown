@@ -52,7 +52,7 @@ resource "aws_appconfig_extension" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the extension. Each extension name in your account must be unique. Extension versions use the same name.
 * `description` - (Optional) Information about the extension.
@@ -72,8 +72,8 @@ Defines the actions the extension performs during the AppConfig workflow and at 
 The `action` configuration block supports configuring any number of the following arguments:
 
 * `name` - (Required) The action name.
-* `role_arn` - (Required) An Amazon Resource Name (ARN) for an Identity and Access Management assume role.
 * `uri` - (Required) The extension URI associated to the action point in the extension definition. The URI can be an Amazon Resource Name (ARN) for one of the following: an Lambda function, an Amazon Simple Queue Service queue, an Amazon Simple Notification Service topic, or the Amazon EventBridge default event bus.
+* `role_arn` - (Optional) An Amazon Resource Name (ARN) for an Identity and Access Management assume role.
 * `description` - (Optional) Information about the action.
 
 #### `parameter`
@@ -84,9 +84,9 @@ The `parameter` configuration block supports configuring any number of the follo
 * `required` - (Required) Determines if a parameter value must be specified in the extension association.
 * `description` - (Optional) Information about the parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Extension.
 * `id` - AppConfig Extension ID.
@@ -94,8 +94,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Extensions can be imported using their extension ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Extensions using their extension ID. For example:
 
+```terraform
+import {
+  to = aws_appconfig_extension.example
+  id = "71rxuzt"
+}
 ```
-$ terraform import aws_appconfig_extension.example 71rxuzt
+
+Using `terraform import`, import AppConfig Extensions using their extension ID. For example:
+
+```console
+% terraform import aws_appconfig_extension.example 71rxuzt
 ```

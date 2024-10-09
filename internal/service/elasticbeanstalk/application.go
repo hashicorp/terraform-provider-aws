@@ -1,31 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elastic_beanstalk_application")
-func ResourceApplication() *schema.Resource {
+// @SDKResource("aws_elastic_beanstalk_application", name="Application")
+// @Tags(identifierAttribute="arn")
+func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
 		ReadWithoutTimeout:   resourceApplicationRead,
 		UpdateWithoutTimeout: resourceApplicationUpdate,
 		DeleteWithoutTimeout: resourceApplicationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -33,28 +38,15 @@ func ResourceApplication() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"appversion_lifecycle": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"service_role": {
-							Type:     schema.TypeString,
-							Required: true,
+						"delete_source_from_s3": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"max_age_in_days": {
 							Type:     schema.TypeInt,
@@ -64,280 +56,281 @@ func ResourceApplication() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"delete_source_from_s3": {
-							Type:     schema.TypeBool,
-							Optional: true,
+						names.AttrServiceRole: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 100),
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	// Get the name and description
-	name := d.Get("name").(string)
-	description := d.Get("description").(string)
-
-	log.Printf("[DEBUG] Elastic Beanstalk application create: %s, description: %s", name, description)
-
-	req := &elasticbeanstalk.CreateApplicationInput{
+	name := d.Get(names.AttrName).(string)
+	input := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
-		Description:     aws.String(description),
-		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		Tags:            getTagsIn(ctx),
 	}
 
-	app, err := beanstalkConn.CreateApplicationWithContext(ctx, req)
+	_, err := conn.CreateApplication(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Application (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if err = resourceApplicationAppVersionLifecycleUpdate(ctx, beanstalkConn, d, app.Application); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Application (%s): %s", name, err)
+	const (
+		timeout = 30 * time.Second
+	)
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (interface{}, error) {
+		return findApplicationByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Application (%s) create: %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("appversion_lifecycle"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := &elasticbeanstalk.UpdateApplicationResourceLifecycleInput{
+			ApplicationName:         aws.String(d.Id()),
+			ResourceLifecycleConfig: expandApplicationResourceLifecycleConfig(v.([]interface{})[0].(map[string]interface{})),
+		}
+
+		_, err := conn.UpdateApplicationResourceLifecycle(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application (%s) resource lifecycle: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
+
+	app, err := findApplicationByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elastic Beanstalk Application (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
+	}
+	d.Set(names.AttrARN, app.ApplicationArn)
+	d.Set(names.AttrDescription, app.Description)
+	d.Set(names.AttrName, app.ApplicationName)
+
+	return diags
+}
+
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	if d.HasChange("description") {
-		if err := resourceApplicationDescriptionUpdate(ctx, conn, d); err != nil {
+	if d.HasChange(names.AttrDescription) {
+		input := &elasticbeanstalk.UpdateApplicationInput{
+			ApplicationName: aws.String(d.Id()),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		}
+
+		_, err := conn.UpdateApplication(ctx, input)
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("appversion_lifecycle") {
-		if err := resourceApplicationAppVersionLifecycleUpdate(ctx, conn, d, nil); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application (%s): %s", d.Id(), err)
+		var resourceLifecycleConfig *awstypes.ApplicationResourceLifecycleConfig
+
+		if v, ok := d.GetOk("appversion_lifecycle"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			resourceLifecycleConfig = expandApplicationResourceLifecycleConfig(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			resourceLifecycleConfig = expandApplicationResourceLifecycleConfig(map[string]interface{}{})
 		}
-	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+		input := &elasticbeanstalk.UpdateApplicationResourceLifecycleInput{
+			ApplicationName:         aws.String(d.Id()),
+			ResourceLifecycleConfig: resourceLifecycleConfig,
+		}
 
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application (%s): updating tags: %s", d.Id(), err)
+		_, err := conn.UpdateApplicationResourceLifecycle(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application (%s) resource lifecycle: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDescriptionUpdate(ctx context.Context, beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
-	name := d.Get("name").(string)
-	description := d.Get("description").(string)
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	log.Printf("[DEBUG] Elastic Beanstalk application: %s, update description: %s", name, description)
-
-	_, err := beanstalkConn.UpdateApplicationWithContext(ctx, &elasticbeanstalk.UpdateApplicationInput{
-		ApplicationName: aws.String(name),
-		Description:     aws.String(description),
+	log.Printf("[DEBUG] Deleting Elastic Beanstalk Application: %s", d.Id())
+	_, err := conn.DeleteApplication(ctx, &elasticbeanstalk.DeleteApplicationInput{
+		ApplicationName: aws.String(d.Id()),
 	})
 
-	return err
-}
-
-func resourceApplicationAppVersionLifecycleUpdate(ctx context.Context, beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, app *elasticbeanstalk.ApplicationDescription) error {
-	name := d.Get("name").(string)
-	appversion_lifecycles := d.Get("appversion_lifecycle").([]interface{})
-	var appversion_lifecycle map[string]interface{}
-	if len(appversion_lifecycles) == 1 {
-		appversion_lifecycle = appversion_lifecycles[0].(map[string]interface{})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application (%s): %s", d.Id(), err)
 	}
 
-	if appversion_lifecycle == nil && app != nil && app.ResourceLifecycleConfig.ServiceRole == nil {
-		// We want appversion lifecycle management to be disabled, and it currently is, and there's no way to reproduce
-		// this state in a UpdateApplicationResourceLifecycle service call (fails w/ ServiceRole is not a valid arn).  So,
-		// in this special case we just do nothing.
-		log.Printf("[DEBUG] Elastic Beanstalk application: %s, update appversion_lifecycle is anticipated no-op", name)
+	const (
+		timeout = 10 * time.Second
+	)
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+		return findApplicationByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Application (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findApplicationByName(ctx context.Context, conn *elasticbeanstalk.Client, name string) (*awstypes.ApplicationDescription, error) {
+	input := &elasticbeanstalk.DescribeApplicationsInput{
+		ApplicationNames: []string{name},
+	}
+
+	return findApplication(ctx, conn, input)
+}
+
+func findApplication(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeApplicationsInput) (*awstypes.ApplicationDescription, error) {
+	output, err := findApplications(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findApplications(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeApplicationsInput) ([]awstypes.ApplicationDescription, error) {
+	output, err := conn.DescribeApplications(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Applications, nil
+}
+
+func expandApplicationResourceLifecycleConfig(tfMap map[string]interface{}) *awstypes.ApplicationResourceLifecycleConfig {
+	if tfMap == nil {
 		return nil
 	}
 
-	rlc := &elasticbeanstalk.ApplicationResourceLifecycleConfig{
-		ServiceRole: nil,
-		VersionLifecycleConfig: &elasticbeanstalk.ApplicationVersionLifecycleConfig{
-			MaxCountRule: &elasticbeanstalk.MaxCountRule{
+	apiObject := &awstypes.ApplicationResourceLifecycleConfig{
+		VersionLifecycleConfig: &awstypes.ApplicationVersionLifecycleConfig{
+			MaxAgeRule: &awstypes.MaxAgeRule{
 				Enabled: aws.Bool(false),
 			},
-			MaxAgeRule: &elasticbeanstalk.MaxAgeRule{
+			MaxCountRule: &awstypes.MaxCountRule{
 				Enabled: aws.Bool(false),
 			},
 		},
 	}
 
-	if appversion_lifecycle != nil {
-		service_role, ok := appversion_lifecycle["service_role"]
-		if ok {
-			rlc.ServiceRole = aws.String(service_role.(string))
-		}
+	if v, ok := tfMap[names.AttrServiceRole].(string); ok && v != "" {
+		apiObject.ServiceRole = aws.String(v)
+	}
 
-		rlc.VersionLifecycleConfig = &elasticbeanstalk.ApplicationVersionLifecycleConfig{
-			MaxCountRule: &elasticbeanstalk.MaxCountRule{
-				Enabled: aws.Bool(false),
-			},
-			MaxAgeRule: &elasticbeanstalk.MaxAgeRule{
-				Enabled: aws.Bool(false),
-			},
-		}
-
-		max_age_in_days, ok := appversion_lifecycle["max_age_in_days"]
-		if ok && max_age_in_days != 0 {
-			rlc.VersionLifecycleConfig.MaxAgeRule = &elasticbeanstalk.MaxAgeRule{
-				Enabled:            aws.Bool(true),
-				DeleteSourceFromS3: aws.Bool(appversion_lifecycle["delete_source_from_s3"].(bool)),
-				MaxAgeInDays:       aws.Int64(int64(max_age_in_days.(int))),
-			}
-		}
-
-		max_count, ok := appversion_lifecycle["max_count"]
-		if ok && max_count != 0 {
-			rlc.VersionLifecycleConfig.MaxCountRule = &elasticbeanstalk.MaxCountRule{
-				Enabled:            aws.Bool(true),
-				DeleteSourceFromS3: aws.Bool(appversion_lifecycle["delete_source_from_s3"].(bool)),
-				MaxCount:           aws.Int64(int64(max_count.(int))),
-			}
+	if v, ok := tfMap["max_age_in_days"].(int); ok && v != 0 {
+		apiObject.VersionLifecycleConfig.MaxAgeRule = &awstypes.MaxAgeRule{
+			DeleteSourceFromS3: aws.Bool(tfMap["delete_source_from_s3"].(bool)),
+			Enabled:            aws.Bool(true),
+			MaxAgeInDays:       aws.Int32(int32(v)),
 		}
 	}
 
-	_, err := beanstalkConn.UpdateApplicationResourceLifecycleWithContext(ctx, &elasticbeanstalk.UpdateApplicationResourceLifecycleInput{
-		ApplicationName:         aws.String(name),
-		ResourceLifecycleConfig: rlc,
-	})
-	if err != nil {
-		return fmt.Errorf("updating application resource lifecycle: %w", err)
+	if v, ok := tfMap["max_count"].(int); ok && v != 0 {
+		apiObject.VersionLifecycleConfig.MaxCountRule = &awstypes.MaxCountRule{
+			DeleteSourceFromS3: aws.Bool(tfMap["delete_source_from_s3"].(bool)),
+			Enabled:            aws.Bool(true),
+			MaxCount:           aws.Int32(int32(v)),
+		}
 	}
-	return nil
+
+	return apiObject
 }
 
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	var app *elasticbeanstalk.ApplicationDescription
-	err := retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
-		var err error
-		app, err = getApplication(ctx, d.Id(), conn)
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		if app == nil {
-			err = fmt.Errorf("Elastic Beanstalk Application %q not found", d.Id())
-			if d.IsNewResource() {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
+func flattenApplicationResourceLifecycleConfig(apiObject *awstypes.ApplicationResourceLifecycleConfig) []interface{} {
+	if apiObject == nil {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		app, err = getApplication(ctx, d.Id(), conn)
-	}
-	if err != nil {
-		if app == nil {
-			log.Printf("[WARN] %s, removing from state", err)
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(app.ApplicationArn)
-	d.Set("arn", arn)
-	d.Set("name", app.ApplicationName)
-	d.Set("description", app.Description)
+	tfMap := map[string]interface{}{}
 
-	if app.ResourceLifecycleConfig != nil {
-		d.Set("appversion_lifecycle", flattenResourceLifecycleConfig(app.ResourceLifecycleConfig))
-	}
+	if apiObject := apiObject.VersionLifecycleConfig; apiObject != nil {
+		if apiObject := apiObject.MaxAgeRule; apiObject != nil && aws.ToBool(apiObject.Enabled) {
+			if v := apiObject.DeleteSourceFromS3; v != nil {
+				tfMap["delete_source_from_s3"] = aws.ToBool(v)
+			}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Elastic Beanstalk Application (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	return diags
-}
-
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-
-	_, err := beanstalkConn.DeleteApplicationWithContext(ctx, &elasticbeanstalk.DeleteApplicationInput{
-		ApplicationName: aws.String(d.Id()),
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application (%s): %s", d.Id(), err)
-	}
-
-	var app *elasticbeanstalk.ApplicationDescription
-	err = retry.RetryContext(ctx, 10*time.Second, func() *retry.RetryError {
-		app, err = getApplication(ctx, d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
-		if err != nil {
-			return retry.NonRetryableError(err)
+			if v := apiObject.MaxAgeInDays; v != nil {
+				tfMap["max_age_in_days"] = aws.ToInt32(v)
+			}
 		}
 
-		if app != nil {
-			return retry.RetryableError(
-				fmt.Errorf("Beanstalk Application (%s) still exists: %s", d.Id(), err))
+		if apiObject := apiObject.MaxCountRule; apiObject != nil && aws.ToBool(apiObject.Enabled) {
+			if v := apiObject.DeleteSourceFromS3; v != nil {
+				tfMap["delete_source_from_s3"] = aws.ToBool(v)
+			}
+
+			if v := apiObject.MaxCount; v != nil {
+				tfMap["max_count"] = aws.ToInt32(v)
+			}
 		}
+	}
+
+	if len(tfMap) == 0 {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		app, err = getApplication(ctx, d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application (%s): %s", d.Id(), err)
-	}
-	return diags
-}
-
-func getApplication(ctx context.Context, id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
-	resp, err := conn.DescribeApplicationsWithContext(ctx, &elasticbeanstalk.DescribeApplicationsInput{
-		ApplicationNames: []*string{aws.String(id)},
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidBeanstalkAppID.NotFound") {
-			return nil, nil
-		}
-		return nil, err
 	}
 
-	if len(resp.Applications) > 1 {
-		return nil, fmt.Errorf("Error %d Applications matched, expected 1", len(resp.Applications))
+	if v := apiObject.ServiceRole; v != nil {
+		tfMap[names.AttrServiceRole] = aws.ToString(v)
 	}
 
-	if len(resp.Applications) == 0 {
-		return nil, nil
-	}
-
-	return resp.Applications[0], nil
+	return []interface{}{tfMap}
 }

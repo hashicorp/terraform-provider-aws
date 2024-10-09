@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidClusterName(t *testing.T) {
@@ -15,6 +19,10 @@ func TestValidClusterName(t *testing.T) {
 	}{
 		{
 			Value:    "my-valid-eks-cluster_1_dev",
+			ErrCount: 0,
+		},
+		{
+			Value:    "a",
 			ErrCount: 0,
 		},
 		{
@@ -52,7 +60,7 @@ func TestValidClusterName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validClusterName(tc.Value, "cluster_name")
+		_, errors := validClusterName(tc.Value, names.AttrClusterName)
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the EKS Cluster Name to trigger a validation error: %s, expected %d, got %d errors", tc.Value, tc.ErrCount, len(errors))

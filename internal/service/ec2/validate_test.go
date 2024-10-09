@@ -1,7 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidSecurityGroupRuleDescription(t *testing.T) {
@@ -14,7 +19,7 @@ func TestValidSecurityGroupRuleDescription(t *testing.T) {
 		`testRule 123 ._-:/()#,@[]+=&;{}!$*`,
 	}
 	for _, v := range validDescriptions {
-		_, errors := validSecurityGroupRuleDescription(v, "description")
+		_, errors := validSecurityGroupRuleDescription(v, names.AttrDescription)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid security group rule description: %q", v, errors)
 		}
@@ -26,55 +31,9 @@ func TestValidSecurityGroupRuleDescription(t *testing.T) {
 		`\`,
 	}
 	for _, v := range invalidDescriptions {
-		_, errors := validSecurityGroupRuleDescription(v, "description")
+		_, errors := validSecurityGroupRuleDescription(v, names.AttrDescription)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid security group rule description", v)
-		}
-	}
-}
-
-func TestValidAmazonSideASN(t *testing.T) {
-	t.Parallel()
-
-	validAsns := []string{
-		"7224",
-		"9059",
-		"10124",
-		"17493",
-		"64512",
-		"64513",
-		"65533",
-		"65534",
-		"4200000000",
-		"4200000001",
-		"4294967293",
-		"4294967294",
-	}
-	for _, v := range validAsns {
-		_, errors := validAmazonSideASN(v, "amazon_side_asn")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid ASN: %q", v, errors)
-		}
-	}
-
-	invalidAsns := []string{
-		"1",
-		"ABCDEFG",
-		"",
-		"7225",
-		"9058",
-		"10125",
-		"17492",
-		"64511",
-		"65535",
-		"4199999999",
-		"4294967295",
-		"9999999999",
-	}
-	for _, v := range invalidAsns {
-		_, errors := validAmazonSideASN(v, "amazon_side_asn")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid ASN", v)
 		}
 	}
 }

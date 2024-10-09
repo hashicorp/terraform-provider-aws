@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Convert `definition.*.calculated_fields` to a set type, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Convert `definition.*.calculated_fields` to a set type, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_template: Convert `definition.*.calculated_fields` to a set type, preventing persistent differences
+```

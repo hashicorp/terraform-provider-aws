@@ -141,9 +141,9 @@ The following arguments are optional:
 * `security_group_ids` - (Required) List of security group IDs.
 * `subnets` - (Required) List of VPC subnets.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Entity Recognizer version.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -158,8 +158,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Comprehend Entity Recognizer can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Entity Recognizer using the ARN. For example:
 
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  id = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+}
 ```
-$ terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
+
+Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For example:
+
+```console
+% terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```

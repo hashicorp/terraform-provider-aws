@@ -1,16 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
 	"math"
-	"regexp"
+	"sync"
 
-	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func emptySchema() *schema.Schema {
+var emptySchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -19,38 +25,29 @@ func emptySchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{},
 		},
 	}
-}
+})
 
-func emptyDeprecatedSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{},
-		},
-		Deprecated: "Not supported by WAFv2 API",
-	}
-}
-
-func ruleLabelsSchema() *schema.Schema {
+var ruleLabelsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
+						validation.StringMatch(
+							regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`),
+							"must contain only alphanumeric, underscore, hyphen, and colon characters",
+						),
 					),
 				},
 			},
 		},
 	}
-}
+})
 
 func ruleGroupRootStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
@@ -77,9 +74,22 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func statementSchema(level int) *schema.Schema {
-	if level > 1 {
-		return &schema.Schema{
+const (
+	statementSchemaCacheSize = max(
+		ruleGroupRootStatementSchemaLevel,
+		webACLRootStatementSchemaLevel,
+	)
+)
+
+type schemaCache struct {
+	values [statementSchemaCacheSize]schema.Schema
+	once   sync.Once
+}
+
+func (c *schemaCache) get(level int) *schema.Schema {
+	c.once.Do(func() {
+		// Initialize the first element
+		c.values[0] = schema.Schema{
 			Type:     schema.TypeList,
 			Optional: true,
 			MaxItems: 1,
@@ -90,13 +100,10 @@ func statementSchema(level int) *schema.Schema {
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"and_statement":                         statementSchema(level - 1),
 								"byte_match_statement":                  byteMatchStatementSchema(),
 								"geo_match_statement":                   geoMatchStatementSchema(),
 								"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 								"label_match_statement":                 labelMatchStatementSchema(),
-								"not_statement":                         statementSchema(level - 1),
-								"or_statement":                          statementSchema(level - 1),
 								"regex_match_statement":                 regexMatchStatementSchema(),
 								"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 								"size_constraint_statement":             sizeConstraintSchema(),
@@ -108,37 +115,53 @@ func statementSchema(level int) *schema.Schema {
 				},
 			},
 		}
-	}
 
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"statement": {
-					Type:     schema.TypeList,
-					Required: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"byte_match_statement":                  byteMatchStatementSchema(),
-							"geo_match_statement":                   geoMatchStatementSchema(),
-							"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-							"label_match_statement":                 labelMatchStatementSchema(),
-							"regex_match_statement":                 regexMatchStatementSchema(),
-							"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-							"size_constraint_statement":             sizeConstraintSchema(),
-							"sqli_match_statement":                  sqliMatchStatementSchema(),
-							"xss_match_statement":                   xssMatchStatementSchema(),
+		// Initialize the rest of the elements
+		previous := &c.values[0]
+		for i := 1; i < statementSchemaCacheSize; i++ {
+			c.values[i] = schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"statement": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"and_statement":                         previous,
+									"byte_match_statement":                  byteMatchStatementSchema(),
+									"geo_match_statement":                   geoMatchStatementSchema(),
+									"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
+									"label_match_statement":                 labelMatchStatementSchema(),
+									"not_statement":                         previous,
+									"or_statement":                          previous,
+									"regex_match_statement":                 regexMatchStatementSchema(),
+									"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+									"size_constraint_statement":             sizeConstraintSchema(),
+									"sqli_match_statement":                  sqliMatchStatementSchema(),
+									"xss_match_statement":                   xssMatchStatementSchema(),
+								},
+							},
 						},
 					},
 				},
-			},
-		},
-	}
+			}
+			previous = &c.values[i]
+		}
+	})
+
+	return &c.values[level-1]
 }
 
-func byteMatchStatementSchema() *schema.Schema {
+var statementSchemaCache schemaCache
+
+func statementSchema(level int) *schema.Schema {
+	return statementSchemaCache.get(level)
+}
+
+var byteMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -147,9 +170,9 @@ func byteMatchStatementSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"field_to_match": fieldToMatchSchema(),
 				"positional_constraint": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.PositionalConstraint_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PositionalConstraint](),
 				},
 				"search_string": {
 					Type:         schema.TypeString,
@@ -160,9 +183,9 @@ func byteMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func geoMatchStatementSchema() *schema.Schema {
+var geoMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -179,16 +202,16 @@ func geoMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func ipSetReferenceStatementSchema() *schema.Schema {
+var ipSetReferenceStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
@@ -200,22 +223,22 @@ func ipSetReferenceStatementSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"fallback_behavior": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 							},
 							"header_name": {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 255),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 								),
 							},
 							"position": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.ForwardedIPPosition_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ForwardedIPPosition](),
 							},
 						},
 					},
@@ -223,34 +246,34 @@ func ipSetReferenceStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func labelMatchStatementSchema() *schema.Schema {
+var labelMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"key": {
+				names.AttrKey: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
 					),
 				},
-				"scope": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.LabelMatchScope_Values(), false),
+				names.AttrScope: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LabelMatchScope](),
 				},
 			},
 		},
 	}
-}
+})
 
-func regexMatchStatementSchema() *schema.Schema {
+var regexMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -270,16 +293,16 @@ func regexMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func regexPatternSetReferenceStatementSchema() *schema.Schema {
+var regexPatternSetReferenceStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
@@ -289,9 +312,9 @@ func regexPatternSetReferenceStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sizeConstraintSchema() *schema.Schema {
+var sizeConstraintSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -299,12 +322,12 @@ func sizeConstraintSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"comparison_operator": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.ComparisonOperator_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
 				},
 				"field_to_match": fieldToMatchSchema(),
-				"size": {
+				names.AttrSize: {
 					Type:         schema.TypeInt,
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
@@ -313,9 +336,28 @@ func sizeConstraintSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sqliMatchStatementSchema() *schema.Schema {
+var sqliMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"field_to_match": fieldToMatchSchema(),
+				"sensitivity_level": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
+				},
+				"text_transformation": textTransformationSchema(),
+			},
+		},
+	}
+})
+
+var xssMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -327,29 +369,17 @@ func sqliMatchStatementSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func xssMatchStatementSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchSchema(),
-				"text_transformation": textTransformationSchema(),
-			},
-		},
-	}
-}
-
-func fieldToMatchBaseSchema() *schema.Resource {
+var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
 			"body":                bodySchema(),
 			"cookies":             cookiesSchema(),
+			"header_order":        headerOrderSchema(),
 			"headers":             headersSchema(),
+			"ja3_fingerprint":     ja3fingerprintSchema(),
 			"json_body":           jsonBodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
@@ -359,14 +389,14 @@ func fieldToMatchBaseSchema() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 40),
 								// The value is returned in lower case by the API.
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 							),
 						},
 					},
@@ -378,14 +408,14 @@ func fieldToMatchBaseSchema() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 30),
 								// The value is returned in lower case by the API.
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 							),
 						},
 					},
@@ -394,18 +424,18 @@ func fieldToMatchBaseSchema() *schema.Resource {
 			"uri_path": emptySchema(),
 		},
 	}
-}
+})
 
-func fieldToMatchSchema() *schema.Schema {
+var fieldToMatchSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem:     fieldToMatchBaseSchema(),
 	}
-}
+})
 
-func jsonBodySchema() *schema.Schema {
+var jsonBodySchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -413,23 +443,23 @@ func jsonBodySchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"invalid_fallback_behavior": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.BodyParsingFallbackBehavior_Values(), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BodyParsingFallbackBehavior](),
 				},
 				"match_pattern": jsonBodyMatchPatternSchema(),
 				"match_scope": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.JsonMatchScope_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.JsonMatchScope](),
 				},
-				"oversize_handling": oversizeHandlingOptionalSchema(wafv2.OversizeHandlingContinue),
+				"oversize_handling": oversizeHandlingOptionalDefaultContinueSchema(),
 			},
 		},
 	}
-}
+})
 
-func jsonBodyMatchPatternSchema() *schema.Schema {
+var jsonBodyMatchPatternSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -445,15 +475,15 @@ func jsonBodyMatchPatternSchema() *schema.Schema {
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 512),
-							validation.StringMatch(regexp.MustCompile(`(/)|(/(([^~])|(~[01]))+)`), "must be a valid JSON pointer")),
+							validation.StringMatch(regexache.MustCompile(`(/)|(/(([^~])|(~[01]))+)`), "must be a valid JSON pointer")),
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func forwardedIPConfigSchema() *schema.Schema {
+var forwardedIPConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -461,9 +491,9 @@ func forwardedIPConfigSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"fallback_behavior": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 				},
 				"header_name": {
 					Type:     schema.TypeString,
@@ -472,30 +502,30 @@ func forwardedIPConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func textTransformationSchema() *schema.Schema {
+var textTransformationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
 		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"priority": {
+				names.AttrPriority: {
 					Type:     schema.TypeInt,
 					Required: true,
 				},
-				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.TextTransformationType_Values(), false),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TextTransformationType](),
 				},
 			},
 		},
 	}
-}
+})
 
-func visibilityConfigSchema() *schema.Schema {
+var visibilityConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -506,12 +536,12 @@ func visibilityConfigSchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Required: true,
 				},
-				"metric_name": {
+				names.AttrMetricName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				"sampled_requests_enabled": {
@@ -521,9 +551,55 @@ func visibilityConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func allowConfigSchema() *schema.Schema {
+var associationConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"request_body": requestBodySchema(),
+			},
+		},
+	}
+})
+
+var requestBodySchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"api_gateway":              requestBodyAssociatedResourceTypeSchema(),
+				"app_runner_service":       requestBodyAssociatedResourceTypeSchema(),
+				"cloudfront":               requestBodyAssociatedResourceTypeSchema(),
+				"cognito_user_pool":        requestBodyAssociatedResourceTypeSchema(),
+				"verified_access_instance": requestBodyAssociatedResourceTypeSchema(),
+			},
+		},
+	}
+})
+
+var requestBodyAssociatedResourceTypeSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"default_size_inspection_limit": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+				},
+			},
+		},
+	}
+})
+
+var allowConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -534,9 +610,9 @@ func allowConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func captchaConfigSchema() *schema.Schema {
+var captchaConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -547,9 +623,34 @@ func captchaConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func challengeConfigSchema() *schema.Schema {
+var outerCaptchaConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"immunity_time_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"immunity_time": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var challengeConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -560,9 +661,34 @@ func challengeConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func countConfigSchema() *schema.Schema {
+var outerChallengeConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"immunity_time_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"immunity_time": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var countConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -573,9 +699,9 @@ func countConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func blockConfigSchema() *schema.Schema {
+var blockConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -586,9 +712,9 @@ func blockConfigSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func customRequestHandlingSchema() *schema.Schema {
+var customRequestHandlingSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -601,15 +727,15 @@ func customRequestHandlingSchema() *schema.Schema {
 					MinItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_$.-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
 								),
 							},
-							"value": {
+							names.AttrValue: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
@@ -620,9 +746,9 @@ func customRequestHandlingSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func customResponseSchema() *schema.Schema {
+var customResponseSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -634,7 +760,7 @@ func customResponseSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
 					),
 				},
 				"response_code": {
@@ -647,15 +773,15 @@ func customResponseSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_$.-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
 								),
 							},
-							"value": {
+							names.AttrValue: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
@@ -666,36 +792,36 @@ func customResponseSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func customResponseBodySchema() *schema.Schema {
+var customResponseBodySchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"key": {
+				names.AttrKey: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
 					),
 				},
-				"content": {
+				names.AttrContent: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 10240),
 				},
-				"content_type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.ResponseContentType_Values(), false),
+				names.AttrContentType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResponseContentType](),
 				},
 			},
 		},
 	}
-}
+})
 
 func cookiesSchema() *schema.Schema {
 	return &schema.Schema{
@@ -734,6 +860,23 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
+func ja3fingerprintSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"fallback_behavior": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
+				},
+			},
+		},
+	}
+}
+
 func bodySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -741,34 +884,46 @@ func bodySchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingOptionalSchema(wafv2.OversizeHandlingContinue),
+				"oversize_handling": oversizeHandlingOptionalDefaultContinueSchema(),
 			},
 		},
 	}
 }
 
-func oversizeHandlingOptionalSchema(defaultValue string) *schema.Schema {
+var oversizeHandlingOptionalDefaultContinueSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Optional:     true,
-		Default:      defaultValue,
-		ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          string(awstypes.OversizeHandlingContinue),
+		ValidateDiagFunc: enum.Validate[awstypes.OversizeHandling](),
 	}
-}
+})
 
-func oversizeHandlingRequiredSchema() *schema.Schema {
+var oversizeHandlingRequiredSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: enum.Validate[awstypes.OversizeHandling](),
 	}
-}
+})
 
-func matchScopeSchema() *schema.Schema {
+var matchScopeSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validation.StringInSlice(wafv2.MapMatchScope_Values(), false),
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: enum.Validate[awstypes.MapMatchScope](),
+	}
+})
+
+func headerOrderSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"oversize_handling": oversizeHandlingRequiredSchema(),
+			},
+		},
 	}
 }
 
@@ -798,7 +953,7 @@ func headersSchema() *schema.Schema {
 	}
 }
 
-func headersMatchPatternBaseSchema() *schema.Schema {
+var headersMatchPatternBaseSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -808,11 +963,11 @@ func headersMatchPatternBaseSchema() *schema.Schema {
 			Type: schema.TypeString,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(1, 64),
-				validation.StringMatch(regexp.MustCompile(`.*\S.*`), ""),
+				validation.StringIsNotWhiteSpace,
 			),
 		},
 	}
-}
+})
 
 func webACLRootStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
@@ -848,44 +1003,26 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"excluded_rule": excludedRuleSchema(),
-				"name": {
+				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"rule_action_override":       ruleActionOverrideSchema(),
-				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
-				"scope_down_statement":       scopeDownStatementSchema(level - 1),
+				"rule_action_override": ruleActionOverrideSchema(),
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"version": {
+				names.AttrVersion: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
 			},
 		},
-	}
-}
-
-func excludedRuleSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 128),
-				},
-			},
-		},
-		Deprecated: "Use rule_action_override instead",
 	}
 }
 
@@ -897,16 +1034,117 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"aggregate_key_type": {
-					Type:         schema.TypeString,
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.RateBasedStatementAggregateKeyTypeIp,
+					ValidateDiagFunc: enum.Validate[awstypes.RateBasedStatementAggregateKeyType](),
+				},
+				"custom_key": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookie": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"forwarded_ip": emptySchema(),
+							"http_method":  emptySchema(),
+							names.AttrHeader: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"ip": emptySchema(),
+							"label_namespace": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrNamespace: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
+											),
+										},
+									},
+								},
+							},
+							"query_argument": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"query_string": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"uri_path": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"evaluation_window_sec": {
+					Type:         schema.TypeInt,
 					Optional:     true,
-					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
-					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
+					Default:      300,
+					ValidateFunc: validation.IntInSlice([]int{60, 120, 300, 600}),
 				},
 				"forwarded_ip_config": forwardedIPConfigSchema(),
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(100, 2000000000),
+					ValidateFunc: validation.IntBetween(10, 2000000000),
 				},
 				"scope_down_statement": scopeDownStatementSchema(level - 1),
 			},
@@ -938,7 +1176,7 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func ruleActionOverrideSchema() *schema.Schema {
+var ruleActionOverrideSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -946,7 +1184,7 @@ func ruleActionOverrideSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"action_to_use": actionToUseSchema(),
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
@@ -954,7 +1192,7 @@ func ruleActionOverrideSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func managedRuleGroupConfigSchema() *schema.Schema {
 	return &schema.Schema{
@@ -962,17 +1200,35 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"aws_managed_rules_bot_control_rule_set": {
+				"aws_managed_rules_acfp_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"inspection_level": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
+							"enable_regex_in_path": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
 							},
+							"creation_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringIsNotWhiteSpace,
+								),
+							},
+							"registration_page_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringIsNotWhiteSpace,
+								),
+							},
+							"request_inspection":  managedRuleGroupConfigACFPRequestInspectionSchema(),
+							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
 						},
 					},
 				},
@@ -982,16 +1238,40 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"enable_regex_in_path": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							"login_path": {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
 							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
+						},
+					},
+				},
+				"aws_managed_rules_bot_control_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_machine_learning": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"inspection_level": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InspectionLevel](),
+							},
 						},
 					},
 				},
@@ -1000,7 +1280,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 256),
-						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+						validation.StringIsNotWhiteSpace,
 					),
 				},
 				"password_field": {
@@ -1009,21 +1289,21 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"identifier": {
+							names.AttrIdentifier: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
 					},
 				},
 				"payload_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PayloadType](),
 				},
 				"username_field": {
 					Type:     schema.TypeList,
@@ -1031,12 +1311,12 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"identifier": {
+							names.AttrIdentifier: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1054,10 +1334,11 @@ func actionToUseSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"allow":   allowConfigSchema(),
-				"block":   blockConfigSchema(),
-				"captcha": captchaConfigSchema(),
-				"count":   countConfigSchema(),
+				"allow":     allowConfigSchema(),
+				"block":     blockConfigSchema(),
+				"captcha":   captchaConfigSchema(),
+				"challenge": challengeConfigSchema(),
+				"count":     countConfigSchema(),
 			},
 		},
 	}
@@ -1070,12 +1351,110 @@ func ruleGroupReferenceStatementSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"excluded_rule": excludedRuleSchema(),
+				"rule_action_override": ruleActionOverrideSchema(),
+			},
+		},
+	}
+}
+
+func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"address_fields": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifiers": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MinItems: 1,
+							},
+						},
+					},
+				},
+				"email_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIdentifier: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringIsNotWhiteSpace,
+								),
+							},
+						},
+					},
+				},
+				"password_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIdentifier: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringIsNotWhiteSpace,
+								),
+							},
+						},
+					},
+				},
+				"phone_number_fields": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifiers": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MinItems: 1,
+							},
+						},
+					},
+				},
+				"payload_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PayloadType](),
+				},
+				"username_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIdentifier: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringIsNotWhiteSpace,
+								),
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -1094,21 +1473,21 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"identifier": {
+							names.AttrIdentifier: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
 					},
 				},
 				"payload_type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PayloadType](),
 				},
 				"username_field": {
 					Type:     schema.TypeList,
@@ -1116,12 +1495,12 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"identifier": {
+							names.AttrIdentifier: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringIsNotWhiteSpace,
 								),
 							},
 						},
@@ -1132,7 +1511,7 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 	}
 }
 
-func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
+var managedRuleGroupConfigATPResponseInspectionSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1158,7 +1537,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"header": {
+				names.AttrHeader: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -1170,7 +1549,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								// TODO: ValidateFunc: length > 0
 							},
-							"name": {
+							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -1184,7 +1563,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"json": {
+				names.AttrJSON: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -1196,7 +1575,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								// TODO: ValidateFunc: length > 0
 							},
-							"identifier": {
+							names.AttrIdentifier: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -1210,7 +1589,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"status_code": {
+				names.AttrStatusCode: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -1234,4 +1613,4 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})

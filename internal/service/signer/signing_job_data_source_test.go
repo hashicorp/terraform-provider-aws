@@ -1,13 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningJobDataSource_basic(t *testing.T) {
@@ -21,13 +25,13 @@ func TestAccSignerSigningJobDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningJobDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(dataSourceName, "job_owner", resourceName, "job_owner"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "job_invoker", resourceName, "job_invoker"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "profile_name", resourceName, "profile_name"),

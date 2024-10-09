@@ -27,22 +27,31 @@ resource "aws_route53_resolver_config" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `resource_id` - (Required) The ID of the VPC that the configuration is for.
 * `autodefined_reverse_flag` - (Required) Indicates whether or not the Resolver will create autodefined rules for reverse DNS lookups. Valid values: `ENABLE`, `DISABLE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the resolver configuration.
 * `owner_id` - The AWS account ID of the owner of the VPC that this resolver configuration applies to.
 
 ## Import
 
-Route 53 Resolver configs can be imported using the Route 53 Resolver config ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 Resolver configs using the Route 53 Resolver config ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_config.example
+  id = "rslvr-rc-715aa20c73a23da7"
+}
 ```
-$ terraform import aws_route53_resolver_config.example rslvr-rc-715aa20c73a23da7
+
+Using `terraform import`, import Route 53 Resolver configs using the Route 53 Resolver config ID. For example:
+
+```console
+% terraform import aws_route53_resolver_config.example rslvr-rc-715aa20c73a23da7
 ```

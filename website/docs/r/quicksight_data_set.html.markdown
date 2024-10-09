@@ -167,7 +167,7 @@ The following arguments are required:
 * `data_set_id` - (Required, Forces new resource) Identifier for the data set.
 * `import_mode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
-* `physical_table_map` - (Required) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
 The following arguments are optional:
 
@@ -180,6 +180,7 @@ The following arguments are optional:
 * `permissions` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [permissions](#permissions).
 * `row_level_permission_data_set` - (Optional) The row-level security configuration for the data that you want to create. See [row_level_permission_data_set](#row_level_permission_data_set).
 * `row_level_permission_tag_configuration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
+* `refresh_properties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### physical_table_map
@@ -187,12 +188,13 @@ The following arguments are optional:
 For a `physical_table_map` item to be valid, only one of `custom_sql`, `relational_table`, or `s3_source` should be configured.
 
 * `physical_table_map_id` - (Required) Key of the physical table map.
-* `custom_sql` - (Optional) A physical table type built from the results of the custom SQL query. See [custom_sql](#custom_sq1).
+* `custom_sql` - (Optional) A physical table type built from the results of the custom SQL query. See [custom_sql](#custom_sql).
 * `relational_table` - (Optional) A physical table type for relational data sources. See [relational_table](#relational_table).
 * `s3_source` - (Optional) A physical table type for as S3 data source. See [s3_source](#s3_source).
 
-### custom_sq1
+### custom_sql
 
+* `data_source_arn` - (Required) ARN of the data source.
 * `name` - (Required) Display name for the SQL query result.
 * `sql_query` - (Required) SQL query.
 * `columns` - (Optional) Column schema from the SQL query result set. See [columns](#columns).
@@ -361,6 +363,24 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `tag_rules` - (Required) A set of rules associated with row-level security, such as the tag names and columns that they are assigned to. See [tag_rules](#tag_rules).
 * `status` - (Optional) The status of row-level security tags. If enabled, the status is `ENABLED`. If disabled, the status is `DISABLED`.
 
+### refresh_properties
+
+* `refresh_configuration` - (Required) The refresh configuration for the data set. See [refresh_configuration](#refresh_configuration).
+
+### refresh_configuration
+
+* `incremental_refresh` - (Required) The incremental refresh for the data set. See [incremental_refresh](#incremental_refresh).
+
+### incremental_refresh
+
+* `lookback_window` - (Required) The lookback window setup for an incremental refresh configuration. See [lookback_window](#lookback_window).
+
+### lookback_window
+
+* `column_name` - (Required) The name of the lookback window column.
+* `size` - (Required) The lookback window column size.
+* `size_unit` - (Required) The size unit that is used for the lookback window column. Valid values for this structure are `HOUR`, `DAY`, and `WEEK`.
+
 ### tag_rules
 
 * `column_name` - (Required) Column name that a tag key is assigned to.
@@ -368,9 +388,9 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `match_all_value` - (Optional) A string that you want to use to filter by all the values in a column in the dataset and don’t want to list the values one by one.
 * `tag_multi_value_delimiter` - (Optional) A string that you want to use to delimit the values when you pass the values at run time.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
@@ -378,8 +398,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight Data Set can be imported using the AWS account ID and data set ID separated by a comma (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_data_set.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_data_set.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```

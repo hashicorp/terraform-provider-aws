@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
@@ -21,7 +25,7 @@ func TestSubnetMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes:   map[string]string{},
-			Expected:     "false",
+			Expected:     acctest.CtFalse,
 		},
 	}
 

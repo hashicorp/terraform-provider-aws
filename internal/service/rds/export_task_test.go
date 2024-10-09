@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -8,11 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	rdsv1 "github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -27,11 +29,8 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 	resourceName := "aws_rds_export_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,11 +39,11 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -64,11 +63,8 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 	s3Prefix := "test_prefix/test-export"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,13 +73,13 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "export_only.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "export_only.0", "database"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "export_only.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export_only.0", names.AttrDatabase),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 				),
 			},
@@ -98,7 +94,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 
 func testAccCheckExportTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_export_task" {
@@ -133,7 +129,7 @@ func testAccCheckExportTaskExists(ctx context.Context, name string, exportTask *
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 		resp, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, rs.Primary.ID, err)
@@ -170,11 +166,6 @@ func testAccExportTaskConfigBase(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {
@@ -240,20 +231,18 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  allocated_storage    = 10
-  db_name              = "test"
-  engine               = "mysql"
-  engine_version       = "5.7"
-  instance_class       = "db.t3.micro"
-  username             = "foo"
-  password             = "foobarbaz"
-  parameter_group_name = "default.mysql5.7"
-  skip_final_snapshot  = true
+  identifier          = %[1]q
+  allocated_storage   = 10
+  db_name             = "test"
+  engine              = "mysql"
+  instance_class      = "db.t3.micro"
+  username            = "foo"
+  password            = "foobarbaz"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 }
 `, rName)

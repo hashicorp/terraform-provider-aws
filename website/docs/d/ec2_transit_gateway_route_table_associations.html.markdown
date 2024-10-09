@@ -1,12 +1,12 @@
 ---
 subcategory: "Transit Gateway"
 layout: "aws"
-page_title: "AWS: aws_ec2_transitgateway_route_table_associations"
+page_title: "AWS: aws_ec2_transit_gateway_route_table_associations"
 description: |-
    Provides information for multiple EC2 Transit Gateway Route Table Associations
 ---
 
-# Data Source: aws_ec2_transitgateway_route_table_associations
+# Data Source: aws_ec2_transit_gateway_route_table_associations
 
 Provides information for multiple EC2 Transit Gateway Route Table Associations, such as their identifiers.
 
@@ -39,9 +39,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A Transit Gateway Route Table will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table Association identifiers.

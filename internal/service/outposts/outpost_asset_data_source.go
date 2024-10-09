@@ -1,24 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/outposts/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_outposts_asset")
-func DataSourceOutpostAsset() *schema.Resource {
+// @SDKDataSource("aws_outposts_asset", name="Asset")
+func dataSourceOutpostAsset() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceOutpostAssetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -49,40 +54,38 @@ func DataSourceOutpostAsset() *schema.Resource {
 
 func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
-	outpost_id := aws.String(d.Get("arn").(string))
+	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
+	outpost_id := aws.String(d.Get(names.AttrARN).(string))
 
 	input := &outposts.ListAssetsInput{
 		OutpostIdentifier: outpost_id,
 	}
 
-	var results []*outposts.AssetInfo
-	err := conn.ListAssetsPagesWithContext(ctx, input, func(page *outposts.ListAssetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	var results []awstypes.AssetInfo
+
+	pages := outposts.NewListAssetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Outposts Asset: %s", err)
 		}
+
 		for _, asset := range page.Assets {
-			if asset == nil {
-				continue
-			}
-			if v, ok := d.GetOk("asset_id"); ok && v.(string) != aws.StringValue(asset.AssetId) {
+			if v, ok := d.GetOk("asset_id"); ok && v.(string) != aws.ToString(asset.AssetId) {
 				continue
 			}
 			results = append(results, asset)
 		}
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Outposts Asset: %s", err)
 	}
+
 	if len(results) == 0 {
 		return sdkdiag.AppendErrorf(diags, "no Outposts Asset found matching criteria; try different search")
 	}
 
 	asset := results[0]
 
-	d.SetId(aws.StringValue(outpost_id))
+	d.SetId(aws.ToString(outpost_id))
 	d.Set("asset_id", asset.AssetId)
 	d.Set("asset_type", asset.AssetType)
 	d.Set("host_id", asset.ComputeAttributes.HostId)

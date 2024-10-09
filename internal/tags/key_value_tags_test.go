@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -6,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
@@ -43,7 +47,6 @@ func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -189,7 +192,6 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -300,7 +302,6 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -364,7 +365,6 @@ func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -567,7 +567,6 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -631,7 +630,6 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -724,7 +722,6 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -735,43 +732,49 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsIgnoreRDS(t *testing.T) {
+func TestKeyValueTagsIgnoreSystem(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 	testCases := []struct {
-		name string
-		tags KeyValueTags
-		want map[string]string
+		name        string
+		serviceName string
+		tags        KeyValueTags
+		want        map[string]string
 	}{
 		{
-			name: "empty",
-			tags: New(ctx, map[string]string{}),
-			want: map[string]string{},
+			name:        "empty",
+			serviceName: names.EC2,
+			tags:        New(ctx, map[string]string{}),
+			want:        map[string]string{},
 		},
 		{
-			name: "all",
+			name:        "all",
+			serviceName: names.ElasticBeanstalk,
 			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
-				"rds:key2":                "value2",
+				"elasticbeanstalk:key2":   "value2",
 			}),
 			want: map[string]string{},
 		},
 		{
-			name: "mixed",
+			name:        "mixed",
+			serviceName: names.S3,
 			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
 				"key2":                    "value2",
-				"rds:key3":                "value3",
+				"elasticbeanstalk:key3":   "value3",
 				"key4":                    "value4",
 			}),
 			want: map[string]string{
-				"key2": "value2",
-				"key4": "value4",
+				"key2":                  "value2",
+				"elasticbeanstalk:key3": "value3",
+				"key4":                  "value4",
 			},
 		},
 		{
-			name: "none",
+			name:        "none",
+			serviceName: names.RDS,
 			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
@@ -786,11 +789,10 @@ func TestKeyValueTagsIgnoreRDS(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := testCase.tags.IgnoreRDS()
+			got := testCase.tags.IgnoreSystem(testCase.serviceName)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 		})
@@ -867,7 +869,6 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -949,8 +950,6 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1042,8 +1041,6 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1101,7 +1098,6 @@ func TestKeyValueTagsKeyExists(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1167,8 +1163,6 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1226,7 +1220,6 @@ func TestKeyValueTagsKeyValues(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1349,7 +1342,6 @@ func TestKeyValueTagsKeys(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1424,6 +1416,15 @@ func TestKeyValueTagsMap(t *testing.T) {
 			},
 		},
 		{
+			name: "empty_value",
+			tags: New(ctx, map[string]*string{
+				"key1": testStringPtr(""),
+			}),
+			want: map[string]string{
+				"key1": "",
+			},
+		},
+		{
 			name: "nil_value",
 			tags: New(ctx, map[string]*string{
 				"key1": nil,
@@ -1435,7 +1436,6 @@ func TestKeyValueTagsMap(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1522,7 +1522,6 @@ func TestKeyValueTagsMerge(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1602,7 +1601,6 @@ func TestKeyValueTagsOnly(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1679,7 +1677,6 @@ func TestKeyValueTagsRemoved(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1757,7 +1754,6 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1842,8 +1838,6 @@ func TestKeyValueTagsChunks(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1945,7 +1939,6 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2077,7 +2070,6 @@ func TestKeyValueTagsEqual(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2124,8 +2116,6 @@ func TestKeyValueTagsHash(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2262,7 +2252,6 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2322,7 +2311,6 @@ func TestKeyValueTagsURLEncode(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2384,7 +2372,6 @@ func TestKeyValueTagsURLQueryString(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2541,8 +2528,6 @@ func TestNew(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2700,8 +2685,6 @@ func TestTagDataEqual(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2753,8 +2736,6 @@ func TestTagDataString(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2797,8 +2778,6 @@ func TestToSnakeCase(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testCase.Input, func(t *testing.T) {
 			t.Parallel()
 
@@ -2853,7 +2832,6 @@ func TestKeyValueTagsString(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 

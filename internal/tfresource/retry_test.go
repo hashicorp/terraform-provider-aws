@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource_test
 
 import (
@@ -65,7 +68,6 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -132,7 +134,6 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -223,7 +224,6 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -289,7 +289,6 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -355,7 +354,6 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -386,7 +384,7 @@ func TestRetryContext_error(t *testing.T) {
 
 	select {
 	case err := <-errCh:
-		if err != expected { //nolint: errorlint // We are actually comparing equality
+		if err != expected { //nolint:errorlint // We are actually comparing equality
 			t.Fatalf("bad: %#v", err)
 		}
 	case <-time.After(5 * time.Second):
@@ -448,7 +446,6 @@ func TestOptionsApply(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

@@ -72,7 +72,7 @@ resource "aws_appmesh_virtual_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the virtual gateway. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual gateway. Must be between 1 and 255 characters in length.
@@ -261,9 +261,9 @@ The `sds` object supports the following:
 
 * `secret_name` - (Required) Name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the virtual gateway.
 * `arn` - ARN of the virtual gateway.
@@ -274,11 +274,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Mesh virtual gateway can be imported using `mesh_name` together with the virtual gateway's `name`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Mesh virtual gateway using `mesh_name` together with the virtual gateway's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_virtual_gateway.example
+  id = "mesh/gw1"
+}
 ```
-$ terraform import aws_appmesh_virtual_gateway.example mesh/gw1
+
+Using `terraform import`, import App Mesh virtual gateway using `mesh_name` together with the virtual gateway's `name`. For example:
+
+```console
+% terraform import aws_appmesh_virtual_gateway.example mesh/gw1
 ```
 
 [1]: /docs/providers/aws/index.html

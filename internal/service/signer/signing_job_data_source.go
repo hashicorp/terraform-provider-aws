@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer
 
 import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_signer_signing_job")
@@ -26,7 +30,7 @@ func DataSourceSigningJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,11 +96,11 @@ func DataSourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -106,7 +110,7 @@ func DataSourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -116,15 +120,15 @@ func DataSourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -134,11 +138,11 @@ func DataSourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -148,10 +152,10 @@ func DataSourceSigningJob() *schema.Resource {
 
 func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	jobId := d.Get("job_id").(string)
 
-	describeSigningJobOutput, err := conn.DescribeSigningJobWithContext(ctx, &signer.DescribeSigningJobInput{
+	describeSigningJobOutput, err := conn.DescribeSigningJob(ctx, &signer.DescribeSigningJobInput{
 		JobId: aws.String(jobId),
 	})
 
@@ -159,11 +163,11 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Signer signing job (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("completed_at", aws.TimeValue(describeSigningJobOutput.CompletedAt).Format(time.RFC3339)); err != nil {
+	if err := d.Set("completed_at", aws.ToTime(describeSigningJobOutput.CompletedAt).Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job completed at: %s", err)
 	}
 
-	if err := d.Set("created_at", aws.TimeValue(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreatedAt, aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job created at: %s", err)
 	}
 
@@ -201,7 +205,7 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	signatureExpiresAt := ""
 	if describeSigningJobOutput.SignatureExpiresAt != nil {
-		signatureExpiresAt = aws.TimeValue(describeSigningJobOutput.SignatureExpiresAt).Format(time.RFC3339)
+		signatureExpiresAt = aws.ToTime(describeSigningJobOutput.SignatureExpiresAt).Format(time.RFC3339)
 	}
 	if err := d.Set("signature_expires_at", signatureExpiresAt); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job requested by: %s", err)
@@ -211,19 +215,19 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job signed object: %s", err)
 	}
 
-	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
-	if err := d.Set("status", describeSigningJobOutput.Status); err != nil {
+	if err := d.Set(names.AttrStatus, describeSigningJobOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status: %s", err)
 	}
 
-	if err := d.Set("status_reason", describeSigningJobOutput.StatusReason); err != nil {
+	if err := d.Set(names.AttrStatusReason, describeSigningJobOutput.StatusReason); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status reason: %s", err)
 	}
 
-	d.SetId(aws.StringValue(describeSigningJobOutput.JobId))
+	d.SetId(aws.ToString(describeSigningJobOutput.JobId))
 
 	return diags
 }

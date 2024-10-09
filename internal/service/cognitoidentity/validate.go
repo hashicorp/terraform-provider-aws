@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity
 
 import (
 	"fmt"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func validIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
-	if !regexp.MustCompile(`^[\w\s+=,.@-]+$`).MatchString(val) {
+	if !regexache.MustCompile(`^[\w\s+=,.@-]+$`).MatchString(val) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
@@ -26,7 +30,7 @@ func validIdentityProvidersClientID(v interface{}, k string) (ws []string, error
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[\w_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[\w_]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and underscores", k))
 	}
 
@@ -43,7 +47,7 @@ func validIdentityProvidersProviderName(v interface{}, k string) (ws []string, e
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[\w._:/-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[\w._:/-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
@@ -56,7 +60,7 @@ func validProviderDeveloperName(v interface{}, k string) (ws []string, errors []
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 100 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[\w._-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[\w._-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
@@ -64,8 +68,8 @@ func validProviderDeveloperName(v interface{}, k string) (ws []string, errors []
 }
 
 func validRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
-	t := v["type"].(string)
-	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
+	t := v[names.AttrType].(string)
+	isRequired := t == string(awstypes.RoleMappingTypeToken) || t == string(awstypes.RoleMappingTypeRules)
 
 	if value, ok := v["ambiguous_role_resolution"]; (!ok || value == "") && isRequired {
 		errors = append(errors, fmt.Errorf(`Ambiguous Role Resolution must be defined when "type" equals "Token" or "Rules"`))
@@ -77,7 +81,7 @@ func validRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{
 func validRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
@@ -85,17 +89,17 @@ func validRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors [
 }
 
 func validRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []error) {
-	t := v["type"].(string)
+	t := v[names.AttrType].(string)
 	valLength := 0
 	if value, ok := v["mapping_rule"]; ok {
 		valLength = len(value.([]interface{}))
 	}
 
-	if (valLength == 0) && t == cognitoidentity.RoleMappingTypeRules {
+	if (valLength == 0) && t == string(awstypes.RoleMappingTypeRules) {
 		errors = append(errors, fmt.Errorf("mapping_rule is required for Rules"))
 	}
 
-	if (valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
+	if (valLength > 0) && t == string(awstypes.RoleMappingTypeToken) {
 		errors = append(errors, fmt.Errorf("mapping_rule must not be set for Token based role mapping"))
 	}
 
@@ -125,7 +129,7 @@ func validSupportedLoginProviders(v interface{}, k string) (ws []string, errors 
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[\w.;_/-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[\w.;_/-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, semicolons, underscores, slashes and hyphens", k))
 	}
 

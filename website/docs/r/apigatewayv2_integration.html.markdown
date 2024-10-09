@@ -30,7 +30,7 @@ resource "aws_lambda_function" "example" {
   function_name = "Example"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_apigatewayv2_integration" "example" {
@@ -104,7 +104,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `integration_type` - (Required) Integration type of an integration.
@@ -143,19 +143,28 @@ The `tls_config` object supports the following:
 
 * `server_name_to_verify` - (Optional) If you specify a server name, API Gateway uses it to verify the hostname on the integration's certificate. The server name is also included in the TLS handshake to support Server Name Indication (SNI) or virtual hosting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Integration identifier.
 * `integration_response_selection_expression` - The [integration response selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-integration-response-selection-expressions) for the integration.
 
 ## Import
 
-`aws_apigatewayv2_integration` can be imported by using the API identifier and integration identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_integration` using the API identifier and integration identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_integration.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_integration.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_integration` using the API identifier and integration identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_integration.example aabbccddee/1122334
 ```
 
 -> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.

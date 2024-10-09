@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
@@ -19,12 +22,12 @@ func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSecretRotationDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
 				Config: testAccSecretRotationDataSourceConfig_default(rName, 7),
@@ -45,14 +48,14 @@ data "aws_secretsmanager_secret_rotation" "test" {
 `
 
 func testAccSecretRotationDataSourceConfig_default(rName string, automaticallyAfterDays int) string {
-	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_permission" "test" {
@@ -63,7 +66,7 @@ resource "aws_lambda_permission" "test" {
 }
 
 resource "aws_secretsmanager_secret" "test" {
-  name = "%[1]s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_rotation" "test" {
@@ -78,5 +81,5 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 data "aws_secretsmanager_secret_rotation" "test" {
   secret_id = aws_secretsmanager_secret_rotation.test.secret_id
 }
-`, rName, automaticallyAfterDays)
+`, rName, automaticallyAfterDays))
 }

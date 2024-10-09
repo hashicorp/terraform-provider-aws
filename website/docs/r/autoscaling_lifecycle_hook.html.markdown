@@ -56,7 +56,7 @@ resource "aws_autoscaling_lifecycle_hook" "foobar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the lifecycle hook.
 * `autoscaling_group_name` - (Required) Name of the Auto Scaling group to which you want to assign the lifecycle hook
@@ -67,14 +67,23 @@ The following arguments are supported:
 * `notification_target_arn` - (Optional) ARN of the notification target that Auto Scaling will use to notify you when an instance is in the transition state for the lifecycle hook. This ARN target can be either an SQS queue or an SNS topic.
 * `role_arn` - (Optional) ARN of the IAM role that allows the Auto Scaling group to publish to the specified notification target.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-AutoScaling Lifecycle Hooks can be imported using the role autoscaling_group_name and name separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling Lifecycle Hooks using the role autoscaling_group_name and name separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_autoscaling_lifecycle_hook.test-lifecycle-hook
+  id = "asg-name/lifecycle-hook-name"
+}
 ```
-$ terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
+
+Using `terraform import`, import AutoScaling Lifecycle Hooks using the role autoscaling_group_name and name separated by `/`. For example:
+
+```console
+% terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
 ```

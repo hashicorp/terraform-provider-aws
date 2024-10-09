@@ -1,23 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
 	"fmt"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
-	aliasNameRegexPattern   = `alias/[a-zA-Z0-9/_-]+`
-	multiRegionKeyIdPattern = `mrk-[a-f0-9]{32}`
+	aliasNamePattern        = aliasNamePrefix + `[0-9A-Za-z_/-]+`
+	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
 )
 
 var (
-	aliasNameRegex     = regexp.MustCompile(`^` + aliasNameRegexPattern + `$`)
-	keyIdRegex         = regexp.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `$`)
-	keyIdResourceRegex = regexp.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `)$`)
+	aliasNameRegex     = regexache.MustCompile(`^` + aliasNamePattern + `$`)
+	keyIDRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `$`)
+	keyIDResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`)
 )
 
 func validGrantName(v interface{}, k string) (ws []string, es []error) {
@@ -27,8 +30,8 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 		es = append(es, fmt.Errorf("%s can not be greater than 256 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[a-zA-Z0-9:/_-]+$`).MatchString(value) {
-		es = append(es, fmt.Errorf("%s must only contain [a-zA-Z0-9:/_-]", k))
+	if !regexache.MustCompile(`^[0-9A-Za-z_:/-]+$`).MatchString(value) {
+		es = append(es, fmt.Errorf("%s must only contain [0-9A-Za-z_:/-]", k))
 	}
 
 	return
@@ -39,7 +42,7 @@ func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
+			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
 	}
 	return
 }
@@ -47,30 +50,30 @@ func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if regexp.MustCompile(`^(alias/aws/)`).MatchString(value) {
+	if regexache.MustCompile(`^(` + cmkAliasPrefix + `)`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
 	}
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
+			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
 	}
 	return
 }
 
-var ValidateKey = validation.Any(
-	validateKeyId,
+var validateKey = validation.Any(
+	validateKeyID,
 	validateKeyARN,
 )
 
-var ValidateKeyOrAlias = validation.Any(
-	validateKeyId,
+var validateKeyOrAlias = validation.Any(
+	validateKeyID,
 	validateKeyARN,
 	validateKeyAliasName,
 	validateKeyAliasARN,
 )
 
-var validateKeyId = validation.StringMatch(keyIdRegex, "must be a KMS Key ID")
+var validateKeyID = validation.StringMatch(keyIDRegex, "must be a KMS Key ID")
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)

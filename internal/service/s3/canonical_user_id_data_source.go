@@ -1,24 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_canonical_user_id")
-func DataSourceCanonicalUserID() *schema.Resource {
+// @SDKDataSource("aws_canonical_user_id", name="Canonical User ID")
+func dataSourceCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -28,21 +31,20 @@ func DataSourceCanonicalUserID() *schema.Resource {
 
 func dataSourceCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	log.Printf("[DEBUG] Reading S3 Buckets")
+	output, err := conn.ListBuckets(ctx, &s3.ListBucketsInput{})
 
-	req := &s3.ListBucketsInput{}
-	resp, err := conn.ListBucketsWithContext(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing S3 Buckets: %s", err)
 	}
-	if resp == nil || resp.Owner == nil {
-		return sdkdiag.AppendErrorf(diags, "no canonical user ID found")
+
+	if output == nil || output.Owner == nil {
+		return sdkdiag.AppendErrorf(diags, "S3 Canonical User ID not found")
 	}
 
-	d.SetId(aws.StringValue(resp.Owner.ID))
-	d.Set("display_name", resp.Owner.DisplayName)
+	d.SetId(aws.ToString(output.Owner.ID))
+	d.Set(names.AttrDisplayName, output.Owner.DisplayName)
 
 	return diags
 }

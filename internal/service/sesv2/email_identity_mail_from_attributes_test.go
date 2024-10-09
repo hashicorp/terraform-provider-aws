@@ -1,17 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +25,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,7 +79,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,7 +105,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_behaviorOnMXFailure(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,7 +143,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_mailFromDomain(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,30 +170,18 @@ func TestAccSESV2EmailIdentityMailFromAttributes_mailFromDomain(t *testing.T) {
 	})
 }
 
-func testAccCheckEmailIdentityMailFromAttributesExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckEmailIdentityMailFromAttributesExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		_, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 
-		out, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, rs.Primary.ID, err)
-		}
-
-		if out == nil || out.MailFromAttributes == nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, rs.Primary.ID, errors.New("mail from attributes not set"))
-		}
-
-		return nil
+		return err
 	}
 }
 

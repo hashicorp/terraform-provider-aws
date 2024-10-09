@@ -1,31 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
 	"context"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// schemaResourceData is an interface that implements functions from schema.ResourceData
+type schemaResourceData interface {
+	Get(key string) any
+	GetChange(key string) (any, any)
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
+	HasChange(key string) bool
+	Id() string
+	Set(string, any) error
+}
 
 // An interceptor is functionality invoked during the CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
 type interceptor interface {
-	run(context.Context, *schema.ResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	run(context.Context, schemaResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 }
 
-type interceptorFunc func(context.Context, *schema.ResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type interceptorFunc func(context.Context, schemaResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
-func (f interceptorFunc) run(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (f interceptorFunc) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	return f(ctx, d, meta, when, why, diags)
 }
 
@@ -176,36 +195,36 @@ func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 }
 
-// tagsInterceptor implements transparent tagging.
-type tagsInterceptor struct {
-	tags *types.ServicePackageResourceTags
+type tagsCRUDFunc func(context.Context, schemaResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
+
+// tagsResourceInterceptor implements transparent tagging for resources.
+type tagsResourceInterceptor struct {
+	tags       *types.ServicePackageResourceTags
+	updateFunc tagsCRUDFunc
+	readFunc   tagsCRUDFunc
 }
 
-func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
@@ -222,52 +241,59 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			// Merge the resource's configured tags with any provider configured default_tags.
 			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 			// Remove system tags.
-			tags = tags.IgnoreAWS()
+			tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = option.Some(tags)
 
 			if why == Create {
 				break
 			}
 
-			if d.HasChange(names.AttrTagsAll) {
-				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
-					var identifier string
-					if identifierAttribute == "id" {
-						identifier = d.Id()
-					} else {
-						identifier = d.Get(identifierAttribute).(string)
-					}
-					o, n := d.GetChange(names.AttrTagsAll)
+			if d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
+				if d.HasChange(names.AttrTagsAll) {
+					if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+						var identifier string
+						if identifierAttribute == "id" {
+							identifier = d.Id()
+						} else {
+							identifier = d.Get(identifierAttribute).(string)
+						}
 
-					// If the service package has a generic resource update tags methods, call it.
-					var err error
+						// Some old resources may not have the required attribute set after Read:
+						// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+						if identifier != "" {
+							o, n := d.GetChange(names.AttrTagsAll)
 
-					if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, any, any) error
-					}); ok {
-						err = v.UpdateTags(ctx, meta, identifier, o, n)
-					} else if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, string, any, any) error
-					}); ok && r.tags.ResourceType != "" {
-						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
-					}
+							// If the service package has a generic resource update tags methods, call it.
+							var err error
 
-					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-						// ISO partitions may not support tagging, giving error
-						tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-							r.tags.IdentifierAttribute: identifier,
-							"error":                    err.Error(),
-						})
+							if v, ok := sp.(interface {
+								UpdateTags(context.Context, any, string, any, any) error
+							}); ok {
+								err = v.UpdateTags(ctx, meta, identifier, o, n)
+							} else if v, ok := sp.(interface {
+								UpdateTags(context.Context, any, string, string, any, any) error
+							}); ok && r.tags.ResourceType != "" {
+								err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+							} else {
+								tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+									"ServicePackage": sp.ServicePackageName(),
+									"ResourceType":   r.tags.ResourceType,
+								})
+							}
 
-						return ctx, diags
-					}
+							// ISO partitions may not support tagging, giving error.
+							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+								return ctx, diags
+							}
 
-					if err != nil {
-						return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+							if err != nil {
+								return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+							}
+						}
+						// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 					}
 				}
-				// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 			}
 		}
 	case After:
@@ -292,45 +318,179 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 						identifier = d.Get(identifierAttribute).(string)
 					}
 
-					// If the service package has a generic resource list tags methods, call it.
-					var err error
+					// Some old resources may not have the required attribute set after Read:
+					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+					if identifier != "" {
+						// If the service package has a generic resource list tags methods, call it.
+						var err error
 
-					if v, ok := sp.(interface {
-						ListTags(context.Context, any, string) error
-					}); ok {
-						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-					} else if v, ok := sp.(interface {
-						ListTags(context.Context, any, string, string) error
-					}); ok && r.tags.ResourceType != "" {
-						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
-					}
+						if v, ok := sp.(interface {
+							ListTags(context.Context, any, string) error
+						}); ok {
+							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+						} else if v, ok := sp.(interface {
+							ListTags(context.Context, any, string, string) error
+						}); ok && r.tags.ResourceType != "" {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else {
+							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
+						}
 
-					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-						// ISO partitions may not support tagging, giving error
-						tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
-							r.tags.IdentifierAttribute: d.Id(),
-							"error":                    err.Error(),
-						})
-						return ctx, diags
-					}
+						// ISO partitions may not support tagging, giving error.
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							return ctx, diags
+						}
 
-					if err != nil {
-						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						if inContext.ServicePackageName == names.DynamoDB && err != nil {
+							// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+							if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+								err = nil
+							}
+						}
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
 					}
 				}
 			}
 
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig)
+			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
-			// The resource's configured tags do not include any provider configured default_tags.
-			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
+			// The resource's configured tags can now include duplicate tags that have been configured on the provider.
+			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, d).Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
 			// Computed tags_all do.
 			if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
+			}
+		}
+	case Finally:
+		switch why {
+		case Update:
+			if r.tags.IdentifierAttribute != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
+				ctx, diags = r.updateFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
+				ctx, diags = r.readFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
+			}
+		}
+	}
+
+	return ctx, diags
+}
+
+// tagsResourceInterceptor implements transparent tagging for data sources.
+type tagsDataSourceInterceptor struct {
+	tags *types.ServicePackageResourceTags
+}
+
+func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
+	if !ok {
+		return ctx, diags
+	}
+
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	if err != nil {
+		serviceName = "<service>"
+	}
+
+	resourceName := inContext.ResourceName
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	switch when {
+	case Before:
+		switch why {
+		case Read:
+			// Get the data source's configured tags.
+			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
+			tagsInContext.TagsIn = option.Some(tags)
+		}
+	case After:
+		// Set tags in state after R.
+		switch why {
+		case Read:
+			// TODO: can this occur for a data source?
+			if d.Id() == "" {
+				return ctx, diags
+			}
+
+			// If the R handler didn't set tags, try and read them from the service API.
+			if tagsInContext.TagsOut.IsNone() {
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+					var identifier string
+					if identifierAttribute == "id" {
+						identifier = d.Id()
+					} else {
+						identifier = d.Get(identifierAttribute).(string)
+					}
+
+					// TODO: can this occur for a data source?
+					// Some old resources may not have the required attribute set after Read:
+					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+					if identifier != "" {
+						// If the service package has a generic resource list tags methods, call it.
+						var err error
+
+						if v, ok := sp.(interface {
+							ListTags(context.Context, any, string) error
+						}); ok {
+							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+						} else if v, ok := sp.(interface {
+							ListTags(context.Context, any, string, string) error
+						}); ok && r.tags.ResourceType != "" {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else {
+							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
+						}
+
+						// ISO partitions may not support tagging, giving error.
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							return ctx, diags
+						}
+
+						if inContext.ServicePackageName == names.DynamoDB && err != nil {
+							// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+							if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+								err = nil
+							}
+						}
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
+					}
+				}
+			}
+
+			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
+			if err := d.Set(names.AttrTags, tags.Map()); err != nil {
+				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 		}
 	}

@@ -12,6 +12,8 @@ Gives an external source (like an EventBridge Rule, SNS, or S3) permission to ac
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id  = "AllowExecutionFromCloudWatch"
@@ -34,7 +36,7 @@ resource "aws_lambda_function" "test_lambda" {
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -58,7 +60,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 ```
 
-## Usage with SNS
+### With SNS
 
 ```terraform
 resource "aws_lambda_permission" "with_sns" {
@@ -84,7 +86,7 @@ resource "aws_lambda_function" "func" {
   function_name = "lambda_called_from_sns"
   role          = aws_iam_role.default.arn
   handler       = "exports.handler"
-  runtime       = "python3.7"
+  runtime       = "python3.12"
 }
 
 resource "aws_iam_role" "default" {
@@ -108,7 +110,7 @@ resource "aws_iam_role" "default" {
 }
 ```
 
-## Specify Lambda permissions for API Gateway REST API
+### With API Gateway REST API
 
 ```terraform
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
@@ -128,7 +130,7 @@ resource "aws_lambda_permission" "lambda_permission" {
 }
 ```
 
-## Usage with CloudWatch log group
+### With CloudWatch Log Group
 
 ```terraform
 resource "aws_lambda_permission" "logging" {
@@ -155,7 +157,7 @@ resource "aws_lambda_function" "logging" {
   function_name = "lambda_called_from_cloudwatch_logs"
   handler       = "exports.handler"
   role          = aws_iam_role.default.arn
-  runtime       = "python3.7"
+  runtime       = "python3.12"
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -177,7 +179,7 @@ resource "aws_iam_role" "default" {
 }
 ```
 
-## Example function URL cross-account invoke policy
+### With Cross-Account Invocation Policy
 
 ```terraform
 resource "aws_lambda_function_url" "url" {
@@ -204,6 +206,25 @@ resource "aws_lambda_permission" "url" {
 }
 ```
 
+### With `replace_triggered_by` Lifecycle Configuration
+
+If omitting the `qualifier` argument (which forces re-creation each time a function version is published), a `lifecycle` block can be used to ensure permissions are re-applied on any change to the underlying function.
+
+```terraform
+resource "aws_lambda_permission" "logging" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.example.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = "arn:aws:events:eu-west-1:111122223333:rule/RunDaily"
+
+  lifecycle {
+    replace_triggered_by = [
+      aws_lambda_function.example
+    ]
+  }
+}
+```
+
 ## Argument Reference
 
 * `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g., `lambda:InvokeFunction`)
@@ -226,16 +247,34 @@ resource "aws_lambda_permission" "url" {
 [2]: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
 [3]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Lambda permission statements can be imported using function_name/statement_id, with an optional qualifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda permission statements using function_name/statement_id with an optional qualifier. For example:
 
+```terraform
+import {
+  to = aws_lambda_permission.test_lambda_permission
+  id = "my_test_lambda_function/AllowExecutionFromCloudWatch"
+}
 ```
-$ terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function/AllowExecutionFromCloudWatch
 
-$ terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
+```terraform
+import {
+  to = aws_lambda_permission.test_lambda_permission
+  id = "my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch"
+}
+```
+
+Using `terraform import`, import Lambda permission statements using function_name/statement_id with an optional qualifier. For example:
+
+```console
+% terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function/AllowExecutionFromCloudWatch
+```
+
+```console
+% terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
 ```

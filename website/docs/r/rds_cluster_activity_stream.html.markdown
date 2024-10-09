@@ -56,26 +56,35 @@ resource "aws_rds_cluster_activity_stream" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation][3].
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required, Forces new resources) The Amazon Resource Name (ARN) of the DB cluster.
 * `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. Database events such as a change or access generate an activity stream event. The database session can handle these events either synchronously or asynchronously. One of: `sync`, `async`.
 * `kms_key_id` - (Required, Forces new resources) The AWS KMS key identifier for encrypting messages in the database activity stream. The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key.
 * `engine_native_audit_fields_included` - (Optional, Forces new resources) Specifies whether the database activity stream includes engine-native audit fields. This option only applies to an Oracle DB instance. By default, no engine-native audit fields are included. Defaults `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the DB cluster.
 * `kinesis_stream_name` - The name of the Amazon Kinesis data stream to be used for the database activity stream.
 
 ## Import
 
-RDS Aurora Cluster Database Activity Streams can be imported using the `resource_arn`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Aurora Cluster Database Activity Streams using the `resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_activity_stream.default
+  id = "arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo"
+}
 ```
-$ terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
+
+Using `terraform import`, import RDS Aurora Cluster Database Activity Streams using the `resource_arn`. For example:
+
+```console
+% terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
 ```
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html

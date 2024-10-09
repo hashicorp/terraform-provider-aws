@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -11,7 +14,7 @@ func validateClusterName(v interface{}, k string) (ws []string, errors []error) 
 	return validation.All(
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(
-			regexp.MustCompile("[a-zA-Z0-9_-]+"),
+			regexache.MustCompile("^[0-9A-Za-z_-]+$"),
 			"The cluster name must consist of alphanumerics, hyphens, and underscores."),
 	)(v, k)
 }

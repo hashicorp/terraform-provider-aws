@@ -130,7 +130,7 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `database_name` (Required) Glue database where results are written.
 * `name` (Required) Name of the crawler.
@@ -138,10 +138,14 @@ The following arguments are supported:
 * `classifiers` (Optional) List of custom classifiers. By default, all AWS classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.
 * `configuration` (Optional) JSON string of configuration information. For more details see [Setting Crawler Configuration Options](https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 * `description` (Optional) Description of the crawler.
+* `delta_target` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
 * `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
-* `jdbc_target` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
-* `s3_target` (Optional) List nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
-* `mongodb_target` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
+* `jdbc_target` (Optional) List of nested JDBC target arguments. See [JDBC Target](#jdbc-target) below.
+* `s3_target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
+* `catalog_target` (Optional) List of nested AWS Glue Data Catalog target arguments. See [Catalog Target](#catalog-target) below.
+* `mongodb_target` (Optional) List of nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
+* `hudi_target` (Optional) List of nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
+* `iceberg_target` (Optional) List of nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
 * `lake_formation_configuration` (Optional) Specifies Lake Formation configuration settings for the crawler. See [Lake Formation Configuration](#lake-formation-configuration) below.
@@ -191,6 +195,20 @@ The following arguments are supported:
 * `path` - (Required) The path of the Amazon DocumentDB or MongoDB target (database/collection).
 * `scan_all` - (Optional) Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table. Default value is `true`.
 
+### Hudi Target
+
+* `connection_name` - (Optional) The name of the connection to use to connect to the Hudi target.
+* `paths` - (Required) One or more Amazon S3 paths that contains Hudi metadata folders as s3://bucket/prefix.
+* `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `maximum_traversal_depth` - (Required) The maximum depth of Amazon S3 paths that the crawler can traverse to discover the Hudi metadata folder in your Amazon S3 path. Used to limit the crawler run time. Valid values are between `1` and `20`.
+
+### Iceberg Target
+
+* `connection_name` - (Optional) The name of the connection to use to connect to the Iceberg target.
+* `paths` - (Required) One or more Amazon S3 paths that contains Iceberg metadata folders as s3://bucket/prefix.
+* `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `maximum_traversal_depth` - (Required) The maximum depth of Amazon S3 paths that the crawler can traverse to discover the Iceberg metadata folder in your Amazon S3 path. Used to limit the crawler run time. Valid values are between `1` and `20`.
+
 ### Delta Target
 
 * `connection_name` - (Optional) The name of the connection to use to connect to the Delta table target.
@@ -210,15 +228,15 @@ The following arguments are supported:
 
 ### Lineage Configuration
 
-* `crawler_lineage_settings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `ENABLE` and `DISABLE`. Default value is `Disable`.
+* `crawler_lineage_settings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `ENABLE` and `DISABLE`. Default value is `DISABLE`.
 
 ### Recrawl Policy
 
 * `recrawl_behavior` - (Optional) Specifies whether to crawl the entire dataset again, crawl only folders that were added since the last crawler run, or crawl what S3 notifies the crawler of via SQS. Valid Values are: `CRAWL_EVENT_MODE`, `CRAWL_EVERYTHING` and `CRAWL_NEW_FOLDERS_ONLY`. Default value is `CRAWL_EVERYTHING`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Crawler name
 * `arn` - The ARN of the crawler
@@ -226,8 +244,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Crawlers can be imported using `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Crawlers using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_crawler.MyJob
+  id = "MyJob"
+}
 ```
-$ terraform import aws_glue_crawler.MyJob MyJob
+
+Using `terraform import`, import Glue Crawlers using `name`. For example:
+
+```console
+% terraform import aws_glue_crawler.MyJob MyJob
 ```

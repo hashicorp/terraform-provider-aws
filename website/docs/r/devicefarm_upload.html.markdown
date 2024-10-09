@@ -33,9 +33,9 @@ resource "aws_devicefarm_upload" "example" {
 * `project_arn` - (Required) The ARN of the project for the upload.
 * `type` - (Required) The upload's upload type. See [AWS Docs](https://docs.aws.amazon.com/devicefarm/latest/APIReference/API_CreateUpload.html#API_CreateUpload_RequestSyntax) for valid list of values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this upload.
 * `url` - The presigned Amazon S3 URL that was used to store a file using a PUT request.
@@ -44,8 +44,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DeviceFarm Uploads can be imported by their arn:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Uploads using their ARN. For example:
 
+```terraform
+import {
+  to = aws_devicefarm_upload.example
+  id = "arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+}
 ```
-$ terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+
+Using `terraform import`, import DeviceFarm Uploads using their ARN. For example:
+
+```console
+% terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```

@@ -24,12 +24,13 @@ The following arguments are required:
 
 * `name` - (Required) Name of the subnet group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the subnet group.
 * `arn` - ARN of the subnet group.
 * `description` - Description of the subnet group.
 * `subnet_ids` - Set of VPC Subnet ID-s of the subnet group.
 * `tags` - Map of tags assigned to the subnet group.
+* `vpc_id` - The Amazon Virtual Private Cloud identifier (VPC ID) of the cache subnet group.

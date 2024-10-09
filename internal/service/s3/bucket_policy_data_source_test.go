@@ -1,66 +1,61 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/s3"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.GetBucketPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_bucket_policy.test"
 	resourceName := "aws_s3_bucket_policy.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketPolicyExists(ctx, resourceName, &conf),
-					testAccCheckBucketPolicyMatch(dataSourceName, "policy", resourceName, "policy"),
+					testAccCheckBucketPolicyMatch(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckBucketPolicyMatch(resource1, attr1, resource2, attr2 string) resource.TestCheckFunc {
+func testAccCheckBucketPolicyMatch(nameFirst, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resource1]
+		rs, ok := s.RootModule().Resources[nameFirst]
 		if !ok {
-			return fmt.Errorf("not found: %s", resource1)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ID is set")
-		}
-		policy1, ok := rs.Primary.Attributes[attr1]
-		if !ok {
-			return fmt.Errorf("attribute %q not found for %q", attr1, resource1)
+			return fmt.Errorf("Not found: %s", nameFirst)
 		}
 
-		rs, ok = s.RootModule().Resources[resource2]
+		policy1, ok := rs.Primary.Attributes[keyFirst]
 		if !ok {
-			return fmt.Errorf("not found: %s", resource2)
+			return fmt.Errorf("attribute %q not found for %q", keyFirst, nameFirst)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("mo ID is set")
-		}
-		policy2, ok := rs.Primary.Attributes[attr2]
+
+		rs, ok = s.RootModule().Resources[nameSecond]
 		if !ok {
-			return fmt.Errorf("attribute %q not found for %q", attr2, resource2)
+			return fmt.Errorf("Not found: %s", nameSecond)
+		}
+
+		policy2, ok := rs.Primary.Attributes[keySecond]
+		if !ok {
+			return fmt.Errorf("attribute %q not found for %q", keySecond, nameSecond)
 		}
 
 		areEquivalent, err := awspolicy.PoliciesAreEquivalent(policy1, policy2)
@@ -76,38 +71,14 @@ func testAccCheckBucketPolicyMatch(resource1, attr1, resource2, attr2 string) re
 	}
 }
 
-func testAccCheckBucketPolicyExists(ctx context.Context, n string, ci *s3.GetBucketPolicyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no S3 Bucket Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
-
-		output, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		*ci = *output
-
-		return nil
-	}
+func testAccDataSourceBucketPolicyConfig_base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_service_principal" "current" {
+  service_name = "lambda"
 }
 
-func testAccDataSourceBucketPolicyBaseConfig(rName string) string {
-	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -131,7 +102,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = [data.aws_service_principal.current.name]
     }
   }
 }
@@ -139,7 +110,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 func testAccBucketPolicyDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDataSourceBucketPolicyBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccDataSourceBucketPolicyConfig_base(rName), `
 data "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id
 

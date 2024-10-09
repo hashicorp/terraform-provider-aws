@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
@@ -33,7 +36,7 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLanguageModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,9 +44,9 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 				Config: testAccLanguageModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "base_model_name", "NarrowBand"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
 				),
 			},
 			{
@@ -71,33 +74,33 @@ func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLanguageModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLanguageModelConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLanguageModelConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccLanguageModelConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccLanguageModelConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLanguageModelConfig_tags1(rName, "key2", "value2"),
+				Config: testAccLanguageModelConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -120,7 +123,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLanguageModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +141,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 
 func testAccCheckLanguageModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transcribe_language_model" {
@@ -171,7 +174,7 @@ func testAccCheckLanguageModelExists(ctx context.Context, name string, languageM
 			return fmt.Errorf("No Transcribe LanguageModel is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 		resp, err := tftranscribe.FindLanguageModelByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -185,7 +188,7 @@ func testAccCheckLanguageModelExists(ctx context.Context, name string, languageM
 }
 
 func testAccLanguageModelsPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 	input := &transcribe.ListLanguageModelsInput{}
 

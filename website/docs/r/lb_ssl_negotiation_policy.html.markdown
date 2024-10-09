@@ -70,7 +70,7 @@ resource "aws_lb_ssl_negotiation_policy" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the SSL negotiation policy.
 * `load_balancer` - (Required) The load balancer to which the policy
@@ -87,9 +87,9 @@ To set your attributes, please see the [AWS Elastic Load Balancing Developer Gui
 
 ~> **NOTE:** The AWS documentation references Server Order Preference, which the AWS Elastic Load Balancing API refers to as `Server-Defined-Cipher-Order`. If you wish to set Server Order Preference, use this value instead.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `name` - The name of the stickiness policy.

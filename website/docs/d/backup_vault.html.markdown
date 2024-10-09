@@ -20,13 +20,13 @@ data "aws_backup_vault" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the backup vault.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the vault.
 * `kms_key_arn` - Server-side encryption key that is used to protect your backups.

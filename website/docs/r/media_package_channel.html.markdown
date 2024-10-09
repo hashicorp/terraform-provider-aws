@@ -21,15 +21,15 @@ resource "aws_media_package_channel" "kittens" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `channel_id` - (Required) A unique identifier describing the channel
 * `description` - (Optional) A description of the channel
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The same as `channel_id`
 * `arn` - The ARN of the channel
@@ -42,8 +42,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Media Package Channels can be imported via the channel ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Media Package Channels using the channel ID. For example:
 
+```terraform
+import {
+  to = aws_media_package_channel.kittens
+  id = "kittens-channel"
+}
 ```
-$ terraform import aws_media_package_channel.kittens kittens-channel
+
+Using `terraform import`, import Media Package Channels using the channel ID. For example:
+
+```console
+% terraform import aws_media_package_channel.kittens kittens-channel
 ```

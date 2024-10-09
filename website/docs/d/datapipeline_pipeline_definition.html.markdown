@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `pipeline_id` - (Required) ID of the pipeline.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `parameter_object` - Parameter objects used in the pipeline definition. See below
 * `parameter_value` - Parameter values used in the pipeline definition. See below

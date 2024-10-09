@@ -25,16 +25,16 @@ resource "aws_lightsail_lb" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail load balancer.
 * `instance_port` - (Required) The instance port the load balancer will connect.
 * `health_check_path` - (Optional) The health check path of the load balancer. Default value "/".
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name used for this load balancer (matches `name`).
 * `arn` - The ARN of the Lightsail load balancer.
@@ -47,8 +47,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_lightsail_lb` can be imported by using the name attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_lb` using the name attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_lb.test
+  id = "example-load-balancer"
+}
 ```
-$ terraform import aws_lightsail_lb.test example-load-balancer
+
+Using `terraform import`, import `aws_lightsail_lb` using the name attribute. For example:
+
+```console
+% terraform import aws_lightsail_lb.test example-load-balancer
 ```

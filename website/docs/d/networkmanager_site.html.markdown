@@ -24,9 +24,9 @@ data "aws_networkmanager_site" "example" {
 * `global_network_id` - (Required) ID of the Global Network of the site to retrieve.
 * `site_id` - (Required) ID of the specific site to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the site.
 * `description` - Description of the site.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
@@ -8,8 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -21,9 +24,9 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccAccountRegistration_basic,
-		"disappears": testAccAccountRegistration_disappears,
-		"kms key":    testAccAccountRegistration_optionalKMSKey,
+		acctest.CtBasic:      testAccAccountRegistration_basic,
+		acctest.CtDisappears: testAccAccountRegistration_disappears,
+		"kms key":            testAccAccountRegistration_optionalKMSKey,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -38,7 +41,7 @@ func testAccAccountRegistration_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +73,7 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,7 +103,7 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,21 +111,21 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
 		},
@@ -137,7 +140,7 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 // registration is inactive, simply that the status check returns a valid response.
 func testAccCheckAccountRegistrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_account_registration" {
@@ -166,7 +169,7 @@ func testAccCheckAccountRegisterationIsActive(ctx context.Context, name string) 
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAccountRegistration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		out, err := conn.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{})
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAccountRegistration, rs.Primary.ID, err)

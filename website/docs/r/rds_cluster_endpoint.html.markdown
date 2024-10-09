@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_rds_cluster_endpoint
 
-Manages an RDS Aurora Cluster Endpoint.
+Manages an RDS Aurora Cluster Custom Endpoint.
 You can refer to the [User Guide][1].
 
 ## Example Usage
@@ -79,7 +79,7 @@ resource "aws_rds_cluster_endpoint" "static" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster-endpoint.html).
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required, Forces new resources) The cluster identifier.
 * `cluster_endpoint_identifier` - (Required, Forces new resources) The identifier to use for the new endpoint. This parameter is stored as a lowercase string.
@@ -88,9 +88,9 @@ The following arguments are supported:
 * `excluded_members` - (Optional) List of DB instance identifiers that aren't part of the custom endpoint group. All other eligible instances are reachable through the custom endpoint. Only relevant if the list of static members is empty. Conflicts with `static_members`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
 * `id` - The RDS Cluster Endpoint Identifier
@@ -99,10 +99,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RDS Clusters Endpoint can be imported using the `cluster_endpoint_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters Endpoint using the `cluster_endpoint_identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_endpoint.custom_reader
+  id = "aurora-prod-cluster-custom-reader"
+}
 ```
-$ terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
+
+Using `terraform import`, import RDS Clusters Endpoint using the `cluster_endpoint_identifier`. For example:
+
+```console
+% terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
 ```
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster

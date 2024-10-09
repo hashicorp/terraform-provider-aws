@@ -1,13 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces_test
 
 import (
-	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/workspaces"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
@@ -19,7 +24,7 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -27,10 +32,10 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address", resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, "root_volume_encryption_enabled", resourceName, "root_volume_encryption_enabled"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_encryption_key", resourceName, "volume_encryption_key"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.#", resourceName, "workspace_properties.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.compute_type_name", resourceName, "workspace_properties.0.compute_type_name"),
@@ -38,7 +43,7 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.running_mode", resourceName, "workspace_properties.0.running_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.user_volume_size_gib", resourceName, "workspace_properties.0.user_volume_size_gib"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -54,7 +59,7 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -62,10 +67,10 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address", resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, "root_volume_encryption_enabled", resourceName, "root_volume_encryption_enabled"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_encryption_key", resourceName, "volume_encryption_key"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.#", resourceName, "workspace_properties.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.compute_type_name", resourceName, "workspace_properties.0.compute_type_name"),
@@ -73,7 +78,7 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.running_mode", resourceName, "workspace_properties.0.running_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.user_volume_size_gib", resourceName, "workspace_properties.0.user_volume_size_gib"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -85,12 +90,12 @@ func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceDataSourceConfig_idAndDirectoryIDConflict(),
-				ExpectError: regexp.MustCompile("\"workspace_id\": conflicts with directory_id"),
+				ExpectError: regexache.MustCompile("\"workspace_id\": conflicts with directory_id"),
 			},
 		},
 	})

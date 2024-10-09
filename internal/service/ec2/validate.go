@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
+
+	"github.com/YakDriver/regexache"
 )
 
 func validSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
@@ -16,8 +19,8 @@ func validSecurityGroupRuleDescription(v interface{}, k string) (ws []string, er
 
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpRange.html. Note that
 	// "" is an allowable description value.
-	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\&\;\{\}\!\$\*]*$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
+	pattern := `^[0-9A-Za-z_ .:/()#,@\[\]+=&;{}!$*-]*$`
+	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",
 			k, pattern, value))
@@ -42,25 +45,4 @@ func validNestedExactlyOneOf(m map[string]interface{}, valid []string) error {
 		return fmt.Errorf("only one of `%s` can be specified, but `%s` were specified.", strings.Join(valid, ", "), strings.Join(specified, ", "))
 	}
 	return nil
-}
-
-func validAmazonSideASN(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
-	asn, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
-		return
-	}
-
-	// https://github.com/hashicorp/terraform-provider-aws/issues/5263
-	isLegacyAsn := func(a int64) bool {
-		return a == 7224 || a == 9059 || a == 10124 || a == 17493
-	}
-
-	if !isLegacyAsn(asn) && ((asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294)) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be 7224, 9059, 10124 or 17493 or in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
-	}
-	return
 }

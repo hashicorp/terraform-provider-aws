@@ -30,14 +30,14 @@ resource "aws_route53_zone" "secondary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `reference_name` - (Optional) This is a reference name used in Caller Reference
   (helpful for identifying single delegation set amongst others)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
 * `id` - The delegation set ID
@@ -46,8 +46,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Delegation Sets can be imported using the `delegation set id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Delegation Sets using the delegation set `id`. For example:
 
+```terraform
+import {
+  to = aws_route53_delegation_set.set1
+  id = "N1PA6795SAMPLE"
+}
 ```
-$ terraform import aws_route53_delegation_set.set1 N1PA6795SAMPLE
+
+Using `terraform import`, import Route53 Delegation Sets using the delegation set `id`. For example:
+
+```console
+% terraform import aws_route53_delegation_set.set1 N1PA6795SAMPLE
 ```

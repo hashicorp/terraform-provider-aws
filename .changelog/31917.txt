@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dms_replication_task: Allow `cdc_start_time` to use [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted dates in addition to UNIX timestamps
+```

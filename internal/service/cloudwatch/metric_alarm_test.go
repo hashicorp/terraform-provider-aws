@@ -1,30 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,21 +36,21 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 				Config: testAccMetricAlarmConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", "CPUUtilization"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, "CPUUtilization"),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "Average"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudwatch", regexache.MustCompile(`alarm:.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", "This metric monitors ec2 cpu utilization"),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "80"),
 					resource.TestCheckResourceAttr(resourceName, "period", "120"),
-					resource.TestCheckResourceAttr(resourceName, "namespace", "AWS/EC2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, "AWS/EC2"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comparison_operator", "GreaterThanOrEqualToThreshold"),
-					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", "0"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_periods", "2"),
-					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "dimensions.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dimensions.InstanceId", "i-abc123"),
+					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_periods", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dimensions.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dimensions.InstanceId", "i-abcd1234"),
 				),
 			},
 			{
@@ -60,13 +64,13 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +78,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "reboot"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
@@ -86,21 +90,21 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "recover"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "stop"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "terminate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 		},
@@ -109,13 +113,13 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -123,7 +127,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsSNSTopic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
@@ -137,13 +141,13 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +155,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsSWFAction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
@@ -165,13 +169,13 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,7 +183,7 @@ func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 				Config: testAccMetricAlarmConfig_datapointsTo(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", "2"),
+					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", acctest.Ct2),
 				),
 			},
 		},
@@ -188,13 +192,13 @@ func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,13 +234,13 @@ func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -260,47 +264,47 @@ func TestAccCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testing.T
 
 func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "IQM(1:2)"), // IQM accepts no args
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "iqm10"), // IQM accepts no args
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			// {  TODO: more complex regex to reject this
 			// 	Config: testAccMetricAlarmConfig_extendedStatistic(rName, "PR(5%:10%)"),  // PR args must be absolute
-			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// 	ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			// },
 			// {  TODO: more complex regex to reject this
 			// 	Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TC(:)"),  // at least one arg must be provided
-			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// 	ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			// },
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "WM"), // missing syntax
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "p"), // missing arg
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "AB(1:2)"), // unknown stat 'AB'
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "cd42"), // unknown stat 'cd'
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "p88.0"),
@@ -413,141 +417,147 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmConfig_badMetricQuery(rName),
-				ExpectError: regexp.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
+				ExpectError: regexache.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionQuery(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
-						"id":          "m1",
-						"expression":  "SELECT MAX(MillisBehindLatest) FROM SCHEMA(\"foo\", Operation, ShardId) WHERE Operation = 'ProcessTask'",
-						"period":      "60",
-						"label":       "cat",
-						"return_data": "true",
+						names.AttrID:         "m1",
+						names.AttrExpression: "SELECT MAX(MillisBehindLatest) FROM SCHEMA(\"foo\", Operation, ShardId) WHERE Operation = 'ProcessTask'",
+						"period":             "60",
+						"label":              "cat",
+						"return_data":        acctest.CtTrue,
 					}),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
-						"id":          "e1",
-						"expression":  "m1",
-						"label":       "cat",
-						"return_data": "true",
-						"period":      "",
+						names.AttrID:         "e1",
+						names.AttrExpression: "m1",
+						"label":              "cat",
+						"return_data":        acctest.CtTrue,
+						"period":             "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
-						"id":                             "m1",
-						"metric.#":                       "1",
+						names.AttrID:                     "m1",
+						"metric.#":                       acctest.Ct1,
 						"metric.0.metric_name":           "CPUUtilization",
 						"metric.0.namespace":             "AWS/EC2",
 						"metric.0.period":                "120",
 						"metric.0.stat":                  "Average",
 						"metric.0.unit":                  "Count",
-						"metric.0.dimensions.%":          "1",
-						"metric.0.dimensions.InstanceId": "i-abc123",
+						"metric.0.dimensions.%":          acctest.Ct1,
+						"metric.0.dimensions.InstanceId": "i-abcd1234",
 						"period":                         "",
 					}),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryCrossAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.0.id", "m1"),
-					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckNoResourceAttr(resourceName, "metric_query.0.period"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
-						"id":          "e1",
-						"expression":  "m1",
-						"label":       "cat",
-						"return_data": "",
-						"period":      "",
+						names.AttrID:         "e1",
+						names.AttrExpression: "m1",
+						"label":              "cat",
+						"return_data":        "",
+						"period":             "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
-						"id":          "e2",
-						"expression":  "e1",
-						"label":       "bug",
-						"return_data": "true",
-						"period":      "",
+						names.AttrID:         "e2",
+						names.AttrExpression: "e1",
+						"label":              "bug",
+						"return_data":        acctest.CtTrue,
+						"period":             "",
 					}),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct2),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_anomalyDetectionExpression(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
-						"id":          "e1",
-						"expression":  "ANOMALY_DETECTION_BAND(m1)",
-						"label":       "CPUUtilization (Expected)",
-						"return_data": "true",
-						"period":      "",
+						names.AttrID:         "e1",
+						names.AttrExpression: "ANOMALY_DETECTION_BAND(m1)",
+						"label":              "CPUUtilization (Expected)",
+						"return_data":        acctest.CtTrue,
+						"period":             "",
 					}),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 		},
 	})
@@ -558,59 +568,13 @@ func TestAccCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmConfig_missingStatistic(rName),
-				ExpectError: regexp.MustCompile("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm"),
-			},
-		},
-	})
-}
-
-func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
-	resourceName := "aws_cloudwatch_metric_alarm.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMetricAlarmConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccMetricAlarmConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccMetricAlarmConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
+				ExpectError: regexache.MustCompile("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm"),
 			},
 		},
 	})
@@ -618,13 +582,13 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -640,22 +604,22 @@ func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMetricAlarmExists(ctx context.Context, n string, alarm *cloudwatch.MetricAlarm) resource.TestCheckFunc {
+func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *types.MetricAlarm) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
-		resp, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+
+		output, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if resp == nil {
-			return fmt.Errorf("Alarm not found")
-		}
-		*alarm = *resp
+
+		*v = *output
 
 		return nil
 	}
@@ -663,19 +627,24 @@ func testAccCheckMetricAlarmExists(ctx context.Context, n string, alarm *cloudwa
 
 func testAccCheckMetricAlarmDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_metric_alarm" {
 				continue
 			}
 
-			resp, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
-			if err == nil {
-				if resp != nil && aws.StringValue(resp.AlarmName) == rs.Primary.ID {
-					return fmt.Errorf("Alarm Still Exists: %s", rs.Primary.ID)
-				}
+			_, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudWatch Metric Alarm %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -685,7 +654,7 @@ func testAccCheckMetricAlarmDestroy(ctx context.Context) resource.TestCheckFunc 
 func testAccMetricAlarmConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
@@ -697,7 +666,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
@@ -706,7 +675,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_datapointsTo(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   datapoints_to_alarm       = 2
   evaluation_periods        = 2
@@ -719,7 +688,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
@@ -728,7 +697,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_treatMissingData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
@@ -741,7 +710,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
@@ -750,7 +719,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_treatMissingDataUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
@@ -763,7 +732,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
@@ -772,7 +741,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_treatMissingDataNoAttr(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
@@ -784,7 +753,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
@@ -793,7 +762,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentiles(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                            = "%s"
+  alarm_name                            = %[1]q
   comparison_operator                   = "GreaterThanOrEqualToThreshold"
   evaluation_periods                    = 2
   metric_name                           = "CPUUtilization"
@@ -806,7 +775,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions             = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
@@ -815,7 +784,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentilesUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                            = "%s"
+  alarm_name                            = %[1]q
   comparison_operator                   = "GreaterThanOrEqualToThreshold"
   evaluation_periods                    = 2
   metric_name                           = "CPUUtilization"
@@ -828,28 +797,28 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions             = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
 }
 
-func testAccMetricAlarmConfig_extendedStatistic(rName string, stat string) string {
+func testAccMetricAlarmConfig_extendedStatistic(rName, stat string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
   period                    = 120
-  extended_statistic        = "%s"
+  extended_statistic        = %[2]q
   threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName, stat)
@@ -858,7 +827,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_missingStatistic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
@@ -869,7 +838,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
@@ -878,7 +847,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_metricQueryExpressionReference(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   threshold                 = 80
@@ -903,7 +872,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
       unit        = "Count"
 
       dimensions = {
-        InstanceId = "i-abc123"
+        InstanceId = "i-abcd1234"
       }
     }
   }
@@ -914,7 +883,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_metricQueryExpressionQuery(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name          = "%s"
+  alarm_name          = %[1]q
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 3
   datapoints_to_alarm = 3
@@ -937,7 +906,7 @@ func testAccMetricAlarmConfig_metricQueryCrossAccount(rName string) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   threshold                 = 80
@@ -957,7 +926,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
       unit        = "Count"
 
       dimensions = {
-        InstanceId = "i-abc123"
+        InstanceId = "i-abcd1234"
       }
     }
   }
@@ -968,7 +937,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_anomalyDetectionExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanUpperThreshold"
   evaluation_periods        = 2
   threshold_metric_id       = "e1"
@@ -994,7 +963,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
       unit        = "Count"
 
       dimensions = {
-        InstanceId = "i-abc123"
+        InstanceId = "i-abcd1234"
       }
     }
   }
@@ -1005,7 +974,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   threshold                 = 80
@@ -1036,7 +1005,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
       unit        = "Count"
 
       dimensions = {
-        InstanceId = "i-abc123"
+        InstanceId = "i-abcd1234"
       }
     }
   }
@@ -1047,7 +1016,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_badMetricQuery(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   threshold                 = 80
@@ -1067,7 +1036,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
       unit        = "Count"
 
       dimensions = {
-        InstanceId = "i-abc123"
+        InstanceId = "i-abcd1234"
       }
     }
   }
@@ -1076,37 +1045,20 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 }
 
 // EC2 Automate requires a valid EC2 instance
-// ValidationError: Invalid use of EC2 'Recover' action. i-abc123 is not a valid EC2 instance.
+// ValidationError: Invalid use of EC2 'Recover' action. i-abcd1234 is not a valid EC2 instance.
 func testAccMetricAlarmConfig_actionsEC2Automate(rName, action string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
-
 data "aws_region" "current" {}
 
-resource "aws_vpc" "test" {
-  cidr_block = "172.16.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "172.16.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.test.id
+  subnet_id     = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -1136,13 +1088,13 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 func testAccMetricAlarmConfig_actionsSNSTopic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_actions       = [aws_sns_topic.test.arn]
   alarm_description   = "Status checks have failed for system"
-  alarm_name          = %q
+  alarm_name          = %[1]q
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "StatusCheckFailed_System"
@@ -1153,27 +1105,22 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   unit                = "Count"
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccMetricAlarmConfig_actionsSWFAction(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
-}
-
-data "aws_partition" "current" {
-}
-
-data "aws_region" "current" {
-}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_actions       = ["arn:${data.aws_partition.current.partition}:swf:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:action/actions/AWS_EC2.InstanceId.Reboot/1.0"]
   alarm_description   = "Status checks have failed, rebooting system."
-  alarm_name          = %q
+  alarm_name          = %[1]q
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 5
   metric_name         = "StatusCheckFailed_Instance"
@@ -1184,59 +1131,8 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   unit                = "Count"
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcd1234"
   }
 }
 `, rName)
-}
-
-func testAccMetricAlarmConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = %[1]q
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = 2
-  metric_name               = "CPUUtilization"
-  namespace                 = "AWS/EC2"
-  period                    = 120
-  statistic                 = "Average"
-  threshold                 = 80
-  alarm_description         = "This metric monitors ec2 cpu utilization"
-  insufficient_data_actions = []
-
-  dimensions = {
-    InstanceId = "i-abc123"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccMetricAlarmConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = %[1]q
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = 2
-  metric_name               = "CPUUtilization"
-  namespace                 = "AWS/EC2"
-  period                    = 120
-  statistic                 = "Average"
-  threshold                 = 80
-  alarm_description         = "This metric monitors ec2 cpu utilization"
-  insufficient_data_actions = []
-
-  dimensions = {
-    InstanceId = "i-abc123"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

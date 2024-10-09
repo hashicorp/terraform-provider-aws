@@ -20,14 +20,14 @@ data "aws_sfn_activity" "sfn_activity" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Optional) Name that identifies the activity.
 * `arn` - (Optional) ARN that identifies the activity.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ARN that identifies the activity.
 * `creation_date` - Date the activity was created.

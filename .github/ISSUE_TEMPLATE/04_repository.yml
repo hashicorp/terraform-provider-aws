@@ -1,7 +1,7 @@
 name: "Repository/Meta"
 description: Choose this option when the issue has to do with the repository itself, including GitHub Actions, labels, workflows, etc.
 title: "[Repo]: "
-labels: ["repository", "needs-triage"]
+labels: ["repository"]
 body:
   - type: markdown
     attributes:

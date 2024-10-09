@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lb: Add `dns_record_client_routing_policy` attribute to configure Availability Zonal DNS affinity on Network Load Balancer (NLB)
+```

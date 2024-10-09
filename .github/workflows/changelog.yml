@@ -1,48 +1,48 @@
 name: CHANGELOG Checks
 on:
-  push:
-    branches:
-      - main
-      - 'release/**'
   pull_request_target:
+    paths:
+      - CHANGELOG.md
+
+permissions:
+  contents: read
+  pull-requests: write
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
 
 jobs:
-  community_check:
-    uses: ./.github/workflows/community-check.yml
-    secrets: inherit
-
-  changes:
-    needs: community_check
-    name: Filter Changes
-    runs-on: ubuntu-latest
-    outputs:
-      changed: ${{ steps.filter.outputs.changed }}
-    steps:
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
-        if: github.event_name == 'pull_request_target' && needs.community_check.outputs.maintainer == 'false'
-        id: filter
-        with:
-          filters: |
-            changed:
-              - CHANGELOG.md
-
   comment:
-    needs: changes
-    if: needs.changes.outputs.changed == 'true'
-    name: Comment
+    name: Comment on Non-Maintainer Edit
     runs-on: ubuntu-latest
     steps:
-      - name: Find Existing PR Comment
+      - name: Checkout Community Check
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Check for Existing Comment
         id: prc
-        uses: peter-evans/find-comment@034abe94d3191f9c89d870519735beae326f2bdb
+        if: steps.community_check.outputs.maintainer == 'false'
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
           body-includes: "Please note that the `CHANGELOG.md` file contents are handled by the maintainers during merge"
-      - run: echo ${{ steps.prc.outputs.comment-id }}
-      - name: PR Comment
+
+      - name: Leave a New Comment
         if: steps.prc.outputs.comment-id == ''
-        uses: peter-evans/create-or-update-comment@3383acd359705b10cb1eeef05c0e88c056ea4666
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

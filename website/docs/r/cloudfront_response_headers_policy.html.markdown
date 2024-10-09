@@ -64,7 +64,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 }
 ```
 
-The example below creates a CloudFront response headers policy with a custom headers config and server timing headers config.
+The example below creates a CloudFront response headers policy with a custom headers config, remove headers config and server timing headers config.
 
 ```terraform
 resource "aws_cloudfront_response_headers_policy" "example" {
@@ -78,6 +78,12 @@ resource "aws_cloudfront_response_headers_policy" "example" {
     }
   }
 
+  remove_headers_config {
+    items {
+      header = "Set-Cookie"
+    }
+  }
+
   server_timing_headers_config {
     enabled       = true
     sampling_rate = 50
@@ -87,12 +93,13 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique name to identify the response headers policy.
 * `comment` - (Optional) A comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `cors_config` - (Optional) A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
 * `custom_headers_config` - (Optional) Object that contains an attribute `items` that contains a list of custom headers. See [Custom Header](#custom-header) for more information.
+* `remove_headers_config` - (Optional) A configuration for a set of HTTP headers to remove from the HTTP response. Object that contains an attribute `items` that contains a list of headers. See [Remove Header](#remove-header) for more information.
 * `security_headers_config` - (Optional) A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
 * `server_timing_headers_config` - (Optional) A configuration for enabling the Server-Timing header in HTTP responses sent from CloudFront. See [Server Timing Headers Config](#server-timing-headers-config) for more information.
 
@@ -111,6 +118,10 @@ The following arguments are supported:
 * `header` - (Required) The HTTP response header name.
 * `override` - (Required) Whether CloudFront overrides a response header with the same name received from the origin with the header specifies here.
 * `value` - (Required) The value for the HTTP response header.
+
+### Remove Header
+
+* `header` - (Required) The HTTP header name.
 
 ### Security Headers Config
 
@@ -149,7 +160,7 @@ The following arguments are supported:
 
 ### XSS Protection
 
-* `mode_block` - (Required) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
+* `mode_block` - (Optional) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
 * `override` - (Required) Whether CloudFront overrides the `X-XSS-Protection` HTTP response header received from the origin with the one specified in this response headers policy.
 * `protection` - (Required) A Boolean value that determines the value of the `X-XSS-Protection` HTTP response header. When this setting is `true`, the value of the `X-XSS-Protection` header is `1`. When this setting is `false`, the value of the `X-XSS-Protection` header is `0`.
 * `report_uri` - (Optional) A reporting URI, which CloudFront uses as the value of the report directive in the `X-XSS-Protection` header. You cannot specify a `report_uri` when `mode_block` is `true`.
@@ -159,17 +170,26 @@ The following arguments are supported:
 * `enabled` - (Required) A Whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
 * `sampling_rate` - (Required) A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to. Valid range: Minimum value of 0.0. Maximum value of 100.0.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `etag` - The current version of the response headers policy.
 * `id` - The identifier for the response headers policy.
 
 ## Import
 
-Cloudfront Response Headers Policies can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Response Headers Policies using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_response_headers_policy.policy
+  id = "658327ea-f89d-4fab-a63d-7e88639e58f9"
+}
 ```
-$ terraform import aws_cloudfront_response_headers_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f9
+
+Using `terraform import`, import Cloudfront Response Headers Policies using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_response_headers_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f9
 ```

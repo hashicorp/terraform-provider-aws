@@ -1,20 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_pinpoint_gcm_channel")
-func ResourceGCMChannel() *schema.Resource {
+const (
+	defaultAuthenticationMethodKey   = "KEY"
+	defaultAuthenticationMethodToken = "TOKEN"
+)
+
+func defaultAuthenticationMethod_Values() []string {
+	return []string{
+		defaultAuthenticationMethodKey,
+		defaultAuthenticationMethodToken,
+	}
+}
+
+// @SDKResource("aws_pinpoint_gcm_channel", name="GCM Channel")
+func resourceGCMChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGCMChannelUpsert,
 		ReadWithoutTimeout:   resourceGCMChannelRead,
@@ -25,17 +45,30 @@ func ResourceGCMChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"api_key": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+			"default_authentication_method": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          defaultAuthenticationMethodKey,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(defaultAuthenticationMethod_Values(), false)),
 			},
-			"enabled": {
+			"api_key": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"api_key", "service_json"},
+			},
+			"service_json": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"api_key", "service_json"},
+			},
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -46,21 +79,27 @@ func ResourceGCMChannel() *schema.Resource {
 
 func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
-	params := &pinpoint.GCMChannelRequest{}
+	params := &awstypes.GCMChannelRequest{}
 
-	params.ApiKey = aws.String(d.Get("api_key").(string))
-	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.DefaultAuthenticationMethod = aws.String(d.Get("default_authentication_method").(string))
+	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+	if d.Get("default_authentication_method") == defaultAuthenticationMethodKey {
+		params.ApiKey = aws.String(d.Get("api_key").(string))
+	}
+	if d.Get("default_authentication_method") == defaultAuthenticationMethodToken {
+		params.ServiceJson = aws.String(d.Get("service_json").(string))
+	}
 
 	req := pinpoint.UpdateGcmChannelInput{
 		ApplicationId:     aws.String(applicationId),
 		GCMChannelRequest: params,
 	}
 
-	_, err := conn.UpdateGcmChannelWithContext(ctx, &req)
+	_, err := conn.UpdateGcmChannel(ctx, &req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Pinpoint GCM Channel for application %s: %s", applicationId, err)
 	}
@@ -72,40 +111,39 @@ func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint GCM Channel for application %s", d.Id())
 
-	output, err := conn.GetGcmChannelWithContext(ctx, &pinpoint.GetGcmChannelInput{
-		ApplicationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint GCM Channel for application %s not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
+	output, err := findGCMChannelByApplicationId(ctx, conn, d.Id())
 
-		return sdkdiag.AppendErrorf(diags, "getting Pinpoint GCM Channel for application %s: %s", d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Pinpoint GCM Channel (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("application_id", output.GCMChannelResponse.ApplicationId)
-	d.Set("enabled", output.GCMChannelResponse.Enabled)
-	// api_key is never returned
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint GCM Channel (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrApplicationID, output.ApplicationId)
+	d.Set("default_authentication_method", output.DefaultAuthenticationMethod)
+	d.Set(names.AttrEnabled, output.Enabled)
 
 	return diags
 }
 
 func resourceGCMChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint GCM Channel for application %s", d.Id())
-	_, err := conn.DeleteGcmChannelWithContext(ctx, &pinpoint.DeleteGcmChannelInput{
+	_, err := conn.DeleteGcmChannel(ctx, &pinpoint.DeleteGcmChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -113,4 +151,27 @@ func resourceGCMChannelDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint GCM Channel for application %s: %s", d.Id(), err)
 	}
 	return diags
+}
+
+func findGCMChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, applicationId string) (*awstypes.GCMChannelResponse, error) {
+	input := &pinpoint.GetGcmChannelInput{
+		ApplicationId: aws.String(applicationId),
+	}
+
+	output, err := conn.GetGcmChannel(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GCMChannelResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.GCMChannelResponse, nil
 }

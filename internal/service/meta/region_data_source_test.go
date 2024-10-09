@@ -1,19 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestFindRegionByEC2Endpoint(t *testing.T) {
 	t.Parallel()
 
+	ctx := acctest.Context(t)
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -37,7 +41,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByEndpoint(tc.Value)
+		_, err := tfmeta.FindRegionByEC2Endpoint(ctx, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -50,6 +54,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 func TestFindRegionByName(t *testing.T) {
 	t.Parallel()
 
+	ctx := acctest.Context(t)
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -66,10 +71,14 @@ func TestFindRegionByName(t *testing.T) {
 			Value:    "us-east-1", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
+		{
+			Value:    "ap-southeast-5", // lintignore:AWSAT003
+			ErrCount: 0,
+		},
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByName(tc.Value)
+		_, err := tfmeta.FindRegionByName(ctx, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -91,9 +100,9 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRegionDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`^.+$`)),
-					acctest.CheckResourceAttrRegionalHostnameService(dataSourceName, "endpoint", ec2.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "name", acctest.Region()),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
+					acctest.CheckResourceAttrRegionalHostnameService(dataSourceName, names.AttrEndpoint, names.EC2),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, acctest.Region()),
 				),
 			},
 		},
@@ -112,9 +121,9 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 			{
 				Config: testAccRegionDataSourceConfig_endpoint(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", ec2.EndpointsID, acctest.PartitionDNSSuffix()))),
-					resource.TestMatchResourceAttr(dataSourceName, "name", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", names.EC2, acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},
@@ -133,9 +142,9 @@ func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 			{
 				Config: testAccRegionDataSourceConfig_endpointAndName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^ec2\\.[^.]+\\.%s$", acctest.PartitionDNSSuffix()))),
-					resource.TestMatchResourceAttr(dataSourceName, "name", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^ec2\\.[^.]+\\.%s$", acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},
@@ -154,9 +163,9 @@ func TestAccMetaRegionDataSource_name(t *testing.T) {
 			{
 				Config: testAccRegionDataSourceConfig_name(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^ec2\\.[^.]+\\.%s$", acctest.PartitionDNSSuffix()))),
-					resource.TestMatchResourceAttr(dataSourceName, "name", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^ec2\\.[^.]+\\.%s$", acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},

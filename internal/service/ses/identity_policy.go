@@ -1,30 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ses_identity_policy")
-func ResourceIdentityPolicy() *schema.Resource {
+// @SDKResource("aws_ses_identity_policy", name="Identity Policy")
+func resourceIdentityPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIdentityPolicyCreate,
 		ReadWithoutTimeout:   resourceIdentityPolicyRead,
 		UpdateWithoutTimeout: resourceIdentityPolicyUpdate,
 		DeleteWithoutTimeout: resourceIdentityPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -35,16 +42,16 @@ func ResourceIdentityPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
 				),
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -61,138 +68,166 @@ func ResourceIdentityPolicy() *schema.Resource {
 
 func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
+
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	identity := d.Get("identity").(string)
-	policyName := d.Get("name").(string)
-
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
-	}
-
+	policyName := d.Get(names.AttrName).(string)
+	id := identityPolicyCreateResourceID(identity, policyName)
 	input := &ses.PutIdentityPolicyInput{
 		Identity:   aws.String(identity),
-		PolicyName: aws.String(policyName),
 		Policy:     aws.String(policy),
-	}
-
-	_, err = conn.PutIdentityPolicyWithContext(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SES Identity (%s) Policy: %s", identity, err)
-	}
-
-	d.SetId(fmt.Sprintf("%s|%s", identity, policyName))
-
-	return append(diags, resourceIdentityPolicyRead(ctx, d, meta)...)
-}
-
-func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
-
-	identity, policyName, err := IdentityPolicyParseID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SES Identity Policy (%s): %s", d.Id(), err)
-	}
-
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
-	}
-
-	req := ses.PutIdentityPolicyInput{
-		Identity:   aws.String(identity),
 		PolicyName: aws.String(policyName),
-		Policy:     aws.String(policy),
 	}
 
-	_, err = conn.PutIdentityPolicyWithContext(ctx, &req)
+	_, err = conn.PutIdentityPolicy(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SES Identity (%s) Policy (%s): %s", identity, policyName, err)
+		return sdkdiag.AppendErrorf(diags, "creating SES Identity Policy (%s): %s", id, err)
 	}
+
+	d.SetId(id)
 
 	return append(diags, resourceIdentityPolicyRead(ctx, d, meta)...)
 }
 
 func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	identity, policyName, err := IdentityPolicyParseID(d.Id())
+	identity, policyName, err := identityPolicyParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policy, err := findIdentityPolicyByTwoPartKey(ctx, conn, identity, policyName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SES Identity Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SES Identity Policy (%s): %s", d.Id(), err)
-	}
-
-	input := &ses.GetIdentityPoliciesInput{
-		Identity:    aws.String(identity),
-		PolicyNames: aws.StringSlice([]string{policyName}),
-	}
-
-	output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting SES Identity (%s) Policy (%s): %s", identity, policyName, err)
-	}
-
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "getting SES Identity (%s) Policy (%s): empty result", identity, policyName)
-	}
-
-	if len(output.Policies) == 0 {
-		log.Printf("[WARN] SES Identity (%s) Policy (%s) not found, removing from state", identity, policyName)
-		d.SetId("")
-		return diags
-	}
-
-	policy, ok := output.Policies[policyName]
-	if !ok {
-		log.Printf("[WARN] SES Identity (%s) Policy (%s) not found, removing from state", identity, policyName)
-		d.SetId("")
-		return diags
 	}
 
 	d.Set("identity", identity)
-	d.Set("name", policyName)
+	d.Set(names.AttrName, policyName)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SES Identity Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
+}
+
+func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
+
+	identity, policyName, err := identityPolicyParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := &ses.PutIdentityPolicyInput{
+		Identity:   aws.String(identity),
+		Policy:     aws.String(policy),
+		PolicyName: aws.String(policyName),
+	}
+
+	_, err = conn.PutIdentityPolicy(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating SES Identity Policy (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceIdentityPolicyRead(ctx, d, meta)...)
 }
 
 func resourceIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	identity, policyName, err := IdentityPolicyParseID(d.Id())
+	identity, policyName, err := identityPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SES Identity Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ses.DeleteIdentityPolicyInput{
+	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", d.Id())
+	_, err = conn.DeleteIdentityPolicy(ctx, &ses.DeleteIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		PolicyName: aws.String(policyName),
-	}
-
-	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", input)
-	_, err = conn.DeleteIdentityPolicyWithContext(ctx, input)
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SES Identity (%s) Policy (%s): %s", identity, policyName, err)
+		return sdkdiag.AppendErrorf(diags, "deleting SES Identity Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func IdentityPolicyParseID(id string) (string, string, error) {
-	idParts := strings.SplitN(id, "|", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected IDENTITY|NAME", id)
+const identityPolicyResourceIDSeparator = "|"
+
+func identityPolicyCreateResourceID(identity, policyName string) string {
+	parts := []string{identity, policyName}
+	id := strings.Join(parts, identityPolicyResourceIDSeparator)
+
+	return id
+}
+
+func identityPolicyParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, identityPolicyResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected IDENTITY%[2]sNAME", id, identityPolicyResourceIDSeparator)
 	}
-	return idParts[0], idParts[1], nil
+
+	return parts[0], parts[1], nil
+}
+
+func findIdentityPolicyByTwoPartKey(ctx context.Context, conn *ses.Client, identity, policyName string) (string, error) {
+	input := &ses.GetIdentityPoliciesInput{
+		Identity:    aws.String(identity),
+		PolicyNames: []string{policyName},
+	}
+	output, err := findIdentityPolicies(ctx, conn, input)
+
+	if err != nil {
+		return "", err
+	}
+
+	v, ok := output[policyName]
+	if !ok {
+		return "", &retry.NotFoundError{}
+	}
+
+	return v, nil
+}
+
+func findIdentityPolicies(ctx context.Context, conn *ses.Client, input *ses.GetIdentityPoliciesInput) (map[string]string, error) {
+	output, err := conn.GetIdentityPolicies(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policies == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Policies, nil
 }

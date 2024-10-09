@@ -53,9 +53,9 @@ The arguments of this data source act as filters for querying the available reso
 * `rule_type` (Optional) Rule type of the desired resolver rules. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `share_status` (Optional) Whether the desired resolver rules are shared and, if so, whether the current account is sharing the rules with another account, or another account is sharing the rules with the current account. Valid values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `resolver_rule_ids` - IDs of the matched resolver rules.

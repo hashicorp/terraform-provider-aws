@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -16,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,7 +45,7 @@ func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.Me
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -66,8 +69,8 @@ func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"status": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -78,7 +81,7 @@ func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.Schema
 }
 
 func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceFrameworkShareData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -87,12 +90,12 @@ func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.Create
 	}
 
 	in := auditmanager.StartAssessmentFrameworkShareInput{
-		DestinationAccount: aws.String(plan.DestinationAccount.ValueString()),
-		DestinationRegion:  aws.String(plan.DestinationRegion.ValueString()),
-		FrameworkId:        aws.String(plan.FrameworkID.ValueString()),
+		DestinationAccount: plan.DestinationAccount.ValueStringPointer(),
+		DestinationRegion:  plan.DestinationRegion.ValueStringPointer(),
+		FrameworkId:        plan.FrameworkID.ValueStringPointer(),
 	}
 	if !plan.Comment.IsNull() {
-		in.Comment = aws.String(plan.Comment.ValueString())
+		in.Comment = plan.Comment.ValueStringPointer()
 	}
 	out, err := conn.StartAssessmentFrameworkShare(ctx, &in)
 	if err != nil {
@@ -116,7 +119,7 @@ func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.Create
 }
 
 func (r *resourceFrameworkShare) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkShareData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -147,7 +150,7 @@ func (r *resourceFrameworkShare) Update(ctx context.Context, req resource.Update
 }
 
 func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkShareData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -158,7 +161,7 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 	// Framework share requests in certain statuses must be revoked before deletion
 	if CanBeRevoked(state.Status.ValueString()) {
 		in := auditmanager.UpdateAssessmentFrameworkShareInput{
-			RequestId:   aws.String(state.ID.ValueString()),
+			RequestId:   state.ID.ValueStringPointer(),
 			RequestType: awstypes.ShareRequestTypeSent,
 			Action:      awstypes.ShareRequestActionRevoke,
 		}
@@ -172,7 +175,7 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 	}
 
 	in := auditmanager.DeleteAssessmentFrameworkShareInput{
-		RequestId:   aws.String(state.ID.ValueString()),
+		RequestId:   state.ID.ValueStringPointer(),
 		RequestType: awstypes.ShareRequestTypeSent,
 	}
 	_, err := conn.DeleteAssessmentFrameworkShare(ctx, &in)
@@ -185,7 +188,7 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceFrameworkShare) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentFrameworkShareRequest, error) {

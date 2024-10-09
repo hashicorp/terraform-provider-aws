@@ -61,7 +61,7 @@ resource "aws_sagemaker_workforce" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `workforce_name` - (Required) The name of the Workforce (must be unique).
 * `cognito_config` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.
@@ -76,12 +76,14 @@ The following arguments are supported:
 
 ### Oidc Config
 
+* `authentication_request_extra_params` - (Optional) A string to string map of identifiers specific to the custom identity provider (IdP) being used.
 * `authorization_endpoint` - (Required) The OIDC IdP authorization endpoint used to configure your private workforce.
 * `client_id` - (Required) The OIDC IdP client ID used to configure your private workforce.
 * `client_secret` - (Required) The OIDC IdP client secret used to configure your private workforce.
 * `issuer` - (Required) The OIDC IdP issuer used to configure your private workforce.
 * `jwks_uri` - (Required) The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.
 * `logout_endpoint` - (Required) The OIDC IdP logout endpoint used to configure your private workforce.
+* `scope` - (Optional) An array of string identifiers used to refer to the specific pieces of user data or claims that the client application wants to access.
 * `token_endpoint` - (Required) The OIDC IdP token endpoint used to configure your private workforce.
 * `user_info_endpoint` - (Required) The OIDC IdP user information endpoint used to configure your private workforce.
 
@@ -95,9 +97,9 @@ The following arguments are supported:
 * `subnets` - (Optional) The ID of the subnets in the VPC that you want to connect.
 * `vpc_id` - (Optional) The ID of the VPC that the workforce uses for communication.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workforce.
 * `id` - The name of the Workforce.
@@ -106,8 +108,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Workforces can be imported using the `workforce_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workforces using the `workforce_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_workforce.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_workforce.example example
+
+Using `terraform import`, import SageMaker Workforces using the `workforce_name`. For example:
+
+```console
+% terraform import aws_sagemaker_workforce.example example
 ```

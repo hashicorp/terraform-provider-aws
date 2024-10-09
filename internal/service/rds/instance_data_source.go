@@ -1,38 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_db_instance")
-func DataSourceInstance() *schema.Resource {
+// @SDKDataSource("aws_db_instance", name="DB Instance")
+// @Tags
+func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,9 +63,9 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"db_instance_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"db_instance_port": {
 				Type:     schema.TypeInt,
@@ -74,11 +80,6 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"db_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"db_subnet_group": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -88,27 +89,27 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +126,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -139,6 +140,10 @@ func DataSourceInstance() *schema.Resource {
 						},
 					},
 				},
+			},
+			"max_allocated_storage": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
@@ -161,7 +166,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -169,11 +174,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -181,11 +186,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -193,11 +198,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"timezone": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -213,100 +218,108 @@ func DataSourceInstance() *schema.Resource {
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Get("db_instance_identifier").(string))
+	var instance *types.DBInstance
 
-	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("RDS DB Instance", err))
+	filter := tfslices.PredicateTrue[*types.DBInstance]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		filter = func(v *types.DBInstance) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		}
 	}
 
-	d.SetId(aws.StringValue(v.DBInstanceIdentifier))
-	d.Set("allocated_storage", v.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", v.AvailabilityZone)
-	d.Set("backup_retention_period", v.BackupRetentionPeriod)
-	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
-	d.Set("db_cluster_identifier", v.DBClusterIdentifier)
-	d.Set("db_instance_arn", v.DBInstanceArn)
-	d.Set("db_instance_class", v.DBInstanceClass)
-	d.Set("db_instance_port", v.DbInstancePort)
-	d.Set("db_name", v.DBName)
-	var parameterGroupNames []string
-	for _, v := range v.DBParameterGroups {
-		parameterGroupNames = append(parameterGroupNames, aws.StringValue(v.DBParameterGroupName))
+	if v, ok := d.GetOk("db_instance_identifier"); ok {
+		id := v.(string)
+		output, err := findDBInstanceByID(ctx, conn, id)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", id, err)
+		}
+
+		if !filter(output) {
+			return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
+		}
+
+		instance = output
+	} else {
+		input := &rds.DescribeDBInstancesInput{}
+		output, err := findDBInstance(ctx, conn, input, filter)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance: %s", err)
+		}
+
+		instance = output
 	}
-	d.Set("db_parameter_groups", parameterGroupNames)
-	var securityGroupNames []string
-	for _, v := range v.DBSecurityGroups {
-		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
-	}
-	d.Set("db_security_groups", securityGroupNames)
-	if v.DBSubnetGroup != nil {
-		d.Set("db_subnet_group", v.DBSubnetGroup.DBSubnetGroupName)
+
+	d.SetId(aws.ToString(instance.DBInstanceIdentifier))
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
+	d.Set("ca_cert_identifier", instance.CACertificateIdentifier)
+	d.Set("db_cluster_identifier", instance.DBClusterIdentifier)
+	d.Set("db_instance_arn", instance.DBInstanceArn)
+	d.Set("db_instance_class", instance.DBInstanceClass)
+	d.Set("db_instance_port", instance.DbInstancePort)
+	d.Set("db_name", instance.DBName)
+	d.Set("db_parameter_groups", tfslices.ApplyToAll(instance.DBParameterGroups, func(v types.DBParameterGroupStatus) string {
+		return aws.ToString(v.DBParameterGroupName)
+	}))
+	if instance.DBSubnetGroup != nil {
+		d.Set("db_subnet_group", instance.DBSubnetGroup.DBSubnetGroupName)
 	} else {
 		d.Set("db_subnet_group", "")
 	}
-	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
-	d.Set("engine", v.Engine)
-	d.Set("engine_version", v.EngineVersion)
-	d.Set("iops", v.Iops)
-	d.Set("kms_key_id", v.KmsKeyId)
-	d.Set("license_model", v.LicenseModel)
-	d.Set("master_username", v.MasterUsername)
-	if v.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
+	d.Set("enabled_cloudwatch_logs_exports", instance.EnabledCloudwatchLogsExports)
+	d.Set(names.AttrEngine, instance.Engine)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
+	d.Set(names.AttrIOPS, instance.Iops)
+	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
+	d.Set("license_model", instance.LicenseModel)
+	d.Set("master_username", instance.MasterUsername)
+	if instance.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(instance.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	}
-	d.Set("monitoring_interval", v.MonitoringInterval)
-	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
-	d.Set("multi_az", v.MultiAZ)
-	d.Set("network_type", v.NetworkType)
-	var optionGroupNames []string
-	for _, v := range v.OptionGroupMemberships {
-		optionGroupNames = append(optionGroupNames, aws.StringValue(v.OptionGroupName))
-	}
-	d.Set("option_group_memberships", optionGroupNames)
-	d.Set("preferred_backup_window", v.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", v.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", v.PubliclyAccessible)
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("resource_id", v.DbiResourceId)
-	d.Set("storage_encrypted", v.StorageEncrypted)
-	d.Set("storage_throughput", v.StorageThroughput)
-	d.Set("storage_type", v.StorageType)
-	d.Set("timezone", v.Timezone)
-	var vpcSecurityGroupIDs []string
-	for _, v := range v.VpcSecurityGroups {
-		vpcSecurityGroupIDs = append(vpcSecurityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
-	}
-	d.Set("vpc_security_groups", vpcSecurityGroupIDs)
+	d.Set("max_allocated_storage", instance.MaxAllocatedStorage)
+	d.Set("monitoring_interval", instance.MonitoringInterval)
+	d.Set("monitoring_role_arn", instance.MonitoringRoleArn)
+	d.Set("multi_az", instance.MultiAZ)
+	d.Set("network_type", instance.NetworkType)
+	d.Set("option_group_memberships", tfslices.ApplyToAll(instance.OptionGroupMemberships, func(v types.OptionGroupMembership) string {
+		return aws.ToString(v.OptionGroupName)
+	}))
+	d.Set("preferred_backup_window", instance.PreferredBackupWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
+	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
+	d.Set(names.AttrResourceID, instance.DbiResourceId)
+	d.Set(names.AttrStorageEncrypted, instance.StorageEncrypted)
+	d.Set("storage_throughput", instance.StorageThroughput)
+	d.Set(names.AttrStorageType, instance.StorageType)
+	d.Set("timezone", instance.Timezone)
+	d.Set("vpc_security_groups", tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	}))
 
 	// Per AWS SDK Go docs:
 	// The endpoint might not be shown for instances whose status is creating.
-	if dbEndpoint := v.Endpoint; dbEndpoint != nil {
-		d.Set("address", dbEndpoint.Address)
-		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
-		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
-		d.Set("port", dbEndpoint.Port)
+	if dbEndpoint := instance.Endpoint; dbEndpoint != nil {
+		d.Set(names.AttrAddress, dbEndpoint.Address)
+		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.ToString(dbEndpoint.Address), aws.ToInt32(dbEndpoint.Port)))
+		d.Set(names.AttrHostedZoneID, dbEndpoint.HostedZoneId)
+		d.Set(names.AttrPort, dbEndpoint.Port)
 	} else {
-		d.Set("address", nil)
-		d.Set("endpoint", nil)
-		d.Set("hosted_zone_id", nil)
-		d.Set("port", nil)
+		d.Set(names.AttrAddress, nil)
+		d.Set(names.AttrEndpoint, nil)
+		d.Set(names.AttrHostedZoneID, nil)
+		d.Set(names.AttrPort, nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("db_instance_arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", d.Get("db_instance_arn").(string), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, instance.TagList)
 
 	return diags
 }

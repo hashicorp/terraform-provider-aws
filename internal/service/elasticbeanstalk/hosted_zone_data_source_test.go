@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
@@ -18,7 +21,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +40,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +57,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
 			},
 			{
 				Config:      testAccHostedZoneDataSourceConfig_byRegion("ss-pluto-1"),
-				ExpectError: regexp.MustCompile("Unsupported region"),
+				ExpectError: regexache.MustCompile("unsupported Elastic Beanstalk Region"),
 			},
 		},
 	})
@@ -68,7 +71,7 @@ func testAccCheckHostedZone(resourceName string, region string) resource.TestChe
 			return fmt.Errorf("Unsupported region: %s", region)
 		}
 
-		return resource.TestCheckResourceAttr(resourceName, "id", expectedValue)(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrID, expectedValue)(s)
 	}
 }
 

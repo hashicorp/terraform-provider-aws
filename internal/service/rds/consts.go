@@ -1,47 +1,71 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	ClusterRoleStatusActive  = "ACTIVE"
-	ClusterRoleStatusDeleted = "DELETED"
-	ClusterRoleStatusPending = "PENDING"
+	clusterRoleStatusActive  = "ACTIVE"
+	clusterRoleStatusDeleted = "DELETED"
+	clusterRoleStatusPending = "PENDING"
 )
 
 const (
-	ClusterStatusAvailable                  = "available"
-	ClusterStatusBackingUp                  = "backing-up"
-	ClusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
-	ClusterStatusCreating                   = "creating"
-	ClusterStatusDeleting                   = "deleting"
-	ClusterStatusMigrating                  = "migrating"
-	ClusterStatusModifying                  = "modifying"
-	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
-	ClusterStatusRebooting                  = "rebooting"
-	ClusterStatusRenaming                   = "renaming"
-	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
-	ClusterStatusUpgrading                  = "upgrading"
+	clusterStatusAvailable                     = "available"
+	clusterStatusBackingUp                     = "backing-up"
+	clusterStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
+	clusterStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
+	clusterStatusCreating                      = "creating"
+	clusterStatusDeleting                      = "deleting"
+	clusterStatusMigrating                     = "migrating"
+	clusterStatusModifying                     = "modifying"
+	clusterStatusPreparingDataMigration        = "preparing-data-migration"
+	clusterStatusPromoting                     = "promoting"
+	clusterStatusRebooting                     = "rebooting"
+	clusterStatusRenaming                      = "renaming"
+	clusterStatusResettingMasterCredentials    = "resetting-master-credentials"
+	clusterStatusScalingCompute                = "scaling-compute"
+	clusterStatusUpgrading                     = "upgrading"
+
+	// Non-standard status values.
+	clusterStatusAvailableWithPendingModifiedValues = "tf-available-with-pending-modified-values"
 )
 
 const (
-	storageTypeStandard = "standard"
-	storageTypeGP2      = "gp2"
-	storageTypeGP3      = "gp3"
-	storageTypeIO1      = "io1"
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
 )
 
-func StorageType_Values() []string {
-	return []string{
-		storageTypeStandard,
-		storageTypeGP2,
-		storageTypeGP3,
-		storageTypeIO1,
-	}
-}
+const (
+	clusterSnapshotAttributeNameRestore = "restore"
+)
 
 const (
+	clusterEndpointStatusAvailable = "available"
+	clusterEndpointStatusCreating  = "creating"
+	clusterEndpointStatusDeleting  = "deleting"
+)
+
+const (
+	storageTypeStandard    = "standard"
+	storageTypeGP2         = "gp2"
+	storageTypeGP3         = "gp3"
+	storageTypeIO1         = "io1"
+	storageTypeIO2         = "io2"
+	storageTypeAuroraIOPT1 = "aurora-iopt1"
+)
+
+const (
+	InstanceEngineAuroraMySQL         = "aurora-mysql"
+	InstanceEngineAuroraPostgreSQL    = "aurora-postgresql"
+	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineDB2Advanced         = "db2-ae"
+	InstanceEngineDB2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
@@ -52,71 +76,87 @@ const (
 	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
-	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
+	InstanceEngineSQLServerWeb        = "sqlserver-web"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 const (
-	InstanceStatusAvailable                                    = "available"
-	InstanceStatusBackingUp                                    = "backing-up"
-	InstanceStatusConfiguringEnhancedMonitoring                = "configuring-enhanced-monitoring"
-	InstanceStatusConfiguringIAMDatabaseAuth                   = "configuring-iam-database-auth"
-	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
-	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
-	InstanceStatusCreating                                     = "creating"
-	InstanceStatusDeleting                                     = "deleting"
-	InstanceStatusFailed                                       = "failed"
-	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
-	InstanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
-	InstanceStatusIncompatibleNetwork                          = "incompatible-network"
-	InstanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
-	InstanceStatusIncompatibleParameters                       = "incompatible-parameters"
-	InstanceStatusIncompatibleRestore                          = "incompatible-restore"
-	InstanceStatusInsufficentCapacity                          = "insufficient-capacity"
-	InstanceStatusMaintenance                                  = "maintenance"
-	InstanceStatusModifying                                    = "modifying"
-	InstanceStatusMovingToVPC                                  = "moving-to-vpc"
-	InstanceStatusRebooting                                    = "rebooting"
-	InstanceStatusResettingMasterCredentials                   = "resetting-master-credentials"
-	InstanceStatusRenaming                                     = "renaming"
-	InstanceStatusRestoreError                                 = "restore-error"
-	InstanceStatusStarting                                     = "starting"
-	InstanceStatusStopped                                      = "stopped"
-	InstanceStatusStopping                                     = "stopping"
-	InstanceStatusStorageFull                                  = "storage-full"
-	InstanceStatusStorageOptimization                          = "storage-optimization"
-	InstanceStatusUpgrading                                    = "upgrading"
+	instanceStatusAvailable                                    = "available"
+	instanceStatusBackingUp                                    = "backing-up"
+	instanceStatusConfiguringEnhancedMonitoring                = "configuring-enhanced-monitoring"
+	instanceStatusConfiguringIAMDatabaseAuth                   = "configuring-iam-database-auth"
+	instanceStatusConfiguringLogExports                        = "configuring-log-exports"
+	instanceStatusConvertingToVPC                              = "converting-to-vpc"
+	instanceStatusCreating                                     = "creating"
+	instanceStatusDeletePreCheck                               = "delete-precheck"
+	instanceStatusDeleting                                     = "deleting"
+	instanceStatusFailed                                       = "failed"
+	instanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
+	instanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
+	instanceStatusIncompatiblCreate                            = "incompatible-create"
+	instanceStatusIncompatibleNetwork                          = "incompatible-network"
+	instanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
+	instanceStatusIncompatibleParameters                       = "incompatible-parameters"
+	instanceStatusIncompatibleRestore                          = "incompatible-restore"
+	instanceStatusInsufficentCapacity                          = "insufficient-capacity"
+	instanceStatusMaintenance                                  = "maintenance"
+	instanceStatusModifying                                    = "modifying"
+	instanceStatusMovingToVPC                                  = "moving-to-vpc"
+	instanceStatusRebooting                                    = "rebooting"
+	instanceStatusResettingMasterCredentials                   = "resetting-master-credentials"
+	instanceStatusRenaming                                     = "renaming"
+	instanceStatusRestoreError                                 = "restore-error"
+	instanceStatusStarting                                     = "starting"
+	instanceStatusStopped                                      = "stopped"
+	instanceStatusStopping                                     = "stopping"
+	instanceStatusStorageFull                                  = "storage-full"
+	instanceStatusStorageOptimization                          = "storage-optimization"
+	instanceStatusUpgrading                                    = "upgrading"
 )
 
 const (
-	InstanceAutomatedBackupStatusPending     = "pending"
-	InstanceAutomatedBackupStatusReplicating = "replicating"
-	InstanceAutomatedBackupStatusRetained    = "retained"
+	globalClusterStatusAvailable = "available"
+	globalClusterStatusCreating  = "creating"
+	globalClusterStatusDeleting  = "deleting"
+	globalClusterStatusModifying = "modifying"
+	globalClusterStatusUpgrading = "upgrading"
 )
 
 const (
-	EventSubscriptionStatusActive    = "active"
-	EventSubscriptionStatusCreating  = "creating"
-	EventSubscriptionStatusDeleting  = "deleting"
-	EventSubscriptionStatusModifying = "modifying"
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
 )
 
 const (
-	DBSnapshotAvailable = "available"
-	DBSnapshotCreating  = "creating"
+	dbSnapshotAvailable = "available"
+	dbSnapshotCreating  = "creating"
 )
 
 const (
-	ClusterEngineAurora           = "aurora"
+	dbSnapshotAttributeNameRestore = "restore"
+)
+
+const (
 	ClusterEngineAuroraMySQL      = "aurora-mysql"
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
 	ClusterEnginePostgres         = "postgres"
+	ClusterEngineCustomPrefix     = "custom-"
 )
 
-func ClusterEngine_Values() []string {
+func clusterEngine_Values() []string {
 	return []string{
-		ClusterEngineAurora,
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
+	}
+}
+
+func clusterInstanceEngine_Values() []string {
+	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,
@@ -125,97 +165,139 @@ func ClusterEngine_Values() []string {
 }
 
 const (
-	EngineModeGlobal        = "global"
-	EngineModeMultiMaster   = "multimaster"
-	EngineModeParallelQuery = "parallelquery"
-	EngineModeProvisioned   = "provisioned"
-	EngineModeServerless    = "serverless"
+	globalClusterEngineAurora           = "aurora"
+	globalClusterEngineAuroraMySQL      = "aurora-mysql"
+	globalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 )
 
-func EngineMode_Values() []string {
+func globalClusterEngine_Values() []string {
 	return []string{
-		EngineModeGlobal,
-		EngineModeMultiMaster,
-		EngineModeParallelQuery,
-		EngineModeProvisioned,
-		EngineModeServerless,
+		globalClusterEngineAurora,
+		globalClusterEngineAuroraMySQL,
+		globalClusterEngineAuroraPostgreSQL,
 	}
 }
 
 const (
-	ExportableLogTypeAgent      = "agent"
-	ExportableLogTypeAlert      = "alert"
-	ExportableLogTypeAudit      = "audit"
-	ExportableLogTypeError      = "error"
-	ExportableLogTypeGeneral    = "general"
-	ExportableLogTypeListener   = "listener"
-	ExportableLogTypeOEMAgent   = "oemagent"
-	ExportableLogTypePostgreSQL = "postgresql"
-	ExportableLogTypeSlowQuery  = "slowquery"
-	ExportableLogTypeTrace      = "trace"
-	ExportableLogTypeUpgrade    = "upgrade"
+	engineModeGlobal        = "global"
+	engineModeMultiMaster   = "multimaster"
+	engineModeParallelQuery = "parallelquery"
+	engineModeProvisioned   = "provisioned"
+	engineModeServerless    = "serverless"
 )
 
-func ClusterExportableLogType_Values() []string {
+func engineMode_Values() []string {
 	return []string{
-		ExportableLogTypeAudit,
-		ExportableLogTypeError,
-		ExportableLogTypeGeneral,
-		ExportableLogTypePostgreSQL,
-		ExportableLogTypeSlowQuery,
-		ExportableLogTypeUpgrade,
-	}
-}
-
-func InstanceExportableLogType_Values() []string {
-	return []string{
-		ExportableLogTypeAgent,
-		ExportableLogTypeAlert,
-		ExportableLogTypeAudit,
-		ExportableLogTypeError,
-		ExportableLogTypeGeneral,
-		ExportableLogTypeListener,
-		ExportableLogTypeOEMAgent,
-		ExportableLogTypePostgreSQL,
-		ExportableLogTypeSlowQuery,
-		ExportableLogTypeTrace,
-		ExportableLogTypeUpgrade,
+		engineModeGlobal,
+		engineModeMultiMaster,
+		engineModeParallelQuery,
+		engineModeProvisioned,
+		engineModeServerless,
 	}
 }
 
 const (
-	NetworkTypeDual = "DUAL"
-	NetworkTypeIPv4 = "IPV4"
+	engineLifecycleSupport         = "open-source-rds-extended-support"
+	engineLifecycleSupportDisabled = "open-source-rds-extended-support-disabled"
 )
 
-func NetworkType_Values() []string {
+func engineLifecycleSupport_Values() []string {
 	return []string{
-		NetworkTypeDual,
-		NetworkTypeIPv4,
+		engineLifecycleSupport,
+		engineLifecycleSupportDisabled,
 	}
 }
 
 const (
-	RestoreTypeCopyOnWrite = "copy-on-write"
-	RestoreTypeFullCopy    = "full-copy"
+	exportableLogTypeAgent      = "agent"
+	exportableLogTypeAlert      = "alert"
+	exportableLogTypeAudit      = "audit"
+	exportableLogTypeDiagLog    = "diag.log"
+	exportableLogTypeError      = "error"
+	exportableLogTypeGeneral    = "general"
+	exportableLogTypeListener   = "listener"
+	exportableLogTypeNotifyLog  = "notify.log"
+	exportableLogTypeOEMAgent   = "oemagent"
+	exportableLogTypePostgreSQL = "postgresql"
+	exportableLogTypeSlowQuery  = "slowquery"
+	exportableLogTypeTrace      = "trace"
+	exportableLogTypeUpgrade    = "upgrade"
 )
 
-func RestoreType_Values() []string {
+func clusterExportableLogType_Values() []string {
 	return []string{
-		RestoreTypeCopyOnWrite,
-		RestoreTypeFullCopy,
+		exportableLogTypeAudit,
+		exportableLogTypeError,
+		exportableLogTypeGeneral,
+		exportableLogTypePostgreSQL,
+		exportableLogTypeSlowQuery,
+		exportableLogTypeUpgrade,
+	}
+}
+
+func instanceExportableLogType_Values() []string {
+	return []string{
+		exportableLogTypeAgent,
+		exportableLogTypeAlert,
+		exportableLogTypeAudit,
+		exportableLogTypeDiagLog,
+		exportableLogTypeError,
+		exportableLogTypeGeneral,
+		exportableLogTypeListener,
+		exportableLogTypeNotifyLog,
+		exportableLogTypeOEMAgent,
+		exportableLogTypePostgreSQL,
+		exportableLogTypeSlowQuery,
+		exportableLogTypeTrace,
+		exportableLogTypeUpgrade,
 	}
 }
 
 const (
-	TimeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
-	TimeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
 )
 
-func TimeoutAction_Values() []string {
+func networkType_Values() []string {
 	return []string{
-		TimeoutActionForceApplyCapacityChange,
-		TimeoutActionRollbackCapacityChange,
+		networkTypeDual,
+		networkTypeIPv4,
+	}
+}
+
+const (
+	restoreTypeCopyOnWrite = "copy-on-write"
+	restoreTypeFullCopy    = "full-copy"
+)
+
+func restoreType_Values() []string {
+	return []string{
+		restoreTypeCopyOnWrite,
+		restoreTypeFullCopy,
+	}
+}
+
+const (
+	timeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
+	timeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
+)
+
+func timeoutAction_Values() []string {
+	return []string{
+		timeoutActionForceApplyCapacityChange,
+		timeoutActionRollbackCapacityChange,
+	}
+}
+
+const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = names.AttrRegion
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		names.AttrRegion,
 	}
 }
 
@@ -224,11 +306,13 @@ const (
 )
 
 const (
-	ResNameTags = "Tags"
+	reservedInstanceStateActive         = "active"
+	reservedInstanceStateRetired        = "retired"
+	reservedInstanceStatePaymentPending = "payment-pending"
 )
 
 const (
-	ReservedInstanceStateActive         = "active"
-	ReservedInstanceStateRetired        = "retired"
-	ReservedInstanceStatePaymentPending = "payment-pending"
+	parameterSourceEngineDefault = "engine-default"
+	parameterSourceSystem        = "system"
+	parameterSourceUser          = "user"
 )

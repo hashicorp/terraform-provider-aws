@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Allow in-place update of `route_table_ids`
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Support setting `throughput_capacity` to `4096`
+```

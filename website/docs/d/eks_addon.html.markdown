@@ -27,11 +27,11 @@ output "eks_addon_outputs" {
 
 * `addon_name` – (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
-* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `cluster_name` – (Required) Name of the EKS Cluster.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the EKS add-on.
 * `addon_version` - Version of EKS add-on.

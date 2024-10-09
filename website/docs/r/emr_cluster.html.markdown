@@ -136,7 +136,9 @@ EOF
 }
 ```
 
-The `aws_emr_cluster` resource typically requires two IAM roles, one for the EMR Cluster to use as a service, and another to place on your Cluster Instances to interact with AWS from those instances. The suggested role policy template for the EMR service is `AmazonElasticMapReduceRole`, and `AmazonElasticMapReduceforEC2Role` for the EC2 profile. See the [Getting Started](https://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/emr-gs-launch-sample-cluster.html) guide for more information on these IAM roles. There is also a fully-bootable example Terraform configuration at the bottom of this page.
+The `aws_emr_cluster` resource typically requires two IAM roles, one for the EMR Cluster to use as a service role, and another is assigned to every EC2 instance in a cluster and each application process that runs on a cluster assumes this role for permissions to interact with other AWS services. An additional role, the Auto Scaling role, is required if your cluster uses automatic scaling in Amazon EMR.
+
+The default AWS managed EMR service role is called `EMR_DefaultRole` with Amazon managed policy `AmazonEMRServicePolicy_v2` attached. The name of default instance profile role is `EMR_EC2_DefaultRole` with default managed policy `AmazonElasticMapReduceforEC2Role` attached, but it is on the path to deprecation and will not be replaced with another default managed policy. You'll need to create and specify an instance profile to replace the deprecated role and default policy. See the [Configure IAM service roles for Amazon EMR](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-iam-roles.html) guide for more information on these IAM roles. There is also a fully-bootable example Terraform configuration at the bottom of this page.
 
 ### Instance Fleet
 
@@ -654,12 +656,14 @@ EOF
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created.
 * `master_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.
 * `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
+* `placement_group_config` - (Optional) The specified placement group configuration for an Amazon EMR cluster.
 * `scale_down_behavior` - (Optional) Way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `security_configuration` - (Optional) Security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater.
 * `step` - (Optional) List of steps to run when creating the cluster. See below. It is highly recommended to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` if other steps are being managed outside of Terraform. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `step_concurrency_level` - (Optional) Number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `release_label` 5.28.0 or greater (default is 1).
 * `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
+* `unhealthy_node_replacement` - (Optional) Whether whether Amazon EMR should gracefully replace core nodes that have degraded within the cluster. Default value is `false`.
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
 ### bootstrap_action
@@ -712,7 +716,7 @@ The instance fleet configuration is available only in Amazon EMR versions 4.8.0 
 
 The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior, and allocation strategy.
 
-* `allocation_strategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Currently, the only option is `capacity-optimized` (the default), which launches instances from Spot instance pools with optimal capacity for the number of instances that are launching.
+* `allocation_strategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Valid values include `capacity-optimized`, `diversified`, `lowest-price`, `price-capacity-optimized`. See the [AWS documentation](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html#emr-instance-fleet-allocation-strategy) for details on each strategy type.
 * `block_duration_minutes` - (Optional) Defined duration for Spot instances (also known as Spot blocks) in minutes. When specified, the Spot instance does not terminate before the defined duration expires, and defined duration pricing for Spot instances applies. Valid values are 60, 120, 180, 240, 300, or 360. The duration period starts as soon as a Spot instance receives its instance ID. At the end of the duration, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
 * `timeout_action` - (Required) Action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired; that is, when all Spot instances could not be provisioned within the Spot provisioning timeout. Valid values are `TERMINATE_CLUSTER` and `SWITCH_TO_ON_DEMAND`. SWITCH_TO_ON_DEMAND specifies that if no Spot instances are available, On-Demand Instances should be provisioned to fulfill any remaining Spot capacity.
 * `timeout_duration_minutes` - (Required) Spot provisioning timeout period in minutes. If Spot instances are not provisioned within this time period, the TimeOutAction is taken. Minimum value is 5 and maximum value is 1440. The timeout applies only during initial provisioning, when the cluster is first created.
@@ -730,7 +734,7 @@ The launch specification for Spot instances in the fleet, which determines the d
 
 * `iops` - (Optional) Number of I/O operations per second (IOPS) that the volume supports.
 * `size` - (Required) Volume size, in gibibytes (GiB).
-* `type` - (Required) Volume type. Valid options are `gp3`, `gp2`, `io1`, `standard`, `st1` and `sc1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+* `type` - (Required) Volume type. Valid options are `gp3`, `gp2`, `io1`, `io2`, `standard`, `st1` and `sc1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 * `throughput` - (Optional) The throughput, in mebibyte per second (MiB/s).
 * `volumes_per_instance` - (Optional) Number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1).
 
@@ -805,9 +809,14 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 * `main_class` - (Optional) Name of the main class in the specified Java file. If not specified, the JAR file should specify a Main-Class in its manifest file.
 * `properties` - (Optional) Key-Value map of Java properties that are set when the step runs. You can use these properties to pass key value pairs to your main function.
 
-## Attributes Reference
+### placement_group_config
 
-In addition to all arguments above, the following attributes are exported:
+* `instance_role` - (Required) Role of the instance in the cluster. Valid Values: `MASTER`, `CORE`, `TASK`.
+* `placement_strategy` - (Optional) EC2 Placement Group strategy associated with instance role. Valid Values: `SPREAD`, `PARTITION`, `CLUSTER`, `NONE`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `applications` - Applications installed on this cluster.
 * `arn`- ARN of the cluster.
@@ -827,13 +836,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR clusters can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR clusters using the `id`. For example:
 
-```
-$ terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```terraform
+import {
+  to = aws_emr_cluster.cluster
+  id = "j-123456ABCDEF"
+}
 ```
 
-Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) available to all Terraform resources to prevent perpetual differences, e.g.,
+Using `terraform import`, import EMR clusters using the `id`. For example:
+
+```console
+% terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```
+
+Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) available to all Terraform resources to prevent perpetual differences. For example:
 
 ```terraform
 resource "aws_emr_cluster" "example" {

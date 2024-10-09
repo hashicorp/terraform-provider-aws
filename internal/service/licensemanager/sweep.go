@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package licensemanager
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_licensemanager_license_configuration", &resource.Sweeper{
 		Name: "aws_licensemanager_license_configuration",
 		F:    sweepLicenseConfigurations,
@@ -23,11 +23,11 @@ func init() {
 
 func sweepLicenseConfigurations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LicenseManagerConn()
+	conn := client.LicenseManagerClient(ctx)
 	input := &licensemanager.ListLicenseConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -37,9 +37,9 @@ func sweepLicenseConfigurations(region string) error {
 		}
 
 		for _, v := range page.LicenseConfigurations {
-			r := ResourceLicenseConfiguration()
+			r := resourceLicenseConfiguration()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.LicenseConfigurationArn))
+			d.SetId(aws.ToString(v.LicenseConfigurationArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -47,7 +47,7 @@ func sweepLicenseConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
 		return nil
 	}
@@ -56,7 +56,7 @@ func sweepLicenseConfigurations(region string) error {
 		return fmt.Errorf("error listing License Manager License Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping License Manager License Configurations (%s): %w", region, err)

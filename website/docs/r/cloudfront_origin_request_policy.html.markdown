@@ -40,7 +40,7 @@ resource "aws_cloudfront_origin_request_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Unique name to identify the origin request policy.
 * `comment` - (Optional) Comment to describe the origin request policy.
@@ -67,17 +67,26 @@ The following arguments are supported:
 
 `items` - (Required) List of item names (cookies, headers, or query strings).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `etag` - The current version of the origin request policy.
 * `id` - The identifier for the origin request policy.
 
 ## Import
 
-Cloudfront Origin Request Policies can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Origin Request Policies using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_origin_request_policy.policy
+  id = "ccca32ef-dce3-4df3-80df-1bd3000bc4d3"
+}
 ```
-$ terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
+
+Using `terraform import`, import Cloudfront Origin Request Policies using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
 ```

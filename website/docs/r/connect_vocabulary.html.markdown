@@ -27,7 +27,7 @@ resource "aws_connect_vocabulary" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `content` - (Required) The content of the custom vocabulary in plain-text format with a table of values. Each row in the table represents a word or a phrase, described with Phrase, IPA, SoundsLike, and DisplayAs fields. Separate the fields with TAB characters. For more information, see [Create a custom vocabulary using a table](https://docs.aws.amazon.com/transcribe/latest/dg/custom-vocabulary.html#create-vocabulary-table). Minimum length of `1`. Maximum length of `60000`.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -43,9 +43,9 @@ The following arguments are supported:
 * `create` - (Default `5m`)
 * `delete` - (Default `100m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the vocabulary.
 * `failure_reason` - The reason why the custom vocabulary was not created.
@@ -58,8 +58,17 @@ separated by a colon (`:`).
 
 ## Import
 
-Amazon Connect Vocabularies can be imported using the `instance_id` and `vocabulary_id` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Vocabularies using the `instance_id` and `vocabulary_id` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_connect_vocabulary.example
+  id = "f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5"
+}
 ```
-$ terraform import aws_connect_vocabulary.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
+
+Using `terraform import`, import Amazon Connect Vocabularies using the `instance_id` and `vocabulary_id` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_connect_vocabulary.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```

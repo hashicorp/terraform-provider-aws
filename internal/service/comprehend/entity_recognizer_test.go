@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomprehend "github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
@@ -35,7 +38,7 @@ func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,26 +47,26 @@ func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.EntityRecognizerDataFormatComprehendCsv)),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.input_format", string(types.InputFormatOneDocPerLine)),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.test_s3_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -91,7 +94,7 @@ func TestAccComprehendEntityRecognizer_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,21 +128,21 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEntityRecognizerConfig_versionName(rName, vName1, "key", "value1"),
+				Config: testAccEntityRecognizerConfig_versionName(rName, vName1, names.AttrKey, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName1),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName1))),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName1))),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue1),
 				),
 			},
 			{
@@ -148,16 +151,16 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEntityRecognizerConfig_versionName(rName, vName2, "key", "value2"),
+				Config: testAccEntityRecognizerConfig_versionName(rName, vName2, names.AttrKey, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName2),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName2))),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value2"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName2))),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue2),
 				),
 			},
 			{
@@ -185,7 +188,7 @@ func TestAccComprehendEntityRecognizer_versionNameEmpty(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,10 +197,10 @@ func TestAccComprehendEntityRecognizer_versionNameEmpty(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s$`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s$`, rName))),
 				),
 			},
 			{
@@ -225,7 +228,7 @@ func TestAccComprehendEntityRecognizer_versionNameGenerated(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -236,7 +239,7 @@ func TestAccComprehendEntityRecognizer_versionNameGenerated(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 				),
 			},
 			{
@@ -264,7 +267,7 @@ func TestAccComprehendEntityRecognizer_versionNamePrefix(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -275,7 +278,7 @@ func TestAccComprehendEntityRecognizer_versionNamePrefix(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "version_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", "tf-acc-test-prefix-"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
 				),
 			},
 			{
@@ -303,7 +306,7 @@ func TestAccComprehendEntityRecognizer_documents_testDocuments(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -312,24 +315,24 @@ func TestAccComprehendEntityRecognizer_documents_testDocuments(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.EntityRecognizerDataFormatComprehendCsv)),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "input_data_config.0.documents.0.test_s3_uri"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -357,7 +360,7 @@ func TestAccComprehendEntityRecognizer_annotations_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -366,26 +369,26 @@ func TestAccComprehendEntityRecognizer_annotations_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.EntityRecognizerDataFormatComprehendCsv)),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.input_format", string(types.InputFormatOneDocPerLine)),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.test_s3_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -413,7 +416,7 @@ func TestAccComprehendEntityRecognizer_annotations_testDocuments(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -422,26 +425,26 @@ func TestAccComprehendEntityRecognizer_annotations_testDocuments(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.EntityRecognizerDataFormatComprehendCsv)),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.input_format", string(types.InputFormatOneDocPerLine)),
 					resource.TestCheckResourceAttrSet(resourceName, "input_data_config.0.documents.0.test_s3_uri"),
-					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -467,13 +470,13 @@ func TestAccComprehendEntityRecognizer_annotations_validateNoTestDocuments(t *te
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEntityRecognizerConfig_annotations_noTestDocuments(rName),
-				ExpectError: regexp.MustCompile("input_data_config.documents.test_s3_uri must be set when input_data_config.annotations.test_s3_uri is set"),
+				ExpectError: regexache.MustCompile("input_data_config.documents.test_s3_uri must be set when input_data_config.annotations.test_s3_uri is set"),
 			},
 		},
 	})
@@ -493,13 +496,13 @@ func TestAccComprehendEntityRecognizer_annotations_validateNoTestAnnotations(t *
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEntityRecognizerConfig_annotations_noTestAnnotations(rName),
-				ExpectError: regexp.MustCompile("input_data_config.annotations.test_s3_uri must be set when input_data_config.documents.test_s3_uri is set"),
+				ExpectError: regexache.MustCompile("input_data_config.annotations.test_s3_uri must be set when input_data_config.documents.test_s3_uri is set"),
 			},
 		},
 	})
@@ -521,7 +524,7 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -530,8 +533,8 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
 			},
 			{
@@ -563,7 +566,7 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -572,8 +575,8 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrARN),
 				),
 			},
 			{
@@ -605,7 +608,7 @@ func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -623,8 +626,8 @@ func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v2),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 2),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
 			},
 			{
@@ -637,8 +640,8 @@ func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v3),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 3),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model2", "key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume2", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model2", names.AttrKeyID),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume2", names.AttrKeyID),
 				),
 			},
 			{
@@ -675,7 +678,7 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Create(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -684,12 +687,12 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Create(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &er1),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.1", names.AttrID),
 				),
 			},
 			{
@@ -702,12 +705,12 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Create(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &er2),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 2),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.1", "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.2", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.3", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.2", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.3", names.AttrID),
 				),
 			},
 			{
@@ -735,7 +738,7 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -744,7 +747,7 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &er1),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -752,12 +755,12 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &er2),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 2),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.1", names.AttrID),
 				),
 			},
 			{
@@ -770,7 +773,7 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &er3),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 3),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -798,17 +801,17 @@ func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEntityRecognizerConfig_tags1(rName, "key1", "value1"),
+				Config: testAccEntityRecognizerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v1),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -817,24 +820,24 @@ func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEntityRecognizerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEntityRecognizerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v2),
 					testAccCheckEntityRecognizerNotRecreated(&v1, &v2),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccEntityRecognizerConfig_tags1(rName, "key2", "value2"),
+				Config: testAccEntityRecognizerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v3),
 					testAccCheckEntityRecognizerNotRecreated(&v2, &v3),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -857,21 +860,21 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
 					testAccEntityRecognizerConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v1),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
 				),
 			},
 			{
@@ -881,31 +884,31 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtProviderKey1, acctest.CtProviderValue1, "providerkey2", "providervalue2"),
 					testAccEntityRecognizerConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v2),
 					testAccCheckEntityRecognizerNotRecreated(&v1, &v2),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey2", "providervalue2"),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtValue1),
 					testAccEntityRecognizerConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v3),
 					testAccCheckEntityRecognizerNotRecreated(&v2, &v3),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtValue1),
 				),
 			},
 		},
@@ -914,7 +917,7 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 
 func testAccCheckEntityRecognizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_comprehend_entity_recognizer" {
@@ -962,7 +965,7 @@ func testAccCheckEntityRecognizerExists(ctx context.Context, name string, entity
 			return fmt.Errorf("No Comprehend Entity Recognizer is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		resp, err := tfcomprehend.FindEntityRecognizerByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1010,7 +1013,7 @@ func testAccCheckEntityRecognizerPublishedVersions(ctx context.Context, name str
 			return fmt.Errorf("No Comprehend Entity Recognizer is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		name, err := tfcomprehend.EntityRecognizerParseARN(rs.Primary.ID)
 		if err != nil {
@@ -2078,7 +2081,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  count = length(aws_subnet.test)
+  count = %[2]d
 
   subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
@@ -2122,7 +2125,7 @@ data "aws_iam_policy_document" "s3_endpoint" {
     ]
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
 
 func testAccEntityRecognizerConfig_vpcConfig_Update(rName string) string {
@@ -2199,7 +2202,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  count = length(aws_subnet.test)
+  count = %[2]d
 
   subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
@@ -2243,7 +2246,7 @@ data "aws_iam_policy_document" "s3_endpoint" {
     ]
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
 
 func testAccEntityRecognizerConfig_vpcConfig_None(rName string) string {

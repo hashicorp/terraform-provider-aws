@@ -25,7 +25,7 @@ resource "aws_route53recoveryreadiness_resource_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_set_name` - (Required) Unique name describing the resource set.
 * `resource_set_type` - (Required) Type of the resources in the resource set.
@@ -63,24 +63,33 @@ The following arguments are optional:
 * `domain_name` - (Optional) Domain name that is targeted.
 * `record_set_id` - (Optional) Resource record set ID that is targeted.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the resource set
 * `resources.#.component_id` - Unique identified for DNS Target Resources, use for readiness checks.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-## Import
-
-Route53 Recovery Readiness resource set name can be imported via the resource set name, e.g.,
-
-```
-$ terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
-```
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `delete` - (Default `5m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Readiness resource set name using the resource set name. For example:
+
+```terraform
+import {
+  to = aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
+  id = "example"
+}
+```
+
+Using `terraform import`, import Route53 Recovery Readiness resource set name using the resource set name. For example:
+
+```console
+% terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set example
+```

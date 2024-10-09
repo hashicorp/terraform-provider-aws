@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -20,13 +23,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_rds_export_task")
 func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExportTask{}
 	r.SetDefaultCreateTimeout(60 * time.Minute)
@@ -75,14 +78,14 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			"failure_cause": schema.StringAttribute{
 				Computed: true,
 			},
-			"iam_role_arn": schema.StringAttribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
@@ -91,7 +94,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			"percent_progress": schema.Int64Attribute{
 				Computed: true,
 			},
-			"s3_bucket_name": schema.StringAttribute{
+			names.AttrS3BucketName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
@@ -114,10 +117,10 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			"source_type": schema.StringAttribute{
+			names.AttrSourceType: schema.StringAttribute{
 				Computed: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 			"task_end_time": schema.StringAttribute{
@@ -131,7 +134,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -140,7 +143,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var plan resourceExportTaskData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -149,17 +152,17 @@ func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	in := rds.StartExportTaskInput{
-		ExportTaskIdentifier: aws.String(plan.ExportTaskIdentifier.ValueString()),
-		IamRoleArn:           aws.String(plan.IAMRoleArn.ValueString()),
-		KmsKeyId:             aws.String(plan.KMSKeyID.ValueString()),
-		S3BucketName:         aws.String(plan.S3BucketName.ValueString()),
-		SourceArn:            aws.String(plan.SourceArn.ValueString()),
+		ExportTaskIdentifier: plan.ExportTaskIdentifier.ValueStringPointer(),
+		IamRoleArn:           plan.IAMRoleArn.ValueStringPointer(),
+		KmsKeyId:             plan.KMSKeyID.ValueStringPointer(),
+		S3BucketName:         plan.S3BucketName.ValueStringPointer(),
+		SourceArn:            plan.SourceArn.ValueStringPointer(),
 	}
 	if !plan.ExportOnly.IsNull() {
 		in.ExportOnly = flex.ExpandFrameworkStringValueList(ctx, plan.ExportOnly)
 	}
 	if !plan.S3Prefix.IsNull() && !plan.S3Prefix.IsUnknown() {
-		in.S3Prefix = aws.String(plan.S3Prefix.ValueString())
+		in.S3Prefix = plan.S3Prefix.ValueStringPointer()
 	}
 
 	outStart, err := conn.StartExportTask(ctx, &in)
@@ -194,7 +197,7 @@ func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *resourceExportTask) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var state resourceExportTaskData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -228,7 +231,7 @@ func (r *resourceExportTask) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var state resourceExportTaskData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -239,7 +242,7 @@ func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequ
 	// Attempt to cancel the export task, but ignore errors where the task is in an invalid
 	// state (ie. completed or failed) which can't be cancelled
 	_, err := conn.CancelExportTask(ctx, &rds.CancelExportTaskInput{
-		ExportTaskIdentifier: aws.String(state.ID.ValueString()),
+		ExportTaskIdentifier: state.ID.ValueStringPointer(),
 	})
 	if err != nil {
 		var stateFault *awstypes.InvalidExportTaskStateFault
@@ -263,7 +266,7 @@ func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceExportTask) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awstypes.ExportTask, error) {
@@ -369,7 +372,7 @@ func (rd *resourceExportTaskData) refreshFromOutput(ctx context.Context, out *aw
 	rd.FailureCause = flex.StringToFramework(ctx, out.FailureCause)
 	rd.IAMRoleArn = flex.StringToFramework(ctx, out.IamRoleArn)
 	rd.KMSKeyID = flex.StringToFramework(ctx, out.KmsKeyId)
-	rd.PercentProgress = types.Int64Value(int64(out.PercentProgress))
+	rd.PercentProgress = types.Int64Value(int64(aws.ToInt32(out.PercentProgress)))
 	rd.S3BucketName = flex.StringToFramework(ctx, out.S3Bucket)
 	rd.S3Prefix = flex.StringToFramework(ctx, out.S3Prefix)
 	rd.SnapshotTime = timeToFramework(ctx, out.SnapshotTime)

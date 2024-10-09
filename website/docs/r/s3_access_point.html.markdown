@@ -14,9 +14,11 @@ Provides a resource to manage an S3 Access Point.
 
 -> Advanced usage: To use a custom API endpoint for this Terraform resource, use the [`s3control` endpoint provider configuration](/docs/providers/aws/index.html#s3control), not the `s3` endpoint provider configuration.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
-### AWS Partition Bucket
+### AWS Partition General Purpose Bucket
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -55,8 +57,8 @@ resource "aws_vpc" "example" {
 
 The following arguments are required:
 
-* `bucket` - (Required) Name of an AWS Partition S3 Bucket or the ARN of S3 on Outposts Bucket that you want to associate this access point with.
-* `name` - (Required) Name you want to assign to this access point.
+* `bucket` - (Required) Name of an AWS Partition S3 General Purpose Bucket or the ARN of S3 on Outposts Bucket that you want to associate this access point with.
+* `name` - (Required) Name you want to assign to this access point. See the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-access-points.html?icmpid=docs_amazons3_console#access-points-names) for naming conditions.
 
 The following arguments are optional:
 
@@ -87,9 +89,9 @@ The following arguments are required:
 
 * `vpc_id` - (Required)  This access point will only allow connections from the specified VPC ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alias` - Alias of the S3 Access Point.
 * `arn` - ARN of the S3 Access Point.
@@ -102,14 +104,36 @@ Note: S3 access points only support secure access by HTTPS. HTTP isn't supported
 
 ## Import
 
-For Access Points associated with an AWS Partition S3 Bucket, this resource can be imported using the `account_id` and `name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket or the ARN for Access Points associated with an S3 on Outposts Bucket. For example:
 
-```
-$ terraform import aws_s3_access_point.example 123456789012:example
+Import using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket:
+
+```terraform
+import {
+  to = aws_s3_access_point.example
+  id = "123456789012:example"
+}
 ```
 
-For Access Points associated with an S3 on Outposts Bucket, this resource can be imported using the ARN, e.g.,
+Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
 
+```terraform
+import {
+  to = aws_s3_access_point.example
+  id = "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example"
+}
 ```
-$ terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
+
+**Using `terraform import` to import.** For example:
+
+Import using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket:
+
+```console
+% terraform import aws_s3_access_point.example 123456789012:example
+```
+
+Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
+
+```console
+% terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
 ```

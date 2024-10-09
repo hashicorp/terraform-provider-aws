@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
@@ -5,17 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDecodeWorkingStorageID(t *testing.T) {
+func TestWorkingStorageParseResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -57,7 +59,7 @@ func TestDecodeWorkingStorageID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := tfstoragegateway.DecodeWorkingStorageID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.WorkingStorageParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -82,18 +84,17 @@ func TestAccStorageGatewayWorkingStorage_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// Storage Gateway API does not support removing working storages,
-		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckGatewayDestroy(ctx),
+		// Storage Gateway API does not support removing working storages.
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkingStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkingStorageExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -105,46 +106,28 @@ func TestAccStorageGatewayWorkingStorage_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkingStorageExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckWorkingStorageExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
-		gatewayARN, diskID, err := tfstoragegateway.DecodeWorkingStorageID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.WorkingStorageParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &storagegateway.DescribeWorkingStorageInput{
-			GatewayARN: aws.String(gatewayARN),
-		}
+		_, err = tfstoragegateway.FindWorkingStorageDiskIDByTwoPartKey(ctx, conn, gatewayARN, diskID)
 
-		output, err := conn.DescribeWorkingStorageWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error reading Storage Gateway working storage: %s", err)
-		}
-
-		if output == nil || len(output.DiskIds) == 0 {
-			return fmt.Errorf("Storage Gateway working storage %q not found", rs.Primary.ID)
-		}
-
-		for _, existingDiskID := range output.DiskIds {
-			if aws.StringValue(existingDiskID) == diskID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("Storage Gateway working storage %q not found", rs.Primary.ID)
+		return err
 	}
 }
 
 func testAccWorkingStorageConfig_basic(rName string) string {
-	return testAccGatewayConfig_typeStored(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_typeStored(rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
@@ -171,5 +154,5 @@ resource "aws_storagegateway_working_storage" "test" {
   disk_id     = data.aws_storagegateway_local_disk.test.id
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
-`, rName)
+`, rName))
 }

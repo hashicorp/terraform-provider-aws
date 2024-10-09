@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package swf
 
 import (
@@ -6,14 +9,16 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/swf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/swf"
+	"github.com/aws/aws-sdk-go-v2/service/swf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +27,7 @@ import (
 
 // @SDKResource("aws_swf_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
-func ResourceDomain() *schema.Resource {
+func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
 		ReadWithoutTimeout:   resourceDomainRead,
@@ -34,28 +39,28 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -79,53 +84,55 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
-		Tags:                                   GetTagsIn(ctx),
+		Tags:                                   getTagsIn(ctx),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.RegisterDomainWithContext(ctx, input)
+	_, err := conn.RegisterDomain(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating SWF Domain (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SWF Domain (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceDomainRead(ctx, d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
-	output, err := FindDomainByName(ctx, conn, d.Id())
+	output, err := findDomainByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SWF Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SWF Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SWF Domain (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(output.DomainInfo.Arn)
-	d.Set("arn", arn)
-	d.Set("description", output.DomainInfo.Description)
-	d.Set("name", output.DomainInfo.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.DomainInfo.Name)))
+	arn := aws.ToString(output.DomainInfo.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.DomainInfo.Description)
+	d.Set(names.AttrName, output.DomainInfo.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.DomainInfo.Name)))
 	d.Set("workflow_execution_retention_period_in_days", output.Configuration.WorkflowExecutionRetentionPeriodInDays)
 
-	return nil
+	return diags
 }
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -134,31 +141,32 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
-	_, err := conn.DeprecateDomainWithContext(ctx, &swf.DeprecateDomainInput{
-		Name: aws.String(d.Get("name").(string)),
+	_, err := conn.DeprecateDomain(ctx, &swf.DeprecateDomainInput{
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, swf.ErrCodeDomainDeprecatedFault, swf.ErrCodeUnknownResourceFault) {
-		return nil
+	if errs.IsA[*types.DomainDeprecatedFault](err) || errs.IsA[*types.UnknownResourceFault](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SWF Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SWF Domain (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindDomainByName(ctx context.Context, conn *swf.SWF, name string) (*swf.DescribeDomainOutput, error) {
+func findDomainByName(ctx context.Context, conn *swf.Client, name string) (*swf.DescribeDomainOutput, error) {
 	input := &swf.DescribeDomainInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeDomainWithContext(ctx, input)
+	output, err := conn.DescribeDomain(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, swf.ErrCodeUnknownResourceFault) {
+	if errs.IsA[*types.UnknownResourceFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -173,9 +181,9 @@ func FindDomainByName(ctx context.Context, conn *swf.SWF, name string) (*swf.Des
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := aws.StringValue(output.DomainInfo.Status); status == swf.RegistrationStatusDeprecated {
+	if status := output.DomainInfo.Status; status == types.RegistrationStatusDeprecated {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(status),
 			LastRequest: input,
 		}
 	}

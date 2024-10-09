@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package deploy
 
@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_codedeploy_app", &resource.Sweeper{
 		Name: "aws_codedeploy_app",
 		F:    sweepApps,
@@ -24,48 +23,42 @@ func init() {
 
 func sweepApps(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
-
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.(*conns.AWSClient).DeployConn()
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
+	conn := client.DeployClient(ctx)
 	input := &codedeploy.ListApplicationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *codedeploy.ListApplicationsOutput, lastPage bool) bool {
-		for _, app := range page.Applications {
-			if app == nil {
-				continue
-			}
+	pages := codedeploy.NewListApplicationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-			appName := aws.StringValue(app)
-			r := ResourceApp()
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CodeDeploy Application sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing CodeDeploy Applications (%s): %w", region, err)
+		}
+
+		for _, v := range page.Applications {
+			r := resourceApp()
 			d := r.Data(nil)
-			d.SetId(fmt.Sprintf("%s:%s", "xxxx", appName))
-			d.Set("name", appName)
+			d.SetId(fmt.Sprintf("%s:%s", "xxxx", v))
+			d.Set(names.AttrName, v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing CodeDeploy Applications for %s: %w", region, err))
+		return fmt.Errorf("error sweeping CodeDeploy Applications (%s): %w", region, err)
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping CodeDeploy Applications for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping CodeDeploy Applications sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

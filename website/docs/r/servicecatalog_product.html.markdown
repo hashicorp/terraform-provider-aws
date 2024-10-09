@@ -40,7 +40,7 @@ The following arguments are required:
 
 * `name` - (Required) Name of the product.
 * `owner` - (Required) Owner of the product.
-* `provisioning_artifact_parameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. Detailed below.
+* `provisioning_artifact_parameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. See [`provisioning_artifact_parameters` Block](#provisioning_artifact_parameters-block) for details.
 * `type` - (Required) Type of product. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html#API_CreateProduct_RequestSyntax) for valid list of values.
 
 The following arguments are optional:
@@ -53,9 +53,9 @@ The following arguments are optional:
 * `support_url` - (Optional) Contact URL for product support.
 * `tags` - (Optional) Tags to apply to the product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### provisioning_artifact_parameters
+### `provisioning_artifact_parameters` Block
 
-The following arguments are supported:
+The `provisioning_artifact_parameters` configuration block supports the following arguments:
 
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disable_template_validation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
@@ -64,9 +64,9 @@ The following arguments are supported:
 * `template_url` - (Required if `template_physical_id` is not provided) Template source as URL of the CloudFormation template in Amazon S3.
 * `type` - (Optional) Type of provisioning artifact. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_ProvisioningArtifactProperties.html) for valid list of values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the product.
 * `created_time` - Time when the product was created.
@@ -86,8 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_product` can be imported using the product ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_product` using the product ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_product.example
+  id = "prod-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_product` using the product ID. For example:
+
+```console
+% terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```

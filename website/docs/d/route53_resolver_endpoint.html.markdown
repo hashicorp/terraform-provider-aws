@@ -41,6 +41,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Computed ARN of the Route53 Resolver Endpoint.
 * `direction` - Direction of the queries to or from the Resolver Endpoint .
 * `ip_addresses` - List of IPaddresses that have been associated with the Resolver Endpoint.
+* `protocols` - The protocols used by the Resolver endpoint.
+* `resolver_endpoint_type` - The Resolver endpoint IP address type.
 * `status` - Current status of the Resolver Endpoint.
 * `vpc_id` - ID of the Host VPC that the Resolver Endpoint resides in.
 

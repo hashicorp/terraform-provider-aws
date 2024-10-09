@@ -28,7 +28,7 @@ resource "aws_networkmanager_link" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bandwidth` - (Required) The upload speed and download speed in Mbps. Documented below.
 * `description` - (Optional) A description of the link.
@@ -43,17 +43,26 @@ The `bandwidth` object supports the following:
 * `download_speed` - (Optional) Download speed in Mbps.
 * `upload_speed` - (Optional) Upload speed in Mbps.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Link Amazon Resource Name (ARN).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-`aws_networkmanager_link` can be imported using the link ARN, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_link` using the link ARN. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_link.example
+  id = "arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223"
+}
 ```
-$ terraform import aws_networkmanager_link.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
+
+Using `terraform import`, import `aws_networkmanager_link` using the link ARN. For example:
+
+```console
+% terraform import aws_networkmanager_link.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
 ```

@@ -59,8 +59,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `experiment_options` - (Optional) The experiment options for the experiment template. See [experiment_options](#experiment_options) below for more details!
 * `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
+* `log_configuration` - (Optional) The configuration for experiment logging. See below.
+
+### experiment_options
+
+The `experiment_options` block supports the following:
+
+* `account_targeting` - (Optional) Specifies the account targeting setting for experiment options. Supports `single-account` and `multi-account`.
+* `empty_target_resolution_mode` - (Optional) Specifies the empty target resolution mode for experiment options. Supports `fail` and `skip`.
 
 ### `action`
 
@@ -80,7 +89,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `target` (`action.*.target`)
 
-* `key` - (Required) Target type. Valid values are `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances).
+* `key` - (Required) Target type. Valid values are `AutoScalingGroups` (EC2 Auto Scaling groups), `Buckets` (S3 Buckets), `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Pods` (EKS Pods), `ReplicationGroups`(ElastiCache Redis Replication Groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Tables` (DynamoDB encrypted global tables), `Tasks` (ECS Tasks), `TransitGateways` (Transit gateways), `Volumes` (EBS Volumes). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
 * `value` - (Required) Target name, referencing a corresponding target.
 
 ### `stop_condition`
@@ -96,6 +105,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 * `filter` - (Optional) Filter(s) for the target. Filters can be used to select resources based on specific attributes returned by the respective describe action of the resource type. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters). See below.
 * `resource_arns` - (Optional) Set of ARNs of the resources to target with an action. Conflicts with `resource_tag`.
 * `resource_tag` - (Optional) Tag(s) the resources need to have to be considered a valid target for an action. Conflicts with `resource_arns`. See below.
+* `parameters` - (Optional) The resource type parameters.
 
 ~> **NOTE:** The `target` configuration block requires either `resource_arns` or `resource_tag`.
 
@@ -111,16 +121,40 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 * `key` - (Required) Tag key.
 * `value` - (Required) Tag value.
 
-## Attributes Reference
+### `log_configuration`
 
-In addition to all arguments above, the following attributes are exported:
+* `log_schema_version` - (Required) The schema version. See [documentation](https://docs.aws.amazon.com/fis/latest/userguide/monitoring-logging.html#experiment-log-schema) for the list of schema versions.
+* `cloudwatch_logs_configuration` - (Optional) The configuration for experiment logging to Amazon CloudWatch Logs. See below.
+* `s3_configuration` - (Optional) The configuration for experiment logging to Amazon S3. See below.
+
+#### `cloudwatch_logs_configuration`
+
+* `log_group_arn` - (Required) The Amazon Resource Name (ARN) of the destination Amazon CloudWatch Logs log group.
+
+#### `s3_configuration`
+
+* `bucket_name` - (Required) The name of the destination bucket.
+* `prefix` - (Optional) The bucket prefix.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Experiment Template ID.
 
 ## Import
 
-FIS Experiment Templates can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FIS Experiment Templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fis_experiment_template.template
+  id = "EXT123AbCdEfGhIjK"
+}
 ```
-$ terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
+
+Using `terraform import`, import FIS Experiment Templates using the `id`. For example:
+
+```console
+% terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
 ```

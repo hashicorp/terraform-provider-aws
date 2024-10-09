@@ -5,23 +5,26 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/configservice/configserviceiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists configservice service tags.
+// listTags lists configservice service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn configserviceiface.ConfigServiceAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *configservice.Client, identifier string, optFns ...func(*configservice.Options)) (tftags.KeyValueTags, error) {
 	input := &configservice.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -33,14 +36,14 @@ func ListTags(ctx context.Context, conn configserviceiface.ConfigServiceAPI, ide
 // ListTags lists configservice service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ConfigServiceConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ConfigServiceClient(ctx), identifier)
 
 	if err != nil {
 		return err
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -49,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns configservice service tags.
-func Tags(tags tftags.KeyValueTags) []*configservice.Tag {
-	result := make([]*configservice.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &configservice.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -65,19 +68,19 @@ func Tags(tags tftags.KeyValueTags) []*configservice.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from configservice service tags.
-func KeyValueTags(ctx context.Context, tags []*configservice.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns configservice service tags from Context.
+// getTagsIn returns configservice service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*configservice.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -87,41 +90,46 @@ func GetTagsIn(ctx context.Context) []*configservice.Tag {
 	return nil
 }
 
-// SetTagsOut sets configservice service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*configservice.Tag) {
+// setTagsOut sets configservice service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates configservice service tags.
+// updateTags updates configservice service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
-func UpdateTags(ctx context.Context, conn configserviceiface.ConfigServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *configservice.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*configservice.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ConfigService)
+	if len(removedTags) > 0 {
 		input := &configservice.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ConfigService)
+	if len(updatedTags) > 0 {
 		input := &configservice.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -134,5 +142,5 @@ func UpdateTags(ctx context.Context, conn configserviceiface.ConfigServiceAPI, i
 // UpdateTags updates configservice service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ConfigServiceConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ConfigServiceClient(ctx), identifier, oldTags, newTags)
 }

@@ -8,6 +8,10 @@ description: |-
 
 # Resource: aws_worklink_website_certificate_authority_association
 
+Provides a AWS WorkLink Website Certificate Authority Association resource.
+
+!> **WARNING:** The `aws_worklink_website_certificate_authority_association` resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead.
+
 ## Example Usage
 
 ```terraform
@@ -23,22 +27,31 @@ resource "aws_worklink_website_certificate_authority_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `fleet_arn` - (Required, ForceNew) The ARN of the fleet.
 * `certificate` - (Required, ForceNew) The root certificate of the Certificate Authority.
 * `display_name` - (Optional, ForceNew) The certificate name to display.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `website_ca_id` - A unique identifier for the Certificate Authority.
 
 ## Import
 
-WorkLink Website Certificate Authority can be imported using `FLEET-ARN,WEBSITE-CA-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkLink Website Certificate Authority using `FLEET-ARN,WEBSITE-CA-ID`. For example:
 
+```terraform
+import {
+  to = aws_worklink_website_certificate_authority_association.example
+  id = "arn:aws:worklink::123456789012:fleet/example,abcdefghijk"
+}
 ```
-$ terraform import aws_worklink_website_certificate_authority_association.example arn:aws:worklink::123456789012:fleet/example,abcdefghijk
+
+Using `terraform import`, import WorkLink Website Certificate Authority using `FLEET-ARN,WEBSITE-CA-ID`. For example:
+
+```console
+% terraform import aws_worklink_website_certificate_authority_association.example arn:aws:worklink::123456789012:fleet/example,abcdefghijk
 ```

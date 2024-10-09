@@ -21,7 +21,7 @@ resource "aws_lambda_layer_version" "lambda_layer" {
   filename   = "lambda_layer_payload.zip"
   layer_name = "lambda_layer_name"
 
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 ```
 
@@ -45,7 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `compatible_architectures` - (Optional) List of [Architectures][4] this layer is compatible with. Currently `x86_64` and `arm64` can be specified.
-* `compatible_runtimes` - (Optional) List of [Runtimes][2] this layer is compatible with. Up to 5 runtimes can be specified.
+* `compatible_runtimes` - (Optional) List of [Runtimes][2] this layer is compatible with. Up to 15 runtimes can be specified.
 * `description` - (Optional) Description of what your Lambda Layer does.
 * `filename` (Optional) Path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
 * `license_info` - (Optional) License info for your Lambda Layer. See [License Info][3].
@@ -53,13 +53,14 @@ The following arguments are optional:
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename`.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename`.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatible_architectures`, `compatible_runtimes`, `description`, `filename`, `layer_name`, `license_info`, `s3_bucket`, `s3_key`, `s3_object_version`, or `source_code_hash` forces deletion of the existing layer version and creation of a new layer version.
-* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
+* `source_code_hash` - (Optional) Virtual attribute used to trigger replacement when source code changes. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Lambda Layer with version.
+* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `created_date` - Date this resource was created.
 * `layer_arn` - ARN of the Lambda Layer without version.
 * `signing_job_arn` - ARN of a signing job.
@@ -74,10 +75,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Layers can be imported using `arn`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Layers using `arn`. For example:
 
+```terraform
+import {
+  to = aws_lambda_layer_version.test_layer
+  id = "arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_"
+}
 ```
-$ terraform import \
+
+Using `terraform import`, import Lambda Layers using `arn`. For example:
+
+```console
+% terraform import \
     aws_lambda_layer_version.test_layer \
     arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```

@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
@@ -17,7 +20,7 @@ func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -28,8 +31,8 @@ func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNodeGroupsDataSourceConfig_names(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "cluster_name", rName),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, names.AttrClusterName, rName),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", acctest.Ct2),
 				),
 			},
 		},

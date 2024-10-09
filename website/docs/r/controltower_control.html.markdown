@@ -28,26 +28,50 @@ resource "aws_controltower_control" "example" {
     for x in data.aws_organizations_organizational_units.example.children :
     x.arn if x.name == "Infrastructure"
   ][0]
+
+  parameters {
+    key   = "AllowedRegions"
+    value = jsonencode(["us-east-1"])
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This following arguments are required:
 
 * `control_identifier` - (Required) The ARN of the control. Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail.
 * `target_identifier` - (Required) The ARN of the organizational unit.
 
-## Attributes Reference
+The following arguments are optional:
 
-In addition to all arguments above, the following attributes are exported:
+* `parameters` - (Optional) Parameter values which are specified to configure the control when you enable it. See [Parameters](#parameters) for more details.
 
+### Parameters
+
+* `key` - (Required) The name of the parameter.
+* `value` - (Required) The value of the parameter.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - The ARN of the EnabledControl resource.
 * `id` - The ARN of the organizational unit.
 
 ## Import
 
-Control Tower Controls can be imported using their `organizational_unit_arn/control_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Control Tower Controls using their `organizational_unit_arn,control_identifier`. For example:
 
+```terraform
+import {
+  to = aws_controltower_control.example
+  id = "arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE"
+}
 ```
-$ terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
+
+Using `terraform import`, import Control Tower Controls using their `organizational_unit_arn/control_identifier`. For example:
+
+```console
+% terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
 ```

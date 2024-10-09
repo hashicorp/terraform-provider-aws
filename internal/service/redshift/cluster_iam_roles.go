@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -5,19 +8,22 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_cluster_iam_roles")
-func ResourceClusterIAMRoles() *schema.Resource {
+// @SDKResource("aws_redshift_cluster_iam_roles", name="Cluster IAM Roles")
+func resourceClusterIAMRoles() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterIAMRolesCreate,
 		ReadWithoutTimeout:   resourceClusterIAMRolesRead,
@@ -35,7 +41,7 @@ func ResourceClusterIAMRoles() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,9 +67,9 @@ func ResourceClusterIAMRoles() *schema.Resource {
 
 func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	clusterID := d.Get("cluster_identifier").(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	input := &redshift.ModifyClusterIamRolesInput{
 		ClusterIdentifier: aws.String(clusterID),
 	}
@@ -73,17 +79,17 @@ func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("iam_role_arns"); ok && v.(*schema.Set).Len() > 0 {
-		input.AddIamRoles = flex.ExpandStringSet(v.(*schema.Set))
+		input.AddIamRoles = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Adding Redshift Cluster IAM Roles: %s", input)
-	output, err := conn.ModifyClusterIamRolesWithContext(ctx, input)
+	log.Printf("[DEBUG] Adding Redshift Cluster IAM Roles: %#v", input)
+	output, err := conn.ModifyClusterIamRoles(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster IAM Roles (%s): %s", clusterID, err)
 	}
 
-	d.SetId(aws.StringValue(output.Cluster.ClusterIdentifier))
+	d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
 
 	if _, err := waitClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Cluster IAM Roles (%s) update: %s", d.Id(), err)
@@ -94,9 +100,9 @@ func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	rsc, err := FindClusterByID(ctx, conn, d.Id())
+	rsc, err := findClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster IAM Roles (%s) not found, removing from state", d.Id())
@@ -114,16 +120,16 @@ func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, me
 		roleARNs = append(roleARNs, iamRole.IamRoleArn)
 	}
 
-	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, rsc.ClusterIdentifier)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
-	d.Set("iam_role_arns", aws.StringValueSlice(roleARNs))
+	d.Set("iam_role_arns", aws.ToStringSlice(roleARNs))
 
 	return diags
 }
 
 func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	o, n := d.GetChange("iam_role_arns")
 	if o == nil {
@@ -138,14 +144,14 @@ func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, 
 	del := os.Difference(ns)
 
 	input := &redshift.ModifyClusterIamRolesInput{
-		AddIamRoles:       flex.ExpandStringSet(add),
+		AddIamRoles:       flex.ExpandStringValueSet(add),
 		ClusterIdentifier: aws.String(d.Id()),
-		RemoveIamRoles:    flex.ExpandStringSet(del),
+		RemoveIamRoles:    flex.ExpandStringValueSet(del),
 		DefaultIamRoleArn: aws.String(d.Get("default_iam_role_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Modifying Redshift Cluster IAM Roles: %s", input)
-	_, err := conn.ModifyClusterIamRolesWithContext(ctx, input)
+	log.Printf("[DEBUG] Modifying Redshift Cluster IAM Roles: %#v", input)
+	_, err := conn.ModifyClusterIamRoles(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster IAM Roles (%s): %s", d.Id(), err)
@@ -160,16 +166,20 @@ func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterIAMRolesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	input := &redshift.ModifyClusterIamRolesInput{
 		ClusterIdentifier: aws.String(d.Id()),
-		RemoveIamRoles:    flex.ExpandStringSet(d.Get("iam_role_arns").(*schema.Set)),
+		RemoveIamRoles:    flex.ExpandStringValueSet(d.Get("iam_role_arns").(*schema.Set)),
 		DefaultIamRoleArn: aws.String(d.Get("default_iam_role_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Removing Redshift Cluster IAM Roles: %s", input)
-	_, err := conn.ModifyClusterIamRolesWithContext(ctx, input)
+	log.Printf("[DEBUG] Removing Redshift Cluster IAM Roles: %#v", input)
+	_, err := conn.ModifyClusterIamRoles(ctx, input)
+
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Cluster IAM Roles (%s): %s", d.Id(), err)

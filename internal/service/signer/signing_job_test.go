@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer_test
 
 import (
@@ -5,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningJob_basic(t *testing.T) {
@@ -28,7 +32,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -39,7 +43,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 					testAccCheckSigningJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Succeeded"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
 				),
 			},
 		},
@@ -111,13 +115,9 @@ func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.D
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-		params := &signer.DescribeSigningJobInput{
-			JobId: aws.String(rs.Primary.ID),
-		}
-
-		getJob, err := conn.DescribeSigningJobWithContext(ctx, params)
+		getJob, err := tfsigner.FindSigningJobByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

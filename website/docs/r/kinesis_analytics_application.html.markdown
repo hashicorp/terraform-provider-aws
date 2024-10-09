@@ -144,7 +144,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the Kinesis Analytics Application.
 * `code` - (Optional) SQL Code to transform input data, and generate output.
@@ -340,9 +340,9 @@ The `s3` blcok supports the following:
 * `file_key` - (Required) The File Key name containing reference data.
 * `role_arn` - (Required) The IAM Role ARN to read the data.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Kinesis Analytics Application.
 * `arn` - The ARN of the Kinesis Analytics Appliation.
@@ -356,8 +356,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Analytics Application can be imported by using ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Analytics Application using ARN. For example:
 
+```terraform
+import {
+  to = aws_kinesis_analytics_application.example
+  id = "arn:aws:kinesisanalytics:us-west-2:1234567890:application/example"
+}
 ```
-$ terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
+
+Using `terraform import`, import Kinesis Analytics Application using ARN. For example:
+
+```console
+% terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
 ```

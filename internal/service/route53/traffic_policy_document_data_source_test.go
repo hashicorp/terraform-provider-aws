@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awsutil"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfrouter53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
@@ -18,7 +21,7 @@ func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyDocumentDataSourceConfig_basic,
@@ -36,7 +39,7 @@ func TestAccRoute53TrafficPolicyDocumentDataSource_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyDocumentDataSourceConfig_complete,
@@ -57,7 +60,7 @@ func testAccCheckTrafficPolicySameJSON(resourceName, jsonExpected string) resour
 		}
 
 		var j, j2 tfrouter53.Route53TrafficPolicyDoc
-		if err := json.Unmarshal([]byte(rs.Primary.Attributes["json"]), &j); err != nil {
+		if err := json.Unmarshal([]byte(rs.Primary.Attributes[names.AttrJSON]), &j); err != nil {
 			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 		if err := json.Unmarshal([]byte(jsonExpected), &j2); err != nil {
@@ -79,7 +82,7 @@ func testAccCheckTrafficPolicySameJSON(resourceName, jsonExpected string) resour
 			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
-		if !awsutil.DeepEqual(&j, &j2) {
+		if !reflect.DeepEqual(&j, &j2) {
 			return fmt.Errorf("expected out to be %v, got %v", j, j2)
 		}
 

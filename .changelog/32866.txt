@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_emr_instance_fleet: Fix fleet deletion failing for terminated clusters
+```

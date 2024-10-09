@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -21,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -55,12 +58,12 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 			"action_plan_title": schema.StringAttribute{
 				Optional: true,
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -68,7 +71,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 			"testing_information": schema.StringAttribute{
 				Optional: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -95,7 +98,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 						"source_set_up_option": schema.StringAttribute{
 							Required: true,
 						},
-						"source_type": schema.StringAttribute{
+						names.AttrSourceType: schema.StringAttribute{
 							Required: true,
 						},
 						"troubleshooting_text": schema.StringAttribute{
@@ -126,7 +129,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceControlData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -147,21 +150,21 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	in := auditmanager.CreateControlInput{
-		Name:                  aws.String(plan.Name.ValueString()),
+		Name:                  plan.Name.ValueStringPointer(),
 		ControlMappingSources: cmsInput,
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 	if !plan.ActionPlanInstructions.IsNull() {
-		in.ActionPlanInstructions = aws.String(plan.ActionPlanInstructions.ValueString())
+		in.ActionPlanInstructions = plan.ActionPlanInstructions.ValueStringPointer()
 	}
 	if !plan.ActionPlanTitle.IsNull() {
-		in.ActionPlanTitle = aws.String(plan.ActionPlanTitle.ValueString())
+		in.ActionPlanTitle = plan.ActionPlanTitle.ValueStringPointer()
 	}
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 	if !plan.TestingInformation.IsNull() {
-		in.TestingInformation = aws.String(plan.TestingInformation.ValueString())
+		in.TestingInformation = plan.TestingInformation.ValueStringPointer()
 	}
 
 	out, err := conn.CreateControl(ctx, &in)
@@ -186,7 +189,7 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceControlData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -216,7 +219,7 @@ func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan, state resourceControlData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -244,21 +247,21 @@ func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest
 		}
 
 		in := &auditmanager.UpdateControlInput{
-			ControlId:             aws.String(plan.ID.ValueString()),
-			Name:                  aws.String(plan.Name.ValueString()),
+			ControlId:             plan.ID.ValueStringPointer(),
+			Name:                  plan.Name.ValueStringPointer(),
 			ControlMappingSources: cmsInput,
 		}
 		if !plan.ActionPlanInstructions.IsNull() {
-			in.ActionPlanInstructions = aws.String(plan.ActionPlanInstructions.ValueString())
+			in.ActionPlanInstructions = plan.ActionPlanInstructions.ValueStringPointer()
 		}
 		if !plan.ActionPlanTitle.IsNull() {
-			in.ActionPlanTitle = aws.String(plan.ActionPlanTitle.ValueString())
+			in.ActionPlanTitle = plan.ActionPlanTitle.ValueStringPointer()
 		}
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 		if !plan.TestingInformation.IsNull() {
-			in.TestingInformation = aws.String(plan.TestingInformation.ValueString())
+			in.TestingInformation = plan.TestingInformation.ValueStringPointer()
 		}
 
 		out, err := conn.UpdateControl(ctx, in)
@@ -283,7 +286,7 @@ func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceControlData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -292,7 +295,7 @@ func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteControl(ctx, &auditmanager.DeleteControlInput{
-		ControlId: aws.String(state.ID.ValueString()),
+		ControlId: state.ID.ValueStringPointer(),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -307,7 +310,7 @@ func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceControl) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -370,7 +373,7 @@ var (
 		"source_keyword":       types.ListType{ElemType: types.ObjectType{AttrTypes: sourceKeywordAttrTypes}},
 		"source_name":          types.StringType,
 		"source_set_up_option": types.StringType,
-		"source_type":          types.StringType,
+		names.AttrSourceType:   types.StringType,
 		"troubleshooting_text": types.StringType,
 	}
 
@@ -388,8 +391,8 @@ type resourceControlData struct {
 	Description            types.String `tfsdk:"description"`
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
-	Tags                   types.Map    `tfsdk:"tags"`
-	TagsAll                types.Map    `tfsdk:"tags_all"`
+	Tags                   tftags.Map   `tfsdk:"tags"`
+	TagsAll                tftags.Map   `tfsdk:"tags_all"`
 	TestingInformation     types.String `tfsdk:"testing_information"`
 	Type                   types.String `tfsdk:"type"`
 }
@@ -431,7 +434,7 @@ func (rd *resourceControlData) refreshFromOutput(ctx context.Context, out *awsty
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 	rd.Type = types.StringValue(string(out.Type))
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
@@ -442,13 +445,13 @@ func expandControlMappingSourcesCreate(ctx context.Context, tfList []controlMapp
 
 	for _, item := range tfList {
 		new := awstypes.CreateControlMappingSource{
-			SourceName:        aws.String(item.SourceName.ValueString()),
+			SourceName:        item.SourceName.ValueStringPointer(),
 			SourceSetUpOption: awstypes.SourceSetUpOption(item.SourceSetUpOption.ValueString()),
 			SourceType:        awstypes.SourceType(item.SourceType.ValueString()),
 		}
 
 		if !item.SourceDescription.IsNull() {
-			new.SourceDescription = aws.String(item.SourceDescription.ValueString())
+			new.SourceDescription = item.SourceDescription.ValueStringPointer()
 		}
 		if !item.SourceFrequency.IsNull() {
 			new.SourceFrequency = awstypes.SourceFrequency(item.SourceFrequency.ValueString())
@@ -459,7 +462,7 @@ func expandControlMappingSourcesCreate(ctx context.Context, tfList []controlMapp
 			new.SourceKeyword = expandSourceKeyword(sk)
 		}
 		if !item.TroubleshootingText.IsNull() {
-			new.TroubleshootingText = aws.String(item.TroubleshootingText.ValueString())
+			new.TroubleshootingText = item.TroubleshootingText.ValueStringPointer()
 		}
 		ccms = append(ccms, new)
 	}
@@ -472,14 +475,14 @@ func expandControlMappingSourcesUpdate(ctx context.Context, tfList []controlMapp
 
 	for _, item := range tfList {
 		new := awstypes.ControlMappingSource{
-			SourceId:          aws.String(item.SourceID.ValueString()),
-			SourceName:        aws.String(item.SourceName.ValueString()),
+			SourceId:          item.SourceID.ValueStringPointer(),
+			SourceName:        item.SourceName.ValueStringPointer(),
 			SourceSetUpOption: awstypes.SourceSetUpOption(item.SourceSetUpOption.ValueString()),
 			SourceType:        awstypes.SourceType(item.SourceType.ValueString()),
 		}
 
 		if !item.SourceDescription.IsNull() {
-			new.SourceDescription = aws.String(item.SourceDescription.ValueString())
+			new.SourceDescription = item.SourceDescription.ValueStringPointer()
 		}
 		if !item.SourceFrequency.IsNull() {
 			new.SourceFrequency = awstypes.SourceFrequency(item.SourceFrequency.ValueString())
@@ -490,7 +493,7 @@ func expandControlMappingSourcesUpdate(ctx context.Context, tfList []controlMapp
 			new.SourceKeyword = expandSourceKeyword(sk)
 		}
 		if !item.TroubleshootingText.IsNull() {
-			new.TroubleshootingText = aws.String(item.TroubleshootingText.ValueString())
+			new.TroubleshootingText = item.TroubleshootingText.ValueStringPointer()
 		}
 		cms = append(cms, new)
 	}
@@ -504,7 +507,7 @@ func expandSourceKeyword(tfList []sourceKeywordData) *awstypes.SourceKeyword {
 	sk := tfList[0]
 	return &awstypes.SourceKeyword{
 		KeywordInputType: awstypes.KeywordInputType(sk.KeywordInputType.ValueString()),
-		KeywordValue:     aws.String(sk.KeywordValue.ValueString()),
+		KeywordValue:     sk.KeywordValue.ValueStringPointer(),
 	}
 }
 
@@ -524,7 +527,7 @@ func flattenControlMappingSources(ctx context.Context, apiObject []awstypes.Cont
 			"source_keyword":       sk,
 			"source_name":          types.StringValue(aws.ToString(source.SourceName)),
 			"source_set_up_option": types.StringValue(string(source.SourceSetUpOption)),
-			"source_type":          types.StringValue(string(source.SourceType)),
+			names.AttrSourceType:   types.StringValue(string(source.SourceType)),
 			"troubleshooting_text": flex.StringToFramework(ctx, source.TroubleshootingText),
 		}
 		objVal, d := types.ObjectValue(controlMappingSourceAttrTypes, obj)

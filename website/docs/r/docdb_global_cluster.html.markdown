@@ -1,9 +1,9 @@
 ---
-subcategory: "DocDB (DocumentDB)"
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_global_cluster"
 description: |-
-  Manages a DocDB Global Cluster
+  Manages a DocumentDB Global Cluster
 ---
 
 # Resource: aws_docdb_global_cluster
@@ -59,6 +59,10 @@ resource "aws_docdb_cluster" "secondary" {
   cluster_identifier        = "test-secondary-cluster"
   global_cluster_identifier = aws_docdb_global_cluster.example.id
   db_subnet_group_name      = "default"
+
+  depends_on = [
+    aws_docdb_cluster.primary
+  ]
 }
 
 resource "aws_docdb_cluster_instance" "secondary" {
@@ -98,7 +102,7 @@ resource "aws_docdb_global_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
@@ -109,16 +113,16 @@ The following arguments are supported:
 * `source_db_cluster_identifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
 * `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Global Cluster Amazon Resource Name (ARN)
 * `global_cluster_members` - Set of objects containing Global Cluster members.
     * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster.
     * `is_writer` - Whether the member is the primary DB Cluster.
 * `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
-* `id` - DocDB Global Cluster.
+* `id` - DocumentDB Global Cluster ID.
 
 ## Timeouts
 
@@ -130,13 +134,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_docdb_global_cluster` can be imported by using the Global Cluster identifier, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_docdb_global_cluster` using the Global Cluster identifier. For example:
 
-```
-$ terraform import aws_docdb_global_cluster.example example
+```terraform
+import {
+  to = aws_docdb_global_cluster.example
+  id = "example"
+}
 ```
 
-Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
+Using `terraform import`, import `aws_docdb_global_cluster` using the Global Cluster identifier. For example:
+
+```console
+% terraform import aws_docdb_global_cluster.example example
+```
+
+Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_docdb_global_cluster" "example" {

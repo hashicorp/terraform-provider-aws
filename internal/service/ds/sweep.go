@@ -1,22 +1,23 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package ds
 
 import (
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_directory_service_directory", &resource.Sweeper{
 		Name: "aws_directory_service_directory",
 		F:    sweepDirectories,
@@ -41,44 +42,40 @@ func init() {
 
 func sweepDirectories(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DSConn()
-
+	conn := client.DSClient(ctx)
+	input := &directoryservice.DescribeDirectoriesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &directoryservice.DescribeDirectoriesInput{}
-	err = describeDirectoriesPages(ctx, conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := directoryservice.NewDescribeDirectoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Directory Service Directory sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, directory := range page.DirectoryDescriptions {
-			r := ResourceDirectory()
+		if err != nil {
+			return fmt.Errorf("error listing Directory Service Directories (%s): %w", region, err)
+		}
+
+		for _, v := range page.DirectoryDescriptions {
+			r := resourceDirectory()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(directory.DirectoryId))
+			d.SetId(aws.ToString(v.DirectoryId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Directory Service Directory sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("listing Directory Service Directories (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithMinPollInterval(10*time.Second)) // Brute-force approach to add some delay due to rate limiting
 
 	if err != nil {
-		return fmt.Errorf("sweeping Directory Service Directories (%s): %w", region, err)
+		return fmt.Errorf("error sweeping Directory Service Directories (%s): %w", region, err)
 	}
 
 	return nil
@@ -86,75 +83,62 @@ func sweepDirectories(region string) error {
 
 func sweepRegions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.(*conns.AWSClient).DSConn()
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
+	conn := client.DSClient(ctx)
 	input := &directoryservice.DescribeDirectoriesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeDirectoriesPages(ctx, conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := directoryservice.NewDescribeDirectoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Directory Service Region sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, directory := range page.DirectoryDescriptions {
-			if directory == nil {
+		if err != nil {
+			return fmt.Errorf("error listing Directory Service Directories (%s): %w", region, err)
+		}
+
+		for _, v := range page.DirectoryDescriptions {
+			if v.RegionsInfo == nil || len(v.RegionsInfo.AdditionalRegions) == 0 {
 				continue
 			}
 
-			if directory.RegionsInfo == nil || len(directory.RegionsInfo.AdditionalRegions) == 0 {
-				continue
+			input := &directoryservice.DescribeRegionsInput{
+				DirectoryId: v.DirectoryId,
 			}
 
-			err := describeRegionsPages(ctx, conn, &directoryservice.DescribeRegionsInput{
-				DirectoryId: directory.DirectoryId,
-			}, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := directoryservice.NewDescribeRegionsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
 				}
 
-				for _, region := range page.RegionsDescription {
-					if region != nil && aws.StringValue(region.RegionType) != directoryservice.RegionTypePrimary {
-						r := ResourceRegion()
+				for _, v := range page.RegionsDescription {
+					if v.RegionType != awstypes.RegionTypePrimary {
+						r := resourceRegion()
 						d := r.Data(nil)
-						d.SetId(RegionCreateResourceID(aws.StringValue(region.DirectoryId), aws.StringValue(region.RegionName)))
+						d.SetId(regionCreateResourceID(aws.ToString(v.DirectoryId), aws.ToString(v.RegionName)))
+
 						sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 					}
 				}
-
-				return !lastPage
-			})
-
-			if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeUnsupportedOperationException, "Multi-region replication") {
-				log.Printf("[INFO] Skipping Directory Service Regions for %s", aws.StringValue(directory.DirectoryId))
-				continue
-			}
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("describing Directory Service Regions for %s: %w", aws.StringValue(directory.DirectoryId), err))
-				continue
 			}
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing Directory Service Directories for %s: %w", region, err))
+		return fmt.Errorf("error sweeping Directory Service Regions (%s): %w", region, err)
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Directory Service Regions for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Directory Service Regions sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
