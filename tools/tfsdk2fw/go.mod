@@ -254,6 +254,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.55.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.26.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.34.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.2.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.18.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.29.2 // indirect
