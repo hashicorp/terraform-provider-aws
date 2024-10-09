@@ -466,6 +466,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Security Groups",
 		},
 		{
+			Factory:  dataSourceSpotDataFeedSubscription,
+			TypeName: "aws_spot_datafeed_subscription",
+			Name:     "Spot Data Feed Subscription",
+		},
+		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
 		},
