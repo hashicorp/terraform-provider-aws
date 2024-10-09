@@ -83,4 +83,4 @@ Using `terraform import`, import Service Catalog Portfolios using the Service Ca
 % terraform import aws_servicecatalog_portfolio.testfolio port-12344321
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-da174375baa38ca503a2ff97599b160bf147cf7877cecc0642771beb1b8b5543 -->
+<!-- cache-key: cdktf-0.20.9 input-da174375baa38ca503a2ff97599b160bf147cf7877cecc0642771beb1b8b5543 -->

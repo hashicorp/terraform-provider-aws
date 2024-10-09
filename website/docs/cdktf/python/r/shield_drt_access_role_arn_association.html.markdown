@@ -31,7 +31,7 @@ from imports.aws.shield_drt_access_role_arn_association import ShieldDrtAccessRo
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        test = IamRole(self, "test",
+        example = IamRole(self, "example",
             assume_role_policy=Token.as_string(
                 Fn.jsonencode({
                     "Statement": [{
@@ -45,20 +45,20 @@ class MyConvertedCode(TerraformStack):
                     ],
                     "Version": "2012-10-17"
                 })),
-            name=aws_shield_drt_access_role_arn.string_value
+            name="example-role"
         )
-        aws_iam_role_policy_attachment_test = IamRolePolicyAttachment(self, "test_1",
+        aws_iam_role_policy_attachment_example = IamRolePolicyAttachment(self, "example_1",
             policy_arn="arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy",
-            role=test.name
+            role=example.name
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
-        aws_iam_role_policy_attachment_test.override_logical_id("test")
-        aws_shield_drt_access_role_arn_association_test =
-        ShieldDrtAccessRoleArnAssociation(self, "test_2",
-            role_arn=test.arn
+        aws_iam_role_policy_attachment_example.override_logical_id("example")
+        aws_shield_drt_access_role_arn_association_example =
+        ShieldDrtAccessRoleArnAssociation(self, "example_2",
+            role_arn=example.arn
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
-        aws_shield_drt_access_role_arn_association_test.override_logical_id("test")
+        aws_shield_drt_access_role_arn_association_example.override_logical_id("example")
 ```
 
 ## Argument Reference
@@ -104,4 +104,4 @@ Using `terraform import`, import Shield DRT access role ARN association using th
 % terraform import aws_shield_drt_access_role_arn_association.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a1b0a7e20332bc5effb0fc54f6639b8b3cfe6eae95b1c7cece4bc8557f79a496 -->
+<!-- cache-key: cdktf-0.20.9 input-64153c99f6109f71d2f116c2ff3e7fcfe38fd4c4748e5390b47d3d064e3cbc4b -->

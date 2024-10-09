@@ -95,4 +95,4 @@ Using `terraform import`, import S3 bucket using `bucket`. For example:
 % terraform import aws_s3_directory_bucket.example example--usw2-az1--x-s3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ecd2f34ecfd0b06c47a4352b23162aad2e13520bdaeaf78f7643a7d034dc3c6a -->
+<!-- cache-key: cdktf-0.20.9 input-ecd2f34ecfd0b06c47a4352b23162aad2e13520bdaeaf78f7643a7d034dc3c6a -->

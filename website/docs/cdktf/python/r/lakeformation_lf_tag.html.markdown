@@ -71,4 +71,4 @@ Using `terraform import`, import Lake Formation LF-Tags using the `catalog_id:ke
 % terraform import aws_lakeformation_lf_tag.example 123456789012:some_key
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bf94b8ab63011d4fef3fa3ec211650c4f2001e0c5c3d0a615a0fa38cb361e973 -->
+<!-- cache-key: cdktf-0.20.9 input-bf94b8ab63011d4fef3fa3ec211650c4f2001e0c5c3d0a615a0fa38cb361e973 -->

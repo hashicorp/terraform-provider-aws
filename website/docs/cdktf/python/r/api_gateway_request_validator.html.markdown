@@ -74,4 +74,4 @@ Using `terraform import`, import `aws_api_gateway_request_validator` using `REST
 % terraform import aws_api_gateway_request_validator.example 12345abcde/67890fghij
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-505defc9caba2113992cea9320dfb9b74802857b30dd2c0100aa471ccc27a60b -->
+<!-- cache-key: cdktf-0.20.9 input-505defc9caba2113992cea9320dfb9b74802857b30dd2c0100aa471ccc27a60b -->

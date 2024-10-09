@@ -1,7 +1,37 @@
-## 5.70.0 (Unreleased)
+## 5.71.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_route53profiles_profiles` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
+* **New Resource:** `aws_backup_restore_testing_plan` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
+* **New Resource:** `aws_backup_restore_testing_selection` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
+* **New Resource:** `aws_datazone_user_profile` ([#38810](https://github.com/hashicorp/terraform-provider-aws/issues/38810))
+* **New Resource:** `aws_pinpointsmsvoicev2_configuration_set` ([#39620](https://github.com/hashicorp/terraform-provider-aws/issues/39620))
+* **New Resource:** `aws_route53profiles_association` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
+* **New Resource:** `aws_route53profiles_profile` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
+* **New Resource:** `aws_route53profiles_resource_association` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
+
+ENHANCEMENTS:
+
+* data-source/aws_backup_plan: Add `rule.schedule_expression_timezone` attribute ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* data-source/aws_eip: Add `ipam_pool_id` attribute ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
+* resource/aws_backup_plan: Add `rule.schedule_expression_timezone` argument ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* resource/aws_eip: Add `ipam_pool_id` argument in support of [public IPAM pools](https://docs.aws.amazon.com/vpc/latest/ipam/tutorials-eip-pool.html) ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
+* resource/aws_vpc_ipam: Add `enable_private_gua` argument ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
+* resource/aws_vpc_ipv6_cidr_block_association: Add `ip_source` and `ipv6_address_attribute` attributes ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
+
+BUG FIXES:
+
+* resource/aws_elasticache_replication_group: Fix `security_group_names` causing resource replacement after import ([#39591](https://github.com/hashicorp/terraform-provider-aws/issues/39591))
+* resource/aws_securityhub_automation_rule: Increase `criteria.aws_account_id`, `criteria.generator_id`, `criteria.resource_id`, and `criteria.title` max length from `20` to `100` ([#39616](https://github.com/hashicorp/terraform-provider-aws/issues/39616))
+* resource/aws_vpc_ipam_pool: Change `publicly_advertisable` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
+* resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip` errors ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
+
+## 5.70.0 (October  4, 2024)
 
 NOTES:
 
+* resource/aws_s3_bucket_lifecycle_configuration: Amazon S3 now applies a default minimum object size of 128 KB for S3 Lifecycle transition rules to any S3 storage class. This new default behavior will be applied to any new or modified S3 Lifecycle configuration. You can override this new default and customize the minimum object size for S3 Lifecycle transition rules to any value ([#39578](https://github.com/hashicorp/terraform-provider-aws/issues/39578))
 * resource/aws_simpledb_domain: The `aws_simpledb_domain` resource has been deprecated and will be removed in a future version. Use Amazon DynamoDB instead ([#39536](https://github.com/hashicorp/terraform-provider-aws/issues/39536))
 * resource/aws_worklink_fleet: The `aws_worklink_fleet` resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead ([#39538](https://github.com/hashicorp/terraform-provider-aws/issues/39538))
 * resource/aws_worklink_website_certificate_authority_association: The `aws_worklink_website_certificate_authority_association` resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead ([#39538](https://github.com/hashicorp/terraform-provider-aws/issues/39538))
@@ -18,11 +48,13 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ebs_snapshot: Add `start_time` attribute ([#39557](https://github.com/hashicorp/terraform-provider-aws/issues/39557))
+* resource/aws_bedrockagent_agent_action_group: Add `prepare_agent` argument ([#39486](https://github.com/hashicorp/terraform-provider-aws/issues/39486))
 * resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.custom_transformation_configuration` argument ([#39556](https://github.com/hashicorp/terraform-provider-aws/issues/39556))
 * resource/aws_globalaccelerator_endpoint_group: Add `endpoint_configuration.attachment_arn` argument ([#39507](https://github.com/hashicorp/terraform-provider-aws/issues/39507))
 * resource/aws_lambda_code_signing_config: Add `tags` argument and `tags_all` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
 * resource/aws_lambda_event_source_mapping: Add `arn` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
 * resource/aws_lambda_event_source_mapping: Add `tags` argument and `tags_all` attribute ([#39535](https://github.com/hashicorp/terraform-provider-aws/issues/39535))
+* resource/aws_s3_bucket_lifecycle_configuration: Add `transition_default_minimum_object_size` argument ([#39578](https://github.com/hashicorp/terraform-provider-aws/issues/39578))
 
 BUG FIXES:
 

@@ -63,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `primaryEndpointAddress` - The endpoint of the primary node in this node group (shard).
 * `readerEndpointAddress` - The endpoint of the reader node in this node group (shard).
 
-<!-- cache-key: cdktf-0.20.1 input-0a09a165e844244961e767fdfba1cd3d4e4518e4b3958f1415c491847d1b687a -->
+<!-- cache-key: cdktf-0.20.9 input-0a09a165e844244961e767fdfba1cd3d4e4518e4b3958f1415c491847d1b687a -->

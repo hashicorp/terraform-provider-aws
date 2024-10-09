@@ -100,4 +100,4 @@ Using `terraform import`, import EKS access entry using the `clusterName` and `p
 % terraform import aws_eks_access_entry.my_eks_access_entry my_cluster_name:my_principal_arn
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b1e354f0352416084c60e499c3b7fd0af5ce630a5214f790b8f8f559d01e99e3 -->
+<!-- cache-key: cdktf-0.20.9 input-b1e354f0352416084c60e499c3b7fd0af5ce630a5214f790b8f8f559d01e99e3 -->

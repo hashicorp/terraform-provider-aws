@@ -131,4 +131,4 @@ Using `terraform import`, import `aws_apigatewayv2_authorizer` using the API ide
 % terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1c3af321ee2c6d773b05a5b2f0d08b279ff40d97f0ebbbd416015deaabe366fd -->
+<!-- cache-key: cdktf-0.20.9 input-1c3af321ee2c6d773b05a5b2f0d08b279ff40d97f0ebbbd416015deaabe366fd -->

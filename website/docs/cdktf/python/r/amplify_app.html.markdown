@@ -280,4 +280,4 @@ Using `terraform import`, import Amplify App using Amplify App ID (appId). For e
 
 App ID can be obtained from App ARN (e.g., `arn:aws:amplify:us-east-1:12345678:apps/d2ypk4k47z8u6`).
 
-<!-- cache-key: cdktf-0.20.1 input-c654202f4b2998abd6708efac5e85089c2fe4ff2ec3b84681ad72e031d2e94df -->
+<!-- cache-key: cdktf-0.20.9 input-c654202f4b2998abd6708efac5e85089c2fe4ff2ec3b84681ad72e031d2e94df -->

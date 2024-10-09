@@ -97,4 +97,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink us
 % terraform import aws_oam_sink.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-df83765dae299e88af75d63112c2aeeda438c2ff865d3b03e37c4e3c091361b8 -->
+<!-- cache-key: cdktf-0.20.9 input-df83765dae299e88af75d63112c2aeeda438c2ff865d3b03e37c4e3c091361b8 -->

@@ -122,4 +122,4 @@ This resource exports the following attributes in addition to the arguments abov
     * `notAfter` - The certificate is not valid after this date.
     * `notBefore` - The certificate is not valid before this date.
 
-<!-- cache-key: cdktf-0.20.1 input-c5fc1f0a710ef5472f25b8e9639aa2a5bb22ff79e04926030c3f0710b353cd73 -->
+<!-- cache-key: cdktf-0.20.9 input-c5fc1f0a710ef5472f25b8e9639aa2a5bb22ff79e04926030c3f0710b353cd73 -->

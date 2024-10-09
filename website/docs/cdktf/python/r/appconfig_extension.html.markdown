@@ -139,4 +139,4 @@ Using `terraform import`, import AppConfig Extensions using their extension ID. 
 % terraform import aws_appconfig_extension.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dc3aefea2329478318f849122336f0b2be77d040d49129d32b5456797deed301 -->
+<!-- cache-key: cdktf-0.20.9 input-dc3aefea2329478318f849122336f0b2be77d040d49129d32b5456797deed301 -->
