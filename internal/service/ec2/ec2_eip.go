@@ -108,6 +108,7 @@ func resourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"network_interface": {
 				Type:     schema.TypeString,
