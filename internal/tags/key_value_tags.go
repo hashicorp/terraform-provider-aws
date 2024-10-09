@@ -764,8 +764,16 @@ func GetAnyAttr(value cty.Value, attr string, shouldReturnSetElement func(string
 
 	// Handle indexed attribute
 	if strings.Contains(part, "[") && strings.Contains(part, "]") {
-		attrName := part[:strings.Index(part, "[")]
-		indexStr := part[strings.Index(part, "[")+1 : strings.Index(part, "]")]
+		attrNameEnd := strings.Index(part, "[")
+		indexStart := attrNameEnd + 1
+		indexEnd := strings.Index(part, "]")
+
+		if attrNameEnd == -1 || indexEnd == -1 {
+			return cty.NilVal, fmt.Errorf("invalid indexed attribute format: %s", part)
+		}
+
+		attrName := part[:attrNameEnd]
+		indexStr := part[indexStart:indexEnd]
 
 		if !value.Type().HasAttribute(attrName) {
 			return cty.NilVal, fmt.Errorf("attribute %s not found", attrName)
