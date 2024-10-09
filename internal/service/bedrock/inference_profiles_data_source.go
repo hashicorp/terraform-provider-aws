@@ -99,17 +99,17 @@ type inferenceProfilesDataSourceModel struct {
 }
 
 type inferenceProfileSummaryModel struct {
-	CreatedAt            timetypes.RFC3339                                            `tfsdk:"created_at"`
-	Description          types.String                                                 `tfsdk:"description"`
-	InferenceProfileARN  fwtypes.ARN                                                  `tfsdk:"inference_profile_arn"`
-	InferenceProfileID   types.String                                                 `tfsdk:"inference_profile_id"`
-	InferenceProfileName types.String                                                 `tfsdk:"inference_profile_name"`
-	Models               fwtypes.ListNestedObjectValueOf[inferenceProfilesModelModel] `tfsdk:"models"`
-	Status               fwtypes.StringEnum[awstypes.InferenceProfileStatus]          `tfsdk:"status"`
-	Type                 fwtypes.StringEnum[awstypes.InferenceProfileType]            `tfsdk:"type"`
-	UpdatedAt            timetypes.RFC3339                                            `tfsdk:"updated_at"`
+	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
+	Description          types.String                                                `tfsdk:"description"`
+	InferenceProfileARN  fwtypes.ARN                                                 `tfsdk:"inference_profile_arn"`
+	InferenceProfileID   types.String                                                `tfsdk:"inference_profile_id"`
+	InferenceProfileName types.String                                                `tfsdk:"inference_profile_name"`
+	Models               fwtypes.ListNestedObjectValueOf[inferenceProfileModelModel] `tfsdk:"models"`
+	Status               fwtypes.StringEnum[awstypes.InferenceProfileStatus]         `tfsdk:"status"`
+	Type                 fwtypes.StringEnum[awstypes.InferenceProfileType]           `tfsdk:"type"`
+	UpdatedAt            timetypes.RFC3339                                           `tfsdk:"updated_at"`
 }
 
-type inferenceProfilesModelModel struct {
+type inferenceProfileModelModel struct {
 	ModelARN fwtypes.ARN `tfsdk:"model_arn"`
 }

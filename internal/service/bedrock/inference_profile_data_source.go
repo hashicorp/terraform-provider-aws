@@ -7,14 +7,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @FrameworkDataSource(name="Inference Profile")
@@ -26,7 +31,7 @@ type inferenceProfileDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *inferenceProfileDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (*inferenceProfileDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_bedrock_inference_profile"
 }
 
@@ -40,11 +45,9 @@ func (d *inferenceProfileDataSource) Schema(ctx context.Context, request datasou
 			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"inference_profile_arn": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
 			},
 			"inference_profile_id": schema.StringAttribute{
 				Required: true,
@@ -55,12 +58,17 @@ func (d *inferenceProfileDataSource) Schema(ctx context.Context, request datasou
 			"models": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileModelModel](ctx),
 				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[inferenceProfileModelModel](ctx),
+				},
 			},
 			"status": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.InferenceProfileStatus](),
+				Computed:   true,
 			},
 			"type": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.InferenceProfileType](),
+				Computed:   true,
 			},
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -78,38 +86,59 @@ func (d *inferenceProfileDataSource) Read(ctx context.Context, request datasourc
 	}
 
 	conn := d.Meta().BedrockClient(ctx)
-	input := &bedrock.GetInferenceProfileInput{
-		InferenceProfileIdentifier: data.InferenceProfileID.ValueStringPointer(),
-	}
 
-	output, err := conn.GetInferenceProfile(ctx, input)
+	output, err := findInferenceProfileByID(ctx, conn, data.InferenceProfileID.ValueString())
+
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("error reading inference profile: %s", data.InferenceProfileID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Inference Profile (%s)", data.InferenceProfileID.ValueString()), err.Error())
 		return
 	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.ID = types.StringValue(*output.InferenceProfileId)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
+func findInferenceProfileByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetInferenceProfileOutput, error) {
+	input := &bedrock.GetInferenceProfileInput{
+		InferenceProfileIdentifier: aws.String(id),
+	}
+
+	return findInferenceProfile(ctx, conn, input)
+}
+
+func findInferenceProfile(ctx context.Context, conn *bedrock.Client, input *bedrock.GetInferenceProfileInput) (*bedrock.GetInferenceProfileOutput, error) {
+	output, err := conn.GetInferenceProfile(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 type inferenceProfileDataSourceModel struct {
-	ID                   types.String                                                `tfsdk:"id"`
-	InferenceProfileARN  types.String                                                `tfsdk:"inference_profile_arn"`
+	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
+	Description          types.String                                                `tfsdk:"description"`
+	InferenceProfileARN  fwtypes.ARN                                                 `tfsdk:"inference_profile_arn"`
 	InferenceProfileID   types.String                                                `tfsdk:"inference_profile_id"`
 	InferenceProfileName types.String                                                `tfsdk:"inference_profile_name"`
 	Models               fwtypes.ListNestedObjectValueOf[inferenceProfileModelModel] `tfsdk:"models"`
-	Status               types.String                                                `tfsdk:"status"`
-	Type                 types.String                                                `tfsdk:"type"`
-	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
-	Description          types.String                                                `tfsdk:"description"`
+	Status               fwtypes.StringEnum[awstypes.InferenceProfileStatus]         `tfsdk:"status"`
+	Type                 fwtypes.StringEnum[awstypes.InferenceProfileType]           `tfsdk:"type"`
 	UpdatedAt            timetypes.RFC3339                                           `tfsdk:"updated_at"`
-}
-
-type inferenceProfileModelModel struct {
-	ModelArn types.String `tfsdk:"model_arn"`
 }
