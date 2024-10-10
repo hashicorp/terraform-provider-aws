@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_osis_pipeline: add `vpc_attachment_options` and `vpc_endpoint_management` options
+```
