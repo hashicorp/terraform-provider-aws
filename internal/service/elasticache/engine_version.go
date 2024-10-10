@@ -166,22 +166,30 @@ func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
 	d.Set("engine_version_actual", version)
 }
 
+func determineAttrEngineVersionRedis(configVersion string, engineVersion *gversion.Version) (string, error) {
+	if engineVersion.Segments()[0] < 6 {
+		return engineVersion.String(), nil
+	} else {
+		// Handle major-only version number
+		isConfigVersion6x, _ := regexp.MatchString(`^6\.x`, configVersion)
+		isEngineVersion6, _ := regexp.MatchString(`^6`, engineVersion.String())
+		if isConfigVersion6x && isEngineVersion6 {
+			return fmt.Sprintf("%d.x", engineVersion.Segments()[0]), nil
+		} else {
+			return fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]), nil
+		}
+	}
+}
+
 func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	engineVersion, err := gversion.NewVersion(aws.ToString(version))
 	if err != nil {
 		return fmt.Errorf("reading engine version: %w", err)
 	}
-	if engineVersion.Segments()[0] < 6 {
-		d.Set(names.AttrEngineVersion, engineVersion.String())
-	} else {
-		// Handle major-only version number
-		configVersion := d.Get(names.AttrEngineVersion).(string)
-		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
-			d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
-		} else {
-			d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
-		}
-	}
+
+	configVersion := d.Get("engine_version").(string)
+	attrEngineVersion, _ := determineAttrEngineVersionRedis(configVersion, engineVersion)
+	d.Set("engine_version", attrEngineVersion)
 	d.Set("engine_version_actual", engineVersion.String())
 
 	return nil
