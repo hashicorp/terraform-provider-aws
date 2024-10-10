@@ -21,7 +21,7 @@ func TestAccBedrockInferenceProfileDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockInferenceProfileDataSourceConfig_basic(),
+				Config: testAccInferenceProfileDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "inference_profile_arn"),
 					resource.TestCheckResourceAttrSet(datasourceName, "inference_profile_id"),
@@ -38,7 +38,7 @@ func TestAccBedrockInferenceProfileDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBedrockInferenceProfileDataSourceConfig_basic() string {
+func testAccInferenceProfileDataSourceConfig_basic() string {
 	return `
 data "aws_bedrock_inference_profiles" "test" {}
 
