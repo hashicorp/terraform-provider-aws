@@ -132,7 +132,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.JobTags = fwflex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
+	data.JobTags = tftags.FlattenStringValueMap(ctx, jobTags.IgnoreAWS().Map())
 
 	modelARN := aws.ToString(outputGM.ModelArn)
 	modelTags, err := listTags(ctx, conn, modelARN)
@@ -143,7 +143,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.ModelTags = fwflex.FlattenFrameworkStringValueMap(ctx, modelTags.IgnoreAWS().Map())
+	data.ModelTags = tftags.FlattenStringValueMap(ctx, modelTags.IgnoreAWS().Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -155,12 +155,12 @@ type customModelDataSourceModel struct {
 	ID                   types.String                                               `tfsdk:"id"`
 	JobARN               fwtypes.ARN                                                `tfsdk:"job_arn"`
 	JobName              types.String                                               `tfsdk:"job_name"`
-	JobTags              types.Map                                                  `tfsdk:"job_tags"`
+	JobTags              tftags.Map                                                 `tfsdk:"job_tags"`
 	ModelARN             fwtypes.ARN                                                `tfsdk:"model_arn"`
 	ModelID              types.String                                               `tfsdk:"model_id"`
 	ModelKMSKeyARN       fwtypes.ARN                                                `tfsdk:"model_kms_key_arn"`
 	ModelName            types.String                                               `tfsdk:"model_name"`
-	ModelTags            types.Map                                                  `tfsdk:"model_tags"`
+	ModelTags            tftags.Map                                                 `tfsdk:"model_tags"`
 	OutputDataConfig     fwtypes.ListNestedObjectValueOf[outputDataConfigModel]     `tfsdk:"output_data_config"`
 	TrainingDataConfig   fwtypes.ListNestedObjectValueOf[trainingDataConfigModel]   `tfsdk:"training_data_config"`
 	TrainingMetrics      fwtypes.ListNestedObjectValueOf[trainingMetricsModel]      `tfsdk:"training_metrics"`
