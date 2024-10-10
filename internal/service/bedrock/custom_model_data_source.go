@@ -72,11 +72,11 @@ func (d *customModelDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			"model_tags":             tftags.TagsAttributeComputedOnly(),
-			"output_data_config":     framework.NewDataSourceComputedListOfObjectSchema[outputDataConfigModel](ctx),
-			"training_data_config":   framework.NewDataSourceComputedListOfObjectSchema[trainingDataConfigModel](ctx),
-			"training_metrics":       framework.NewDataSourceComputedListOfObjectSchema[trainingMetricsModel](ctx),
-			"validation_data_config": framework.NewDataSourceComputedListOfObjectSchema[validationDataConfigModel](ctx),
-			"validation_metrics":     framework.NewDataSourceComputedListOfObjectSchema[validatorMetricModel](ctx),
+			"output_data_config":     framework.DataSourceComputedListOfObjectAttribute[outputDataConfigModel](ctx),
+			"training_data_config":   framework.DataSourceComputedListOfObjectAttribute[trainingDataConfigModel](ctx),
+			"training_metrics":       framework.DataSourceComputedListOfObjectAttribute[trainingMetricsModel](ctx),
+			"validation_data_config": framework.DataSourceComputedListOfObjectAttribute[validationDataConfigModel](ctx),
+			"validation_metrics":     framework.DataSourceComputedListOfObjectAttribute[validatorMetricModel](ctx),
 		},
 	}
 }
