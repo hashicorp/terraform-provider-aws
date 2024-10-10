@@ -393,7 +393,8 @@ func resourceListener() *schema.Resource {
 				Optional:     true,
 				Default:      350,
 				ValidateFunc: validation.IntBetween(60, 6000),
-				//DiffSuppressFunc: TBD,
+				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -421,20 +422,20 @@ func suppressIfDefaultActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiff
 	}
 }
 
-// func suppressIfListenerProtocolNot(protocols ...awstypes.ProtocolEnum) schema.SchemaDiffSuppressFunc {
-// 	return func(k string, old string, new string, d *schema.ResourceData) bool {
-// 		// fmt.Println(d.Get("load_balancer_arn").(string)) ## returns an "Unknown" value
-// 		protocolType := awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string))
-// 		fmt.Println("original:", protocolType)
+func suppressIfListenerProtocolNot(protocols ...awstypes.ProtocolEnum) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		protocolType := awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string))
 
-// 		if protocolType == awstypes.ProtocolEnum("") && strings.Contains(d.Get("load_balancer_arn").(string), "gwy") {
-// 			protocolType = awstypes.ProtocolEnumGeneve
-// 		}
-// 		fmt.Println("After:", protocolType)
+		// GENEVE protocol for GWLB listeners cannot be specified on create
+		// If protocol is blank (i.e. GWLB listener on plan) or load balancer ARN contains 'gwy',
+		// assume GENEVE protocol.
+		if protocolType == awstypes.ProtocolEnum("") || strings.Contains(d.Get("load_balancer_arn").(string), "gwy") {
+			protocolType = awstypes.ProtocolEnumGeneve
+		}
 
-// 		return !slices.Contains(protocols, protocolType)
-// 	}
-// }
+		return !slices.Contains(protocols, protocolType)
+	}
+}
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -532,7 +533,6 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// If protocol is not set, use the load balancer ARN to determine if listener is gateway type and set protocol appropriately
 	if listenerProtocolType == awstypes.ProtocolEnum("") && strings.Contains(lbARN, "loadbalancer/gwy/") {
 		listenerProtocolType = awstypes.ProtocolEnumGeneve
-		fmt.Println(listenerProtocolType)
 	}
 
 	// Listener attributes like TCP idle timeout are not supported on create
