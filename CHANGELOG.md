@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_elasticache_serverless_cache` ([#39590](https://github.com/hashicorp/terraform-provider-aws/issues/39590))
 * **New Data Source:** `aws_prometheus_default_scraper_configuration` ([#35280](https://github.com/hashicorp/terraform-provider-aws/issues/35280))
 * **New Data Source:** `aws_route53profiles_profiles` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 * **New Resource:** `aws_backup_restore_testing_plan` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
@@ -16,6 +17,7 @@ ENHANCEMENTS:
 
 * data-source/aws_backup_plan: Add `rule.schedule_expression_timezone` attribute ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
 * data-source/aws_eip: Add `ipam_pool_id` attribute ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
+* data-source/aws_vpc_endpoint_service: Add `private_dns_names` attribute ([#39659](https://github.com/hashicorp/terraform-provider-aws/issues/39659))
 * resource/aws_backup_plan: Add `rule.schedule_expression_timezone` argument ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
 * resource/aws_batch_compute_environment: Add plan-time validation of `update_policy.job_execution_timeout_minutes` ([#39583](https://github.com/hashicorp/terraform-provider-aws/issues/39583))
 * resource/aws_batch_job_definition: Suppress unnecessary differences in `container_properties.environment` ([#21834](https://github.com/hashicorp/terraform-provider-aws/issues/21834))
