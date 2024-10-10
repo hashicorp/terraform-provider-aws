@@ -117,7 +117,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Cannot use transparent tagging because it has to handle `tags_all` as well
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))

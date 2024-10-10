@@ -49,7 +49,7 @@ func (d *defaultTagsDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	defaultTagsConfig := d.Meta().DefaultTagsConfig
+	defaultTagsConfig := d.Meta().DefaultTagsConfig()
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.GetTags()
 

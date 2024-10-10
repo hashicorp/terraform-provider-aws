@@ -26,7 +26,7 @@ import (
 
 type AWSClient struct {
 	AccountID         string
-	DefaultTagsConfig *tftags.DefaultConfig
+	defaultTagsConfig *tftags.DefaultConfig
 	IgnoreTagsConfig  *tftags.IgnoreConfig
 	Partition         string
 	Region            string
@@ -53,6 +53,14 @@ func (c *AWSClient) CredentialsProvider(context.Context) aws_sdkv2.CredentialsPr
 		return nil
 	}
 	return c.awsConfig.Credentials
+}
+
+func (c *AWSClient) DefaultTagsConfig() *tftags.DefaultConfig {
+	return c.defaultTagsConfig
+}
+
+func (c *AWSClient) SetDefaultTagsConfig(d *tftags.DefaultConfig) {
+	c.defaultTagsConfig = d
 }
 
 func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name
