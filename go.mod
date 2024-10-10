@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.43
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.41
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.17
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.30
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.31
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.2
@@ -68,7 +68,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.29.2
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.34.2
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.2
@@ -201,7 +201,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.2
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.16.2
