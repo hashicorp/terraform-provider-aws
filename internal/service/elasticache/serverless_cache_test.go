@@ -108,6 +108,40 @@ func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheServerlessCache_finalSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var serverlessElasticCache awstypes.ServerlessCache
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckServerlessCacheDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_finalSnapshot(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheServerlessCache_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -524,6 +558,17 @@ func testAccServerlessCacheConfig_basicRedis(rName string) string {
 resource "aws_elasticache_serverless_cache" "test" {
   engine = "redis"
   name   = %[1]q
+}
+`, rName)
+}
+
+func testAccServerlessCacheConfig_finalSnapshot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine = "redis"
+  name   = %[1]q
+
+  final_snapshot_name = %[1]q
 }
 `, rName)
 }

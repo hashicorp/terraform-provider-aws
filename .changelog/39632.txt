@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `serverless_cache_snapshot_name` attribute
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Add `multi_az_enabled` to the CreateReplicationGroup AWS API request regardless of its value. Fixes restoring a Multi-AZ enabled replication group snapshot, or a serverless cache snapshot, into a new, Multi-AZ disabled, replication group.
+```
+
+```release-note:enhancement
+resource/aws_elasticache_serverless_cache: Add `final_snapshot_name` attribute
+```
