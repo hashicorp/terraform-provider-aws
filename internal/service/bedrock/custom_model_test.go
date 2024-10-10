@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccBedrockCustomModel_basic(t *testing.T) {
+func testAccCustomModel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
@@ -72,7 +72,7 @@ func testAccBedrockCustomModel_basic(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_disappears(t *testing.T) {
+func testAccCustomModel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
@@ -96,7 +96,7 @@ func testAccBedrockCustomModel_disappears(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags(t *testing.T) {
+func testAccCustomModel_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
@@ -143,7 +143,7 @@ func testAccBedrockCustomModel_tags(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_kmsKey(t *testing.T) {
+func testAccCustomModel_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
@@ -172,7 +172,7 @@ func testAccBedrockCustomModel_kmsKey(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_validationDataConfig(t *testing.T) {
+func testAccCustomModel_validationDataConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
@@ -203,7 +203,7 @@ func testAccBedrockCustomModel_validationDataConfig(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.T) {
+func testAccCustomModel_validationDataConfigWaitForCompletion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -251,7 +251,7 @@ func testAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.
 	})
 }
 
-func testAccBedrockCustomModel_vpcConfig(t *testing.T) {
+func testAccCustomModel_vpcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
