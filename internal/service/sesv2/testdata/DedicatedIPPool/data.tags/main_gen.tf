@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 data "aws_sesv2_dedicated_ip_pool" "test" {
-  pool_name  = aws_sesv2_dedicated_ip_pool.test.pool_name
+  pool_name = aws_sesv2_dedicated_ip_pool.test.pool_name
 }
 
 resource "aws_sesv2_dedicated_ip_pool" "test" {
