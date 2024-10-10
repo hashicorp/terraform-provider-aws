@@ -1,7 +1,7 @@
 ---
-subcategory: 'Bedrock'
-layout: 'aws'
-page_title: 'AWS: aws_bedrock_inference_profiles'
+subcategory: "Bedrock"
+layout: "aws"
+page_title: "AWS: aws_bedrock_inference_profiles"
 description: |-
   Terraform data source for managing AWS Bedrock Inference Profiles.
 ---
