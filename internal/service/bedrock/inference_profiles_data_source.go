@@ -33,13 +33,7 @@ func (*inferenceProfilesDataSource) Metadata(_ context.Context, request datasour
 func (d *inferenceProfilesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"inference_profile_summaries": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileSummaryModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[inferenceProfileSummaryModel](ctx),
-				},
-			},
+			"inference_profile_summaries": framework.DataSourceComputedListOfObjectAttribute[inferenceProfileSummaryModel](ctx),
 		},
 	}
 }

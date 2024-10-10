@@ -56,13 +56,7 @@ func (d *inferenceProfileDataSource) Schema(ctx context.Context, request datasou
 			"inference_profile_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"models": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileModelModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[inferenceProfileModelModel](ctx),
-				},
-			},
+			"models": framework.DataSourceComputedListOfObjectAttribute[inferenceProfileModelModel](ctx),
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InferenceProfileStatus](),
 				Computed:   true,
