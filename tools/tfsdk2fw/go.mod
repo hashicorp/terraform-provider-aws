@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.43 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.41 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.17 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.30 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.31 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
@@ -81,7 +81,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.29.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.34.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.35.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.2 // indirect
@@ -219,7 +219,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.23.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.26.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.27.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.25.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.16.2 // indirect
