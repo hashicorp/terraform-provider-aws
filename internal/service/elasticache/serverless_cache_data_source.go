@@ -52,7 +52,7 @@ func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasour
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"endpoint": schema.ObjectAttribute{
+			names.AttrEndpoint: schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[dsEndpoint](ctx),
 				Computed:   true,
 			},
