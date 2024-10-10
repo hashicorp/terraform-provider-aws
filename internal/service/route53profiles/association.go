@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -51,7 +50,7 @@ const (
 
 type resourceAssociation struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceProfileData]
+	framework.WithNoOpUpdate[associationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -73,6 +72,9 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"profile_id": schema.StringAttribute{
 				Required: true,
@@ -89,9 +91,15 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ProfileStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatusMessage: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -109,35 +117,35 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var state associationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	var data associationResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := &route53profiles.AssociateProfileInput{
-
+		Name: data.Name.ValueStringPointer(),
 		Tags: getTagsInSlice(ctx),
 	}
-	resp.Diagnostics.Append(flex.Expand(ctx, state, input)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
 
 	out, err := conn.AssociateProfile(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, state.Name.String(), err),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.ProfileAssociation == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, state.Name.String(), nil),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, data.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	state.ID = flex.StringToFramework(ctx, out.ProfileAssociation.Id)
+	data.ID = flex.StringToFramework(ctx, out.ProfileAssociation.Id)
 
 	associationArn := arn.ARN{
 		Partition: r.Meta().Partition,
@@ -147,26 +155,24 @@ func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateReq
 		Resource:  fmt.Sprintf("profile-association/%s", aws.ToString(out.ProfileAssociation.Id)),
 	}.String()
 
-	log.Println("WARN", associationArn)
+	data.ARN = flex.StringValueToFramework(ctx, associationArn)
 
-	state.ARN = flex.StringValueToFramework(ctx, associationArn)
-
-	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	profileAssociation, err := waitAssociationCreated(ctx, conn, state.ID.ValueString(), createTimeout)
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	profileAssociation, err := waitAssociationCreated(ctx, conn, data.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionWaitingForCreation, ResNameAssociation, state.Name.String(), err),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionWaitingForCreation, ResNameAssociation, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, profileAssociation, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, profileAssociation, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
