@@ -33,6 +33,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
 			Name:     "Configuration Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceDedicatedIPPool,
