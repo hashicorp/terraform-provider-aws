@@ -38,6 +38,10 @@ func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasour
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
 			},
+			"cache_usage_limits": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[dsCacheUsageLimits](ctx),
+				Computed:   true,
+			},
 			names.AttrCreateTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -47,6 +51,10 @@ func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasour
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
+			},
+			"endpoint": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[dsEndpoint](ctx),
+				Computed:   true,
 			},
 			names.AttrEngine: schema.StringAttribute{
 				Computed: true,
@@ -63,10 +71,13 @@ func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasour
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrSecurityGroupIDs: schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				ElementType: types.StringType,
-				Computed:    true,
+			"reader_endpoint": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[dsEndpoint](ctx),
+				Computed:   true,
+			},
+			names.AttrSecurityGroupIDs: schema.ListAttribute{
+				CustomType: fwtypes.ListOfStringType,
+				Computed:   true,
 			},
 			"snapshot_retention_limit": schema.Int64Attribute{
 				Computed: true,
@@ -74,67 +85,12 @@ func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasour
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrSubnetIDs: schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				ElementType: types.StringType,
-				Computed:    true,
+			names.AttrSubnetIDs: schema.ListAttribute{
+				CustomType: fwtypes.ListOfStringType,
+				Computed:   true,
 			},
 			"user_group_id": schema.StringAttribute{
 				Computed: true,
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"cache_usage_limits": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[dsCacheUsageLimits](ctx),
-				Blocks: map[string]schema.Block{
-					"data_storage": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[dsDataStorage](ctx),
-						Attributes: map[string]schema.Attribute{
-							"maximum": schema.Int64Attribute{
-								Computed: true,
-							},
-							"minimum": schema.Int64Attribute{
-								Computed: true,
-							},
-							names.AttrUnit: schema.StringAttribute{
-								Computed: true,
-							},
-						},
-					},
-					"ecpu_per_second": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[dsECPUPerSecond](ctx),
-						Attributes: map[string]schema.Attribute{
-							"maximum": schema.Int64Attribute{
-								Computed: true,
-							},
-							"minimum": schema.Int64Attribute{
-								Computed: true,
-							},
-						},
-					},
-				},
-			},
-			names.AttrEndpoint: schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[dsEndpoint](ctx),
-				Attributes: map[string]schema.Attribute{
-					names.AttrAddress: schema.StringAttribute{
-						Computed: true,
-					},
-					names.AttrPort: schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
-			"reader_endpoint": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[dsEndpoint](ctx),
-				Attributes: map[string]schema.Attribute{
-					names.AttrAddress: schema.StringAttribute{
-						Computed: true,
-					},
-					names.AttrPort: schema.Int64Attribute{
-						Computed: true,
-					},
-				},
 			},
 		},
 	}
@@ -142,27 +98,24 @@ func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasour
 
 func (d *dataSourceServerlessCache) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data dsServerlessCache
+	conn := d.Meta().ElastiCacheClient(ctx)
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := d.Meta().ElastiCacheClient(ctx)
-
-	serverlessCache, err := findServerlessCacheByID(ctx, conn, data.ServerlessCacheName.ValueString())
+	output, err := findServerlessCacheByID(ctx, conn, data.Name.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionReading, "Serverless Cache", data.ServerlessCacheName.ValueString(), err),
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionReading, "Serverless Cache", data.Name.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, serverlessCache, &data)...)
-
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -181,12 +134,12 @@ type dsServerlessCache struct {
 	FullEngineVersion      types.String                              `tfsdk:"full_engine_version"`
 	KmsKeyID               types.String                              `tfsdk:"kms_key_id"`
 	MajorEngineVersion     types.String                              `tfsdk:"major_engine_version"`
+	Name                   types.String                              `tfsdk:"name"`
 	ReaderEndpoint         fwtypes.ObjectValueOf[dsEndpoint]         `tfsdk:"reader_endpoint"`
-	SecurityGroupIDs       fwtypes.SetValueOf[types.String]          `tfsdk:"security_group_ids"`
-	ServerlessCacheName    types.String                              `tfsdk:"name"`
+	SecurityGroupIDs       fwtypes.ListValueOf[types.String]         `tfsdk:"security_group_ids"`
 	SnapshotRetentionLimit types.Int64                               `tfsdk:"snapshot_retention_limit"`
 	Status                 types.String                              `tfsdk:"status"`
-	SubnetIDs              fwtypes.SetValueOf[types.String]          `tfsdk:"subnet_ids"`
+	SubnetIDs              fwtypes.ListValueOf[types.String]         `tfsdk:"subnet_ids"`
 	UserGroupID            types.String                              `tfsdk:"user_group_id"`
 }
 
