@@ -34,7 +34,7 @@ func TestAccVPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", acctest.CtFalse),
 					resource.TestCheckResourceAttr(datasourceName, names.AttrOwner, "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", ""),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_names.#", acctest.Ct0),
 					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, names.AttrServiceName, "dynamodb"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "supported_ip_address_types.#", 0),
