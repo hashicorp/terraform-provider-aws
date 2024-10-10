@@ -77,4 +77,4 @@ Using `terraform import`, import Inspector Classic Assessment Targets using thei
 % terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-751090ce084efdbf0b345dca096fd95c6240e0d6d09be01dcacf39cbb869bd19 -->
+<!-- cache-key: cdktf-0.20.9 input-751090ce084efdbf0b345dca096fd95c6240e0d6d09be01dcacf39cbb869bd19 -->

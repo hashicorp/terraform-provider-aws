@@ -73,4 +73,4 @@ The `corsConfiguration` object supports the following:
 * `exposeHeaders` - Set of exposed HTTP headers.
 * `maxAge` - Number of seconds that the browser should cache preflight request results.
 
-<!-- cache-key: cdktf-0.20.1 input-07def8e516a65dc957df3faf29d3393a72b9685bf3a34d4aa3801030f8f0dd38 -->
+<!-- cache-key: cdktf-0.20.9 input-07def8e516a65dc957df3faf29d3393a72b9685bf3a34d4aa3801030f8f0dd38 -->

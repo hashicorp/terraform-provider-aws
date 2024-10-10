@@ -102,4 +102,4 @@ Using `terraform import`, import `aws_lightsail_lb_certificate` using the id att
 % terraform import aws_lightsail_lb_certificate.test example-load-balancer,example-load-balancer-certificate
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6dd7f018be5db76314b7c107cdfa92a9e683d7eb41cf67a52fae3873bec4f0c6 -->
+<!-- cache-key: cdktf-0.20.9 input-6dd7f018be5db76314b7c107cdfa92a9e683d7eb41cf67a52fae3873bec4f0c6 -->

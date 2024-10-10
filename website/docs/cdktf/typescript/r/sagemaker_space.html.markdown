@@ -192,4 +192,4 @@ Using `terraform import`, import SageMaker Spaces using the `id`. For example:
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3e17b39793c37f2fefabeb98ab4bdbd74dcfb087df2995c78e61ef0faf9ecdc -->
+<!-- cache-key: cdktf-0.20.9 input-b3e17b39793c37f2fefabeb98ab4bdbd74dcfb087df2995c78e61ef0faf9ecdc -->

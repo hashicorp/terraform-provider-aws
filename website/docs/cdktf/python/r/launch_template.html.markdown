@@ -447,6 +447,7 @@ Each `network_interfaces` block supports the following:
 * `ipv6_prefixes` - (Optional) One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
 * `network_interface_id` - (Optional) The ID of the network interface to attach.
 * `network_card_index` - (Optional) The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
+* `primary_ipv6` - (Optional) Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `private_ip_address` - (Optional) The primary private IPv4 address.
 * `ipv4_address_count` - (Optional) The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
 * `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
@@ -519,4 +520,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-eb46931f560f9bd164e98b954f3becd91353d04fb42aa6cdb223ac168ffd71f6 -->
+<!-- cache-key: cdktf-0.20.9 input-4ea1f79147c035d56ca062057addfe56de64ba6c3dee99ca558008c0b296d7c8 -->

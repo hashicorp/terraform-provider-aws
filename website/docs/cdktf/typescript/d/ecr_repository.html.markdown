@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `scanOnPush` - Whether images are scanned after being pushed to the repository.
 
-<!-- cache-key: cdktf-0.20.1 input-dca647d04d11f3277efe49d65bb6183e2b5b2ad799294faa6fdd90156a3bfee3 -->
+<!-- cache-key: cdktf-0.20.9 input-dca647d04d11f3277efe49d65bb6183e2b5b2ad799294faa6fdd90156a3bfee3 -->

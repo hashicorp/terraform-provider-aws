@@ -159,4 +159,4 @@ Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
 % terraform import aws_ami.example ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-07ad6907bcdf710f44e4490525952f2744e1fd913c106b86670941ed753bd143 -->
+<!-- cache-key: cdktf-0.20.9 input-07ad6907bcdf710f44e4490525952f2744e1fd913c106b86670941ed753bd143 -->

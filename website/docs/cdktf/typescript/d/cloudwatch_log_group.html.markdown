@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `retentionInDays` - Number of days log events retained in the specified log group.
 * `tags` - Map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-8a8ab510e997c869183a1e56bb94690ada516904b6b672569dc99353f2274fae -->
+<!-- cache-key: cdktf-0.20.9 input-8a8ab510e997c869183a1e56bb94690ada516904b6b672569dc99353f2274fae -->

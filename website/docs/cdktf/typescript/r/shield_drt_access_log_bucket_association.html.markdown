@@ -102,4 +102,4 @@ Using `terraform import`, import Shield DRT access log bucket associations using
 % terraform import aws_shield_drt_access_log_bucket_association.example example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cb4e208b96c15a8650b0613340094369071abb3b2e7ac8628349179a5337633d -->
+<!-- cache-key: cdktf-0.20.9 input-cb4e208b96c15a8650b0613340094369071abb3b2e7ac8628349179a5337633d -->

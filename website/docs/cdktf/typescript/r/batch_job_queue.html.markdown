@@ -106,7 +106,7 @@ This resource supports the following arguments:
 * `name` - (Required) Specifies the name of the job queue.
 * `computeEnvironments` - (Deprecated) (Optional) This parameter is deprecated, please use `computeEnvironmentOrder` instead. List of compute environment ARNs mapped to a job queue. The position of the compute environments in the list will dictate the order. When importing a AWS Batch Job Queue, the parameter `computeEnvironments` will always be used over `computeEnvironmentOrder`. Please adjust your HCL accordingly.
 * `computeEnvironmentOrder` - (Optional) The set of compute environments mapped to a job queue and their order relative to each other. The job scheduler uses this parameter to determine which compute environment runs a specific job. Compute environments must be in the VALID state before you can associate them with a job queue. You can associate up to three compute environments with a job queue.  
-* `job_state_time_limit_action` - (Optional) The set of job state time limit actions mapped to a job queue. Specifies an action that AWS Batch will take after the job has remained at the head of the queue in the specified state for longer than the specified time.
+* `jobStateTimeLimitAction` - (Optional) The set of job state time limit actions mapped to a job queue. Specifies an action that AWS Batch will take after the job has remained at the head of the queue in the specified state for longer than the specified time.
 * `priority` - (Required) The priority of the job queue. Job queues with a higher priority
     are evaluated first when associated with the same compute environment.
 * `schedulingPolicyArn` - (Optional) The ARN of the fair share scheduling policy. If this parameter is specified, the job queue uses a fair share scheduling policy. If this parameter isn't specified, the job queue uses a first in, first out (FIFO) scheduling policy. After a job queue is created, you can replace but can't remove the fair share scheduling policy.
@@ -172,4 +172,4 @@ Using `terraform import`, import Batch Job Queue using the `arn`. For example:
 % terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d2d8afc607d24c6304997117ac827b221e6d3aa3e410fd4f8d5afa5e4d1a8f16 -->
+<!-- cache-key: cdktf-0.20.9 input-d2d8afc607d24c6304997117ac827b221e6d3aa3e410fd4f8d5afa5e4d1a8f16 -->

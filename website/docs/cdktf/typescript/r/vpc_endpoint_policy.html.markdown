@@ -118,4 +118,4 @@ Using `terraform import`, import VPC Endpoint Policies using the `id`. For examp
 % terraform import aws_vpc_endpoint_policy.example vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a5b2784f8f44ade8f56c203390d38d1010def6c1bdaafcb341605772236d19d6 -->
+<!-- cache-key: cdktf-0.20.9 input-a5b2784f8f44ade8f56c203390d38d1010def6c1bdaafcb341605772236d19d6 -->

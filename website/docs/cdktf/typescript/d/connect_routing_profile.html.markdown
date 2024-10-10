@@ -96,4 +96,4 @@ A `queueConfigs` block supports the following attributes:
 * `queueId` - Identifier for the queue.
 * `queueName` - Name for the queue.
 
-<!-- cache-key: cdktf-0.20.1 input-4bef98269c30e5e318435de8076afc54af062a6b62cb6767304c69bb9d6f3ee9 -->
+<!-- cache-key: cdktf-0.20.9 input-4bef98269c30e5e318435de8076afc54af062a6b62cb6767304c69bb9d6f3ee9 -->
