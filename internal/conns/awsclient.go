@@ -55,12 +55,8 @@ func (c *AWSClient) CredentialsProvider(context.Context) aws_sdkv2.CredentialsPr
 	return c.awsConfig.Credentials
 }
 
-func (c *AWSClient) DefaultTagsConfig() *tftags.DefaultConfig {
+func (c *AWSClient) DefaultTagsConfig(context.Context) *tftags.DefaultConfig {
 	return c.defaultTagsConfig
-}
-
-func (c *AWSClient) SetDefaultTagsConfig(d *tftags.DefaultConfig) {
-	c.defaultTagsConfig = d
 }
 
 func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name

@@ -335,7 +335,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(), meta.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig)
 					ctx = meta.RegisterLogger(ctx)
 				}
 
@@ -405,7 +405,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(), meta.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig)
 					ctx = meta.RegisterLogger(ctx)
 					ctx = flex.RegisterLogger(ctx)
 				}

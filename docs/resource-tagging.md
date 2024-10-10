@@ -335,7 +335,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -349,7 +349,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -367,7 +367,7 @@ implement the logic to convert the configuration tags into the service API call 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     /* ... creation steps ... */
@@ -386,7 +386,7 @@ This example shows using `TagSpecifications`:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &ec2.CreateFleetInput{
@@ -402,7 +402,7 @@ In the resource `Read` operation, implement the logic to convert the service tag
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */
@@ -424,7 +424,7 @@ use the generated `listTags` function, e.g., with Athena Workgroups:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */

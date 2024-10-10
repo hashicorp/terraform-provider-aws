@@ -974,7 +974,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	tagSpecifications := getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstance)
 
 	// block devices
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tagSpecifications = append(tagSpecifications,
 		tagSpecificationsFromKeyValue(
 			defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("volume_tags").(map[string]interface{}))),
@@ -1332,7 +1332,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -2320,7 +2320,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		return nil, err
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	for _, vol := range volResp.Volumes {
