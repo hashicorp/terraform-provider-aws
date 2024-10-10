@@ -4,14 +4,14 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
-func geospatialMapStyleOptionsSchema() *schema.Schema {
+var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapStyleOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -19,13 +19,13 @@ func geospatialMapStyleOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": stringSchema(false, enum.Validate[awstypes.BaseMapStyleType]()),
+				"base_map_style": stringEnumSchema[awstypes.BaseMapStyleType](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func geospatialWindowOptionsSchema() *schema.Schema {
+var geospatialWindowOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -40,34 +40,18 @@ func geospatialWindowOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"east": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-1800, 1800),
-							},
-							"north": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-90, 90),
-							},
-							"south": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-90, 90),
-							},
-							"west": {
-								Type:         schema.TypeFloat,
-								Required:     true,
-								ValidateFunc: validation.FloatBetween(-1800, 1800),
-							},
+							"east":  floatBetweenSchema(attrRequired, -1800, 1800),
+							"north": floatBetweenSchema(attrRequired, -90, 90),
+							"south": floatBetweenSchema(attrRequired, -90, 90),
+							"west":  floatBetweenSchema(attrRequired, -1800, 1800),
 						},
 					},
 				},
-				"map_zoom_mode": stringSchema(false, enum.Validate[awstypes.MapZoomMode]()),
+				"map_zoom_mode": stringEnumSchema[awstypes.MapZoomMode](attrOptional),
 			},
 		},
 	}
-}
+})
 
 func expandGeospatialMapStyleOptions(tfList []interface{}) *awstypes.GeospatialMapStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {

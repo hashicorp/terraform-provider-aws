@@ -4,12 +4,9 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,9 +28,9 @@ func radarChartVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"alternate_band_colors_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-							"alternate_band_even_color":        stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							"alternate_band_odd_color":         stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"alternate_band_colors_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							"alternate_band_even_color":        hexColorSchema(attrOptional),
+							"alternate_band_odd_color":         hexColorSchema(attrOptional),
 							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -48,7 +45,7 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -83,7 +80,7 @@ func radarChartVisualSchema() *schema.Schema {
 								},
 							},
 							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"shape":  stringSchema(false, enum.Validate[awstypes.RadarChartShape]()),
+							"shape":  stringEnumSchema[awstypes.RadarChartShape](attrOptional),
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -92,14 +89,14 @@ func radarChartVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_items_limit": itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":        fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
-										"color_items_limit":    itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"color_sort":           fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"category_items_limit": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":        fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"color_items_limit":    itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"color_sort":           fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
-							"start_angle":    floatSchema(false, validation.FloatBetween(-360, 360)),
+							"start_angle":    floatBetweenSchema(attrOptional, -360, 360),
 							"visual_palette": visualPaletteSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},

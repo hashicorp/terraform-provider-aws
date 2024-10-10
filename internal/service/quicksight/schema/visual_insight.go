@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,7 +18,7 @@ func insightVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 				"visual_id":           idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
@@ -46,7 +44,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id":           idSchema(),
 													"time":                     dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"custom_seasonality_value": intSchema(false, validation.IntBetween(1, 180)),
+													"custom_seasonality_value": intBetweenSchema(attrOptional, 1, 180),
 													"lower_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -55,10 +53,10 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"periods_backward":    intSchema(false, validation.IntBetween(0, 1000)),
-													"periods_forward":     intSchema(false, validation.IntBetween(1, 1000)),
-													"prediction_interval": intSchema(false, validation.IntBetween(50, 95)),
-													"seasonality":         stringSchema(true, enum.Validate[awstypes.ForecastComputationSeasonality]()),
+													"periods_backward":    intBetweenSchema(attrOptional, 0, 1000),
+													"periods_forward":     intBetweenSchema(attrOptional, 1, 1000),
+													"prediction_interval": intBetweenSchema(attrOptional, 50, 95),
+													"seasonality":         stringEnumSchema[awstypes.ForecastComputationSeasonality](attrRequired),
 													"upper_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -80,7 +78,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_size":   intSchema(false, validation.IntBetween(2, 52)),
+													"period_size":   intBetweenSchema(attrOptional, 2, 52),
 													names.AttrValue: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -94,7 +92,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id": idSchema(),
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringSchema(true, enum.Validate[awstypes.MaximumMinimumComputationType]()),
+													names.AttrType:   stringEnumSchema[awstypes.MaximumMinimumComputationType](attrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -151,7 +149,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_time_granularity": stringSchema(true, enum.Validate[awstypes.TimeGranularity]()),
+													"period_time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 													names.AttrValue:           measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -166,9 +164,9 @@ func insightVisualSchema() *schema.Schema {
 													"computation_id": idSchema(),
 													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringSchema(true, enum.Validate[awstypes.TopBottomComputationType]()),
-													"mover_size":     intSchema(false, validation.IntBetween(1, 20)),
-													"sort_order":     stringSchema(true, enum.Validate[awstypes.TopBottomSortOrder]()),
+													names.AttrType:   stringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
+													"mover_size":     intBetweenSchema(attrOptional, 1, 20),
+													"sort_order":     stringEnumSchema[awstypes.TopBottomSortOrder](attrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -190,8 +188,8 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"result_size":   intSchema(false, validation.IntBetween(1, 20)),
-													names.AttrType:  stringSchema(true, enum.Validate[awstypes.TopBottomComputationType]()),
+													"result_size":   intBetweenSchema(attrOptional, 1, 20),
+													names.AttrType:  stringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
 													names.AttrValue: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -238,7 +236,7 @@ func insightVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"narrative": stringSchema(true, validation.StringLenBetween(1, 150000)),
+										"narrative": stringLenBetweenSchema(attrRequired, 1, 150000),
 									},
 								},
 							},

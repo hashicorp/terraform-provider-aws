@@ -4,16 +4,15 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func axisDisplayOptionsSchema() *schema.Schema {
+var axisDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -21,7 +20,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"axis_line_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"axis_line_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 				"axis_offset": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -40,7 +39,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"missing_date_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"missing_date_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -136,7 +135,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"grid_line_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"grid_line_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 				"scrollbar_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScrollBarOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -144,7 +143,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 							"visible_range": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisibleRangeOptions.html
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -159,8 +158,8 @@ func axisDisplayOptionsSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"from": floatSchema(false, validation.FloatBetween(0, 100)),
-													"to":   floatSchema(false, validation.FloatBetween(0, 100)),
+													"from": floatBetweenSchema(attrOptional, 0, 100),
+													"to":   floatBetweenSchema(attrOptional, 0, 100),
 												},
 											},
 										},
@@ -188,9 +187,9 @@ func axisDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func chartAxisLabelOptionsSchema() *schema.Schema {
+var chartAxisLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -213,7 +212,7 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"column":   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+										"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
 									},
 								},
 							},
@@ -225,14 +224,14 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"sort_icon_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-				"visibility":           stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"sort_icon_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+				"visibility":           stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func itemsLimitConfigurationSchema() *schema.Schema {
+var itemsLimitConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -244,13 +243,13 @@ func itemsLimitConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
-				"other_categories": stringSchema(true, enum.Validate[awstypes.OtherCategories]()),
+				"other_categories": stringEnumSchema[awstypes.OtherCategories](attrRequired),
 			},
 		},
 	}
-}
+})
 
-func contributionAnalysisDefaultsSchema() *schema.Schema {
+var contributionAnalysisDefaultsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -265,23 +264,23 @@ func contributionAnalysisDefaultsSchema() *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
+							"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 						},
 					},
 				},
-				"measure_field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+				"measure_field_id": stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}
-}
+})
 
-func referenceLineSchema(maxItems int) *schema.Schema {
+var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 		Type:     schema.TypeList,
 		Optional: true,
 		MinItems: 1,
-		MaxItems: maxItems,
+		MaxItems: referenceLinesMaxItems,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDataConfiguration.html
@@ -291,7 +290,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"axis_binding": stringSchema(false, enum.Validate[awstypes.AxisBinding]()),
+							"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrOptional),
 							"dynamic_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDynamicDataConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -336,13 +335,13 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+										"custom_label": stringMatchSchema(attrRequired, `.*\S.*`, ""),
 									},
 								},
 							},
-							"font_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"font_color":          hexColorSchema(attrOptional),
 							"font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-							"horizontal_position": stringSchema(false, enum.Validate[awstypes.ReferenceLineLabelHorizontalPosition]()),
+							"horizontal_position": stringEnumSchema[awstypes.ReferenceLineLabelHorizontalPosition](attrOptional),
 							"value_label_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineValueLabelConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -351,15 +350,15 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"format_configuration": numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
-										"relative_position":    stringSchema(false, enum.Validate[awstypes.ReferenceLineValueLabelRelativePosition]()),
+										"relative_position":    stringEnumSchema[awstypes.ReferenceLineValueLabelRelativePosition](attrOptional),
 									},
 								},
 							},
-							"vertical_position": stringSchema(false, enum.Validate[awstypes.ReferenceLineLabelVerticalPosition]()),
+							"vertical_position": stringEnumSchema[awstypes.ReferenceLineLabelVerticalPosition](attrOptional),
 						},
 					},
 				},
-				names.AttrStatus: stringSchema(false, enum.Validate[awstypes.Status]()),
+				names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
 				"style_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineStyleConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -367,17 +366,17 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							"pattern": stringSchema(false, enum.Validate[awstypes.ReferenceLinePatternType]()),
+							"color":   hexColorSchema(attrOptional),
+							"pattern": stringEnumSchema[awstypes.ReferenceLinePatternType](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func smallMultiplesOptionsSchema() *schema.Schema {
+var smallMultiplesOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -385,16 +384,8 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"max_visible_columns": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntBetween(1, 10),
-				},
-				"max_visible_rows": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntBetween(1, 10),
-				},
+				"max_visible_columns": intBetweenSchema(attrOptional, 1, 10),
+				"max_visible_rows":    intBetweenSchema(attrOptional, 1, 10),
 				"panel_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -402,20 +393,20 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"background_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"background_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-							"border_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"border_style":          stringSchema(false, enum.Validate[awstypes.PanelBorderStyle]()),
+							"background_color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"background_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							"border_color":          stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"border_style":          stringEnumSchema[awstypes.PanelBorderStyle](attrOptional),
 							"border_thickness": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"border_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"border_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 							"gutter_spacing": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"gutter_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"gutter_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 							"title": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelTitleOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -424,8 +415,8 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"horizontal_text_alignment": stringSchema(false, enum.Validate[awstypes.HorizontalTextAlignment]()),
-										"visibility":                stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"horizontal_text_alignment": stringEnumSchema[awstypes.HorizontalTextAlignment](attrOptional),
+										"visibility":                stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -435,7 +426,7 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandAxisDisplayOptions(tfList []interface{}) *awstypes.AxisDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {

@@ -4,11 +4,9 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 )
@@ -31,25 +29,15 @@ func ThemeConfigurationSchema() *schema.Schema {
 								Optional: true,
 								MinItems: 8, // Colors size needs to be in the range between 8 and 20
 								MaxItems: 20,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-								},
+								Elem:     hexColorSchema(attrElem),
 							},
-							"empty_fill_color": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
+							"empty_fill_color": hexColorSchema(attrOptional),
 							"min_max_gradient": {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 2, // MinMaxGradient size needs to be 2
 								MaxItems: 2,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-								},
+								Elem:     hexColorSchema(attrElem),
 							},
 						},
 					},
@@ -148,86 +136,22 @@ func ThemeConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"accent": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"accent_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"danger": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"danger_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"dimension": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"dimension_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"measure": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"measure_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"primary_background": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"primary_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"secondary_background": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"secondary_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"success": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"success_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"warning": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
-							"warning_foreground": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
-							},
+							"accent":               hexColorSchema(attrOptional),
+							"accent_foreground":    hexColorSchema(attrOptional),
+							"danger":               hexColorSchema(attrOptional),
+							"danger_foreground":    hexColorSchema(attrOptional),
+							"dimension":            hexColorSchema(attrOptional),
+							"dimension_foreground": hexColorSchema(attrOptional),
+							"measure":              hexColorSchema(attrOptional),
+							"measure_foreground":   hexColorSchema(attrOptional),
+							"primary_background":   hexColorSchema(attrOptional),
+							"primary_foreground":   hexColorSchema(attrOptional),
+							"secondary_background": hexColorSchema(attrOptional),
+							"secondary_foreground": hexColorSchema(attrOptional),
+							"success":              hexColorSchema(attrOptional),
+							"success_foreground":   hexColorSchema(attrOptional),
+							"warning":              hexColorSchema(attrOptional),
+							"warning_foreground":   hexColorSchema(attrOptional),
 						},
 					},
 				},
