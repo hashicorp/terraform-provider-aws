@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_datapipeline_pipeline" "test" {
   pipeline_id = aws_datapipeline_pipeline.test.id
 }

@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_dms_replication_instance" "test" {
   replication_instance_id = aws_dms_replication_instance.test.replication_instance_id
 }
