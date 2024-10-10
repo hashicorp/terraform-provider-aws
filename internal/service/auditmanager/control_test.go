@@ -45,7 +45,7 @@ func TestAccAuditManagerControl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_set_up_option", string(types.SourceSetUpOptionProceduralControlsMapping)),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_type", string(types.SourceTypeManual)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`control/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`control/.+$`)),
 				),
 			},
 			{
