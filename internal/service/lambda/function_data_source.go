@@ -331,8 +331,15 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
 	d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
-	if output.Concurrency != nil {
-		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
+	// Get the function concurrency settings
+	result, err := conn.GetFunctionConcurrency(ctx, &lambda.GetFunctionConcurrencyInput{
+		FunctionName: aws.String(functionName),
+	})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function concurrency (%s): %s", functionName, err)
+	}
+	if result.ReservedConcurrentExecutions != nil {
+		d.Set("reserved_concurrent_executions", *result.ReservedConcurrentExecutions)
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
