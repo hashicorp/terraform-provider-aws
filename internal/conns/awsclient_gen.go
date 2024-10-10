@@ -121,6 +121,7 @@ import (
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
+	imagebuilder_sdkv2 "github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	inspector_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
@@ -246,7 +247,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -724,8 +724,8 @@ func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore_sdkv
 	return errs.Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore, make(map[string]any)))
 }
 
-func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Imagebuilder {
-	return errs.Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder, make(map[string]any)))
+func (c *AWSClient) ImageBuilderClient(ctx context.Context) *imagebuilder_sdkv2.Client {
+	return errs.Must(client[*imagebuilder_sdkv2.Client](ctx, c, names.ImageBuilder, make(map[string]any)))
 }
 
 func (c *AWSClient) InspectorClient(ctx context.Context) *inspector_sdkv2.Client {

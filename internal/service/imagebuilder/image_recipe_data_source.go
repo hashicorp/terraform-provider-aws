@@ -6,8 +6,7 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_image_recipe")
-func DataSourceImageRecipe() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_image_recipe", name="Image Recipe")
+// @Tags
+func dataSourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRecipeRead,
 
@@ -140,7 +140,7 @@ func DataSourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"user_data_base64": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -159,45 +159,37 @@ func DataSourceImageRecipe() *schema.Resource {
 
 func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImageRecipeInput{}
-
-	if v, ok := d.GetOk(names.AttrARN); ok {
-		input.ImageRecipeArn = aws.String(v.(string))
-	}
-
-	output, err := conn.GetImageRecipeWithContext(ctx, input)
+	arn := d.Get(names.AttrARN).(string)
+	imageRecipe, err := findImageRecipeByARN(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", aws.StringValue(input.ImageRecipeArn), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", arn, err)
 	}
 
-	if output == nil || output.ImageRecipe == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): empty response", aws.StringValue(input.ImageRecipeArn))
+	arn = aws.ToString(imageRecipe.Arn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
+	if err := d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting block_device_mapping: %s", err)
 	}
-
-	imageRecipe := output.ImageRecipe
-
-	d.SetId(aws.StringValue(imageRecipe.Arn))
-	d.Set(names.AttrARN, imageRecipe.Arn)
-	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
-	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
+	if err := d.Set("component", flattenComponentConfigurations(imageRecipe.Components)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
+	}
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
 	d.Set(names.AttrOwner, imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-	d.Set(names.AttrTags, KeyValueTags(ctx, imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
 		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
 	}
-
 	d.Set(names.AttrVersion, imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
+
+	setTagsOut(ctx, imageRecipe.Tags)
 
 	return diags
 }

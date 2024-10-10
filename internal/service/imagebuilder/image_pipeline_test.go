@@ -9,15 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,9 +52,9 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
 					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformLinux)),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, imagebuilder.PipelineStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -464,11 +463,11 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable),
+				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, string(types.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", string(types.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable)),
 				),
 			},
 			{
@@ -478,11 +477,11 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 				ImportStateVerifyIgnore: []string{"date_next_run"},
 			},
 			{
-				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, imagebuilder.PipelineExecutionStartConditionExpressionMatchOnly),
+				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, string(types.PipelineExecutionStartConditionExpressionMatchOnly)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", imagebuilder.PipelineExecutionStartConditionExpressionMatchOnly),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", string(types.PipelineExecutionStartConditionExpressionMatchOnly)),
 				),
 			},
 		},
@@ -577,10 +576,10 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineConfig_status(rName, imagebuilder.PipelineStatusDisabled),
+				Config: testAccImagePipelineConfig_status(rName, string(types.PipelineStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, imagebuilder.PipelineStatusDisabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusDisabled)),
 				),
 			},
 			{
@@ -589,10 +588,10 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccImagePipelineConfig_status(rName, imagebuilder.PipelineStatusEnabled),
+				Config: testAccImagePipelineConfig_status(rName, string(types.PipelineStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, imagebuilder.PipelineStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusEnabled)),
 				),
 			},
 		},
@@ -656,11 +655,11 @@ func TestAccImageBuilderImagePipeline_workflow(t *testing.T) {
 		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineConfig_workflow(rName, imagebuilder.OnWorkflowFailureAbort, "test1"),
+				Config: testAccImagePipelineConfig_workflow(rName, string(types.OnWorkflowFailureAbort), "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", imagebuilder.OnWorkflowFailureAbort),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", string(types.OnWorkflowFailureAbort)),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test1"),
 				),
 			},
@@ -670,11 +669,11 @@ func TestAccImageBuilderImagePipeline_workflow(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccImagePipelineConfig_workflow(rName, imagebuilder.OnWorkflowFailureContinue, "test2"),
+				Config: testAccImagePipelineConfig_workflow(rName, string(types.OnWorkflowFailureContinue), "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", imagebuilder.OnWorkflowFailureContinue),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", string(types.OnWorkflowFailureContinue)),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test2"),
 				),
 			},
@@ -720,56 +719,42 @@ func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
 
 func testAccCheckImagePipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_image_pipeline" {
 				continue
 			}
 
-			input := &imagebuilder.GetImagePipelineInput{
-				ImagePipelineArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfimagebuilder.FindImagePipelineByARN(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetImagePipelineWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting Image Builder Image Pipeline (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("Image Builder Image Pipeline (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Image Builder Image Pipeline %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckImagePipelineExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckImagePipelineExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
-		input := &imagebuilder.GetImagePipelineInput{
-			ImagePipelineArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfimagebuilder.FindImagePipelineByARN(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetImagePipelineWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Image Builder Image Pipeline (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 

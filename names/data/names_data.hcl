@@ -2945,8 +2945,7 @@ service "ebs" {
 
 service "imagebuilder" {
   sdk {
-    id             = "imagebuilder"
-    client_version = 1
+    id = "imagebuilder"
   }
 
   names {

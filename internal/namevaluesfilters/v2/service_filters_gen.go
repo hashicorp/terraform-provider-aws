@@ -4,6 +4,7 @@ package v2
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/aws"
+	imagebuildertypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	licensemanagertypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	route53resolvertypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
@@ -11,6 +12,28 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 )
 
 // []*SERVICE.Filter handling
+
+// ImageBuilderFilters returns imagebuilder service filters.
+func (filters NameValuesFilters) ImageBuilderFilters() []imagebuildertypes.Filter {
+	m := filters.Map()
+
+	if len(m) == 0 {
+		return nil
+	}
+
+	result := make([]imagebuildertypes.Filter, 0, len(m))
+
+	for k, v := range m {
+		filter := imagebuildertypes.Filter{
+			Name:   aws.String(k),
+			Values: v,
+		}
+
+		result = append(result, filter)
+	}
+
+	return result
+}
 
 // LicenseManagerFilters returns licensemanager service filters.
 func (filters NameValuesFilters) LicenseManagerFilters() []licensemanagertypes.Filter {
