@@ -81,4 +81,4 @@ Using `terraform import`, import Shield Subscription using the `id`. For example
 % terraform import aws_shield_subscription.example 012345678901
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9770e07cac85f999f7859107f3f56cbf03ebcf3f22b024d8ceb651a16dabeb59 -->
+<!-- cache-key: cdktf-0.20.9 input-9770e07cac85f999f7859107f3f56cbf03ebcf3f22b024d8ceb651a16dabeb59 -->

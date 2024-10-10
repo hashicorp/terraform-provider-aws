@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `managed_by` - Identifier of a datashare to show its managing entity.
 * `producer_arn` - ARN (Amazon Resource Name) of the producer.
 
-<!-- cache-key: cdktf-0.20.1 input-a6e02994b2fd3f90675bcbc9f0776c98f5364aa58fe770ac23f494179694a345 -->
+<!-- cache-key: cdktf-0.20.9 input-a6e02994b2fd3f90675bcbc9f0776c98f5364aa58fe770ac23f494179694a345 -->

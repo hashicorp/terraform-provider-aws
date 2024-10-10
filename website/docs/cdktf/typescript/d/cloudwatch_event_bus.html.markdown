@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN.
 * `kmsKeyIdentifier` - The identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.
 
-<!-- cache-key: cdktf-0.20.1 input-b3007119469b7ce731e9ba9dd77787cbdd5c343de0312769c93edb7a01b8df88 -->
+<!-- cache-key: cdktf-0.20.9 input-b3007119469b7ce731e9ba9dd77787cbdd5c343de0312769c93edb7a01b8df88 -->

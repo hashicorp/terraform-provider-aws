@@ -93,4 +93,4 @@ Using `terraform import`, import Redshift Resource Policies using the `resourceA
 % terraform import aws_redshift_resource_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9204a9423039f7d94e5ed898bb3da5e1e61a6939d75794dc2fcd863f6426224d -->
+<!-- cache-key: cdktf-0.20.9 input-9204a9423039f7d94e5ed898bb3da5e1e61a6939d75794dc2fcd863f6426224d -->

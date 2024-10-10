@@ -152,4 +152,4 @@ Using `terraform import`, import `aws_networkmanager_connect_attachment` using t
 % terraform import aws_networkmanager_connect_attachment.example attachment-0f8fa60d2238d1bd8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4776336f03ce9c3a13a040a951156b2ec4e93380cc6b2b357573e8dd161a9e7b -->
+<!-- cache-key: cdktf-0.20.9 input-4776336f03ce9c3a13a040a951156b2ec4e93380cc6b2b357573e8dd161a9e7b -->

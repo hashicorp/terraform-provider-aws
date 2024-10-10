@@ -126,4 +126,4 @@ Using `terraform import`, import ECR Repository Policy using the repository name
 % terraform import aws_ecr_repository_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-44b5d72206a7ae206bd84636b9171905757de1999abfec9587269acec8a38aae -->
+<!-- cache-key: cdktf-0.20.9 input-44b5d72206a7ae206bd84636b9171905757de1999abfec9587269acec8a38aae -->

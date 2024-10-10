@@ -18,7 +18,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
@@ -700,15 +704,28 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_inVPC(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("num_cache_clusters"), knownvalue.Int64Exact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("preferred_cache_cluster_azs"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroupIDs), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("security_group_names"), knownvalue.SetSizeExact(0)),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", acctest.Ct1),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("security_group_ids.#", acctest.Ct1),
+					acctest.ImportCheckResourceAttr("security_group_names.#", acctest.Ct0),
+				),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
@@ -2245,10 +2262,10 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.4", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.5", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.5"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{acctest.CtKey1, acctest.CtValue1},
 					}),

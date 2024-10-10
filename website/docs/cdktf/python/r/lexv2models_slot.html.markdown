@@ -305,4 +305,4 @@ Using `terraform import`, import Lex V2 Models Slot using the `id`. For example:
 % terraform import aws_lexv2models_slot.example bot-1234,1,intent-5678,en-US,slot-9012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3a61e3173229f9dd10a6c67529a6eb7d5a15d8bfecb7d0955fb5ba469054e47b -->
+<!-- cache-key: cdktf-0.20.9 input-3a61e3173229f9dd10a6c67529a6eb7d5a15d8bfecb7d0955fb5ba469054e47b -->

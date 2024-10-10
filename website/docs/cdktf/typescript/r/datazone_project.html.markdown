@@ -131,4 +131,4 @@ Using `terraform import`, import DataZone Project using a colon-delimited string
 % terraform import aws_datazone_project.example domain-1234:project-1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4930f33d20f0d4998990d008e7126f3b8b3a0f12964d87688eec35a9b0fcb0c -->
+<!-- cache-key: cdktf-0.20.9 input-f4930f33d20f0d4998990d008e7126f3b8b3a0f12964d87688eec35a9b0fcb0c -->

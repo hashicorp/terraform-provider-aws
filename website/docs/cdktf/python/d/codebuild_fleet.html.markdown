@@ -106,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnets` - A list of one or more subnet IDs in your Amazon VPC.
     * `vpc_id` - The ID of the Amazon VPC.
 
-<!-- cache-key: cdktf-0.20.1 input-1dd0c64b00818aba259878581a28993546ff6920dd1e6d4faaf8fd87b76f41ae -->
+<!-- cache-key: cdktf-0.20.9 input-1dd0c64b00818aba259878581a28993546ff6920dd1e6d4faaf8fd87b76f41ae -->

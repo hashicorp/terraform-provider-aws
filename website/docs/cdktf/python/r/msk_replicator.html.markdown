@@ -162,4 +162,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0e60a252807fd8218137603e51d4ca0c238c8a12c16ad862d49c01b03e18c039 -->
+<!-- cache-key: cdktf-0.20.9 input-0e60a252807fd8218137603e51d4ca0c238c8a12c16ad862d49c01b03e18c039 -->

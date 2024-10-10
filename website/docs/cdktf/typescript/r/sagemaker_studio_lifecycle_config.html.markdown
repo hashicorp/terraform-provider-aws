@@ -89,4 +89,4 @@ Using `terraform import`, import SageMaker Studio Lifecycle Configs using the `s
 % terraform import aws_sagemaker_studio_lifecycle_config.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f7edc489d0b096359a34e89cf7ec68961eef94fcddbafc6d023a82cee5ae9374 -->
+<!-- cache-key: cdktf-0.20.9 input-f7edc489d0b096359a34e89cf7ec68961eef94fcddbafc6d023a82cee5ae9374 -->

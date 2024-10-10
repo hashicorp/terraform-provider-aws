@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags assigned to the subnet group.
 * `vpcId` - The Amazon Virtual Private Cloud identifier (VPC ID) of the cache subnet group.
 
-<!-- cache-key: cdktf-0.20.1 input-07b35b3fe4909edf57cc7f3e8cfcaaeee2a4edd505353cd18970e5f0fb1bd847 -->
+<!-- cache-key: cdktf-0.20.9 input-07b35b3fe4909edf57cc7f3e8cfcaaeee2a4edd505353cd18970e5f0fb1bd847 -->

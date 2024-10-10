@@ -91,4 +91,4 @@ Using `terraform import`, import delegated administrators using the delegate acc
 % terraform import aws_cloudtrail_organization_delegated_admin_account.example 12345678901
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f1842e5484de3fd2191fbcc41846f7e0b274bf44a662611028ace70c96e4808a -->
+<!-- cache-key: cdktf-0.20.9 input-f1842e5484de3fd2191fbcc41846f7e0b274bf44a662611028ace70c96e4808a -->

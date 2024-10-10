@@ -84,4 +84,4 @@ Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `
 * `idToken` - (Optional) Time unit in for the value in `idTokenValidity`, defaults to `hours`.
 * `refreshToken` - (Optional) Time unit in for the value in `refreshTokenValidity`, defaults to `days`.
 
-<!-- cache-key: cdktf-0.20.1 input-804400abfbd53cd25621680ec5f1657976bea849d7c8272f9f3b774f5cc1e05b -->
+<!-- cache-key: cdktf-0.20.9 input-804400abfbd53cd25621680ec5f1657976bea849d7c8272f9f3b774f5cc1e05b -->

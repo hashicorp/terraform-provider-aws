@@ -11,6 +11,8 @@ var (
 	ResourcePlan                    = resourcePlan
 	ResourceRegionSettings          = resourceRegionSettings
 	ResourceReportPlan              = resourceReportPlan
+	ResourceRestoreTestingPlan      = newRestoreTestingPlanResource
+	ResourceRestoreTestingSelection = newRestoreTestingSelectionResource
 	ResourceSelection               = resourceSelection
 	ResourceVault                   = resourceVault
 	ResourceVaultLockConfiguration  = resourceVaultLockConfiguration
@@ -24,6 +26,8 @@ var (
 	FindPlanByID                            = findPlanByID
 	FindRegionSettings                      = findRegionSettings
 	FindReportPlanByName                    = findReportPlanByName
+	FindRestoreTestingPlanByName            = findRestoreTestingPlanByName
+	FindRestoreTestingSelectionByTwoPartKey = findRestoreTestingSelectionByTwoPartKey
 	FindSelectionByTwoPartKey               = findSelectionByTwoPartKey
 	FindVaultAccessPolicyByName             = findVaultAccessPolicyByName
 	FindVaultNotificationsByName            = findVaultNotificationsByName
