@@ -13,7 +13,7 @@ import (
 
 // NewResourceComputedListOfObjectSchema returns a new schema.ListAttribute for objects of the specified type.
 // The list is Computed-only.
-func NewResourceComputedListOfObjectSchema[T any](ctx context.Context) schema.ListAttribute {
+func ResourceComputedListOfObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
 	return schema.ListAttribute{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
 		Computed:   true,

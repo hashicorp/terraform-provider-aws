@@ -137,8 +137,8 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 			},
 			names.AttrTags:       tftags.TagsAttribute(),
 			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
-			"training_metrics":   framework.NewResourceComputedListOfObjectSchema[trainingMetricsModel](ctx),
-			"validation_metrics": framework.NewResourceComputedListOfObjectSchema[validatorMetricModel](ctx),
+			"training_metrics":   framework.ResourceComputedListOfObjectAttribute[trainingMetricsModel](ctx),
+			"validation_metrics": framework.ResourceComputedListOfObjectAttribute[validatorMetricModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"output_data_config": schema.ListNestedBlock{
@@ -221,7 +221,8 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 											stringplanmodifier.RequiresReplace(),
 										},
 										Validators: []validator.String{
-											fwvalidators.S3URI()},
+											fwvalidators.S3URI(),
+										},
 									},
 								},
 							},
