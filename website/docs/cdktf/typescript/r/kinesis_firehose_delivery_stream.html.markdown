@@ -91,7 +91,7 @@ class MyConvertedCode extends TerraformStack {
       functionName: "firehose_lambda_processor",
       handler: "exports.handler",
       role: lambdaIam.arn,
-      runtime: "nodejs16.x",
+      runtime: "nodejs20.x",
     });
     new KinesisFirehoseDeliveryStream(this, "extended_s3_stream", {
       destination: "extended_s3",
@@ -1251,4 +1251,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.20.1 input-e14a6ef26850bbd11cfdffd53a2f5778283f5b9202b48b79227dbc1e2a4e2773 -->
+<!-- cache-key: cdktf-0.20.9 input-123d22cb29a006903c55a9c659e3aa0f3a04f78cc6efc96a55cf82acd1a211b6 -->

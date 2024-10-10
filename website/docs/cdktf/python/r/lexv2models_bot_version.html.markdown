@@ -89,4 +89,4 @@ Using `terraform import`, import Lex V2 Models Bot Version using the `id`. For e
 % terraform import aws_lexv2models_bot_version.example id-12345678,1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1083d8e00d95e96391a8f8ae1d36ea86d249c001a0286867966cba1d749c0b69 -->
+<!-- cache-key: cdktf-0.20.9 input-1083d8e00d95e96391a8f8ae1d36ea86d249c001a0286867966cba1d749c0b69 -->

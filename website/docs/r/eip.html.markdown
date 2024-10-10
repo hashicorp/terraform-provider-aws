@@ -93,6 +93,15 @@ resource "aws_eip" "byoip-ip" {
 }
 ```
 
+### Allocating EIP from the IPAM Pool
+
+```terraform
+resource "aws_eip" "ipam-ip" {
+  domain       = "vpc"
+  ipam_pool_id = "ipam-pool-07ccc86aa41bef7ce"
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -102,6 +111,7 @@ This resource supports the following arguments:
 * `customer_owned_ipv4_pool` - (Optional) ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing).
 * `domain` - Indicates if this EIP is for use in VPC (`vpc`).
 * `instance` - (Optional) EC2 instance ID.
+* `ipam_pool_id`- (Optional) The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
 * `network_border_group` - (Optional) Location from which the IP address is advertised. Use this parameter to limit the address to this location.
 * `network_interface` - (Optional) Network interface ID to associate with.
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`.

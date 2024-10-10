@@ -59,12 +59,12 @@ See [`standardsControlAssociations`](#standards_control_associations-attribute-r
 
 * `associationStatus` - Enablement status of a control in a specific standard.
 * `relatedRequirements` - List of underlying requirements in the compliance framework related to the standard.
-* `securityControlArn` - ARN of the security control.
+* `security_control_arn` - ARN of the security control.
 * `securityControlId` - ID of the security control.
 * `standardsArn` - ARN of the standard.
-* `standardsControlDescription` - Description of the standard.
-* `standardsControlTitle` - Title of the standard.
+* `standards_control_description` - Description of the standard.
+* `standards_control_title` - Title of the standard.
 * `updatedAt` - Last time that a control's enablement status in a specified standard was updated.
 * `updatedReason` - Reason for updating a control's enablement status in a specified standard.
 
-<!-- cache-key: cdktf-0.20.1 input-c00380a89860eece1814ac9de7eefbb73fb280e1bf0a1078f9a81c54f1e95d9b -->
+<!-- cache-key: cdktf-0.20.9 input-c00380a89860eece1814ac9de7eefbb73fb280e1bf0a1078f9a81c54f1e95d9b -->

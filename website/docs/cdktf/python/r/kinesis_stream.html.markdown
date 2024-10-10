@@ -109,4 +109,4 @@ Using `terraform import`, import Kinesis Streams using the `name`. For example:
 [2]: https://docs.aws.amazon.com/kinesis/latest/dev/amazon-kinesis-streams.html
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
 
-<!-- cache-key: cdktf-0.20.1 input-972fc2cd811ba5b65f65f723f0cb5a041ff08e4079315825ec1e475538220367 -->
+<!-- cache-key: cdktf-0.20.9 input-972fc2cd811ba5b65f65f723f0cb5a041ff08e4079315825ec1e475538220367 -->

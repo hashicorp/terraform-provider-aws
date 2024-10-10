@@ -91,4 +91,4 @@ Using `terraform import`, import Redshift Serverless Endpoint Access using the `
 % terraform import aws_redshiftserverless_endpoint_access.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-02a646b226fa2e51fbd46daf9da9414ac21e7f0d365734c9325c86977ee9c65c -->
+<!-- cache-key: cdktf-0.20.9 input-02a646b226fa2e51fbd46daf9da9414ac21e7f0d365734c9325c86977ee9c65c -->

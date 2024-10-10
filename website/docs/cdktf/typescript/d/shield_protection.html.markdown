@@ -75,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the protection.
 * `protectionArn` - ARN of the protection.
 
-<!-- cache-key: cdktf-0.20.1 input-75d9f856f14ca87d032548d9404cb36b20ed94a40ec416924f4ee0c3392a6e12 -->
+<!-- cache-key: cdktf-0.20.9 input-75d9f856f14ca87d032548d9404cb36b20ed94a40ec416924f4ee0c3392a6e12 -->

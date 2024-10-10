@@ -165,4 +165,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->
+<!-- cache-key: cdktf-0.20.9 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->

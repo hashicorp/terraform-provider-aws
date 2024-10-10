@@ -35,7 +35,7 @@ class MyConvertedCode(TerraformStack):
         #     You can read more about this at https://cdk.tf/variables
         distribution_id = TerraformVariable(self, "distribution_id",
             description="The Cloudfront Distribution on which to enable the Application Layer Automatic Response.",
-            type=VariableType.ANY
+            type=VariableType.STRING
         )
         current = DataAwsCallerIdentity(self, "current")
         data_aws_partition_current = DataAwsPartition(self, "current_2")
@@ -61,4 +61,4 @@ The following arguments are required:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-93c90a7a5edc0d30e2ecedf69f4d9c1fd50a496fcb62bc621562723697aad103 -->
+<!-- cache-key: cdktf-0.20.9 input-cafc17fc5932907762e79a26d14307b777fefc209bf86dc7793ac6c58a00d747 -->

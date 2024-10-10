@@ -93,4 +93,4 @@ Using `terraform import`, import CloudFront Key Value Store using the `name`. Fo
 % terraform import aws_cloudfront_key_value_store.example example_store
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2c7d66072a4a2d94c521f72818a599845afcff8fc7069e0cb0264c4da9928d51 -->
+<!-- cache-key: cdktf-0.20.9 input-2c7d66072a4a2d94c521f72818a599845afcff8fc7069e0cb0264c4da9928d51 -->
