@@ -34,8 +34,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.17.41 h1:7gXo+Axmp+R4Z+AK8YFQO0ZV3L0
 github.com/aws/aws-sdk-go-v2/credentials v1.17.41/go.mod h1:u4Eb8d3394YLubphT4jLEwN1rLNq2wFOlT6OuxFwPzU=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.17 h1:TMH3f/SCAWdNtXXVPPu5D6wrr4G5hI1rAxbcocKfC7Q=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.17/go.mod h1:1ZRXLdTpzdJb9fwTMXiLipENRxkGMTn1sfKexGllQCw=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.30 h1:akklue0xJFgXxu7zODXZQ9ZtbFW1JLUPnu4Q4veRYcI=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.30/go.mod h1:fXzCjRi6r4VHyYiaPEZerTpIgvEOzMGP/lrhrb0EXk4=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.31 h1:wSC5/HvZBb5q2WJCQ2TX1dVEL2j2qqJxpuC0Y6A6IOE=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.31/go.mod h1:fXzCjRi6r4VHyYiaPEZerTpIgvEOzMGP/lrhrb0EXk4=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.21 h1:UAsR3xA31QGf79WzpG/ixT9FZvQlh5HY1NRqSHBNOCk=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.21/go.mod h1:JNr43NFf5L9YaG3eKTm7HQzls9J+A9YYcGI5Quh1r2Y=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.21 h1:6jZVETqmYCadGFvrYEQfC5fAQmlo80CeL5psbno6r0s=
@@ -148,8 +148,8 @@ github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.24.2 h1:0zQpu0iCRPn8nR0
 github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.24.2/go.mod h1:RyNiCpIH0KtgbCt3eKGlhgj9jG6l8l+Yi1GDd0vlETE=
 github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.29.2 h1:WJCEDkpkLi5Q+YQsPJYJFgRWtnYwLcY+NJsgahyJoOk=
 github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.29.2/go.mod h1:HEOwb1SxSL01D6YtkARXzi0ty2geNsb67FSXzLWahJ4=
-github.com/aws/aws-sdk-go-v2/service/codepipeline v1.34.2 h1:EJJ2Aonydz/G0Tbr1pi+nPFxZ075W+ftsTyNR3tf6Tw=
-github.com/aws/aws-sdk-go-v2/service/codepipeline v1.34.2/go.mod h1:UZj9ctdbPBbfD3ZlTh+s7oRgv4+t5yed5CEx0iUxqfI=
+github.com/aws/aws-sdk-go-v2/service/codepipeline v1.35.0 h1:wnrlU8cfaTs/vXMbLkkgAX+YfLvnLAJ4gpHF+v4+fKw=
+github.com/aws/aws-sdk-go-v2/service/codepipeline v1.35.0/go.mod h1:UZj9ctdbPBbfD3ZlTh+s7oRgv4+t5yed5CEx0iUxqfI=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.2 h1:E6cnRUSrrtqIcfP6umkvUKjlir7FoKBwDMEocVWB2hM=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.2/go.mod h1:1CiGbcC+U9RfvC5ttl7ojDXOXAFn4AxVVch1uQFFS9k=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.2 h1:39F322GVg7dhbVbqwcAaC2w8MDoeM+6aIU0Peq0BUh4=
@@ -424,8 +424,8 @@ github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.2 h1:CXHsX3g74Bb3MYaoTBQi
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.2/go.mod h1:dMPb72DNrDK+qKq3LhVlgCy4whw/8ZnBZe9tHrYdEOs=
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.26.2 h1:LHpwJhk1JrRGovUrAiB7tHXhajnOD6O6LuzEKNDbURA=
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.26.2/go.mod h1:wJMubyQkr2odVU8HQRxjOlYP4LCLAvlGdWGz64F3wzU=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.2 h1:0v1ZIgCIdhq7820Mr8woMsUX+RfPc2NZ2baKC/etpqI=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.2/go.mod h1:R5840lWIF0gNBWsua6HX+aK6ruLsjE8tuEhzg7PcBBY=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.3 h1:JQa+svAT+yrsRz4QYs/ofioXfQ8B49mU32li2kDq9sE=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.3/go.mod h1:R5840lWIF0gNBWsua6HX+aK6ruLsjE8tuEhzg7PcBBY=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.27.2 h1:sptSZN/j9LSeBpdQNQJ9kGQeyMj1jFUCsJhO/bAwOv4=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.27.2/go.mod h1:Eqm3dwEVpnvToV8xlelpfj1g8wi6VjlqqzhODH5xSRw=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.25.2 h1:GsOyDDu3svGW4UHi/wM7xHKUmMrbcy7iCGPDIfPiH2c=
