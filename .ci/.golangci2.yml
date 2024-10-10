@@ -79,6 +79,8 @@ linters-settings:
       - schema.DefaultTimeout
       - validation.*
       # QuickSight schema
+      - floatBetweenSchema
+      - intBetweenSchema
       - stringLenBetweenSchema
       # Terraform Plugin Framework
       - int32validator.*
