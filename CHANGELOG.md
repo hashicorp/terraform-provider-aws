@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_bedrock_inference_profile` ([#39342](https://github.com/hashicorp/terraform-provider-aws/issues/39342))
+* **New Data Source:** `aws_bedrock_inference_profiles` ([#39342](https://github.com/hashicorp/terraform-provider-aws/issues/39342))
 * **New Data Source:** `aws_elasticache_serverless_cache` ([#39590](https://github.com/hashicorp/terraform-provider-aws/issues/39590))
 * **New Data Source:** `aws_prometheus_default_scraper_configuration` ([#35280](https://github.com/hashicorp/terraform-provider-aws/issues/35280))
 * **New Data Source:** `aws_route53profiles_profiles` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
@@ -29,6 +31,7 @@ resource/aws_route53_resolver_rule: Add `ipv6` optional argument to the `target_
 
 BUG FIXES:
 
+* resource/aws_backup_vault: Fix `empty result` errors reading vaults in certain Regions ([#39670](https://github.com/hashicorp/terraform-provider-aws/issues/39670))
 * resource/aws_elasticache_replication_group: Fix `security_group_names` causing resource replacement after import ([#39591](https://github.com/hashicorp/terraform-provider-aws/issues/39591))
 * resource/aws_instance: Fixed issues with `volume_tags`, `root_block_device.*.tags`, and `ebs_block_device.*.tags` where tags overlapped with default tags. These are now handled consistently with top-level tags throughout the provider. Specifically, tags defined in both locations are no longer removed, preventing erroneous differences. ([#37441](https://github.com/hashicorp/terraform-provider-aws/issues/37441))
 * resource/aws_sagemaker_workteam: Mark `workforce_name` as Optional ([#39630](https://github.com/hashicorp/terraform-provider-aws/issues/39630))
