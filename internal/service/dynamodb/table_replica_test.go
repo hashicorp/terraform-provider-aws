@@ -404,6 +404,42 @@ func testAccCheckTableReplicaExists(ctx context.Context, n string) resource.Test
 	}
 }
 
+func TestAccDynamoDBTableReplica_deletion_protection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_deletion_protection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// disable deletion protection for the sweeper to work
+			{
+				Config: testAccTableReplicaConfig_deletion_protection(rName, false),
+				Check:  resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
+			},
+		},
+	})
+}
+
 func testAccTableReplicaConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
@@ -758,4 +794,33 @@ resource "aws_dynamodb_table_replica" "test" {
   point_in_time_recovery = true
 }
 `, rName, key))
+}
+
+func testAccTableReplicaConfig_deletion_protection(rName string, deletionProtection bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  provider                    = "awsalternate"
+  global_table_arn            = aws_dynamodb_table.test.arn
+  deletion_protection_enabled = %[2]t
+}
+`, rName, deletionProtection))
 }
