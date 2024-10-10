@@ -258,8 +258,16 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		input := expandPutRuleInput(d, ruleName)
+		input.Tags = getTagsIn(ctx)
 
 		_, err = retryPutRule(ctx, conn, input)
+
+		// Some partitions (e.g. ISO) may not support tag-on-create.
+		if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+			input.Tags = nil
+
+			_, err = retryPutRule(ctx, conn, input)
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule (%s): %s", d.Id(), err)
