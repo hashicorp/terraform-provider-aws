@@ -204,7 +204,7 @@ func resourceSubnetGroupCustomizeDiff(ctx context.Context, diff *schema.Resource
 	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging,
 	// thus we must suppress the diff originating from the provider-level default_tags configuration.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213.
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	if len(defaultTagsConfig.GetTags()) > 0 && diff.Get(names.AttrName).(string) == "default" {
 		return nil
 	}

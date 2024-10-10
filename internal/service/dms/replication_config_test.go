@@ -260,47 +260,6 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationConfig_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_replication_config.test"
-	var v awstypes.ReplicationConfig
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccReplicationConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccReplicationConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccDMSReplicationConfig_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -662,57 +621,6 @@ resource "aws_dms_replication_config" "test" {
   depends_on = [aws_rds_cluster_instance.source, aws_rds_cluster_instance.target]
 }
 `, rName, start))
-}
-
-func testAccReplicationConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccReplicationConfigConfig_base_DummyDatabase(rName),
-		fmt.Sprintf(`
-resource "aws_dms_replication_config" "test" {
-  replication_config_identifier = %[1]q
-  replication_type              = "cdc"
-  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
-  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-
-  compute_config {
-    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units           = "128"
-    min_capacity_units           = "2"
-    preferred_maintenance_window = "sun:23:45-mon:00:30"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccReplicationConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccReplicationConfigConfig_base_DummyDatabase(rName),
-		fmt.Sprintf(`
-resource "aws_dms_replication_config" "test" {
-  replication_config_identifier = %[1]q
-  replication_type              = "cdc"
-  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
-  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-
-  compute_config {
-    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units           = "128"
-    min_capacity_units           = "2"
-    preferred_maintenance_window = "sun:23:45-mon:00:30"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 var (

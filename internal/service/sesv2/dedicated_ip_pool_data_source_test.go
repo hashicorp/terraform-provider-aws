@@ -47,8 +47,7 @@ resource "aws_sesv2_dedicated_ip_pool" "test" {
 }
 
 data "aws_sesv2_dedicated_ip_pool" "test" {
-  depends_on = [aws_sesv2_dedicated_ip_pool.test]
-  pool_name  = %[1]q
+  pool_name = aws_sesv2_dedicated_ip_pool.test.pool_name
 }
 `, poolName, poolName)
 }

@@ -27,7 +27,7 @@ func TestAccDMSCertificateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCertificateExists(ctx, dataSourceName),
+					testAccCheckCertificateExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "certificate_id"),
 				),
 			},

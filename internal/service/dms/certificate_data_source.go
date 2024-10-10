@@ -19,6 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_dms_certificate", name="Certificate")
+// @Tags(identifierAttribute="certificate_arn")
 func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
@@ -80,8 +81,6 @@ func dataSourceCertificate() *schema.Resource {
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	certificateID := d.Get("certificate_id").(string)
 	out, err := findCertificateByID(ctx, conn, certificateID)
@@ -102,19 +101,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("signing_algorithm", out.SigningAlgorithm)
 	d.Set("valid_from_date", out.ValidFromDate.String())
 	d.Set("valid_to_date", out.ValidToDate.String())
-
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Certificate (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

@@ -478,7 +478,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := tftags.New(ctx, getContextTags(ctx))
 	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {

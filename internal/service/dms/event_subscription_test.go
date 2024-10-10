@@ -162,52 +162,6 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 	})
 }
 
-func TestAccDMSEventSubscription_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var eventSubscription awstypes.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_event_subscription.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEventSubscriptionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -301,39 +255,4 @@ resource "aws_dms_event_subscription" "test" {
   sns_topic_arn    = aws_sns_topic.test.arn
 }
 `, rName, eventCategory1, eventCategory2))
-}
-
-func testAccEventSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
-resource "aws_dms_event_subscription" "test" {
-  name             = %[1]q
-  enabled          = true
-  event_categories = ["creation", "failure"]
-  source_type      = "replication-instance"
-  source_ids       = [aws_dms_replication_instance.test.replication_instance_id]
-  sns_topic_arn    = aws_sns_topic.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccEventSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
-resource "aws_dms_event_subscription" "test" {
-  name             = %[1]q
-  enabled          = true
-  event_categories = ["creation", "failure"]
-  source_type      = "replication-instance"
-  source_ids       = [aws_dms_replication_instance.test.replication_instance_id]
-  sns_topic_arn    = aws_sns_topic.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

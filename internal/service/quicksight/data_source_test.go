@@ -104,53 +104,6 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSource_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dataSource awstypes.DataSource
-	resourceName := "aws_quicksight_data_source.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDataSourceConfig_tags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDataSourceConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-		},
-	})
-}
-
 func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSource awstypes.DataSource
@@ -431,58 +384,6 @@ resource "aws_quicksight_data_source" "test" {
   type = "S3"
 }
 `, rId, rName))
-}
-
-func testAccDataSourceConfig_tags1(rId, rName, key, value string) string {
-	return acctest.ConfigCompose(
-		testAccDataSourceConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_source" "test" {
-  data_source_id = %[1]q
-  name           = %[2]q
-
-  parameters {
-    s3 {
-      manifest_file_location {
-        bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_object.test.key
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-  }
-
-  type = "S3"
-}
-`, rId, rName, key, value))
-}
-
-func testAccDataSourceConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		testAccDataSourceConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_source" "test" {
-  data_source_id = %[1]q
-  name           = %[2]q
-
-  parameters {
-    s3 {
-      manifest_file_location {
-        bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_object.test.key
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-  type = "S3"
-}
-`, rId, rName, key1, value1, key2, value2))
 }
 
 func testAccDataSource_UserConfig(rName string) string {

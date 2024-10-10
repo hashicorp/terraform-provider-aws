@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template Alias")
+// @FrameworkResource("aws_quicksight_template_alias", name="Template Alias")
 func newTemplateAliasResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &templateAliasResource{}, nil
 }

@@ -4,6 +4,7 @@
 package dms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -444,6 +445,14 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckS3EndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return testAccCheckEndpointDestroy(ctx)
+}
+
+func testAccCheckS3EndpointExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return testAccCheckEndpointExists(ctx, n)
 }
 
 func testAccS3EndpointConfig_base(rName string) string {

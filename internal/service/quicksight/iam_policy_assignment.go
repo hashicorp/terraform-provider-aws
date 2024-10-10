@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="IAM Policy Assignment")
+// @FrameworkResource("aws_quicksight_iam_policy_assignment", name="IAM Policy Assignment")
 func newIAMPolicyAssignmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &iamPolicyAssignmentResource{}, nil
 }
