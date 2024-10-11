@@ -222,6 +222,8 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.account_filter_type", "INTERSECTION"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", acctest.Ct1),
+					resource.CheckResourceAttrHasPrefix(resourceName, "stack_instance_summaries.0.organizational_unit_id", "r-"),
 				),
 			},
 			{
@@ -232,12 +234,20 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 					"retain_stack",
 					"call_as",
 					"deployment_targets",
+					"parameter_overrides",
 				},
 			},
 			{
-				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
+				Config: testAccStackSetInstanceConfig_deploymentTargetsAndUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.account_filter_type", "INTERSECTION"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", acctest.Ct1),
+					resource.CheckResourceAttrHasPrefix(resourceName, "stack_instance_summaries.0.organizational_unit_id", "r-"),
 				),
 			},
 		},
@@ -834,9 +844,18 @@ resource "aws_cloudformation_stack_set" "test" {
     enabled                          = true
     retain_stacks_on_account_removal = false
   }
+  parameters = {
+    Parameter1 = "test123"
+  }
 
   template_body = <<TEMPLATE
+Parameters:
+  Parameter1:
+    Type: String
 %[2]s
+Outputs:
+  Parameter1Value:
+    Value: !Ref Parameter1
 TEMPLATE
 
   lifecycle {
@@ -855,6 +874,30 @@ resource "aws_cloudformation_stack_set_instance" "test" {
     organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
     account_filter_type     = "INTERSECTION"
     accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
+  }
+
+  parameter_overrides = {
+    Parameter1 = "test123"
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_deploymentTargetsAndUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+    account_filter_type     = "INTERSECTION"
+    accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
+  }
+
+  parameter_overrides = {
+    Parameter1 = "updatedvalue"
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
