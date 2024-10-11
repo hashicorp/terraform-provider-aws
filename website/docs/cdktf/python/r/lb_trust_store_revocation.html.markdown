@@ -84,4 +84,4 @@ Using `terraform import`, import Trust Store Revocations using their ARN. For ex
 % terraform import aws_lb_trust_store_revocation.example arn:aws:elasticloadbalancing:us-west-2:187416307283:truststore/my-trust-store/20cfe21448b66314,6
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ef6cd189328aa527ddf421defe54c23909195f7b8fd370d9f8f1d391547a633e -->
+<!-- cache-key: cdktf-0.20.9 input-ef6cd189328aa527ddf421defe54c23909195f7b8fd370d9f8f1d391547a633e -->

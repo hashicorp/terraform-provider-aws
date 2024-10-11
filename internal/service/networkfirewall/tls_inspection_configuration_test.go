@@ -38,7 +38,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -170,7 +170,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_encryptionConfiguration(t 
 				Config: testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -238,7 +238,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "REJECT", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -282,7 +282,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "DROP", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),

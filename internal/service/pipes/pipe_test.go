@@ -3066,7 +3066,7 @@ resource "aws_lambda_function" "target" {
   function_name = "%[1]s-target"
   role          = aws_iam_role.target.arn
   handler       = "index.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_pipes_pipe" "test" {

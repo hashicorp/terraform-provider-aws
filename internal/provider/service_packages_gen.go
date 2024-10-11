@@ -55,6 +55,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeguruprofiler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
@@ -229,6 +230,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmquicksetup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmsap"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sso"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
@@ -302,6 +304,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		codebuild.ServicePackage(ctx),
 		codecatalyst.ServicePackage(ctx),
 		codecommit.ServicePackage(ctx),
+		codeconnections.ServicePackage(ctx),
 		codeguruprofiler.ServicePackage(ctx),
 		codegurureviewer.ServicePackage(ctx),
 		codepipeline.ServicePackage(ctx),
@@ -476,6 +479,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		ssm.ServicePackage(ctx),
 		ssmcontacts.ServicePackage(ctx),
 		ssmincidents.ServicePackage(ctx),
+		ssmquicksetup.ServicePackage(ctx),
 		ssmsap.ServicePackage(ctx),
 		sso.ServicePackage(ctx),
 		ssoadmin.ServicePackage(ctx),

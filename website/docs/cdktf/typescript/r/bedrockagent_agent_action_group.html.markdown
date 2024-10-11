@@ -202,6 +202,7 @@ The following arguments are optional:
   Each function represents an action in an action group.
   See [`functionSchema` Block](#function_schema-block) for details.
 * `parentActionGroupSignature` - (Optional) To allow your agent to request the user for additional information when trying to complete a task, set this argument to `AMAZON.UserInput`. You must leave the `description`, `apiSchema`, and `actionGroupExecutor` arguments blank for this action group. Valid values: `AMAZON.UserInput`.
+* `prepareAgent` - (Optional) Whether or not to prepare the agent after creation or modification. Defaults to `true`.
 * `skipResourceInUseCheck` - (Optional) Whether the in-use check is skipped when deleting the action group.
 
 ### `actionGroupExecutor` Block
@@ -274,7 +275,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `delete` - (Default `120m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -308,4 +310,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Action Group th
 % terraform import aws_bedrockagent_agent_action_group.example MMAUDBZTH4,GGRRAED6JP,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7c2751cbbc79e9a251562aa24af42ebbf05f1bd42903010439ef1c8b8dae6ff3 -->
+<!-- cache-key: cdktf-0.20.9 input-24717de6bf2c6ea146670ed6baa29be12e190a23071aa74b2516abd638ffcd16 -->

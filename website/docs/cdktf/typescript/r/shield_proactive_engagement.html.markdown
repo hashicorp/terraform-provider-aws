@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
           Version: "2012-10-17",
         })
       ),
-      name: awsShieldDrtAccessRoleArn.stringValue,
+      name: "example-role",
     });
     const awsIamRolePolicyAttachmentExample = new IamRolePolicyAttachment(
       this,
@@ -68,25 +68,31 @@ class MyConvertedCode extends TerraformStack {
       });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsShieldDrtAccessRoleArnAssociationExample.overrideLogicalId("example");
-    new ShieldProactiveEngagement(this, "test", {
-      dependsOn: [awsShieldDrtAccessRoleArnAssociationTest],
-      emergencyContact: [
-        {
-          contactNotes: "Notes",
-          emailAddress: "test@company.com",
-          phoneNumber: "+12358132134",
-        },
-        {
-          contactNotes: "Notes 2",
-          emailAddress: "test2@company.com",
-          phoneNumber: "+12358132134",
-        },
-      ],
-      enabled: true,
-    });
-    const awsShieldProtectionGroupTest = new ShieldProtectionGroup(
+    const awsShieldProactiveEngagementExample = new ShieldProactiveEngagement(
       this,
-      "test_4",
+      "example_3",
+      {
+        dependsOn: [awsShieldDrtAccessRoleArnAssociationExample],
+        emergencyContact: [
+          {
+            contactNotes: "Notes",
+            emailAddress: "contact1@example.com",
+            phoneNumber: "+12358132134",
+          },
+          {
+            contactNotes: "Notes 2",
+            emailAddress: "contact2@example.com",
+            phoneNumber: "+12358132134",
+          },
+        ],
+        enabled: true,
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsShieldProactiveEngagementExample.overrideLogicalId("example");
+    const awsShieldProtectionGroupExample = new ShieldProtectionGroup(
+      this,
+      "example_4",
       {
         aggregation: "MAX",
         pattern: "ALL",
@@ -94,7 +100,7 @@ class MyConvertedCode extends TerraformStack {
       }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    awsShieldProtectionGroupTest.overrideLogicalId("test");
+    awsShieldProtectionGroupExample.overrideLogicalId("example");
   }
 }
 
@@ -149,4 +155,4 @@ Using `terraform import`, import Shield proactive engagement using the AWS accou
 % terraform import aws_shield_proactive_engagement.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-18d32750dfd31cffba57af41ba91e22ba3765e56d4195e29721822c73685fa6d -->
+<!-- cache-key: cdktf-0.20.9 input-20fc99cd448022b4ae311eda83ba5e27f0f9eae7fd8f28be2dcf5adb9ce77603 -->

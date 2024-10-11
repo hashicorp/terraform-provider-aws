@@ -107,7 +107,12 @@ func (r *customDomainAssociationResource) Create(ctx context.Context, request re
 
 	// Set values for unknowns.
 	data.CustomDomainCertificateExpiryTime = timetypes.NewRFC3339TimePointerValue(output.CustomDomainCertificateExpiryTime)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Redshift Serverless Custom Domain Association", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -260,6 +265,11 @@ func (data *customDomainAssociationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *customDomainAssociationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.WorkgroupName.ValueString(), data.CustomDomainName.ValueString()}, customDomainAssociationResourceIDPartCount, false)))
+func (data *customDomainAssociationResourceModel) setID() (string, error) {
+	parts := []string{
+		data.WorkgroupName.ValueString(),
+		data.CustomDomainName.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, customDomainAssociationResourceIDPartCount, false)
 }

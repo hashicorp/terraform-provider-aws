@@ -417,4 +417,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-29a007b6f11d53df2c4908c1b9afb8067086cdbb37d8aed67111c25506e6e448 -->
+<!-- cache-key: cdktf-0.20.9 input-29a007b6f11d53df2c4908c1b9afb8067086cdbb37d8aed67111c25506e6e448 -->

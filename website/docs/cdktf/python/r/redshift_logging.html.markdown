@@ -100,4 +100,4 @@ Using `terraform import`, import Redshift Logging using the `id`. For example:
 % terraform import aws_redshift_logging.example cluster-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3a484d99a52bc2d9b765c721c1393918623d13b3e2374fc295ee32d34fe8c944 -->
+<!-- cache-key: cdktf-0.20.9 input-3a484d99a52bc2d9b765c721c1393918623d13b3e2374fc295ee32d34fe8c944 -->

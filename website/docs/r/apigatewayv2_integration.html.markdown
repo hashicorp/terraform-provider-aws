@@ -30,7 +30,7 @@ resource "aws_lambda_function" "example" {
   function_name = "Example"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_apigatewayv2_integration" "example" {

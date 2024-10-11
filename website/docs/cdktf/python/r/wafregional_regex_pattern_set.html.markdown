@@ -70,4 +70,4 @@ Using `terraform import`, import WAF Regional Regex Pattern Set using the id. Fo
 % terraform import aws_wafregional_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cff1466a5daff624aa9ded6cc255388e5ab53f5a98b6e49b1cd55ad6eb538fca -->
+<!-- cache-key: cdktf-0.20.9 input-cff1466a5daff624aa9ded6cc255388e5ab53f5a98b6e49b1cd55ad6eb538fca -->

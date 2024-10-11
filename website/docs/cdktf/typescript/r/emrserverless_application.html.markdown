@@ -200,4 +200,4 @@ Using `terraform import`, import EMR Severless applications using the `id`. For 
 % terraform import aws_emrserverless_application.example id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b6a431ae1995c9cbc99268cbdcdd9e88abb7812960696ed78cdf441865883f23 -->
+<!-- cache-key: cdktf-0.20.9 input-b6a431ae1995c9cbc99268cbdcdd9e88abb7812960696ed78cdf441865883f23 -->

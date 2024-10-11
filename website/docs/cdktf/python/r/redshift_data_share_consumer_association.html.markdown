@@ -99,4 +99,4 @@ Using `terraform import`, import Redshift Data Share Consumer Association using 
 % terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c33946aa25940255e66f441f2fbc61c5d7177e0f8ab3a902439c289ff8337aa8 -->
+<!-- cache-key: cdktf-0.20.9 input-c33946aa25940255e66f441f2fbc61c5d7177e0f8ab3a902439c289ff8337aa8 -->

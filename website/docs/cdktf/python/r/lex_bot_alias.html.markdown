@@ -104,4 +104,4 @@ Using `terraform import`, import bot aliases using an ID with the format `bot_na
 % terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1d88de25eb65ac94895d774194baf992f1fe3487e7eec1fc9809a28597665e73 -->
+<!-- cache-key: cdktf-0.20.9 input-1d88de25eb65ac94895d774194baf992f1fe3487e7eec1fc9809a28597665e73 -->

@@ -52,7 +52,7 @@ class MyConvertedCode(TerraformStack):
                     "Version": "2012-10-17"
                 })),
             inline_policy=[IamRoleInlinePolicy(
-                name="example name",
+                name="example-policy",
                 policy=Token.as_string(
                     Fn.jsonencode({
                         "Statement": [{
@@ -65,14 +65,14 @@ class MyConvertedCode(TerraformStack):
                     }))
             )
             ],
-            name="example name"
+            name="example-role"
         )
         SecurityGroup(self, "test",
-            name="example name"
+            name="example"
         )
         aws_datazone_domain_test = DatazoneDomain(self, "test_2",
             domain_execution_role=domain_execution_role.arn,
-            name="example name"
+            name="example"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_datazone_domain_test.override_logical_id("test")
@@ -151,4 +151,4 @@ Using `terraform import`, import DataZone Form Type using a comma separated valu
 % terraform import aws_datazone_form_type.example domain_identifier,name,revision
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c3a2e042d80bbd96635e77f1e4358067efee9896b85ead15bd6a7ce0f445304f -->
+<!-- cache-key: cdktf-0.20.9 input-cdef50a21d1845378a865dd36aa3dc7d71db53486e0928923653cfc25130f74f -->

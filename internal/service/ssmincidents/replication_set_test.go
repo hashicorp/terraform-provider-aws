@@ -55,7 +55,7 @@ func testAccReplicationSet_basic(t *testing.T) {
 						names.AttrName:      region2,
 						names.AttrKMSKeyARN: "DefaultKey",
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -120,7 +120,7 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -139,7 +139,7 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -178,7 +178,7 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						names.AttrName: acctest.Region(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						names.AttrName: acctest.AlternateRegion(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -215,7 +215,7 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						names.AttrName: acctest.Region(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -272,7 +272,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -291,7 +291,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -312,7 +312,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey2, rProviderVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey3, rProviderVal3),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -350,7 +350,7 @@ func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -365,7 +365,7 @@ func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 			{
@@ -379,7 +379,7 @@ func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 		},

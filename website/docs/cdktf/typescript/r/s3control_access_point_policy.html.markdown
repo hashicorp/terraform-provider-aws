@@ -123,4 +123,4 @@ Using `terraform import`, import Access Point policies using the `accessPointArn
 % terraform import aws_s3control_access_point_policy.example arn:aws:s3:us-west-2:123456789012:accesspoint/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e5c457db50c72d6b30534efccf23fc63cd4d7f721d03d7a1b36a6e8875fa8261 -->
+<!-- cache-key: cdktf-0.20.9 input-e5c457db50c72d6b30534efccf23fc63cd4d7f721d03d7a1b36a6e8875fa8261 -->

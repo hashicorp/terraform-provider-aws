@@ -80,4 +80,4 @@ Using `terraform import`, import API Gateway Client Certificates using the id. F
 % terraform import aws_api_gateway_client_certificate.demo ab1cqe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f5e9958abec817b82b925c0b36a7398f6252c227f18c1f61028418cabf76045c -->
+<!-- cache-key: cdktf-0.20.9 input-f5e9958abec817b82b925c0b36a7398f6252c227f18c1f61028418cabf76045c -->

@@ -135,4 +135,4 @@ Using `terraform import`, import Pinpoint Email Channel using the `application-i
 % terraform import aws_pinpoint_email_channel.email application-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6378f9b4a01e95270fdc0e626fd068fb87d9b632a57e241b972a8df73443edf7 -->
+<!-- cache-key: cdktf-0.20.9 input-6378f9b4a01e95270fdc0e626fd068fb87d9b632a57e241b972a8df73443edf7 -->

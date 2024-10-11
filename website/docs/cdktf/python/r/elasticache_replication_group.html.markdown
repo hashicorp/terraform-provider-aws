@@ -284,7 +284,10 @@ The following arguments are optional:
   If `true`, `automatic_failover_enabled` must also be enabled.
   Defaults to `false`.
 * `network_type` - (Optional) The IP versions for cache cluster connections. Valid values are `ipv4`, `ipv6` or `dual_stack`.
-* `node_type` - (Optional) Instance class to be used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). Required unless `global_replication_group_id` is set. Cannot be set if `global_replication_group_id` is set.
+* `node_type` - (Optional) Instance class to be used.
+  See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
+  Required unless `global_replication_group_id` is set.
+  Cannot be set if `global_replication_group_id` is set.
 * `notification_topic_arn` – (Optional) ARN of an SNS topic to send ElastiCache notifications to. Example: `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 * `num_cache_clusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have.
   If `automatic_failover_enabled` or `multi_az_enabled` are `true`, must be at least 2.
@@ -375,4 +378,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a06a9b6971ab807b7497ee50364b06ba349ae1d5cfaaabe4594b06c00721c11f -->
+<!-- cache-key: cdktf-0.20.9 input-e2335101ff9c7c19181f1cfc45b40e853a14f84d347b6ab9db1560aed2046c8c -->

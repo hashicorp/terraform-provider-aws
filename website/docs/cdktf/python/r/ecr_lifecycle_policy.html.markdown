@@ -109,4 +109,4 @@ Using `terraform import`, import ECR Lifecycle Policy using the name of the repo
 % terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d545331ba3e4420277d75e2fdc8d30cf8a2c2782aecb6d62783fa7e1ed09235d -->
+<!-- cache-key: cdktf-0.20.9 input-d545331ba3e4420277d75e2fdc8d30cf8a2c2782aecb6d62783fa7e1ed09235d -->
