@@ -182,7 +182,7 @@ func sweepWorkGroups(region string) error {
 				continue
 			}
 
-			r := resourceDatabase()
+			r := resourceWorkGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set(names.AttrForceDestroy, true)
