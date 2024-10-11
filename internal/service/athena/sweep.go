@@ -58,7 +58,7 @@ func sweepDataCatalogs(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing Athena DData Catalogs (%s): %w", region, err)
+			return fmt.Errorf("error listing Athena Data Catalogs (%s): %w", region, err)
 		}
 
 		for _, v := range page.DataCatalogsSummary {
@@ -93,12 +93,10 @@ func sweepDatabases(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.AthenaClient(ctx)
-	input := &athena.ListDatabasesInput{
-		CatalogName: aws.String("AwsDataCatalog"),
-	}
+	input := &athena.ListDataCatalogsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := athena.NewListDatabasesPaginator(conn, input)
+	pages := athena.NewListDataCatalogsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -108,23 +106,39 @@ func sweepDatabases(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing Athena Databases (%s): %w", region, err)
+			return fmt.Errorf("error listing Athena Data Catalogs (%s): %w", region, err)
 		}
 
-		for _, v := range page.DatabaseList {
-			name := aws.ToString(v.Name)
-
-			if name == "default" {
-				log.Printf("[INFO] Skipping Athena Database %s", name)
-				continue
+		for _, v := range page.DataCatalogsSummary {
+			catalogName := aws.ToString(v.CatalogName)
+			input := &athena.ListDatabasesInput{
+				CatalogName: aws.String(catalogName),
 			}
 
-			r := resourceDatabase()
-			d := r.Data(nil)
-			d.SetId(name)
-			d.Set(names.AttrForceDestroy, true)
+			pages := athena.NewListDatabasesPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.DatabaseList {
+					name := aws.ToString(v.Name)
+
+					if name == "default" {
+						log.Printf("[INFO] Skipping Athena Database %s", name)
+						continue
+					}
+
+					r := resourceDatabase()
+					d := r.Data(nil)
+					d.SetId(name)
+					d.Set(names.AttrForceDestroy, true)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
 		}
 	}
 
