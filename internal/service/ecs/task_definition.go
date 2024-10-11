@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -586,7 +588,6 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		d.SetId("")
 		return diags
 	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
 	}
@@ -663,8 +664,9 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.DeregisterTaskDefinition(ctx, &ecs.DeregisterTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get(names.AttrARN).(string)),
 	})
-
-	if err != nil {
+	if tfawserr.ErrMessageContains(err, "ClientException", "in the process of being deleted") {
+		return diags
+	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Definition (%s): %s", d.Id(), err)
 	}
 
@@ -673,8 +675,12 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 
 func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTaskDefinitionInput) (*awstypes.TaskDefinition, []awstypes.Tag, error) {
 	output, err := conn.DescribeTaskDefinition(ctx, input)
-
-	if err != nil {
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusBadRequest) {
+		return nil, nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	} else if err != nil {
 		return nil, nil, err
 	}
 
@@ -704,7 +710,7 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 		return nil, nil, err
 	}
 
-	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive {
+	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive || status == awstypes.TaskDefinitionStatusDeleteInProgress {
 		return nil, nil, &retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
