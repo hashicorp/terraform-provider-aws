@@ -758,13 +758,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
 	}
 
-	if tagged && !hasIdentifierAttribute && len(d.OverrideIdentifierAttribute) == 0 {
-		v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-		return
-	}
-
 	if tagged {
 		if !skip {
+			if !hasIdentifierAttribute && len(d.OverrideIdentifierAttribute) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				return
+			}
 			if !generatorSeen {
 				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
