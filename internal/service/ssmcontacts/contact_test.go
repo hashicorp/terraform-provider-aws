@@ -47,7 +47,7 @@ func testAccContact_basic(t *testing.T) {
 					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PERSONAL"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/.+$`)),
 				),
 			},
 			{

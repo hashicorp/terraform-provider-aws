@@ -49,7 +49,7 @@ func TestAccSSOAdminApplication_basic(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "application_provider_arn", testAccApplicationProviderARN),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "application_arn", "sso", regexache.MustCompile(`application/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "application_arn", "sso", regexache.MustCompile(`application/.+$`)),
 				),
 			},
 			{

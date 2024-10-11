@@ -46,7 +46,7 @@ func testAccReplicationSetDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status", dataSourceName, "region.0.status"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status_message", dataSourceName, "region.0.status_message"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 				),
 			},
 		},
