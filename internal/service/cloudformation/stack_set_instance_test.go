@@ -223,7 +223,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", acctest.Ct1),
-					resource.CheckResourceAttrHasPrefix(resourceName, "stack_instance_summaries.0.organizational_unit_id", "r-"),
+					acctest.CheckResourceAttrHasPrefix(resourceName, "stack_instance_summaries.0.organizational_unit_id", "r-"),
 				),
 			},
 			{
@@ -247,7 +247,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", acctest.Ct1),
-					resource.CheckResourceAttrHasPrefix(resourceName, "stack_instance_summaries.0.organizational_unit_id", "r-"),
+					acctest.CheckResourceAttrHasPrefix(resourceName, "stack_instance_summaries.0.organizational_unit_id", "r-"),
 				),
 			},
 		},
