@@ -558,7 +558,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func waitDBClusterInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) {
+func waitDBClusterInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			instanceStatusBackingUp,
