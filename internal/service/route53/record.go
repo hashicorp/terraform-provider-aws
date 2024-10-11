@@ -736,8 +736,10 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	output, err := conn.ChangeResourceRecordSets(ctx, input)
 
-	if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
-		err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
+	// Pre-AWS SDK for Go v2 migration compatibility.
+	// https://github.com/hashicorp/terraform-provider-aws/issues/37806.
+	if errs.IsA[*awstypes.InvalidChangeBatch](err) {
+		return diags
 	}
 
 	if err != nil {

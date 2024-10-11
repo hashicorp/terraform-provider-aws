@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Image Builder Image Recipes.
 * `names` - Set of names of the matched Image Builder Image Recipes.
 
-<!-- cache-key: cdktf-0.20.1 input-b9f289e59d41c6162c49d38c4f1cd3ae9945f6fdc1c047edd7598af188bbe832 -->
+<!-- cache-key: cdktf-0.20.9 input-b9f289e59d41c6162c49d38c4f1cd3ae9945f6fdc1c047edd7598af188bbe832 -->

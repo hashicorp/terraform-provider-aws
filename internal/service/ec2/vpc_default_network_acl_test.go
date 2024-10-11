@@ -148,12 +148,12 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						names.AttrProtocol: "-1",
-						"rule_no":          "100",
-						"from_port":        acctest.Ct0,
-						"to_port":          acctest.Ct0,
-						names.AttrAction:   "allow",
-						"cidr_block":       "0.0.0.0/0",
+						names.AttrProtocol:  "-1",
+						"rule_no":           "100",
+						"from_port":         acctest.Ct0,
+						"to_port":           acctest.Ct0,
+						names.AttrAction:    "allow",
+						names.AttrCIDRBlock: "0.0.0.0/0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct0),
 				),
@@ -301,7 +301,7 @@ func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *types
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindNetworkACLByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkACLByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

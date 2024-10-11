@@ -99,4 +99,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_connect` using the EC2
 % terraform import aws_ec2_transit_gateway_connect.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3587ce9a543683c2a7be3dfe58f86b578cf760c76595adf37a9f30c13a13e9b9 -->
+<!-- cache-key: cdktf-0.20.9 input-3587ce9a543683c2a7be3dfe58f86b578cf760c76595adf37a9f30c13a13e9b9 -->

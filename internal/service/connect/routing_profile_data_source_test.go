@@ -119,7 +119,7 @@ func testAccRoutingProfileDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4 string) string {
+func testAccRoutingProfileDataSourceConfig_base(rName, rName2, rName3, rName4 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -186,7 +186,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileDataSourceConfig_id(rName, rName2, rName3, rName4 string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4),
+		testAccRoutingProfileDataSourceConfig_base(rName, rName2, rName3, rName4),
 		`
 data "aws_connect_routing_profile" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -197,7 +197,7 @@ data "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileDataSourceConfig_name(rName, rName2, rName3, rName4 string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4),
+		testAccRoutingProfileDataSourceConfig_base(rName, rName2, rName3, rName4),
 		`
 data "aws_connect_routing_profile" "test" {
   instance_id = aws_connect_instance.test.id

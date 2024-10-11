@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_appconfig_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
@@ -154,14 +154,14 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 	}
 
 	input := &appconfig.CreateEnvironmentInput{
-		Name:          aws.String(plan.Name.ValueString()),
+		Name:          plan.Name.ValueStringPointer(),
 		ApplicationId: aws.String(appId),
 		Tags:          getTagsIn(ctx),
 		Monitors:      expandMonitors(monitors),
 	}
 
 	if !(plan.Description.IsNull() || plan.Description.IsUnknown()) {
-		input.Description = aws.String(plan.Description.ValueString())
+		input.Description = plan.Description.ValueStringPointer()
 	}
 
 	environment, err := conn.CreateEnvironment(ctx, input)
@@ -239,11 +239,11 @@ func (r *resourceEnvironment) Update(ctx context.Context, request resource.Updat
 		updateInput := plan.updateEnvironmentInput()
 
 		if !plan.Description.Equal(state.Description) {
-			updateInput.Description = aws.String(plan.Description.ValueString())
+			updateInput.Description = plan.Description.ValueStringPointer()
 		}
 
 		if !plan.Name.Equal(state.Name) {
-			updateInput.Name = aws.String(plan.Name.ValueString())
+			updateInput.Name = plan.Name.ValueStringPointer()
 		}
 
 		if !plan.Monitors.Equal(state.Monitors) {
@@ -322,8 +322,8 @@ type resourceEnvironmentData struct {
 	Monitors      types.Set    `tfsdk:"monitor"`
 	Name          types.String `tfsdk:"name"`
 	State         types.String `tfsdk:"state"`
-	Tags          types.Map    `tfsdk:"tags"`
-	TagsAll       types.Map    `tfsdk:"tags_all"`
+	Tags          tftags.Map   `tfsdk:"tags"`
+	TagsAll       tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (d *resourceEnvironmentData) refreshFromCreateOutput(ctx context.Context, meta *conns.AWSClient, out *appconfig.CreateEnvironmentOutput) diag.Diagnostics {
@@ -394,22 +394,22 @@ func (d *resourceEnvironmentData) refreshFromUpdateOutput(ctx context.Context, m
 
 func (d *resourceEnvironmentData) getEnvironmentInput() *appconfig.GetEnvironmentInput {
 	return &appconfig.GetEnvironmentInput{
-		ApplicationId: aws.String(d.ApplicationID.ValueString()),
-		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+		ApplicationId: d.ApplicationID.ValueStringPointer(),
+		EnvironmentId: d.EnvironmentID.ValueStringPointer(),
 	}
 }
 
 func (d *resourceEnvironmentData) updateEnvironmentInput() *appconfig.UpdateEnvironmentInput {
 	return &appconfig.UpdateEnvironmentInput{
-		ApplicationId: aws.String(d.ApplicationID.ValueString()),
-		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+		ApplicationId: d.ApplicationID.ValueStringPointer(),
+		EnvironmentId: d.EnvironmentID.ValueStringPointer(),
 	}
 }
 
 func (d *resourceEnvironmentData) deleteEnvironmentInput() *appconfig.DeleteEnvironmentInput {
 	return &appconfig.DeleteEnvironmentInput{
-		ApplicationId: aws.String(d.ApplicationID.ValueString()),
-		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+		ApplicationId: d.ApplicationID.ValueStringPointer(),
+		EnvironmentId: d.EnvironmentID.ValueStringPointer(),
 	}
 }
 
@@ -456,11 +456,11 @@ type monitorData struct {
 
 func (m monitorData) expand() awstypes.Monitor {
 	result := awstypes.Monitor{
-		AlarmArn: aws.String(m.AlarmARN.ValueString()),
+		AlarmArn: m.AlarmARN.ValueStringPointer(),
 	}
 
 	if !m.AlarmRoleARN.IsNull() {
-		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueString())
+		result.AlarmRoleArn = m.AlarmRoleARN.ValueStringPointer()
 	}
 
 	return result

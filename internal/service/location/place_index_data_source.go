@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -67,15 +67,15 @@ func DataSourcePlaceIndex() *schema.Resource {
 
 func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DescribePlaceIndexInput{}
+	input := &location.DescribePlaceIndexInput{}
 
 	if v, ok := d.GetOk("index_name"); ok {
 		input.IndexName = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribePlaceIndexWithContext(ctx, input)
+	output, err := conn.DescribePlaceIndex(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Place Index: %s", err)
@@ -85,8 +85,8 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Place Index: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.IndexName))
-	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.SetId(aws.ToString(output.IndexName))
+	d.Set(names.AttrCreateTime, aws.ToTime(output.CreateTime).Format(time.RFC3339))
 	d.Set("data_source", output.DataSource)
 
 	if output.DataSourceConfiguration != nil {
@@ -99,7 +99,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 	d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
-	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
+	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	return diags
 }

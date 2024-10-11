@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 - `registry_id` - The registry ID where the repository was created.
 - `upstream_registry_url` - The registry URL of the upstream public registry to use as the source.
 
-<!-- cache-key: cdktf-0.20.1 input-51f9ce17c5f6437a6a7033bcc7164586c2d49132414e45c72255adc80ed3befc -->
+<!-- cache-key: cdktf-0.20.9 input-51f9ce17c5f6437a6a7033bcc7164586c2d49132414e45c72255adc80ed3befc -->

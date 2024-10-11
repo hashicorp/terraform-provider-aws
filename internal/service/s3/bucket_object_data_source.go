@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKDataSource("aws_s3_bucket_object", name="Bucket Object")
+// @Tags(identifierAttribute="arn", resourceType="BucketObject")
 func dataSourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectRead,
@@ -120,7 +121,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +144,6 @@ func dataSourceBucketObject() *schema.Resource {
 func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get(names.AttrBucket).(string)
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
@@ -190,11 +190,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(out.ETag), `"`))
 	d.Set("expiration", out.Expiration)
-	if out.Expires != nil {
-		d.Set("expires", out.Expires.Format(time.RFC1123))
-	} else {
-		d.Set("expires", nil)
-	}
+	d.Set("expires", out.ExpiresString) // formatted in RFC1123
 	if out.LastModified != nil {
 		d.Set("last_modified", out.LastModified.Format(time.RFC1123))
 	} else {
@@ -208,9 +204,9 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if out.StorageClass != "" {
-		d.Set("storage_class", out.StorageClass)
+		d.Set(names.AttrStorageClass, out.StorageClass)
 	}
 	d.Set("version_id", out.VersionId)
 	d.Set("website_redirect_location", out.WebsiteRedirectLocation)
@@ -237,16 +233,6 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		d.Set("body", buf.String())
-	}
-
-	tags, err := objectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

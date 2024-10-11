@@ -142,7 +142,7 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_tags1(rName),
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
@@ -150,7 +150,7 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceConfig_tags2(rName),
+				Config: testAccInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
@@ -167,8 +167,20 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.ExtraName", "tf-test"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -191,16 +203,15 @@ func TestAccLightsailInstance_keyOnlyTags(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_keyOnlyTags1(rName),
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -209,18 +220,28 @@ func TestAccLightsailInstance_keyOnlyTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceConfig_keyOnlyTags2(rName),
+				Config: testAccInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.ExtraName", "tf-test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag1", "NotEmptyAnymore"),
-					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag2", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey2, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 		},
@@ -480,7 +501,7 @@ resource "aws_lightsail_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_availabilityZone(rName string, availabilityZone string) string {
+func testAccInstanceConfig_availabilityZone(rName, availabilityZone string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`	
@@ -493,7 +514,7 @@ resource "aws_lightsail_instance" "test" {
 `, rName, availabilityZone))
 }
 
-func testAccInstanceConfig_tags1(rName string) string {
+func testAccInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
@@ -504,13 +525,13 @@ resource "aws_lightsail_instance" "test" {
   bundle_id         = "nano_3_0"
 
   tags = {
-    Name = "tf-test"
+    %[2]q = %[3]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccInstanceConfig_tags2(rName string) string {
+func testAccInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
@@ -521,52 +542,14 @@ resource "aws_lightsail_instance" "test" {
   bundle_id         = "nano_3_0"
 
   tags = {
-    Name      = "tf-test",
-    ExtraName = "tf-test"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccInstanceConfig_keyOnlyTags1(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfigBase(),
-		fmt.Sprintf(`
-resource "aws_lightsail_instance" "test" {
-  name              = %[1]q
-  availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
-
-  tags = {
-    Name      = "tf-test"
-    EmptyTag1 = ""
-  }
-}
-`, rName))
-}
-
-func testAccInstanceConfig_keyOnlyTags2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfigBase(),
-		fmt.Sprintf(`
-resource "aws_lightsail_instance" "test" {
-  name              = %[1]q
-  availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
-
-  tags = {
-    Name      = "tf-test",
-    ExtraName = "tf-test"
-    EmptyTag1 = "NotEmptyAnymore"
-    EmptyTag2 = ""
-  }
-}
-`, rName))
-}
-
-func testAccInstanceConfig_IPAddressType(rName string, rIPAddressType string) string {
+func testAccInstanceConfig_IPAddressType(rName, rIPAddressType string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
@@ -580,7 +563,7 @@ resource "aws_lightsail_instance" "test" {
 `, rName, rIPAddressType))
 }
 
-func testAccInstanceConfig_addOn(rName string, snapshotTime string, status string) string {
+func testAccInstanceConfig_addOn(rName, snapshotTime, status string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`

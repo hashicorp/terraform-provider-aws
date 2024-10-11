@@ -21,6 +21,7 @@ var (
 	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
 	FindGlobalReplicationGroupByID       = findGlobalReplicationGroupByID
 	FindReplicationGroupByID             = findReplicationGroupByID
+	FindReservedCacheNodeByID            = findReservedCacheNodeByID
 	FindServerlessCacheByID              = findServerlessCacheByID
 	FindUserByID                         = findUserByID
 	FindUserGroupByID                    = findUserGroupByID
@@ -30,14 +31,21 @@ var (
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
+	DeleteCacheCluster                        = deleteCacheCluster
 	DiffVersion                               = diffVersion
+	EmptyDescription                          = emptyDescription
 	EngineMemcached                           = engineMemcached
 	EngineRedis                               = engineRedis
 	EngineVersionForceNewOnDowngrade          = engineVersionForceNewOnDowngrade
 	EngineVersionIsDowngrade                  = engineVersionIsDowngrade
+	GlobalReplicationGroupRegionPrefixFormat  = globalReplicationGroupRegionPrefixFormat
 	NormalizeEngineVersion                    = normalizeEngineVersion
 	ParamGroupNameRequiresMajorVersionUpgrade = paramGroupNameRequiresMajorVersionUpgrade
 	ValidateClusterEngineVersion              = validateClusterEngineVersion
 	ValidMemcachedVersionString               = validMemcachedVersionString
 	ValidRedisVersionString                   = validRedisVersionString
+)
+
+type (
+	VersionDiff = versionDiff
 )

@@ -63,15 +63,17 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 
 	streamARN := d.Get(names.AttrStreamARN).(string)
 	tableName := d.Get(names.AttrTableName).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{tableName, streamARN}, kinesisStreamingDestinationResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{tableName, streamARN}, kinesisStreamingDestinationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &dynamodb.EnableKinesisStreamingDestinationInput{
 		StreamArn: aws.String(streamARN),
 		TableName: aws.String(tableName),
 	}
 
-	_, err := conn.EnableKinesisStreamingDestination(ctx, input)
-
-	if err != nil {
+	if _, err := conn.EnableKinesisStreamingDestination(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling DynamoDB Kinesis Streaming Destination (%s): %s", id, err)
 	}
 
@@ -126,6 +128,10 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 
 	if tfresource.NotFound(err) {
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "disabling DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting DynamoDB Kinesis Streaming Destination: %s", d.Id())

@@ -79,4 +79,4 @@ Using `terraform import`, import IOT Things using the name. For example:
 % terraform import aws_iot_thing.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-80ff616de83aba8dd5b8102e42172cd6cc340818bf3135b58cdb41c17424b73b -->
+<!-- cache-key: cdktf-0.20.9 input-80ff616de83aba8dd5b8102e42172cd6cc340818bf3135b58cdb41c17424b73b -->

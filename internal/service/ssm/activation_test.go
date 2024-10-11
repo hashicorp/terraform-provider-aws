@@ -12,7 +12,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -39,43 +42,11 @@ func TestAccSSMActivation_basic(t *testing.T) {
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"activation_code",
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
-			},
-		},
-	})
-}
-
-func TestAccSSMActivation_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var ssmActivation awstypes.Activation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssm_activation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccActivationConfig_tags(rName, roleName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
-					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -234,23 +205,6 @@ resource "aws_ssm_activation" "test" {
   registration_limit = "5"
 
   depends_on = [aws_iam_role_policy_attachment.test]
-}
-`, rName))
-}
-
-func testAccActivationConfig_tags(rName string, roleName string) string {
-	return acctest.ConfigCompose(testAccActivationConfig_base(roleName), fmt.Sprintf(`
-resource "aws_ssm_activation" "test" {
-  name               = %[1]q
-  description        = "Test"
-  iam_role           = aws_iam_role.test.name
-  registration_limit = "5"
-
-  depends_on = [aws_iam_role_policy_attachment.test]
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName))
 }

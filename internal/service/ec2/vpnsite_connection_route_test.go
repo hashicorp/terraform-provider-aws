@@ -73,13 +73,7 @@ func testAccCheckVPNConnectionRouteDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			cidrBlock, vpnConnectionID, err := tfec2.VPNConnectionRouteParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
+			_, err := tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_connection_id"], rs.Primary.Attributes["destination_cidr_block"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -103,19 +97,9 @@ func testAccVPNConnectionRouteExists(ctx context.Context, n string) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPN Connection Route ID is set")
-		}
-
-		cidrBlock, vpnConnectionID, err := tfec2.VPNConnectionRouteParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err = tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
+		_, err := tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_connection_id"], rs.Primary.Attributes["destination_cidr_block"])
 
 		return err
 	}

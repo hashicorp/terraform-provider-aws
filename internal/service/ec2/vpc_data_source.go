@@ -23,7 +23,8 @@ import (
 
 // @SDKDataSource("aws_vpc", name="VPC")
 // @Tags
-func DataSourceVPC() *schema.Resource {
+// @Testing(generator=false)
+func dataSourceVPC() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCRead,
 
@@ -36,7 +37,7 @@ func DataSourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -46,11 +47,11 @@ func DataSourceVPC() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"association_id": {
+						names.AttrAssociationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -133,9 +134,9 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		isDefaultStr = "true"
 	}
 	input := &ec2.DescribeVpcsInput{
-		Filters: newAttributeFilterListV2(
+		Filters: newAttributeFilterList(
 			map[string]string{
-				"cidr":            d.Get("cidr_block").(string),
+				"cidr":            d.Get(names.AttrCIDRBlock).(string),
 				"dhcp-options-id": d.Get("dhcp_options_id").(string),
 				"isDefault":       isDefaultStr,
 				names.AttrState:   d.Get(names.AttrState).(string),
@@ -147,7 +148,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.VpcIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set))...)
+	input.Filters = append(input.Filters, newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set))...)
 	input.Filters = append(input.Filters, tagFilters(ctx)...)
 
 	if len(input.Filters) == 0 {
@@ -155,7 +156,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Filters = nil
 	}
 
-	vpc, err := findVPCV2(ctx, conn, input)
+	vpc, err := findVPC(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC", err))
@@ -172,25 +173,25 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Resource:  "vpc/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("cidr_block", vpc.CidrBlock)
+	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("default", vpc.IsDefault)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames); err != nil {
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport); err != nil {
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
@@ -206,9 +207,9 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	cidrAssociations := []interface{}{}
 	for _, v := range vpc.CidrBlockAssociationSet {
 		association := map[string]interface{}{
-			"association_id": aws.ToString(v.AssociationId),
-			"cidr_block":     aws.ToString(v.CidrBlock),
-			names.AttrState:  aws.ToString(aws.String(string(v.CidrBlockState.State))),
+			names.AttrAssociationID: aws.ToString(v.AssociationId),
+			names.AttrCIDRBlock:     aws.ToString(v.CidrBlock),
+			names.AttrState:         aws.ToString(aws.String(string(v.CidrBlockState.State))),
 		}
 		cidrAssociations = append(cidrAssociations, association)
 	}
@@ -224,7 +225,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ipv6_cidr_block", nil)
 	}
 
-	setTagsOutV2(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }

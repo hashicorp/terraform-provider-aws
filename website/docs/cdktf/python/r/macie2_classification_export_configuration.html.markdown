@@ -88,4 +88,4 @@ Using `terraform import`, import `aws_macie2_classification_export_configuration
 % terraform import aws_macie2_classification_export_configuration.example 123456789012:us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b790e975bbab64731657718f850f0c07a6901341522f2000f5f309d87096fb71 -->
+<!-- cache-key: cdktf-0.20.9 input-b790e975bbab64731657718f850f0c07a6901341522f2000f5f309d87096fb71 -->

@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_load_balancer_backend_server_policy")
-func ResourceBackendServerPolicy() *schema.Resource {
+// @SDKResource("aws_load_balancer_backend_server_policy", name="Backend Server Policy")
+func resourceBackendServerPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackendServerPolicySet,
 		ReadWithoutTimeout:   resourceBackendServerPolicyRead,
@@ -48,42 +48,43 @@ func ResourceBackendServerPolicy() *schema.Resource {
 
 func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	instancePort := d.Get("instance_port").(int)
 	lbName := d.Get("load_balancer_name").(string)
-	id := BackendServerPolicyCreateResourceID(lbName, instancePort)
-	input := &elb.SetLoadBalancerPoliciesForBackendServerInput{
-		InstancePort:     aws.Int64(int64(instancePort)),
+	id := backendServerPolicyCreateResourceID(lbName, instancePort)
+	input := &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+		InstancePort:     aws.Int32(int32(instancePort)),
 		LoadBalancerName: aws.String(lbName),
 	}
 
 	if v, ok := d.GetOk("policy_names"); ok && v.(*schema.Set).Len() > 0 {
-		input.PolicyNames = flex.ExpandStringSet(v.(*schema.Set))
+		input.PolicyNames = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := conn.SetLoadBalancerPoliciesForBackendServerWithContext(ctx, input)
+	_, err := conn.SetLoadBalancerPoliciesForBackendServer(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", id, err)
 	}
 
-	d.SetId(id)
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return append(diags, resourceBackendServerPolicyRead(ctx, d, meta)...)
 }
 
 func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, instancePort, err := BackendServerPolicyParseResourceID(d.Id())
-
+	lbName, instancePort, err := backendServerPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyNames, err := FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
+	policyNames, err := findLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Backend Server Policy (%s) not found, removing from state", d.Id())
@@ -104,22 +105,19 @@ func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData
 
 func resourceBackendServerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, instancePort, err := BackendServerPolicyParseResourceID(d.Id())
-
+	lbName, instancePort, err := backendServerPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
-	}
-
-	input := &elb.SetLoadBalancerPoliciesForBackendServerInput{
-		InstancePort:     aws.Int64(int64(instancePort)),
-		LoadBalancerName: aws.String(lbName),
-		PolicyNames:      aws.StringSlice([]string{}),
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting ELB Classic Backend Server Policy: %s", d.Id())
-	_, err = conn.SetLoadBalancerPoliciesForBackendServerWithContext(ctx, input)
+	_, err = conn.SetLoadBalancerPoliciesForBackendServer(ctx, &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+		InstancePort:     aws.Int32(int32(instancePort)),
+		LoadBalancerName: aws.String(lbName),
+		PolicyNames:      []string{},
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", d.Id(), err)
@@ -128,8 +126,8 @@ func resourceBackendServerPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx context.Context, conn *elb.ELB, lbName string, instancePort int) ([]string, error) {
-	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
+func findLoadBalancerBackendServerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, instancePort int) ([]string, error) {
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
 		return nil, err
@@ -138,15 +136,11 @@ func FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx context.Context, conn *
 	var policyNames []string
 
 	for _, v := range lb.BackendServerDescriptions {
-		if v == nil {
+		if aws.ToInt32(v.InstancePort) != int32(instancePort) {
 			continue
 		}
 
-		if aws.Int64Value(v.InstancePort) != int64(instancePort) {
-			continue
-		}
-
-		policyNames = append(policyNames, aws.StringValueSlice(v.PolicyNames)...)
+		policyNames = append(policyNames, v.PolicyNames...)
 	}
 
 	return policyNames, nil
@@ -154,14 +148,14 @@ func FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx context.Context, conn *
 
 const backendServerPolicyResourceIDSeparator = ":"
 
-func BackendServerPolicyCreateResourceID(lbName string, instancePort int) string {
+func backendServerPolicyCreateResourceID(lbName string, instancePort int) string {
 	parts := []string{lbName, strconv.Itoa(instancePort)}
 	id := strings.Join(parts, backendServerPolicyResourceIDSeparator)
 
 	return id
 }
 
-func BackendServerPolicyParseResourceID(id string) (string, int, error) {
+func backendServerPolicyParseResourceID(id string) (string, int, error) {
 	parts := strings.Split(id, backendServerPolicyResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

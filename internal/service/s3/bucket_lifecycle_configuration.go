@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -207,7 +208,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -240,7 +241,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -251,11 +252,18 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"transition_default_minimum_object_size": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.TransitionDefaultMinimumObjectSize](),
+			},
 		},
 	}
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
@@ -271,6 +279,10 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
+	if v, ok := d.GetOk("transition_default_minimum_object_size"); ok {
+		input.TransitionDefaultMinimumObjectSize = types.TransitionDefaultMinimumObjectSize(v.(string))
+	}
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
@@ -280,40 +292,39 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		diag.Errorf("waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
+	if _, err := waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	const (
 		lifecycleConfigurationExtraRetryDelay    = 5 * time.Second
 		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 	)
-	var lastOutput, output []types.LifecycleRule
+	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
 
 	err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
 		var err error
 
 		time.Sleep(lifecycleConfigurationExtraRetryDelay)
 
-		output, err = findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 		if d.IsNewResource() && tfresource.NotFound(err) {
 			return retry.RetryableError(err)
@@ -323,7 +334,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 			return retry.NonRetryableError(err)
 		}
 
-		if lastOutput == nil || !lifecycleRulesEqual(lastOutput, output) {
+		if lastOutput == nil || !lifecycleRulesEqual(lastOutput.Rules, output.Rules) {
 			lastOutput = output
 			return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", d.Id()))
 		}
@@ -332,34 +343,36 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Lifecycle Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
-	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output)); err != nil {
-		return diag.Errorf("setting rule: %s", err)
+	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output.Rules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
+	d.Set("transition_default_minimum_object_size", output.TransitionDefaultMinimumObjectSize)
 
-	return nil
+	return diags
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
@@ -373,29 +386,32 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
+	if v, ok := d.GetOk("transition_default_minimum_object_size"); ok {
+		input.TransitionDefaultMinimumObjectSize = types.TransitionDefaultMinimumObjectSize(v.(string))
+	}
+
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, input)
 	}, errCodeNoSuchLifecycleConfiguration)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		diag.Errorf("waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
+	if _, err := waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3.DeleteBucketLifecycleInput{
@@ -408,22 +424,22 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	_, err = conn.DeleteBucketLifecycle(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		return findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Lifecyle Configuration (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecyle Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted
@@ -449,7 +465,7 @@ func suppressMissingFilterConfigurationBlock(k, old, new string, d *schema.Resou
 	return false
 }
 
-func findLifecycleRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.LifecycleRule, error) {
+func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketLifecycleConfigurationOutput, error) {
 	input := &s3.GetBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
@@ -474,7 +490,7 @@ func findLifecycleRules(ctx context.Context, conn *s3.Client, bucket, expectedBu
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.Rules, nil
+	return output, nil
 }
 
 func lifecycleRulesEqual(rules1, rules2 []types.LifecycleRule) bool {
@@ -496,7 +512,7 @@ func lifecycleRulesEqual(rules1, rules2 []types.LifecycleRule) bool {
 
 func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []types.LifecycleRule) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -506,7 +522,7 @@ func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, ex
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(lifecycleRulesEqual(output, rules)), nil
+		return output, strconv.FormatBool(lifecycleRulesEqual(output.Rules, rules)), nil
 	}
 }
 
@@ -790,7 +806,7 @@ func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersi
 			transition.NoncurrentDays = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -828,7 +844,7 @@ func expandTransitions(l []interface{}) []types.Transition {
 			transition.Days = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -1015,7 +1031,7 @@ func flattenNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTr
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.NewerNoncurrentVersions != nil {
@@ -1041,7 +1057,7 @@ func flattenTransitions(transitions []types.Transition) []interface{} {
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.Date != nil {

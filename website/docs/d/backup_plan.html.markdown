@@ -30,5 +30,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the backup plan.
 * `name` - Display name of a backup plan.
+* `rule` - Rules of a backup plan.
 * `tags` - Metadata that you can assign to help organize the plans you create.
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.

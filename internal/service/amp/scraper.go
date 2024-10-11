@@ -34,8 +34,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Scraper")
+// @FrameworkResource("aws_prometheus_scraper", name="Scraper")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.ScraperDescription")
 func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperResource{}
 
@@ -243,7 +244,7 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	if !data.Alias.IsNull() {
-		input.Alias = aws.String(data.Alias.ValueString())
+		input.Alias = data.Alias.ValueStringPointer()
 	}
 
 	output, err := conn.CreateScraper(ctx, input)
@@ -367,7 +368,7 @@ func (r *scraperResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	_, err := conn.DeleteScraper(ctx, &amp.DeleteScraperInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		ScraperId:   aws.String(data.ID.ValueString()),
+		ScraperId:   data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -403,8 +404,8 @@ type scraperResourceModel struct {
 	RoleARN             types.String                                             `tfsdk:"role_arn"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
-	Tags                types.Map                                                `tfsdk:"tags"`
-	TagsAll             types.Map                                                `tfsdk:"tags_all"`
+	Tags                tftags.Map                                               `tfsdk:"tags"`
+	TagsAll             tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
@@ -490,6 +491,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 		Target:  []string{},
 		Refresh: statusScraper(ctx, conn, id),
 		Timeout: timeout,
+		Delay:   8 * time.Minute,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -54,7 +54,7 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
@@ -182,12 +182,12 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccClusterConfig_update(rName, 4),
+				Config: testAccClusterConfig_update(rName, 4, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -196,9 +196,27 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "shard_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccClusterConfig_update(rName, 4, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "shard_capacity", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
@@ -296,7 +314,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -310,7 +328,7 @@ resource "aws_docdbelastic_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_update(rName string, shardCapacity int) string {
+func testAccClusterConfig_update(rName string, shardCapacity, backupRetentionPeriod int) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(rName),
 		fmt.Sprintf(`
@@ -323,7 +341,8 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
+  backup_retention_period      = %[3]d
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -334,7 +353,7 @@ resource "aws_docdbelastic_cluster" "test" {
     aws_subnet.test[1].id
   ]
 }
-`, rName, shardCapacity))
+`, rName, shardCapacity, backupRetentionPeriod))
 }
 
 func testAccClusterConfig_tags1(rName, key1, value1 string) string {
@@ -350,7 +369,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -381,7 +400,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id

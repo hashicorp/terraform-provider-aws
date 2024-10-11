@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -120,7 +121,7 @@ func dataSourceTrafficPolicyDocument() *schema.Resource {
 								},
 							},
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -266,6 +267,7 @@ func dataSourceTrafficPolicyDocument() *schema.Resource {
 }
 
 func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	trafficDoc := &route53TrafficPolicyDoc{}
 
 	if v, ok := d.GetOk(names.AttrEndpoint); ok {
@@ -289,7 +291,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 
 	jsonDoc, err := json.Marshal(trafficDoc)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	jsonString := string(jsonDoc)
 
@@ -297,7 +299,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 
 	d.SetId(strconv.Itoa(schema.HashString(jsonString)))
 
-	return nil
+	return diags
 }
 
 func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *trafficPolicyEndpoint {
@@ -360,7 +362,7 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *trafficPolicy
 	if v, ok := tfMap["secondary"]; ok && len(v.([]interface{})) > 0 {
 		apiObject.Secondary = expandDataTrafficPolicyFailOverDoc(v.([]interface{}))
 	}
-	if v, ok := tfMap["location"]; ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := tfMap[names.AttrLocation]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Locations = expandDataTrafficPolicyLocationsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["geo_proximity_location"]; ok && len(v.(*schema.Set).List()) > 0 {

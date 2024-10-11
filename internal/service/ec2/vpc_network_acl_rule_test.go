@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -42,7 +42,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					testAccCheckNetworkACLRuleExists(ctx, resource2Name),
 					testAccCheckNetworkACLRuleExists(ctx, resource3Name),
 
-					resource.TestCheckResourceAttr(resource1Name, "cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrCIDRBlock, "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource1Name, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource1Name, "from_port", "22"),
 					resource.TestCheckResourceAttr(resource1Name, "ipv6_cidr_block", ""),
@@ -51,7 +51,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "rule_number", "200"),
 					resource.TestCheckResourceAttr(resource1Name, "to_port", "22"),
 
-					resource.TestCheckResourceAttr(resource2Name, "cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrCIDRBlock, "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource2Name, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_type", acctest.Ct0),
@@ -60,7 +60,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource2Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource2Name, "rule_number", "300"),
 
-					resource.TestCheckResourceAttr(resource3Name, "cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrCIDRBlock, "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource3Name, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_type", "-1"),
@@ -176,7 +176,7 @@ func TestAccVPCNetworkACLRule_ipv6(t *testing.T) {
 				Config: testAccVPCNetworkACLRuleConfig_ipv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, ""),
 					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
@@ -211,7 +211,7 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 				Config: testAccVPCNetworkACLRuleConfig_ipv6ICMP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, ""),
 					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "icmp_type", "-1"),
@@ -234,7 +234,7 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6710
 func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Vpc
+	var v awstypes.Vpc
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vpcResourceName := "aws_vpc.test"
 	resourceName := "aws_network_acl_rule.test"
@@ -287,7 +287,7 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 				Config: testAccVPCNetworkACLRuleConfig_allProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -320,7 +320,7 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 				Config: testAccVPCNetworkACLRuleConfig_tcpProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -358,7 +358,7 @@ func TestAccVPCNetworkACLRule_duplicate(t *testing.T) {
 
 func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_acl_rule" {
@@ -398,7 +398,7 @@ func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFu
 
 func testAccCheckNetworkACLRuleExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -127,7 +128,7 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 
 func testAccCheckUDFDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_user_defined_function" {
@@ -144,9 +145,9 @@ func testAccCheckUDFDestroy(ctx context.Context) resource.TestCheckFunc {
 				DatabaseName: aws.String(dbName),
 				FunctionName: aws.String(funcName),
 			}
-			if _, err := conn.GetUserDefinedFunctionWithContext(ctx, input); err != nil {
+			if _, err := conn.GetUserDefinedFunction(ctx, input); err != nil {
 				//Verify the error is what we want
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					continue
 				}
 
@@ -174,8 +175,8 @@ func testAccCheckUserDefinedFunctionExists(ctx context.Context, name string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
-		out, err := conn.GetUserDefinedFunctionWithContext(ctx, &glue.GetUserDefinedFunctionInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		out, err := conn.GetUserDefinedFunction(ctx, &glue.GetUserDefinedFunctionInput{
 			CatalogId:    aws.String(catalogId),
 			DatabaseName: aws.String(dbName),
 			FunctionName: aws.String(funcName),

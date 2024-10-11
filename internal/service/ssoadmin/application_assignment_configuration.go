@@ -69,8 +69,8 @@ func (r *resourceApplicationAssignmentConfiguration) Create(ctx context.Context,
 	plan.ID = types.StringValue(plan.ApplicationARN.ValueString())
 
 	in := &ssoadmin.PutApplicationAssignmentConfigurationInput{
-		ApplicationArn:     aws.String(plan.ApplicationARN.ValueString()),
-		AssignmentRequired: aws.Bool(plan.AssignmentRequired.ValueBool()),
+		ApplicationArn:     plan.ApplicationARN.ValueStringPointer(),
+		AssignmentRequired: plan.AssignmentRequired.ValueBoolPointer(),
 	}
 
 	_, err := conn.PutApplicationAssignmentConfiguration(ctx, in)
@@ -124,8 +124,8 @@ func (r *resourceApplicationAssignmentConfiguration) Update(ctx context.Context,
 
 	if !plan.AssignmentRequired.Equal(state.AssignmentRequired) {
 		in := &ssoadmin.PutApplicationAssignmentConfigurationInput{
-			ApplicationArn:     aws.String(plan.ApplicationARN.ValueString()),
-			AssignmentRequired: aws.Bool(plan.AssignmentRequired.ValueBool()),
+			ApplicationArn:     plan.ApplicationARN.ValueStringPointer(),
+			AssignmentRequired: plan.AssignmentRequired.ValueBoolPointer(),
 		}
 
 		_, err := conn.PutApplicationAssignmentConfiguration(ctx, in)
@@ -153,7 +153,7 @@ func (r *resourceApplicationAssignmentConfiguration) Delete(ctx context.Context,
 	}
 
 	in := &ssoadmin.PutApplicationAssignmentConfigurationInput{
-		ApplicationArn:     aws.String(state.ApplicationARN.ValueString()),
+		ApplicationArn:     state.ApplicationARN.ValueStringPointer(),
 		AssignmentRequired: aws.Bool(true),
 	}
 

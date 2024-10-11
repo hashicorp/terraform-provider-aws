@@ -62,7 +62,7 @@ func resourceIntegration() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -128,7 +128,7 @@ func resourceIntegration() *schema.Resource {
 			"timeout_milliseconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(50, 29000),
+				ValidateFunc: validation.IntBetween(50, 300000),
 				Default:      29000,
 			},
 			"tls_config": {
@@ -179,7 +179,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.CacheNamespace = aws.String(d.Get(names.AttrResourceID).(string))
 	}
 
-	if v, ok := d.GetOk("connection_id"); ok {
+	if v, ok := d.GetOk(names.AttrConnectionID); ok {
 		input.ConnectionId = aws.String(v.(string))
 	}
 
@@ -252,7 +252,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("cache_key_parameters", integration.CacheKeyParameters)
 	d.Set("cache_namespace", integration.CacheNamespace)
-	d.Set("connection_id", integration.ConnectionId)
+	d.Set(names.AttrConnectionID, integration.ConnectionId)
 	d.Set("connection_type", types.ConnectionTypeInternet)
 	if integration.ConnectionType != "" {
 		d.Set("connection_type", integration.ConnectionType)
@@ -423,11 +423,11 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		})
 	}
 
-	if d.HasChange("connection_id") {
+	if d.HasChange(names.AttrConnectionID) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/connectionId"),
-			Value: aws.String(d.Get("connection_id").(string)),
+			Value: aws.String(d.Get(names.AttrConnectionID).(string)),
 		})
 	}
 

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -83,23 +83,24 @@ func resourceSubnetGroup() *schema.Resource {
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	name := d.Get(names.AttrName).(string)
 	input := &elasticache.CreateCacheSubnetGroupInput{
 		CacheSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		CacheSubnetGroupName:        aws.String(name),
-		SubnetIds:                   flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:                   flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateCacheSubnetGroupWithContext(ctx, input)
+	output, err := conn.CreateCacheSubnetGroup(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateCacheSubnetGroupWithContext(ctx, input)
+		output, err = conn.CreateCacheSubnetGroup(ctx, input)
 	}
 
 	if err != nil {
@@ -114,10 +115,10 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTags(ctx, conn, aws.StringValue(output.CacheSubnetGroup.ARN), tags)
+		err := createTags(ctx, conn, aws.ToString(output.CacheSubnetGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 		}
 
@@ -131,7 +132,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	group, err := findCacheSubnetGroupByName(ctx, conn, d.Id())
 
@@ -148,8 +149,8 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.CacheSubnetGroupDescription)
 	d.Set(names.AttrName, group.CacheSubnetGroupName)
-	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v *elasticache.Subnet) string {
-		return aws.StringValue(v.SubnetIdentifier)
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v awstypes.Subnet) string {
+		return aws.ToString(v.SubnetIdentifier)
 	}))
 	d.Set(names.AttrVPCID, group.VpcId)
 
@@ -158,16 +159,16 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	if d.HasChanges(names.AttrSubnetIDs, names.AttrDescription) {
 		input := &elasticache.ModifyCacheSubnetGroupInput{
 			CacheSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			CacheSubnetGroupName:        aws.String(d.Get(names.AttrName).(string)),
-			SubnetIds:                   flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			SubnetIds:                   flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
-		_, err := conn.ModifyCacheSubnetGroupWithContext(ctx, input)
+		_, err := conn.ModifyCacheSubnetGroup(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache Subnet Group (%s): %s", d.Id(), err)
@@ -179,16 +180,16 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
-		return conn.DeleteCacheSubnetGroupWithContext(ctx, &elasticache.DeleteCacheSubnetGroupInput{
+		return conn.DeleteCacheSubnetGroup(ctx, &elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
 	}, "DependencyViolation")
 
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
+	if errs.IsA[*awstypes.CacheSubnetGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -211,50 +212,48 @@ func resourceSubnetGroupCustomizeDiff(ctx context.Context, diff *schema.Resource
 	return nil
 }
 
-func findCacheSubnetGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheSubnetGroup, error) {
+func findCacheSubnetGroupByName(ctx context.Context, conn *elasticache.Client, name string) (*awstypes.CacheSubnetGroup, error) {
 	input := &elasticache.DescribeCacheSubnetGroupsInput{
 		CacheSubnetGroupName: aws.String(name),
 	}
 
-	return findCacheSubnetGroup(ctx, conn, input, tfslices.PredicateTrue[*elasticache.CacheSubnetGroup]())
+	return findCacheSubnetGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheSubnetGroup]())
 }
 
-func findCacheSubnetGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*elasticache.CacheSubnetGroup]) (*elasticache.CacheSubnetGroup, error) {
+func findCacheSubnetGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*awstypes.CacheSubnetGroup]) (*awstypes.CacheSubnetGroup, error) {
 	output, err := findCacheSubnetGroups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCacheSubnetGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*elasticache.CacheSubnetGroup]) ([]*elasticache.CacheSubnetGroup, error) {
-	var output []*elasticache.CacheSubnetGroup
+func findCacheSubnetGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*awstypes.CacheSubnetGroup]) ([]awstypes.CacheSubnetGroup, error) {
+	var output []awstypes.CacheSubnetGroup
 
-	err := conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := elasticache.NewDescribeCacheSubnetGroupsPaginator(conn, input)
 
-		for _, v := range page.CacheSubnetGroups {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.CacheSubnetGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.CacheSubnetGroups {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

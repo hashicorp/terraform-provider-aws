@@ -15,12 +15,12 @@ import (
 func resourceClusterResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -109,7 +109,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -143,7 +143,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  EngineModeProvisioned,
+				Default:  engineModeProvisioned,
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -154,7 +154,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -347,7 +347,7 @@ func resourceClusterResourceV0() *schema.Resource {
 						"timeout_action": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  TimeoutActionRollbackCapacityChange,
+							Default:  timeoutActionRollbackCapacityChange,
 						},
 					},
 				},

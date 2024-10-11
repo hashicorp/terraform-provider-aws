@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,7 +21,7 @@ import (
 )
 
 // @SDKDataSource("aws_vpc_dhcp_options")
-func DataSourceVPCDHCPOptions() *schema.Resource {
+func dataSourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCDHCPOptionsRead,
 
@@ -78,13 +78,13 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 
 func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
 	if v, ok := d.GetOk("dhcp_options_id"); ok {
-		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
+		input.DhcpOptionsIds = []string{v.(string)}
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -95,18 +95,18 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	opts, err := FindDHCPOptions(ctx, conn, input)
+	opts, err := findDHCPOptions(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 DHCP Options Set", err))
 	}
 
-	d.SetId(aws.StringValue(opts.DhcpOptionsId))
+	d.SetId(aws.ToString(opts.DhcpOptionsId))
 
-	ownerID := aws.StringValue(opts.OwnerId)
+	ownerID := aws.ToString(opts.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
@@ -121,7 +121,7 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

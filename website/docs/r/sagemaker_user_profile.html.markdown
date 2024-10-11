@@ -50,6 +50,7 @@ This resource supports the following arguments:
 * `space_storage_settings` - (Optional) The storage settings for a private space. See [Space Storage Settings](#space_storage_settings) below.
 * `studio_web_portal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensor_board_app_settings) below.
+* `studio_web_portal_settings` - (Optional) The Studio Web Portal settings. See [`studio_web_portal_settings` Block](#studio_web_portal_settings-block) below.
 
 #### space_storage_settings
 
@@ -92,6 +93,7 @@ This resource supports the following arguments:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [Custom Image](#custom_image) below.
 
 #### r_session_app_settings
 
@@ -109,6 +111,11 @@ This resource supports the following arguments:
 
 * `access_status` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
 * `user_group` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
+
+#### `studio_web_portal_settings` Block
+
+* `hidden_app_types` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
+* `hidden_ml_tools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
 
 ##### code_repository
 

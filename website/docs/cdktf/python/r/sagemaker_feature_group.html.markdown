@@ -131,4 +131,4 @@ Using `terraform import`, import Feature Groups using the `name`. For example:
 % terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3be94431d796f9b9ec09230c1283d4f41ae089366185d32e9b6f25a4d055142c -->
+<!-- cache-key: cdktf-0.20.9 input-3be94431d796f9b9ec09230c1283d4f41ae089366185d32e9b6f25a4d055142c -->

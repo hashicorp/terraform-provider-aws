@@ -112,7 +112,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
 	policy, err = verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)

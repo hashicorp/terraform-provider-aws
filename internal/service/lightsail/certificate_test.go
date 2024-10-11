@@ -177,6 +177,56 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 	})
 }
 
+func TestAccLightsailCertificate_keyOnlyTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lightsail_certificate.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_tags1(rName, domainName, acctest.CtKey1, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCertificateConfig_tags2(rName, domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+			{
+				Config: testAccCertificateConfig_tags1(rName, domainName, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLightsailCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_certificate.test"
@@ -275,7 +325,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string) resource.TestC
 	}
 }
 
-func testAccCertificateConfig_basic(rName string, domainName string) string {
+func testAccCertificateConfig_basic(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_certificate" "test" {
   name        = %[1]q
@@ -284,7 +334,7 @@ resource "aws_lightsail_certificate" "test" {
 `, rName, domainName)
 }
 
-func testAccCertificateConfig_subjectAlternativeNames(rName string, domainName string, san string) string {
+func testAccCertificateConfig_subjectAlternativeNames(rName, domainName, san string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_certificate" "test" {
   name                      = %[1]q
@@ -294,7 +344,7 @@ resource "aws_lightsail_certificate" "test" {
 `, rName, domainName, san)
 }
 
-func testAccCertificateConfig_tags1(resourceName string, domainName string, tagKey1, tagValue1 string) string {
+func testAccCertificateConfig_tags1(resourceName, domainName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_certificate" "test" {
   name        = %[1]q
@@ -306,7 +356,7 @@ resource "aws_lightsail_certificate" "test" {
 `, resourceName, domainName, tagKey1, tagValue1)
 }
 
-func testAccCertificateConfig_tags2(resourceName, domainName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCertificateConfig_tags2(resourceName, domainName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_certificate" "test" {
   name        = %[1]q

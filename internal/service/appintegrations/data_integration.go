@@ -25,6 +25,8 @@ import (
 
 // @SDKResource("aws_appintegrations_data_integration", name="Data Integration")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appintegrations;appintegrations.GetDataIntegrationOutput")
 func ResourceDataIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataIntegrationCreate,

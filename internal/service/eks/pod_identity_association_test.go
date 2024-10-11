@@ -186,7 +186,7 @@ func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["association_id"], rs.Primary.Attributes[names.AttrClusterName])
+			_, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes[names.AttrClusterName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -212,7 +212,7 @@ func testAccCheckPodIdentityAssociationExists(ctx context.Context, n string, v *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
-		output, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["association_id"], rs.Primary.Attributes[names.AttrClusterName])
+		output, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes[names.AttrClusterName])
 
 		if err != nil {
 			return err
@@ -231,7 +231,7 @@ func testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName string) re
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["association_id"]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes[names.AttrAssociationID]), nil
 	}
 }
 

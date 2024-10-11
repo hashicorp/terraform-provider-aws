@@ -161,9 +161,9 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
-		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrName])
+		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}
@@ -171,14 +171,14 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 
 func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_group" {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrName])
+			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -260,22 +260,31 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
 
+resource "aws_cognito_identity_pool" "test" {
+  identity_pool_name               = %[1]q
+  allow_unauthenticated_identities = false
+}
+
 resource "aws_iam_role" "test1" {
   name = "%[1]s-1"
 
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity"
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Principal": {
+      "Federated": "cognito-identity.amazonaws.com"
+    },
+    "Condition": {
+      "StringEquals": {
+        "cognito-identity.amazonaws.com:aud": [
+            "${aws_cognito_identity_pool.test.identity_pool_name}"
+        ]
+      }
     }
-  ]
+  }]
 }
 EOF
 }
@@ -291,7 +300,12 @@ resource "aws_cognito_user_group" "test" {
 func testAccUserGroupConfig_roleARNUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name = "%[1]s"
+  name = %[1]q
+}
+
+resource "aws_cognito_identity_pool" "test" {
+  identity_pool_name               = %[1]q
+  allow_unauthenticated_identities = false
 }
 
 resource "aws_iam_role" "test2" {
@@ -300,16 +314,20 @@ resource "aws_iam_role" "test2" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity"
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Principal": {
+      "Federated": "cognito-identity.amazonaws.com"
+    },
+    "Condition": {
+      "StringEquals": {
+        "cognito-identity.amazonaws.com:aud": [
+            "${aws_cognito_identity_pool.test.identity_pool_name}"
+        ]
+      }
     }
-  ]
+  }]
 }
 EOF
 }

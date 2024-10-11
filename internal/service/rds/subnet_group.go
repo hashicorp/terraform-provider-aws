@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_db_subnet_group", name="DB Subnet Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
@@ -96,10 +97,11 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		DBSubnetGroupName:        aws.String(name),
 		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
-		Tags:                     getTagsInV2(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBSubnetGroup(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Subnet Group (%s): %s", name, err)
 	}

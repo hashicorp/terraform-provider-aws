@@ -6,8 +6,8 @@ package networkmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_sites")
-func DataSourceSites() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_sites", name="Sites")
+func dataSourceSites() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSitesRead,
 
@@ -39,11 +39,11 @@ func DataSourceSites() *schema.Resource {
 func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	output, err := FindSites(ctx, conn, &networkmanager.GetSitesInput{
+	output, err := findSites(ctx, conn, &networkmanager.GetSitesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
 	})
 
@@ -60,7 +60,7 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		siteIDs = append(siteIDs, aws.StringValue(v.SiteId))
+		siteIDs = append(siteIDs, aws.ToString(v.SiteId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

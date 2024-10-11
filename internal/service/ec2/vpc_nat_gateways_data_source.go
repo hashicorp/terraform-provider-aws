@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_nat_gateways")
-func DataSourceNATGateways() *schema.Resource {
+// @SDKDataSource("aws_nat_gateways", name="NAT Gateways")
+func dataSourceNATGateways() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNATGatewaysRead,
 
@@ -45,7 +45,7 @@ func DataSourceNATGateways() *schema.Resource {
 func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeNatGatewaysInput{}
 
@@ -71,7 +71,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filter = nil
 	}
 
-	output, err := FindNATGateways(ctx, conn, input)
+	output, err := findNATGateways(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateways: %s", err)
@@ -80,7 +80,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	var natGatewayIDs []string
 
 	for _, v := range output {
-		natGatewayIDs = append(natGatewayIDs, aws.StringValue(v.NatGatewayId))
+		natGatewayIDs = append(natGatewayIDs, aws.ToString(v.NatGatewayId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

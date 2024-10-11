@@ -102,4 +102,4 @@ Using `terraform import`, import IoT Things Groups using the name. For example:
 % terraform import aws_iot_thing_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d40a8b9d3295130dee82fc924f5a78064a2bcbc1d9fdc3faf7a58c297c82b090 -->
+<!-- cache-key: cdktf-0.20.9 input-d40a8b9d3295130dee82fc924f5a78064a2bcbc1d9fdc3faf7a58c297c82b090 -->

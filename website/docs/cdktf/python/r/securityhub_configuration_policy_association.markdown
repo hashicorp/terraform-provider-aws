@@ -120,4 +120,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_configuration_policy_association.example_account_association 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-25377a44fda98bfdaaa528cbf1b8ef2a5407dd6d84d29b7ed90eaf7f13214fbe -->
+<!-- cache-key: cdktf-0.20.9 input-25377a44fda98bfdaaa528cbf1b8ef2a5407dd6d84d29b7ed90eaf7f13214fbe -->

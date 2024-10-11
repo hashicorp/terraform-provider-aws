@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,7 +24,7 @@ func testAccVocabulary_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var v connect.DescribeVocabularyOutput
+	var v awstypes.Vocabulary
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
@@ -70,7 +69,7 @@ func testAccVocabulary_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var v connect.DescribeVocabularyOutput
+	var v awstypes.Vocabulary
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
@@ -102,7 +101,7 @@ func testAccVocabulary_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var v connect.DescribeVocabularyOutput
+	var v awstypes.Vocabulary
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
@@ -153,35 +152,22 @@ func testAccVocabulary_updateTags(t *testing.T) {
 	})
 }
 
-func testAccCheckVocabularyExists(ctx context.Context, resourceName string, function *connect.DescribeVocabularyOutput) resource.TestCheckFunc {
+func testAccCheckVocabularyExists(ctx context.Context, n string, v *awstypes.Vocabulary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Connect Vocabulary not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect Vocabulary ID not set")
-		}
-		instanceID, vocabularyID, err := tfconnect.VocabularyParseID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+
+		output, err := tfconnect.FindVocabularyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["vocabulary_id"])
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
-
-		params := &connect.DescribeVocabularyInput{
-			InstanceId:   aws.String(instanceID),
-			VocabularyId: aws.String(vocabularyID),
-		}
-
-		getFunction, err := conn.DescribeVocabularyWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		*function = *getFunction
+		*v = *output
 
 		return nil
 	}
@@ -194,22 +180,11 @@ func testAccCheckVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
-			instanceID, vocabularyID, err := tfconnect.VocabularyParseID(rs.Primary.ID)
+			_, err := tfconnect.FindVocabularyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["vocabulary_id"])
 
-			if err != nil {
-				return err
-			}
-
-			params := &connect.DescribeVocabularyInput{
-				InstanceId:   aws.String(instanceID),
-				VocabularyId: aws.String(vocabularyID),
-			}
-
-			resp, err := conn.DescribeVocabularyWithContext(ctx, params)
-
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -217,10 +192,7 @@ func testAccCheckVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			// API returns an empty list for Vocabulary if there are none
-			if resp.Vocabulary == nil {
-				continue
-			}
+			return fmt.Errorf("Connect Vocabulary %s still exists", rs.Primary.ID)
 		}
 
 		return nil

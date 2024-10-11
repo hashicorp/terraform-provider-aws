@@ -96,7 +96,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"location": schema.ListNestedBlock{
+			names.AttrLocation: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{

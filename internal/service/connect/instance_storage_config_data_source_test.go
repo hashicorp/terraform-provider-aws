@@ -27,7 +27,7 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisFirehoseConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
@@ -55,7 +55,7 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisStreamConfig(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
@@ -82,7 +82,7 @@ func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisVideoStreamConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
@@ -114,7 +114,7 @@ func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),

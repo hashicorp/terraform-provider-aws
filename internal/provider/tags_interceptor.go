@@ -161,7 +161,7 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 	toAdd := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
 	// The resource's configured tags can now include duplicate tags that have been configured on the provider.
-	if err := d.Set(names.AttrTags, toAdd.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, d).Map()); err != nil {
+	if err := d.Set(names.AttrTags, toAdd.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, d, names.AttrTags, nil).Map()); err != nil {
 		return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 	}
 

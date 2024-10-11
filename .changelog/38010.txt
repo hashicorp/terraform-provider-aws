@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_api_gateway_integration: Increase maximum value of `timeout_milliseconds` from `29000` (29 seconds) to `300000` (5 minutes)
+```

@@ -239,7 +239,7 @@ func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccPoolRolesAttachmentConfig(name string) string {
+func testAccPoolRolesAttachmentConfig_base(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
@@ -356,7 +356,7 @@ EOF
 }
 
 func testAccPoolRolesAttachmentConfig_basic(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -368,7 +368,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappings(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -393,7 +393,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsUpdated(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -425,7 +425,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -449,7 +449,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -467,7 +467,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 }
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name string) string {
-	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
+	return acctest.ConfigCompose(testAccPoolRolesAttachmentConfig_base(name), `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 

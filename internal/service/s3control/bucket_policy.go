@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,13 +58,14 @@ func resourceBucketPolicy() *schema.Resource {
 }
 
 func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3control.PutBucketPolicyInput{
@@ -74,24 +76,25 @@ func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 	_, err = conn.PutBucketPolicy(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating S3 Control Bucket Policy (%s): %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Control Bucket Policy (%s): %s", bucket, err)
 	}
 
 	d.SetId(bucket)
 
-	return resourceBucketPolicyRead(ctx, d, meta)
+	return append(diags, resourceBucketPolicyRead(ctx, d, meta)...)
 }
 
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if parsedArn.AccountID == "" {
-		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
 	output, err := findBucketPolicyByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
@@ -99,11 +102,11 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Control Bucket Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Control Bucket Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Control Bucket Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, d.Id())
@@ -111,7 +114,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	if output.Policy != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		d.Set(names.AttrPolicy, policyToSet)
@@ -119,15 +122,16 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set(names.AttrPolicy, "")
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3control.PutBucketPolicyInput{
@@ -138,19 +142,20 @@ func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 	_, err = conn.PutBucketPolicy(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Control Bucket Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Control Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketPolicyRead(ctx, d, meta)
+	return append(diags, resourceBucketPolicyRead(ctx, d, meta)...)
 }
 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Control Bucket Policy: %s", d.Id())
@@ -160,14 +165,14 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchBucketPolicy, errCodeNoSuchOutpost) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Control Bucket Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Control Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findBucketPolicyByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, bucket string) (*s3control.GetBucketPolicyOutput, error) {

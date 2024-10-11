@@ -81,9 +81,10 @@ class MyConvertedCode(TerraformStack):
         example = SagemakerAppImageConfig(self, "example",
             app_image_config_name="example",
             kernel_gateway_image_config=SagemakerAppImageConfigKernelGatewayImageConfig(
-                kernel_spec=SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
+                kernel_spec=[SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
                     name="example"
                 )
+                ]
             )
         )
         aws_sagemaker_image_example = SagemakerImage(self, "example_1",
@@ -144,6 +145,10 @@ The following arguments are optional:
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [`jupyter_server_app_settings` Block](#jupyter_server_app_settings-block) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [`kernel_gateway_app_settings` Block](#kernel_gateway_app_settings-block) below.
 * `security_groups` - (Optional) The security groups for the Amazon Virtual Private Cloud that the space uses for communication.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [`jupyter_lab_app_settings` Block](#jupyter_lab_app_settings-block) below.
+* `space_storage_settings` - (Optional) The storage settings for a private space. See [`space_storage_settings` Block](#space_storage_settings-block) below.
+* `custom_posix_user_config` - (Optional) Details about the POSIX identity that is used for file system operations. See [`custom_posix_user_config` Block](#custom_posix_user_config-block) below.
+* `custom_file_system_config` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. See [`custom_file_system_config` Block](#custom_file_system_config-block) below.
 
 ### `default_user_settings` Block
 
@@ -163,6 +168,7 @@ The following arguments are optional:
 * `space_storage_settings` - (Optional) The storage settings for a private space. See [`space_storage_settings` Block](#space_storage_settings-block) below.
 * `studio_web_portal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [`tensor_board_app_settings` Block](#tensor_board_app_settings-block) below.
+* `studio_web_portal_settings` - (Optional) The Studio Web Portal settings. See [`studio_web_portal_settings` Block](#studio_web_portal_settings-block) below.
 
 #### `space_storage_settings` Block
 
@@ -253,6 +259,12 @@ The following arguments are optional:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`default_resource_spec` Block](#default_resource_spec-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [`custom_image` Block](#custom_image-block) below.
+
+#### `studio_web_portal_settings` Block
+
+* `hidden_app_types` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
+* `hidden_ml_tools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
 
 ##### `code_repository` Block
 
@@ -289,9 +301,15 @@ The following arguments are optional:
 
 ### `domain_settings` Block
 
+* `docker_settings` - (Optional) A collection of settings that configure the domain’s Docker interaction. see [`docker_settings` Block](#docker_settings-block) below.
 * `execution_role_identity_config` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
 * `r_studio_server_pro_domain_settings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [`r_studio_server_pro_domain_settings` Block](#r_studio_server_pro_domain_settings-block) below.
 * `security_group_ids` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
+
+#### `docker_settings` Block
+
+* `enable_docker_access` - (Optional) Indicates whether the domain can access Docker. Valid values are `ENABLED` and `DISABLED`.
+* `vpc_only_trusted_accounts` - (Optional) The list of Amazon Web Services accounts that are trusted when the domain is created in VPC-only mode.
 
 #### `r_studio_server_pro_domain_settings` Block
 
@@ -342,4 +360,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1aef42f588000331a9cbfd58b449907f26fa2c1a99529bd8fe066eea5f20c0de -->
+<!-- cache-key: cdktf-0.20.9 input-a391c557b44e35eab3a9ff9d883168c7a69f825a68d65476363ebdae427cb3e8 -->

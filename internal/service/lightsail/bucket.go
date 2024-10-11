@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_bucket", name="Bucket")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Bucket")
 func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,

@@ -181,7 +181,7 @@ func testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx context.Context) 
 				continue
 			}
 
-			_, err := tfec2.FindVPCEndpointServicePermissionV2(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
+			_, err := tfec2.FindVPCEndpointServicePermission(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -211,7 +211,7 @@ func testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx context.Context, n
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindVPCEndpointServicePermissionV2(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
+		_, err := tfec2.FindVPCEndpointServicePermission(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
 
 		return err
 	}

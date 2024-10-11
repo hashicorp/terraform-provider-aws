@@ -89,7 +89,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	canaryArn, groupName, err := GroupAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	group, err := FindAssociatedGroup(ctx, conn, canaryArn, groupName)
@@ -97,7 +97,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Synthetics Group Association between canary (%s) and group (%s) not found, removing from state", canaryArn, groupName)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -121,7 +121,7 @@ func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData,
 	canaryArn, groupName, err := GroupAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	in := &synthetics.DisassociateResourceInput{

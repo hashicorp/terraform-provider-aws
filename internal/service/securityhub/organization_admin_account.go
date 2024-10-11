@@ -83,7 +83,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {

@@ -53,6 +53,13 @@ func ProblemStandardMessage(service, action, resource, id string, gotError error
 	return fmt.Sprintf("%s %s %s (%s): %s", action, hf, resource, id, gotError)
 }
 
+func AddError(d *fwdiag.Diagnostics, service, action, resource, id string, gotError error) {
+	d.AddError(
+		ProblemStandardMessage(service, action, resource, id, nil),
+		gotError.Error(),
+	)
+}
+
 // Error returns an errors.Error with a standardized error message
 func Error(service, action, resource, id string, gotError error) error {
 	return errors.New(ProblemStandardMessage(service, action, resource, id, gotError))
@@ -66,25 +73,11 @@ func AppendDiagError(diags diag.Diagnostics, service, action, resource, id strin
 	)
 }
 
-// DiagError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
-// with a standardized error message
-func DiagError(service, action, resource, id string, gotError error) diag.Diagnostics {
-	return diag.Diagnostics{
-		diagError(service, action, resource, id, gotError),
-	}
-}
-
 func diagError(service, action, resource, id string, gotError error) diag.Diagnostic {
 	return diag.Diagnostic{
 		Severity: diag.Error,
 		Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
 	}
-}
-
-func AppendDiagErrorMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
-	return append(diags,
-		diagError(service, action, resource, id, fmt.Errorf(message)),
-	)
 }
 
 func AppendDiagSettingError(diags diag.Diagnostics, service, resource, id, argument string, gotError error) diag.Diagnostics {
@@ -97,7 +90,7 @@ func AppendDiagWarningMessage(diags diag.Diagnostics, service, action, resource,
 	return append(diags,
 		diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  ProblemStandardMessage(service, action, resource, id, fmt.Errorf(message)),
+			Summary:  ProblemStandardMessage(service, action, resource, id, errors.New(message)),
 		},
 	)
 }
@@ -109,11 +102,4 @@ func WarnLog(service, action, resource, id string, gotError error) {
 
 func LogNotFoundRemoveState(service, action, resource, id string) {
 	WarnLog(service, action, resource, id, errors.New("not found, removing from state"))
-}
-
-func DiagErrorFramework(service, action, resource, id string, gotError error) fwdiag.Diagnostic {
-	return fwdiag.NewErrorDiagnostic(
-		ProblemStandardMessage(service, action, resource, id, nil),
-		gotError.Error(),
-	)
 }

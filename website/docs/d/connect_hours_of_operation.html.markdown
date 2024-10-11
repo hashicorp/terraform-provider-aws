@@ -34,7 +34,7 @@ data "aws_connect_hours_of_operation" "test" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `hours_of_operation_id` - (Optional) Returns information on a specific Hours of Operation by hours of operation id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance

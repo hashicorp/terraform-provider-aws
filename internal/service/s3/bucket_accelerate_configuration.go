@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,6 +58,7 @@ func resourceBucketAccelerateConfiguration() *schema.Resource {
 }
 
 func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
@@ -80,7 +82,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Accelerate Configuration: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Accelerate Configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -90,18 +92,19 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Accelerate Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketAccelerateConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketAccelerateConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
@@ -109,26 +112,27 @@ func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.Re
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Accelerate Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	d.Set(names.AttrStatus, output.Status)
 
-	return nil
+	return diags
 }
 
 func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3.PutBucketAccelerateConfigurationInput{
@@ -144,18 +148,19 @@ func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.
 	_, err = conn.PutBucketAccelerateConfiguration(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketAccelerateConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketAccelerateConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3.PutBucketAccelerateConfigurationInput{
@@ -172,16 +177,16 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 	_, err = conn.PutBucketAccelerateConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
 	}
 
 	// Don't wait for the accelerate configuration to disappear as it still exists after suspension.
 
-	return nil
+	return diags
 }
 
 func findBucketAccelerateConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketAccelerateConfigurationOutput, error) {

@@ -10,8 +10,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -88,7 +88,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointGroup
-	var vpc ec2.Vpc
+	var vpc ec2types.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	albResourceName := "aws_lb.test"
 	vpcResourceName := "aws_vpc.test"
@@ -107,6 +107,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
+						"attachment_arn":                 "",
 						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
 					}),
@@ -163,7 +164,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointGroup
-	var vpc ec2.Vpc
+	var vpc ec2types.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	instanceResourceName := "aws_instance.test"
 	vpcResourceName := "aws_vpc.test"
@@ -429,6 +430,47 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	})
 }
 
+func TestAccGlobalAcceleratorEndpointGroup_crossAccountAttachment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.EndpointGroup
+	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointGroupConfig_crossAccountAttachement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
+						"client_ip_preservation_enabled": acctest.CtFalse,
+						names.AttrWeight:                 "20",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.attachment_arn", "aws_globalaccelerator_cross_account_attachment.alt_test", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", "aws_lb.alt_test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointGroupExists(ctx context.Context, name string, v *awstypes.EndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -477,10 +519,10 @@ func testAccCheckEndpointGroupDestroy(ctx context.Context) resource.TestCheckFun
 
 // testAccCheckEndpointGroupDeleteSecurityGroup deletes the security group
 // placed into the VPC when Global Accelerator client IP address preservation is enabled.
-func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.Vpc) resource.TestCheckFunc {
+func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+		conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.ToString(vpc.VpcId), aws.ToString(vpc.OwnerId))
 
@@ -873,4 +915,145 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   traffic_dial_percentage       = 0
 }
 `, rName)
+}
+
+func testAccEndpointGroupConfig_crossAccountAttachement(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountAlternateRegionProvider(),
+		fmt.Sprintf(`
+###############################################################################
+## Alternate account setup.
+###############################################################################
+data "aws_availability_zones" "alt_available" {
+  provider = "awsalternate"
+
+  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alt_test" {
+  provider = "awsalternate"
+
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "alt_test" {
+  provider = "awsalternate"
+
+  count = 2
+
+  vpc_id            = aws_vpc.alt_test.id
+  availability_zone = data.aws_availability_zones.alt_available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.alt_test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "alt_test" {
+  provider = "awsalternate"
+
+  name            = %[1]q
+  internal        = false
+  security_groups = [aws_security_group.alt_test.id]
+  subnets         = aws_subnet.alt_test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "alt_test" {
+  provider = "awsalternate"
+
+  name   = %[1]q
+  vpc_id = aws_vpc.alt_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "alt_test" {
+  provider = "awsalternate"
+
+  vpc_id = aws_vpc.alt_test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_globalaccelerator_cross_account_attachment" "alt_test" {
+  provider = "awsalternate"
+
+  name       = %[1]q
+  principals = [data.aws_caller_identity.current.account_id]
+
+  resource {
+    endpoint_id = aws_lb.alt_test.arn
+  }
+}
+
+###############################################################################
+## Main account setup.
+###############################################################################
+data "aws_caller_identity" "current" {}
+
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "IPV4"
+  enabled         = false
+}
+
+resource "aws_globalaccelerator_listener" "test" {
+  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  protocol        = "TCP"
+
+  port_range {
+    from_port = 80
+    to_port   = 80
+  }
+}
+
+resource "aws_globalaccelerator_endpoint_group" "test" {
+  listener_arn = aws_globalaccelerator_listener.test.id
+
+  endpoint_configuration {
+    endpoint_id                    = aws_lb.alt_test.arn
+    attachment_arn                 = aws_globalaccelerator_cross_account_attachment.alt_test.arn
+    weight                         = 20
+    client_ip_preservation_enabled = false
+  }
+
+  endpoint_group_region = %[2]q
+}
+`, rName, acctest.AlternateRegion()))
 }

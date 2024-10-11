@@ -6,15 +6,16 @@ package route53resolver
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_firewall_rule_group")
-func DataSourceFirewallRuleGroup() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_firewall_rule_group", name="Firewall Rule Group")
+func dataSourceFirewallRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallRuleGroupRead,
 
@@ -68,16 +69,17 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 }
 
 func dataSourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	id := d.Get("firewall_rule_group_id").(string)
-	ruleGroup, err := FindFirewallRuleGroupByID(ctx, conn, id)
+	ruleGroup, err := findFirewallRuleGroupByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Rule Group (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(ruleGroup.Id))
+	d.SetId(aws.ToString(ruleGroup.Id))
 	d.Set(names.AttrARN, ruleGroup.Arn)
 	d.Set(names.AttrCreationTime, ruleGroup.CreationTime)
 	d.Set("creator_request_id", ruleGroup.CreatorRequestId)
@@ -90,5 +92,5 @@ func dataSourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrStatus, ruleGroup.Status)
 	d.Set(names.AttrStatusMessage, ruleGroup.StatusMessage)
 
-	return nil
+	return diags
 }

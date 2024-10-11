@@ -83,4 +83,4 @@ Using `terraform import`, import an ACL using the `name`. For example:
 % terraform import aws_memorydb_acl.example my-acl
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c0b11cab2ffda49ddaeadbf6cc9362150372c08b03e6b84d1bd545de5d3072f1 -->
+<!-- cache-key: cdktf-0.20.9 input-c0b11cab2ffda49ddaeadbf6cc9362150372c08b03e6b84d1bd545de5d3072f1 -->

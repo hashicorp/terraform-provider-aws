@@ -6,7 +6,7 @@ package ivs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,7 +44,7 @@ const (
 func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	channelArn := d.Get("channel_arn").(string)
 
@@ -53,7 +53,7 @@ func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, DSNameStreamKey, channelArn, err)
 	}
 
-	d.SetId(aws.StringValue(out.Arn))
+	d.SetId(aws.ToString(out.Arn))
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("channel_arn", out.ChannelArn)

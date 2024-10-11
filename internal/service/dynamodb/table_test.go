@@ -19,7 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -372,10 +375,16 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.Ct1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1040,35 +1049,6 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.TableDescription
-	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTableConfig_tags(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					testAccCheckInitialTableConf(resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 // https://github.com/hashicorp/terraform/issues/13243
 func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1422,17 +1402,28 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_timeToLive(rName, true),
+				Config: testAccTableConfig_timeToLive(rName, rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtTrue),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(rName),
+							names.AttrEnabled: knownvalue.Bool(true),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config:             testAccTableConfig_timeToLive_unset(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -1453,12 +1444,18 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_timeToLive(rName, false),
+				Config: testAccTableConfig_timeToLive(rName, "", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1466,12 +1463,86 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_timeToLive(rName, true),
+				Config:             testAccTableConfig_timeToLive_unset(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccDynamoDBTable_TTL_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_timeToLive(rName, "", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtTrue),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_timeToLive(rName, rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(rName),
+							names.AttrEnabled: knownvalue.Bool(true),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_TTL_validate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_timeToLive(rName, "TestTTL", false),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot be specified when "ttl[0].enabled" is "false"`)),
+			},
+			{
+				Config:      testAccTableConfig_timeToLive(rName, "", true),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot have an empty value`)),
+			},
+			{
+				Config:      testAccTableConfig_TTL_missingAttributeName(rName, true),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot have an empty value`)),
 			},
 		},
 	})
@@ -1633,6 +1704,46 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", ""),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_restoreCrossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	resourceNameRestore := "aws_dynamodb_table.test_restore"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameRestore := fmt.Sprintf("%s-restore", rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_restoreCrossRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceNameRestore, names.AttrName, rNameRestore),
+					acctest.MatchResourceAttrRegionalARNRegion(resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/XXX`)),
+					acctest.MatchResourceAttrRegionalARNRegion(resourceNameRestore, names.AttrARN, "dynamodb", acctest.AlternateRegion(), regexache.MustCompile(`table/YYY`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1802,7 +1913,7 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncrypted(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaEncryptedDefault(rName),
+				Config: testAccTableConfig_replicaEncryptedDefault(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
@@ -1810,7 +1921,7 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncrypted(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_replicaEncryptedDefault(rName),
+				Config: testAccTableConfig_replicaEncryptedDefault(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
@@ -1818,8 +1929,47 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncrypted(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccTableConfig_replicaEncryptedDefault(rName),
+				Config:   testAccTableConfig_replicaEncryptedDefault(rName, true),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_singleDefaultKeyEncryptedAmazonOwned(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaEncryptedDefault(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaEncryptedDefault(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct0),
+				),
 			},
 		},
 	})
@@ -2699,6 +2849,10 @@ func testAccCheckInitialTableExists(ctx context.Context, n string, v *awstypes.T
 	}
 }
 
+func testAccCheckTableExists(ctx context.Context, n string, v *awstypes.TableDescription) resource.TestCheckFunc {
+	return testAccCheckInitialTableExists(ctx, n, v)
+}
+
 func testAccCheckTableNotRecreated(i, j *awstypes.TableDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !i.CreationDateTime.Equal(aws.ToTime(j.CreationDateTime)) {
@@ -3197,59 +3351,6 @@ resource "aws_dynamodb_table" "test" {
 `, rName, enabled, viewType)
 }
 
-func testAccTableConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name           = %[1]q
-  read_capacity  = 1
-  write_capacity = 2
-  hash_key       = "TestTableHashKey"
-  range_key      = "TestTableRangeKey"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name            = "InitialTestTableGSI"
-    hash_key        = "TestTableHashKey"
-    range_key       = "TestGSIRangeKey"
-    write_capacity  = 1
-    read_capacity   = 1
-    projection_type = "KEYS_ONLY"
-  }
-
-  tags = {
-    Name    = %[1]q
-    AccTest = "yes"
-    Testing = "absolutely"
-  }
-}
-`, rName)
-}
-
 func testAccTableConfig_gsiUpdate(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
@@ -3576,7 +3677,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_timeToLive(rName string, ttlEnabled bool) string {
+func testAccTableConfig_timeToLive(rName, ttlAttribute string, ttlEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   hash_key       = "TestTableHashKey"
@@ -3590,7 +3691,44 @@ resource "aws_dynamodb_table" "test" {
   }
 
   ttl {
-    attribute_name = %[2]t ? "TestTTL" : ""
+    attribute_name = %[2]q
+    enabled        = %[3]t
+  }
+}
+`, rName, ttlAttribute, ttlEnabled)
+}
+
+func testAccTableConfig_timeToLive_unset(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_TTL_missingAttributeName(rName string, ttlEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = ""
     enabled        = %[2]t
   }
 }
@@ -3730,7 +3868,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replicaEncryptedDefault(rName string) string {
+func testAccTableConfig_replicaEncryptedDefault(rName string, sseEnabled bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
@@ -3751,14 +3889,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   server_side_encryption {
-    enabled = true
+    enabled = %[2]t
   }
 
   replica {
     region_name = data.aws_region.alternate.name
   }
 }
-`, rName))
+`, rName, sseEnabled))
 }
 
 func testAccTableConfig_replicaCMK(rName string) string {
@@ -4555,4 +4693,60 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName)
+}
+
+func testAccTableConfig_restoreCrossRegion(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider = "aws"
+
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dynamodb_table" "test" {
+  provider = "aws"
+
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
+  }
+}
+
+resource "aws_kms_key" "test_restore" {
+  provider = "awsalternate"
+
+  description             = "%[1]s-restore"
+  deletion_window_in_days = 7
+}
+
+resource "aws_dynamodb_table" "test_restore" {
+  provider = "awsalternate"
+
+  name                     = "%[1]s-restore"
+  restore_source_table_arn = aws_dynamodb_table.test.arn
+  restore_to_latest_time   = true
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.test_restore.arn
+  }
+}
+`, rName))
 }

@@ -22,6 +22,18 @@ func validResourcePolicyDocument(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+func validAccountPolicyDocument(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html
+	if len(value) > 30720 || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("CloudWatch log account policy document must be between 1 and 30,720 characters."))
+	}
+	if _, err := structure.NormalizeJsonString(v); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+	}
+	return
+}
+
 func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 

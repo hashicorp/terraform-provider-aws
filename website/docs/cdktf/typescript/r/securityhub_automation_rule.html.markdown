@@ -259,4 +259,4 @@ Using `terraform import`, import Security Hub automation rule using their ARN. F
 % terraform import aws_securityhub_automation_rule.example arn:aws:securityhub:us-west-2:123456789012:automation-rule/473eddde-f5c4-4ae5-85c7-e922f271fffc
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d39a588992b913aa1997d25a28592253791dd418817f1cd29a608ab212177149 -->
+<!-- cache-key: cdktf-0.20.9 input-d39a588992b913aa1997d25a28592253791dd418817f1cd29a608ab212177149 -->
