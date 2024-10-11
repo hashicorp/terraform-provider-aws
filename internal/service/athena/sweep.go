@@ -16,10 +16,69 @@ import (
 )
 
 func RegisterSweepers() {
+	resource.AddTestSweepers("aws_athena_data_catalog", &resource.Sweeper{
+		Name: "aws_athena_data_catalog",
+		F:    sweepDataCatalogs,
+		Dependencies: []string{
+			"aws_athena_database",
+		},
+	})
+
 	resource.AddTestSweepers("aws_athena_database", &resource.Sweeper{
 		Name: "aws_athena_database",
 		F:    sweepDatabases,
 	})
+}
+
+func sweepDataCatalogs(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.AthenaClient(ctx)
+	input := &athena.ListDatabasesInput{
+		CatalogName: aws.String("AwsDataCatalog"),
+	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := athena.NewListDatabasesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Athena Database sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Athena Databases (%s): %w", region, err)
+		}
+
+		for _, v := range page.DatabaseList {
+			name := aws.ToString(v.Name)
+
+			if name == "default" {
+				log.Printf("[INFO] Skipping Athena Database %s", name)
+				continue
+			}
+
+			r := resourceDatabase()
+			d := r.Data(nil)
+			d.SetId(name)
+			d.Set(names.AttrForceDestroy, true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Athena Databases (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepDatabases(region string) error {
@@ -49,9 +108,12 @@ func sweepDatabases(region string) error {
 
 		for _, v := range page.DatabaseList {
 			name := aws.ToString(v.Name)
+
 			if name == "default" {
+				log.Printf("[INFO] Skipping Athena Database %s", name)
 				continue
 			}
+
 			r := resourceDatabase()
 			d := r.Data(nil)
 			d.SetId(name)
