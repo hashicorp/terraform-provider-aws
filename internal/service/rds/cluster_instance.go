@@ -323,7 +323,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(output.DBInstance.DBInstanceIdentifier))
 
-	if _, err := waitDBClusterInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) create: %s", d.Id(), err)
 	}
 
@@ -514,7 +514,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -558,40 +558,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func waitDBClusterInstanceCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			instanceStatusBackingUp,
-			instanceStatusConfiguringEnhancedMonitoring,
-			instanceStatusConfiguringIAMDatabaseAuth,
-			instanceStatusConfiguringLogExports,
-			instanceStatusCreating,
-			instanceStatusMaintenance,
-			instanceStatusModifying,
-			instanceStatusRebooting,
-			instanceStatusRenaming,
-			instanceStatusResettingMasterCredentials,
-			instanceStatusStarting,
-			instanceStatusStorageOptimization,
-			instanceStatusUpgrading,
-		},
-		Target:     []string{instanceStatusAvailable},
-		Refresh:    statusDBInstance(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*types.DBInstance); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDBClusterInstanceUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) {
+func waitDBClusterInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			instanceStatusBackingUp,
