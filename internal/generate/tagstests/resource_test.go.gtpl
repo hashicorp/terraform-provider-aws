@@ -2441,7 +2441,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -2454,9 +2458,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ $name }}: config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2493,7 +2495,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 			},
 			// 2: Update ignored tag only
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -2506,9 +2512,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ $name }}: config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2545,7 +2549,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 			},
 			// 3: Update both tags
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -2558,9 +2566,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ $name }}: config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2607,7 +2613,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -2618,9 +2628,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ $name }}: config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2696,7 +2704,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 			},
 			// 2: Update ignored tag
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -2707,9 +2719,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ $name }}: config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2784,7 +2794,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 			},
 			// 3: Update both tags
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -2795,9 +2809,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ $name }}: config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
