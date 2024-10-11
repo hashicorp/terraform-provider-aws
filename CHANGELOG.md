@@ -6,7 +6,11 @@ BUG FIXES:
 
 ## 5.71.0 (October 11, 2024)
 
-This Terraform AWS Provider version has been removed from the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) due to `archive has incorrect checksum` errors while installing the provider.
+This Terraform AWS Provider version has been removed from the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) due to `archive has incorrect checksum` errors while installing the provider on some platforms.
+
+See the [**v5.71.0** GitHub Release](https://github.com/hashicorp/terraform-provider-aws/releases/tag/v5.71.0) for details of the features, enhancements and bugs.
+
+The next planned Terraform AWS Provider release is **v5.72.0**, scheduled for the morning (EST) of October 17, 2024.
 
 ## 5.70.0 (October  4, 2024)
 
