@@ -1961,11 +1961,11 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 128.0, 8.5),
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 256.0, 8.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "8.5"),
 				),
 			},
