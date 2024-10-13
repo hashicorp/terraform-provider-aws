@@ -328,8 +328,13 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", d.Id(), err)
 	}
-
-	docArn := getDocumentARN(doc, meta.(*conns.AWSClient))
+	docArn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ssm",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  getDocumentArnResourceName(doc.DocumentType, *doc.Name),
+	}.String()
 	d.Set(names.AttrARN, docArn)
 	d.Set(names.AttrCreatedDate, aws.ToTime(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
@@ -716,17 +721,11 @@ func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []interf
 	return tfList
 }
 
-func getDocumentARN(doc *awstypes.DocumentDescription, client *conns.AWSClient) string {
+func getDocumentArnResourceName(t awstypes.DocumentType, name string) string {
 	prefix := "document/"
-	if doc.DocumentType == awstypes.DocumentTypeAutomation {
+	if t == awstypes.DocumentTypeAutomation {
 		prefix = "automation-definition/"
 	}
 
-	return arn.ARN{
-		Partition: client.Partition,
-		Service:   "ssm",
-		Region:    client.Region,
-		AccountID: client.AccountID,
-		Resource:  prefix + aws.ToString(doc.Name),
-	}.String()
+	return prefix + name
 }

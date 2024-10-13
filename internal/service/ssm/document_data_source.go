@@ -78,14 +78,14 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.SetId(aws.ToString(output.Name))
 
 	if !strings.HasPrefix(name, "AWS-") {
-		arn := arn.ARN{
+		docArn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
 			Service:   "ssm",
 			Region:    meta.(*conns.AWSClient).Region,
 			AccountID: meta.(*conns.AWSClient).AccountID,
-			Resource:  "document/" + name,
+			Resource:  getDocumentArnResourceName(output.DocumentType, name),
 		}.String()
-		d.Set(names.AttrARN, arn)
+		d.Set(names.AttrARN, docArn)
 	} else {
 		d.Set(names.AttrARN, name)
 	}
