@@ -24,15 +24,7 @@ func dataSourceSpotDataFeedSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			names.AttrPrefix: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,8 +54,6 @@ func dataSourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.Resou
 
 	d.Set(names.AttrBucket, subscription.Bucket)
 	d.Set(names.AttrPrefix, subscription.Prefix)
-	d.Set(names.AttrOwnerID, subscription.OwnerId)
-	d.Set(names.AttrState, subscription.State)
 
 	return diags
 }

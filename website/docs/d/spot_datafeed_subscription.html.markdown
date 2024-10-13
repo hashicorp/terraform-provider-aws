@@ -23,6 +23,5 @@ data "aws_spot_datafeed_subscription" "default" {}
 This data source exports the following attributes in addition to the arguments above:
 
 * `bucket` - The name of the Amazon S3 bucket where the spot instance data feed is located.
-* `owner_id` - The Amazon Web Services account ID of the account.
 * `prefix` - The prefix for the data feed files.
-* `state` - The state of the spot instance data feed subscription, either `Active` or `Inactive`.
+

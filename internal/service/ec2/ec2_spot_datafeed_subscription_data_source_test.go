@@ -16,6 +16,7 @@ import (
 func TestAccEC2SpotDataFeedSubscriptionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_spot_datafeed_subscription.test"
 	dataSourceName := "data.aws_spot_datafeed_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -25,15 +26,13 @@ func TestAccEC2SpotDataFeedSubscriptionDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotDataFeedSubscriptionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "Active"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrPrefix, ""),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrBucket, resourceName, names.AttrBucket),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPrefix, resourceName, names.AttrPrefix),
 				),
 			},
 		},
