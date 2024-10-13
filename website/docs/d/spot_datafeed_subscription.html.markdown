@@ -24,4 +24,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `bucket` - The name of the Amazon S3 bucket where the spot instance data feed is located.
 * `prefix` - The prefix for the data feed files.
-
