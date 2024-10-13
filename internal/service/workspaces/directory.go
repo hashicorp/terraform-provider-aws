@@ -402,23 +402,25 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		new := n.(*schema.Set)
 		added := new.Difference(old)
 		removed := old.Difference(new)
-
-		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), added.GoString())
-		_, err := conn.AssociateIpGroups(ctx, &workspaces.AssociateIpGroupsInput{
-			DirectoryId: aws.String(d.Id()),
-			GroupIds:    flex.ExpandStringValueSet(added),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+		if added.Len() > 0 {
+			log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), added.GoString())
+			_, err := conn.AssociateIpGroups(ctx, &workspaces.AssociateIpGroupsInput{
+				DirectoryId: aws.String(d.Id()),
+				GroupIds:    flex.ExpandStringValueSet(added),
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+			}
 		}
-
-		log.Printf("[DEBUG] Disassociating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), removed.GoString())
-		_, err = conn.DisassociateIpGroups(ctx, &workspaces.DisassociateIpGroupsInput{
-			DirectoryId: aws.String(d.Id()),
-			GroupIds:    flex.ExpandStringValueSet(removed),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "disasassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+		if removed.Len() > 0 {
+			log.Printf("[DEBUG] Disassociating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), removed.GoString())
+			_, err := conn.DisassociateIpGroups(ctx, &workspaces.DisassociateIpGroupsInput{
+				DirectoryId: aws.String(d.Id()),
+				GroupIds:    flex.ExpandStringValueSet(removed),
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disasassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+			}
 		}
 
 		log.Printf("[INFO] Updated WorkSpaces Directory (%s) IP Groups", d.Id())
