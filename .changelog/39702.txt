@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_workspaces_directory : Fix `ip_group_ids` update when resource created with an empty list of `ip_group_ids`
+```
