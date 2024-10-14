@@ -92,7 +92,7 @@ func dataSourceDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
