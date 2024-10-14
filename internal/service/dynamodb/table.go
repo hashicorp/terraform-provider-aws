@@ -198,10 +198,12 @@ func resourceTable() *schema.Resource {
 						"read_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -499,6 +501,7 @@ func onDemandThroughputSchema() *schema.Schema {
 				"max_read_request_units": {
 					Type:     schema.TypeInt,
 					Optional: true,
+					Computed: true,
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return old == "0" && new == "-1"
 					},
@@ -506,6 +509,7 @@ func onDemandThroughputSchema() *schema.Schema {
 				"max_write_request_units": {
 					Type:     schema.TypeInt,
 					Optional: true,
+					Computed: true,
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return old == "0" && new == "-1"
 					},

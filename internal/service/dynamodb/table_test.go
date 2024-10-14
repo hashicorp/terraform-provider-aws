@@ -859,12 +859,13 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_OnDemandThroughput(rName, 5, 5),
+				Config: testAccTableConfig_onDemandThroughput(rName, 5, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "5"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "5"),
 				),
 			},
 			{
@@ -873,7 +874,7 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_OnDemandThroughput(rName, 10, 10),
+				Config: testAccTableConfig_onDemandThroughput(rName, 10, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
@@ -883,7 +884,7 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_OnDemandThroughput(rName, 1, 10),
+				Config: testAccTableConfig_onDemandThroughput(rName, 1, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
@@ -893,13 +894,57 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_OnDemandThroughput(rName, -1, 5),
+				Config: testAccTableConfig_onDemandThroughput(rName, -1, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_gsiOnDemandThroughput(rName, 5, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"on_demand_throughput.0.max_read_request_units":  "5",
+						"on_demand_throughput.0.max_write_request_units": "5",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_onDemandThroughput(rName, 10, 10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"on_demand_throughput.0.max_read_request_units":  acctest.Ct10,
+						"on_demand_throughput.0.max_write_request_units": acctest.Ct10,
+					}),
 				),
 			},
 		},
@@ -3309,7 +3354,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_OnDemandThroughput(rName string, read, write int) string {
+func testAccTableConfig_onDemandThroughput(rName string, read, write int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = %[1]q
@@ -3323,6 +3368,42 @@ resource "aws_dynamodb_table" "test" {
 
   attribute {
     name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName, read, write)
+}
+
+func testAccTableConfig_gsiOnDemandThroughput(rName string, read, write int) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+
+  on_demand_throughput {
+    max_read_request_units  = %[2]d
+    max_write_request_units = %[3]d
+  }
+
+  global_secondary_index {
+    name            = "att1-index"
+    hash_key        = "att1"
+    projection_type = "ALL"
+
+    on_demand_throughput {
+      max_read_request_units  = %[2]d
+      max_write_request_units = %[3]d
+    }
+  }
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
     type = "S"
   }
 }
