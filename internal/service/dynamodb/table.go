@@ -1076,6 +1076,18 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	// It is possible to update GSI capacity when ON DEMAND billing mode does not change
+	if newBillingMode == awstypes.BillingModePayPerRequest && (oldBillingMode == newBillingMode) {
+		for _, gsiUpdate := range gsiUpdates {
+			if gsiUpdate.Update == nil {
+				continue
+			}
+
+			hasTableUpdate = true
+			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
+		}
+	}
+
 	if hasTableUpdate {
 		_, err := conn.UpdateTable(ctx, input)
 
@@ -1650,13 +1662,19 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			m := data.(map[string]interface{})
 			idxName := m[names.AttrName].(string)
 
+			c := awstypes.CreateGlobalSecondaryIndexAction{
+				IndexName:             aws.String(idxName),
+				KeySchema:             expandKeySchema(m),
+				ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
+				Projection:            expandProjection(m),
+			}
+
+			if v, ok := m["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+
 			ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
-				Create: &awstypes.CreateGlobalSecondaryIndexAction{
-					IndexName:             aws.String(idxName),
-					KeySchema:             expandKeySchema(m),
-					ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
-					Projection:            expandProjection(m),
-				},
+				Create: &c,
 			})
 		}
 	}
@@ -1674,6 +1692,20 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
 			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
 
+			oldOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			newOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			if v, ok := oldMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				oldOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+
+			if v, ok := newMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				newOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+			var onDemandThroughputChanged bool
+			if oldOnDemandThroughput != nil && newOnDemandThroughput != nil {
+				onDemandThroughputChanged = (oldOnDemandThroughput.MaxReadRequestUnits != newOnDemandThroughput.MaxReadRequestUnits) || (oldOnDemandThroughput.MaxWriteRequestUnits != newOnDemandThroughput.MaxWriteRequestUnits)
+			}
+
 			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
@@ -1686,11 +1718,19 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			if err != nil {
 				return ops, err
 			}
+			oldAttributes, err = stripOnDemandThroughputAttributes(oldAttributes)
+			if err != nil {
+				return ops, err
+			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
 				return ops, err
 			}
 			newAttributes, err = stripNonKeyAttributes(newAttributes)
+			if err != nil {
+				return ops, err
+			}
+			newAttributes, err = stripOnDemandThroughputAttributes(newAttributes)
 			if err != nil {
 				return ops, err
 			}
@@ -1704,6 +1744,15 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 					},
 				}
 				ops = append(ops, update)
+			} else if onDemandThroughputChanged && !otherAttributesChanged {
+				update := awstypes.GlobalSecondaryIndexUpdate{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName:          aws.String(idxName),
+						OnDemandThroughput: newOnDemandThroughput,
+					},
+				}
+				ops = append(ops, update)
+
 			} else if otherAttributesChanged {
 				// Other attributes cannot be updated
 				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{

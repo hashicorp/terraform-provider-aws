@@ -936,7 +936,7 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_onDemandThroughput(rName, 10, 10),
+				Config: testAccTableConfig_gsiOnDemandThroughput(rName, 10, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
@@ -3382,8 +3382,8 @@ resource "aws_dynamodb_table" "test" {
   hash_key     = "TestTableHashKey"
 
   on_demand_throughput {
-    max_read_request_units  = %[2]d
-    max_write_request_units = %[3]d
+    max_read_request_units  = 10
+    max_write_request_units = 10
   }
 
   global_secondary_index {
