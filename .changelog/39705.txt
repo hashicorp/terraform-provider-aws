@@ -1,7 +1,7 @@
 ```release-note:bug
-resource/aws_ssm_document: Fix document arn for automation documents.
+resource/aws_ssm_document: Correct `arn` for automation documents
 ```
 
 ```release-note:bug
-data-source/aws_ssm_document: Fix document arn for automation documents.
+data-source/aws_ssm_document: Correct `arn` for automation documents
 ```
