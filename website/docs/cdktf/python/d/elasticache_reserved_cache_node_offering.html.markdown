@@ -58,4 +58,4 @@ In addition to all arguments above, the following attributes are exported:
 * `fixed_price` - Fixed price charged for this reserved cache node.
 * `offering_id` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.20.1 input-965292cde7ab36b678077acfe62013d1655bf2d077c9b61c55be6121229ef30f -->
+<!-- cache-key: cdktf-0.20.9 input-965292cde7ab36b678077acfe62013d1655bf2d077c9b61c55be6121229ef30f -->

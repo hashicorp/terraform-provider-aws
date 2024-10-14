@@ -452,14 +452,14 @@ resource "aws_iam_role" "test" {
             "kinesis:DescribeStreamSummary"
           ]
           Effect   = "Allow"
-          Resource = ["${aws_kinesis_video_stream.test.arn}"]
+          Resource = [aws_kinesis_video_stream.test.arn]
         },
         {
           Action = [
             "kinesis:PutRecord"
           ]
           Effect   = "Allow"
-          Resource = ["${aws_kinesis_stream.test_output.arn}"]
+          Resource = [aws_kinesis_stream.test_output.arn]
         },
       ]
     })

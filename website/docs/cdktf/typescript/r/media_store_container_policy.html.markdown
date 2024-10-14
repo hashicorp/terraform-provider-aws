@@ -134,4 +134,4 @@ Using `terraform import`, import MediaStore Container Policy using the MediaStor
 % terraform import aws_media_store_container_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9ed289864924023edb076e3fc25bf237e0f5f6970e7ef7c1126877959c4604d5 -->
+<!-- cache-key: cdktf-0.20.9 input-9ed289864924023edb076e3fc25bf237e0f5f6970e7ef7c1126877959c4604d5 -->

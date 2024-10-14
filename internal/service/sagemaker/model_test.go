@@ -942,7 +942,7 @@ data "aws_iam_policy_document" "policy" {
     ]
 
     resources = [
-      "${aws_s3_bucket.test.arn}",
+      aws_s3_bucket.test.arn,
       "${aws_s3_bucket.test.arn}/*",
     ]
   }

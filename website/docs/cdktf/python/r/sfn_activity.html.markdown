@@ -107,4 +107,4 @@ Using `terraform import`, import activities using the `arn`. For example:
 % terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-178930cc8fa2534f7dbabebf9c06db77152b49c283d6e2ce1c68afba89f3dd65 -->
+<!-- cache-key: cdktf-0.20.9 input-178930cc8fa2534f7dbabebf9c06db77152b49c283d6e2ce1c68afba89f3dd65 -->

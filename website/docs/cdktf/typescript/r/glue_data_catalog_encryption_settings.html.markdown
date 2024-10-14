@@ -105,4 +105,4 @@ Using `terraform import`, import Glue Data Catalog Encryption Settings using `CA
 % terraform import aws_glue_data_catalog_encryption_settings.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-040418b7e00ccc1ca1827417c7cb67e4f7b98b8e95f2923b46ca62ccb70ce840 -->
+<!-- cache-key: cdktf-0.20.9 input-040418b7e00ccc1ca1827417c7cb67e4f7b98b8e95f2923b46ca62ccb70ce840 -->

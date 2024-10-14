@@ -107,4 +107,4 @@ Using `terraform import`, import Serverless Application Repository Stack using t
 % terraform import aws_serverlessapplicationrepository_cloudformation_stack.example serverlessrepo-postgres-rotator
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3c56c5981c41da613753a417692699808c2eda591b3a00277762ed97e8d26af7 -->
+<!-- cache-key: cdktf-0.20.9 input-3c56c5981c41da613753a417692699808c2eda591b3a00277762ed97e8d26af7 -->

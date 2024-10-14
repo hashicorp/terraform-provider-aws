@@ -84,4 +84,4 @@ Using `terraform import`, import KMS External Keys using the `id`. For example:
 % terraform import aws_kms_external_key.a arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0484ec46a723c1a6dff8e9bc90b1793826fc146b89008eced5df42a79df9f3c2 -->
+<!-- cache-key: cdktf-0.20.9 input-0484ec46a723c1a6dff8e9bc90b1793826fc146b89008eced5df42a79df9f3c2 -->

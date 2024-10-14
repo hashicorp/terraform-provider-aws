@@ -86,4 +86,4 @@ Using `terraform import`, import IoT Billing Groups using the name. For example:
 % terraform import aws_iot_billing_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9c7d425266ee0d22b75f66601e87869fbffa73cef615eccf2a0373970c04de22 -->
+<!-- cache-key: cdktf-0.20.9 input-9c7d425266ee0d22b75f66601e87869fbffa73cef615eccf2a0373970c04de22 -->

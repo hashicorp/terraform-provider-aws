@@ -30,6 +30,7 @@ import (
 // @SDKResource("aws_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Subnet")
+// @Testing(generator=false)
 func resourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

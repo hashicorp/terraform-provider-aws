@@ -369,7 +369,7 @@ resource "aws_iam_role" "source" {
         "Action" : "sts:AssumeRole",
         "Condition" : {
           "StringEquals" : {
-            "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
+            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
           }
         }
       }

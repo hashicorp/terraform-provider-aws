@@ -76,4 +76,4 @@ Using `terraform import`, import Verified Permissions Policy Store using the `po
 % terraform import aws_verifiedpermissions_policy_template.example policyStoreId:policyTemplateId
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-42f660b66107b10f64a559e6b9570385f505fca4bd368a8c47f9a036cb2dd5cb -->
+<!-- cache-key: cdktf-0.20.9 input-42f660b66107b10f64a559e6b9570385f505fca4bd368a8c47f9a036cb2dd5cb -->

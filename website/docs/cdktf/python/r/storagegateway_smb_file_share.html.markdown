@@ -145,4 +145,4 @@ Using `terraform import`, import `aws_storagegateway_smb_file_share` using the S
 % terraform import aws_storagegateway_smb_file_share.example arn:aws:storagegateway:us-east-1:123456789012:share/share-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-266d36f4283c8f5cbf1514fda12c86d9206bde44c81510fef8f77f3c9788e4d7 -->
+<!-- cache-key: cdktf-0.20.9 input-266d36f4283c8f5cbf1514fda12c86d9206bde44c81510fef8f77f3c9788e4d7 -->

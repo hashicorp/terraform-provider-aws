@@ -116,4 +116,4 @@ Using `terraform import`, import EventBridge schema using the `name` and `regist
 % terraform import aws_schemas_schema.test name/registry
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ebc2fd95aa82c21b5b6f551a7043512b14e59815f8ffb599ebc2d14cfbaf7eb8 -->
+<!-- cache-key: cdktf-0.20.9 input-ebc2fd95aa82c21b5b6f551a7043512b14e59815f8ffb599ebc2d14cfbaf7eb8 -->

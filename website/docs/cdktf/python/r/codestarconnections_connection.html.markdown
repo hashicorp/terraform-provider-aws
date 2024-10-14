@@ -127,4 +127,4 @@ Using `terraform import`, import CodeStar connections using the ARN. For example
 % terraform import aws_codestarconnections_connection.test-connection arn:aws:codestar-connections:us-west-1:0123456789:connection/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c7edc69e0a0834cde9145e05c5690abc2c043a0afe10ce6f00227d267e2b851a -->
+<!-- cache-key: cdktf-0.20.9 input-c7edc69e0a0834cde9145e05c5690abc2c043a0afe10ce6f00227d267e2b851a -->

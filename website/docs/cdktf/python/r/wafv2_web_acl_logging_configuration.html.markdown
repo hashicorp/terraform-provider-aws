@@ -257,4 +257,4 @@ Using `terraform import`, import WAFv2 Web ACL Logging Configurations using the 
 % terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-85d1da7d18f672f0f803c69c5c81c64a375e97f797b4b4d93dafd654b70f24b0 -->
+<!-- cache-key: cdktf-0.20.9 input-85d1da7d18f672f0f803c69c5c81c64a375e97f797b4b4d93dafd654b70f24b0 -->

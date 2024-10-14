@@ -186,4 +186,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `manag
 % terraform import aws_ssoadmin_managed_policy_attachment.example arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-73fefc01b46b4cf4489868580522a20327e26c603ae4140b5374affcfb50ca7b -->
+<!-- cache-key: cdktf-0.20.9 input-73fefc01b46b4cf4489868580522a20327e26c603ae4140b5374affcfb50ca7b -->

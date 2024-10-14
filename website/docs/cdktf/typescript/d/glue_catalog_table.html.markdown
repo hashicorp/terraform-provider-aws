@@ -76,7 +76,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### storage_descriptor
 
-* `additional_locations` - List of locations that point to the path where a Delta table is located
+* `additionalLocations` - List of locations that point to the path where a Delta table is located
 * `bucketColumns` - List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - Whether the data in the table is compressed.
@@ -134,4 +134,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the target table.
 * `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.20.1 input-6aa148fa876b8e857555bdad7d827e6584f2528c3ddc31f0e55e804050c5f778 -->
+<!-- cache-key: cdktf-0.20.9 input-6aa148fa876b8e857555bdad7d827e6584f2528c3ddc31f0e55e804050c5f778 -->

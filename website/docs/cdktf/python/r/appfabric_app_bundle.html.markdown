@@ -75,4 +75,4 @@ Using `terraform import`, import AppFabric AppBundle using the `arn`. For exampl
 % terraform import aws_appfabric_app_bundle.example arn:aws:appfabric:[region]:[account]:appbundle/ee5587b4-5765-4288-a202-xxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-29d27eaca85b0b1ba64cf8cc214f41167fefbd972688956f6a164cba558173ba -->
+<!-- cache-key: cdktf-0.20.9 input-29d27eaca85b0b1ba64cf8cc214f41167fefbd972688956f6a164cba558173ba -->

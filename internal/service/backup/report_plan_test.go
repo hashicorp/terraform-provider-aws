@@ -362,10 +362,6 @@ func testAccCheckReportPlanExists(ctx context.Context, n string, v *awstypes.Rep
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Report Plan ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		output, err := tfbackup.FindReportPlanByName(ctx, conn, rs.Primary.ID)
@@ -380,7 +376,7 @@ func testAccCheckReportPlanExists(ctx context.Context, n string, v *awstypes.Rep
 	}
 }
 
-func testAccReportPlanBaseConfig(bucketName string) string {
+func testAccReportPlanConfig_base(bucketName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -401,7 +397,7 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 func testAccReportPlanConfig_basic(rName, rName2, label string) string {
-	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReportPlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -425,7 +421,7 @@ resource "aws_backup_report_plan" "test" {
 }
 
 func testAccReportPlanConfig_tags1(rName, rName2, label string) string {
-	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReportPlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -450,7 +446,7 @@ resource "aws_backup_report_plan" "test" {
 }
 
 func testAccReportPlanConfig_tags2(rName, rName2, label string) string {
-	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReportPlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -476,7 +472,7 @@ resource "aws_backup_report_plan" "test" {
 }
 
 func testAccReportPlanConfig_deliveryChannel(rName, rName2, label string) string {
-	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReportPlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -501,7 +497,7 @@ resource "aws_backup_report_plan" "test" {
 }
 
 func testAccReportPlanConfig_reportSettings(rName, rName2, label string) string {
-	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReportPlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q

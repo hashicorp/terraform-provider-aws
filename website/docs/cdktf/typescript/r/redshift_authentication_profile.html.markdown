@@ -86,4 +86,4 @@ Using `terraform import`, import Redshift Authentication by `authenticationProfi
 % terraform import aws_redshift_authentication_profile.test example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dc99cb7420c5de511051f2f61b1ee290d874bf0770374a9047ba240fbb6ae37e -->
+<!-- cache-key: cdktf-0.20.9 input-dc99cb7420c5de511051f2f61b1ee290d874bf0770374a9047ba240fbb6ae37e -->

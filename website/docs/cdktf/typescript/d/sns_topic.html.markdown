@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-9cb14ee05a81d55e9f99a318c9fbad40bd207dac283e926d3ecef9f91ffb125d -->
+<!-- cache-key: cdktf-0.20.9 input-9cb14ee05a81d55e9f99a318c9fbad40bd207dac283e926d3ecef9f91ffb125d -->

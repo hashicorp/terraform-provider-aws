@@ -112,4 +112,4 @@ Using `terraform import`, import the ECR Repository Creating Templates using the
 % terraform import aws_ecr_repository_creation_template.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6a68ddd72d684832553f7fea30388e98aefd0a50991301f248211b5ea25214ca -->
+<!-- cache-key: cdktf-0.20.9 input-6a68ddd72d684832553f7fea30388e98aefd0a50991301f248211b5ea25214ca -->

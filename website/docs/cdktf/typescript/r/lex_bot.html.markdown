@@ -177,4 +177,4 @@ Using `terraform import`, import bots using their name. For example:
 % terraform import aws_lex_bot.order_flowers_bot OrderFlowers
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e97de4060b2ca18f867fded9294c619effbd503e7c58dacacd804ae26ee28522 -->
+<!-- cache-key: cdktf-0.20.9 input-e97de4060b2ca18f867fded9294c619effbd503e7c58dacacd804ae26ee28522 -->

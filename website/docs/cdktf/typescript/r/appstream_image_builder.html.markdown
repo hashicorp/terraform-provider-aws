@@ -129,4 +129,4 @@ Using `terraform import`, import `aws_appstream_image_builder` using the `name`.
 % terraform import aws_appstream_image_builder.example imageBuilderExample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b371c5560fe29fa7c1227813252a979a996c97107efcf6194342d7cac877c823 -->
+<!-- cache-key: cdktf-0.20.9 input-b371c5560fe29fa7c1227813252a979a996c97107efcf6194342d7cac877c823 -->

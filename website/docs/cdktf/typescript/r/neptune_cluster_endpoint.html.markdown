@@ -88,4 +88,4 @@ Using `terraform import`, import `aws_neptune_cluster_endpoint` using the `clust
 % terraform import aws_neptune_cluster_endpoint.example my-cluster:my-endpoint
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fe62dbee474ec48b5d17927f8e8d3998a36b2d1c434288d6e385def0ac966409 -->
+<!-- cache-key: cdktf-0.20.9 input-fe62dbee474ec48b5d17927f8e8d3998a36b2d1c434288d6e385def0ac966409 -->

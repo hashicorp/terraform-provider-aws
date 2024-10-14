@@ -83,4 +83,4 @@ See the [AWS Polly Voice documentation](https://docs.aws.amazon.com/polly/latest
 * `name` - Name of the voice.
 * `supportedEngines` - Specifies which engines are supported by a given voice.
 
-<!-- cache-key: cdktf-0.20.1 input-8f02e48c8a3dd4816395e7c038ab5b7915d68787dd9b00143ef09631935cc44f -->
+<!-- cache-key: cdktf-0.20.9 input-8f02e48c8a3dd4816395e7c038ab5b7915d68787dd9b00143ef09631935cc44f -->

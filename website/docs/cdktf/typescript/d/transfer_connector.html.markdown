@@ -67,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
     * `value` - Values associated with the tags key.
 * `url` - URL of the partner's AS2 or SFTP endpoint.
 
-<!-- cache-key: cdktf-0.20.1 input-d8010c6834c55c360923308a4a5d05caa5bc79a08016e4759049157e780c9bbf -->
+<!-- cache-key: cdktf-0.20.9 input-d8010c6834c55c360923308a4a5d05caa5bc79a08016e4759049157e780c9bbf -->

@@ -160,4 +160,4 @@ Using `terraform import`, import Amazon Connect Phone Numbers using its `id`. Fo
 % terraform import aws_connect_phone_number.example 12345678-abcd-1234-efgh-9876543210ab
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3709bbd75b47ca64869527df48be54e1acf135a3093efdda6d797cfbc24ebba1 -->
+<!-- cache-key: cdktf-0.20.9 input-3709bbd75b47ca64869527df48be54e1acf135a3093efdda6d797cfbc24ebba1 -->

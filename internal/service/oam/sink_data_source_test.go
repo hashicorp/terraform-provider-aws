@@ -44,7 +44,7 @@ func testAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "sink_identifier"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/+.`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
 				),
 			},
 		},

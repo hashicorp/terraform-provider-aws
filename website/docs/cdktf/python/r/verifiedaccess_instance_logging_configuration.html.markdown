@@ -236,4 +236,4 @@ Using `terraform import`, import Verified Access Logging Configuration using the
 % terraform import aws_verifiedaccess_instance_logging_configuration.example vai-1234567890abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-79065eedd6b6f9585bd07a6cdc493096940c3c74f302f0f330a123cc337d069b -->
+<!-- cache-key: cdktf-0.20.9 input-79065eedd6b6f9585bd07a6cdc493096940c3c74f302f0f330a123cc337d069b -->

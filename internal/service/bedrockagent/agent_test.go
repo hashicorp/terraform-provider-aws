@@ -116,6 +116,48 @@ func TestAccBedrockAgentAgent_singlePrompt(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentAgent_singlePromptUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v awstypes.Agent
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_singlePromptUpdate(rName, "anthropic.claude-v2", "basic claude", "500"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccAgentConfig_singlePromptUpdate(rName, "anthropic.claude-v2", "basic claude", "501"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentAgent_addPrompt(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -337,6 +379,52 @@ func TestAccBedrockAgentAgent_tags(t *testing.T) {
 					testAccCheckAgentExists(ctx, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgent_kms(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v awstypes.Agent
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_kms(rName, "anthropic.claude-v2", "basic claude", "500"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_encryption_key_arn", "aws_kms_key.test_agent", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+			{
+				Config: testAccAgentConfig_kms(rName, "anthropic.claude-v2", "basic claude", "501"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_encryption_key_arn", "aws_kms_key.test_agent", names.AttrARN),
 				),
 			},
 		},
@@ -651,6 +739,43 @@ resource "aws_bedrockagent_agent" "test" {
 `, rName, model, desc))
 }
 
+func testAccAgentConfig_singlePromptUpdate(rName, model, desc, timeout string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = %[4]s
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+  skip_resource_in_use_check  = true
+
+  prompt_override_configuration {
+    override_lambda = null
+    prompt_configurations = [
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            top_k          = 250
+            top_p          = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "DISABLED"
+        prompt_type          = "POST_PROCESSING"
+      },
+    ]
+  }
+
+}
+`, rName, model, desc, timeout))
+}
+
 func testAccAgentConfig_guardrail_noConfig(rName, model string) string {
 	return acctest.ConfigCompose(testAccAgent_base(rName, model), testAccAgent_guardrail(rName), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
@@ -677,4 +802,24 @@ resource "aws_bedrockagent_agent" "test" {
   }
 }
 `, rName, model, guardrailVersion))
+}
+
+func testAccAgentConfig_kms(rName, model, description, timeout string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  customer_encryption_key_arn = aws_kms_key.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = %[4]s
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+}
+
+resource "aws_kms_key" "test_agent" {
+  description             = "Agent test key"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+}
+`, rName, model, description, timeout))
 }

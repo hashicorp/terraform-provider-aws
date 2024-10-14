@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags assigned to the resource.
 * `url` - URL of the service endpoint used to authenticate users with an `identity_provider_type` of `API_GATEWAY`.
 
-<!-- cache-key: cdktf-0.20.1 input-aaf83b44d3a635f5e39b1f2975869116a8983e59843210bac0bde9cc0f4cfd5d -->
+<!-- cache-key: cdktf-0.20.9 input-aaf83b44d3a635f5e39b1f2975869116a8983e59843210bac0bde9cc0f4cfd5d -->

@@ -71,4 +71,4 @@ Using `terraform import`, import `aws_ce_cost_allocation_tag` using the `id`. Fo
 % terraform import aws_ce_cost_allocation_tag.example key
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-544cfa0670b83ddbc9c2d5d5bbdf2b0ec54ea059c22ab29b2f86b8890060e8a5 -->
+<!-- cache-key: cdktf-0.20.9 input-544cfa0670b83ddbc9c2d5d5bbdf2b0ec54ea059c22ab29b2f86b8890060e8a5 -->

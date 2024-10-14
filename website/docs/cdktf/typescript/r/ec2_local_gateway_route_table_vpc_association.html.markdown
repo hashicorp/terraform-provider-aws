@@ -104,4 +104,4 @@ Using `terraform import`, import `aws_ec2_local_gateway_route_table_vpc_associat
 % terraform import aws_ec2_local_gateway_route_table_vpc_association.example lgw-vpc-assoc-1234567890abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4f905dac47ee96e216b29234377003c85028f4754efe49a90ad2269ba720a64 -->
+<!-- cache-key: cdktf-0.20.9 input-f4f905dac47ee96e216b29234377003c85028f4754efe49a90ad2269ba720a64 -->

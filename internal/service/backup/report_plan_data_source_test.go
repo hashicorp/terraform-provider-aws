@@ -97,7 +97,7 @@ data "aws_backup_report_plan" "test" {
 `
 
 func testAccReportPlanDataSourceConfig_basic(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReportPlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = "Test report plan data source"

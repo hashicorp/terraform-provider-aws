@@ -1245,10 +1245,10 @@ func TestAccElastiCacheCluster_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_versionAndTag(rName, "5.0.4", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccClusterConfig_versionAndTag(rName, "5.0.5", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.5"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),

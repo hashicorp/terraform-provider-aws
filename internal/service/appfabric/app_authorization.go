@@ -234,15 +234,14 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
+	// Set values for unknowns.
+	data.AppAuthorizationARN = fwflex.StringToFramework(ctx, output.AppAuthorization.AppAuthorizationArn)
 	id, err := data.setID()
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
 		return
 	}
 	data.ID = types.StringValue(id)
-
-	// Set values for unknowns.
-	data.AppAuthorizationARN = fwflex.StringToFramework(ctx, output.AppAuthorization.AppAuthorizationArn)
 
 	appAuthorization, err := waitAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 

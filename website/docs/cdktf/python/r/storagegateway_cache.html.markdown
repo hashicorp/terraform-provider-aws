@@ -72,4 +72,4 @@ Using `terraform import`, import `aws_storagegateway_cache` using the gateway Am
 % terraform import aws_storagegateway_cache.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-71c425b426e8be6b2795e6720d1217aa0af1c682498abb9c938909327c75ac67 -->
+<!-- cache-key: cdktf-0.20.9 input-71c425b426e8be6b2795e6720d1217aa0af1c682498abb9c938909327c75ac67 -->

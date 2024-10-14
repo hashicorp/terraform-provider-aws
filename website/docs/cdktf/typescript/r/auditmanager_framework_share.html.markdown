@@ -89,4 +89,4 @@ Using `terraform import`, import Audit Manager Framework Share using the `id`. F
 % terraform import aws_auditmanager_framework_share.example abcdef-123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-14d7a2ed97dee3206ec0e19704aeaa2d131932ec24b406ef4fff013eeb7c1aba -->
+<!-- cache-key: cdktf-0.20.9 input-14d7a2ed97dee3206ec0e19704aeaa2d131932ec24b406ef4fff013eeb7c1aba -->

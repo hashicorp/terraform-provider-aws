@@ -2052,7 +2052,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s_${count.index}"
   handler       = "exports.example"
   role          = aws_iam_role.test[0].arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

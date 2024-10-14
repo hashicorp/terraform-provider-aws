@@ -61,4 +61,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.20.1 input-b68b876212554fb1c28230029578a838320e08a00b6bc270b81195566fe1902f -->
+<!-- cache-key: cdktf-0.20.9 input-b68b876212554fb1c28230029578a838320e08a00b6bc270b81195566fe1902f -->

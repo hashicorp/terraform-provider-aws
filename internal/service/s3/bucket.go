@@ -1010,7 +1010,13 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// Bucket Lifecycle Configuration.
 	//
 	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() ([]types.LifecycleRule, error) {
-		return findLifecycleRules(ctx, conn, d.Id(), "")
+		output, err := findBucketLifecycleConfiguration(ctx, conn, d.Id(), "")
+
+		if err != nil {
+			return nil, err
+		}
+
+		return output.Rules, nil
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {

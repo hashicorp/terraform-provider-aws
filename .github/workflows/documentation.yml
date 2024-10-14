@@ -23,7 +23,7 @@ jobs:
     env:
       UV_THREADPOOL_SIZE: 128
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         with:
           quiet: 'yes'
@@ -36,18 +36,18 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: 'docs'
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: go.mod
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      - uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
         continue-on-error: true
         timeout-minutes: 2
         with:

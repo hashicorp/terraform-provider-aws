@@ -76,4 +76,4 @@ Using `terraform import`, import `aws_apigatewayv2_api_mapping` using the API ma
 % terraform import aws_apigatewayv2_api_mapping.example 1122334/ws-api.example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-580fc04639f7b69e714911cbb27a6fa6354fc412415a99400266b16e65672884 -->
+<!-- cache-key: cdktf-0.20.9 input-580fc04639f7b69e714911cbb27a6fa6354fc412415a99400266b16e65672884 -->

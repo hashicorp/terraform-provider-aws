@@ -81,4 +81,4 @@ The following attribute is additionally exported:
 * `tags` - A map of tags assigned to the Hosted Zone.
 * `zoneId` - The Hosted Zone identifier.
 
-<!-- cache-key: cdktf-0.20.1 input-801182a67123797b89e33b036efcdaf21713389a304311326b773bb8831f747d -->
+<!-- cache-key: cdktf-0.20.9 input-801182a67123797b89e33b036efcdaf21713389a304311326b773bb8831f747d -->

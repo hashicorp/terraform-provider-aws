@@ -92,4 +92,4 @@ Using `terraform import`, import `aws_kinesisanalyticsv2_application` using `app
 % terraform import aws_kinesisanalyticsv2_application_snapshot.example example-application/example-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bd3010fed4591275bcebfac88611f10eb5c9c79e722ef1789997282c4a9937ac -->
+<!-- cache-key: cdktf-0.20.9 input-bd3010fed4591275bcebfac88611f10eb5c9c79e722ef1789997282c4a9937ac -->

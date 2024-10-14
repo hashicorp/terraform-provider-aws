@@ -47,7 +47,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the VPC CIDR association
+* `id` - The ID of the VPC CIDR association.
+* `ip_source` - The source that allocated the IP address space. Values: `amazon`, `byoip`, `none`.
+* `ipv6_address_attribute` - Public IPv6 addresses are those advertised on the internet from AWS. Private IP addresses are not and cannot be advertised on the internet from AWS. Values: `public`, `private`.
 
 ## Import
 

@@ -87,4 +87,4 @@ Using `terraform import`, import Security Hub invite acceptance using the accoun
 % terraform import aws_securityhub_invite_accepter.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-47799ffb1b46661d89c8c190f8ee1ae51146d3c40022d01eb9ce32bcbbe707ae -->
+<!-- cache-key: cdktf-0.20.9 input-47799ffb1b46661d89c8c190f8ee1ae51146d3c40022d01eb9ce32bcbbe707ae -->

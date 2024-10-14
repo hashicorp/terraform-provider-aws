@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `startTime` - The date and time, in RFC 3339 format, that the rotation goes into effect.
 * `tags` - A map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-fec602a20a6eeab9eacf8fc19733de5bf83ba69d9c3bdd37c9529f43537ba570 -->
+<!-- cache-key: cdktf-0.20.9 input-fec602a20a6eeab9eacf8fc19733de5bf83ba69d9c3bdd37c9529f43537ba570 -->

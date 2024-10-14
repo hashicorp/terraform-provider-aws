@@ -744,8 +744,80 @@ type configTag struct {
 	source tagSource
 }
 
+// GetAnyAttr traverses the cty.Value based on the attr string and returns the attribute.
+// It takes an additional function parameter to determine whether to return a set element.
+func GetAnyAttr(value cty.Value, attr string, shouldReturnSetElement func(string, cty.Value) bool) (cty.Value, error) {
+	// Base case: if attr is empty, return the current value
+	if attr == "" {
+		return value, nil
+	}
+
+	// Split the attr string into the first part and the rest
+	var part, rest string
+	if dotIndex := strings.Index(attr, "."); dotIndex != -1 {
+		part = attr[:dotIndex]
+		rest = attr[dotIndex+1:]
+	} else {
+		part = attr
+		rest = ""
+	}
+
+	// Handle indexed attribute
+	if strings.Contains(part, "[") && strings.Contains(part, "]") {
+		attrNameEnd := strings.Index(part, "[")
+		indexStart := attrNameEnd + 1
+		indexEnd := strings.Index(part, "]")
+
+		if attrNameEnd == -1 || indexEnd == -1 {
+			return cty.NilVal, fmt.Errorf("invalid indexed attribute format: %s", part)
+		}
+
+		attrName := part[:attrNameEnd]
+		indexStr := part[indexStart:indexEnd]
+
+		if !value.Type().HasAttribute(attrName) {
+			return cty.NilVal, fmt.Errorf("attribute %s not found", attrName)
+		}
+
+		value = value.GetAttr(attrName)
+
+		if value.Type().IsSetType() {
+			it := value.ElementIterator()
+			for it.Next() {
+				_, v := it.Element()
+				if shouldReturnSetElement(indexStr, v) {
+					return GetAnyAttr(v, rest, shouldReturnSetElement)
+				}
+			}
+			return cty.NilVal, fmt.Errorf("set element not found for attribute %s", attrName)
+		}
+
+		if !value.Type().IsListType() && !value.Type().IsTupleType() {
+			return cty.NilVal, fmt.Errorf("attribute %s is not a list, tuple, or set", attrName)
+		}
+
+		index, err := strconv.Atoi(indexStr)
+		if err != nil {
+			return cty.NilVal, fmt.Errorf("invalid index: %s", indexStr)
+		}
+
+		if index >= value.LengthInt() {
+			return cty.NilVal, fmt.Errorf("index %d out of range for attribute %s", index, attrName)
+		}
+
+		return GetAnyAttr(value.Index(cty.NumberIntVal(int64(index))), rest, shouldReturnSetElement)
+	}
+
+	// Handle regular attribute
+	if !value.Type().HasAttribute(part) {
+		return cty.NilVal, fmt.Errorf("attribute %s not found", part)
+	}
+
+	return GetAnyAttr(value.GetAttr(part), rest, shouldReturnSetElement)
+}
+
 // ResolveDuplicates resolves differences between incoming tags, defaultTags, and ignoreConfig
-func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData, tagsAttr string, setFunc func(string, cty.Value) bool) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
 
@@ -759,7 +831,12 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 
 	configTags := make(map[string]configTag)
 	if configExists {
-		c := cf.GetAttr(names.AttrTags)
+		c, err := GetAnyAttr(cf, tagsAttr, setFunc)
+		if err != nil {
+			// in situations with imports and computed attributes where there's no
+			// matching config, return the tags unchanged
+			return tags
+		}
 
 		// if the config is null just return the incoming tags
 		// no duplicates to calculate
@@ -773,14 +850,20 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 	}
 
 	if pl := d.GetRawPlan(); !pl.IsNull() && pl.IsKnown() {
-		c := pl.GetAttr(names.AttrTags)
+		c, err := GetAnyAttr(pl, tagsAttr, setFunc)
+		if err != nil {
+			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
+		}
 		if !c.IsNull() && c.IsKnown() {
 			normalizeTagsFromRaw(c.AsValueMap(), configTags, plan)
 		}
 	}
 
 	if st := d.GetRawState(); !st.IsNull() && st.IsKnown() {
-		c := st.GetAttr(names.AttrTags)
+		c, err := GetAnyAttr(st, tagsAttr, setFunc)
+		if err != nil {
+			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
+		}
 		if !c.IsNull() {
 			normalizeTagsFromRaw(c.AsValueMap(), configTags, state)
 		}

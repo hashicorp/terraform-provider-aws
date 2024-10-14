@@ -35,7 +35,10 @@ class MyConvertedCode(TerraformStack):
             description="My awesome code signing config.",
             policies=LambdaCodeSigningConfigPolicies(
                 untrusted_artifact_on_deployment="Warn"
-            )
+            ),
+            tags={
+                "Name": "dynamodb"
+            }
         )
 ```
 
@@ -44,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 * `allowed_publishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
 * `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.
 * `description` - (Optional) Descriptive name for this code signing configuration.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `allowed_publishers` block supports the following argument:
 
@@ -60,6 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the code signing configuration.
 * `config_id` - Unique identifier for the code signing configuration.
 * `last_modified` - The date and time that the code signing configuration was last modified.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html
 
@@ -88,4 +93,4 @@ Using `terraform import`, import Code Signing Configs using their ARN. For examp
 % terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b27a1e90446049f7c1773fd983c1f96949a20ac313e28f81bd237fd17f96c857 -->
+<!-- cache-key: cdktf-0.20.9 input-e7811cec92131887c279c3e50300db98d1a6fda984b73feceb743321e3bcaaf0 -->

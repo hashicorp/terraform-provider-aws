@@ -114,4 +114,4 @@ Using `terraform import`, import AWS Service Catalog AppRegistry Application usi
 % terraform import aws_servicecatalogappregistry_application.example application-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0e72d2a6bda89576ef42e709c381a50e666f8d77a87e41cf5f591793d904a0e9 -->
+<!-- cache-key: cdktf-0.20.9 input-0e72d2a6bda89576ef42e709c381a50e666f8d77a87e41cf5f591793d904a0e9 -->

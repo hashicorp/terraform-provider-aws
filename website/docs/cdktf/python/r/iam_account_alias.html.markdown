@@ -68,4 +68,4 @@ Using `terraform import`, import the current Account Alias using the `account_al
 % terraform import aws_iam_account_alias.alias my-account-alias
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-72640126c5720d6095332215b1cee0a5afc0db674ccec0642c743d28f1d7ef16 -->
+<!-- cache-key: cdktf-0.20.9 input-72640126c5720d6095332215b1cee0a5afc0db674ccec0642c743d28f1d7ef16 -->

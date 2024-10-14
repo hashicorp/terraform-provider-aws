@@ -186,4 +186,4 @@ Using `terraform import`, import ElastiCache Global Replication Groups using the
 % terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfdf8fb8151d1dd27e56bf30242603f71120c4ececefd5c623f1f7efab72074a -->
+<!-- cache-key: cdktf-0.20.9 input-bfdf8fb8151d1dd27e56bf30242603f71120c4ececefd5c623f1f7efab72074a -->

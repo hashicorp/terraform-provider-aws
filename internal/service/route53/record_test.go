@@ -2474,8 +2474,8 @@ resource "aws_route53_record" "test" {
 
   alias {
     evaluate_target_health = false
-    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")
-    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")
+    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id", "")
+    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name", "")
   }
 }
 `)
@@ -2490,8 +2490,8 @@ resource "aws_route53_record" "test" {
 
   alias {
     evaluate_target_health = false
-    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")
-    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")
+    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name", "")
+    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id", "")
   }
 }
 `)

@@ -19,6 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		{
 			Factory: newDataSourceReservedCacheNodeOffering,
 		},
+		{
+			Factory: newDataSourceServerlessCache,
+			Name:    "Serverless Cache",
+		},
 	}
 }
 

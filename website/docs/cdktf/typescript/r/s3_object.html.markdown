@@ -370,4 +370,4 @@ Import using S3 URL syntax:
 % terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-34988cafa71f79b33d23c2b77bc24856b3a66f271edddbd9a0c2b27436c57a06 -->
+<!-- cache-key: cdktf-0.20.9 input-34988cafa71f79b33d23c2b77bc24856b3a66f271edddbd9a0c2b27436c57a06 -->

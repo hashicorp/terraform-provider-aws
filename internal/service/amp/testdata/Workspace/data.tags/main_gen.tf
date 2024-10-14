@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_prometheus_workspace" "test" {
   workspace_id = aws_prometheus_workspace.test.id
 }
@@ -8,12 +9,6 @@ data "aws_prometheus_workspace" "test" {
 resource "aws_prometheus_workspace" "test" {
 
   tags = var.resource_tags
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_tags" {

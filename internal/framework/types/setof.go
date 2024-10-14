@@ -25,7 +25,11 @@ type setTypeOf[T attr.Value] struct {
 }
 
 var (
+	// SetOfStringType is a custom type used for defining a Set of strings.
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
+
+	// SetOfARNType is a custom type used for defining a Set of ARNs.
+	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}}
 )
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
@@ -96,6 +100,11 @@ func (t setTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 type SetValueOf[T attr.Value] struct {
 	basetypes.SetValue
 }
+
+type (
+	SetOfString = SetValueOf[basetypes.StringValue]
+	SetOfARN    = SetValueOf[ARN]
+)
 
 func (v SetValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(SetValueOf[T])

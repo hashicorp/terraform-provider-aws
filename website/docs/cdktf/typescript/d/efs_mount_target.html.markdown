@@ -63,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `availabilityZoneId` - The unique and consistent identifier of the Availability Zone (AZ) that the mount target resides in.
 * `ownerId` - AWS account ID that owns the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-241585ed69289317f2541ca35ef78442a4e59e0d0ccb4b15a56966c7604251c8 -->
+<!-- cache-key: cdktf-0.20.9 input-241585ed69289317f2541ca35ef78442a4e59e0d0ccb4b15a56966c7604251c8 -->

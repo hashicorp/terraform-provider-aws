@@ -76,12 +76,11 @@ from cdktf import TerraformStack
 #
 from imports.aws.securityhub_configuration_policy import SecurityhubConfigurationPolicy
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, enabledStandardArns):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         SecurityhubConfigurationPolicy(self, "disabled",
             configuration_policy=SecurityhubConfigurationPolicyConfigurationPolicy(
-                service_enabled=False,
-                enabled_standard_arns=enabled_standard_arns
+                service_enabled=False
             ),
             depends_on=[example],
             description="This is an example of disabled configuration policy",
@@ -225,4 +224,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_configuration_policy.example "00000000-1111-2222-3333-444444444444"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-721ffba1ee84815bfddcee09500eede2e0b1933a072787923a97146e5d21cdc2 -->
+<!-- cache-key: cdktf-0.20.9 input-721ffba1ee84815bfddcee09500eede2e0b1933a072787923a97146e5d21cdc2 -->

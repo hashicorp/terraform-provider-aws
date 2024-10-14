@@ -193,4 +193,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-de
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-32f1ffb82434765f7f939865f265bce2bc581d70840fa99c7110d5d88a55a5c6 -->
+<!-- cache-key: cdktf-0.20.9 input-32f1ffb82434765f7f939865f265bce2bc581d70840fa99c7110d5d88a55a5c6 -->

@@ -81,4 +81,4 @@ Using `terraform import`, import AWS WAF Regex Pattern Set using their ID. For e
 % terraform import aws_waf_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c7a01b91a902b53fb081fc1a31da6a9bab5a071453ba698e3fa3b714308491e7 -->
+<!-- cache-key: cdktf-0.20.9 input-c7a01b91a902b53fb081fc1a31da6a9bab5a071453ba698e3fa3b714308491e7 -->

@@ -58,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value mapping of resource tags.
 * `verifiedForSendingStatus` - Specifies whether or not the identity is verified.
 
-<!-- cache-key: cdktf-0.20.1 input-7c12091698113e4874168fd26ec7c1c02c1487b040cff1044c5b20751c66d041 -->
+<!-- cache-key: cdktf-0.20.9 input-7c12091698113e4874168fd26ec7c1c02c1487b040cff1044c5b20751c66d041 -->

@@ -71,4 +71,4 @@ Using `terraform import`, import Redshift HSM Client Certificates using `hsm_cli
 % terraform import aws_redshift_hsm_client_certificate.test example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5c66db327c1839116bd09ae2b35aec09129f16566c516184eda37641b0d7234e -->
+<!-- cache-key: cdktf-0.20.9 input-5c66db327c1839116bd09ae2b35aec09129f16566c516184eda37641b0d7234e -->

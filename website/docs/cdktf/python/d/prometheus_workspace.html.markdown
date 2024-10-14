@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the Prometheus workspace.
 * `tags` - Tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-0c78b2184575da6a4ef65a1385b9ae96d6e113933b9d4a6da9019f9ab1d32c5e -->
+<!-- cache-key: cdktf-0.20.9 input-0c78b2184575da6a4ef65a1385b9ae96d6e113933b9d4a6da9019f9ab1d32c5e -->

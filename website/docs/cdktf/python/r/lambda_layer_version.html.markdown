@@ -31,7 +31,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         LambdaLayerVersion(self, "lambda_layer",
-            compatible_runtimes=["nodejs16.x"],
+            compatible_runtimes=["nodejs20.x"],
             filename="lambda_layer_payload.zip",
             layer_name="lambda_layer_name"
         )
@@ -112,4 +112,4 @@ Using `terraform import`, import Lambda Layers using `arn`. For example:
     arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e28273fbc6b8ee3a12677de46806c73387c4f54a2401491e5ce7c087a203939b -->
+<!-- cache-key: cdktf-0.20.9 input-9c3d90e8ee994e11e67c1e3fc7808bac0321ba6be9b7d3f93e84edae26958ad2 -->

@@ -2070,6 +2070,12 @@ service/ssmincidents:
           - any-glob-to-any-file:
               - 'internal/service/ssmincidents/**/*'
               - 'website/**/ssmincidents_*'
+service/ssmquicksetup:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/ssmquicksetup/**/*'
+              - 'website/**/ssmquicksetup_*'
 service/ssmsap:
   - any:
       - changed-files:

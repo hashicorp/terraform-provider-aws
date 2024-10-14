@@ -111,4 +111,4 @@ Using `terraform import`, import Athena Named Query using the query ID. For exam
 % terraform import aws_athena_named_query.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-47b0d06df589479137354b1a06a5e12352b544e95a27f4e5bc2dec9fa0224790 -->
+<!-- cache-key: cdktf-0.20.9 input-47b0d06df589479137354b1a06a5e12352b544e95a27f4e5bc2dec9fa0224790 -->

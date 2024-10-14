@@ -151,4 +151,4 @@ Using `terraform import`, import domains using the domain name. For example:
 % terraform import aws_route53domains_registered_domain.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f3a43c49a370aa3f3597964c2d4afca7628a448994f55687aeb34234b8e0224c -->
+<!-- cache-key: cdktf-0.20.9 input-f3a43c49a370aa3f3597964c2d4afca7628a448994f55687aeb34234b8e0224c -->

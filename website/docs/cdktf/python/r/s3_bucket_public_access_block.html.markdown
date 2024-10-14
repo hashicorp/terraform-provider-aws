@@ -89,4 +89,4 @@ Using `terraform import`, import `aws_s3_bucket_public_access_block` using the b
 % terraform import aws_s3_bucket_public_access_block.example my-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-57aca43437d3baccafd0295a3b17a5e714bee976d7cb3f139b488240cf5b921a -->
+<!-- cache-key: cdktf-0.20.9 input-57aca43437d3baccafd0295a3b17a5e714bee976d7cb3f139b488240cf5b921a -->

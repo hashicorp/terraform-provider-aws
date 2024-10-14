@@ -44,7 +44,7 @@ func TestAccAuditManagerFramework_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "control_sets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.0.controls.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`assessmentFramework/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`assessmentFramework/.+$`)),
 				),
 			},
 			{

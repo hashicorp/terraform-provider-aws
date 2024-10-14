@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `displayName` - Name of the application provider.
 * `iconUrl` - URL that points to an icon that represents the application provider.
 
-<!-- cache-key: cdktf-0.20.1 input-5b7f53830f2afb882f413121c04003a0266ebeabfe915b61f6df8b5b62338a3e -->
+<!-- cache-key: cdktf-0.20.9 input-5b7f53830f2afb882f413121c04003a0266ebeabfe915b61f6df8b5b62338a3e -->

@@ -50,7 +50,7 @@ resource "aws_iam_role" "example" {
         {
           Action   = ["sns:Publish"]
           Effect   = "Allow"
-          Resource = ["${aws_sns_topic.example.arn}"]
+          Resource = [aws_sns_topic.example.arn]
         },
         {
           Action = [
@@ -58,7 +58,7 @@ resource "aws_iam_role" "example" {
             "kinesis:DescribeStreamSummary"
           ]
           Effect   = "Allow"
-          Resource = ["${aws_kinesis_video_stream.example.arn}"]
+          Resource = [aws_kinesis_video_stream.example.arn]
         },
       ]
     })
@@ -139,14 +139,14 @@ resource "aws_iam_role" "example" {
             "kinesis:DescribeStreamSummary"
           ]
           Effect   = "Allow"
-          Resource = ["${aws_kinesis_video_stream.example.arn}"]
+          Resource = [aws_kinesis_video_stream.example.arn]
         },
         {
           Action = [
             "kinesis:PutRecord"
           ]
           Effect   = "Allow"
-          Resource = ["${aws_kinesis_stream.example.arn}"]
+          Resource = [aws_kinesis_stream.example.arn]
         },
       ]
     })

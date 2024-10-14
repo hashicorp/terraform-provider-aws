@@ -82,6 +82,8 @@ This resource supports the following arguments:
 ### `managedScaling`
 
 * `instanceWarmupPeriod` - (Optional) Period of time, in seconds, after a newly launched Amazon EC2 instance can contribute to CloudWatch metrics for Auto Scaling group. If this parameter is omitted, the default value of 300 seconds is used.
+
+  For more information on how the instance warmup period contributes to managed scale-out behavior, see [Control the instances Amazon ECS terminates](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/managed-termination-protection.html) in the _Amazon Elastic Container Service Developer Guide_.
 * `maximumScalingStepSize` - (Optional) Maximum step adjustment size. A number between 1 and 10,000.
 * `minimumScalingStepSize` - (Optional) Minimum step adjustment size. A number between 1 and 10,000.
 * `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
@@ -123,4 +125,4 @@ Using `terraform import`, import ECS Capacity Providers using the `name`. For ex
 % terraform import aws_ecs_capacity_provider.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b5d6c2dfdd1ced0f5b638526b416491f5fbd7f35c97b21c7e2ce669b61c189b4 -->
+<!-- cache-key: cdktf-0.20.9 input-797abb55245071d6007ea74149db3030c3a05e7af10104cb97fc827aed66cbc8 -->

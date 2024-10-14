@@ -102,4 +102,4 @@ Using `terraform import`, import Chatbot Microsoft Teams Channel Configuration u
 % terraform import aws_chatbot_teams_channel_configuration.example 5f4f15d2-b958-522a-8333-124aa8bf0925
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0806007ab81b864e2705100f5ab5a77d86935808601f480b1a6c54c8f664b05f -->
+<!-- cache-key: cdktf-0.20.9 input-0806007ab81b864e2705100f5ab5a77d86935808601f480b1a6c54c8f664b05f -->

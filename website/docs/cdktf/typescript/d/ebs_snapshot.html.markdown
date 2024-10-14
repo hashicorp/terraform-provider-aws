@@ -76,6 +76,7 @@ This data source exports the following attributes in addition to the arguments a
 * `volumeSize` - Size of the drive in GiBs.
 * `kmsKeyId` - ARN for the KMS encryption key.
 * `dataEncryptionKeyId` - The data encryption key identifier for the snapshot.
+* `startTime` - Time stamp when the snapshot was initiated.
 * `state` - Snapshot state.
 * `storageTier` - Storage tier in which the snapshot is stored.
 * `outpostArn` - ARN of the Outpost on which the snapshot is stored.
@@ -89,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
 
-<!-- cache-key: cdktf-0.20.1 input-c8ad520ee1902fdd4beb1d909dcc090edcec79bd99fe9a2e9d973ce88eeefa44 -->
+<!-- cache-key: cdktf-0.20.9 input-86581368f66aad8815bf1d7ad238630d56cadb2709c7c6b32c933a80a4a25b30 -->

@@ -78,4 +78,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tenancy` - Indicates the tenancy of the Capacity Block Reservation. Specify either `default` or `dedicated`.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
 
-<!-- cache-key: cdktf-0.20.1 input-a143505ea3006f16f26ae26aa08d81bdcf5392160b05943377879fc64c70fceb -->
+<!-- cache-key: cdktf-0.20.9 input-a143505ea3006f16f26ae26aa08d81bdcf5392160b05943377879fc64c70fceb -->

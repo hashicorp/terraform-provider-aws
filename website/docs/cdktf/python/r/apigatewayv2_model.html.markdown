@@ -87,4 +87,4 @@ Using `terraform import`, import `aws_apigatewayv2_model` using the API identifi
 % terraform import aws_apigatewayv2_model.example aabbccddee/1122334
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-063f47681aa238116147c2530543550c6286bab9afb427347d6c9ef713ac5596 -->
+<!-- cache-key: cdktf-0.20.9 input-063f47681aa238116147c2530543550c6286bab9afb427347d6c9ef713ac5596 -->

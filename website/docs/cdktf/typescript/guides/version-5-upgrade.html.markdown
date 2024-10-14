@@ -385,7 +385,7 @@ Remove `securityGroupNames` from configurations as it no longer exists. We remov
 
 ## resource/aws_elasticache_replication_group
 
-* Remove the `cluster_mode` configuration block. Use top-level `numNodeGroups` and `replicasPerNodeGroup` instead.
+* Remove the `clusterMode` configuration block. Use top-level `numNodeGroups` and `replicasPerNodeGroup` instead.
 * Remove `availabilityZones`, `number_cache_clusters`, `replication_group_description` arguments from configurations as they no longer exist.  Use `preferredCacheClusterAzs`, `numCacheClusters`, and `description`, respectively, instead.
 
 ## resource/aws_elasticache_security_group
@@ -767,7 +767,7 @@ Rename `number_cache_clusters` and `replication_group_description`, which no lon
 
 ## data-source/aws_iam_policy_document
 
-* Remove `source_json` and `override_json` from configurations. Use `sourcePolicyDocuments` and `overridePolicyDocuments`, respectively, instead.
+* Remove `sourceJson` and `overrideJson` from configurations. Use `sourcePolicyDocuments` and `overridePolicyDocuments`, respectively, instead.
 * Don't add empty `statement.sid` values to `json` attribute value.
 
 ## data-source/aws_identitystore_group
@@ -815,4 +815,4 @@ We removed the `aws_subnet_ids` data source. Use the [`aws_subnets`](/docs/provi
 
 Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
-<!-- cache-key: cdktf-0.20.1 input-aca6d1f7e7d666acb626774a0855d9b010ab540c0e171c9acb88a23401334cb9 -->
+<!-- cache-key: cdktf-0.20.9 input-aca6d1f7e7d666acb626774a0855d9b010ab540c0e171c9acb88a23401334cb9 -->

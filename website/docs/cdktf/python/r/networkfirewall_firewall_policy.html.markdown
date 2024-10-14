@@ -275,4 +275,4 @@ Using `terraform import`, import Network Firewall Policies using their `arn`. Fo
 % terraform import aws_networkfirewall_firewall_policy.example arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-404c165333a79301aa20f34d18808df0b499908bd2b40ced95421124be533c61 -->
+<!-- cache-key: cdktf-0.20.9 input-404c165333a79301aa20f34d18808df0b499908bd2b40ced95421124be533c61 -->

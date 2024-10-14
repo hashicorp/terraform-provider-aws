@@ -582,4 +582,4 @@ Using `terraform import`, import Lex V2 Models Intent using the `intent_id:bot_i
 % terraform import aws_lexv2models_intent.example intent-42874:bot-11376:DRAFT:en_US
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0876331bf551e29ba9e9733339842f2f92c0848356779ef9b53c82a6c9b7a11e -->
+<!-- cache-key: cdktf-0.20.9 input-0876331bf551e29ba9e9733339842f2f92c0848356779ef9b53c82a6c9b7a11e -->

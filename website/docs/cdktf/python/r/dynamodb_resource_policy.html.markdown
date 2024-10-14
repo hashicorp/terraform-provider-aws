@@ -77,4 +77,4 @@ Using `terraform import`, import DynamoDB Resource Policy using the `example_id_
 % terraform import aws_dynamodb_resource_policy.example arn:aws:dynamodb:us-east-1:1234567890:table/my-table
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-89f104ce68215639032ec286cf1738e1000df8b4b941baf9449d7434bd1e4afe -->
+<!-- cache-key: cdktf-0.20.9 input-89f104ce68215639032ec286cf1738e1000df8b4b941baf9449d7434bd1e4afe -->

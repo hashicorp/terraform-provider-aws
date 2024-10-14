@@ -103,4 +103,4 @@ Using `terraform import`, import S3 Bucket Ownership Controls using S3 Bucket na
 % terraform import aws_s3_bucket_ownership_controls.example my-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1815e6949e67a720f4b115be9bf7db12d26eaec6cd93db780cd1bd71fccb4ed2 -->
+<!-- cache-key: cdktf-0.20.9 input-1815e6949e67a720f4b115be9bf7db12d26eaec6cd93db780cd1bd71fccb4ed2 -->

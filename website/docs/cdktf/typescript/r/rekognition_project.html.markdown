@@ -92,4 +92,4 @@ Using `terraform import`, import Rekognition Project using the `name`. For examp
 % terraform import aws_rekognition_project.example project-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0fa7b988bdeb66bc32a12a7cbbd2066aa8d91a04d6af41519857096637e28d9d -->
+<!-- cache-key: cdktf-0.20.9 input-0fa7b988bdeb66bc32a12a7cbbd2066aa8d91a04d6af41519857096637e28d9d -->

@@ -5,6 +5,7 @@ package backup_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -12,11 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -229,7 +234,7 @@ func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+			_, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -246,20 +251,16 @@ func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVaultExists(ctx context.Context, name string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultExists(ctx context.Context, n string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Vault ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+		output, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -301,7 +302,7 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 
 		jobID := aws.ToString(output.BackupJobId)
 
-		_, err = tfbackup.WaitJobCompleted(ctx, conn, jobID, 10*time.Minute)
+		_, err = waitJobCompleted(ctx, conn, jobID, 10*time.Minute)
 
 		if err != nil {
 			return fmt.Errorf("error waiting for Backup Job (%s) complete: %w", jobID, err)
@@ -325,6 +326,66 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.DescribeBackupJobOutput, error) {
+	input := &backup.DescribeBackupJobInput{
+		BackupJobId: aws.String(id),
+	}
+
+	output, err := conn.DescribeBackupJob(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findJobByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.BackupJobStateCreated, awstypes.BackupJobStatePending, awstypes.BackupJobStateRunning, awstypes.BackupJobStateAborting),
+		Target:  enum.Slice(awstypes.BackupJobStateCompleted),
+		Refresh: statusJobState(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*backup.DescribeBackupJobOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func testAccVaultConfig_basic(rName string) string {

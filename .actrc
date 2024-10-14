@@ -3,3 +3,4 @@
 -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-22.04
 -P linux=ghcr.io/catthehacker/ubuntu:act-22.04
 -P custom-linux-medium=ghcr.io/catthehacker/ubuntu:act-22.04
+-P custom-linux-xl=ghcr.io/catthehacker/ubuntu:act-22.04

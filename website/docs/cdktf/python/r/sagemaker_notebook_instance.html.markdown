@@ -131,4 +131,4 @@ Using `terraform import`, import SageMaker Notebook Instances using the `name`. 
 % terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7b793590709519efd0f96bd3612e9c4d048d225f9ade368bd3db9274a33268bd -->
+<!-- cache-key: cdktf-0.20.9 input-7b793590709519efd0f96bd3612e9c4d048d225f9ade368bd3db9274a33268bd -->

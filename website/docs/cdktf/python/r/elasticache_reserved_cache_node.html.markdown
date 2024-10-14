@@ -56,7 +56,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `instance_count` - (Optional) Number of cache node instances to reserve.
+* `cache_node_count` - (Optional) Number of cache node instances to reserve.
   Default value is `1`.
 * `id` - (Optional) Customer-specified identifier to track this reservation.
   If not specified, AWS will assign a random ID.
@@ -111,4 +111,4 @@ Using `terraform import`, import ElastiCache Reserved Cache Node using the `id`.
 % terraform import aws_elasticache_reserved_cache_node.example CustomReservationID
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1cdd18480fdfe2b962535e3cdd9c4c99d3f7c4efc4e20ebb73f06cea5f32bd41 -->
+<!-- cache-key: cdktf-0.20.9 input-136412662030dbc89cb137902b3caabdc5b5752628416bda8d4acb2dec2c6e57 -->

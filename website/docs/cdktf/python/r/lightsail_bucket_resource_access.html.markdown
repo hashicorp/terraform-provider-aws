@@ -87,4 +87,4 @@ Using `terraform import`, import `aws_lightsail_bucket_resource_access` using th
 % terraform import aws_lightsail_bucket_resource_access.test example-bucket,example-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-11d161bb3c5191460b3ab1be6d53678d62712049e854a8f1218a3be8610b0749 -->
+<!-- cache-key: cdktf-0.20.9 input-11d161bb3c5191460b3ab1be6d53678d62712049e854a8f1218a3be8610b0749 -->

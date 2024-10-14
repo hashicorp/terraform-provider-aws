@@ -36,7 +36,7 @@ class MyConvertedCode extends TerraformStack {
     const distributionId = new TerraformVariable(this, "distribution_id", {
       description:
         "The Cloudfront Distribution on which to enable the Application Layer Automatic Response.",
-      type: VariableType.ANY,
+      type: VariableType.STRING,
     });
     const current = new DataAwsCallerIdentity(this, "current", {});
     const dataAwsPartitionCurrent = new DataAwsPartition(this, "current_2", {});
@@ -72,4 +72,4 @@ The following arguments are required:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-93c90a7a5edc0d30e2ecedf69f4d9c1fd50a496fcb62bc621562723697aad103 -->
+<!-- cache-key: cdktf-0.20.9 input-cafc17fc5932907762e79a26d14307b777fefc209bf86dc7793ac6c58a00d747 -->

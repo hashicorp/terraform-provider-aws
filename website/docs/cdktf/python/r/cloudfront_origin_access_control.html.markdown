@@ -81,4 +81,4 @@ Using `terraform import`, import CloudFront Origin Access Control using the `id`
 % terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-57d44c640b1c59b5d0c2dd1656c48370adc34d64a3f2a59ddd9fbaf2231990b2 -->
+<!-- cache-key: cdktf-0.20.9 input-57d44c640b1c59b5d0c2dd1656c48370adc34d64a3f2a59ddd9fbaf2231990b2 -->

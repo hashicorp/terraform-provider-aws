@@ -99,4 +99,4 @@ Using `terraform import`, import ECR Repositories using the `name`. For example:
 % terraform import aws_ecr_repository.service test-service
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e1209b507b315e404a10f48d280e6590a59e9ffd637d877733fc8905cf37de81 -->
+<!-- cache-key: cdktf-0.20.9 input-e1209b507b315e404a10f48d280e6590a59e9ffd637d877733fc8905cf37de81 -->

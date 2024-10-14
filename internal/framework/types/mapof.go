@@ -100,6 +100,10 @@ type MapValueOf[T attr.Value] struct {
 	basetypes.MapValue
 }
 
+type (
+	MapOfString = MapValueOf[basetypes.StringValue]
+)
+
 func (v MapValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(MapValueOf[T])
 

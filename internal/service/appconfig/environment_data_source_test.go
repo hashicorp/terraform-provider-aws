@@ -36,7 +36,7 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEnvironmentDataSourceConfig_basic(appName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/([a-z\d]{4,7})/environment/+.`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_appconfig_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "Example AppConfig Environment"),
 					resource.TestMatchResourceAttr(dataSourceName, "environment_id", regexache.MustCompile(`[a-z\d]{4,7}`)),

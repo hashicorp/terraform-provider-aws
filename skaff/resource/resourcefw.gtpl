@@ -439,7 +439,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
 		!plan.Type.Equal(state.Type) {
 
-		var input {{ .ServicePackage }}.Update{{ .Resource }}Input{
+		var input {{ .ServicePackage }}.Update{{ .Resource }}Input
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
 		if resp.Diagnostics.HasError() {
 			return

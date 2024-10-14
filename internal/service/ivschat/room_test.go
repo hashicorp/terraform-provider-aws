@@ -386,7 +386,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
   handler          = "index.handler"
 }
 

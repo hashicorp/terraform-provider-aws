@@ -107,4 +107,4 @@ Using `terraform import`, import Global Accelerator custom routing accelerators 
 % terraform import aws_globalaccelerator_custom_routing_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-765641ba0d03ea8679c57c2c3557a0495cf7d72f403588b6664a9e2b49f09bcd -->
+<!-- cache-key: cdktf-0.20.9 input-765641ba0d03ea8679c57c2c3557a0495cf7d72f403588b6664a9e2b49f09bcd -->

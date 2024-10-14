@@ -265,4 +265,4 @@ Using `terraform import`, import Amazon Connect Instance Storage Configs using t
 % terraform import aws_connect_instance_storage_config.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5:CHAT_TRANSCRIPTS
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f61d343b420a3f570c17898dc773fd2fccd8d832985461fc87179d145f2b2518 -->
+<!-- cache-key: cdktf-0.20.9 input-f61d343b420a3f570c17898dc773fd2fccd8d832985461fc87179d145f2b2518 -->

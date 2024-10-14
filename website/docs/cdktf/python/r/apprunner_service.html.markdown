@@ -323,4 +323,4 @@ Using `terraform import`, import App Runner Services using the `arn`. For exampl
 % terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-49b6751d647a49c3c3492d7fba17d8ea4f9304c7977e4bcce52e5ef6a905c952 -->
+<!-- cache-key: cdktf-0.20.9 input-49b6751d647a49c3c3492d7fba17d8ea4f9304c7977e4bcce52e5ef6a905c952 -->

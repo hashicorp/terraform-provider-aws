@@ -163,6 +163,7 @@ class MyConvertedCode extends TerraformStack {
 |CodeBuild|`codebuild`|`AWS_ENDPOINT_URL_CODEBUILD`|`codebuild`|
 |CodeCatalyst|`codecatalyst`|`AWS_ENDPOINT_URL_CODECATALYST`|`codecatalyst`|
 |CodeCommit|`codecommit`|`AWS_ENDPOINT_URL_CODECOMMIT`|`codecommit`|
+|CodeConnections|`codeconnections`|`AWS_ENDPOINT_URL_CODECONNECTIONS`|`codeconnections`|
 |CodeGuru Profiler|`codeguruprofiler`|`AWS_ENDPOINT_URL_CODEGURUPROFILER`|`codeguruprofiler`|
 |CodeGuru Reviewer|`codegurureviewer`|`AWS_ENDPOINT_URL_CODEGURU_REVIEWER`|`codeguru_reviewer`|
 |CodePipeline|`codepipeline`|`AWS_ENDPOINT_URL_CODEPIPELINE`|`codepipeline`|
@@ -464,4 +465,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fa8330db78ee15da27b4dd219dc074c05b13294b346a240e293e5481d81be477 -->
+<!-- cache-key: cdktf-0.20.9 input-7f8e5bac5eaae6449261e2943a5adf9c4c2e01b33e93356dd6555fc464bd56a4 -->

@@ -141,4 +141,4 @@ Using `terraform import`, import DataZone Domain using the `domainId`. For examp
 % terraform import aws_datazone_domain.example domain-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9cf4fea64daacd2647e1dcda678fe26fafde57d1e729da86af348a0ae67767c3 -->
+<!-- cache-key: cdktf-0.20.9 input-9cf4fea64daacd2647e1dcda678fe26fafde57d1e729da86af348a0ae67767c3 -->

@@ -109,4 +109,4 @@ Using `terraform import`, import Redshift Serverless Custom Domain Association u
 % terraform import aws_redshiftserverless_custom_domain_association.example example-workgroup,example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f2ed1f05d9d7950427f9d82ae56ca1e32290bd78ace2387e3f141832feda885f -->
+<!-- cache-key: cdktf-0.20.9 input-f2ed1f05d9d7950427f9d82ae56ca1e32290bd78ace2387e3f141832feda885f -->

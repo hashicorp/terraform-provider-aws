@@ -569,4 +569,4 @@ Using `terraform import`, import `aws_kinesisanalyticsv2_application` using the 
 % terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-285a8300a0be803744a942b4b82c971baa2718e2a1bae6de5e6ef6e2cab2fe72 -->
+<!-- cache-key: cdktf-0.20.9 input-285a8300a0be803744a942b4b82c971baa2718e2a1bae6de5e6ef6e2cab2fe72 -->

@@ -89,4 +89,4 @@ Using `terraform import`, import QuickSight Template Alias using the AWS account
 % terraform import aws_quicksight_template_alias.example 123456789012,example-id,example-alias
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0ef4c7dd40f38e995959bc39fcd14ea01fdf8e036b7c872e0812d2486af788e0 -->
+<!-- cache-key: cdktf-0.20.9 input-0ef4c7dd40f38e995959bc39fcd14ea01fdf8e036b7c872e0812d2486af788e0 -->

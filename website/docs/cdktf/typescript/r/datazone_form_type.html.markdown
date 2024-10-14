@@ -56,7 +56,7 @@ class MyConvertedCode extends TerraformStack {
       ),
       inlinePolicy: [
         {
-          name: "example name",
+          name: "example-policy",
           policy: Token.asString(
             Fn.jsonencode({
               Statement: [
@@ -71,14 +71,14 @@ class MyConvertedCode extends TerraformStack {
           ),
         },
       ],
-      name: "example name",
+      name: "example-role",
     });
     new SecurityGroup(this, "test", {
-      name: "example name",
+      name: "example",
     });
     const awsDatazoneDomainTest = new DatazoneDomain(this, "test_2", {
       domainExecutionRole: domainExecutionRole.arn,
-      name: "example name",
+      name: "example",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsDatazoneDomainTest.overrideLogicalId("test");
@@ -169,4 +169,4 @@ Using `terraform import`, import DataZone Form Type using a comma separated valu
 % terraform import aws_datazone_form_type.example domain_identifier,name,revision
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c3a2e042d80bbd96635e77f1e4358067efee9896b85ead15bd6a7ce0f445304f -->
+<!-- cache-key: cdktf-0.20.9 input-cdef50a21d1845378a865dd36aa3dc7d71db53486e0928923653cfc25130f74f -->

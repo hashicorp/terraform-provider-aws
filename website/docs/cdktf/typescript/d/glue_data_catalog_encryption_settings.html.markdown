@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `catalogEncryptionServiceRole` - The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sseAwsKmsKeyId` - ARN of the AWS KMS key to use for encryption at rest.
 
-<!-- cache-key: cdktf-0.20.1 input-78a160a18efc6d43f60575420d37772ff044fbb513e2720991b26149cc501c21 -->
+<!-- cache-key: cdktf-0.20.9 input-78a160a18efc6d43f60575420d37772ff044fbb513e2720991b26149cc501c21 -->

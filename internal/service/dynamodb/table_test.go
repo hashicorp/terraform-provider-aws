@@ -1676,8 +1676,8 @@ func TestAccDynamoDBTable_restoreCrossRegion(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceNameRestore, names.AttrName, rNameRestore),
-					acctest.MatchResourceAttrRegionalARNRegion(resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/+.`)),
-					acctest.MatchResourceAttrRegionalARNRegion(resourceNameRestore, names.AttrARN, "dynamodb", acctest.AlternateRegion(), regexache.MustCompile(`table/+.`)),
+					acctest.MatchResourceAttrRegionalARNRegion(resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/XXX`)),
+					acctest.MatchResourceAttrRegionalARNRegion(resourceNameRestore, names.AttrARN, "dynamodb", acctest.AlternateRegion(), regexache.MustCompile(`table/YYY`)),
 				),
 			},
 			{

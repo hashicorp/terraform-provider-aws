@@ -89,4 +89,4 @@ Using `terraform import`, import Cost Optimization Hub Preferences using the `id
 % terraform import aws_costoptimizationhub_preferences.example 111222333444
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b17be540dc21dce4de0b09580ad3bd3ab760b5bbe7908660a89a38aeff2e7b1b -->
+<!-- cache-key: cdktf-0.20.9 input-b17be540dc21dce4de0b09580ad3bd3ab760b5bbe7908660a89a38aeff2e7b1b -->

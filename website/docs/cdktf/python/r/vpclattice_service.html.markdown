@@ -90,4 +90,4 @@ Using `terraform import`, import VPC Lattice Service using the `id`. For example
 % terraform import aws_vpclattice_service.example svc-06728e2357ea55f8a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f9acfec4249fc51134e9cb5589073b543ce94ac0103b759f9c21d3128e90b21c -->
+<!-- cache-key: cdktf-0.20.9 input-f9acfec4249fc51134e9cb5589073b543ce94ac0103b759f9c21d3128e90b21c -->

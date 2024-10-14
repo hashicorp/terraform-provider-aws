@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `slack_team_id` - ID of the Slack Workspace assigned by AWS Chatbot.
 
-<!-- cache-key: cdktf-0.20.1 input-62340c1bdb1633b2d881f64f66520d98acaee101a0c84a3bd9b8c855bcc55fc4 -->
+<!-- cache-key: cdktf-0.20.9 input-62340c1bdb1633b2d881f64f66520d98acaee101a0c84a3bd9b8c855bcc55fc4 -->

@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `serviceRoleArn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.
 
-<!-- cache-key: cdktf-0.20.1 input-07755259e17c1389ef594d13cf31fa96fecc80102f8edf0b3ec9e035aef6985e -->
+<!-- cache-key: cdktf-0.20.9 input-07755259e17c1389ef594d13cf31fa96fecc80102f8edf0b3ec9e035aef6985e -->

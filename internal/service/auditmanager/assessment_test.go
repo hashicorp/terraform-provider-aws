@@ -47,7 +47,7 @@ func TestAccAuditManagerAssessment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_accounts.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_services.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`assessment/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`assessment/.+$`)),
 				),
 			},
 			{

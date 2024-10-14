@@ -284,4 +284,4 @@ Using `terraform import`, import Lightsail Databases using their name. For examp
 % terraform import aws_lightsail_database.foo 'bar'
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c460ea904b2c519242690eaca4e01b78c0151a707412615588901072ae863f56 -->
+<!-- cache-key: cdktf-0.20.9 input-c460ea904b2c519242690eaca4e01b78c0151a707412615588901072ae863f56 -->

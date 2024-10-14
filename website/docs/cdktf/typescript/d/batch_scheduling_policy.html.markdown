@@ -59,4 +59,4 @@ A `shareDistribution` block supports the following arguments:
 * `shareIdentifier` - Fair share identifier or fair share identifier prefix. For more information, see [ShareAttributes](https://docs.aws.amazon.com/batch/latest/APIReference/API_ShareAttributes.html).
 * `weightFactor` - Weight factor for the fair share identifier. For more information, see [ShareAttributes](https://docs.aws.amazon.com/batch/latest/APIReference/API_ShareAttributes.html).
 
-<!-- cache-key: cdktf-0.20.1 input-a3c940bd9dab02eb61feff7643ca700cbd6562b5e25eb6379d0c7a0bc4618bc4 -->
+<!-- cache-key: cdktf-0.20.9 input-a3c940bd9dab02eb61feff7643ca700cbd6562b5e25eb6379d0c7a0bc4618bc4 -->

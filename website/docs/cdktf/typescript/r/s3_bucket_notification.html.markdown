@@ -189,7 +189,7 @@ class MyConvertedCode extends TerraformStack {
       functionName: "example_lambda_name",
       handler: "exports.example",
       role: iamForLambda.arn,
-      runtime: "go1.x",
+      runtime: "nodejs20.x",
     });
     const allowBucket = new LambdaPermission(this, "allow_bucket", {
       action: "lambda:InvokeFunction",
@@ -260,7 +260,7 @@ class MyConvertedCode extends TerraformStack {
       functionName: "example_lambda_name1",
       handler: "exports.example",
       role: iamForLambda.arn,
-      runtime: "go1.x",
+      runtime: "nodejs20.x",
     });
     const func2 = new LambdaFunction(this, "func2", {
       filename: "your-function2.zip",
@@ -497,4 +497,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ffc8a3d834243776f095d91cbf1034f45496ca04ecab5cc652f8eef56b45e134 -->
+<!-- cache-key: cdktf-0.20.9 input-711adefb8489e0fd4ea9dba1542457d59f20b23308521f2b80c2174f2e1144a0 -->

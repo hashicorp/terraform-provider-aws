@@ -220,7 +220,7 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	if image.PublicBaseImageReleasedDate != nil {
-		data.PubilcBaseImageReleasedDate = timetypes.NewRFC3339TimeValue(*image.PublicBaseImageReleasedDate)
+		data.PublicBaseImageReleasedDate = timetypes.NewRFC3339TimeValue(*image.PublicBaseImageReleasedDate)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -269,7 +269,7 @@ type dsImage struct {
 	Name                        types.String                                        `tfsdk:"name"`
 	NameRegex                   fwtypes.Regexp                                      `tfsdk:"name_regex"`
 	Platform                    types.String                                        `tfsdk:"platform"`
-	PubilcBaseImageReleasedDate timetypes.RFC3339                                   `tfsdk:"public_base_image_released_date"`
+	PublicBaseImageReleasedDate timetypes.RFC3339                                   `tfsdk:"public_base_image_released_date"`
 	State                       types.String                                        `tfsdk:"state"`
 	StateChangeReason           fwtypes.ListNestedObjectValueOf[dsStateChange]      `tfsdk:"state_change_reason"`
 	Type                        fwtypes.StringEnum[awstypes.VisibilityType]         `tfsdk:"type"`

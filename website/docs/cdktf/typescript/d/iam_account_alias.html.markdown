@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `accountAlias` - Alias associated with the AWS account.
 * `id` - Alias associated with the AWS account.
 
-<!-- cache-key: cdktf-0.20.1 input-f455bf9fcf364a77caee2097f0080546bcaeac3c0d78e42f7561ab85f7ca2ecf -->
+<!-- cache-key: cdktf-0.20.9 input-f455bf9fcf364a77caee2097f0080546bcaeac3c0d78e42f7561ab85f7ca2ecf -->

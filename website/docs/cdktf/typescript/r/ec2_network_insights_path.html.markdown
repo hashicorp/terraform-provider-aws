@@ -93,4 +93,4 @@ Using `terraform import`, import Network Insights Paths using the `id`. For exam
 % terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-645d11fe41637643fed84a2b234c7fbc0c008ac395ec9f6314171deb55f71cf0 -->
+<!-- cache-key: cdktf-0.20.9 input-645d11fe41637643fed84a2b234c7fbc0c008ac395ec9f6314171deb55f71cf0 -->

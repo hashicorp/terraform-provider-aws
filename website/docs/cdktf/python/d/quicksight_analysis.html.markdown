@@ -48,4 +48,4 @@ The following arguments are optional:
 See the [Analysis Resource](/docs/providers/aws/r/quicksight_analysis.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.1 input-38402a4af27e773d5f029908d58dbad1645d59049aa34309041de532adcafc54 -->
+<!-- cache-key: cdktf-0.20.9 input-38402a4af27e773d5f029908d58dbad1645d59049aa34309041de532adcafc54 -->

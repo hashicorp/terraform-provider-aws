@@ -38,7 +38,7 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 				Config: testAccAPIKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
@@ -57,7 +57,7 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 				Config: testAccAPIKeyConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey2),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),

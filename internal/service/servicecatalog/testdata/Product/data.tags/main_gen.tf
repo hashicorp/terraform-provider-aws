@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_servicecatalog_product" "test" {
   id = aws_servicecatalog_product.test.id
 }
@@ -54,8 +55,6 @@ resource "aws_s3_object" "test" {
     }
   })
 }
-
-data "aws_partition" "current" {}
 
 variable "rName" {
   description = "Name for resource"

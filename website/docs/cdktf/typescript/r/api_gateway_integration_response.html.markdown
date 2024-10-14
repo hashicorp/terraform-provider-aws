@@ -128,4 +128,4 @@ Using `terraform import`, import `aws_api_gateway_integration_response` using `R
 % terraform import aws_api_gateway_integration_response.example 12345abcde/67890fghij/GET/200
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-97c39e121698d07126a2f35c245570b6347a512d3549856ca8d5c2fc0f8be7e7 -->
+<!-- cache-key: cdktf-0.20.9 input-97c39e121698d07126a2f35c245570b6347a512d3549856ca8d5c2fc0f8be7e7 -->

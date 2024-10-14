@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `precedence` - Precedence of the user group.
 * `role_arn` - ARN of the IAM role to be associated with the user group.
 
-<!-- cache-key: cdktf-0.20.1 input-27df73fb237762edc7cf45b6bd3efdbad132db982d809d1c48656693e1ae599d -->
+<!-- cache-key: cdktf-0.20.9 input-27df73fb237762edc7cf45b6bd3efdbad132db982d809d1c48656693e1ae599d -->

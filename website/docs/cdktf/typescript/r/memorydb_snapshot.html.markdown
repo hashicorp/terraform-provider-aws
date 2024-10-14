@@ -105,4 +105,4 @@ Using `terraform import`, import a snapshot using the `name`. For example:
 % terraform import aws_memorydb_snapshot.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-540eb2f7a447881028486dd90d40cbfa1d108e80be222d8149c4c844371b23d5 -->
+<!-- cache-key: cdktf-0.20.9 input-540eb2f7a447881028486dd90d40cbfa1d108e80be222d8149c4c844371b23d5 -->

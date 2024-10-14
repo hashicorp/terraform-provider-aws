@@ -102,4 +102,4 @@ A `phoneConfig` block supports the following attributes:
 * `deskPhoneNumber` - The phone number for the user's desk phone.
 * `phoneType` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.20.1 input-c25bf43664c73166a832756c06c50d944796dfadba58e27c218ef474c427f5f9 -->
+<!-- cache-key: cdktf-0.20.9 input-c25bf43664c73166a832756c06c50d944796dfadba58e27c218ef474c427f5f9 -->

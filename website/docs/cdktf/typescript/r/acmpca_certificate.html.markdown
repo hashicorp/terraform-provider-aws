@@ -136,4 +136,4 @@ Using `terraform import`, import ACM PCA Certificates using their ARN. For examp
 % terraform import aws_acmpca_certificate.cert arn:aws:acm-pca:eu-west-1:675225743824:certificate-authority/08319ede-83g9-1400-8f21-c7d12b2b6edb/certificate/a4e9c2aa4bcfab625g1b9136464cd3a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8d7847646fadad3366407a089a915a6efb6332c06ac3d98363d31e7d2c9bddea -->
+<!-- cache-key: cdktf-0.20.9 input-8d7847646fadad3366407a089a915a6efb6332c06ac3d98363d31e7d2c9bddea -->

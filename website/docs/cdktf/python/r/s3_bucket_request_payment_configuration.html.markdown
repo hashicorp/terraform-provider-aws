@@ -102,4 +102,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_request_payment_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-62f7785977df6bbe78bff83612517614bf09a5146fc4d611baf0af9750555f41 -->
+<!-- cache-key: cdktf-0.20.9 input-62f7785977df6bbe78bff83612517614bf09a5146fc4d611baf0af9750555f41 -->

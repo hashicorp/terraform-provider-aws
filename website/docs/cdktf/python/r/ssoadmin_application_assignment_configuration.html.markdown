@@ -76,4 +76,4 @@ Using `terraform import`, import SSO Admin Application Assignment Configuration 
 % terraform import aws_ssoadmin_application_assignment_configuration.example arn:aws:sso::012345678901:application/id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7a720f0b0d045e94e162a4cd1586921195ca3d6e0468585c9321df2eef9bcda1 -->
+<!-- cache-key: cdktf-0.20.9 input-7a720f0b0d045e94e162a4cd1586921195ca3d6e0468585c9321df2eef9bcda1 -->

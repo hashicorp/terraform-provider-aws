@@ -263,8 +263,9 @@ func resourceComputeEnvironment() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"job_execution_timeout_minutes": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 360),
 						},
 						"terminate_jobs_on_update": {
 							Type:     schema.TypeBool,

@@ -112,4 +112,4 @@ Using `terraform import`, import `aws_lightsail_lb_https_redirection_policy` usi
 % terraform import aws_lightsail_lb_https_redirection_policy.test example-load-balancer
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-096d2aad822770675cf0db37d9363ce16e54bc7144846d6f81441f5de8d7d74a -->
+<!-- cache-key: cdktf-0.20.9 input-096d2aad822770675cf0db37d9363ce16e54bc7144846d6f81441f5de8d7d74a -->

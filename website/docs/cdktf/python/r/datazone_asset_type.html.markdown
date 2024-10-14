@@ -88,4 +88,4 @@ Using `terraform import`, import DataZone Asset Type using the `domain_identifie
 % terraform import aws_datazone_asset_type.example domain-id-12345678,example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-461d9e23525d2105789a40430d6f6b05212237a6eabf758eb111ccee45680ec8 -->
+<!-- cache-key: cdktf-0.20.9 input-461d9e23525d2105789a40430d6f6b05212237a6eabf758eb111ccee45680ec8 -->

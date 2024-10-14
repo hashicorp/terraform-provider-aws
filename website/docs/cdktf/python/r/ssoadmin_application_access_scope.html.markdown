@@ -91,4 +91,4 @@ Using `terraform import`, import SSO Admin Application Access Scope using the `i
 % terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901,sso:account:access
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cf505dadf134c69cd6c7c26ff4c81d309a119192ad2e48ef73877664e79abeb0 -->
+<!-- cache-key: cdktf-0.20.9 input-cf505dadf134c69cd6c7c26ff4c81d309a119192ad2e48ef73877664e79abeb0 -->

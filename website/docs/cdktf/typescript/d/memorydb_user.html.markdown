@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `minimumEngineVersion` - Minimum engine version supported for the user.
 * `tags` - Map of tags assigned to the user.
 
-<!-- cache-key: cdktf-0.20.1 input-96e6cd20001d150cf9f5453c135efe793e4ab19f94eca86175544e28a5078f19 -->
+<!-- cache-key: cdktf-0.20.9 input-96e6cd20001d150cf9f5453c135efe793e4ab19f94eca86175544e28a5078f19 -->

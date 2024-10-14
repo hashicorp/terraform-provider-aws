@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sink_id` - Random ID string that AWS generated as part of the sink ARN.
 * `tags` - Tags assigned to the sink.
 
-<!-- cache-key: cdktf-0.20.1 input-8e63be540533d9d78bac454b3d644795733c12ad84f0bb46cc6b5785db3cbc59 -->
+<!-- cache-key: cdktf-0.20.9 input-8e63be540533d9d78bac454b3d644795733c12ad84f0bb46cc6b5785db3cbc59 -->

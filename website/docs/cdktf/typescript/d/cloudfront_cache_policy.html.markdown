@@ -105,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `items` - List of item names (`cookies`, `headers`, or `queryStrings`).
 
-<!-- cache-key: cdktf-0.20.1 input-d2206ba916ee923999c55171522950c705c9bfd904c6382e709e850f3e24144f -->
+<!-- cache-key: cdktf-0.20.9 input-d2206ba916ee923999c55171522950c705c9bfd904c6382e709e850f3e24144f -->

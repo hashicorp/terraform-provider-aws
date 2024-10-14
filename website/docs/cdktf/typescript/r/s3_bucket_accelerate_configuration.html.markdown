@@ -121,4 +121,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_accelerate_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b8d2eb8976f9eb67b7e44985d08d6df0a0c35907c6a6a2a51239045804765fc1 -->
+<!-- cache-key: cdktf-0.20.9 input-b8d2eb8976f9eb67b7e44985d08d6df0a0c35907c6a6a2a51239045804765fc1 -->

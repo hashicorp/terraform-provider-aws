@@ -2546,7 +2546,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, funcName))
 }
@@ -2593,7 +2593,7 @@ resource "aws_lambda_function" "test" {
   publish       = false
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, fileName, rName))
 }
@@ -2676,7 +2676,7 @@ resource "aws_lambda_function" "test" {
   function_name           = %[1]q
   role                    = aws_iam_role.iam_for_lambda.arn
   handler                 = "exports.example"
-  runtime                 = "nodejs16.x"
+  runtime                 = "nodejs20.x"
   code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_1.arn
 }
 `, rName))
@@ -2691,7 +2691,7 @@ resource "aws_lambda_function" "test" {
   function_name           = %[1]q
   role                    = aws_iam_role.iam_for_lambda.arn
   handler                 = "exports.example"
-  runtime                 = "nodejs16.x"
+  runtime                 = "nodejs20.x"
   code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_2.arn
 }
 `, rName))
@@ -2706,7 +2706,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
@@ -2720,7 +2720,7 @@ resource "aws_lambda_function" "test" {
   function_name                  = %[1]q
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
-  runtime                        = "nodejs16.x"
+  runtime                        = "nodejs20.x"
   reserved_concurrent_executions = 111
 }
 `, rName))
@@ -2735,7 +2735,7 @@ resource "aws_lambda_function" "test" {
   function_name                  = %[1]q
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
-  runtime                        = "nodejs16.x"
+  runtime                        = "nodejs20.x"
   reserved_concurrent_executions = 222
 }
 `, rName))
@@ -2749,7 +2749,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
@@ -2763,7 +2763,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {
@@ -2783,7 +2783,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {}
@@ -2801,7 +2801,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {
@@ -2822,7 +2822,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
@@ -2836,7 +2836,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {
@@ -2901,7 +2901,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   kms_key_arn   = aws_kms_key.test1.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {
@@ -2946,7 +2946,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   kms_key_arn   = aws_kms_key.test2.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {
@@ -2967,7 +2967,7 @@ resource "aws_lambda_function" "test" {
   publish       = %[3]t
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, fileName, rName, publish))
 }
@@ -2996,7 +2996,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   dead_letter_config {
     target_arn = aws_sns_topic.test[0].arn
@@ -3020,7 +3020,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   dead_letter_config {
     target_arn = aws_sns_topic.test[1].arn
@@ -3044,7 +3044,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   dead_letter_config {
     target_arn = ""
@@ -3093,7 +3093,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -3150,7 +3150,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda_az2.id]
@@ -3224,7 +3224,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   architectures = ["arm64"]
 }
 `, rName))
@@ -3239,7 +3239,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   architectures = ["x86_64"]
 }
 `, rName))
@@ -3252,7 +3252,7 @@ func testAccFunctionConfig_architecturesARM64Layer(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
   layer_name               = %[1]q
-  compatible_runtimes      = ["nodejs16.x"]
+  compatible_runtimes      = ["nodejs20.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
@@ -3261,7 +3261,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   architectures = ["arm64"]
   layers        = [aws_lambda_layer_version.test.arn]
 }
@@ -3275,7 +3275,7 @@ func testAccFunctionConfig_architecturesUpdateLayer(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
   layer_name               = %[1]q
-  compatible_runtimes      = ["nodejs16.x"]
+  compatible_runtimes      = ["nodejs20.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
@@ -3284,7 +3284,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   architectures = ["x86_64"]
   layers        = [aws_lambda_layer_version.test.arn]
 }
@@ -3300,7 +3300,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   ephemeral_storage {
     size = 1024
@@ -3318,7 +3318,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   ephemeral_storage {
     size = 2048
@@ -3336,7 +3336,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   logging_config {
     log_format = "Text"
@@ -3355,7 +3355,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   logging_config {
     application_log_level = "TRACE"
@@ -3375,7 +3375,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   logging_config {
     log_format = "JSON"
@@ -3393,7 +3393,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   tracing_config {
     mode = "Active"
@@ -3411,7 +3411,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   tracing_config {
     mode = "PassThrough"
@@ -3453,7 +3453,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   kms_key_arn   = aws_kms_key.test.arn
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
@@ -3467,7 +3467,7 @@ resource "aws_lambda_layer_version" "test" {
 
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = "%[1]s-${count.index}"
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 resource "aws_lambda_function" "test" {
@@ -3475,7 +3475,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   layers        = [aws_lambda_layer_version.test[0].arn]
 }
 `, rName))
@@ -3490,7 +3490,7 @@ resource "aws_lambda_layer_version" "test" {
 
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = "%[1]s-${count.index}"
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 resource "aws_lambda_function" "test" {
@@ -3498,7 +3498,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   layers        = aws_lambda_layer_version.test[*].arn
 }
 `, rName))
@@ -3513,7 +3513,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -3532,7 +3532,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id, aws_subnet.subnet_for_lambda_az2.id]
@@ -3571,7 +3571,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   publish       = true
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -3590,7 +3590,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   publish       = true
   vpc_config {
     security_group_ids = []
@@ -3609,7 +3609,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.test.id]
@@ -3630,7 +3630,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   replace_security_groups_on_destroy = true
 
@@ -3660,7 +3660,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   replace_security_groups_on_destroy = true
   replacement_security_group_ids     = [aws_security_group.test_replacement.id]
@@ -3682,7 +3682,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = []
@@ -3730,7 +3730,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName)
 }
@@ -3763,7 +3763,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[2]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
 }
 `, filePath, rName)
 }
@@ -3795,7 +3795,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[2]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, filePath, rName)
 }
@@ -3851,7 +3851,7 @@ resource "aws_lambda_function" "test" {
   function_name     = %[3]q
   role              = aws_iam_role.iam_for_lambda.arn
   handler           = "exports.example"
-  runtime           = "nodejs16.x"
+  runtime           = "nodejs20.x"
 }
 `, key, path, rName)
 }
@@ -3896,7 +3896,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName, key, path)
 }
@@ -3923,7 +3923,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
@@ -3950,7 +3950,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -3969,7 +3969,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     ipv6_allowed_for_dual_stack = true
@@ -3987,7 +3987,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   skip_destroy  = true
 }
 `, rName))

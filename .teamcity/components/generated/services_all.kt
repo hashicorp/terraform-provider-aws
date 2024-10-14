@@ -223,6 +223,7 @@ val services = mapOf(
     "ssm" to ServiceSpec("SSM (Systems Manager)", vpcLock = true),
     "ssmcontacts" to ServiceSpec("SSM Contacts"),
     "ssmincidents" to ServiceSpec("SSM Incident Manager Incidents"),
+    "ssmquicksetup" to ServiceSpec("SSM Quick Setup"),
     "ssmsap" to ServiceSpec("Systems Manager for SAP"),
     "sso" to ServiceSpec("SSO (Single Sign-On)"),
     "ssoadmin" to ServiceSpec("SSO Admin"),

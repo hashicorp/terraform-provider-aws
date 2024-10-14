@@ -87,4 +87,4 @@ Using `terraform import`, import Internet Gateway Attachments using the `id`. Fo
 % terraform import aws_internet_gateway_attachment.example igw-c0a643a9:vpc-123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-afa0ad650467b8c31da183ec77ac9779b620b292e7a92425cb2b77263075d02d -->
+<!-- cache-key: cdktf-0.20.9 input-afa0ad650467b8c31da183ec77ac9779b620b292e7a92425cb2b77263075d02d -->

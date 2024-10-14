@@ -87,4 +87,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnet_ids` – List of subnet IDs
     * `vpc_id` – The VPC associated with your cluster.
 
-<!-- cache-key: cdktf-0.20.1 input-2f858927be7bf4d84b730bd1c7bc1415840ed27358e0ce92b62ad60ac4d50047 -->
+<!-- cache-key: cdktf-0.20.9 input-2f858927be7bf4d84b730bd1c7bc1415840ed27358e0ce92b62ad60ac4d50047 -->

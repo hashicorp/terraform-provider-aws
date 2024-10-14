@@ -181,4 +181,4 @@ Using `terraform import`, import Network Firewall Logging Configurations using t
 % terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a424d4d289b34356de5d5f45679c9809505595ffb099b5886f34b982f524e9e4 -->
+<!-- cache-key: cdktf-0.20.9 input-a424d4d289b34356de5d5f45679c9809505595ffb099b5886f34b982f524e9e4 -->

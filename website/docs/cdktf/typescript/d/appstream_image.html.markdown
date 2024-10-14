@@ -88,4 +88,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Current state of image. Image starts in PENDING state which changes to AVAILABLE if creation passes and FAILED if it fails. Values will be from: PENDING | AVAILABLE | FAILED | COPYING | DELETING | CREATING | IMPORTING.
 * `visibility` - Visibility type enum indicating whether the image is PUBLIC, PRIVATE, or SHARED. Valid values include: PUBLIC | PRIVATE | SHARED.
 
-<!-- cache-key: cdktf-0.20.1 input-39f03a832e6704e24654ff2ffaed108e62f2139a01511d5bb7d35829e13a0986 -->
+<!-- cache-key: cdktf-0.20.9 input-39f03a832e6704e24654ff2ffaed108e62f2139a01511d5bb7d35829e13a0986 -->

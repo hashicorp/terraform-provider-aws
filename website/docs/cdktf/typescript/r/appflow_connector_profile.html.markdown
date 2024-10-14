@@ -64,7 +64,7 @@ class MyConvertedCode extends TerraformStack {
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsRedshiftClusterExample.overrideLogicalId("example");
     const awsS3BucketExample = new S3Bucket(this, "example_2", {
-      bucket: "example_bucket",
+      bucket: "example-bucket",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsS3BucketExample.overrideLogicalId("example");
@@ -389,4 +389,4 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
 
-<!-- cache-key: cdktf-0.20.1 input-175320c144cddd55dbd02b452b869ed210cf85367e05941516384dd0ea24a19d -->
+<!-- cache-key: cdktf-0.20.9 input-e7d0ceaa36169ec31d54db61161dc854a227bd68c2f7b1bd576ae5713ea98f3d -->

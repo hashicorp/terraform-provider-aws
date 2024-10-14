@@ -105,4 +105,4 @@ Using `terraform import`, import VPC Lattice Auth Policy using the `id`. For exa
 % terraform import aws_vpclattice_auth_policy.example abcd-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfefd578bb50996b82ce55ca4ba5163180bcda5a652c6847303282acbdb1d91d -->
+<!-- cache-key: cdktf-0.20.9 input-bfefd578bb50996b82ce55ca4ba5163180bcda5a652c6847303282acbdb1d91d -->

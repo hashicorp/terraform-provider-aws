@@ -120,4 +120,4 @@ Using `terraform import`, import Workspaces using their ID. For example:
 % terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5d3b14ab533dbbfb49b079db145d3d7cd623cbd43efb18f5f11b0a2debdc876c -->
+<!-- cache-key: cdktf-0.20.9 input-5d3b14ab533dbbfb49b079db145d3d7cd623cbd43efb18f5f11b0a2debdc876c -->

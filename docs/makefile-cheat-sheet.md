@@ -163,6 +163,9 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-lint-fix` | Fix acceptance test linter findings |  |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-short`<sup>D</sup> | Run acceptace tests with the -short flag |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-tflint` | Acceptance Test Linting / tflint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
 | `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |

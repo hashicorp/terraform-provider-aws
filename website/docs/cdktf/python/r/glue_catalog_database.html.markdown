@@ -124,4 +124,4 @@ Using `terraform import`, import Glue Catalog Databases using the `catalog_id:na
 % terraform import aws_glue_catalog_database.database 123456789012:my_database
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f6ddbf330fc96789770c14c13d7df90a799c7886bd2a946dc50aba50cacf3d3c -->
+<!-- cache-key: cdktf-0.20.9 input-f6ddbf330fc96789770c14c13d7df90a799c7886bd2a946dc50aba50cacf3d3c -->

@@ -70,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `policy` - Resource-based policy document that's attached to the secret.
 * `tags` - Tags of the secret.
 
-<!-- cache-key: cdktf-0.20.1 input-1cf3158ebed32b0b6c34be5689b105718c04748bc53773ad85c5652ccd87a14c -->
+<!-- cache-key: cdktf-0.20.9 input-1cf3158ebed32b0b6c34be5689b105718c04748bc53773ad85c5652ccd87a14c -->

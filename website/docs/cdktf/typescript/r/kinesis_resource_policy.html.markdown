@@ -82,4 +82,4 @@ Using `terraform import`, import Kinesis resource policies using the `resourceAr
 % terraform import aws_kinesis_resource_policy.example arn:aws:kinesis:us-west-2:123456789012:stream/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-67ba4866c8f0beb4004281fd0965d1ae6a887b41b0885795de9467e13a206319 -->
+<!-- cache-key: cdktf-0.20.9 input-67ba4866c8f0beb4004281fd0965d1ae6a887b41b0885795de9467e13a206319 -->

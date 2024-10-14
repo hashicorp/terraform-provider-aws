@@ -148,4 +148,4 @@ Using `terraform import`, import CloudSearch Domains using the `name`. For examp
 % terraform import aws_cloudsearch_domain.example example-domain
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ceae2d1756852153a56b7559bc1249bcbdcd21cd8eb1c3b3095494c7547dd974 -->
+<!-- cache-key: cdktf-0.20.9 input-ceae2d1756852153a56b7559bc1249bcbdcd21cd8eb1c3b3095494c7547dd974 -->

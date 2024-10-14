@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `zookeeperConnectString` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphbetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 * `zookeeperConnectStringTls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
-<!-- cache-key: cdktf-0.20.1 input-284a977e04ce4581d3dedc9fee705b1b12bd7feba0e15de9010a3cb282e7c367 -->
+<!-- cache-key: cdktf-0.20.9 input-284a977e04ce4581d3dedc9fee705b1b12bd7feba0e15de9010a3cb282e7c367 -->

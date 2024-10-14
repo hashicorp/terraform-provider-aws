@@ -110,4 +110,4 @@ Using `terraform import`, import OpenSearchServerless Collection using the `id`.
 % terraform import aws_opensearchserverless_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bbd8832845290d485daf33e5853dfc639ffbd2597086ab9e0dd010a45fc52c34 -->
+<!-- cache-key: cdktf-0.20.9 input-bbd8832845290d485daf33e5853dfc639ffbd2597086ab9e0dd010a45fc52c34 -->

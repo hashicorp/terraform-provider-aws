@@ -236,7 +236,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "test.handler"
-  runtime       = "python3.7"
+  runtime       = "python3.12"
 }
 
 resource "aws_iam_role" "test" {

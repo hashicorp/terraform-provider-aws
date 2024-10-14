@@ -41,6 +41,7 @@ var (
 	FindAttachedUserPolicyByTwoPartKey  = findAttachedUserPolicyByTwoPartKey
 	FindEntitiesForPolicyByARN          = findEntitiesForPolicyByARN
 	FindGroupByName                     = findGroupByName
+	FindGroupPoliciesByName             = findGroupPoliciesByName
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
@@ -49,6 +50,7 @@ var (
 	FindServerCertificateByName         = findServerCertificateByName
 	FindSSHPublicKeyByThreePartKey      = findSSHPublicKeyByThreePartKey
 	FindUserByName                      = findUserByName
+	FindUserPoliciesByName              = findUserPoliciesByName
 	FindVirtualMFADeviceBySerialNumber  = findVirtualMFADeviceBySerialNumber
 	SESSMTPPasswordFromSecretKeySigV4   = sesSMTPPasswordFromSecretKeySigV4
 )

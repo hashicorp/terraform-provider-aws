@@ -73,4 +73,4 @@ Using `terraform import`, import S3 Access Grants instance resource policies usi
 % terraform import aws_s3control_access_grants_instance_resource_policy.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5fc8f9b74ea6f1b84355cc86c632e105d4e2b0bf42fdaa38f1076a0043630327 -->
+<!-- cache-key: cdktf-0.20.9 input-5fc8f9b74ea6f1b84355cc86c632e105d4e2b0bf42fdaa38f1076a0043630327 -->

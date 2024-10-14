@@ -236,4 +236,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-75088d3c6c39c44bd5079c79ed51ebfb158cf71471233214605cf723a3b61c92 -->
+<!-- cache-key: cdktf-0.20.9 input-75088d3c6c39c44bd5079c79ed51ebfb158cf71471233214605cf723a3b61c92 -->

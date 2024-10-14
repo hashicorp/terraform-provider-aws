@@ -106,4 +106,4 @@ Using `terraform import`, import S3 Access Grants instances using the `accountId
 % terraform import aws_s3control_access_grants_instance.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b93dc63072425c740c37ee25cbe238215ca8b10e57f9a55f7f1d1276607f9789 -->
+<!-- cache-key: cdktf-0.20.9 input-b93dc63072425c740c37ee25cbe238215ca8b10e57f9a55f7f1d1276607f9789 -->

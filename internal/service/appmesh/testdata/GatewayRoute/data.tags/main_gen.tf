@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_appmesh_gateway_route" "test" {
   name                 = aws_appmesh_gateway_route.test.name
   mesh_name            = aws_appmesh_gateway_route.test.mesh_name

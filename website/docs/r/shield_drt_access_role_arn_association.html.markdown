@@ -16,8 +16,12 @@ For more information see [Configure AWS SRT Support](https://docs.aws.amazon.com
 ### Basic Usage
 
 ```terraform
-resource "aws_iam_role" "test" {
-  name = var.aws_shield_drt_access_role_arn
+resource "aws_shield_drt_access_role_arn_association" "example" {
+  role_arn = aws_iam_role.example.arn
+}
+
+resource "aws_iam_role" "example" {
+  name = "example-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -33,13 +37,9 @@ resource "aws_iam_role" "test" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
+resource "aws_iam_role_policy_attachment" "example" {
+  role       = aws_iam_role.example.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
-}
-
-resource "aws_shield_drt_access_role_arn_association" "test" {
-  role_arn = aws_iam_role.test.arn
 }
 ```
 

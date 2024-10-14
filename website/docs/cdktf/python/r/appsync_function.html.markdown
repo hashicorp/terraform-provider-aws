@@ -150,4 +150,4 @@ Using `terraform import`, import `aws_appsync_function` using the AppSync API ID
 % terraform import aws_appsync_function.example xxxxx-yyyyy
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8a300575c15598cb9fb3033c9f121af555947649d923354ecc0b51630bf72444 -->
+<!-- cache-key: cdktf-0.20.9 input-8a300575c15598cb9fb3033c9f121af555947649d923354ecc0b51630bf72444 -->

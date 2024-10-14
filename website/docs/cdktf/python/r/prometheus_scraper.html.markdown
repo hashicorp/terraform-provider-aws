@@ -187,4 +187,4 @@ For example:
 % terraform import aws_prometheus_scraper.example s-0123abc-0000-0123-a000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5ba79328054772ce8673fb1f5c2bb61b9edab57d3b5063875b389e42fb5fecb4 -->
+<!-- cache-key: cdktf-0.20.9 input-5ba79328054772ce8673fb1f5c2bb61b9edab57d3b5063875b389e42fb5fecb4 -->

@@ -92,4 +92,4 @@ Using `terraform import`, import DynamoDB Kinesis Streaming Destinations using t
 % terraform import aws_dynamodb_kinesis_streaming_destination.example example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d0a54894e87b04c66f4b0385516446c2240689109ec043bf93470658fee0ec34 -->
+<!-- cache-key: cdktf-0.20.9 input-d0a54894e87b04c66f4b0385516446c2240689109ec043bf93470658fee0ec34 -->

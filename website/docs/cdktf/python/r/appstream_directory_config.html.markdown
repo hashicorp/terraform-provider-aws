@@ -81,4 +81,4 @@ Using `terraform import`, import `aws_appstream_directory_config` using the id. 
 % terraform import aws_appstream_directory_config.example directoryNameExample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cc4dcd0e21d4459a6f134b5283f0f40cf04088ba29d91cc8b5c68f07a92ceeb9 -->
+<!-- cache-key: cdktf-0.20.9 input-cc4dcd0e21d4459a6f134b5283f0f40cf04088ba29d91cc8b5c68f07a92ceeb9 -->

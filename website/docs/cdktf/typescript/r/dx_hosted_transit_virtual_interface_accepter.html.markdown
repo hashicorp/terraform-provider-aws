@@ -131,4 +131,4 @@ Using `terraform import`, import Direct Connect hosted transit virtual interface
 % terraform import aws_dx_hosted_transit_virtual_interface_accepter.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-11153e84fd4c6aad81c1acf38c978286aaac606a6d4e54cc6058708bc8cb04ba -->
+<!-- cache-key: cdktf-0.20.9 input-11153e84fd4c6aad81c1acf38c978286aaac606a6d4e54cc6058708bc8cb04ba -->

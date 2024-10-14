@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `lastUpdatedTime` - Last time database was updated.
 * `tableCount` -  Total number of tables in the Timestream database.
 
-<!-- cache-key: cdktf-0.20.1 input-09f00a2fd4d9fce1e8e04daeb035e6aa811517fe8fcd6ee09f5600b143473d33 -->
+<!-- cache-key: cdktf-0.20.9 input-09f00a2fd4d9fce1e8e04daeb035e6aa811517fe8fcd6ee09f5600b143473d33 -->

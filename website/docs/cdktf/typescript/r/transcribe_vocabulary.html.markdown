@@ -122,4 +122,4 @@ Using `terraform import`, import Transcribe Vocabulary using the `vocabularyName
 % terraform import aws_transcribe_vocabulary.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4a63881191c0f51840ddf42c0326273b5b41ebbdda248795a18439aec52f460c -->
+<!-- cache-key: cdktf-0.20.9 input-4a63881191c0f51840ddf42c0326273b5b41ebbdda248795a18439aec52f460c -->

@@ -159,4 +159,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the environment (e.g., `ssh` or `ec2`).
 
-<!-- cache-key: cdktf-0.20.1 input-bf29aa87e91680d6409c49045f078211230a30d2b90d0276e519038e29cdc43b -->
+<!-- cache-key: cdktf-0.20.9 input-bf29aa87e91680d6409c49045f078211230a30d2b90d0276e519038e29cdc43b -->

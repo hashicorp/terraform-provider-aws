@@ -83,7 +83,7 @@ func testAccCheckVaultLockConfigurationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+			_, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -100,26 +100,22 @@ func testAccCheckVaultLockConfigurationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVaultLockConfigurationExists(ctx context.Context, name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultLockConfigurationExists(ctx context.Context, n string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Vault Lock Configuration ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+		output, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*vault = *output
+		*v = *output
 
 		return nil
 	}

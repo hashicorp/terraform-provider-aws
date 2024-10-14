@@ -42,4 +42,4 @@ This data source exports the following attributes in addition to the arguments a
     * `model_arn` - The ARN of the custom model.
     * `model_name` - The name of the custom model.
 
-<!-- cache-key: cdktf-0.20.1 input-acd462c13bd8aa9fa563b4fb867f73096848d37f59305799b2a1a45869feaff2 -->
+<!-- cache-key: cdktf-0.20.9 input-acd462c13bd8aa9fa563b4fb867f73096848d37f59305799b2a1a45869feaff2 -->

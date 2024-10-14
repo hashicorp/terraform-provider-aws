@@ -94,4 +94,4 @@ Using `terraform import`, import phone numbers using the `id`. For example:
 % terraform import aws_pinpointsmsvoicev2_phone_number.example phone-abcdef0123456789abcdef0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-aa6d29e97ac5831ac317b89bec1a39167aa47708480303b888683e022b312dc3 -->
+<!-- cache-key: cdktf-0.20.9 input-aa6d29e97ac5831ac317b89bec1a39167aa47708480303b888683e022b312dc3 -->

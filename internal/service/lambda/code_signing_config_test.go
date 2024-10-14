@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,7 +27,10 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 	var conf awstypes.CodeSigningConfig
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
@@ -57,7 +61,10 @@ func TestAccLambdaCodeSigningConfig_disappears(t *testing.T) {
 	var conf awstypes.CodeSigningConfig
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
@@ -74,13 +81,65 @@ func TestAccLambdaCodeSigningConfig_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLambdaCodeSigningConfig_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_code_signing_config.code_signing_config"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var conf awstypes.CodeSigningConfig
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodeSigningConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodeSigningConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccCodeSigningConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaCodeSigningConfig_updatePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
 	var conf awstypes.CodeSigningConfig
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
@@ -117,7 +176,10 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 	var conf awstypes.CodeSigningConfig
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
@@ -220,6 +282,47 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 
   description = "Code Signing Config for test account"
 }`
+}
+
+func testAccCodeSigningConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_signer_signing_profile" "test" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_lambda_code_signing_config" "code_signing_config" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      aws_signer_signing_profile.test.version_arn,
+    ]
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccCodeSigningConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_signer_signing_profile" "test" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_lambda_code_signing_config" "code_signing_config" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      aws_signer_signing_profile.test.version_arn,
+    ]
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccCodeSigningConfigConfig_updatePublishers() string {

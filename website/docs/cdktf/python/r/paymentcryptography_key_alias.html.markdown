@@ -91,4 +91,4 @@ Using `terraform import`, import Payment Cryptography Control Plane Key Alias us
 % terraform import aws_paymentcryptography_key_alias.example alias/4681482429376900170
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-141e49e545d7faaf02295cdbf1b52210b11bc31ee05c4aa246832f8600067649 -->
+<!-- cache-key: cdktf-0.20.9 input-141e49e545d7faaf02295cdbf1b52210b11bc31ee05c4aa246832f8600067649 -->

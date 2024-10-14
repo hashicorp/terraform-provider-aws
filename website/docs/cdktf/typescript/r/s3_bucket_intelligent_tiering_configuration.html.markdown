@@ -150,4 +150,4 @@ Using `terraform import`, import S3 bucket intelligent tiering configurations us
 % terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-edbf222c0509de935ae7e968f1135a975907d699aec103595f6bbe9c75bcbff7 -->
+<!-- cache-key: cdktf-0.20.9 input-edbf222c0509de935ae7e968f1135a975907d699aec103595f6bbe9c75bcbff7 -->

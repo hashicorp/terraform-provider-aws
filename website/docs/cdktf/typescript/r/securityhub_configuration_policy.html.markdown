@@ -80,16 +80,12 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { SecurityhubConfigurationPolicy } from "./.gen/providers/aws/securityhub-configuration-policy";
-interface MyConfig {
-  enabledStandardArns: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     new SecurityhubConfigurationPolicy(this, "disabled", {
       configurationPolicy: {
         serviceEnabled: false,
-        enabledStandardArns: config.enabledStandardArns,
       },
       dependsOn: [example],
       description: "This is an example of disabled configuration policy",
@@ -254,4 +250,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_configuration_policy.example "00000000-1111-2222-3333-444444444444"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-721ffba1ee84815bfddcee09500eede2e0b1933a072787923a97146e5d21cdc2 -->
+<!-- cache-key: cdktf-0.20.9 input-721ffba1ee84815bfddcee09500eede2e0b1933a072787923a97146e5d21cdc2 -->

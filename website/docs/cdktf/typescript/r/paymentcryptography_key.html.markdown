@@ -136,4 +136,4 @@ Using `terraform import`, import Payment Cryptography Control Plane Key using th
 % terraform import aws_paymentcryptography_key.example arn:aws:payment-cryptography:us-east-1:123456789012:key/qtbojf64yshyvyzf
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b5c55e78824f5c938bd7193d8d118d0a6fd452542fa086135e7091b318adc200 -->
+<!-- cache-key: cdktf-0.20.9 input-b5c55e78824f5c938bd7193d8d118d0a6fd452542fa086135e7091b318adc200 -->

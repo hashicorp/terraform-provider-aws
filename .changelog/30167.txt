@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_route53_resolver_endpoint: Add `resolver_endpoint_type` argument
+resource/aws_route53_resolver_rule: Add `ipv6` optional argument to the `target_ip` object
+```

@@ -159,4 +159,4 @@ Using `terraform import`, import DataZone Glossary Term using a comma-delimited 
 % terraform import aws_datazone_glossary_term.example domain-id,glossary-term-id,glossary-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c37c106222a8610b78c71f287b61a97f73ed65e0fcf11dc9955f4ce2e9b9506c -->
+<!-- cache-key: cdktf-0.20.9 input-c37c106222a8610b78c71f287b61a97f73ed65e0fcf11dc9955f4ce2e9b9506c -->

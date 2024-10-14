@@ -19,30 +19,54 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newLogicallyAirGappedVaultResource,
+			Name:    "Logically Air Gapped Vault",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newRestoreTestingPlanResource,
+			Name:    "Restore Testing Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newRestoreTestingSelectionResource,
+			Name:    "Restore Testing Plan Selection",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceFramework,
+			Factory:  dataSourceFramework,
 			TypeName: "aws_backup_framework",
+			Name:     "Framework",
 		},
 		{
-			Factory:  DataSourcePlan,
+			Factory:  dataSourcePlan,
 			TypeName: "aws_backup_plan",
+			Name:     "Plan",
 		},
 		{
-			Factory:  DataSourceReportPlan,
+			Factory:  dataSourceReportPlan,
 			TypeName: "aws_backup_report_plan",
+			Name:     "Report Plan",
 		},
 		{
-			Factory:  DataSourceSelection,
+			Factory:  dataSourceSelection,
 			TypeName: "aws_backup_selection",
+			Name:     "Selection",
 		},
 		{
-			Factory:  DataSourceVault,
+			Factory:  dataSourceVault,
 			TypeName: "aws_backup_vault",
+			Name:     "Vault",
 		},
 	}
 }
@@ -50,7 +74,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceFramework,
+			Factory:  resourceFramework,
 			TypeName: "aws_backup_framework",
 			Name:     "Framework",
 			Tags: &types.ServicePackageResourceTags{
@@ -58,11 +82,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalSettings,
+			Factory:  resourceGlobalSettings,
 			TypeName: "aws_backup_global_settings",
+			Name:     "Global Settings",
 		},
 		{
-			Factory:  ResourcePlan,
+			Factory:  resourcePlan,
 			TypeName: "aws_backup_plan",
 			Name:     "Plan",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,11 +95,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRegionSettings,
+			Factory:  resourceRegionSettings,
 			TypeName: "aws_backup_region_settings",
+			Name:     "Region Settings",
 		},
 		{
-			Factory:  ResourceReportPlan,
+			Factory:  resourceReportPlan,
 			TypeName: "aws_backup_report_plan",
 			Name:     "Report Plan",
 			Tags: &types.ServicePackageResourceTags{
@@ -82,11 +108,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSelection,
+			Factory:  resourceSelection,
 			TypeName: "aws_backup_selection",
+			Name:     "Selection",
 		},
 		{
-			Factory:  ResourceVault,
+			Factory:  resourceVault,
 			TypeName: "aws_backup_vault",
 			Name:     "Vault",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,16 +121,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVaultLockConfiguration,
+			Factory:  resourceVaultLockConfiguration,
 			TypeName: "aws_backup_vault_lock_configuration",
+			Name:     "Vault Lock Configuration",
 		},
 		{
-			Factory:  ResourceVaultNotifications,
+			Factory:  resourceVaultNotifications,
 			TypeName: "aws_backup_vault_notifications",
+			Name:     "Vault Notifications",
 		},
 		{
-			Factory:  ResourceVaultPolicy,
+			Factory:  resourceVaultPolicy,
 			TypeName: "aws_backup_vault_policy",
+			Name:     "Vault Policy",
 		},
 	}
 }

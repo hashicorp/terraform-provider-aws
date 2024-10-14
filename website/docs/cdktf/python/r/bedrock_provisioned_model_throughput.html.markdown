@@ -74,4 +74,4 @@ Using `terraform import`, import Provisioned Throughput using the `provisioned_m
 % terraform import aws_bedrock_provisioned_model_throughput.example arn:aws:bedrock:us-west-2:123456789012:provisioned-model/1y5n57gh5y2e
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-11ada04f321d0194ae987736c014cc7adcb12d4589d81e2b4f9e4d6e267d1642 -->
+<!-- cache-key: cdktf-0.20.9 input-11ada04f321d0194ae987736c014cc7adcb12d4589d81e2b4f9e4d6e267d1642 -->

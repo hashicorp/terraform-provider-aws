@@ -101,4 +101,4 @@ Using `terraform import`, import Athena Prepared Statement using the `WORKGROUP-
 % terraform import aws_athena_prepared_statement.example 12345abcde/example 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f9448be709591784d5efcdb3a1f07a5bb6778cf5a1950bdedc990f59ba26a3f2 -->
+<!-- cache-key: cdktf-0.20.9 input-f9448be709591784d5efcdb3a1f07a5bb6778cf5a1950bdedc990f59ba26a3f2 -->

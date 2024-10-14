@@ -28,6 +28,7 @@ import (
 // @SDKResource("aws_medialive_input_security_group", name="Input Security Group")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
+// @Testing(generator=false)
 func ResourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,

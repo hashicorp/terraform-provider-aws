@@ -64,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `certificate_chain` - Certificates forming the requested ACM-issued certificate's chain of trust. The chain consists of the certificate of the issuing CA and the intermediate certificates of any other subordinate CAs.
 * `tags` - Mapping of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-96a7dcde6213ce97cb9609786e41d50a53017448d4bbff7e905095220a7aeb48 -->
+<!-- cache-key: cdktf-0.20.9 input-96a7dcde6213ce97cb9609786e41d50a53017448d4bbff7e905095220a7aeb48 -->

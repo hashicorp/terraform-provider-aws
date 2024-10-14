@@ -11,8 +11,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfplancheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,6 +55,7 @@ func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "api_schema.0.payload"),
 					resource.TestCheckResourceAttr(resourceName, "api_schema.0.s3.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
 				),
 			},
 			{
@@ -56,6 +63,57 @@ func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgentActionGroup_upgradeToPrepareAgent(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_action_group.test"
+	var v awstypes.AgentActionGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		CheckDestroy: testAccCheckAgentActionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.69.0",
+					},
+				},
+				Config: testAccAgentActionGroupConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("prepare_agent")),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAgentActionGroupConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New("prepare_agent"), knownvalue.Null(), knownvalue.Bool(true)),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("prepare_agent"), knownvalue.Bool(true)),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})

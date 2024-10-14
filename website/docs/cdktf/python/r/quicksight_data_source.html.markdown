@@ -259,4 +259,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c03af6ff31ed75df225f166782f3175243a0d74ce90961f6621fe586d1eded0b -->
+<!-- cache-key: cdktf-0.20.9 input-c03af6ff31ed75df225f166782f3175243a0d74ce90961f6621fe586d1eded0b -->

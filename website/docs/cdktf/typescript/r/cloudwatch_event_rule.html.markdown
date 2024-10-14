@@ -124,4 +124,4 @@ Using `terraform import`, import EventBridge Rules using the `event_bus_name/rul
 % terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1edad67baf5a07ed69fb4e4fec186b1cdb993c657170cf34c502b05f9a833823 -->
+<!-- cache-key: cdktf-0.20.9 input-1edad67baf5a07ed69fb4e4fec186b1cdb993c657170cf34c502b05f9a833823 -->

@@ -96,4 +96,4 @@ Using `terraform import`, import API Gateway documentation_parts using `REST-API
 % terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-93006cef8f4099ce7b8423d2d22b0e24f5bef35342f3992a61358ae48aaf185d -->
+<!-- cache-key: cdktf-0.20.9 input-93006cef8f4099ce7b8423d2d22b0e24f5bef35342f3992a61358ae48aaf185d -->

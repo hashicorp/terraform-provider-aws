@@ -93,4 +93,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_rotation` using the 
 % terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-981ee22e0fa2a512405fc3422d9ccdc84ffe4cca74a3f247700c467d89539716 -->
+<!-- cache-key: cdktf-0.20.9 input-981ee22e0fa2a512405fc3422d9ccdc84ffe4cca74a3f247700c467d89539716 -->

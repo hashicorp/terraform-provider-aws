@@ -70,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the table.
 * `tableStatus` - Current state of table.
 
-<!-- cache-key: cdktf-0.20.1 input-64cce03e034d1817777cb7a66a12bd88fb6b9a77007d581d6d9dc6359893b48a -->
+<!-- cache-key: cdktf-0.20.9 input-64cce03e034d1817777cb7a66a12bd88fb6b9a77007d581d6d9dc6359893b48a -->

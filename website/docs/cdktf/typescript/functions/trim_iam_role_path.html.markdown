@@ -36,4 +36,4 @@ trim_iam_role_path(arn string) string
 
 1. `arn` (String) IAM role Amazon Resource Name (ARN).
 
-<!-- cache-key: cdktf-0.20.1 input-4519af72369fad9e53d7c2896a6c397d364baba724441cbbfcab64ccf0fb0ff2 -->
+<!-- cache-key: cdktf-0.20.9 input-4519af72369fad9e53d7c2896a6c397d364baba724441cbbfcab64ccf0fb0ff2 -->

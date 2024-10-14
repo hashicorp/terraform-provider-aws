@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - Amazon Resource Name (ARN) of Glue Registry.
 * `description` - A description of the registry.
 
-<!-- cache-key: cdktf-0.20.1 input-e9eb8b4e6e8262dd3c80922987d4f0253afa9a1750108733d9da020bcd0e6760 -->
+<!-- cache-key: cdktf-0.20.9 input-e9eb8b4e6e8262dd3c80922987d4f0253afa9a1750108733d9da020bcd0e6760 -->

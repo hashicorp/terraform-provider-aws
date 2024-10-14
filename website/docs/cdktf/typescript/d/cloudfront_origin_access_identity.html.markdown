@@ -58,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
    access identity, which you use when giving the origin access identity read
    permission to an object in Amazon S3.
 
-<!-- cache-key: cdktf-0.20.1 input-a7cd9b1786140626f45007d44ca5d963414beca09e6e286c1818e2e771206508 -->
+<!-- cache-key: cdktf-0.20.9 input-a7cd9b1786140626f45007d44ca5d963414beca09e6e286c1818e2e771206508 -->

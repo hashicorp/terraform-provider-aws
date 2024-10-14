@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `clone_url_http` - URL to use for cloning the repository over HTTPS.
 * `clone_url_ssh` - URL to use for cloning the repository over SSH.
 
-<!-- cache-key: cdktf-0.20.1 input-b16ab4c6988819daea4a817d385a8fcb8fc011d4cde702f73a6773161f2a029a -->
+<!-- cache-key: cdktf-0.20.9 input-b16ab4c6988819daea4a817d385a8fcb8fc011d4cde702f73a6773161f2a029a -->

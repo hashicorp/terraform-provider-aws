@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_route_table" "test" {
   route_table_id = aws_route_table.test.id
 }
@@ -13,12 +14,6 @@ resource "aws_route_table" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_tags" {

@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the AWS App Runner service HostedZoneId in the selected region.
 
-<!-- cache-key: cdktf-0.20.1 input-4733cac38efe0f9c496e6811289bffebba0378b3b737ce90cd79e01055e37459 -->
+<!-- cache-key: cdktf-0.20.9 input-4733cac38efe0f9c496e6811289bffebba0378b3b737ce90cd79e01055e37459 -->

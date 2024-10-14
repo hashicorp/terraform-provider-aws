@@ -1470,7 +1470,7 @@ data "aws_iam_policy_document" "managed_instance_scaling_test_policy" {
     ]
 
     resources = [
-      "${aws_s3_bucket.managed_instance_scaling_test.arn}",
+      aws_s3_bucket.managed_instance_scaling_test.arn,
       "${aws_s3_bucket.managed_instance_scaling_test.arn}/*",
     ]
   }

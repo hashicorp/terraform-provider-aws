@@ -108,4 +108,4 @@ Using `terraform import`, import ECR Public Repositories using the `repository_n
 % terraform import aws_ecrpublic_repository.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0eb50922129c99699d4703ec9d9700079393eb47686643926f7ecccc4d057b7c -->
+<!-- cache-key: cdktf-0.20.9 input-0eb50922129c99699d4703ec9d9700079393eb47686643926f7ecccc4d057b7c -->

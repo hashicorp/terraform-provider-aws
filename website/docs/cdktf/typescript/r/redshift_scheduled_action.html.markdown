@@ -207,4 +207,4 @@ Using `terraform import`, import Redshift Scheduled Action using the `name`. For
 % terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bb46dc91c30f3bd0e92ef6f30fbb8c2c42b66b25bd27c78c262e5e212679b4d1 -->
+<!-- cache-key: cdktf-0.20.9 input-bb46dc91c30f3bd0e92ef6f30fbb8c2c42b66b25bd27c78c262e5e212679b4d1 -->

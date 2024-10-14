@@ -143,4 +143,4 @@ Using `terraform import`, import `aws_imagebuilder_image` resources using the Am
 % terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cbb9db80d9b66120d07dffb432829c9d9219308f5d9c07fc66965f6a0724ebf8 -->
+<!-- cache-key: cdktf-0.20.9 input-cbb9db80d9b66120d07dffb432829c9d9219308f5d9c07fc66965f6a0724ebf8 -->

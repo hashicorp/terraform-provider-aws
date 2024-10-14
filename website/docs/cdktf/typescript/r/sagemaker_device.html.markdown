@@ -93,4 +93,4 @@ Using `terraform import`, import SageMaker Devices using the `device-fleet-name/
 % terraform import aws_sagemaker_device.example my-fleet/my-device
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-baa6c522eea0c7f933208c4fefa045d0c6a31387586c39061b3b1a1c768ab3ca -->
+<!-- cache-key: cdktf-0.20.9 input-baa6c522eea0c7f933208c4fefa045d0c6a31387586c39061b3b1a1c768ab3ca -->

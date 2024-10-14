@@ -93,4 +93,4 @@ Using `terraform import`, import Service Discovery Private DNS Namespace using t
 % terraform import aws_service_discovery_private_dns_namespace.example 0123456789:vpc-123345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f146701ebde1d502a5742b49eee835afec6daf02f5ca55955ff340c638c7c5b -->
+<!-- cache-key: cdktf-0.20.9 input-6f146701ebde1d502a5742b49eee835afec6daf02f5ca55955ff340c638c7c5b -->

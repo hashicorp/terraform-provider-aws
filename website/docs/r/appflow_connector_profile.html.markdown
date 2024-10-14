@@ -42,7 +42,7 @@ resource "aws_iam_role" "example" {
 }
 
 resource "aws_s3_bucket" "example" {
-  bucket = "example_bucket"
+  bucket = "example-bucket"
 }
 
 resource "aws_redshift_cluster" "example" {

@@ -8,20 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupSelection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var selection1 backup.GetBackupSelectionOutput
+	var v awstypes.BackupSelection
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -34,7 +34,7 @@ func TestAccBackupSelection_basic(t *testing.T) {
 			{
 				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
+					testAccCheckSelectionExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -49,7 +49,7 @@ func TestAccBackupSelection_basic(t *testing.T) {
 
 func TestAccBackupSelection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var selection1 backup.GetBackupSelectionOutput
+	var v awstypes.BackupSelection
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -62,34 +62,8 @@ func TestAccBackupSelection_disappears(t *testing.T) {
 			{
 				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
+					testAccCheckSelectionExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceSelection(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccBackupSelection_Disappears_backupPlan(t *testing.T) {
-	ctx := acctest.Context(t)
-	var selection1 backup.GetBackupSelectionOutput
-	resourceName := "aws_backup_selection.test"
-	backupPlanResourceName := "aws_backup_plan.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSelectionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceSelection(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourcePlan(), backupPlanResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,7 +73,7 @@ func TestAccBackupSelection_Disappears_backupPlan(t *testing.T) {
 
 func TestAccBackupSelection_withTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var selection1 backup.GetBackupSelectionOutput
+	var v awstypes.BackupSelection
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -112,7 +86,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 			{
 				Config: testAccSelectionConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
+					testAccCheckSelectionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", acctest.Ct2),
 				),
 			},
@@ -128,7 +102,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 
 func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var selection1 backup.GetBackupSelectionOutput
+	var v awstypes.BackupSelection
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -141,7 +115,7 @@ func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 			{
 				Config: testAccSelectionConfig_conditionsTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
+					testAccCheckSelectionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", acctest.Ct1),
@@ -161,7 +135,7 @@ func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 
 func TestAccBackupSelection_withResources(t *testing.T) {
 	ctx := acctest.Context(t)
-	var selection1 backup.GetBackupSelectionOutput
+	var v awstypes.BackupSelection
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -174,7 +148,7 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 			{
 				Config: testAccSelectionConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
+					testAccCheckSelectionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.Ct2),
 				),
 			},
@@ -190,7 +164,7 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 
 func TestAccBackupSelection_withNotResources(t *testing.T) {
 	ctx := acctest.Context(t)
-	var selection1 backup.GetBackupSelectionOutput
+	var v awstypes.BackupSelection
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -203,7 +177,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 			{
 				Config: testAccSelectionConfig_notResources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
+					testAccCheckSelectionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "not_resources.#", acctest.Ct1),
 				),
 			},
@@ -219,7 +193,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 
 func TestAccBackupSelection_updateTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var selection1, selection2 backup.GetBackupSelectionOutput
+	var v1, v2 awstypes.BackupSelection
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -232,14 +206,13 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 			{
 				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection1),
+					testAccCheckSelectionExists(ctx, resourceName, &v1),
 				),
 			},
 			{
 				Config: testAccSelectionConfig_updateTag(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSelectionExists(ctx, resourceName, &selection2),
-					testAccCheckSelectionRecreated(t, &selection1, &selection2),
+					testAccCheckSelectionExists(ctx, resourceName, &v2),
 				),
 			},
 			{
@@ -255,61 +228,46 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 func testAccCheckSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_selection" {
 				continue
 			}
 
-			input := &backup.GetBackupSelectionInput{
-				BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),
-				SelectionId:  aws.String(rs.Primary.ID),
+			_, err := tfbackup.FindSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["plan_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			resp, err := conn.GetBackupSelection(ctx, input)
-
-			if err == nil {
-				if *resp.SelectionId == rs.Primary.ID {
-					return fmt.Errorf("Selection '%s' was not deleted properly", rs.Primary.ID)
-				}
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Backup Selection %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSelectionExists(ctx context.Context, name string, selection *backup.GetBackupSelectionOutput) resource.TestCheckFunc {
+func testAccCheckSelectionExists(ctx context.Context, n string, v *awstypes.BackupSelection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-		input := &backup.GetBackupSelectionInput{
-			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),
-			SelectionId:  aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetBackupSelection(ctx, input)
+		output, err := tfbackup.FindSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["plan_id"], rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*selection = *output
+		*v = *output
 
-		return nil
-	}
-}
-
-func testAccCheckSelectionRecreated(t *testing.T,
-	before, after *backup.GetBackupSelectionOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *before.SelectionId == *after.SelectionId {
-			t.Fatalf("Expected change of Backup Selection IDs, but both were %s", *before.SelectionId)
-		}
 		return nil
 	}
 }

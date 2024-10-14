@@ -279,7 +279,7 @@ This resource supports the following arguments:
 ~> **NOTE:** This block is only valid for a Network Load Balancer (NLB) target group when `protocol` is `TCP` or `TLS`.
 
 * `enableUnhealthyConnectionTermination` - (Optional) Indicates whether the load balancer terminates connections to unhealthy targets. Possible values are `true` or `false`. Default: `true`.
-* `unhealthy_draining_interval` - (Optional) Indicates the time to wait for in-flight requests to complete when a target becomes unhealthy. The range is `0-360000`. This value has to be set only if `enableUnhealthyConnectionTermination` is set to false. Default: `0`.
+* `unhealthyDrainingInterval` - (Optional) Indicates the time to wait for in-flight requests to complete when a target becomes unhealthy. The range is `0-360000`. This value has to be set only if `enableUnhealthyConnectionTermination` is set to false. Default: `0`.
 
 ### target_group_health
 
@@ -347,4 +347,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d3bea472512d80f127efc0c75eb47f82181185cc60e62778c6dbf5bb4b6aa3fb -->
+<!-- cache-key: cdktf-0.20.9 input-d3bea472512d80f127efc0c75eb47f82181185cc60e62778c6dbf5bb4b6aa3fb -->

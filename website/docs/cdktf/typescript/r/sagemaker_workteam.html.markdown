@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
         {
           cognitoMemberDefinition: {
             clientId: Token.asString(awsCognitoUserPoolClientExample.id),
-            userGroup: Token.asString(awsCognitoUserGroupExample.id),
+            userGroup: Token.asString(awsCognitoUserGroupExample.name),
             userPool: Token.asString(
               awsCognitoUserPoolDomainExample.userPoolId
             ),
@@ -85,8 +85,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `description` - (Required) A description of the work team.
-* `workforceName` - (Required) The name of the Workteam (must be unique).
-* `workteamName` - (Required) The name of the workforce.
+* `workforceName` - (Required) The name of the workforce.
+* `workteamName` - (Required) The name of the Workteam (must be unique).
 * `memberDefinition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognitoMemberDefinition`. For workforces created using your own OIDC identity provider (IdP) use `oidcMemberDefinition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
 * `notificationConfiguration` - (Optional) Configures notification of workers regarding available or expiring work items. see [Notification Configuration](#notification-configuration) details below.
 * `workerAccessConfiguration` - (Optional) Use this optional parameter to constrain access to an Amazon S3 resource based on the IP address using supported IAM global condition keys. The Amazon S3 resource is accessed in the worker portal using a Amazon S3 presigned URL. see [Worker Access Configuration](#worker-access-configuration) details below.
@@ -161,4 +161,4 @@ Using `terraform import`, import SageMaker Workteams using the `workteamName`. F
 % terraform import aws_sagemaker_workteam.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ff6a786e9c3394fb79bd4ef7cf52b0575c2ff64b4a93d504f6ea4709dcf17b1a -->
+<!-- cache-key: cdktf-0.20.9 input-9ac358db98aebbfae557b0945f65f02166f5e0693531cf2251b875b077a7ea64 -->

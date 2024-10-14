@@ -95,4 +95,4 @@ Using `terraform import`, import `aws_detective_member` using the ARN of the gra
 % terraform import aws_detective_member.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4108f05240e0c0f62d7dfe1e0039f5231d9901dad3b7104a04e9f1121a124644 -->
+<!-- cache-key: cdktf-0.20.9 input-4108f05240e0c0f62d7dfe1e0039f5231d9901dad3b7104a04e9f1121a124644 -->

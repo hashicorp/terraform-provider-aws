@@ -65,4 +65,4 @@ are exported:
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
 [4]: https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html
 
-<!-- cache-key: cdktf-0.20.1 input-fa9e8af044240db88bc0177862ab514d3d3abe026c71cbc8ce4c90ad35bdc2bd -->
+<!-- cache-key: cdktf-0.20.9 input-fa9e8af044240db88bc0177862ab514d3d3abe026c71cbc8ce4c90ad35bdc2bd -->

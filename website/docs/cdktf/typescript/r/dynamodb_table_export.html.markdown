@@ -162,4 +162,4 @@ Using `terraform import`, import DynamoDB table exports using the `arn`. For exa
 % terraform import aws_dynamodb_table_export.example arn:aws:dynamodb:us-west-2:12345678911:table/my-table-1/export/01580735656614-2c2f422e
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1150f6d90f64d16dd25f0625e0075c077e3f1e010161383624d21123b6751cb6 -->
+<!-- cache-key: cdktf-0.20.9 input-1150f6d90f64d16dd25f0625e0075c077e3f1e010161383624d21123b6751cb6 -->

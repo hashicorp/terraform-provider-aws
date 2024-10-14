@@ -40,7 +40,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct0),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),

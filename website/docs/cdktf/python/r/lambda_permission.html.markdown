@@ -52,7 +52,7 @@ class MyConvertedCode(TerraformStack):
             function_name="lambda_function_name",
             handler="exports.handler",
             role=iam_for_lambda.arn,
-            runtime="nodejs16.x"
+            runtime="nodejs20.x"
         )
         test_alias = LambdaAlias(self, "test_alias",
             description="a sample description",
@@ -109,7 +109,7 @@ class MyConvertedCode(TerraformStack):
             function_name="lambda_called_from_sns",
             handler="exports.handler",
             role=default_var.arn,
-            runtime="python3.7"
+            runtime="python3.12"
         )
         aws_sns_topic_default = SnsTopic(self, "default_2",
             name="call-lambda-maybe"
@@ -203,7 +203,7 @@ class MyConvertedCode(TerraformStack):
             function_name="lambda_called_from_cloudwatch_logs",
             handler="exports.handler",
             role=Token.as_string(aws_iam_role_default.arn),
-            runtime="python3.7"
+            runtime="python3.12"
         )
         aws_lambda_permission_logging = LambdaPermission(self, "logging_4",
             action="lambda:InvokeFunction",
@@ -353,4 +353,4 @@ Using `terraform import`, import Lambda permission statements using function_nam
 % terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d4a2087f351c8ca4a69a59ef6d0c60e38de8ab53ebfbaae17642d9753dcbe762 -->
+<!-- cache-key: cdktf-0.20.9 input-cc2da36a2a783465b1859d2644dd511fddd678311843151f41d2c8287a0c1159 -->

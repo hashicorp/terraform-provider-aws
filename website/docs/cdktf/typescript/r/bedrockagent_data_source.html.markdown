@@ -88,6 +88,7 @@ The `serverSideEncryptionConfiguration` configuration block supports the followi
 The `vectorIngestionConfiguration` configuration block supports the following arguments:
 
 * `chunkingConfiguration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunkingConfiguration` block](#chunking_configuration-block) for details.
+* `customTransformationConfiguration`- (Optional, Forces new resource) Configuration for custom transformation of data source documents.
 * `parsingConfiguration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsingConfiguration` block](#parsing_configuration-block) for details.
 
 ### `chunkingConfiguration` block
@@ -126,6 +127,38 @@ The `semanticChunkingConfiguration` block supports the following arguments:
 * `breakpointPercentileThreshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
 * `bufferSize` - (Required, Forces new resource) The buffer size.
 * `maxTokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+
+### `customTransformationConfiguration` block
+
+The `customTransformationConfiguration` block supports the following arguments:
+
+* `intermediateStorage` - (Required, Forces new resource) The intermediate storage for custom transformation.
+* `transformationFunction` - (Required) The configuration of transformation function.
+
+### `intermediateStorage` block
+
+The `intermediateStorage` block supports the following arguments:
+
+* `s3Location` - (Required, Forces new resource) Configuration block for intermedia S3 storage.
+
+### `s3Location` block
+
+The `s3Location` block supports the following arguments:
+
+* `uri` - (Required, Forces new resource) S3 URI for intermediate storage.
+
+### `transformationFunction` block
+
+The `transformationFunction` block supports the following arguments:
+
+* `stepToApply` - (Required, Forces new resource) Currently only `POST_CHUNKING` is supported.
+* `transformationLambdaConfiguration` - (Required, Forces new resource) The lambda configuration for custom transformation.
+
+### `transformationLambdaConfiguration` block
+
+The `transformationLambdaConfiguration` block supports the following arguments:
+
+* `lambdaArn` - (Required, Forces new resource) The ARN of the lambda to use for custom transformation.
 
 ### `parsingConfiguration` block
 
@@ -193,4 +226,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d07fd6429de9a5e4533bdf063c450d5cb798061251dc5f4c96fbdbef3bc56fc2 -->
+<!-- cache-key: cdktf-0.20.9 input-a6844c8d1576a70595f0eb27383ed66b24e7350d2c18bdf84a9bc5f9440c3698 -->

@@ -79,4 +79,4 @@ Using `terraform import`, import `aws_appsync_domain_name` using the AppSync dom
 % terraform import aws_appsync_domain_name.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c850eb2b8026013d6a49e351a9f3cc357c29b074be725be34e7d5f3683fad68c -->
+<!-- cache-key: cdktf-0.20.9 input-c850eb2b8026013d6a49e351a9f3cc357c29b074be725be34e7d5f3683fad68c -->

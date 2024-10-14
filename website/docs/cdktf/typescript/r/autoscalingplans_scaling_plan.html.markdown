@@ -287,4 +287,4 @@ Using `terraform import`, import Auto Scaling scaling plans using the `name`. Fo
 % terraform import aws_autoscalingplans_scaling_plan.example MyScale1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f67f35037f518287955e616d7a36d30ef67c9f228d87872a4d2e00fce74eaaef -->
+<!-- cache-key: cdktf-0.20.9 input-f67f35037f518287955e616d7a36d30ef67c9f228d87872a4d2e00fce74eaaef -->

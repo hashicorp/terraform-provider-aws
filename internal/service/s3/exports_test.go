@@ -37,6 +37,7 @@ var (
 	FindBucket                            = findBucket
 	FindBucketACL                         = findBucketACL
 	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
+	FindBucketLifecycleConfiguration      = findBucketLifecycleConfiguration
 	FindBucketNotificationConfiguration   = findBucketNotificationConfiguration
 	FindBucketPolicy                      = findBucketPolicy
 	FindBucketRequestPayment              = findBucketRequestPayment
@@ -45,7 +46,6 @@ var (
 	FindCORSRules                         = findCORSRules
 	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
 	FindInventoryConfiguration            = findInventoryConfiguration
-	FindLifecycleRules                    = findLifecycleRules
 	FindLoggingEnabled                    = findLoggingEnabled
 	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey

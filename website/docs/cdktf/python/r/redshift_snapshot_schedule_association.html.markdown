@@ -85,4 +85,4 @@ Using `terraform import`, import Redshift Snapshot Schedule Association using th
 % terraform import aws_redshift_snapshot_schedule_association.default tf-redshift-cluster/tf-redshift-snapshot-schedule
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cfbb9314d7e41451bce6ec8e24e4375625bd63ba89df980d70fe96df9cca5e41 -->
+<!-- cache-key: cdktf-0.20.9 input-cfbb9314d7e41451bce6ec8e24e4375625bd63ba89df980d70fe96df9cca5e41 -->

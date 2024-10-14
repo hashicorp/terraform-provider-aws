@@ -107,4 +107,4 @@ Using `terraform import`, import SSO Admin Trusted Token Issuer using the `id`. 
 % terraform import aws_ssoadmin_trusted_token_issuer.example arn:aws:sso::012345678901:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0900500b852bcc2cdb7068eab61e167d32b79c14f63d21b8cf4c9f90010fe17b -->
+<!-- cache-key: cdktf-0.20.9 input-0900500b852bcc2cdb7068eab61e167d32b79c14f63d21b8cf4c9f90010fe17b -->

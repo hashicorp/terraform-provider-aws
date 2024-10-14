@@ -46,7 +46,7 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Terraform acceptance test"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "verifiedpermissions", regexache.MustCompile(`policy-store/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "verifiedpermissions", regexache.MustCompile(`policy-store/.+$`)),
 				),
 			},
 			{

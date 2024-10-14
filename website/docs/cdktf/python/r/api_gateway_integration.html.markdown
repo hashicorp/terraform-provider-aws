@@ -115,7 +115,7 @@ class MyConvertedCode(TerraformStack):
             function_name="mylambda",
             handler="lambda.lambda_handler",
             role=role.arn,
-            runtime="python3.7",
+            runtime="python3.12",
             source_code_hash=Token.as_string(Fn.filebase64sha256("lambda.zip"))
         )
         method = ApiGatewayMethod(self, "method",
@@ -288,4 +288,4 @@ Using `terraform import`, import `aws_api_gateway_integration` using `REST-API-I
 % terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-81e6d697f00f0fcc748de8e3839b83773d2165b6d6901935697bcf51a913f03f -->
+<!-- cache-key: cdktf-0.20.9 input-460026c382945845558d8fe0d14937725abcc7db6f7b3678d3ac9f1bc7aaf4c0 -->

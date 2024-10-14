@@ -185,4 +185,4 @@ Using `terraform import`, import Configuration Recorder using the name. For exam
 % terraform import aws_config_configuration_recorder.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-abb2a30c6aaa0f7b0debfcd2ded1ca9be070019688f41914c9c15ae47a17cbc7 -->
+<!-- cache-key: cdktf-0.20.9 input-abb2a30c6aaa0f7b0debfcd2ded1ca9be070019688f41914c9c15ae47a17cbc7 -->

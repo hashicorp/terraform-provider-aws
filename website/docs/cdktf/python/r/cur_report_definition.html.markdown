@@ -89,4 +89,4 @@ Using `terraform import`, import Report Definitions using the `report_name`. For
 % terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fa8924e99b86f9384cb9b9234f6d564ca800826ccbe2a55d504b92db0ccfafef -->
+<!-- cache-key: cdktf-0.20.9 input-fa8924e99b86f9384cb9b9234f6d564ca800826ccbe2a55d504b92db0ccfafef -->

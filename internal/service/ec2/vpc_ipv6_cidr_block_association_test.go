@@ -39,6 +39,10 @@ func TestAccVPCIPv6CIDRBlockAssociation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
+					resource.TestCheckResourceAttr(resource1Name, "ip_source", "amazon"),
+					resource.TestCheckResourceAttr(resource2Name, "ip_source", "amazon"),
+					resource.TestCheckResourceAttr(resource1Name, "ipv6_address_attribute", "public"),
+					resource.TestCheckResourceAttr(resource2Name, "ipv6_address_attribute", "public"),
 					resource.TestCheckResourceAttr(resource1Name, "ipv6_pool", "Amazon"),
 					resource.TestCheckResourceAttr(resource2Name, "ipv6_pool", "Amazon"),
 				),

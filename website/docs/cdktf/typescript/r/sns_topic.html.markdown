@@ -183,4 +183,4 @@ Using `terraform import`, import SNS Topics using the topic `arn`. For example:
 % terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-48c72ff32a9fbe275d73ccac0295699a2829a7d556b8359da2df4433876d29c8 -->
+<!-- cache-key: cdktf-0.20.9 input-48c72ff32a9fbe275d73ccac0295699a2829a7d556b8359da2df4433876d29c8 -->

@@ -8330,6 +8330,34 @@ service "ssmsap" {
   brand                    = "AWS"
 }
 
+service "ssmquicksetup" {
+  cli_v2_command {
+    aws_cli_v2_command           = "ssm-quicksetup"
+    aws_cli_v2_command_no_dashes = "ssmquicksetup"
+  }
+
+  sdk {
+    id = "SSM QuickSetup"
+  }
+
+  names {
+    provider_name_upper = "SSMQuickSetup"
+    human_friendly      = "SSM Quick Setup"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConfigurationManagers"
+  }
+
+  resource_prefix {
+    correct = "aws_ssmquicksetup_"
+  }
+
+  provider_package_correct = "ssmquicksetup"
+  doc_prefix               = ["ssmquicksetup_"]
+  brand                    = "AWS"
+}
+
 service "sso" {
   sdk {
     id = "SSO"

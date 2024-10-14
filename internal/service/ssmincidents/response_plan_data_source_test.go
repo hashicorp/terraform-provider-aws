@@ -175,7 +175,7 @@ func testAccResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "tags.a", dataSourceName, "tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.b", dataSourceName, "tags.b"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`response-plan/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`response-plan/.+$`)),
 				),
 			},
 		},
