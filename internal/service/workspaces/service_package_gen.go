@@ -46,8 +46,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			},
 		},
 		{
-			Factory:  DataSourceImage,
+			Factory:  dataSourceImage,
 			TypeName: "aws_workspaces_image",
+			Name:     "Image",
 		},
 		{
 			Factory:  DataSourceWorkspace,
