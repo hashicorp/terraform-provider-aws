@@ -105,21 +105,18 @@ func (d *dataSourceKeyGroup) Schema(ctx context.Context, req datasource.SchemaRe
 			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"key_group_config": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"items": schema.ListAttribute{
-						ElementType: types.StringType,
-						Computed:    true,
-					},
-					names.AttrName: schema.StringAttribute{
-						Required: true,
-					},
-					names.AttrComment: schema.StringAttribute{
-						Optional: true,
-					},
-				},
+			names.AttrID: schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Computed: true,
+			},
+			"items": schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+			},
+			names.AttrComment: schema.StringAttribute{
+				Optional: true,
 			},
 		},
 	}
@@ -149,7 +146,7 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	// TIP: -- 3. Get information about a resource from AWS
-	out, err := findKeyGroupByID(ctx, conn, data.Name.ValueString())
+	out, err := findKeyGroupByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameKeyGroup, data.Name.String(), err),
@@ -160,7 +157,7 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 
 	// TIP: -- 4. Set the ID, arguments, and attributes
 	// Using a field name prefix allows mapping fields such as `KeyGroupId` to `ID`
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("KeyGroup"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.KeyGroup.KeyGroupConfig, &data, flex.WithFieldNamePrefix("KeyGroup"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -188,8 +185,8 @@ type dataSourceKeyGroupModel struct {
 	Etag    types.String `tfsdk:"etag"`
 	Items   types.List   `tfsdk:"items"`
 	Comment types.String `tfsdk:"comment"`
+	ID      types.String `tfsdk:"id"`
 	Name    types.String `tfsdk:"name"`
-	Type    types.String `tfsdk:"type"`
 }
 
 type complexArgumentModel struct {
