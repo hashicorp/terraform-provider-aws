@@ -27,7 +27,7 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBundleDataSourceConfig_basic("wsb-b0s22j3d7"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-b0s22j3d7"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.0.name", "PERFORMANCE"),
@@ -54,13 +54,13 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-df76rqys9"),
+				Config: testAccBundleDataSourceConfig_byOwnerName("Amazon", "Value with Ubuntu 22.04"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "bundle_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.0.name", "VALUE"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Value with Windows 10 and Office 2016"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Value with Ubuntu 22.04"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrOwner, "Amazon"),
 					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "root_storage.0.capacity", "80"),
