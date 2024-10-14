@@ -5,27 +5,31 @@ package workspaces
 
 import (
 	"context"
+	"errors"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_workspaces_directory", name="Directory")
 // @Tags(identifierAttribute="id")
-func ResourceDirectory() *schema.Resource {
+func resourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
 		ReadWithoutTimeout:   resourceDirectoryRead,
@@ -129,44 +133,44 @@ func ResourceDirectory() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_type_android": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 						"device_type_chromeos": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 						"device_type_ios": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 						"device_type_linux": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 						"device_type_osx": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 						"device_type_web": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 						"device_type_windows": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 						"device_type_zeroclient": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenAccessPropertyEnumValues(types.AccessPropertyValue("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
 						},
 					},
 				},
@@ -231,7 +235,10 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, DirectoryRegisterInvalidResourceStateTimeout,
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectory(ctx, input)
 		})
@@ -242,59 +249,60 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(directoryID)
 
-	_, err = WaitDirectoryRegistered(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) to register: %s", d.Id(), err)
+	if _, err := waitDirectoryRegistered(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("self_service_permissions"); ok {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", directoryID)
-		_, err := conn.ModifySelfservicePermissions(ctx, &workspaces.ModifySelfservicePermissionsInput{
-			ResourceId:             aws.String(directoryID),
-			SelfservicePermissions: ExpandSelfServicePermissions(v.([]interface{})),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) self-service permissions: %s", directoryID, err)
+		input := &workspaces.ModifySelfservicePermissionsInput{
+			ResourceId:             aws.String(d.Id()),
+			SelfservicePermissions: expandSelfservicePermissions(v.([]interface{})),
 		}
-		log.Printf("[INFO] Modified WorkSpaces Directory (%s) self-service permissions", directoryID)
+
+		_, err := conn.ModifySelfservicePermissions(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) self-service permissions: %s", d.Id(), err)
+		}
 	}
 
 	if v, ok := d.GetOk("workspace_access_properties"); ok {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) access properties", directoryID)
-		_, err := conn.ModifyWorkspaceAccessProperties(ctx, &workspaces.ModifyWorkspaceAccessPropertiesInput{
-			ResourceId:                aws.String(directoryID),
-			WorkspaceAccessProperties: ExpandWorkspaceAccessProperties(v.([]interface{})),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) access properties: %s", directoryID, err)
+		input := &workspaces.ModifyWorkspaceAccessPropertiesInput{
+			ResourceId:                aws.String(d.Id()),
+			WorkspaceAccessProperties: expandWorkspaceAccessProperties(v.([]interface{})),
 		}
-		log.Printf("[INFO] Modified WorkSpaces Directory (%s) access properties", directoryID)
+
+		_, err := conn.ModifyWorkspaceAccessProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) access properties: %s", d.Id(), err)
+		}
 	}
 
 	if v, ok := d.GetOk("workspace_creation_properties"); ok {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) creation properties", directoryID)
-		_, err := conn.ModifyWorkspaceCreationProperties(ctx, &workspaces.ModifyWorkspaceCreationPropertiesInput{
-			ResourceId:                  aws.String(directoryID),
-			WorkspaceCreationProperties: ExpandWorkspaceCreationProperties(v.([]interface{})),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) creation properties: %s", directoryID, err)
+		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
+			ResourceId:                  aws.String(d.Id()),
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]interface{})),
 		}
-		log.Printf("[INFO] Modified WorkSpaces Directory (%s) creation properties", directoryID)
+
+		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) creation properties: %s", d.Id(), err)
+		}
 	}
 
 	if v, ok := d.GetOk("ip_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-		ipGroupIds := v.(*schema.Set)
-		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", directoryID, ipGroupIds.List())
-		_, err := conn.AssociateIpGroups(ctx, &workspaces.AssociateIpGroupsInput{
-			DirectoryId: aws.String(directoryID),
-			GroupIds:    flex.ExpandStringValueSet(ipGroupIds),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) ip groups: %s", directoryID, err)
+		input := &workspaces.AssociateIpGroupsInput{
+			DirectoryId: aws.String(d.Id()),
+			GroupIds:    flex.ExpandStringValueSet(v.(*schema.Set)),
 		}
-		log.Printf("[INFO] Associated WorkSpaces Directory (%s) IP Groups", directoryID)
+
+		_, err := conn.AssociateIpGroups(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
@@ -304,7 +312,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	directory, err := FindDirectoryByID(ctx, conn, d.Id())
+	directory, err := findDirectoryByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Directory (%s) not found, removing from state", d.Id())
@@ -316,36 +324,25 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Directory (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrAlias, directory.Alias)
 	d.Set("directory_id", directory.DirectoryId)
-	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
-	}
-	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
-	d.Set("iam_role_id", directory.IamRoleId)
-	d.Set("registration_code", directory.RegistrationCode)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
-	d.Set(names.AttrAlias, directory.Alias)
-
-	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
+	d.Set("dns_ip_addresses", directory.DnsIpAddresses)
+	d.Set("iam_role_id", directory.IamRoleId)
+	d.Set("ip_group_ids", directory.IpGroupIds)
+	d.Set("registration_code", directory.RegistrationCode)
+	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
-
-	if err := d.Set("workspace_access_properties", FlattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
+	d.Set(names.AttrSubnetIDs, directory.SubnetIds)
+	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
 	}
-
-	if err := d.Set("workspace_creation_properties", FlattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
+	if err := d.Set("workspace_creation_properties", flattenDefaultWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
-
-	if err := d.Set("ip_group_ids", flex.FlattenStringValueSet(directory.IpGroupIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ip_group_ids: %s", err)
-	}
-
-	if err := d.Set("dns_ip_addresses", flex.FlattenStringValueSet(directory.DnsIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting dns_ip_addresses: %s", err)
-	}
+	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 
 	return diags
 }
@@ -355,75 +352,74 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	if d.HasChange("self_service_permissions") {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", d.Id())
-		permissions := d.Get("self_service_permissions").([]interface{})
-
-		_, err := conn.ModifySelfservicePermissions(ctx, &workspaces.ModifySelfservicePermissionsInput{
+		input := &workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
-			SelfservicePermissions: ExpandSelfServicePermissions(permissions),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) self service permissions: %s", d.Id(), err)
+			SelfservicePermissions: expandSelfservicePermissions(d.Get("self_service_permissions").([]interface{})),
 		}
-		log.Printf("[INFO] Modified WorkSpaces Directory (%s) self-service permissions", d.Id())
+
+		_, err := conn.ModifySelfservicePermissions(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) self-service permissions: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("workspace_access_properties") {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) access properties", d.Id())
-		properties := d.Get("workspace_access_properties").([]interface{})
-
-		_, err := conn.ModifyWorkspaceAccessProperties(ctx, &workspaces.ModifyWorkspaceAccessPropertiesInput{
+		input := &workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(d.Id()),
-			WorkspaceAccessProperties: ExpandWorkspaceAccessProperties(properties),
-		})
+			WorkspaceAccessProperties: expandWorkspaceAccessProperties(d.Get("workspace_access_properties").([]interface{})),
+		}
+
+		_, err := conn.ModifyWorkspaceAccessProperties(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) access properties: %s", d.Id(), err)
 		}
-		log.Printf("[INFO] Modified WorkSpaces Directory (%s) access properties", d.Id())
 	}
 
 	if d.HasChange("workspace_creation_properties") {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) creation properties", d.Id())
-		properties := d.Get("workspace_creation_properties").([]interface{})
-
-		_, err := conn.ModifyWorkspaceCreationProperties(ctx, &workspaces.ModifyWorkspaceCreationPropertiesInput{
+		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
-			WorkspaceCreationProperties: ExpandWorkspaceCreationProperties(properties),
-		})
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(d.Get("workspace_creation_properties").([]interface{})),
+		}
+
+		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) creation properties: %s", d.Id(), err)
 		}
-		log.Printf("[INFO] Modified WorkSpaces Directory (%s) creation properties", d.Id())
 	}
 
 	if d.HasChange("ip_group_ids") {
 		o, n := d.GetChange("ip_group_ids")
-		old := o.(*schema.Set)
-		new := n.(*schema.Set)
-		added := new.Difference(old)
-		removed := old.Difference(new)
-		if added.Len() > 0 {
-			log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), added.GoString())
-			_, err := conn.AssociateIpGroups(ctx, &workspaces.AssociateIpGroupsInput{
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os), os.Difference(ns)
+
+		if add.Len() > 0 {
+			input := &workspaces.AssociateIpGroupsInput{
 				DirectoryId: aws.String(d.Id()),
-				GroupIds:    flex.ExpandStringValueSet(added),
-			})
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+				GroupIds:    flex.ExpandStringValueSet(add),
 			}
-		}
-		if removed.Len() > 0 {
-			log.Printf("[DEBUG] Disassociating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), removed.GoString())
-			_, err := conn.DisassociateIpGroups(ctx, &workspaces.DisassociateIpGroupsInput{
-				DirectoryId: aws.String(d.Id()),
-				GroupIds:    flex.ExpandStringValueSet(removed),
-			})
+
+			_, err := conn.AssociateIpGroups(ctx, input)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "disasassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "associating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
 			}
 		}
 
-		log.Printf("[INFO] Updated WorkSpaces Directory (%s) IP Groups", d.Id())
+		if del.Len() > 0 {
+			input := &workspaces.DisassociateIpGroupsInput{
+				DirectoryId: aws.String(d.Id()),
+				GroupIds:    flex.ExpandStringValueSet(del),
+			}
+
+			_, err := conn.DisassociateIpGroups(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
+			}
+		}
 	}
 
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
@@ -433,8 +429,11 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, DirectoryRegisterInvalidResourceStateTimeout,
+	log.Printf("[DEBUG] Deleting WorkSpaces Directory: %s", d.Id())
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectory(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),
@@ -449,221 +448,322 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "deregistering WorkSpaces Directory (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitDirectoryDeregistered(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) to deregister: %s", d.Id(), err)
+	if _, err := waitDirectoryDeregistered(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func ExpandWorkspaceAccessProperties(properties []interface{}) *types.WorkspaceAccessProperties {
-	if len(properties) == 0 || properties[0] == nil {
+func findDirectoryByID(ctx context.Context, conn *workspaces.Client, id string) (*types.WorkspaceDirectory, error) {
+	input := &workspaces.DescribeWorkspaceDirectoriesInput{
+		DirectoryIds: []string{id},
+	}
+
+	output, err := findDirectory(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if itypes.IsZero(output) {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if state := output.State; state == types.WorkspaceDirectoryStateDeregistered {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDirectory(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceDirectoriesInput) (*types.WorkspaceDirectory, error) {
+	output, err := findDirectories(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDirectories(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceDirectoriesInput) ([]types.WorkspaceDirectory, error) {
+	var output []types.WorkspaceDirectory
+
+	pages := workspaces.NewDescribeWorkspaceDirectoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Directories...)
+	}
+
+	return output, nil
+}
+
+func statusDirectory(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDirectoryByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, directoryID string) (*types.WorkspaceDirectory, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.WorkspaceDirectoryStateRegistering),
+		Target:  enum.Slice(types.WorkspaceDirectoryStateRegistered),
+		Refresh: statusDirectory(ctx, conn, directoryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, directoryID string) (*types.WorkspaceDirectory, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			types.WorkspaceDirectoryStateRegistering,
+			types.WorkspaceDirectoryStateRegistered,
+			types.WorkspaceDirectoryStateDeregistering,
+		),
+		Target:  []string{},
+		Refresh: statusDirectory(ctx, conn, directoryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandWorkspaceAccessProperties(tfList []interface{}) *types.WorkspaceAccessProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	result := &types.WorkspaceAccessProperties{}
+	apiObject := &types.WorkspaceAccessProperties{}
+	tfMap := tfList[0].(map[string]interface{})
 
-	p := properties[0].(map[string]interface{})
-
-	if p["device_type_android"].(string) != "" {
-		result.DeviceTypeAndroid = types.AccessPropertyValue(p["device_type_android"].(string))
+	if tfMap["device_type_android"].(string) != "" {
+		apiObject.DeviceTypeAndroid = types.AccessPropertyValue(tfMap["device_type_android"].(string))
 	}
 
-	if p["device_type_chromeos"].(string) != "" {
-		result.DeviceTypeChromeOs = types.AccessPropertyValue(p["device_type_chromeos"].(string))
+	if tfMap["device_type_chromeos"].(string) != "" {
+		apiObject.DeviceTypeChromeOs = types.AccessPropertyValue(tfMap["device_type_chromeos"].(string))
 	}
 
-	if p["device_type_ios"].(string) != "" {
-		result.DeviceTypeIos = types.AccessPropertyValue(p["device_type_ios"].(string))
+	if tfMap["device_type_ios"].(string) != "" {
+		apiObject.DeviceTypeIos = types.AccessPropertyValue(tfMap["device_type_ios"].(string))
 	}
 
-	if p["device_type_linux"].(string) != "" {
-		result.DeviceTypeLinux = types.AccessPropertyValue(p["device_type_linux"].(string))
+	if tfMap["device_type_linux"].(string) != "" {
+		apiObject.DeviceTypeLinux = types.AccessPropertyValue(tfMap["device_type_linux"].(string))
 	}
 
-	if p["device_type_osx"].(string) != "" {
-		result.DeviceTypeOsx = types.AccessPropertyValue(p["device_type_osx"].(string))
+	if tfMap["device_type_osx"].(string) != "" {
+		apiObject.DeviceTypeOsx = types.AccessPropertyValue(tfMap["device_type_osx"].(string))
 	}
 
-	if p["device_type_web"].(string) != "" {
-		result.DeviceTypeWeb = types.AccessPropertyValue(p["device_type_web"].(string))
+	if tfMap["device_type_web"].(string) != "" {
+		apiObject.DeviceTypeWeb = types.AccessPropertyValue(tfMap["device_type_web"].(string))
 	}
 
-	if p["device_type_windows"].(string) != "" {
-		result.DeviceTypeWindows = types.AccessPropertyValue(p["device_type_windows"].(string))
+	if tfMap["device_type_windows"].(string) != "" {
+		apiObject.DeviceTypeWindows = types.AccessPropertyValue(tfMap["device_type_windows"].(string))
 	}
 
-	if p["device_type_zeroclient"].(string) != "" {
-		result.DeviceTypeZeroClient = types.AccessPropertyValue(p["device_type_zeroclient"].(string))
+	if tfMap["device_type_zeroclient"].(string) != "" {
+		apiObject.DeviceTypeZeroClient = types.AccessPropertyValue(tfMap["device_type_zeroclient"].(string))
 	}
 
-	return result
+	return apiObject
 }
 
-func ExpandSelfServicePermissions(permissions []interface{}) *types.SelfservicePermissions {
-	if len(permissions) == 0 || permissions[0] == nil {
+func expandSelfservicePermissions(tfList []interface{}) *types.SelfservicePermissions {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	result := &types.SelfservicePermissions{}
+	apiObject := &types.SelfservicePermissions{}
+	tfMap := tfList[0].(map[string]interface{})
 
-	p := permissions[0].(map[string]interface{})
-
-	if p["change_compute_type"].(bool) {
-		result.ChangeComputeType = types.ReconnectEnumEnabled
+	if tfMap["change_compute_type"].(bool) {
+		apiObject.ChangeComputeType = types.ReconnectEnumEnabled
 	} else {
-		result.ChangeComputeType = types.ReconnectEnumDisabled
+		apiObject.ChangeComputeType = types.ReconnectEnumDisabled
 	}
 
-	if p["increase_volume_size"].(bool) {
-		result.IncreaseVolumeSize = types.ReconnectEnumEnabled
+	if tfMap["increase_volume_size"].(bool) {
+		apiObject.IncreaseVolumeSize = types.ReconnectEnumEnabled
 	} else {
-		result.IncreaseVolumeSize = types.ReconnectEnumDisabled
+		apiObject.IncreaseVolumeSize = types.ReconnectEnumDisabled
 	}
 
-	if p["rebuild_workspace"].(bool) {
-		result.RebuildWorkspace = types.ReconnectEnumEnabled
+	if tfMap["rebuild_workspace"].(bool) {
+		apiObject.RebuildWorkspace = types.ReconnectEnumEnabled
 	} else {
-		result.RebuildWorkspace = types.ReconnectEnumDisabled
+		apiObject.RebuildWorkspace = types.ReconnectEnumDisabled
 	}
 
-	if p["restart_workspace"].(bool) {
-		result.RestartWorkspace = types.ReconnectEnumEnabled
+	if tfMap["restart_workspace"].(bool) {
+		apiObject.RestartWorkspace = types.ReconnectEnumEnabled
 	} else {
-		result.RestartWorkspace = types.ReconnectEnumDisabled
+		apiObject.RestartWorkspace = types.ReconnectEnumDisabled
 	}
 
-	if p["switch_running_mode"].(bool) {
-		result.SwitchRunningMode = types.ReconnectEnumEnabled
+	if tfMap["switch_running_mode"].(bool) {
+		apiObject.SwitchRunningMode = types.ReconnectEnumEnabled
 	} else {
-		result.SwitchRunningMode = types.ReconnectEnumDisabled
+		apiObject.SwitchRunningMode = types.ReconnectEnumDisabled
 	}
 
-	return result
+	return apiObject
 }
 
-func ExpandWorkspaceCreationProperties(properties []interface{}) *types.WorkspaceCreationProperties {
-	if len(properties) == 0 || properties[0] == nil {
+func expandWorkspaceCreationProperties(tfList []interface{}) *types.WorkspaceCreationProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	p := properties[0].(map[string]interface{})
-
-	result := &types.WorkspaceCreationProperties{
-		EnableInternetAccess:            aws.Bool(p["enable_internet_access"].(bool)),
-		EnableMaintenanceMode:           aws.Bool(p["enable_maintenance_mode"].(bool)),
-		UserEnabledAsLocalAdministrator: aws.Bool(p["user_enabled_as_local_administrator"].(bool)),
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &types.WorkspaceCreationProperties{
+		EnableInternetAccess:            aws.Bool(tfMap["enable_internet_access"].(bool)),
+		EnableMaintenanceMode:           aws.Bool(tfMap["enable_maintenance_mode"].(bool)),
+		UserEnabledAsLocalAdministrator: aws.Bool(tfMap["user_enabled_as_local_administrator"].(bool)),
 	}
 
-	if p["custom_security_group_id"].(string) != "" {
-		result.CustomSecurityGroupId = aws.String(p["custom_security_group_id"].(string))
+	if tfMap["custom_security_group_id"].(string) != "" {
+		apiObject.CustomSecurityGroupId = aws.String(tfMap["custom_security_group_id"].(string))
 	}
 
-	if p["default_ou"].(string) != "" {
-		result.DefaultOu = aws.String(p["default_ou"].(string))
+	if tfMap["default_ou"].(string) != "" {
+		apiObject.DefaultOu = aws.String(tfMap["default_ou"].(string))
 	}
 
-	return result
+	return apiObject
 }
 
-func FlattenWorkspaceAccessProperties(properties *types.WorkspaceAccessProperties) []interface{} {
-	if properties == nil {
+func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{
 		map[string]interface{}{
-			"device_type_android":    string(properties.DeviceTypeAndroid),
-			"device_type_chromeos":   string(properties.DeviceTypeChromeOs),
-			"device_type_ios":        string(properties.DeviceTypeIos),
-			"device_type_linux":      string(properties.DeviceTypeLinux),
-			"device_type_osx":        string(properties.DeviceTypeOsx),
-			"device_type_web":        string(properties.DeviceTypeWeb),
-			"device_type_windows":    string(properties.DeviceTypeWindows),
-			"device_type_zeroclient": string(properties.DeviceTypeZeroClient),
+			"device_type_android":    apiObject.DeviceTypeAndroid,
+			"device_type_chromeos":   apiObject.DeviceTypeChromeOs,
+			"device_type_ios":        apiObject.DeviceTypeIos,
+			"device_type_linux":      apiObject.DeviceTypeLinux,
+			"device_type_osx":        apiObject.DeviceTypeOsx,
+			"device_type_web":        apiObject.DeviceTypeWeb,
+			"device_type_windows":    apiObject.DeviceTypeWindows,
+			"device_type_zeroclient": apiObject.DeviceTypeZeroClient,
 		},
 	}
 }
 
-func FlattenSelfServicePermissions(permissions *types.SelfservicePermissions) []interface{} {
-	if permissions == nil {
+func flattenSelfservicePermissions(apiObject *types.SelfservicePermissions) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	result := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
-	switch permissions.ChangeComputeType {
+	switch apiObject.ChangeComputeType {
 	case types.ReconnectEnumEnabled:
-		result["change_compute_type"] = true
+		tfMap["change_compute_type"] = true
 	case types.ReconnectEnumDisabled:
-		result["change_compute_type"] = false
+		tfMap["change_compute_type"] = false
 	default:
-		result["change_compute_type"] = nil
+		tfMap["change_compute_type"] = nil
 	}
 
-	switch permissions.IncreaseVolumeSize {
+	switch apiObject.IncreaseVolumeSize {
 	case types.ReconnectEnumEnabled:
-		result["increase_volume_size"] = true
+		tfMap["increase_volume_size"] = true
 	case types.ReconnectEnumDisabled:
-		result["increase_volume_size"] = false
+		tfMap["increase_volume_size"] = false
 	default:
-		result["increase_volume_size"] = nil
+		tfMap["increase_volume_size"] = nil
 	}
 
-	switch permissions.RebuildWorkspace {
+	switch apiObject.RebuildWorkspace {
 	case types.ReconnectEnumEnabled:
-		result["rebuild_workspace"] = true
+		tfMap["rebuild_workspace"] = true
 	case types.ReconnectEnumDisabled:
-		result["rebuild_workspace"] = false
+		tfMap["rebuild_workspace"] = false
 	default:
-		result["rebuild_workspace"] = nil
+		tfMap["rebuild_workspace"] = nil
 	}
 
-	switch permissions.RestartWorkspace {
+	switch apiObject.RestartWorkspace {
 	case types.ReconnectEnumEnabled:
-		result["restart_workspace"] = true
+		tfMap["restart_workspace"] = true
 	case types.ReconnectEnumDisabled:
-		result["restart_workspace"] = false
+		tfMap["restart_workspace"] = false
 	default:
-		result["restart_workspace"] = nil
+		tfMap["restart_workspace"] = nil
 	}
 
-	switch permissions.SwitchRunningMode {
+	switch apiObject.SwitchRunningMode {
 	case types.ReconnectEnumEnabled:
-		result["switch_running_mode"] = true
+		tfMap["switch_running_mode"] = true
 	case types.ReconnectEnumDisabled:
-		result["switch_running_mode"] = false
+		tfMap["switch_running_mode"] = false
 	default:
-		result["switch_running_mode"] = nil
+		tfMap["switch_running_mode"] = nil
 	}
 
-	return []interface{}{result}
+	return []interface{}{tfMap}
 }
 
-func FlattenWorkspaceCreationProperties(properties *types.DefaultWorkspaceCreationProperties) []interface{} {
-	if properties == nil {
+func flattenDefaultWorkspaceCreationProperties(apiObject *types.DefaultWorkspaceCreationProperties) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{
 		map[string]interface{}{
-			"custom_security_group_id":            aws.ToString(properties.CustomSecurityGroupId),
-			"default_ou":                          aws.ToString(properties.DefaultOu),
-			"enable_internet_access":              aws.ToBool(properties.EnableInternetAccess),
-			"enable_maintenance_mode":             aws.ToBool(properties.EnableMaintenanceMode),
-			"user_enabled_as_local_administrator": aws.ToBool(properties.UserEnabledAsLocalAdministrator),
+			"custom_security_group_id":            aws.ToString(apiObject.CustomSecurityGroupId),
+			"default_ou":                          aws.ToString(apiObject.DefaultOu),
+			"enable_internet_access":              aws.ToBool(apiObject.EnableInternetAccess),
+			"enable_maintenance_mode":             aws.ToBool(apiObject.EnableMaintenanceMode),
+			"user_enabled_as_local_administrator": aws.ToBool(apiObject.UserEnabledAsLocalAdministrator),
 		},
 	}
-}
-
-func flattenAccessPropertyEnumValues(t []types.AccessPropertyValue) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
 }

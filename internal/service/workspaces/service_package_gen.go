@@ -37,8 +37,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_workspaces_bundle",
 		},
 		{
-			Factory:  DataSourceDirectory,
+			Factory:  dataSourceDirectory,
 			TypeName: "aws_workspaces_directory",
+			Name:     "Directory",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
 		},
 		{
 			Factory:  DataSourceImage,
@@ -54,7 +58,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDirectory,
+			Factory:  resourceDirectory,
 			TypeName: "aws_workspaces_directory",
 			Name:     "Directory",
 			Tags: &types.ServicePackageResourceTags{

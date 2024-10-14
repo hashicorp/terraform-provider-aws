@@ -14,15 +14,6 @@ import (
 )
 
 const (
-	DirectoryDeregisterInvalidResourceStateTimeout = 2 * time.Minute
-	DirectoryRegisterInvalidResourceStateTimeout   = 2 * time.Minute
-
-	// Maximum amount of time to wait for a Directory to return Registered
-	DirectoryRegisteredTimeout = 10 * time.Minute
-
-	// Maximum amount of time to wait for a Directory to return Deregistered
-	DirectoryDeregisteredTimeout = 10 * time.Minute
-
 	// Maximum amount of time to wait for a WorkSpace to return Available
 	WorkspaceAvailableTimeout = 30 * time.Minute
 
@@ -35,44 +26,6 @@ const (
 	// Maximum amount of time to wait for a WorkSpace to return Terminated
 	WorkspaceTerminatedTimeout = 10 * time.Minute
 )
-
-func WaitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, directoryID string) (*types.WorkspaceDirectory, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.WorkspaceDirectoryStateRegistering),
-		Target:  enum.Slice(types.WorkspaceDirectoryStateRegistered),
-		Refresh: StatusDirectoryState(ctx, conn, directoryID),
-		Timeout: DirectoryRegisteredTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-func WaitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, directoryID string) (*types.WorkspaceDirectory, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			types.WorkspaceDirectoryStateRegistering,
-			types.WorkspaceDirectoryStateRegistered,
-			types.WorkspaceDirectoryStateDeregistering,
-		),
-		Target:  []string{},
-		Refresh: StatusDirectoryState(ctx, conn, directoryID),
-		Timeout: DirectoryDeregisteredTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		return v, err
-	}
-
-	return nil, err
-}
 
 func WaitWorkspaceAvailable(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
 	stateConf := &retry.StateChangeConf{

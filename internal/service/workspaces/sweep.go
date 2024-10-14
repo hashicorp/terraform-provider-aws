@@ -60,7 +60,7 @@ func sweepDirectories(region string) error {
 		}
 
 		for _, v := range page.Directories {
-			r := ResourceDirectory()
+			r := resourceDirectory()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DirectoryId))
 

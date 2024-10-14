@@ -9,24 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func StatusDirectoryState(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
 
 // nosemgrep:ci.workspaces-in-func-name
 func StatusWorkspaceState(ctx context.Context, conn *workspaces.Client, workspaceID string) retry.StateRefreshFunc {
