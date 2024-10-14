@@ -185,6 +185,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"on_demand_throughput": onDemandThroughputSchema(),
 						"projection_type": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -248,35 +249,7 @@ func resourceTable() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"on_demand_throughput": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_read_request_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "0" && new == "-1" {
-									return true
-								}
-								return false
-							},
-						},
-						"max_write_request_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "0" && new == "-1" {
-									return true
-								}
-								return false
-							},
-						},
-					},
-				},
-			},
+			"on_demand_throughput": onDemandThroughputSchema(),
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -511,6 +484,32 @@ func resourceTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 				Optional: true,
+			},
+		},
+	}
+}
+
+func onDemandThroughputSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"max_read_request_units": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "0" && new == "-1"
+					},
+				},
+				"max_write_request_units": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "0" && new == "-1"
+					},
+				},
 			},
 		},
 	}
@@ -2083,6 +2082,10 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi["non_key_attributes"] = g.Projection.NonKeyAttributes
 		}
 
+		if g.OnDemandThroughput != nil {
+			gsi["on_demand_throughput"] = flattenOnDemandThroughput(g.OnDemandThroughput)
+		}
+
 		output = append(output, gsi)
 	}
 
@@ -2248,12 +2251,18 @@ func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
 }
 
 func expandGlobalSecondaryIndex(data map[string]interface{}, billingMode awstypes.BillingMode) *awstypes.GlobalSecondaryIndex {
-	return &awstypes.GlobalSecondaryIndex{
+	output := awstypes.GlobalSecondaryIndex{
 		IndexName:             aws.String(data[names.AttrName].(string)),
 		KeySchema:             expandKeySchema(data),
 		Projection:            expandProjection(data),
 		ProvisionedThroughput: expandProvisionedThroughput(data, billingMode),
 	}
+
+	if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+	}
+
+	return &output
 }
 
 func expandProvisionedThroughput(data map[string]interface{}, billingMode awstypes.BillingMode) *awstypes.ProvisionedThroughput {
