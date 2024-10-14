@@ -1702,8 +1702,8 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 				newOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 			}
 			var onDemandThroughputChanged bool
-			if oldOnDemandThroughput != nil && newOnDemandThroughput != nil {
-				onDemandThroughputChanged = (oldOnDemandThroughput.MaxReadRequestUnits != newOnDemandThroughput.MaxReadRequestUnits) || (oldOnDemandThroughput.MaxWriteRequestUnits != newOnDemandThroughput.MaxWriteRequestUnits)
+			if !reflect.DeepEqual(oldOnDemandThroughput, newOnDemandThroughput) {
+				onDemandThroughputChanged = true
 			}
 
 			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
