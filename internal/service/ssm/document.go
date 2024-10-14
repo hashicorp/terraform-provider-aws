@@ -328,24 +328,19 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", d.Id(), err)
 	}
-	docArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  getDocumentArnResourceName(doc.DocumentType, *doc.Name),
-	}.String()
-	d.Set(names.AttrARN, docArn)
+
+	documentType, name := doc.DocumentType, aws.ToString(doc.Name)
+	d.Set(names.AttrARN, documentARN(meta.(*conns.AWSClient), documentType, name))
 	d.Set(names.AttrCreatedDate, aws.ToTime(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set(names.AttrDescription, doc.Description)
 	d.Set("document_format", doc.DocumentFormat)
-	d.Set("document_type", doc.DocumentType)
+	d.Set("document_type", documentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
-	d.Set(names.AttrName, doc.Name)
+	d.Set(names.AttrName, name)
 	d.Set(names.AttrOwner, doc.Owner)
 	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
@@ -721,11 +716,20 @@ func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []interf
 	return tfList
 }
 
-func getDocumentArnResourceName(t awstypes.DocumentType, name string) string {
-	prefix := "document/"
-	if t == awstypes.DocumentTypeAutomation {
-		prefix = "automation-definition/"
+func documentARN(c *conns.AWSClient, documentType awstypes.DocumentType, name string) string {
+	arn := arn.ARN{
+		Partition: c.Partition,
+		Service:   "ssm",
+		Region:    c.Region,
+		AccountID: c.AccountID,
 	}
 
-	return prefix + name
+	switch documentType {
+	case awstypes.DocumentTypeAutomation:
+		arn.Resource = "automation-definition/" + name
+	default:
+		arn.Resource = "document/" + name
+	}
+
+	return arn.String()
 }
