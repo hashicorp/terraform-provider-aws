@@ -1,8 +1,14 @@
 ## 5.72.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_rds_cluster: Increase maximum value of `serverlessv2_scaling_configuration.max_capacity` and `serverlessv2_scaling_configuration.min_capacity` from `128` to `256` ([#39697](https://github.com/hashicorp/terraform-provider-aws/issues/39697))
+
 BUG FIXES:
 
+* data-source/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
 * resource/aws_cognito_user_pool: Fixes error when `schema` has empty `string_attribute_constraints` or `number_attribute_constraints` ([#20386](https://github.com/hashicorp/terraform-provider-aws/issues/20386))
+* resource/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
 
 ## 5.71.0 (October 11, 2024)
 
