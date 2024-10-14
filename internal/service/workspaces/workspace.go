@@ -369,7 +369,7 @@ func findWorkspace(ctx context.Context, conn *workspaces.Client, input *workspac
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findWorkspaces(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspacesInput) ([]types.Workspace, error) {
+func findWorkspaces(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspacesInput) ([]types.Workspace, error) { // nosemgrep:ci.caps0-in-func-name,ci.workspaces-in-func-name
 	var output []types.Workspace
 
 	pages := workspaces.NewDescribeWorkspacesPaginator(conn, input)
