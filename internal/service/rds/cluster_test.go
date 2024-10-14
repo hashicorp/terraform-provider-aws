@@ -4794,24 +4794,19 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine      = %[1]q
-  latest      = true
-  include_all = true
-
-  filter {
-    name   = "engine-mode"
-    values = ["serverless"]
-  }
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[2]q
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
   skip_final_snapshot = true
-  engine              = data.aws_rds_engine_version.test.engine
-  engine_version      = data.aws_rds_engine_version.test.version
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
 
   serverlessv2_scaling_configuration {
     max_capacity = %[3]f
