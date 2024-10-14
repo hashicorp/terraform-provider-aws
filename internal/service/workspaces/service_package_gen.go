@@ -68,7 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPGroup,
+			Factory:  resourceIPGroup,
 			TypeName: "aws_workspaces_ip_group",
 			Name:     "IP Group",
 			Tags: &types.ServicePackageResourceTags{

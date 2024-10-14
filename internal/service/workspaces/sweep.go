@@ -4,7 +4,6 @@
 package workspaces
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -93,7 +92,7 @@ func sweepIPGroups(region string) error {
 		}
 
 		for _, v := range page.Result {
-			r := ResourceIPGroup()
+			r := resourceIPGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.GroupId))
 
@@ -118,23 +117,6 @@ func sweepIPGroups(region string) error {
 		return fmt.Errorf("error sweeping WorkSpaces IP Groups (%s): %w", region, err)
 	}
 
-	return nil
-}
-
-func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
-	for {
-		output, err := conn.DescribeIpGroups(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.ToString(output.NextToken) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
 	return nil
 }
 

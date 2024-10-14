@@ -7,7 +7,9 @@ package workspaces
 var (
 	ResourceConnectionAlias = newConnectionAliasResource
 	ResourceDirectory       = resourceDirectory
+	ResourceIPGroup         = resourceIPGroup
 
 	FindConnectionAliasByID = findConnectionAliasByID
 	FindDirectoryByID       = findDirectoryByID
+	FindIPGroupByID         = findIPGroupByID
 )
