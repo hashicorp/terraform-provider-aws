@@ -46,6 +46,7 @@ var (
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
 	FindRolePoliciesByName              = findRolePoliciesByName
+	FindRolePolicyAttachmentsByName     = findRolePolicyAttachmentsByName
 	FindSAMLProviderByARN               = findSAMLProviderByARN
 	FindServerCertificateByName         = findServerCertificateByName
 	FindSSHPublicKeyByThreePartKey      = findSSHPublicKeyByThreePartKey
