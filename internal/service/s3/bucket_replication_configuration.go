@@ -771,7 +771,7 @@ func expandSSEKMSEncryptedObjects(tfList []interface{}) *types.SseKmsEncryptedOb
 
 func expandReplicationRuleFilter(ctx context.Context, tfList []interface{}) *types.ReplicationRuleFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
+		return &types.ReplicationRuleFilter{}
 	}
 
 	tfMap := tfList[0].(map[string]interface{})
