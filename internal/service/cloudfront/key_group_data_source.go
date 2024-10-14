@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
+
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -34,16 +35,16 @@ import (
 	// awstypes.<Type Name>.
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	///	"github.com/aws/aws-sdk-go-v2/aws"
+	///	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	///	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	/// fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,22 +105,18 @@ func (d *dataSourceKeyGroup) Schema(ctx context.Context, req datasource.SchemaRe
 			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 		},
 		Blocks: map[string]schema.Block{
 			"key_group_config": schema.SingleNestedBlock{
 				Attributes: map[string]schema.Attribute{
 					"items": schema.ListAttribute{
-					    ElementType: types.StringType,
-						Required: true,
+						ElementType: types.StringType,
+						Computed:    true,
 					},
 					names.AttrName: schema.StringAttribute{
-						Computed: true,
+						Required: true,
 					},
-					"comment": schema.StringAttribute{
+					names.AttrComment: schema.StringAttribute{
 						Optional: true,
 					},
 				},
@@ -127,6 +124,7 @@ func (d *dataSourceKeyGroup) Schema(ctx context.Context, req datasource.SchemaRe
 		},
 	}
 }
+
 // TIP: ==== ASSIGN CRUD METHODS ====
 // Data sources only have a read method.
 func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -142,16 +140,16 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	// 6. Set the state
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := d.Meta().CloudFrontClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the config
 	var data dataSourceKeyGroupModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Get information about a resource from AWS
-	out, err := findKeyGroupById(ctx, conn, data.Name.ValueString())
+	out, err := findKeyGroupByID(ctx, conn, data.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameKeyGroup, data.Name.String(), err),
@@ -174,25 +172,24 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-
 // TIP: ==== DATA STRUCTURES ====
 // With Terraform Plugin-Framework configurations are deserialized into
 // Go types, providing type safety without the need for type assertions.
 // These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name. 
+// tag value should match the attribute name.
 //
-// Nested objects are represented in their own data struct. These will 
+// Nested objects are represented in their own data struct. These will
 // also have a corresponding attribute type mapping for use inside flex
 // functions.
 //
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type dataSourceKeyGroupModel struct {
-	Etag            types.String                                          `tfsdk:"etag"`
-	Items           types.List                                            `tfsdk:"items"`
-	Comment         types.String                                          `tfsdk:"comment"`
-	Name            types.String                                          `tfsdk:"name"`
-	Type            types.String                                          `tfsdk:"type"`
+	Etag    types.String `tfsdk:"etag"`
+	Items   types.List   `tfsdk:"items"`
+	Comment types.String `tfsdk:"comment"`
+	Name    types.String `tfsdk:"name"`
+	Type    types.String `tfsdk:"type"`
 }
 
 type complexArgumentModel struct {
