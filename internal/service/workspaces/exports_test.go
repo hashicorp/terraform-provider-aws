@@ -5,7 +5,9 @@ package workspaces
 
 // Exports for use in tests only.
 var (
-	ResourceDirectory = resourceDirectory
+	ResourceConnectionAlias = newConnectionAliasResource
+	ResourceDirectory       = resourceDirectory
 
-	FindDirectoryByID = findDirectoryByID
+	FindConnectionAliasByID = findConnectionAliasByID
+	FindDirectoryByID       = findDirectoryByID
 )
