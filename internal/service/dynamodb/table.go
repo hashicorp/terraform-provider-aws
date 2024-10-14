@@ -1076,10 +1076,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	// It is possible to update GSI capacity when ON DEMAND billing mode does not change
-	if newBillingMode == awstypes.BillingModePayPerRequest && (oldBillingMode == newBillingMode) {
+	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
+	if newBillingMode == awstypes.BillingModePayPerRequest {
 		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update == nil {
+			if gsiUpdate.Update.OnDemandThroughput == nil {
 				continue
 			}
 
