@@ -214,7 +214,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
+				Config: testAccStackSetInstanceConfig_deploymentTargets(rName, "testvalue123"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
@@ -238,7 +238,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetInstanceConfig_deploymentTargetsAndUpdate(rName),
+				Config: testAccStackSetInstanceConfig_deploymentTargets(rName, "updatedvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
@@ -254,7 +254,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 	})
 }
 
-func TestAccCloudFormationStackSetInstance_DeploymentTargets_emptyOU(t *testing.T) {
+func TestAccCloudFormationStackSetInstance_deploymentTargets_emptyOU(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackInstanceSummaries []awstypes.StackInstanceSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -273,7 +273,7 @@ func TestAccCloudFormationStackSetInstance_DeploymentTargets_emptyOU(t *testing.
 		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetInstanceConfig_DeploymentTargets_emptyOU(rName),
+				Config: testAccStackSetInstanceConfig_deploymentTargets_emptyOU(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
@@ -291,7 +291,7 @@ func TestAccCloudFormationStackSetInstance_DeploymentTargets_emptyOU(t *testing.
 				},
 			},
 			{
-				Config: testAccStackSetInstanceConfig_DeploymentTargets_emptyOU(rName),
+				Config: testAccStackSetInstanceConfig_deploymentTargets_emptyOU(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
 				),
@@ -865,8 +865,8 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyVPC(rName))
 }
 
-func testAccStackSetInstanceConfig_deploymentTargets(rName string) string {
-	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+func testAccStackSetInstanceConfig_deploymentTargets(rName, parameter string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
@@ -877,35 +877,15 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   }
 
   parameter_overrides = {
-    Parameter1 = "test123"
+    Parameter1 = %[1]q
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
-`)
+`, parameter))
 }
 
-func testAccStackSetInstanceConfig_deploymentTargetsAndUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
-resource "aws_cloudformation_stack_set_instance" "test" {
-  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
-
-  deployment_targets {
-    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
-    account_filter_type     = "INTERSECTION"
-    accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
-  }
-
-  parameter_overrides = {
-    Parameter1 = "updatedvalue"
-  }
-
-  stack_set_name = aws_cloudformation_stack_set.test.name
-}
-`)
-}
-
-func testAccStackSetInstanceConfig_DeploymentTargets_emptyOU(rName string) string {
+func testAccStackSetInstanceConfig_deploymentTargets_emptyOU(rName string) string {
 	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), fmt.Sprintf(`
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
