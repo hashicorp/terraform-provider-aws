@@ -119,7 +119,7 @@ func testAccBundlePreCheck(t *testing.T) {
 func testAccBundleDataSourceConfig_basic(bundleID string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
-  bundle_id = %q
+  bundle_id = %[1]q
 }
 `, bundleID)
 }
@@ -127,8 +127,8 @@ data "aws_workspaces_bundle" "test" {
 func testAccBundleDataSourceConfig_byOwnerName(owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
-  owner = %q
-  name  = %q
+  owner = %[1]q
+  name  = %[2]q
 }
 `, owner, name)
 }
@@ -136,9 +136,9 @@ data "aws_workspaces_bundle" "test" {
 func testAccBundleDataSourceConfig_idAndOwnerNameConflict(bundleID, owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
-  bundle_id = %q
-  owner     = %q
-  name      = %q
+  bundle_id = %[1]q
+  owner     = %[2]q
+  name      = %[3]q
 }
 `, bundleID, owner, name)
 }
@@ -146,7 +146,7 @@ data "aws_workspaces_bundle" "test" {
 func testAccBundleDataSourceConfig_privateOwner(name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
-  name = %q
+  name = %[1]q
 }
 `, name)
 }
