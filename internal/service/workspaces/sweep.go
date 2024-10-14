@@ -144,7 +144,7 @@ func sweepWorkspace(region string) error {
 		}
 
 		for _, v := range page.Workspaces {
-			r := ResourceWorkspace()
+			r := resourceWorkspace()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.WorkspaceId))
 

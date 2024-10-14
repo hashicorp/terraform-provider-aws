@@ -8,8 +8,10 @@ var (
 	ResourceConnectionAlias = newConnectionAliasResource
 	ResourceDirectory       = resourceDirectory
 	ResourceIPGroup         = resourceIPGroup
+	ResourceWorkspace       = resourceWorkspace
 
 	FindConnectionAliasByID = findConnectionAliasByID
 	FindDirectoryByID       = findDirectoryByID
 	FindIPGroupByID         = findIPGroupByID
+	FindWorkspaceByID       = findWorkspaceByID
 )
