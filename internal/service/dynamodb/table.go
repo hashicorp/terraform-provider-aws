@@ -1752,7 +1752,6 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 					},
 				}
 				ops = append(ops, update)
-
 			} else if otherAttributesChanged {
 				// Other attributes cannot be updated
 				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
