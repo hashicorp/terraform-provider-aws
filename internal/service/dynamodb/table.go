@@ -651,6 +651,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			tcp.GlobalSecondaryIndexes = globalSecondaryIndexes
 		}
 
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tcp.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		input.TableCreationParameters = tcp
 
 		importTableOutput, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
