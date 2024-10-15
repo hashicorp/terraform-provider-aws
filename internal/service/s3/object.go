@@ -44,7 +44,7 @@ import (
 // @Tags(identifierAttribute="arn", resourceType="Object")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
 // @Testing(importStateIdFunc=testAccObjectImportStateIdFunc)
-// @Testing(importIgnore="force_destroy")
+// @Testing(importIgnore="force_destroy;refresh_content")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -218,6 +218,12 @@ func resourceObject() *schema.Resource {
 					},
 				},
 			},
+			"refresh_content": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{names.AttrSource, "content_base64"},
+			},
 			"server_side_encryption": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -315,6 +321,14 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
+
+	if d.Get("refresh_content").(bool) {
+		content, err := getStringObjectContent(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string), optFns...)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
+		}
+		d.Set(names.AttrContent, content)
+	}
 
 	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -706,6 +720,33 @@ func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput,
 	}
 
 	return output, nil
+}
+
+func getStringObjectContent(ctx context.Context, conn *s3.Client, bucket, key, etag, checksumAlgorithm string, optFns ...func(*s3.Options)) (string, error) {
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+	if checksumAlgorithm != "" {
+		input.ChecksumMode = types.ChecksumModeEnabled
+	}
+	if etag != "" {
+		input.IfMatch = aws.String(etag)
+	}
+
+	output, err := conn.GetObject(ctx, input, optFns...)
+
+	if err != nil {
+		return "", err
+	}
+
+	objectData, err := io.ReadAll(output.Body)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(objectData), nil
 }
 
 func expandObjectDate(v string) *time.Time {

@@ -73,7 +73,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -126,7 +126,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -208,7 +208,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -264,7 +264,7 @@ func TestAccS3Object_tags_null(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -419,7 +419,7 @@ func TestAccS3Object_tags_AddOnUpdate(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -481,7 +481,7 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -516,7 +516,7 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -614,7 +614,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -661,7 +661,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -754,7 +754,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -816,7 +816,7 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -867,7 +867,7 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -914,7 +914,7 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -951,7 +951,7 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1023,7 +1023,7 @@ func TestAccS3Object_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -1086,7 +1086,7 @@ func TestAccS3Object_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -1123,7 +1123,7 @@ func TestAccS3Object_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1193,7 +1193,7 @@ func TestAccS3Object_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -1256,7 +1256,7 @@ func TestAccS3Object_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 			{
@@ -1311,7 +1311,7 @@ func TestAccS3Object_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1405,7 +1405,7 @@ func TestAccS3Object_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1498,7 +1498,7 @@ func TestAccS3Object_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1567,7 +1567,7 @@ func TestAccS3Object_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1628,7 +1628,7 @@ func TestAccS3Object_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1694,7 +1694,7 @@ func TestAccS3Object_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1760,7 +1760,7 @@ func TestAccS3Object_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1819,7 +1819,7 @@ func TestAccS3Object_tags_ComputedTag_OnCreate(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -1920,7 +1920,7 @@ func TestAccS3Object_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
@@ -2011,7 +2011,7 @@ func TestAccS3Object_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
+					names.AttrForceDestroy, "refresh_content",
 				},
 			},
 		},
