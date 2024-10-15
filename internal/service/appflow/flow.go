@@ -3546,32 +3546,32 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 	return m
 }
 
-func flattenSAPODataPaginationConfigProperties(sapoDataPaginationConfig *types.SAPODataPaginationConfig) map[string]interface{} {
+func flattenSAPODataPaginationConfigProperties(sapoDataPaginationConfig *types.SAPODataPaginationConfig) []any {
 	if sapoDataPaginationConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := sapoDataPaginationConfig.MaxPageSize; v != nil {
 		m["max_page_size"] = aws.ToInt32(v)
 	}
 
-	return m
+	return []any{m}
 }
 
-func flattenSAPODataParallelismConfigProperties(sapoDataParallelismConfig *types.SAPODataParallelismConfig) map[string]interface{} {
+func flattenSAPODataParallelismConfigProperties(sapoDataParallelismConfig *types.SAPODataParallelismConfig) []any {
 	if sapoDataParallelismConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := sapoDataParallelismConfig.MaxParallelism; v != nil {
 		m["max_parallelism"] = aws.ToInt32(v)
 	}
 
-	return m
+	return []any{m}
 }
 
 func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSourceProperties) map[string]interface{} {
