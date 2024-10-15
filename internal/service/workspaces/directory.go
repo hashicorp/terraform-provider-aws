@@ -81,6 +81,31 @@ func resourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"saml_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relay_state_parameter_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "RelayState",
+						},
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.SamlStatusEnumDisabled,
+							ValidateDiagFunc: enum.Validate[types.SamlStatusEnum](),
+						},
+						"user_access_url": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"self_service_permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -253,6 +278,19 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("saml_properties"); ok {
+		input := &workspaces.ModifySamlPropertiesInput{
+			ResourceId:     aws.String(d.Id()),
+			SamlProperties: expandSAMLProperties(v.([]interface{})),
+		}
+
+		_, err := conn.ModifySamlProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) SAML properties: %s", d.Id(), err)
+		}
+	}
+
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		input := &workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
@@ -335,6 +373,9 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
+	if err := d.Set("saml_properties", flattenSAMLProperties(directory.SamlProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_properties: %s", err)
+	}
 	d.Set(names.AttrSubnetIDs, directory.SubnetIds)
 	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
@@ -350,6 +391,31 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
+
+	if d.HasChange("saml_properties") {
+		tfListSAMLProperties := d.Get("saml_properties").([]interface{})
+		tfMap := tfListSAMLProperties[0].(map[string]interface{})
+
+		var dels []types.DeletableSamlProperty
+		if tfMap["relay_state_parameter_name"].(string) == "" {
+			dels = append(dels, types.DeletableSamlPropertySamlPropertiesRelayStateParameterName)
+		}
+		if tfMap["user_access_url"].(string) == "" {
+			dels = append(dels, types.DeletableSamlPropertySamlPropertiesUserAccessUrl)
+		}
+
+		input := &workspaces.ModifySamlPropertiesInput{
+			PropertiesToDelete: dels,
+			ResourceId:         aws.String(d.Id()),
+			SamlProperties:     expandSAMLProperties(tfListSAMLProperties),
+		}
+
+		_, err := conn.ModifySamlProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) SAML properties: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("self_service_permissions") {
 		input := &workspaces.ModifySelfservicePermissionsInput{
@@ -614,6 +680,29 @@ func expandWorkspaceAccessProperties(tfList []interface{}) *types.WorkspaceAcces
 	return apiObject
 }
 
+func expandSAMLProperties(tfList []interface{}) *types.SamlProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &types.SamlProperties{}
+
+	if tfMap["relay_state_parameter_name"].(string) != "" {
+		apiObject.RelayStateParameterName = aws.String(tfMap["relay_state_parameter_name"].(string))
+	}
+
+	if tfMap[names.AttrStatus].(string) != "" {
+		apiObject.Status = types.SamlStatusEnum(tfMap[names.AttrStatus].(string))
+	}
+
+	if tfMap["user_access_url"].(string) != "" {
+		apiObject.UserAccessUrl = aws.String(tfMap["user_access_url"].(string))
+	}
+
+	return apiObject
+}
+
 func expandSelfservicePermissions(tfList []interface{}) *types.SelfservicePermissions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -693,6 +782,20 @@ func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties
 			"device_type_web":        apiObject.DeviceTypeWeb,
 			"device_type_windows":    apiObject.DeviceTypeWindows,
 			"device_type_zeroclient": apiObject.DeviceTypeZeroClient,
+		},
+	}
+}
+
+func flattenSAMLProperties(apiObject *types.SamlProperties) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"relay_state_parameter_name": aws.ToString(apiObject.RelayStateParameterName),
+			names.AttrStatus:             apiObject.Status,
+			"user_access_url":            aws.ToString(apiObject.UserAccessUrl),
 		},
 	}
 }
