@@ -2359,7 +2359,7 @@ func TestAccSSMActivation_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 
 func expectFullActivationResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfssm.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "id",
+		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Activation",
 	}, knownValue)
 }

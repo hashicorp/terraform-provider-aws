@@ -200,6 +200,6 @@ func TestAccAPIGatewayV2APIDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 
 func expectFullAPIDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfapigatewayv2.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "arn",
+		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

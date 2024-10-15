@@ -390,7 +390,7 @@ type ResourceDatum struct {
 	CheckDestroyNoop                 bool
 	IsDataSource                     bool
 	DataSourceResourceImplementation implementation
-	OverrideIdentifierAttribute      string
+	overrideIdentifierAttribute      string
 	OverrideResourceType             string
 }
 
@@ -398,6 +398,14 @@ func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+func (d ResourceDatum) OverrideIdentifier() bool {
+	return d.overrideIdentifierAttribute != ""
+}
+
+func (d ResourceDatum) OverrideIdentifierAttribute() string {
+	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
 }
 
 type goImport struct {
@@ -674,7 +682,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["tagsIdentifierAttribute"]; ok {
-					d.OverrideIdentifierAttribute = attr
+					d.overrideIdentifierAttribute = attr
 				}
 				if attr, ok := args.Keyword["tagsResourceType"]; ok {
 					d.OverrideResourceType = attr
@@ -769,7 +777,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tagged {
 		if !skip {
-			if !hasIdentifierAttribute && len(d.OverrideIdentifierAttribute) == 0 {
+			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
 				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}

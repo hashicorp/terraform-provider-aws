@@ -79,7 +79,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 package {{ .ProviderPackage }}_test
 
 import (
-	{{ if ne .OverrideIdentifierAttribute "" }}
+	{{ if .OverrideIdentifier }}
 	"context"
 	{{- end }}
 	"testing"
@@ -91,7 +91,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	{{- if ne .OverrideIdentifierAttribute "" }}
+	{{- if .OverrideIdentifier }}
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -306,13 +306,13 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 }
 
 {{ define "expectFullDataSourceTags" -}}
-{{ if ne .OverrideIdentifierAttribute "" }}expectFull{{ .Name }}DataSourceTags{{ else }}expectFullDataSourceTags{{ end }}
+{{ if .OverrideIdentifier }}expectFull{{ .Name }}DataSourceTags{{ else }}expectFullDataSourceTags{{ end }}
 {{- end }}
 
-{{ if ne .OverrideIdentifierAttribute "" }}
+{{ if .OverrideIdentifier }}
 func {{ template "expectFullDataSourceTags" . }}(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "{{ .OverrideIdentifierAttribute }}",
+		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
 		{{ if ne .OverrideResourceType "" -}}
 		ResourceType:        "{{ .OverrideResourceType }}",
 		{{- end }}

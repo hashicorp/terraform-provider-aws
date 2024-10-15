@@ -200,6 +200,6 @@ func TestAccLambdaFunctionDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *test
 
 func expectFullFunctionDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tflambda.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "arn",
+		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

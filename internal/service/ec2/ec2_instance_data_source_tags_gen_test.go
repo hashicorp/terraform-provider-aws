@@ -187,6 +187,6 @@ func TestAccEC2InstanceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 
 func expectFullInstanceDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "id",
+		IdentifierAttribute: names.AttrID,
 	}, knownValue)
 }

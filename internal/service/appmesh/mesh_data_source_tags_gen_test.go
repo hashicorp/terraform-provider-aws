@@ -215,6 +215,6 @@ func testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *
 
 func expectFullServiceMeshDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "arn",
+		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

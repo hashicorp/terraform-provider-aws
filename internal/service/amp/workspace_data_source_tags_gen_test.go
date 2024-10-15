@@ -187,6 +187,6 @@ func TestAccAMPWorkspaceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 
 func expectFullWorkspaceDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfamp.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "arn",
+		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

@@ -200,6 +200,6 @@ func TestAccAppIntegrationsEventIntegrationDataSource_tags_IgnoreTags_Overlap_Re
 
 func expectFullEventIntegrationDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappintegrations.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "arn",
+		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

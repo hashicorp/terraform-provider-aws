@@ -200,6 +200,6 @@ func TestAccBatchJobDefinitionDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *
 
 func expectFullJobDefinitionDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfbatch.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "arn",
+		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

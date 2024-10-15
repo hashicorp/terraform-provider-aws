@@ -200,7 +200,7 @@ func TestAccIAMUserDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) 
 
 func expectFullUserDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "user_name",
+		IdentifierAttribute: names.AttrUserName,
 		ResourceType:        "User",
 	}, knownValue)
 }

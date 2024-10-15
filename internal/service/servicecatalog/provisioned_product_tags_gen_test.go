@@ -2386,7 +2386,7 @@ func testAccServiceCatalogProvisionedProduct_removingTagNotSupported(t *testing.
 
 func expectFullProvisionedProductResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
-		IdentifierAttribute: "id",
+		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Provisioned Product",
 	}, knownValue)
 }
