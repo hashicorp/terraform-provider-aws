@@ -141,6 +141,35 @@ func testAccPermissions_databaseIAMAllowed(t *testing.T) {
 	})
 }
 
+func testAccPermissions_databaseIAMPrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dbName := "aws_glue_catalog_database.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_databaseIAMPrincipals(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					testAccCheckIAMPrincipalsGrantPrincipal(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
+					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissions_databaseMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -416,6 +445,36 @@ func testAccPermissions_tableIAMAllowed(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
+func testAccPermissions_tableIAMPrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dbName := "aws_glue_catalog_table.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_tableIAMPrincipals(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					testAccCheckIAMPrincipalsGrantPrincipal(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
+					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", dbName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", dbName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
 				),
 			},
 		},
@@ -807,6 +866,27 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckIAMPrincipalsGrantPrincipal(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
+		}
+
+		if v, ok := rs.Primary.Attributes["principal"]; ok && v != "" {
+			expectedPrincipalValue := acctest.AccountID() + ":IAMPrincipals"
+			if v == expectedPrincipalValue {
+				return nil
+			} else {
+				return fmt.Errorf("acceptance test: unexpected principal value for (%s). Is %s, should be %s", rs.Primary.ID, v, expectedPrincipalValue)
+			}
+		}
+
+		return fmt.Errorf("acceptance test: error finding IAMPrincipals grant (%s)", rs.Primary.ID)
+	}
 }
 
 func testAccCheckPermissionsDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -1386,6 +1466,61 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
+func testAccPermissionsConfig_databaseIAMPrincipals(rName string) string {
+	return fmt.Sprintf(`
+
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name = "event"
+      type = "string"
+    }
+
+    columns {
+      name = "timestamp"
+      type = "date"
+    }
+
+    columns {
+      name = "transactionamount"
+      type = "double"
+    }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = "${data.aws_caller_identity.current.account_id}:IAMPrincipals"
+
+  database {
+    name = aws_glue_catalog_database.test.name
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName)
+}
+
 func testAccPermissionsConfig_databaseMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1818,6 +1953,58 @@ resource "aws_glue_catalog_table" "test" {
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["ALL"]
   principal   = "IAM_ALLOWED_PRINCIPALS"
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
+`, rName)
+}
+
+func testAccPermissionsConfig_tableIAMPrincipals(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name = "event"
+      type = "string"
+    }
+
+    columns {
+      name = "timestamp"
+      type = "date"
+    }
+
+    columns {
+      name = "transactionamount"
+      type = "double"
+    }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = "${data.aws_caller_identity.current.account_id}:IAMPrincipals"
 
   table {
     database_name = aws_glue_catalog_database.test.name
