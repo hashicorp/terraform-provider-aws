@@ -78,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the resource share.
 * `tags` - Tags attached to the resource share.
 
-<!-- cache-key: cdktf-0.20.1 input-cc48f71c4e09b5c6f7d0408ca4b951d89f15df66932a2596fdb67c2f1aebceec -->
+<!-- cache-key: cdktf-0.20.9 input-cc48f71c4e09b5c6f7d0408ca4b951d89f15df66932a2596fdb67c2f1aebceec -->

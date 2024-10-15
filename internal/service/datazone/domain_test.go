@@ -51,7 +51,7 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
 			},
 		},
 	})
@@ -113,7 +113,7 @@ func TestAccDataZoneDomain_kms_key_identifier(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
 			},
 		},
 	})
@@ -148,7 +148,7 @@ func TestAccDataZoneDomain_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
 			},
 		},
 	})
@@ -182,7 +182,7 @@ func TestAccDataZoneDomain_single_sign_on(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// we do not set single_sign_on if it's the default value
-				ImportStateVerifyIgnore: []string{"single_sign_on"},
+				ImportStateVerifyIgnore: []string{"single_sign_on", "skip_deletion_check"},
 			},
 		},
 	})

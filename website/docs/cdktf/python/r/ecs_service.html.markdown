@@ -195,6 +195,7 @@ The following arguments are optional:
 * `desired_count` - (Optional) Number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the `DAEMON` scheduling strategy.
 * `enable_ecs_managed_tags` - (Optional) Whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enable_execute_command` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the service.
+* `force_delete` - (Optional) Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the `REPLICA` scheduling strategy.
 * `force_new_deployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `ordered_placement_strategy` and `placement_constraints` updates.
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
@@ -242,6 +243,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
 * `volume_type` - (Optional) Volume type.
+* `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
 ### capacity_provider_strategy
 
@@ -376,6 +378,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `dns_name` - (Optional) Name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
 
+### tag_specifications
+
+`tag_specifications` supports the following:
+
+* `resource_type` - (Required) The type of volume resource. Valid values, `volume`.
+* `propagate_tags` - (Optional) Determines whether to propagate the tags from the task definition to the Amazon EBS volume.
+* `tags` - (Optional) The tags applied to this Amazon EBS volume. `AmazonECSCreated` and `AmazonECSManaged` are reserved tags that can't be used.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -416,4 +426,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fa13cb8c58f9038901ec9965d988c52dd0b7ec9ac1fd9d8c34d94878526b3a45 -->
+<!-- cache-key: cdktf-0.20.9 input-9694658630fa74507bc8ff8947daee7d36a64aec10f6597c8db3e564febd7bb0 -->

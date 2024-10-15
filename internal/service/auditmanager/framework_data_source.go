@@ -143,7 +143,7 @@ type dataSourceFrameworkData struct {
 	FrameworkType  types.String `tfsdk:"framework_type"`
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
-	Tags           types.Map    `tfsdk:"tags"`
+	Tags           tftags.Map   `tfsdk:"tags"`
 }
 
 // refreshFromOutput writes state data from an AWS response object
@@ -167,7 +167,7 @@ func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	return diags
 }

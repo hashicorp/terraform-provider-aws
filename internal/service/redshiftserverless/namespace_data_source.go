@@ -67,7 +67,7 @@ func dataSourceNamespace() *schema.Resource {
 
 func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	namespaceName := d.Get("namespace_name").(string)
 	resource, err := findNamespaceByName(ctx, conn, namespaceName)

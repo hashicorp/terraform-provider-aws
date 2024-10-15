@@ -96,4 +96,4 @@ The `masterUserSecret` configuration block supports the following attributes:
 * `secretArn` - The Amazon Resource Name (ARN) of the secret.
 * `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
-<!-- cache-key: cdktf-0.20.1 input-156ff5865fbb8f8d95843d45c98755bb49f6b9ca52d29fab4979c7c7d124577a -->
+<!-- cache-key: cdktf-0.20.9 input-156ff5865fbb8f8d95843d45c98755bb49f6b9ca52d29fab4979c7c7d124577a -->

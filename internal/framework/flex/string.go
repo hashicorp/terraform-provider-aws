@@ -22,14 +22,24 @@ func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *strin
 	return output
 }
 
-// StringFromFramework converts a single Framework String value to a string pointer slice.
+// StringValueFromFramework converts a Framework String value to a string.
+// A null String is converted to an empty string.
+func StringValueFromFramework(ctx context.Context, v basetypes.StringValuable) string {
+	var output string
+
+	must(Expand(ctx, v, &output))
+
+	return output
+}
+
+// StringSliceValueFromFramework converts a single Framework String value to a string slice.
 // A null String is converted to a nil slice.
-func StringSliceFromFramework(ctx context.Context, v basetypes.StringValuable) []*string {
+func StringSliceValueFromFramework(ctx context.Context, v basetypes.StringValuable) []string {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
 	}
 
-	return []*string{StringFromFramework(ctx, v)}
+	return []string{StringValueFromFramework(ctx, v)}
 }
 
 // StringValueToFramework converts a string value to a Framework String value.
@@ -78,19 +88,6 @@ func StringToFrameworkValuable[T basetypes.StringValuable](ctx context.Context, 
 	must(Flatten(ctx, v, &output))
 
 	return output
-}
-
-func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	s := v.ValueString()
-	if s == "" {
-		return nil
-	}
-
-	return aws.String(s)
 }
 
 func EmptyStringAsNull(v types.String) types.String {

@@ -66,7 +66,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.CreateCarrierGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeCarrierGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCarrierGateway),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
@@ -78,7 +78,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(output.CarrierGateway.CarrierGatewayId))
 
-	if _, err := waitCarrierGatewayCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCarrierGatewayCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Carrier Gateway (%s) create: %s", d.Id(), err)
 	}
 
@@ -113,7 +113,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set(names.AttrVPCID, carrierGateway.VpcId)
 
-	setTagsOutV2(ctx, carrierGateway.Tags)
+	setTagsOut(ctx, carrierGateway.Tags)
 
 	return diags
 }
@@ -143,7 +143,7 @@ func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Carrier Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitCarrierGatewayDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCarrierGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Carrier Gateway (%s) delete: %s", d.Id(), err)
 	}
 

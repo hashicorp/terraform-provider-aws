@@ -158,7 +158,7 @@ func (r *resourceSnapshotCopy) Update(ctx context.Context, req resource.UpdateRe
 
 	if !plan.RetentionPeriod.Equal(state.RetentionPeriod) {
 		in := &redshift.ModifySnapshotCopyRetentionPeriodInput{
-			ClusterIdentifier: aws.String(plan.ClusterIdentifier.ValueString()),
+			ClusterIdentifier: plan.ClusterIdentifier.ValueStringPointer(),
 			RetentionPeriod:   aws.Int32(int32(plan.RetentionPeriod.ValueInt64())),
 		}
 
@@ -194,7 +194,7 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	in := &redshift.DisableSnapshotCopyInput{
-		ClusterIdentifier: aws.String(state.ID.ValueString()),
+		ClusterIdentifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DisableSnapshotCopy(ctx, in)

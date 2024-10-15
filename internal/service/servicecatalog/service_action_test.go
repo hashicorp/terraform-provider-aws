@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -117,7 +118,7 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 
 func testAccCheckServiceActionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_service_action" {
@@ -128,9 +129,9 @@ func testAccCheckServiceActionDestroy(ctx context.Context) resource.TestCheckFun
 				Id: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.DescribeServiceActionWithContext(ctx, input)
+			output, err := conn.DescribeServiceAction(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -155,13 +156,13 @@ func testAccCheckServiceActionExists(ctx context.Context, resourceName string) r
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeServiceActionWithContext(ctx, input)
+		_, err := conn.DescribeServiceAction(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Service Action (%s): %w", rs.Primary.ID, err)

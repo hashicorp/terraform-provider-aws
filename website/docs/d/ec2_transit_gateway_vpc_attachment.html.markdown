@@ -49,6 +49,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `appliance_mode_support` - Whether Appliance Mode support is enabled.
 * `dns_support` - Whether DNS support is enabled.
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled.
 * `id` - EC2 Transit Gateway VPC Attachment identifier
 * `ipv6_support` - Whether IPv6 support is enabled.
 * `subnet_ids` - Identifiers of EC2 Subnets.

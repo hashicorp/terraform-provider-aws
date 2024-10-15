@@ -138,6 +138,10 @@ func testAccPreCheckSharingWithOrganizationEnabled(ctx context.Context, t *testi
 	if tfresource.NotFound(err) {
 		t.Skipf("Sharing with AWS Organization not found, skipping acceptance test: %s", err)
 	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccCheckPrincipalAssociationExists(ctx context.Context, n string, v *awstypes.ResourceShareAssociation) resource.TestCheckFunc {

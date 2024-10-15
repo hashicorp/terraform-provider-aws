@@ -16,22 +16,20 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	// Force "global" services to correct Regions.
-	if config["partition"].(string) == names.StandardPartitionID {
-		cfg.Region = names.USEast1RegionID
-	}
-
-	return shield.NewFromConfig(cfg, func(o *shield.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws.String(endpoint)
-
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+	return shield.NewFromConfig(cfg,
+		shield.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *shield.Options) {
+			// Force "global" services to correct Regions.
+			if config["partition"].(string) == names.StandardPartitionID {
+				if cfg.Region != names.USEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USEast1RegionID,
+					})
+					o.Region = names.USEast1RegionID
+				}
 			}
-		}
-	}), nil
+		},
+	), nil
 }

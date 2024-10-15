@@ -7,19 +7,20 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_opsworks_rds_db_instance")
-func ResourceRDSDBInstance() *schema.Resource {
+// @SDKResource("aws_opsworks_rds_db_instance", name="RDS DB Instance")
+func resourceRDSDBInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRDSDBInstanceCreate,
 		UpdateWithoutTimeout: resourceRDSDBInstanceUpdate,
@@ -52,7 +53,7 @@ func ResourceRDSDBInstance() *schema.Resource {
 
 func resourceRDSDBInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	client := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	dbInstanceARN := d.Get("rds_db_instance_arn").(string)
 	stackID := d.Get("stack_id").(string)
@@ -64,7 +65,7 @@ func resourceRDSDBInstanceCreate(ctx context.Context, d *schema.ResourceData, me
 		StackId:          aws.String(stackID),
 	}
 
-	_, err := client.RegisterRdsDbInstanceWithContext(ctx, input)
+	_, err := client.RegisterRdsDbInstance(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering OpsWorks RDS DB Instance (%s): %s", id, err)
@@ -77,9 +78,9 @@ func resourceRDSDBInstanceCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRDSDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
-	dbInstance, err := FindRDSDBInstanceByTwoPartKey(ctx, conn, d.Get("rds_db_instance_arn").(string), d.Get("stack_id").(string))
+	dbInstance, err := findRDSDBInstanceByTwoPartKey(ctx, conn, d.Get("rds_db_instance_arn").(string), d.Get("stack_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks RDS DB Instance %s not found, removing from state", d.Id())
@@ -100,7 +101,7 @@ func resourceRDSDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRDSDBInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	client := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	input := &opsworks.UpdateRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
@@ -114,7 +115,7 @@ func resourceRDSDBInstanceUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.DbUser = aws.String(d.Get("db_user").(string))
 	}
 
-	_, err := client.UpdateRdsDbInstanceWithContext(ctx, input)
+	_, err := client.UpdateRdsDbInstance(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating OpsWorks RDS DB Instance (%s): %s", d.Id(), err)
@@ -125,14 +126,14 @@ func resourceRDSDBInstanceUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRDSDBInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	client := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	log.Printf("[DEBUG] Deregistering OpsWorks RDS DB Instance: %s", d.Id())
-	_, err := client.DeregisterRdsDbInstanceWithContext(ctx, &opsworks.DeregisterRdsDbInstanceInput{
+	_, err := client.DeregisterRdsDbInstance(ctx, &opsworks.DeregisterRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -143,14 +144,14 @@ func resourceRDSDBInstanceDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindRDSDBInstanceByTwoPartKey(ctx context.Context, conn *opsworks.OpsWorks, dbInstanceARN, stackID string) (*opsworks.RdsDbInstance, error) {
+func findRDSDBInstanceByTwoPartKey(ctx context.Context, conn *opsworks.Client, dbInstanceARN, stackID string) (*awstypes.RdsDbInstance, error) {
 	input := &opsworks.DescribeRdsDbInstancesInput{
 		StackId: aws.String(stackID),
 	}
 
-	output, err := conn.DescribeRdsDbInstancesWithContext(ctx, input)
+	output, err := conn.DescribeRdsDbInstances(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -166,8 +167,8 @@ func FindRDSDBInstanceByTwoPartKey(ctx context.Context, conn *opsworks.OpsWorks,
 	}
 
 	for _, v := range output.RdsDbInstances {
-		if aws.StringValue(v.RdsDbInstanceArn) == dbInstanceARN {
-			return v, nil
+		if aws.ToString(v.RdsDbInstanceArn) == dbInstanceARN {
+			return &v, nil
 		}
 	}
 

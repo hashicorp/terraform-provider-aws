@@ -74,7 +74,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"retrieval_role_arn": {
 				Type:         schema.TypeString,

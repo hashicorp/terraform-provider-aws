@@ -4,45 +4,38 @@ package {{ .PackageName }}_test
 
 import (
 	"context"
-	{{- if ne .GoV2Package "" }}
+{{- if eq .SDKVersion 2 }}
 	"errors"
 	"reflect"
-	{{- end }}
+{{- end }}
 	"fmt"
 	"maps"
-	{{- if and (ne .GoV1Package "") (eq .GoV2Package "") }}
+	"net"
 	"net/url"
-	{{- end }}
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	{{ if ne .GoV1Package "" }}
+{{ if eq .SDKVersion 1 -}}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	{{- if eq .GoV2Package "" }}
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	{{- end }}
-	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	{{- end }}
-	{{- if ne .V1AlternateInputPackage "" }}
-	{{ .V1AlternateInputPackage }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .V1AlternateInputPackage }}"
-	{{- end -}}
-	{{- if ne .GoV2Package "" }}
+	{{ .GoPackage }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoPackage }}"
+{{ else }}
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{ .GoPackage }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}"
 	{{- if .ImportAwsTypes }}
-	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}/types"
 	{{- end }}
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
-	{{- end }}
+{{ end -}}
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
-	{{- if gt (len .Aliases) 0 }}
+{{- if gt (len .Aliases) 0 }}
     "github.com/hashicorp/go-cty/cty"
-	{{- end }}
+{{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -133,7 +126,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(expectedEndpointRegion),
+			expected: expectDefaultEndpoint(t, expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -474,7 +467,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(expectedEndpointRegion),
+			expected: expectDefaultFIPSEndpoint(t, expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -486,64 +479,40 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	{{ if and (ne .GoV1Package "") (ne .GoV2Package "") }}
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV2)
-			})
-		}
-	})
-	{{ else }}
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
             testEndpointCase(t, providerRegion, testcase, callService)
 		})
 	}
-	{{ end -}}
 }
 
-func defaultEndpoint(region string) string {
-{{- if ne .GoV2Package "" }}
-	r := {{ .GoV2Package }}_sdkv2.NewDefaultEndpointResolverV2()
+func defaultEndpoint(region string) (url.URL, error) {
+{{- if eq .SDKVersion 2 }}
+	r := {{ .GoPackage }}_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoV2Package }}_sdkv2.EndpointParameters{
+	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}_sdkv2.EndpointParameters{
 		Region: aws_sdkv2.String(region),
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	if ep.URI.Path == "" {
 		ep.URI.Path = "/"
 	}
 
-	return ep.URI.String()
+	return ep.URI, nil
 {{ else }}
 	r := endpoints.DefaultResolver()
 
-	ep, err := r.EndpointFor({{ .GoV1Package }}_sdkv1.EndpointsID, region
+	ep, err := r.EndpointFor({{ .GoPackage }}_sdkv1.EndpointsID, region
 	{{- if .V1NameResolverNeedsUnknownService }}, func(opt *endpoints.Options) {
 			opt.ResolveUnknownService = true
 		}
 	{{- end -}}
 	)
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	url, _ := url.Parse(ep.URL)
@@ -552,36 +521,36 @@ func defaultEndpoint(region string) string {
 		url.Path = "/"
 	}
 
-	return url.String()
+	return *url, nil
 {{ end -}}
 }
 
-func defaultFIPSEndpoint(region string) string {
-{{- if ne .GoV2Package "" }}
-	r := {{ .GoV2Package }}_sdkv2.NewDefaultEndpointResolverV2()
+func defaultFIPSEndpoint(region string) (url.URL, error) {
+{{- if eq .SDKVersion 2 }}
+	r := {{ .GoPackage }}_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoV2Package }}_sdkv2.EndpointParameters{
+	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}_sdkv2.EndpointParameters{
 		Region:  aws_sdkv2.String(region),
 		UseFIPS: aws_sdkv2.Bool(true),
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	if ep.URI.Path == "" {
 		ep.URI.Path = "/"
 	}
 
-	return ep.URI.String()
+	return ep.URI, nil
 {{ else }}
 	r := endpoints.DefaultResolver()
 
-	ep, err := r.EndpointFor({{ .GoV1Package }}_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
+	ep, err := r.EndpointFor({{ .GoPackage }}_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
 		{{- if .V1NameResolverNeedsUnknownService }}opt.ResolveUnknownService = true{{ end }}
 		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	url, _ := url.Parse(ep.URL)
@@ -590,22 +559,22 @@ func defaultFIPSEndpoint(region string) string {
 		url.Path = "/"
 	}
 
-	return url.String()
+	return *url, nil
 {{ end -}}
 }
 
-{{ if ne .GoV2Package "" }}
-func callService{{ if ne .GoV1Package "" }}V2{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+{{ if eq .SDKVersion 2 }}
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.{{ .ProviderNameUpper }}Client(ctx)
 
 	var result apiCallParams
 
-	_, err := client.{{ .APICall }}(ctx, &{{ .GoV2Package }}_sdkv2.{{ .APICall }}Input{
+	_, err := client.{{ .APICall }}(ctx, &{{ .GoPackage }}_sdkv2.{{ .APICall }}Input{
 	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
 	},
-		func(opts *{{ .GoV2Package }}_sdkv2.Options) {
+		func(opts *{{ .GoPackage }}_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -623,16 +592,13 @@ func callService{{ if ne .GoV1Package "" }}V2{{ end }}(ctx context.Context, t *t
 }
 {{ end }}
 
-{{ if ne .GoV1Package "" }}
-func callService{{ if ne .GoV2Package "" }}V1{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+{{ if eq .SDKVersion 1 }}
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.{{ .ProviderNameUpper }}Conn(ctx)
 
-	{{ $inputPkg := .GoV1Package }}
-	{{ if ne .V1AlternateInputPackage "" }}{{ $inputPkg = .V1AlternateInputPackage }}{{ end }}
-
-	req, _ := client.{{ .APICall }}Request( &{{ $inputPkg }}_sdkv1.{{ .APICall }}Input{
+	req, _ := client.{{ .APICall }}Request( &{{ .GoPackage }}_sdkv1.{{ .APICall }}Input{
 	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
 	})
 
@@ -716,16 +682,38 @@ func withUseFIPSInConfig(setup *caseSetup) {
 	setup.config["use_fips_endpoint"] = true
 }
 
-func expectDefaultEndpoint(region string) caseExpectations {
+func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer default endpoint: %s", err)
+	}
+
 	return caseExpectations{
-		endpoint: defaultEndpoint(region),
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }
 
-func expectDefaultFIPSEndpoint(region string) caseExpectations {
-	return caseExpectations{
-		endpoint: defaultFIPSEndpoint(region),
+func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultFIPSEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer FIPS endpoint: %s", err)
+	}
+
+	hostname := endpoint.Hostname()
+	_, err = net.LookupHost(hostname)
+	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
+		return expectDefaultEndpoint(t, region)
+	} else if err != nil {
+		t.Fatalf("looking up accessanalyzer endpoint %q: %s", hostname, err)
+	}
+
+ 	return caseExpectations{
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }
@@ -869,7 +857,7 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 }
 
-{{ if ne .GoV2Package "" }}
+{{ if eq .SDKVersion 2 }}
 func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
 		return stack.Finalize.Add(

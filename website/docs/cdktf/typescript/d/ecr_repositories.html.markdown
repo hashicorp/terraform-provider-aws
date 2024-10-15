@@ -45,4 +45,4 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - AWS Region.
 * `names` - A list if AWS Elastic Container Registries for the region.
 
-<!-- cache-key: cdktf-0.20.1 input-7e428cb2cac4231451f996e2bdd793475d82b45ae5da0ffb3316ff18dd2de336 -->
+<!-- cache-key: cdktf-0.20.9 input-7e428cb2cac4231451f996e2bdd793475d82b45ae5da0ffb3316ff18dd2de336 -->

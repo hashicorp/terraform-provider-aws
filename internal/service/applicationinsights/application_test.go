@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/applicationinsights"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,7 @@ import (
 
 func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app applicationinsights.ApplicationInfo
+	var app awstypes.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
 
@@ -67,7 +66,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 
 func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app applicationinsights.ApplicationInfo
+	var app awstypes.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
 
@@ -100,7 +99,7 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 
 func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app applicationinsights.ApplicationInfo
+	var app awstypes.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
 
@@ -125,14 +124,15 @@ func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_applicationinsights_application" {
 				continue
 			}
 
-			app, err := tfapplicationinsights.FindApplicationByName(ctx, conn, rs.Primary.ID)
+			_, err := tfapplicationinsights.FindApplicationByName(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -141,39 +141,35 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			if aws.StringValue(app.ResourceGroupName) == rs.Primary.ID {
-				return fmt.Errorf("applicationinsights Application %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("ApplicationInsights Application %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, app *applicationinsights.ApplicationInfo) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.ApplicationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No applicationinsights Application ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn(ctx)
-		resp, err := tfapplicationinsights.FindApplicationByName(ctx, conn, rs.Primary.ID)
+		output, err := tfapplicationinsights.FindApplicationByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*app = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccApplicationConfigBase(rName string) string {
+func testAccApplicationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name = %[1]q
@@ -200,18 +196,18 @@ JSON
 }
 
 func testAccApplicationConfig_basic(rName string) string {
-	return testAccApplicationConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccApplicationConfig_base(rName), `
 resource "aws_applicationinsights_application" "test" {
   resource_group_name = aws_resourcegroups_group.test.name
 }
-`
+`)
 }
 
 func testAccApplicationConfig_updated(rName string) string {
-	return testAccApplicationConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccApplicationConfig_base(rName), `
 resource "aws_applicationinsights_application" "test" {
   resource_group_name = aws_resourcegroups_group.test.name
   auto_config_enabled = true
 }
-`
+`)
 }

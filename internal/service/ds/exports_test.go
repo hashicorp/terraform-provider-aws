@@ -5,7 +5,20 @@ package ds
 
 // Exports for use in tests only.
 var (
-	DirectoryIDValidator           = directoryIDValidator
-	DomainWithTrailingDotValidator = domainWithTrailingDotValidator
-	TrustPasswordValidator         = trustPasswordValidator
+	ResourceConditionalForwarder    = resourceConditionalForwarder
+	ResourceDirectory               = resourceDirectory
+	ResourceLogSubscription         = resourceLogSubscription
+	ResourceRadiusSettings          = resourceRadiusSettings
+	ResourceRegion                  = resourceRegion
+	ResourceSharedDirectory         = resourceSharedDirectory
+	ResourceSharedDirectoryAccepter = resourceSharedDirectoryAccepter
+	ResourceTrust                   = newTrustResource
+
+	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
+	FindDirectoryByID                    = findDirectoryByID
+	FindLogSubscriptionByID              = findLogSubscriptionByID
+	FindRadiusSettingsByID               = findRadiusSettingsByID
+	FindRegionByTwoPartKey               = findRegionByTwoPartKey
+	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey // nosemgrep:ci.ds-in-var-name
+	FindTrustByTwoPartKey                = findTrustByTwoPartKey
 )

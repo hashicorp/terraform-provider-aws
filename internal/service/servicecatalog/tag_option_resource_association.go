@@ -8,20 +8,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_tag_option_resource_association")
-func ResourceTagOptionResourceAssociation() *schema.Resource {
+// @SDKResource("aws_servicecatalog_tag_option_resource_association", name="Tag Option Resource Association")
+func resourceTagOptionResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagOptionResourceAssociationCreate,
 		ReadWithoutTimeout:   resourceTagOptionResourceAssociationRead,
@@ -69,7 +70,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 
 func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.AssociateTagOptionWithResourceInput{
 		ResourceId:  aws.String(d.Get(names.AttrResourceID).(string)),
@@ -80,9 +81,9 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
-		output, err = conn.AssociateTagOptionWithResourceWithContext(ctx, input)
+		output, err = conn.AssociateTagOptionWithResource(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -94,7 +95,7 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.AssociateTagOptionWithResourceWithContext(ctx, input)
+		output, err = conn.AssociateTagOptionWithResource(ctx, input)
 	}
 
 	if err != nil {
@@ -105,22 +106,22 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option Resource Association: empty response")
 	}
 
-	d.SetId(TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get(names.AttrResourceID).(string)))
+	d.SetId(tagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get(names.AttrResourceID).(string)))
 
 	return append(diags, resourceTagOptionResourceAssociationRead(ctx, d, meta)...)
 }
 
 func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
+	tagOptionID, resourceID, err := tagOptionResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
 	}
 
-	output, err := WaitTagOptionResourceAssociationReady(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutRead))
+	output, err := waitTagOptionResourceAssociationReady(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Tag Option Resource Association (%s) not found, removing from state", d.Id())
@@ -151,9 +152,9 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 
 func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
+	tagOptionID, resourceID, err := tagOptionResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -164,9 +165,9 @@ func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.R
 		TagOptionId: aws.String(tagOptionID),
 	}
 
-	_, err = conn.DisassociateTagOptionFromResourceWithContext(ctx, input)
+	_, err = conn.DisassociateTagOptionFromResource(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -174,7 +175,7 @@ func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "disassociating Service Catalog Tag Option from Resource (%s): %s", d.Id(), err)
 	}
 
-	err = WaitTagOptionResourceAssociationDeleted(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutDelete))
+	err = waitTagOptionResourceAssociationDeleted(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Tag Option Resource Disassociation (%s): %s", d.Id(), err)

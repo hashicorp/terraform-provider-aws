@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -146,7 +147,7 @@ func ResourceDetector() *schema.Resource {
 
 func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	input := &guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
@@ -158,23 +159,23 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
-		input.FindingPublishingFrequency = aws.String(v.(string))
+		input.FindingPublishingFrequency = awstypes.FindingPublishingFrequency(v.(string))
 	}
 
-	output, err := conn.CreateDetectorWithContext(ctx, input)
+	output, err := conn.CreateDetector(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Detector: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.DetectorId))
+	d.SetId(aws.ToString(output.DetectorId))
 
 	return append(diags, resourceDetectorRead(ctx, d, meta)...)
 }
 
 func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	gdo, err := FindDetectorByID(ctx, conn, d.Id())
 
@@ -205,7 +206,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("datasources", nil)
 	}
-	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
+	d.Set("enable", gdo.Status == awstypes.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
 	setTagsOut(ctx, gdo.Tags)
@@ -215,20 +216,20 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),
-			FindingPublishingFrequency: aws.String(d.Get("finding_publishing_frequency").(string)),
+			FindingPublishingFrequency: awstypes.FindingPublishingFrequency(d.Get("finding_publishing_frequency").(string)),
 		}
 
 		if d.HasChange("datasources") {
 			input.DataSources = expandDataSourceConfigurations(d.Get("datasources").([]interface{})[0].(map[string]interface{}))
 		}
 
-		_, err := conn.UpdateDetectorWithContext(ctx, input)
+		_, err := conn.UpdateDetector(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s): %s", d.Id(), err)
@@ -240,16 +241,16 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting GuardDuty Detector: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, membershipPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteDetectorWithContext(ctx, &guardduty.DeleteDetectorInput{
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.BadRequestException](ctx, membershipPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDetector(ctx, &guardduty.DeleteDetectorInput{
 			DetectorId: aws.String(d.Id()),
 		})
-	}, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members")
+	}, "cannot delete detector while it has invited or associated members")
 
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 		return diags
 	}
 
@@ -260,12 +261,12 @@ func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.DataSourceConfigurations {
+func expandDataSourceConfigurations(tfMap map[string]interface{}) *awstypes.DataSourceConfigurations {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &guardduty.DataSourceConfigurations{}
+	apiObject := &awstypes.DataSourceConfigurations{}
 
 	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Kubernetes = expandKubernetesConfiguration(v[0].(map[string]interface{}))
@@ -282,7 +283,7 @@ func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.Dat
 	return apiObject
 }
 
-func expandKubernetesConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesConfiguration {
+func expandKubernetesConfiguration(tfMap map[string]interface{}) *awstypes.KubernetesConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -297,17 +298,17 @@ func expandKubernetesConfiguration(tfMap map[string]interface{}) *guardduty.Kube
 		return nil
 	}
 
-	return &guardduty.KubernetesConfiguration{
+	return &awstypes.KubernetesConfiguration{
 		AuditLogs: expandKubernetesAuditLogsConfiguration(m),
 	}
 }
 
-func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesAuditLogsConfiguration {
+func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *awstypes.KubernetesAuditLogsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &guardduty.KubernetesAuditLogsConfiguration{}
+	apiObject := &awstypes.KubernetesAuditLogsConfiguration{}
 
 	if v, ok := tfMap["enable"].(bool); ok {
 		apiObject.Enable = aws.Bool(v)
@@ -316,7 +317,7 @@ func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guard
 	return apiObject
 }
 
-func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *guardduty.MalwareProtectionConfiguration {
+func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *awstypes.MalwareProtectionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -331,12 +332,12 @@ func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *guarddu
 		return nil
 	}
 
-	return &guardduty.MalwareProtectionConfiguration{
+	return &awstypes.MalwareProtectionConfiguration{
 		ScanEc2InstanceWithFindings: expandScanEc2InstanceWithFindings(m),
 	}
 }
 
-func expandScanEc2InstanceWithFindings(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings { // nosemgrep:ci.caps3-in-func-name
+func expandScanEc2InstanceWithFindings(tfMap map[string]interface{}) *awstypes.ScanEc2InstanceWithFindings { // nosemgrep:ci.caps3-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -351,7 +352,7 @@ func expandScanEc2InstanceWithFindings(tfMap map[string]interface{}) *guardduty.
 		return nil
 	}
 
-	apiObject := &guardduty.ScanEc2InstanceWithFindings{
+	apiObject := &awstypes.ScanEc2InstanceWithFindings{
 		EbsVolumes: expandMalwareProtectionEBSVolumesConfiguration(m),
 	}
 
@@ -372,12 +373,12 @@ func expandMalwareProtectionEBSVolumesConfiguration(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsConfiguration {
+func expandS3LogsConfiguration(tfMap map[string]interface{}) *awstypes.S3LogsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &guardduty.S3LogsConfiguration{}
+	apiObject := &awstypes.S3LogsConfiguration{}
 
 	if v, ok := tfMap["enable"].(bool); ok {
 		apiObject.Enable = aws.Bool(v)
@@ -386,7 +387,7 @@ func expandS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsCo
 	return apiObject
 }
 
-func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
+func flattenDataSourceConfigurationsResult(apiObject *awstypes.DataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -408,7 +409,7 @@ func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfig
 	return tfMap
 }
 
-func flattenKubernetesConfiguration(apiObject *guardduty.KubernetesConfigurationResult) map[string]interface{} {
+func flattenKubernetesConfiguration(apiObject *awstypes.KubernetesConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -422,21 +423,19 @@ func flattenKubernetesConfiguration(apiObject *guardduty.KubernetesConfiguration
 	return tfMap
 }
 
-func flattenKubernetesAuditLogsConfiguration(apiObject *guardduty.KubernetesAuditLogsConfigurationResult) map[string]interface{} {
+func flattenKubernetesAuditLogsConfiguration(apiObject *awstypes.KubernetesAuditLogsConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Status; v != nil {
-		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
-	}
+	tfMap["enable"] = apiObject.Status == awstypes.DataSourceStatusEnabled
 
 	return tfMap
 }
 
-func flattenMalwareProtectionConfiguration(apiObject *guardduty.MalwareProtectionConfigurationResult) map[string]interface{} {
+func flattenMalwareProtectionConfiguration(apiObject *awstypes.MalwareProtectionConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -450,7 +449,7 @@ func flattenMalwareProtectionConfiguration(apiObject *guardduty.MalwareProtectio
 	return tfMap
 }
 
-func flattenScanEc2InstanceWithFindingsResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
+func flattenScanEc2InstanceWithFindingsResult(apiObject *awstypes.ScanEc2InstanceWithFindingsResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -464,42 +463,38 @@ func flattenScanEc2InstanceWithFindingsResult(apiObject *guardduty.ScanEc2Instan
 	return tfMap
 }
 
-func flattenEbsVolumesResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
+func flattenEbsVolumesResult(apiObject *awstypes.EbsVolumesResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Status; v != nil {
-		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
-	}
+	tfMap["enable"] = apiObject.Status == awstypes.DataSourceStatusEnabled
 
 	return tfMap
 }
 
-func flattenS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationResult) map[string]interface{} {
+func flattenS3LogsConfigurationResult(apiObject *awstypes.S3LogsConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Status; v != nil {
-		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
-	}
+	tfMap["enable"] = apiObject.Status == awstypes.DataSourceStatusEnabled
 
 	return tfMap
 }
 
-func FindDetectorByID(ctx context.Context, conn *guardduty.GuardDuty, id string) (*guardduty.GetDetectorOutput, error) {
+func FindDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.GetDetectorOutput, error) {
 	input := &guardduty.GetDetectorInput{
 		DetectorId: aws.String(id),
 	}
 
-	output, err := conn.GetDetectorWithContext(ctx, input)
+	output, err := conn.GetDetector(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -518,32 +513,30 @@ func FindDetectorByID(ctx context.Context, conn *guardduty.GuardDuty, id string)
 }
 
 // FindDetector returns the ID of the current account's active GuardDuty detector.
-func FindDetector(ctx context.Context, conn *guardduty.GuardDuty) (*string, error) {
+func FindDetector(ctx context.Context, conn *guardduty.Client) (*string, error) {
 	output, err := findDetectors(ctx, conn)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDetectors(ctx context.Context, conn *guardduty.GuardDuty) ([]*string, error) {
+func findDetectors(ctx context.Context, conn *guardduty.Client) ([]string, error) {
 	input := &guardduty.ListDetectorsInput{}
-	var output []*string
+	var output []string
 
-	err := conn.ListDetectorsPagesWithContext(ctx, input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := guardduty.NewListDetectorsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		output = append(output, page.DetectorIds...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil

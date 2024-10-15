@@ -93,4 +93,4 @@ Using `terraform import`, import domain configurations using the name. For examp
 % terraform import aws_iot_domain_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-04f3616f1c859dbd5767c590de0b217a193898e5e8c076850c9f607bb1d4c226 -->
+<!-- cache-key: cdktf-0.20.9 input-04f3616f1c859dbd5767c590de0b217a193898e5e8c076850c9f607bb1d4c226 -->

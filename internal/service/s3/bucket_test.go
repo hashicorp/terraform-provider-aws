@@ -19,7 +19,6 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -303,7 +302,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -3056,6 +3055,9 @@ func testAccBucketConfig_ReplicationBase(bucketName string) string {
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_iam_role" "role" {
   name = %[1]q
@@ -3067,7 +3069,7 @@ resource "aws_iam_role" "role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -3580,6 +3582,10 @@ resource "aws_s3_bucket" "source" {
 
 func testAccBucketConfig_replicationV2SameRegionNoTags(rName string) string {
 	return fmt.Sprintf(`
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -3590,7 +3596,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.amazonaws.com"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""

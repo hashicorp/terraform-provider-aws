@@ -76,7 +76,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the new event bus. The names of custom event buses can't contain the / character. To create a partner event bus, ensure the `name` matches the `eventSourceName`.
-* `eventSourceName` (Optional) The partner event source that the new event bus will be matched with. Must match `name`.
+* `eventSourceName` - (Optional) The partner event source that the new event bus will be matched with. Must match `name`.
+* `kmsKeyIdentifier` - (Optional) The identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
 * `tags` - (Optional)  A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -118,4 +119,4 @@ Using `terraform import`, import EventBridge event buses using the `name` (which
 % terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-740b7ef9a57fce58b33a2b98397aad29a82f722b6025aed22c549b727c9580eb -->
+<!-- cache-key: cdktf-0.20.9 input-384e9d2b003f92ac8d74b3ce6f822a42c332160a102f7d670366c0325c99b7e2 -->

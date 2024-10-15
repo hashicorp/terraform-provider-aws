@@ -11,15 +11,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -65,17 +66,17 @@ const (
 func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	consumerArn := d.Get("consumer_arn").(string)
 	trackerName := d.Get("tracker_name").(string)
 
-	in := &locationservice.AssociateTrackerConsumerInput{
+	in := &location.AssociateTrackerConsumerInput{
 		ConsumerArn: aws.String(consumerArn),
 		TrackerName: aws.String(trackerName),
 	}
 
-	out, err := conn.AssociateTrackerConsumerWithContext(ctx, in)
+	out, err := conn.AssociateTrackerConsumer(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get(names.AttrName).(string), err)
 	}
@@ -92,7 +93,7 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
@@ -120,7 +121,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	log.Printf("[INFO] Deleting Location TrackerAssociation %s", d.Id())
 
@@ -129,12 +130,12 @@ func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
-	_, err = conn.DisassociateTrackerConsumerWithContext(ctx, &locationservice.DisassociateTrackerConsumerInput{
+	_, err = conn.DisassociateTrackerConsumer(ctx, &location.DisassociateTrackerConsumerInput{
 		ConsumerArn: aws.String(trackerAssociationId.ConsumerARN),
 		TrackerName: aws.String(trackerAssociationId.TrackerName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -146,30 +147,28 @@ func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 // FindTrackerAssociationByTrackerNameAndConsumerARN returns an error if an association for specified tracker and consumer cannot be found
-func FindTrackerAssociationByTrackerNameAndConsumerARN(ctx context.Context, conn *locationservice.LocationService, trackerName, consumerARN string) error {
-	in := &locationservice.ListTrackerConsumersInput{
+func FindTrackerAssociationByTrackerNameAndConsumerARN(ctx context.Context, conn *location.Client, trackerName, consumerARN string) error {
+	in := &location.ListTrackerConsumersInput{
 		TrackerName: aws.String(trackerName),
 	}
 
 	found := false
 
-	err := conn.ListTrackerConsumersPagesWithContext(ctx, in, func(page *locationservice.ListTrackerConsumersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := location.NewListTrackerConsumersPaginator(conn, in)
+
+	for pages.HasMorePages() && !found {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return err
 		}
 
 		for _, arn := range page.ConsumerArns {
-			if aws.StringValue(arn) == consumerARN {
+			if arn == consumerARN {
 				found = true
-				return false
+				break
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return err
 	}
 
 	if !found {

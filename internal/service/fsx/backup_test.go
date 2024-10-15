@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,12 +23,12 @@ import (
 
 func TestAccFSxBackup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -53,14 +53,14 @@ func TestAccFSxBackup_basic(t *testing.T) {
 
 func TestAccFSxBackup_ontapBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	//FSX ONTAP Volume Names can't use dash only underscore
 	vName := strings.Replace(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_", -1)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -85,12 +85,12 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 
 func TestAccFSxBackup_openzfsBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -115,13 +115,13 @@ func TestAccFSxBackup_openzfsBasic(t *testing.T) {
 
 func TestAccFSxBackup_windowsBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -146,12 +146,12 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 
 func TestAccFSxBackup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -170,12 +170,12 @@ func TestAccFSxBackup_disappears(t *testing.T) {
 
 func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -194,12 +194,12 @@ func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 
 func TestAccFSxBackup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -240,12 +240,12 @@ func TestAccFSxBackup_tags(t *testing.T) {
 
 func TestAccFSxBackup_implicitTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
@@ -267,14 +267,14 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 	})
 }
 
-func testAccCheckBackupExists(ctx context.Context, n string, v *fsx.Backup) resource.TestCheckFunc {
+func testAccCheckBackupExists(ctx context.Context, n string, v *awstypes.Backup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		output, err := tffsx.FindBackupByID(ctx, conn, rs.Primary.ID)
 
@@ -290,7 +290,7 @@ func testAccCheckBackupExists(ctx context.Context, n string, v *fsx.Backup) reso
 
 func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_backup" {

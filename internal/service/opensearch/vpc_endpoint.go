@@ -10,21 +10,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_opensearch_vpc_endpoint")
-func ResourceVPCEndpoint() *schema.Resource {
+// @SDKResource("aws_opensearch_vpc_endpoint", name="VPC Endpoint")
+func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
@@ -87,20 +89,20 @@ func ResourceVPCEndpoint() *schema.Resource {
 
 func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	input := &opensearchservice.CreateVpcEndpointInput{
+	input := &opensearch.CreateVpcEndpointInput{
 		DomainArn:  aws.String(d.Get("domain_arn").(string)),
 		VpcOptions: expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
 	}
 
-	output, err := conn.CreateVpcEndpointWithContext(ctx, input)
+	output, err := conn.CreateVpcEndpoint(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpenSearch VPC Endpoint: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.VpcEndpoint.VpcEndpointId))
+	d.SetId(aws.ToString(output.VpcEndpoint.VpcEndpointId))
 
 	if err := waitVPCEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch VPC Endpoint (%s) create: %s", d.Id(), err)
@@ -111,7 +113,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	endpoint, err := findVPCEndpointByID(ctx, conn, d.Id())
 
@@ -140,14 +142,14 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	input := &opensearchservice.UpdateVpcEndpointInput{
+	input := &opensearch.UpdateVpcEndpointInput{
 		VpcOptions:    expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
 		VpcEndpointId: aws.String(d.Id()),
 	}
 
-	_, err := conn.UpdateVpcEndpointWithContext(ctx, input)
+	_, err := conn.UpdateVpcEndpoint(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating OpenSearch VPC Endpoint (%s): %s", d.Id(), err)
@@ -162,14 +164,14 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting OpenSearch VPC Endpoint: %s", d.Id())
-	_, err := conn.DeleteVpcEndpointWithContext(ctx, &opensearchservice.DeleteVpcEndpointInput{
+	_, err := conn.DeleteVpcEndpoint(ctx, &opensearch.DeleteVpcEndpointInput{
 		VpcEndpointId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -214,23 +216,19 @@ func (e *vpcEndpointNotFoundError) As(target any) bool {
 	return true
 }
 
-func vpcEndpointError(apiObject *opensearchservice.VpcEndpointError) error {
-	if apiObject == nil {
-		return nil
-	}
+func vpcEndpointError(apiObject awstypes.VpcEndpointError) error {
+	errorCode := apiObject.ErrorCode
+	innerError := fmt.Errorf("%s: %s", errorCode, aws.ToString(apiObject.ErrorMessage))
+	err := fmt.Errorf("%s: %w", aws.ToString(apiObject.VpcEndpointId), innerError)
 
-	errorCode := aws.StringValue(apiObject.ErrorCode)
-	innerError := fmt.Errorf("%s: %s", errorCode, aws.StringValue(apiObject.ErrorMessage))
-	err := fmt.Errorf("%s: %w", aws.StringValue(apiObject.VpcEndpointId), innerError)
-
-	if errorCode == opensearchservice.VpcEndpointErrorCodeEndpointNotFound {
+	if errorCode == awstypes.VpcEndpointErrorCodeEndpointNotFound {
 		err = &vpcEndpointNotFoundError{apiError: err}
 	}
 
 	return err
 }
 
-func vpcEndpointsError(apiObjects []*opensearchservice.VpcEndpointError) error {
+func vpcEndpointsError(apiObjects []awstypes.VpcEndpointError) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
@@ -240,26 +238,26 @@ func vpcEndpointsError(apiObjects []*opensearchservice.VpcEndpointError) error {
 	return errors.Join(errs...)
 }
 
-func findVPCEndpointByID(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) (*opensearchservice.VpcEndpoint, error) {
-	input := &opensearchservice.DescribeVpcEndpointsInput{
-		VpcEndpointIds: aws.StringSlice([]string{id}),
+func findVPCEndpointByID(ctx context.Context, conn *opensearch.Client, id string) (*awstypes.VpcEndpoint, error) {
+	input := &opensearch.DescribeVpcEndpointsInput{
+		VpcEndpointIds: []string{id},
 	}
 
 	return findVPCEndpoint(ctx, conn, input)
 }
 
-func findVPCEndpoint(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribeVpcEndpointsInput) (*opensearchservice.VpcEndpoint, error) {
+func findVPCEndpoint(ctx context.Context, conn *opensearch.Client, input *opensearch.DescribeVpcEndpointsInput) (*awstypes.VpcEndpoint, error) {
 	output, err := findVPCEndpoints(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpoints(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribeVpcEndpointsInput) ([]*opensearchservice.VpcEndpoint, error) {
-	output, err := conn.DescribeVpcEndpointsWithContext(ctx, input)
+func findVPCEndpoints(ctx context.Context, conn *opensearch.Client, input *opensearch.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
+	output, err := conn.DescribeVpcEndpoints(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -276,7 +274,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchservice.OpenSearchSer
 	return output.VpcEndpoints, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
+func statusVPCEndpoint(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
@@ -288,14 +286,14 @@ func statusVPCEndpoint(ctx context.Context, conn *opensearchservice.OpenSearchSe
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitVPCEndpointCreated(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+func waitVPCEndpointCreated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{opensearchservice.VpcEndpointStatusCreating},
-		Target:  []string{opensearchservice.VpcEndpointStatusActive},
+		Pending: enum.Slice(awstypes.VpcEndpointStatusCreating),
+		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -305,10 +303,10 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchservice.OpenSea
 	return err
 }
 
-func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+func waitVPCEndpointUpdated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{opensearchservice.VpcEndpointStatusUpdating},
-		Target:  []string{opensearchservice.VpcEndpointStatusActive},
+		Pending: enum.Slice(awstypes.VpcEndpointStatusUpdating),
+		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -318,9 +316,9 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchservice.OpenSea
 	return err
 }
 
-func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+func waitVPCEndpointDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{opensearchservice.VpcEndpointStatusDeleting},
+		Pending: enum.Slice(awstypes.VpcEndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,

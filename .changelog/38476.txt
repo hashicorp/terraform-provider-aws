@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix `error marshaling prior state` when upgrading from v4.67.0 to v5.59.0
+```

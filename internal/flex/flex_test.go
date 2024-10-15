@@ -6,9 +6,8 @@ package flex
 import (
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -36,67 +35,6 @@ func TestExpandStringList(t *testing.T) {
 		if got, want := ExpandStringList(testCase.configured), testCase.want; !cmp.Equal(got, want) {
 			t.Errorf("ExpandStringList(%v) = %v, want %v", testCase.configured, got, want)
 		}
-	}
-}
-
-func TestExpandStringListEmpty(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		configured []interface{}
-		want       []*string
-	}{
-		{
-			configured: []interface{}{"abc", "xyz123"},
-			want:       []*string{aws.String("abc"), aws.String("xyz123")},
-		},
-		{
-			configured: []interface{}{"abc", 123, "xyz123"},
-			want:       []*string{aws.String("abc"), aws.String(""), aws.String("xyz123")},
-		},
-		{
-			configured: []interface{}{"foo", "bar", "", "baz"},
-			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String(""), aws.String("baz")},
-		},
-		{
-			configured: []interface{}{"foo", "bar", nil, "baz"},
-			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String(""), aws.String("baz")},
-		},
-	}
-	for _, testCase := range testCases {
-		if got, want := ExpandStringListEmpty(testCase.configured), testCase.want; !cmp.Equal(got, want) {
-			t.Errorf("ExpandStringListEmpty(%v) = %v, want %v", testCase.configured, got, want)
-		}
-	}
-}
-
-func TestExpandStringTimeList(t *testing.T) {
-	t.Parallel()
-
-	configured := []interface{}{"2006-01-02T15:04:05+07:00", "2023-04-13T10:25:05+01:00"}
-	got := ExpandStringTimeList(configured, time.RFC3339)
-	want := []*time.Time{
-		aws.Time(time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("UTC-7", 7*60*60))),
-		aws.Time(time.Date(2023, 4, 13, 10, 25, 5, 0, time.FixedZone("UTC-1", 60*60))),
-	}
-
-	if !cmp.Equal(got, want) {
-		t.Errorf("expanded = %v, want = %v", got, want)
-	}
-}
-
-func TestExpandStringTimeListEmptyItems(t *testing.T) {
-	t.Parallel()
-
-	configured := []interface{}{"2006-01-02T15:04:05+07:00", "", "2023-04-13T10:25:05+01:00"}
-	got := ExpandStringTimeList(configured, time.RFC3339)
-	want := []*time.Time{
-		aws.Time(time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("UTC+7", 7*60*60))),
-		aws.Time(time.Date(2023, 4, 13, 10, 25, 5, 0, time.FixedZone("UTC+1", 60*60))),
-	}
-
-	if !cmp.Equal(got, want) {
-		t.Errorf("expanded = %v, want = %v", got, want)
 	}
 }
 
@@ -257,120 +195,6 @@ func TestResourceIdPartCountLegacySeparator(t *testing.T) {
 	}
 }
 
-func TestFlattenTimeStringList(t *testing.T) {
-	t.Parallel()
-
-	configured := []*time.Time{
-		aws.Time(time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("UTC-7", 7*60*60))),
-		aws.Time(time.Date(2023, 4, 13, 10, 25, 5, 0, time.FixedZone("UTC-1", 60*60))),
-	}
-	got := FlattenTimeStringList(configured, time.RFC3339)
-	want := []interface{}{"2006-01-02T15:04:05+07:00", "2023-04-13T10:25:05+01:00"}
-
-	if !cmp.Equal(got, want) {
-		t.Errorf("expanded = %v, want = %v", got, want)
-	}
-}
-
-func TestDiffStringMaps(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		Old, New                  map[string]interface{}
-		Create, Remove, Unchanged map[string]interface{}
-	}{
-		// Add
-		{
-			Old: map[string]interface{}{
-				"foo": "bar",
-			},
-			New: map[string]interface{}{
-				"foo": "bar",
-				"bar": "baz",
-			},
-			Create: map[string]interface{}{
-				"bar": "baz",
-			},
-			Remove: map[string]interface{}{},
-			Unchanged: map[string]interface{}{
-				"foo": "bar",
-			},
-		},
-
-		// Modify
-		{
-			Old: map[string]interface{}{
-				"foo": "bar",
-			},
-			New: map[string]interface{}{
-				"foo": "baz",
-			},
-			Create: map[string]interface{}{
-				"foo": "baz",
-			},
-			Remove: map[string]interface{}{
-				"foo": "bar",
-			},
-			Unchanged: map[string]interface{}{},
-		},
-
-		// Overlap
-		{
-			Old: map[string]interface{}{
-				"foo":   "bar",
-				"hello": "world",
-			},
-			New: map[string]interface{}{
-				"foo":   "baz",
-				"hello": "world",
-			},
-			Create: map[string]interface{}{
-				"foo": "baz",
-			},
-			Remove: map[string]interface{}{
-				"foo": "bar",
-			},
-			Unchanged: map[string]interface{}{
-				"hello": "world",
-			},
-		},
-
-		// Remove
-		{
-			Old: map[string]interface{}{
-				"foo": "bar",
-				"bar": "baz",
-			},
-			New: map[string]interface{}{
-				"foo": "bar",
-			},
-			Create: map[string]interface{}{},
-			Remove: map[string]interface{}{
-				"bar": "baz",
-			},
-			Unchanged: map[string]interface{}{
-				"foo": "bar",
-			},
-		},
-	}
-
-	for _, tc := range cases {
-		c, r, u := DiffStringMaps(tc.Old, tc.New)
-		cm := FlattenStringMap(c)
-		rm := FlattenStringMap(r)
-		um := FlattenStringMap(u)
-		if diff := cmp.Diff(cm, tc.Create); diff != "" {
-			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-		}
-		if diff := cmp.Diff(rm, tc.Remove); diff != "" {
-			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-		}
-		if diff := cmp.Diff(um, tc.Unchanged); diff != "" {
-			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-		}
-	}
-}
-
 func TestDiffStringValueMaps(t *testing.T) {
 	t.Parallel()
 
@@ -523,5 +347,34 @@ func TestDiffSlices(t *testing.T) {
 		if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
+	}
+}
+
+func TestFlattenStringList(t *testing.T) {
+	t.Parallel()
+
+	foo := "bar"
+	baz := "qux"
+
+	tests := []struct {
+		name string
+		list []*string
+		want []interface{}
+	}{
+		{"nil", nil, []interface{}{}},
+		{"empty", []*string{}, []interface{}{}},
+		{"nil item", []*string{nil}, []interface{}{}},
+		{"single item", []*string{&foo}, []interface{}{foo}},
+		{"multiple items", []*string{&foo, &baz}, []interface{}{foo, baz}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenStringList(tt.list)
+			if diff := cmp.Diff(got, tt.want); diff != "" {
+				t.Errorf("FlattenStringList() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

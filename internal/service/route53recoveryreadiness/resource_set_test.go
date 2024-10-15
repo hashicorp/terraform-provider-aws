@@ -9,16 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,8 +26,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -63,8 +62,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -94,8 +93,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -146,8 +145,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -182,8 +181,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testin
 	domainName := "myTestDomain.test"
 	hzArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
 		Service:   "route53",
 	}.String()
@@ -225,8 +224,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *te
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
 		Service:   "route53",
 	}.String()
@@ -263,8 +262,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *te
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
 		Service:   "route53",
 	}.String()
@@ -303,8 +302,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
+		Partition: acctest.Partition(),
+		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -336,21 +335,24 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 
 func testAccCheckResourceSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoveryreadiness_resource_set" {
 				continue
 			}
 
-			input := &route53recoveryreadiness.GetResourceSetInput{
-				ResourceSetName: aws.String(rs.Primary.ID),
+			_, err := tfroute53recoveryreadiness.FindResourceSetByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetResourceSetWithContext(ctx, input)
-			if err == nil {
-				return fmt.Errorf("Route53RecoveryReadiness Resource Set (%s) not deleted", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Route53 Recovery Readiness Resource Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -364,24 +366,20 @@ func testAccCheckResourceSetExists(ctx context.Context, name string) resource.Te
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
-		input := &route53recoveryreadiness.GetResourceSetInput{
-			ResourceSetName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetResourceSetWithContext(ctx, input)
+		_, err := tfroute53recoveryreadiness.FindResourceSetByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
 func testAccPreCheckResourceSet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	input := &route53recoveryreadiness.ListResourceSetsInput{}
 
-	_, err := conn.ListResourceSetsWithContext(ctx, input)
+	_, err := conn.ListResourceSets(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

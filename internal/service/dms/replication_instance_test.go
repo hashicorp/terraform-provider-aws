@@ -48,7 +48,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
@@ -519,7 +519,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindReplicationInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -529,7 +529,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 
 func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_replication_instance" {

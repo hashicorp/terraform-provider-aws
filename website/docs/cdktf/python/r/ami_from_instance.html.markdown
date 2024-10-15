@@ -79,4 +79,4 @@ This resource also exports a full set of attributes corresponding to the argumen
 [`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
 
-<!-- cache-key: cdktf-0.20.1 input-4fe8c5ccb7949e4e568ee6466ad138d934f82a74818318c1ee9ec048a8d2c352 -->
+<!-- cache-key: cdktf-0.20.9 input-4fe8c5ccb7949e4e568ee6466ad138d934f82a74818318c1ee9ec048a8d2c352 -->

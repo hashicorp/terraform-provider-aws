@@ -5,9 +5,11 @@ package elasticache_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -270,7 +272,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 	descriptionOld := "Memcached Serverless Cluster"
 	descriptionNew := "Memcached Serverless Cluster updated"
 	resourceName := "aws_elasticache_serverless_cache.test"
-	var serverlessElasticCache awstypes.ServerlessCache
+	var v1, v2, v3, v4 awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -283,7 +285,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 			{
 				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionOld, 1, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
@@ -303,9 +305,46 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionOld, 2, 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v2),
+					testAccCheckServerlessCacheNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
+				),
+			},
+			{
+				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionNew, 2, 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v3),
+					testAccCheckServerlessCacheNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
+				),
+			},
+			{
 				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionNew, 2, 1010),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v4),
+					testAccCheckServerlessCacheNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
@@ -461,6 +500,16 @@ func testAccCheckServerlessCacheDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
+func testAccCheckServerlessCacheNotRecreated(i, j *awstypes.ServerlessCache) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.ToTime(i.CreateTime).Equal(aws.ToTime(j.CreateTime)) {
+			return errors.New("ElastiCache Serverless Cache was recreated")
+		}
+
+		return nil
+	}
+}
+
 func testAccServerlessCacheConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
@@ -549,25 +598,29 @@ resource "aws_elasticache_serverless_cache" "test" {
   snapshot_retention_limit = 1
   security_group_ids       = [aws_security_group.test.id]
   subnet_ids               = aws_subnet.test[*].id
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_kms_key" "test" {
-  description = "tf-test-cmk-kms-key-id"
+  description = %[1]q
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))

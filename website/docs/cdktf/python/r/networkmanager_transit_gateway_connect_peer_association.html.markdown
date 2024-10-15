@@ -72,4 +72,4 @@ Using `terraform import`, import `aws_networkmanager_transit_gateway_connect_pee
 % terraform import aws_networkmanager_transit_gateway_connect_peer_association.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer/tgw-connect-peer-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-863f9d20566b9aac9a5ea20d426d5a2e936d36dc5871ea1c3796a2beebaed7ea -->
+<!-- cache-key: cdktf-0.20.9 input-863f9d20566b9aac9a5ea20d426d5a2e936d36dc5871ea1c3796a2beebaed7ea -->

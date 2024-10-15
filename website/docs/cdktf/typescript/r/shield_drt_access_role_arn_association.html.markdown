@@ -31,7 +31,7 @@ import { ShieldDrtAccessRoleArnAssociation } from "./.gen/providers/aws/shield-d
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    const test = new IamRole(this, "test", {
+    const example = new IamRole(this, "example", {
       assumeRolePolicy: Token.asString(
         Fn.jsonencode({
           Statement: [
@@ -47,25 +47,25 @@ class MyConvertedCode extends TerraformStack {
           Version: "2012-10-17",
         })
       ),
-      name: awsShieldDrtAccessRoleArn.stringValue,
+      name: "example-role",
     });
-    const awsIamRolePolicyAttachmentTest = new IamRolePolicyAttachment(
+    const awsIamRolePolicyAttachmentExample = new IamRolePolicyAttachment(
       this,
-      "test_1",
+      "example_1",
       {
         policyArn:
           "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy",
-        role: test.name,
+        role: example.name,
       }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    awsIamRolePolicyAttachmentTest.overrideLogicalId("test");
-    const awsShieldDrtAccessRoleArnAssociationTest =
-      new ShieldDrtAccessRoleArnAssociation(this, "test_2", {
-        roleArn: test.arn,
+    awsIamRolePolicyAttachmentExample.overrideLogicalId("example");
+    const awsShieldDrtAccessRoleArnAssociationExample =
+      new ShieldDrtAccessRoleArnAssociation(this, "example_2", {
+        roleArn: example.arn,
       });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    awsShieldDrtAccessRoleArnAssociationTest.overrideLogicalId("test");
+    awsShieldDrtAccessRoleArnAssociationExample.overrideLogicalId("example");
   }
 }
 
@@ -121,4 +121,4 @@ Using `terraform import`, import Shield DRT access role ARN association using th
 % terraform import aws_shield_drt_access_role_arn_association.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a1b0a7e20332bc5effb0fc54f6639b8b3cfe6eae95b1c7cece4bc8557f79a496 -->
+<!-- cache-key: cdktf-0.20.9 input-64153c99f6109f71d2f116c2ff3e7fcfe38fd4c4748e5390b47d3d064e3cbc4b -->

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 	controlFindingGeneratorDefaultValueFromAWS := "SECURITY_CONTROL"
-	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+	if acctest.Partition() == names.USGovCloudPartitionID {
 		controlFindingGeneratorDefaultValueFromAWS = ""
 	}
 
@@ -100,7 +99,7 @@ func testAccAccount_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		// control_finding_generator not supported in AWS GovCloud.
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -164,10 +163,10 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 	controlFindingGeneratorExpectedValue := "SECURITY_CONTROL"
-	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+	if acctest.Partition() == names.USGovCloudPartitionID {
 		controlFindingGeneratorExpectedValue = ""
 	}
-	expectNonEmptyPlan := acctest.Partition() == endpoints.AwsUsGovPartitionID
+	expectNonEmptyPlan := acctest.Partition() == names.USGovCloudPartitionID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },

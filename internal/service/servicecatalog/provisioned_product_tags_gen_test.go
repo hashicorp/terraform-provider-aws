@@ -5,7 +5,7 @@ package servicecatalog_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +19,7 @@ import (
 
 func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -42,6 +42,9 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -86,6 +89,10 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
@@ -135,6 +142,9 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -176,6 +186,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -206,7 +217,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 
 func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -229,6 +240,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -267,9 +279,69 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 	})
 }
 
+func TestAccServiceCatalogProvisionedProduct_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.ProvisionedProductDetail
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_language", "ignore_errors", "provisioning_artifact_name", "provisioning_parameters", "retain_physical_resources",
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -290,6 +362,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -313,6 +386,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -351,7 +427,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -374,6 +450,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
 				},
@@ -414,6 +493,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -444,7 +524,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -467,6 +547,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -496,6 +579,10 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(""),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2: knownvalue.StringExact(""),
 					})),
@@ -543,6 +630,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -579,7 +669,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -602,6 +692,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -630,6 +723,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
 				},
@@ -665,7 +761,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 
 func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -862,7 +958,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 
 func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1033,7 +1129,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 
 func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1218,7 +1314,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 
 func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1311,7 +1407,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 
 func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1405,7 +1501,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1475,7 +1571,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyProviderOnlyT
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1535,7 +1631,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyProviderOnlyT
 
 func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1600,7 +1696,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingRes
 
 func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1665,7 +1761,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlapping
 
 func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1687,6 +1783,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnCreate(t *testin
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(1)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1722,7 +1819,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnCreate(t *testin
 
 func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1745,6 +1842,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -1776,6 +1876,10 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(2)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapPartial(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapPartial(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -1815,7 +1919,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 
 func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v servicecatalog.ProvisionedProductDetail
+	var v types.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1838,6 +1942,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
@@ -1866,6 +1973,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(1)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

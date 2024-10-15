@@ -99,12 +99,12 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTags creates route53 service tags for new resources.
-func createTags(ctx context.Context, conn *route53.Client, identifier, resourceType string, tags []awstypes.Tag) error {
+func createTags(ctx context.Context, conn *route53.Client, identifier, resourceType string, tags []awstypes.Tag, optFns ...func(*route53.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates route53 service tags.

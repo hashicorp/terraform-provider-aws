@@ -9,9 +9,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_dhcp_options_association")
-func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_dhcp_options_association", name="VPC DHCP Options Association")
+func resourceVPCDHCPOptionsAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCDHCPOptionsAssociationPut,
 		ReadWithoutTimeout:   resourceVPCDHCPOptionsAssociationRead,
@@ -48,18 +48,18 @@ func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 
 func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	dhcpOptionsID := d.Get("dhcp_options_id").(string)
 	vpcID := d.Get(names.AttrVPCID).(string)
-	id := VPCDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID)
+	id := vpcDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID)
 	input := &ec2.AssociateDhcpOptionsInput{
 		DhcpOptionsId: aws.String(dhcpOptionsID),
 		VpcId:         aws.String(vpcID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC DHCP Options Set Association: %s", input)
-	_, err := conn.AssociateDhcpOptionsWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating EC2 VPC DHCP Options Set Association: %#v", input)
+	_, err := conn.AssociateDhcpOptions(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC DHCP Options Set Association (%s): %s", id, err)
@@ -72,16 +72,16 @@ func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.Resourc
 
 func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
+	dhcpOptionsID, vpcID, err := vpcDHCPOptionsAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC DHCP Options Set Association (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return nil, FindVPCDHCPOptionsAssociation(ctx, conn, vpcID, dhcpOptionsID)
+		return nil, findVPCDHCPOptionsAssociation(ctx, conn, vpcID, dhcpOptionsID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -102,15 +102,15 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 
 func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
+	dhcpOptionsID, vpcID, err := vpcDHCPOptionsAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if dhcpOptionsID == DefaultDHCPOptionsID {
+	if dhcpOptionsID == defaultDHCPOptionsID {
 		return diags
 	}
 
@@ -118,8 +118,8 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 	// So, we do this by setting the VPC to the default DHCP Options Set.
 
 	log.Printf("[DEBUG] Deleting EC2 VPC DHCP Options Set Association: %s", d.Id())
-	_, err = conn.AssociateDhcpOptionsWithContext(ctx, &ec2.AssociateDhcpOptionsInput{
-		DhcpOptionsId: aws.String(DefaultDHCPOptionsID),
+	_, err = conn.AssociateDhcpOptions(ctx, &ec2.AssociateDhcpOptionsInput{
+		DhcpOptionsId: aws.String(defaultDHCPOptionsID),
 		VpcId:         aws.String(vpcID),
 	})
 
@@ -135,18 +135,18 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 }
 
 func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpc, err := FindVPCByID(ctx, conn, d.Id())
+	vpc, err := findVPCByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return nil, fmt.Errorf("reading EC2 VPC (%s): %w", d.Id(), err)
 	}
 
-	dhcpOptionsID := aws.StringValue(vpc.DhcpOptionsId)
-	vpcID := aws.StringValue(vpc.VpcId)
+	dhcpOptionsID := aws.ToString(vpc.DhcpOptionsId)
+	vpcID := aws.ToString(vpc.VpcId)
 
-	d.SetId(VPCDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID))
+	d.SetId(vpcDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID))
 	d.Set("dhcp_options_id", dhcpOptionsID)
 	d.Set(names.AttrVPCID, vpcID)
 
@@ -155,21 +155,21 @@ func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.Reso
 
 const vpcDHCPOptionsAssociationResourceIDSeparator = "-"
 
-func VPCDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID string) string {
+func vpcDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID string) string {
 	parts := []string{dhcpOptionsID, vpcID}
 	id := strings.Join(parts, vpcDHCPOptionsAssociationResourceIDSeparator)
 
 	return id
 }
 
-func VPCDHCPOptionsAssociationParseResourceID(id string) (string, string, error) {
+func vpcDHCPOptionsAssociationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, vpcDHCPOptionsAssociationResourceIDSeparator)
 
 	// The DHCP Options ID either contains '-' or is the special value "default".
 	// The VPC ID contains '-'.
 	switch n := len(parts); n {
 	case 3:
-		if parts[0] == DefaultDHCPOptionsID && parts[1] != "" && parts[2] != "" {
+		if parts[0] == defaultDHCPOptionsID && parts[1] != "" && parts[2] != "" {
 			return parts[0], strings.Join([]string{parts[1], parts[2]}, vpcDHCPOptionsAssociationResourceIDSeparator), nil
 		}
 	case 4:

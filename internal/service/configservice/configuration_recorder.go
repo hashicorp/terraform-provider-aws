@@ -509,7 +509,7 @@ func flattenRecordingMode(apiObject *types.RecordingMode) []interface{} {
 		"recording_frequency": apiObject.RecordingFrequency,
 	}
 
-	if apiObject.RecordingModeOverrides != nil && len(apiObject.RecordingModeOverrides) > 0 {
+	if len(apiObject.RecordingModeOverrides) > 0 {
 		tfMap["recording_mode_override"] = flattenRecordingModeOverrides(apiObject.RecordingModeOverrides)
 	}
 

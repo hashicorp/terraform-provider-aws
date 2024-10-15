@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -272,7 +272,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_parameter_group" {
@@ -307,7 +307,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No MemoryDB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindParameterGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
@@ -424,15 +424,15 @@ func TestParameterChanges(t *testing.T) {
 		Name                string
 		Old                 *schema.Set
 		New                 *schema.Set
-		ExpectedRemove      []*memorydb.ParameterNameValue
-		ExpectedAddOrUpdate []*memorydb.ParameterNameValue
+		ExpectedRemove      []*awstypes.ParameterNameValue
+		ExpectedAddOrUpdate []*awstypes.ParameterNameValue
 	}{
 		{
 			Name:                "Empty",
 			Old:                 new(schema.Set),
 			New:                 new(schema.Set),
-			ExpectedRemove:      []*memorydb.ParameterNameValue{},
-			ExpectedAddOrUpdate: []*memorydb.ParameterNameValue{},
+			ExpectedRemove:      []*awstypes.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
 		},
 		{
 			Name: "Remove all",
@@ -443,13 +443,13 @@ func TestParameterChanges(t *testing.T) {
 				},
 			}),
 			New: new(schema.Set),
-			ExpectedRemove: []*memorydb.ParameterNameValue{
+			ExpectedRemove: []*awstypes.ParameterNameValue{
 				{
 					ParameterName:  aws.String("reserved-memory"),
 					ParameterValue: aws.String(acctest.Ct0),
 				},
 			},
-			ExpectedAddOrUpdate: []*memorydb.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
 		},
 		{
 			Name: "No change",
@@ -465,8 +465,8 @@ func TestParameterChanges(t *testing.T) {
 					names.AttrValue: acctest.Ct0,
 				},
 			}),
-			ExpectedRemove:      []*memorydb.ParameterNameValue{},
-			ExpectedAddOrUpdate: []*memorydb.ParameterNameValue{},
+			ExpectedRemove:      []*awstypes.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
 		},
 		{
 			Name: "Remove partial",
@@ -486,13 +486,13 @@ func TestParameterChanges(t *testing.T) {
 					names.AttrValue: "yes",
 				},
 			}),
-			ExpectedRemove: []*memorydb.ParameterNameValue{
+			ExpectedRemove: []*awstypes.ParameterNameValue{
 				{
 					ParameterName:  aws.String("reserved-memory"),
 					ParameterValue: aws.String(acctest.Ct0),
 				},
 			},
-			ExpectedAddOrUpdate: []*memorydb.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
 		},
 		{
 			Name: "Add to existing",
@@ -512,8 +512,8 @@ func TestParameterChanges(t *testing.T) {
 					names.AttrValue: "always",
 				},
 			}),
-			ExpectedRemove: []*memorydb.ParameterNameValue{},
-			ExpectedAddOrUpdate: []*memorydb.ParameterNameValue{
+			ExpectedRemove: []*awstypes.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{
 				{
 					ParameterName:  aws.String("appendfsync"),
 					ParameterValue: aws.String("always"),

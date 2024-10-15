@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_models"
 description: |-

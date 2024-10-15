@@ -9,12 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,23 +38,23 @@ func ResourceOrganizationConfigurationFeature() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auto_enable": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(guardduty.OrgFeatureStatus_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureStatus](),
 						},
 						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(guardduty.OrgFeatureAdditionalConfiguration_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureAdditionalConfiguration](),
 						},
 					},
 				},
 			},
 			"auto_enable": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(guardduty.OrgFeatureStatus_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureStatus](),
 			},
 			"detector_id": {
 				Type:     schema.TypeString,
@@ -61,10 +62,10 @@ func ResourceOrganizationConfigurationFeature() *schema.Resource {
 				ForceNew: true,
 			},
 			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(guardduty.OrgFeature_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.OrgFeature](),
 			},
 		},
 	}
@@ -72,7 +73,7 @@ func ResourceOrganizationConfigurationFeature() *schema.Resource {
 
 func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 
@@ -88,9 +89,9 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	}
 
 	name := d.Get(names.AttrName).(string)
-	feature := &guardduty.OrganizationFeatureConfiguration{
-		AutoEnable: aws.String(d.Get("auto_enable").(string)),
-		Name:       aws.String(name),
+	feature := awstypes.OrganizationFeatureConfiguration{
+		AutoEnable: awstypes.OrgFeatureStatus(d.Get("auto_enable").(string)),
+		Name:       awstypes.OrgFeature(name),
 	}
 
 	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -100,10 +101,10 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	input := &guardduty.UpdateOrganizationConfigurationInput{
 		AutoEnableOrganizationMembers: output.AutoEnableOrganizationMembers,
 		DetectorId:                    aws.String(detectorID),
-		Features:                      []*guardduty.OrganizationFeatureConfiguration{feature},
+		Features:                      []awstypes.OrganizationFeatureConfiguration{feature},
 	}
 
-	_, err = conn.UpdateOrganizationConfigurationWithContext(ctx, input)
+	_, err = conn.UpdateOrganizationConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Organization Configuration (%s) Feature (%s): %s", detectorID, name, err)
@@ -118,7 +119,7 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 
 func resourceOrganizationConfigurationFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	detectorID, name, err := organizationConfigurationFeatureParseResourceID(d.Id())
 	if err != nil {
@@ -166,42 +167,38 @@ func organizationConfigurationFeatureParseResourceID(id string) (string, string,
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DETECTORID%[2]sFEATURENAME", id, organizationConfigurationFeatureResourceIDSeparator)
 }
 
-func FindOrganizationConfigurationFeatureByTwoPartKey(ctx context.Context, conn *guardduty.GuardDuty, detectorID, name string) (*guardduty.OrganizationFeatureConfigurationResult, error) {
+func FindOrganizationConfigurationFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.OrganizationFeatureConfigurationResult, error) {
 	output, err := FindOrganizationConfigurationByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(tfslices.Filter(output.Features, func(v *guardduty.OrganizationFeatureConfigurationResult) bool {
-		return aws.StringValue(v.Name) == name
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.Features, func(v awstypes.OrganizationFeatureConfigurationResult) bool {
+		return string(v.Name) == name
 	}))
 }
 
-func expandOrganizationAdditionalConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationAdditionalConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &guardduty.OrganizationAdditionalConfiguration{}
+func expandOrganizationAdditionalConfiguration(tfMap map[string]interface{}) awstypes.OrganizationAdditionalConfiguration {
+	apiObject := awstypes.OrganizationAdditionalConfiguration{}
 
 	if v, ok := tfMap["auto_enable"].(string); ok && v != "" {
-		apiObject.AutoEnable = aws.String(v)
+		apiObject.AutoEnable = awstypes.OrgFeatureStatus(v)
 	}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		apiObject.Name = aws.String(v)
+		apiObject.Name = awstypes.OrgFeatureAdditionalConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandOrganizationAdditionalConfigurations(tfList []interface{}) []*guardduty.OrganizationAdditionalConfiguration {
+func expandOrganizationAdditionalConfigurations(tfList []interface{}) []awstypes.OrganizationAdditionalConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*guardduty.OrganizationAdditionalConfiguration
+	var apiObjects []awstypes.OrganizationAdditionalConfiguration
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -212,35 +209,23 @@ func expandOrganizationAdditionalConfigurations(tfList []interface{}) []*guarddu
 
 		apiObject := expandOrganizationAdditionalConfiguration(tfMap)
 
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenOrganizationAdditionalConfigurationResult(apiObject *guardduty.OrganizationAdditionalConfigurationResult) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenOrganizationAdditionalConfigurationResult(apiObject awstypes.OrganizationAdditionalConfigurationResult) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.AutoEnable; v != nil {
-		tfMap["auto_enable"] = aws.StringValue(v)
-	}
+	tfMap["auto_enable"] = string(apiObject.AutoEnable)
 
-	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
-	}
+	tfMap[names.AttrName] = string(apiObject.Name)
 
 	return tfMap
 }
 
-func flattenOrganizationAdditionalConfigurationResults(apiObjects []*guardduty.OrganizationAdditionalConfigurationResult) []interface{} {
+func flattenOrganizationAdditionalConfigurationResults(apiObjects []awstypes.OrganizationAdditionalConfigurationResult) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -248,10 +233,6 @@ func flattenOrganizationAdditionalConfigurationResults(apiObjects []*guardduty.O
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenOrganizationAdditionalConfigurationResult(apiObject))
 	}
 

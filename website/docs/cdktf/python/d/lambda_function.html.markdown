@@ -78,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - The version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function.
 
-<!-- cache-key: cdktf-0.20.1 input-3e9e50aa52c5f60bc0ddf382d319121cfde1c10a219b46de0598d1d35bcc2625 -->
+<!-- cache-key: cdktf-0.20.9 input-3e9e50aa52c5f60bc0ddf382d319121cfde1c10a219b46de0598d1d35bcc2625 -->

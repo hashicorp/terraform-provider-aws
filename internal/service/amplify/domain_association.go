@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,6 +48,29 @@ func resourceDomainAssociation() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"certificate_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_verification_dns_record": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.CertificateType](),
+						},
+						"custom_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
 			},
 			"certificate_verification_dns_record": {
 				Type:     schema.TypeString,
@@ -112,6 +136,10 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 		SubDomainSettings:   expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 	}
 
+	if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CertificateSettings = expandCertificateSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	_, err := conn.CreateDomainAssociation(ctx, input)
 
 	if err != nil {
@@ -162,6 +190,9 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
 	}
+	if err := d.Set("certificate_settings", flattenCertificateSettings(domainAssociation.Certificate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_settings: %s", err)
+	}
 
 	return diags
 }
@@ -179,6 +210,10 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		input := &amplify.UpdateDomainAssociationInput{
 			AppId:      aws.String(appID),
 			DomainName: aws.String(domainName),
+		}
+
+		if d.HasChange("certificate_settings") {
+			input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]interface{})[0].(map[string]interface{}))
 		}
 
 		if d.HasChange("enable_auto_sub_domain") {
@@ -383,6 +418,41 @@ func expandSubDomainSettings(tfList []interface{}) []types.SubDomainSetting {
 	}
 
 	return apiObjects
+}
+
+func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.CertificateSettings{
+		Type: types.CertificateType(tfMap[names.AttrType].(string)),
+	}
+
+	if v, ok := tfMap["custom_certificate_arn"].(string); ok {
+		apiObject.CustomCertificateArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenCertificateSettings(apiObject *types.Certificate) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap[names.AttrType] = apiObject.Type
+
+	if v := apiObject.CertificateVerificationDNSRecord; v != nil {
+		tfMap["certificate_verification_dns_record"] = aws.ToString(v)
+	}
+	if v := apiObject.CustomCertificateArn; v != nil {
+		tfMap["custom_certificate_arn"] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {

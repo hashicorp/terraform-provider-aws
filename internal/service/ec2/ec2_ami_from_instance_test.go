@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,7 +18,7 @@ import (
 
 func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 
@@ -48,7 +48,7 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 
 func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 
@@ -89,7 +89,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 
 func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 

@@ -186,7 +186,7 @@ func testAccCheckRouteTableAssociationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfec2.FindRouteTableAssociationByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -216,7 +216,7 @@ func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *a
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		association, err := tfec2.FindRouteTableAssociationByIDV2(ctx, conn, rs.Primary.ID)
+		association, err := tfec2.FindRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

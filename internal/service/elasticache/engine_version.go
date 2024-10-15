@@ -11,7 +11,7 @@ import (
 	"regexp"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -167,7 +167,7 @@ func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
 }
 
 func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
-	engineVersion, err := gversion.NewVersion(aws.StringValue(version))
+	engineVersion, err := gversion.NewVersion(aws.ToString(version))
 	if err != nil {
 		return fmt.Errorf("reading engine version: %w", err)
 	}
@@ -187,11 +187,11 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	return nil
 }
 
-type VersionDiff [3]int
+type versionDiff [3]int
 
 // diffVersion returns a diff of the versions, component by component.
 // Only reports the first diff, since subsequent segments are unimportant for us.
-func diffVersion(n, o *gversion.Version) (result VersionDiff) {
+func diffVersion(n, o *gversion.Version) (result versionDiff) {
 	if n.String() == o.String() {
 		return
 	}

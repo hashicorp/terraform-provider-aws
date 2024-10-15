@@ -6,19 +6,20 @@ package servicediscovery
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_service_discovery_dns_namespace")
-func DataSourceDNSNamespace() *schema.Resource {
+// @SDKDataSource("aws_service_discovery_dns_namespace", name="DNS Namespace")
+func dataSourceDNSNamespace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDNSNamespaceRead,
 
@@ -44,10 +45,10 @@ func DataSourceDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				// HTTP namespaces are handled via the aws_service_discovery_http_namespace data source.
-				ValidateFunc: validation.StringInSlice([]string{
-					servicediscovery.NamespaceTypeDnsPublic,
-					servicediscovery.NamespaceTypeDnsPrivate,
-				}, false),
+				ValidateFunc: validation.StringInSlice(enum.Slice(
+					awstypes.NamespaceTypeDnsPublic,
+					awstypes.NamespaceTypeDnsPrivate,
+				), false),
 			},
 		},
 	}
@@ -55,27 +56,26 @@ func DataSourceDNSNamespace() *schema.Resource {
 
 func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
-	nsType := d.Get(names.AttrType).(string)
+	nsType := awstypes.NamespaceType(d.Get(names.AttrType).(string))
 	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, nsType)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
 	}
 
-	namespaceID := aws.StringValue(nsSummary.Id)
-
-	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
+	namespaceID := aws.ToString(nsSummary.Id)
+	ns, err := findNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Discovery %s Namespace (%s): %s", nsType, namespaceID, err)
 	}
 
 	d.SetId(namespaceID)
-	arn := aws.StringValue(ns.Arn)
+	arn := aws.ToString(ns.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.DnsProperties != nil {

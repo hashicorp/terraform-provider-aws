@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ds_test
+package ds
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
 func TestDirectoryIDValidator(t *testing.T) {
@@ -55,7 +54,6 @@ func TestDirectoryIDValidator(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -67,7 +65,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			tfds.DirectoryIDValidator.ValidateString(ctx, request, &response)
+			directoryIDValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -109,7 +107,6 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -121,7 +118,7 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			tfds.DomainWithTrailingDotValidator.ValidateString(ctx, request, &response)
+			domainWithTrailingDotValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -160,7 +157,6 @@ func TestTrustPasswordValidator(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -172,7 +168,7 @@ func TestTrustPasswordValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			tfds.TrustPasswordValidator.ValidateString(ctx, request, &response)
+			trustPasswordValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)

@@ -16,21 +16,16 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sts.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return sts.NewFromConfig(cfg, func(o *sts.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws.String(endpoint)
-
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+	return sts.NewFromConfig(cfg,
+		sts.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *sts.Options) {
+			if stsRegion := config["sts_region"].(string); stsRegion != "" {
+				tflog.Info(ctx, "overriding region", map[string]any{
+					"original_region": cfg.Region,
+					"override_region": stsRegion,
+				})
+				o.Region = stsRegion
 			}
-		}
-
-		if stsRegion := config["sts_region"].(string); stsRegion != "" {
-			o.Region = stsRegion
-		}
-	}), nil
+		}), nil
 }
