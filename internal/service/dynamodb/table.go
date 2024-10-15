@@ -185,6 +185,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"on_demand_throughput": onDemandThroughputSchema(),
 						"projection_type": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -197,10 +198,12 @@ func resourceTable() *schema.Resource {
 						"read_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -248,6 +251,7 @@ func resourceTable() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"on_demand_throughput": onDemandThroughputSchema(),
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -487,6 +491,34 @@ func resourceTable() *schema.Resource {
 	}
 }
 
+func onDemandThroughputSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"max_read_request_units": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "0" && new == "-1"
+					},
+				},
+				"max_write_request_units": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "0" && new == "-1"
+					},
+				},
+			},
+		},
+	}
+}
+
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
@@ -623,6 +655,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			tcp.GlobalSecondaryIndexes = globalSecondaryIndexes
 		}
 
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tcp.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		input.TableCreationParameters = tcp
 
 		importTableOutput, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
@@ -695,6 +731,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				globalSecondaryIndexes = append(globalSecondaryIndexes, *gsiObject)
 			}
 			input.GlobalSecondaryIndexes = globalSecondaryIndexes
+		}
+
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("stream_enabled"); ok {
@@ -830,6 +870,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_secondary_index", err)
+	}
+
+	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "on_demand_throughput", err)
 	}
 
 	if table.StreamSpecification != nil {
@@ -985,6 +1029,13 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DeletionProtectionEnabled = aws.Bool(d.Get("deletion_protection_enabled").(bool))
 	}
 
+	if d.HasChange("on_demand_throughput") {
+		hasTableUpdate = true
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+	}
+
 	// make change when
 	//   stream_enabled has change (below) OR
 	//   stream_view_type has change and stream_enabled is true (special case)
@@ -1017,6 +1068,18 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if newBillingMode == awstypes.BillingModeProvisioned {
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil {
+				continue
+			}
+
+			hasTableUpdate = true
+			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
+		}
+	}
+
+	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
+	if newBillingMode == awstypes.BillingModePayPerRequest {
+		for _, gsiUpdate := range gsiUpdates {
+			if gsiUpdate.Update.OnDemandThroughput == nil {
 				continue
 			}
 
@@ -1599,13 +1662,19 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			m := data.(map[string]interface{})
 			idxName := m[names.AttrName].(string)
 
+			c := awstypes.CreateGlobalSecondaryIndexAction{
+				IndexName:             aws.String(idxName),
+				KeySchema:             expandKeySchema(m),
+				ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
+				Projection:            expandProjection(m),
+			}
+
+			if v, ok := m["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+
 			ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
-				Create: &awstypes.CreateGlobalSecondaryIndexAction{
-					IndexName:             aws.String(idxName),
-					KeySchema:             expandKeySchema(m),
-					ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
-					Projection:            expandProjection(m),
-				},
+				Create: &c,
 			})
 		}
 	}
@@ -1623,6 +1692,20 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
 			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
 
+			oldOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			newOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			if v, ok := oldMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				oldOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+
+			if v, ok := newMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				newOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+			var onDemandThroughputChanged bool
+			if !reflect.DeepEqual(oldOnDemandThroughput, newOnDemandThroughput) {
+				onDemandThroughputChanged = true
+			}
+
 			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
@@ -1635,11 +1718,19 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			if err != nil {
 				return ops, err
 			}
+			oldAttributes, err = stripOnDemandThroughputAttributes(oldAttributes)
+			if err != nil {
+				return ops, err
+			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
 				return ops, err
 			}
 			newAttributes, err = stripNonKeyAttributes(newAttributes)
+			if err != nil {
+				return ops, err
+			}
+			newAttributes, err = stripOnDemandThroughputAttributes(newAttributes)
 			if err != nil {
 				return ops, err
 			}
@@ -1650,6 +1741,14 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
 						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
+					},
+				}
+				ops = append(ops, update)
+			} else if onDemandThroughputChanged && !otherAttributesChanged {
+				update := awstypes.GlobalSecondaryIndexUpdate{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName:          aws.String(idxName),
+						OnDemandThroughput: newOnDemandThroughput,
 					},
 				}
 				ops = append(ops, update)
@@ -2039,6 +2138,10 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi["non_key_attributes"] = g.Projection.NonKeyAttributes
 		}
 
+		if g.OnDemandThroughput != nil {
+			gsi["on_demand_throughput"] = flattenOnDemandThroughput(g.OnDemandThroughput)
+		}
+
 		output = append(output, gsi)
 	}
 
@@ -2068,6 +2171,24 @@ func expandAttributes(cfg []interface{}) []awstypes.AttributeDefinition {
 		}
 	}
 	return attributes
+}
+
+func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.MaxReadRequestUnits; v != nil {
+		m["max_read_request_units"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.MaxWriteRequestUnits; v != nil {
+		m["max_write_request_units"] = aws.ToInt64(v)
+	}
+
+	return []interface{}{m}
 }
 
 func flattenReplicaDescription(apiObject *awstypes.ReplicaDescription) map[string]interface{} {
@@ -2186,12 +2307,18 @@ func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
 }
 
 func expandGlobalSecondaryIndex(data map[string]interface{}, billingMode awstypes.BillingMode) *awstypes.GlobalSecondaryIndex {
-	return &awstypes.GlobalSecondaryIndex{
+	output := awstypes.GlobalSecondaryIndex{
 		IndexName:             aws.String(data[names.AttrName].(string)),
 		KeySchema:             expandKeySchema(data),
 		Projection:            expandProjection(data),
 		ProvisionedThroughput: expandProvisionedThroughput(data, billingMode),
 	}
+
+	if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+	}
+
+	return &output
 }
 
 func expandProvisionedThroughput(data map[string]interface{}, billingMode awstypes.BillingMode) *awstypes.ProvisionedThroughput {
@@ -2298,6 +2425,24 @@ func expandInputFormatOptions(data []interface{}) *awstypes.InputFormatOptions {
 	}
 
 	return a
+}
+
+func expandOnDemandThroughput(tfMap map[string]interface{}) *awstypes.OnDemandThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.OnDemandThroughput{}
+
+	if v, ok := tfMap["max_read_request_units"].(int); ok {
+		apiObject.MaxReadRequestUnits = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["max_write_request_units"].(int); ok {
+		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
+	}
+
+	return apiObject
 }
 
 func expandS3BucketSource(data map[string]interface{}) *awstypes.S3BucketSource {

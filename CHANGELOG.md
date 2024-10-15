@@ -1,7 +1,32 @@
-## 5.71.0 (Unreleased)
+## 5.72.0 (Unreleased)
+
+NOTES:
+
+* This version contains all the features, enhancements, and bug fixes from the [v5.71.0 release](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5710-october-11-2024) which was removed from the Terraform Registry ([#39692](https://github.com/hashicorp/terraform-provider-aws/issues/39692))
+
+ENHANCEMENTS:
+
+* resource/aws_dynamodb_table: Add `on_demand_throughput`  and `global_secondary_index.on_demand_throughput` arguments ([#37799](https://github.com/hashicorp/terraform-provider-aws/issues/37799))
+* resource/aws_rds_cluster: Increase maximum value of `serverlessv2_scaling_configuration.max_capacity` and `serverlessv2_scaling_configuration.min_capacity` from `128` to `256` ([#39697](https://github.com/hashicorp/terraform-provider-aws/issues/39697))
+
+BUG FIXES:
+
+* data-source/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
+* resource/aws_cognito_user_pool: Fixes error when `schema` has empty `string_attribute_constraints` or `number_attribute_constraints` ([#20386](https://github.com/hashicorp/terraform-provider-aws/issues/20386))
+* resource/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
+
+## 5.71.0 (October 11, 2024)
+
+This Terraform AWS Provider version has been removed from the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) due to `archive has incorrect checksum` errors while installing the provider on some platforms.
+
+The next planned Terraform AWS Provider release is **v5.72.0**, scheduled for the morning (EST) of October 17, 2024.
 
 FEATURES:
 
+* **New Data Source:** `aws_bedrock_inference_profile` ([#39342](https://github.com/hashicorp/terraform-provider-aws/issues/39342))
+* **New Data Source:** `aws_bedrock_inference_profiles` ([#39342](https://github.com/hashicorp/terraform-provider-aws/issues/39342))
+* **New Data Source:** `aws_elasticache_serverless_cache` ([#39590](https://github.com/hashicorp/terraform-provider-aws/issues/39590))
+* **New Data Source:** `aws_prometheus_default_scraper_configuration` ([#35280](https://github.com/hashicorp/terraform-provider-aws/issues/35280))
 * **New Data Source:** `aws_route53profiles_profiles` ([#38172](https://github.com/hashicorp/terraform-provider-aws/issues/38172))
 * **New Resource:** `aws_backup_restore_testing_plan` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
 * **New Resource:** `aws_backup_restore_testing_selection` ([#37039](https://github.com/hashicorp/terraform-provider-aws/issues/37039))
@@ -15,17 +40,26 @@ ENHANCEMENTS:
 
 * data-source/aws_backup_plan: Add `rule.schedule_expression_timezone` attribute ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
 * data-source/aws_eip: Add `ipam_pool_id` attribute ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
+* data-source/aws_vpc_endpoint_service: Add `private_dns_names` attribute ([#39659](https://github.com/hashicorp/terraform-provider-aws/issues/39659))
 * resource/aws_backup_plan: Add `rule.schedule_expression_timezone` argument ([#33653](https://github.com/hashicorp/terraform-provider-aws/issues/33653))
+* resource/aws_batch_compute_environment: Add plan-time validation of `update_policy.job_execution_timeout_minutes` ([#39583](https://github.com/hashicorp/terraform-provider-aws/issues/39583))
+* resource/aws_batch_job_definition: Suppress unnecessary differences in `container_properties.environment` ([#21834](https://github.com/hashicorp/terraform-provider-aws/issues/21834))
 * resource/aws_eip: Add `ipam_pool_id` argument in support of [public IPAM pools](https://docs.aws.amazon.com/vpc/latest/ipam/tutorials-eip-pool.html) ([#39604](https://github.com/hashicorp/terraform-provider-aws/issues/39604))
+* resource/aws_route53_resolver_endpoint: Add `resolver_endpoint_type` argument
+resource/aws_route53_resolver_rule: Add `ipv6` optional argument to the `target_ip` object ([#30167](https://github.com/hashicorp/terraform-provider-aws/issues/30167))
 * resource/aws_vpc_ipam: Add `enable_private_gua` argument ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 * resource/aws_vpc_ipv6_cidr_block_association: Add `ip_source` and `ipv6_address_attribute` attributes ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 
 BUG FIXES:
 
+* resource/aws_backup_vault: Fix `empty result` errors reading vaults in certain Regions ([#39670](https://github.com/hashicorp/terraform-provider-aws/issues/39670))
 * resource/aws_elasticache_replication_group: Fix `security_group_names` causing resource replacement after import ([#39591](https://github.com/hashicorp/terraform-provider-aws/issues/39591))
+* resource/aws_instance: Fixed issues with `volume_tags`, `root_block_device.*.tags`, and `ebs_block_device.*.tags` where tags overlapped with default tags. These are now handled consistently with top-level tags throughout the provider. Specifically, tags defined in both locations are no longer removed, preventing erroneous differences. ([#37441](https://github.com/hashicorp/terraform-provider-aws/issues/37441))
+* resource/aws_sagemaker_workteam: Mark `workforce_name` as Optional ([#39630](https://github.com/hashicorp/terraform-provider-aws/issues/39630))
 * resource/aws_securityhub_automation_rule: Increase `criteria.aws_account_id`, `criteria.generator_id`, `criteria.resource_id`, and `criteria.title` max length from `20` to `100` ([#39616](https://github.com/hashicorp/terraform-provider-aws/issues/39616))
 * resource/aws_vpc_ipam_pool: Change `publicly_advertisable` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 * resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip` errors ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
+
 
 ## 5.70.0 (October  4, 2024)
 

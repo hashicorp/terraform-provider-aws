@@ -1587,7 +1587,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 
 	emptyMap := map[string]string{}
 	mapWithOneKey1 := map[string]string{"brodo": "baggins"}
-	mapWithOneKey2 := map[string]string{"every": "gnomes"}
+	mapWithOneKey2 := map[string]string{"every": "gnomesie"}
 	mapWithTwoKeys := map[string]string{"brodo": "baggins", "jelly": "bean"}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1605,13 +1605,13 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomesie"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomesie"),
 				),
 			},
-			{ // 1 defaultTags + 1 volumeTags
+			{ // 1 defaultTags + 1 volumeTags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithOneKey1, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1621,7 +1621,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
 				),
 			},
-			{ // 1 defaultTags + 2 volumeTags
+			{ // 1 defaultTags + 2 volumeTags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithTwoKeys, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1632,7 +1632,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.jelly", "bean"),
 				),
 			},
-			{ // 1 defaultTags
+			{ // 1 defaultTags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1641,7 +1641,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
 				),
 			},
-			{ // no tags
+			{ // no tags (no overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(emptyMap, emptyMap, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -1662,7 +1662,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 
 	emptyMap := map[string]string{}
 	mapWithOneKey1 := map[string]string{"gigi": "kitty"}
-	mapWithOneKey2 := map[string]string{"every": "gnomes"}
+	mapWithOneKey2 := map[string]string{"every": "gnomesie"}
 	mapWithTwoKeys1 := map[string]string{"brodo": "baggins", "jelly": "bean"}
 	mapWithTwoKeys2 := map[string]string{"brodo": "baggins", "jelly": "andrew"}
 
@@ -1684,7 +1684,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.gigi", "kitty"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomesie"),
 				),
 			},
 			{ // 1 defaultTags + 2 rootTags + 1 ebsTags
@@ -1696,7 +1696,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomesie"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.jelly", "bean"),
 				),
@@ -1710,7 +1710,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomesie"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.jelly", "andrew"),
 				),
@@ -1727,6 +1727,140 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.jelly", "andrew"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_BlockDeviceTags_defaultTagsRBDOverlap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	emptyMap := map[string]string{}
+
+	// default tags and root tags overlapping is causing perpetual diffs
+	defTags := map[string]string{"every": "gnomesie", "iz": "paws", "gigi": "kitty", "brodo": "baggins"}
+	rbdTags := map[string]string{"gigi": "kitty", "brodo": "baggins", "tristy": "boo", "jelly": "bean"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // 4 defaultTags + 4 rbdTags with 2 in common
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, emptyMap, rbdTags, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "6"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.Ct4),
+				),
+			},
+			{ // 4 defaultTags + 4 rbdTags with 2 in common
+				Config:   testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, emptyMap, rbdTags, emptyMap),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBDOverlaps(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	emptyMap := map[string]string{}
+
+	// default tags and root tags overlapping is causing perpetual diffs
+	defTags := map[string]string{"every": "gnomesie", "iz": "paws", "gigi": "kitty", "brodo": "baggins"}
+	ebdTags2 := map[string]string{"gigi": "kitty", "brodo": "baggins", "tristy": "boo", "jelly": "bean"}
+	ebdTags3 := map[string]string{"gigi": "kitty", "brodo": "baggins"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // 4 defaultTags + 4 rbdTags with 2 in common
+				Config: testAccInstanceConfig_blockDeviceTagsDefault3EBS(defTags, emptyMap, ebdTags2, ebdTags3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags_all.%", "6"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2.tags_all.%", acctest.Ct4),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	emptyMap := map[string]string{}
+	defTags := map[string]string{"brodo": "baggins", "jelly": "bean"}
+	volTags1 := map[string]string{"every": "gnomesie"}
+	volTags2 := map[string]string{"brodo": "baggins"}
+	volTags3 := map[string]string{"every": "gnomesie", "iz": "paws", "gigi": "kitty", "brodo": "baggins", "jelly": "bean"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // 2 defaultTags + 1 volumeTags (no overlap)
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags1, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.every", "gnomesie"),
+				),
+			},
+			{ // 2 defaultTags + 1 volumeTags (overlap)
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags2, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
+				),
+			},
+			{ // 2 defaultTags + 5 volumeTags (overlap)
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),  // overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.jelly", "bean"),     // overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.every", "gnomesie"), // non-overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.iz", "paws"),        // non-overlap
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.gigi", "kitty"),     // non-overlap
+				),
+			},
+			{ // 2 defaultTags + 5 volumeTags (overlap)
+				Config:   testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -7028,6 +7162,53 @@ resource "aws_instance" "test" {
   }
 }
 `, defTgCfg, volTgCfg, rbdTgCfg, ebsTgCfg))
+}
+
+func testAccInstanceConfig_blockDeviceTagsDefault3EBS(defTg, ebsTg1, ebsTg2, ebsTg3 map[string]string) string {
+	//lintignore:AT004
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      %[1]s
+    }
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.medium"
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 1
+
+    tags = {
+      %[2]s
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 1
+
+    tags = {
+      %[3]s
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdd"
+    volume_size = 1
+
+    tags = {
+      %[4]s
+    }
+  }
+}
+`, mapToTagConfig(defTg, 6), mapToTagConfig(ebsTg1, 6), mapToTagConfig(ebsTg2, 6), mapToTagConfig(ebsTg3, 6)))
 }
 
 func testAccInstanceConfig_blockDeviceTagsEBSTags(rName string) string {

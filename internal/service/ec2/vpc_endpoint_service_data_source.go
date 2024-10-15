@@ -64,6 +64,11 @@ func dataSourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"private_dns_names": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 			"service": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -187,6 +192,13 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set(names.AttrOwner, sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
+
+	privateDnsNames := make([]string, len(sd.PrivateDnsNames))
+	for i, privateDnsDetail := range sd.PrivateDnsNames {
+		privateDnsNames[i] = aws.ToString(privateDnsDetail.PrivateDnsName)
+	}
+	d.Set("private_dns_names", privateDnsNames)
+
 	d.Set("service_id", serviceID)
 	d.Set(names.AttrServiceName, serviceName)
 	if len(sd.ServiceType) > 0 {
