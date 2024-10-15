@@ -654,9 +654,9 @@ resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   saml_properties {
-    relay_state_parameter_name = "%[2]s"
-    user_access_url = "%[3]s"
-    status = "ENABLED"
+    relay_state_parameter_name = %[2]q
+    user_access_url            = %[3]q
+    status                     = "ENABLED"
   }
 
   tags = {
@@ -674,8 +674,8 @@ resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   saml_properties {
-    relay_state_parameter_name = "%[2]s"
-    status = "DISABLED"
+    relay_state_parameter_name = %[2]q
+    status                     = "DISABLED"
   }
 
   tags = {
@@ -693,8 +693,8 @@ resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   saml_properties {
-    user_access_url = "%[2]s"
-    status = "ENABLED_WITH_DIRECTORY_LOGIN_FALLBACK"
+    user_access_url = %[2]q
+    status          = "ENABLED_WITH_DIRECTORY_LOGIN_FALLBACK"
   }
 
   tags = {
@@ -711,8 +711,7 @@ func testAccDirectoryConfig_samlPropertiesEmpty(rName, domain string) string {
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
-  saml_properties {
-  }
+  saml_properties {}
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
