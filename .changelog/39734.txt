@@ -11,5 +11,5 @@ resource/aws_cognito_user_pool: Properly handles ignored tags.
 ```
 
 ```release-note:bug
-data-ssource/aws_cognito_user_pool: Properly handles ignored tags.
+data-source/aws_cognito_user_pool: Properly handles ignored tags.
 ```
