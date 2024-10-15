@@ -45,7 +45,7 @@ func (e *ephemeralSecrets) Schema(ctx context.Context, _ ephemeral.SchemaRequest
 		},
 		Blocks: map[string]schema.Block{
 			"secret": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[epSecretData](ctx),
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[epSecrets](ctx),
 				Validators: []validator.Set{
 					setvalidator.IsRequired(),
 				},
