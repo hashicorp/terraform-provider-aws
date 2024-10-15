@@ -397,10 +397,10 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		tfMap := tfListSAMLProperties[0].(map[string]interface{})
 
 		var dels []types.DeletableSamlProperty
-		if "" == tfMap["relay_state_parameter_name"].(string) {
+		if tfMap["relay_state_parameter_name"].(string) == "" {
 			dels = append(dels, types.DeletableSamlPropertySamlPropertiesRelayStateParameterName)
 		}
-		if "" == tfMap["user_access_url"].(string) {
+		if tfMap["user_access_url"].(string) == "" {
 			dels = append(dels, types.DeletableSamlPropertySamlPropertiesUserAccessUrl)
 		}
 
