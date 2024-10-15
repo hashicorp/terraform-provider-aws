@@ -131,6 +131,8 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Deprecated: "The managed_policy_arns argument is deprecated. " +
+					"Use the aws_iam_role_policy_attachments_exclusive resource instead.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
