@@ -365,8 +365,6 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 ##### SAPOData Source Properties
 
 * `objectPath` - (Required) Object path specified in the SAPOData flow source.
-* `paginationConfig` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
-* `parallelismConfig` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
 
 ##### Veeva Source Properties
 
