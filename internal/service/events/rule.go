@@ -258,11 +258,11 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		input := expandPutRuleInput(d, ruleName)
-		input.Tags = getTagsIn(ctx)
+		input.Tags = getTagsIn(ctx) // For ABAC aws:RequestTag condition.
 
 		_, err = retryPutRule(ctx, conn, input)
 
-		// Some partitions (e.g. ISO) may not support tag-on-create.
+		// Some partitions (e.g. ISO) may not support tag-on-update.
 		if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			input.Tags = nil
 
