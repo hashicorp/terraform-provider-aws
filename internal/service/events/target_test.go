@@ -206,6 +206,7 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", acctest.Ct0),
