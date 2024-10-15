@@ -616,7 +616,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if v, _ := d.GetChange("ttl"); v.(int) != 0 {
+	if v, _ := d.GetChange("ttl"); v != nil {
 		oldRec.TTL = aws.Int64(int64(v.(int)))
 	}
 
