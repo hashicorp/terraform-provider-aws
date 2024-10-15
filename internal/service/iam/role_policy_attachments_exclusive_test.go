@@ -273,7 +273,7 @@ func TestAccIAMRolePolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccRolePolicyAttachmentsExclusiveConfig_basic(rName),
+				Config: testAccRolePolicyAttachmentsExclusiveConfig_outOfBandAddition(rName, oobPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, roleResourceName, &role),
 					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
