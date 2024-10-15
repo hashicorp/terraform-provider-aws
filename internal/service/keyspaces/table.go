@@ -73,6 +73,141 @@ func resourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"auto_scaling_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"read_capacity_auto_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"auto_scaling_disabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"maximum_units": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      40000,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"minimum_units": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      40000,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"scaling_policy": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_tracking_scaling_policy_configuration": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"target_value": {
+																Type:         schema.TypeFloat,
+																Required:     true,
+																ValidateFunc: validation.FloatBetween(20, 90),
+															},
+															"disable_scale_in": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"scale_in_cooldown": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      0,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"scale_out_cooldown": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      0,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"write_capacity_auto_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"auto_scaling_disabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"maximum_units": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      40000,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"minimum_units": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      40000,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"scaling_policy": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_tracking_scaling_policy_configuration": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"target_value": {
+																Type:         schema.TypeFloat,
+																Required:     true,
+																ValidateFunc: validation.FloatBetween(20, 90),
+															},
+															"disable_scale_in": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"scale_in_cooldown": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"scale_out_cooldown": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"capacity_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -317,6 +452,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:         getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("auto_scaling_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AutoScalingSpecification = expandAutoScalingSpecification(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CapacitySpecification = expandCapacitySpecification(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -458,6 +597,26 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// https://docs.aws.amazon.com/keyspaces/latest/APIReference/API_UpdateTable.html
 		// Note that you can only update one specific table setting per update operation.
+		if d.HasChange("auto_scaling_specification") {
+			if v, ok := d.GetOk("auto_scaling_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input := &keyspaces.UpdateTableInput{
+					AutoScalingSpecification: expandAutoScalingSpecification(v.([]interface{})[0].(map[string]interface{})),
+					KeyspaceName:             aws.String(keyspaceName),
+					TableName:                aws.String(tableName),
+				}
+
+				_, err := conn.UpdateTable(ctx, input)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) AutoScalingSpecification: %s", d.Id(), err)
+				}
+
+				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) AutoScalingSpecification update: %s", d.Id(), err)
+				}
+			}
+		}
+
 		if d.HasChange("capacity_specification") {
 			if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input := &keyspaces.UpdateTableInput{
@@ -766,6 +925,90 @@ func waitTableUpdated(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	}
 
 	return nil, err
+}
+
+func expandAutoScalingSpecification(tfMap map[string]interface{}) *types.AutoScalingSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AutoScalingSpecification{}
+
+	if v, ok := tfMap["read_capacity_auto_scaling"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ReadCapacityAutoScaling = expandAutoScalingSettings(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["write_capacity_auto_scaling"].([]interface{}); ok && len(v) > 0 {
+		apiObject.WriteCapacityAutoScaling = expandAutoScalingSettings(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingSettings(tfMap map[string]interface{}) *types.AutoScalingSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AutoScalingSettings{}
+
+	if v, ok := tfMap["auto_scaling_disabled"].(bool); ok && v {
+		apiObject.AutoScalingDisabled = v
+	}
+
+	if v, ok := tfMap["maximum_units"].(int); ok && v != 0 {
+		apiObject.MaximumUnits = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["minimum_units"].(int); ok && v != 0 {
+		apiObject.MinimumUnits = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["scaling_policy"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ScalingPolicy = expandAutoScalingPolicy(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingPolicy(tfMap map[string]interface{}) *types.AutoScalingPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AutoScalingPolicy{}
+
+	if v, ok := tfMap["target_tracking_scaling_policy_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.TargetTrackingScalingPolicyConfiguration = expandTargetTrackingScalingPolicyConfiguration(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandTargetTrackingScalingPolicyConfiguration(tfMap map[string]interface{}) *types.TargetTrackingScalingPolicyConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.TargetTrackingScalingPolicyConfiguration{}
+
+	if v, ok := tfMap["target_value"].(float64); ok && v != 0 {
+		apiObject.TargetValue = v
+	}
+
+	if v, ok := tfMap["disable_scale_in"].(bool); ok && v {
+		apiObject.DisableScaleIn = v
+	}
+
+	if v, ok := tfMap["scale_in_cooldown"].(int); ok && v != 0 {
+		apiObject.ScaleInCooldown = int32(v)
+	}
+
+	if v, ok := tfMap["scale_out_cooldown"].(int); ok && v != 0 {
+		apiObject.ScaleOutCooldown = int32(v)
+	}
+
+	return apiObject
 }
 
 func expandCapacitySpecification(tfMap map[string]interface{}) *types.CapacitySpecification {
