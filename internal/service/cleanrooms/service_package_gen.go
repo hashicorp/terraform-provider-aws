@@ -42,6 +42,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  ResourceMembership,
+			TypeName: "aws_cleanrooms_membership",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
