@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.3
-	github.com/aws/aws-sdk-go-v2/service/amp v1.29.2
+	github.com/aws/aws-sdk-go-v2/service/amp v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.24.2
@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/backup v1.39.2
+	github.com/aws/aws-sdk-go-v2/service/backup v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.20.2
@@ -68,7 +68,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.29.2
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.2
@@ -217,10 +217,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.163.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.2
-	github.com/aws/aws-sdk-go-v2/service/schemas v1.28.2
+	github.com/aws/aws-sdk-go-v2/service/schemas v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.54.2
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.18.2
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.30.2
@@ -247,7 +247,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.41.2
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.52.2
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/waf v1.25.2
