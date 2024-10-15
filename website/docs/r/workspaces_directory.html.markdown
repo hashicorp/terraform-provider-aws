@@ -28,7 +28,7 @@ resource "aws_workspaces_directory" "example" {
 
   saml_properties {
     user_access_url = "https://sso.example.com/"
-    status = "ENABLED"
+    status          = "ENABLED"
   }
 
   self_service_permissions {
@@ -154,7 +154,7 @@ This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
-* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
+* `ip_group_ids` – (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `saml_properties` – (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
