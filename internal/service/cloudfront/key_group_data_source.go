@@ -38,7 +38,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	///	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	/// awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -130,6 +131,10 @@ func (d *dataSourceKeyGroup) Schema(ctx context.Context, req datasource.SchemaRe
 			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 			},
+			"last_modified_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 		},
 	}
 }
@@ -220,6 +225,8 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	data.ID = flex.StringToFramework(ctx, out.KeyGroup.Id)
 	data.Name = flex.StringToFramework(ctx, out.KeyGroup.KeyGroupConfig.Name)
 	data.Comment = flex.StringToFramework(ctx, out.KeyGroup.KeyGroupConfig.Comment)
+	data.LastModifiedTime = flex.TimeToFramework(ctx, out.KeyGroup.LastModifiedTime)
+
 	data.Etag = flex.StringToFramework(ctx, out.ETag)
 
 	// TIP: -- 6. Set the state
@@ -239,11 +246,12 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type dataSourceKeyGroupModel struct {
-	Etag    types.String `tfsdk:"etag"`
-	Items   types.List   `tfsdk:"items"`
-	Comment types.String `tfsdk:"comment"`
-	ID      types.String `tfsdk:"id"`
-	Name    types.String `tfsdk:"name"`
+	Etag             types.String      `tfsdk:"etag"`
+	Items            types.List        `tfsdk:"items"`
+	Comment          types.String      `tfsdk:"comment"`
+	ID               types.String      `tfsdk:"id"`
+	Name             types.String      `tfsdk:"name"`
+	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 }
 
 type complexArgumentModel struct {
