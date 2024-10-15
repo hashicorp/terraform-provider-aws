@@ -3,6 +3,11 @@
 NOTES:
 
 * This version contains all the features, enhancements, and bug fixes from the [v5.71.0 release](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5710-october-11-2024) which was removed from the Terraform Registry ([#39692](https://github.com/hashicorp/terraform-provider-aws/issues/39692))
+* resource/aws_iam_role: The `managed_policy_arns` argument is deprecated. Use the `aws_iam_role_policy_attachments_exclusive` resource instead. ([#39718](https://github.com/hashicorp/terraform-provider-aws/issues/39718))
+
+FEATURES:
+
+* **New Resource:** `aws_iam_role_policy_attachments_exclusive` ([#39718](https://github.com/hashicorp/terraform-provider-aws/issues/39718))
 
 ENHANCEMENTS:
 
