@@ -81,4 +81,4 @@ Using `terraform import`, import IAM Service Specific Credentials using the `ser
 % terraform import aws_iam_service_specific_credential.default `codecommit.amazonaws.com:example:some-id`
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1e83847adc046bae947086c436bc6f0c678e2771941ae818199da71c13912bb2 -->
+<!-- cache-key: cdktf-0.20.9 input-1e83847adc046bae947086c436bc6f0c678e2771941ae818199da71c13912bb2 -->

@@ -29,7 +29,7 @@ In the `internal/service/<service>/<service>.go` file you will see a `Schema` pr
 
 Typically you will add arguments to represent the values that are under control by Terraform, and attributes to supply read-only values as references for Terraform. These are distinguished by Schema Behavior.
 
-Attribute names are to be specified in `camel_case` as opposed to the AWS API which is `CamelCase`.
+Attribute names are to be specified in `snake_case` as opposed to the AWS API which is `CamelCase`.
 
 ### Implement CRUD handlers
 

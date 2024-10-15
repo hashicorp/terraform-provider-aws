@@ -435,7 +435,7 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().M2Client(ctx)
 
 	_, err := conn.DeleteEnvironment(ctx, &m2.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(data.ID.ValueString()),
+		EnvironmentId: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -578,8 +578,8 @@ type environmentResourceModel struct {
 	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
 	StorageConfigurations        fwtypes.ListNestedObjectValueOf[storageConfigurationModel]   `tfsdk:"storage_configuration"`
 	SubnetIDs                    fwtypes.SetValueOf[types.String]                             `tfsdk:"subnet_ids"`
-	Tags                         types.Map                                                    `tfsdk:"tags"`
-	TagsAll                      types.Map                                                    `tfsdk:"tags_all"`
+	Tags                         tftags.Map                                                   `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                   `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                               `tfsdk:"timeouts"`
 }
 

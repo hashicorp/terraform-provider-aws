@@ -371,6 +371,43 @@ func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_passwordHistorySize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_passwordHistorySize(rName, 24),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.password_history_size", "24"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_passwordHistorySize(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.password_history_size", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
@@ -907,51 +944,6 @@ func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPool_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var pool awstypes.UserPoolType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserPoolConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccUserPoolConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccUserPoolConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
@@ -1397,7 +1389,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 				Config: testAccUserPoolConfig_schemaAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool1),
-					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct4),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":                       "String",
 						"developer_only_attribute":                  acctest.CtFalse,
@@ -1418,14 +1410,31 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"required":                       acctest.CtFalse,
 						"string_attribute_constraints.#": acctest.Ct0,
 					}),
-				),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "String",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "strattr",
+						"number_attribute_constraints.#": acctest.Ct0,
+						"required":                       acctest.CtFalse,
+						"string_attribute_constraints.#": acctest.Ct1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "Number",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "numattr",
+						"required":                       acctest.CtFalse,
+						"number_attribute_constraints.#": acctest.Ct1,
+						"string_attribute_constraints.#": acctest.Ct0,
+					})),
 			},
 			{
 				Config: testAccUserPoolConfig_schemaAttributesUpdated(rName, "mybool"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool2),
 					testAccCheckUserPoolNotRecreated(&pool1, &pool2),
-					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":                       "String",
 						"developer_only_attribute":                  acctest.CtFalse,
@@ -1457,12 +1466,36 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"required":                                 acctest.CtFalse,
 						"string_attribute_constraints.#":           acctest.Ct0,
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "String",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "strattr",
+						"number_attribute_constraints.#": acctest.Ct0,
+						"required":                       acctest.CtFalse,
+						"string_attribute_constraints.#": acctest.Ct1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "Number",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "numattr",
+						"required":                       acctest.CtFalse,
+						"number_attribute_constraints.#": acctest.Ct1,
+						"string_attribute_constraints.#": acctest.Ct0,
+					}),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"schema.2.number_attribute_constraints.0.max_value",
+					"schema.2.number_attribute_constraints.0.min_value",
+					"schema.4.string_attribute_constraints.0.max_length",
+					"schema.4.string_attribute_constraints.0.min_length",
+				},
 			},
 		},
 	})
@@ -2148,6 +2181,23 @@ resource "aws_cognito_user_pool" "test" {
 `, rName, enabled)
 }
 
+func testAccUserPoolConfig_passwordHistorySize(rName string, passwordHistorySize int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  password_policy {
+    minimum_length        = 6
+    password_history_size = %[2]d
+  }
+
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
+  }
+}
+`, rName, passwordHistorySize)
+}
+
 func testAccUserPoolConfig_smsAuthenticationMessage(rName, smsAuthenticationMessage string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -2204,31 +2254,6 @@ resource "aws_cognito_user_pool" "test" {
   sms_verification_message = %[2]q
 }
 `, rName, smsVerificationMessage)
-}
-
-func testAccUserPoolConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccUserPoolConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccUserPoolConfig_emailConfiguration(rName string) string {
@@ -2415,7 +2440,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_kms_key" "test" {
@@ -2471,7 +2496,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -2517,7 +2542,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -2571,7 +2596,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -2627,7 +2652,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -2679,6 +2704,24 @@ resource "aws_cognito_user_pool" "test" {
   }
 
   schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "strattr"
+    required                 = false
+    string_attribute_constraints {}
+  }
+
+  schema {
+    attribute_data_type      = "Number"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "numattr"
+    required                 = false
+    number_attribute_constraints {}
+  }
+
+  schema {
     attribute_data_type      = "Boolean"
     developer_only_attribute = true
     mutable                  = false
@@ -2705,6 +2748,24 @@ resource "aws_cognito_user_pool" "test" {
       min_length = 5
       max_length = 10
     }
+  }
+
+  schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "strattr"
+    required                 = false
+    string_attribute_constraints {}
+  }
+
+  schema {
+    attribute_data_type      = "Number"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "numattr"
+    required                 = false
+    number_attribute_constraints {}
   }
 
   schema {

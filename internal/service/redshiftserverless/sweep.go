@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -44,32 +43,33 @@ func sweepNamespaces(region string) error {
 	conn := client.RedshiftServerlessClient(ctx)
 	input := &redshiftserverless.ListNamespacesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	pages := redshiftserverless.NewListNamespacesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Serverless Namespaces: %w", err))
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Redshift Serverless Namespace sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, namespace := range page.Namespaces {
+		if err != nil {
+			return fmt.Errorf("error listing Redshift Serverless Namespaces (%s): %w", region, err)
+		}
+
+		for _, v := range page.Namespaces {
 			r := resourceNamespace()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(namespace.NamespaceName))
+			d.SetId(aws.ToString(v.NamespaceName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Serverless Namespaces for %s: %w", region, err))
-	}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Serverless Namespaces sweep for %s: %s", region, errs)
-		return nil
+	if err != nil {
+		return fmt.Errorf("error sweeping Redshift Serverless Namespaces (%s): %w", region, err)
 	}
 
 	return nil
@@ -84,32 +84,33 @@ func sweepWorkgroups(region string) error {
 	conn := client.RedshiftServerlessClient(ctx)
 	input := &redshiftserverless.ListWorkgroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	pages := redshiftserverless.NewListWorkgroupsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Serverless Workgroups: %w", err))
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Redshift Serverless Workgroup sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, workgroup := range page.Workgroups {
+		if err != nil {
+			return fmt.Errorf("error listing Redshift Serverless Workgroups (%s): %w", region, err)
+		}
+
+		for _, v := range page.Workgroups {
 			r := resourceWorkgroup()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(workgroup.WorkgroupName))
+			d.SetId(aws.ToString(v.WorkgroupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Serverless Workgroups for %s: %w", region, err))
-	}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Serverless Workgroups sweep for %s: %s", region, errs)
-		return nil
+	if err != nil {
+		return fmt.Errorf("error sweeping Redshift Serverless Workgroups (%s): %w", region, err)
 	}
 
 	return nil
@@ -124,32 +125,33 @@ func sweepSnapshots(region string) error {
 	conn := client.RedshiftServerlessClient(ctx)
 	input := &redshiftserverless.ListSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	pages := redshiftserverless.NewListSnapshotsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Serverless Snapshots: %w", err))
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Redshift Serverless Snapshot sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, workgroup := range page.Snapshots {
+		if err != nil {
+			return fmt.Errorf("error listing Redshift Serverless Snapshots (%s): %w", region, err)
+		}
+
+		for _, v := range page.Snapshots {
 			r := resourceSnapshot()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(workgroup.SnapshotName))
+			d.SetId(aws.ToString(v.SnapshotName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Serverless Snapshots for %s: %w", region, err))
-	}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Serverless Snapshots sweep for %s: %s", region, errs)
-		return nil
+	if err != nil {
+		return fmt.Errorf("error sweeping Redshift Serverless Snapshots (%s): %w", region, err)
 	}
 
 	return nil

@@ -89,10 +89,9 @@ class MyConvertedCode(TerraformStack):
             auto_enable=False,
             auto_enable_standards="NONE",
             depends_on=[aws_securityhub_finding_aggregator_example],
-            organization_configuration=[{
-                "configuration_type": "CENTRAL"
-            }
-            ]
+            organization_configuration=SecurityhubOrganizationConfigurationOrganizationConfiguration(
+                configuration_type="CENTRAL"
+            )
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_securityhub_organization_configuration_example.override_logical_id("example")
@@ -149,4 +148,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_organization_configuration.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2fbc3368dfe1e813d4004abb851ef466468b7d2bea02a2126eea8fae74ad5485 -->
+<!-- cache-key: cdktf-0.20.9 input-2fbc3368dfe1e813d4004abb851ef466468b7d2bea02a2126eea8fae74ad5485 -->

@@ -198,4 +198,4 @@ Using `terraform import`, import Service Discovery Service using the service ID.
 % terraform import aws_service_discovery_service.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bae0abf761352b2967d57b6cd0d452ce01af3694a0b8e973fcbe2e8f6f7ce1fa -->
+<!-- cache-key: cdktf-0.20.9 input-bae0abf761352b2967d57b6cd0d452ce01af3694a0b8e973fcbe2e8f6f7ce1fa -->

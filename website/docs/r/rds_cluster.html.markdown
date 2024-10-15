@@ -170,7 +170,7 @@ data "aws_db_cluster_snapshot" "example" {
 }
 
 resource "aws_rds_cluster" "example" {
-  # Because the global cluster is sourced from this cluster, the initial 
+  # Because the global cluster is sourced from this cluster, the initial
   # engine and engine_version values are defined here and automatically
   # inherited by the global cluster.
   engine         = "aurora"
@@ -360,14 +360,14 @@ resource "aws_rds_cluster" "example" {
   # ... other configuration ...
 
   serverlessv2_scaling_configuration {
-    max_capacity = 128.0
+    max_capacity = 256.0
     min_capacity = 0.5
   }
 }
 ```
 
-* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
-* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
+* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `256` in steps of `0.5`.
+* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `256` in steps of `0.5`.
 
 ## Attribute Reference
 
@@ -406,7 +406,10 @@ load-balanced across replicas
 
 ### master_user_secret
 
-The `master_user_secret` configuration block supports the following attributes:
+~> **NOTE:** The `master_user_secret` block is a list. To reference elements, use [index notation](https://developer.hashicorp.com/terraform/language/expressions/types#indices-and-attributes). For example:<br><br>
+`aws_rds_cluster.this.master_user_secret[0].secret_arn`
+
+The `master_user_secret` block supports the following attributes:
 
 * `kms_key_id` - Amazon Web Services KMS key identifier that is used to encrypt the secret.
 * `secret_arn` - Amazon Resource Name (ARN) of the secret.

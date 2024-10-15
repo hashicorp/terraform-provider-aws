@@ -5,10 +5,6 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | Variable | Description |
 |----------|-------------|
 | `ACM_CERTIFICATE_ROOT_DOMAIN` | Root domain name to use with ACM Certificate testing. |
-| `ACM_CERTIFICATE_MULTIPLE_ISSUED_DOMAIN` | Domain name of ACM Certificate with multiple issued certificates. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
-| `ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN` | Amazon Resource Name of most recent ACM Certificate with multiple issued certificates. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
-| `ACM_CERTIFICATE_SINGLE_ISSUED_DOMAIN` | Domain name of ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
-| `ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN` | Amazon Resource Name of most recent ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certificate` resource usage in tests. |
 | `ADM_CLIENT_ID` | Identifier for Amazon Device Manager Client in Pinpoint testing. |
 | `AMPLIFY_DOMAIN_NAME` | Domain name to use for Amplify domain association testing. |
 | `AMPLIFY_GITHUB_ACCESS_TOKEN` | GitHub access token used for AWS Amplify testing. |
@@ -100,3 +96,4 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN` | ARN for a License Manager license imported into the current account. |
 | `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL` | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit. |
 | `TF_TEST_CLOUDFRONT_RETAIN` | Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards) |
+| `TF_TEST_ELASTICACHE_RESERVED_CACHE_NODE` | Flag to enable resource tests for ElastiCache reserved nodes. Set to `1` to run tests |

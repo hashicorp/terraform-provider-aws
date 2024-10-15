@@ -238,7 +238,7 @@ func (r *resourceEmailTemplate) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	in := &pinpoint.DeleteEmailTemplateInput{
-		TemplateName: aws.String(state.TemplateName.ValueString()),
+		TemplateName: state.TemplateName.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteEmailTemplate(ctx, in)
@@ -289,8 +289,8 @@ type emailTemplateData struct {
 	TemplateName  types.String                                   `tfsdk:"template_name"`
 	EmailTemplate fwtypes.ListNestedObjectValueOf[emailTemplate] `tfsdk:"email_template"`
 	Arn           types.String                                   `tfsdk:"arn"`
-	Tags          types.Map                                      `tfsdk:"tags"`
-	TagsAll       types.Map                                      `tfsdk:"tags_all"`
+	Tags          tftags.Map                                     `tfsdk:"tags"`
+	TagsAll       tftags.Map                                     `tfsdk:"tags_all"`
 }
 
 type emailTemplate struct {

@@ -126,4 +126,4 @@ Using `terraform import`, import CodeBuild Resource Policy using the CodeBuild R
 % terraform import aws_codebuild_resource_policy.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f23442c58293672c191dd97a4494665d2aef6eee691d16bd2960548ec6b274dd -->
+<!-- cache-key: cdktf-0.20.9 input-f23442c58293672c191dd97a4494665d2aef6eee691d16bd2960548ec6b274dd -->

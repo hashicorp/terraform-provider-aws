@@ -755,6 +755,13 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
+		// `aws_elasticache_cluster` resource doesn't define `security_group_names`, but `aws_elasticache_replication_group` does.
+		// The value for that comes from []CacheSecurityGroupMembership which is part of CacheCluster object in AWS API.
+		// We need to set it here, as it is not set in setFromCacheCluster, and we cannot add it to that function
+		// without adding `security_group_names` property to `aws_elasticache_cluster` resource.
+		// This fixes the issue when importing `aws_elasticache_replication_group` where Terraform decides to recreate the imported cluster,
+		// because of `security_group_names` is not set and is "(known after apply)"
+		d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups))
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 		d.Set("transit_encryption_mode", c.TransitEncryptionMode)
 

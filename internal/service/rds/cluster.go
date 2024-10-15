@@ -547,12 +547,12 @@ func resourceCluster() *schema.Resource {
 						names.AttrMaxCapacity: {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 128),
+							ValidateFunc: validation.FloatBetween(0.5, 256),
 						},
 						"min_capacity": {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 128),
+							ValidateFunc: validation.FloatBetween(0.5, 256),
 						},
 					},
 				},
@@ -1383,6 +1383,17 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	// There are two ways to enable the HTTP endpoint: new way and old way.
+	// This is the new way for provisioned engine mode (covers provisioned and serverlessv2).
+	// The old way is modifying the DB cluster and setting the EnableHttpEndpoint field (below).
+	// Both need a wait for update so when it's provisioned it will do old (not necessary but does the wait) & new ways, otherwise just old way.
+	if d.HasChange("enable_http_endpoint") && d.Get("engine_mode").(string) == engineModeProvisioned {
+		o, n := d.GetChange("enable_http_endpoint")
+		if err := enableHTTPEndpointProvisioned(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling HTTP endpoint for RDS Cluster (%s): %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChangesExcept(
 		names.AttrAllowMajorVersionUpgrade,
 		"delete_automated_backups",
@@ -1452,7 +1463,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableGlobalWriteForwarding = aws.Bool(d.Get("enable_global_write_forwarding").(bool))
 		}
 
-		if d.HasChange("enable_http_endpoint") {
+		// for provisioned and serverlessv2 (also "provisioned"), data api must be enabled using conn.EnableHttpEndpoint() as below
+		if d.HasChange("enable_http_endpoint") && d.Get("engine_mode").(string) != engineModeProvisioned {
 			input.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		}
 
@@ -1751,6 +1763,36 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	return []*schema.ResourceData{d}, nil
 }
 
+func enableHTTPEndpointProvisioned(ctx context.Context, conn *rds.Client, arn string, o, n interface{}) error {
+	if o == nil {
+		return nil
+	}
+
+	if n == nil {
+		return nil
+	}
+
+	if !o.(bool) && n.(bool) {
+		_, err := conn.EnableHttpEndpoint(ctx, &rds.EnableHttpEndpointInput{
+			ResourceArn: aws.String(arn),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if o.(bool) && !n.(bool) {
+		_, err := conn.DisableHttpEndpoint(ctx, &rds.DisableHttpEndpointInput{
+			ResourceArn: aws.String(arn),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func addIAMRoleToCluster(ctx context.Context, conn *rds.Client, clusterID, roleARN string) error {
 	input := &rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterID),
@@ -1875,6 +1917,40 @@ func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPen
 
 		return output, status, nil
 	}
+}
+
+func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) {
+	pendingStatuses := []string{
+		clusterStatusCreating,
+		clusterStatusMigrating,
+		clusterStatusPreparingDataMigration,
+		clusterStatusRebooting,
+		clusterStatusBackingUp,
+		clusterStatusConfiguringIAMDatabaseAuth,
+		clusterStatusConfiguringEnhancedMonitoring,
+		clusterStatusModifying,
+		clusterStatusRenaming,
+		clusterStatusResettingMasterCredentials,
+		clusterStatusScalingCompute,
+		clusterStatusUpgrading,
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending:    pendingStatuses,
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {

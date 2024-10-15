@@ -1961,11 +1961,11 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 128.0, 8.5),
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 256.0, 8.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "8.5"),
 				),
 			},
@@ -2556,6 +2556,13 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
 				),
 			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpoint(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
 		},
 	})
 }
@@ -2574,6 +2581,20 @@ func TestAccRDSCluster_enableHTTPEndpointProvisioned(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
+				),
+			},
 			{
 				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
 				Check: resource.ComposeTestCheckFunc(
@@ -4773,24 +4794,19 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine      = %[1]q
-  latest      = true
-  include_all = true
-
-  filter {
-    name   = "engine-mode"
-    values = ["serverless"]
-  }
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[2]q
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
   skip_final_snapshot = true
-  engine              = data.aws_rds_engine_version.test.engine
-  engine_version      = data.aws_rds_engine_version.test.version
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
 
   serverlessv2_scaling_configuration {
     max_capacity = %[3]f

@@ -262,7 +262,7 @@ func testAccCheckGuardrailDestroy(ctx context.Context) resource.TestCheckFunc {
 			id := rs.Primary.Attributes["guardrail_id"]
 			version := rs.Primary.Attributes[names.AttrVersion]
 
-			_, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
+			_, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, id, version)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -292,7 +292,7 @@ func testAccCheckGuardrailExists(ctx context.Context, name string, guardrail *be
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-		out, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
+		out, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, id, version)
 		if err != nil {
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, rs.Primary.ID, err)
 		}

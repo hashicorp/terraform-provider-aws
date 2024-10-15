@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_backup_report_plan")
-func DataSourceReportPlan() *schema.Resource {
+// @SDKDataSource("aws_backup_report_plan", name="Report Plan")
+func dataSourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReportPlanRead,
 
@@ -120,29 +119,26 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
-	reportPlan, err := FindReportPlanByName(ctx, conn, name)
+	reportPlan, err := findReportPlanByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Backup Report Plan (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(reportPlan.ReportPlanName))
-
+	d.SetId(name)
 	d.Set(names.AttrARN, reportPlan.ReportPlanArn)
 	d.Set(names.AttrCreationTime, reportPlan.CreationTime.Format(time.RFC3339))
 	d.Set("deployment_status", reportPlan.DeploymentStatus)
 	d.Set(names.AttrDescription, reportPlan.ReportPlanDescription)
 	d.Set(names.AttrName, reportPlan.ReportPlanName)
-
 	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(reportPlan.ReportDeliveryChannel)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting report_delivery_channel: %s", err)
 	}
-
 	if err := d.Set("report_setting", flattenReportSetting(reportPlan.ReportSetting)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := listTags(ctx, conn, aws.ToString(reportPlan.ReportPlanArn))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)

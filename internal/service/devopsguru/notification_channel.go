@@ -192,7 +192,7 @@ func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.D
 	}
 
 	in := &devopsguru.RemoveNotificationChannelInput{
-		Id: aws.String(state.ID.ValueString()),
+		Id: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.RemoveNotificationChannel(ctx, in)

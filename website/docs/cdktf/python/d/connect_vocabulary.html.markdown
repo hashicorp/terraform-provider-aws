@@ -79,4 +79,4 @@ separated by a colon (`:`).
 * `tags` - A map of tags to assign to the Vocabulary.
 * `vocabulary_id` - The identifier of the custom vocabulary.
 
-<!-- cache-key: cdktf-0.20.1 input-342009f7085547a66baea1db32f32c7bea60a46cb2c6aa70436452552150ca97 -->
+<!-- cache-key: cdktf-0.20.9 input-342009f7085547a66baea1db32f32c7bea60a46cb2c6aa70436452552150ca97 -->

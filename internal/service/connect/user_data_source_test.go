@@ -107,7 +107,7 @@ func testAccUserDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccUserBaseDataSourceConfig(rName, rName2, rName3, rName4, rName5, email string) string {
+func testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email string) string {
 	return acctest.ConfigCompose(
 		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
@@ -132,7 +132,7 @@ resource "aws_connect_user" "test" {
   phone_config {
     after_contact_work_time_limit = 0
     auto_accept                   = true
-    desk_phone_number             = "+112345678913"
+    desk_phone_number             = "+12345678913"
     phone_type                    = "DESK_PHONE"
   }
 
@@ -145,7 +145,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserDataSourceConfig_id(rName, rName2, rName3, rName4, rName5, email string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseDataSourceConfig(rName, rName2, rName3, rName4, rName5, email),
+		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email),
 		`
 data "aws_connect_user" "test" {
   instance_id = aws_connect_instance.test.id
@@ -156,7 +156,7 @@ data "aws_connect_user" "test" {
 
 func testAccUserDataSourceConfig_name(rName, rName2, rName3, rName4, rName5, email string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseDataSourceConfig(rName, rName2, rName3, rName4, rName5, email),
+		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email),
 		`
 data "aws_connect_user" "test" {
   instance_id = aws_connect_instance.test.id

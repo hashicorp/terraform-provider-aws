@@ -93,4 +93,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version_id` - Unique version identifier of this version of the secret.
 * `version_stage` - Staging label attached to the version.
 
-<!-- cache-key: cdktf-0.20.1 input-596ee491979af3a0973c463d5c307cdbedc26652f3a013026f6591e3a4084f60 -->
+<!-- cache-key: cdktf-0.20.9 input-596ee491979af3a0973c463d5c307cdbedc26652f3a013026f6591e3a4084f60 -->

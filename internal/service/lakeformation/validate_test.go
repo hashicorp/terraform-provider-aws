@@ -24,6 +24,7 @@ func TestValidPrincipal(t *testing.T) {
 		"111122223333",           // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"arn:aws-us-gov:iam::357342307427:role/tf-acc-test-3217321001347236965",          // lintignore:AWSAT005          // IAM Role
 		"arn:aws:iam::123456789012:user/David",                                           // lintignore:AWSAT005          // IAM User
+		"arn:aws:iam::123456789012:federated-user/David",                                 // lintignore:AWSAT005          // IAM Federated User
 		"arn:aws-us-gov:iam:us-west-2:357342307427:role/tf-acc-test-3217321001347236965", // lintignore:AWSAT003,AWSAT005 // Non-global IAM Role?
 		"arn:aws:iam:us-east-1:123456789012:user/David",                                  // lintignore:AWSAT003,AWSAT005 // Non-global IAM User?
 		"arn:aws:iam::111122223333:saml-provider/idp1:group/data-scientists",             // lintignore:AWSAT005          // SAML group

@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,65 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name       string
-		volumeType string
-		want       bool
-	}{
-		{"empty", "", false},
-		{"gp2", elasticsearch.VolumeTypeGp2, false},
-		{"gp3", elasticsearch.VolumeTypeGp3, true},
-		{"io1", elasticsearch.VolumeTypeIo1, true},
-		{"standard", elasticsearch.VolumeTypeStandard, false},
-	}
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got := tfelasticsearch.EBSVolumeTypePermitsIopsInput(testCase.volumeType); got != testCase.want {
-				t.Errorf("EBSVolumeTypePermitsIopsInput() = %v, want %v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name       string
-		volumeType string
-		want       bool
-	}{
-		{"empty", "", false},
-		{"gp2", elasticsearch.VolumeTypeGp2, false},
-		{"gp3", elasticsearch.VolumeTypeGp3, true},
-		{"io1", elasticsearch.VolumeTypeIo1, false},
-		{"standard", elasticsearch.VolumeTypeStandard, false},
-	}
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got := tfelasticsearch.EBSVolumeTypePermitsThroughputInput(testCase.volumeType); got != testCase.want {
-				t.Errorf("EBSVolumeTypePermitsThroughputInput() = %v, want %v", got, testCase.want)
-			}
-		})
-	}
-}
-
 func TestAccElasticsearchDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -112,7 +61,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 
 func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,7 +100,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 	customEndpoint := fmt.Sprintf("%s.example.com", rName)
@@ -203,7 +152,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 
 func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
+	var domain1, domain2, domain3, domain4 awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -263,7 +212,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 
 func TestAccElasticsearchDomain_warm(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -321,7 +270,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 
 func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -359,7 +308,7 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 
 func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -403,7 +352,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -412,8 +361,8 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
-			_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
+			_, err := conn.DeleteElasticsearchDomain(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
 				DomainName: aws.String(rName),
 			})
 			return err
@@ -422,19 +371,19 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Create duplicate
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
-					_, err := conn.CreateElasticsearchDomainWithContext(ctx, &elasticsearch.CreateElasticsearchDomainInput{
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
+					_, err := conn.CreateElasticsearchDomain(ctx, &elasticsearch.CreateElasticsearchDomainInput{
 						DomainName: aws.String(rName),
-						EBSOptions: &elasticsearch.EBSOptions{
+						EBSOptions: &awstypes.EBSOptions{
 							EBSEnabled: aws.Bool(true),
-							VolumeSize: aws.Int64(10),
+							VolumeSize: aws.Int32(10),
 						},
 					})
 					if err != nil {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(ctx, conn, rName, 60*time.Minute)
+					_, err = tfelasticsearch.WaitDomainCreated(ctx, conn, rName, 60*time.Minute)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -457,7 +406,7 @@ func TestAccElasticsearchDomain_v23(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -491,7 +440,7 @@ func TestAccElasticsearchDomain_complex(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -523,7 +472,7 @@ func TestAccElasticsearchDomain_vpc(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -551,7 +500,7 @@ func TestAccElasticsearchDomain_vpc(t *testing.T) {
 
 func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -591,7 +540,7 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -629,7 +578,7 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	resourceName := "aws_elasticsearch_domain.test"
@@ -674,7 +623,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -712,7 +661,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -750,7 +699,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -788,7 +737,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -799,12 +748,12 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeIndexSlowLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeIndexSlowLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": elasticsearch.LogTypeIndexSlowLogs,
+						"log_type": string(awstypes.LogTypeIndexSlowLogs),
 					}),
 				),
 			},
@@ -824,7 +773,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -835,12 +784,12 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeSearchSlowLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeSearchSlowLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": elasticsearch.LogTypeSearchSlowLogs,
+						"log_type": string(awstypes.LogTypeSearchSlowLogs),
 					}),
 				),
 			},
@@ -860,7 +809,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -871,12 +820,12 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeEsApplicationLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeEsApplicationLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": elasticsearch.LogTypeEsApplicationLogs,
+						"log_type": string(awstypes.LogTypeEsApplicationLogs),
 					}),
 				),
 			},
@@ -896,7 +845,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -907,12 +856,12 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeAuditLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeAuditLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": elasticsearch.LogTypeAuditLogs,
+						"log_type": string(awstypes.LogTypeAuditLogs),
 					}),
 				),
 			},
@@ -934,7 +883,7 @@ func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -978,7 +927,7 @@ func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1022,7 +971,7 @@ func TestAccElasticsearchDomain_policy(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1054,7 +1003,7 @@ func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1084,7 +1033,7 @@ func TestAccElasticsearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1117,7 +1066,7 @@ func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1150,7 +1099,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	var domain1, domain2 awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1192,7 +1141,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	var domain1, domain2 awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1226,7 +1175,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1259,7 +1208,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	var domain1, domain2 awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1301,7 +1250,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	var domain1, domain2 awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1342,7 +1291,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1393,7 +1342,7 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var input elasticsearch.ElasticsearchDomainStatus
+	var input awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1435,7 +1384,7 @@ func TestAccElasticsearchDomain_VolumeType_update(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
-	var input elasticsearch.ElasticsearchDomainStatus
+	var input awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1491,7 +1440,7 @@ func TestAccElasticsearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var input elasticsearch.ElasticsearchDomainStatus
+	var input awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1538,7 +1487,7 @@ func TestAccElasticsearchDomain_VolumeType_missing(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := testAccRandomDomainName()
 
@@ -1573,7 +1522,7 @@ func TestAccElasticsearchDomain_VolumeType_missing(t *testing.T) {
 
 func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain1, domain2, domain3 elasticsearch.ElasticsearchDomainStatus
+	var domain1, domain2, domain3 awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1645,20 +1594,20 @@ func testAccRandomDomainName() string {
 	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1)))
 }
 
-func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls string, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		options := status.DomainEndpointOptions
 		if *options.EnforceHTTPS != enforceHTTPS {
 			return fmt.Errorf("EnforceHTTPS differ. Given: %t, Expected: %t", *options.EnforceHTTPS, enforceHTTPS)
 		}
-		if *options.TLSSecurityPolicy != tls {
-			return fmt.Errorf("TLSSecurityPolicy differ. Given: %s, Expected: %s", *options.TLSSecurityPolicy, tls)
+		if string(options.TLSSecurityPolicy) != tls {
+			return fmt.Errorf("TLSSecurityPolicy differ. Given: %s, Expected: %s", options.TLSSecurityPolicy, tls)
 		}
 		return nil
 	}
 }
 
-func testAccCheckCustomEndpoint(n string, customEndpointEnabled bool, customEndpoint string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckCustomEndpoint(n string, customEndpointEnabled bool, customEndpoint string, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1681,7 +1630,7 @@ func testAccCheckCustomEndpoint(n string, customEndpointEnabled bool, customEndp
 	}
 }
 
-func testAccCheckNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckNumberOfSecurityGroups(numberOfSecurityGroups int, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
 		if count != numberOfSecurityGroups {
@@ -1691,37 +1640,37 @@ func testAccCheckNumberOfSecurityGroups(numberOfSecurityGroups int, status *elas
 	}
 }
 
-func testAccCheckEBSVolumeThroughput(ebsVolumeThroughput int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeThroughput(ebsVolumeThroughput int, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
-		if *conf.Throughput != int64(ebsVolumeThroughput) {
+		if *conf.Throughput != int32(ebsVolumeThroughput) {
 			return fmt.Errorf("EBS throughput differ. Given: %d, Expected: %d", *conf.Throughput, ebsVolumeThroughput)
 		}
 		return nil
 	}
 }
 
-func testAccCheckEBSVolumeIops(ebsVolumeIops int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeIops(ebsVolumeIops int, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
-		if *conf.Iops != int64(ebsVolumeIops) {
+		if *conf.Iops != int32(ebsVolumeIops) {
 			return fmt.Errorf("EBS IOPS differ. Given: %d, Expected: %d", *conf.Iops, ebsVolumeIops)
 		}
 		return nil
 	}
 }
 
-func testAccCheckEBSVolumeSize(ebsVolumeSize int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeSize(ebsVolumeSize int, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
-		if *conf.VolumeSize != int64(ebsVolumeSize) {
+		if *conf.VolumeSize != int32(ebsVolumeSize) {
 			return fmt.Errorf("EBS volume size differ. Given: %d, Expected: %d", *conf.VolumeSize, ebsVolumeSize)
 		}
 		return nil
 	}
 }
 
-func testAccCheckEBSVolumeEnabled(ebsEnabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckEBSVolumeEnabled(ebsEnabled bool, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
 		if *conf.EBSEnabled != ebsEnabled {
@@ -1731,27 +1680,27 @@ func testAccCheckEBSVolumeEnabled(ebsEnabled bool, status *elasticsearch.Elastic
 	}
 }
 
-func testAccCheckSnapshotHour(snapshotHour int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckSnapshotHour(snapshotHour int, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.SnapshotOptions
-		if *conf.AutomatedSnapshotStartHour != int64(snapshotHour) {
+		if *conf.AutomatedSnapshotStartHour != int32(snapshotHour) {
 			return fmt.Errorf("Snapshots start hour differ. Given: %d, Expected: %d", *conf.AutomatedSnapshotStartHour, snapshotHour)
 		}
 		return nil
 	}
 }
 
-func testAccCheckNumberOfInstances(numberOfInstances int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckNumberOfInstances(numberOfInstances int, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.ElasticsearchClusterConfig
-		if *conf.InstanceCount != int64(numberOfInstances) {
+		if *conf.InstanceCount != int32(numberOfInstances) {
 			return fmt.Errorf("Number of instances differ. Given: %d, Expected: %d", *conf.InstanceCount, numberOfInstances)
 		}
 		return nil
 	}
 }
 
-func testAccCheckDomainEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainEncrypted(encrypted bool, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EncryptionAtRestOptions
 		if *conf.Enabled != encrypted {
@@ -1761,33 +1710,33 @@ func testAccCheckDomainEncrypted(encrypted bool, status *elasticsearch.Elasticse
 	}
 }
 
-func testAccCheckNodeToNodeEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckNodeToNodeEncrypted(encrypted bool, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		options := status.NodeToNodeEncryptionOptions
-		if aws.BoolValue(options.Enabled) != encrypted {
-			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
+		if aws.ToBool(options.Enabled) != encrypted {
+			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.ToBool(options.Enabled), encrypted)
 		}
 		return nil
 	}
 }
 
-func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.AdvancedSecurityOptions
 
-		if aws.BoolValue(conf.Enabled) != enabled {
+		if aws.ToBool(conf.Enabled) != enabled {
 			return fmt.Errorf(
 				"AdvancedSecurityOptions.Enabled not set properly. Given: %t, Expected: %t",
-				aws.BoolValue(conf.Enabled),
+				aws.ToBool(conf.Enabled),
 				enabled,
 			)
 		}
 
-		if aws.BoolValue(conf.Enabled) {
-			if aws.BoolValue(conf.InternalUserDatabaseEnabled) != userDbEnabled {
+		if aws.ToBool(conf.Enabled) {
+			if aws.ToBool(conf.InternalUserDatabaseEnabled) != userDbEnabled {
 				return fmt.Errorf(
 					"AdvancedSecurityOptions.InternalUserDatabaseEnabled not set properly. Given: %t, Expected: %t",
-					aws.BoolValue(conf.InternalUserDatabaseEnabled),
+					aws.ToBool(conf.InternalUserDatabaseEnabled),
 					userDbEnabled,
 				)
 			}
@@ -1797,7 +1746,7 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, statu
 	}
 }
 
-func testAccCheckCognitoOptions(enabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckCognitoOptions(enabled bool, status *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.CognitoOptions
 		if *conf.Enabled != enabled {
@@ -1807,7 +1756,7 @@ func testAccCheckCognitoOptions(enabled bool, status *elasticsearch.Elasticsearc
 	}
 }
 
-func testAccCheckDomainExists(ctx context.Context, n string, domain *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string, domain *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1818,7 +1767,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *elasticsear
 			return fmt.Errorf("No ES Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
 		resp, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
@@ -1835,10 +1784,10 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *elasticsear
 // the same name, if it's created within any reasonable time after deletion.
 // Also, domain ID is not unique and is simply the domain name so won't work
 // for this check either.
-func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainNotRecreated(domain1, domain2 *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
 
 			ic, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
 				DomainName: domain1.DomainName,
@@ -1876,7 +1825,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
 			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
@@ -3044,7 +2993,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 
 func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 	var auditLogsConfig string
-	if logType == elasticsearch.LogTypeAuditLogs {
+	if logType == string(awstypes.LogTypeAuditLogs) {
 		auditLogsConfig = `
 	  	advanced_security_options {
 			enabled                        = true

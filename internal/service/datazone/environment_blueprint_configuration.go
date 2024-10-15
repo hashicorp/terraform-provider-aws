@@ -94,17 +94,17 @@ func (r *resourceEnvironmentBlueprintConfiguration) Create(ctx context.Context, 
 	}
 
 	in := &datazone.PutEnvironmentBlueprintConfigurationInput{
-		DomainIdentifier:               aws.String(plan.DomainId.ValueString()),
+		DomainIdentifier:               plan.DomainId.ValueStringPointer(),
 		EnabledRegions:                 flex.ExpandFrameworkStringValueList(ctx, plan.EnabledRegions),
-		EnvironmentBlueprintIdentifier: aws.String(plan.EnvironmentBlueprintId.ValueString()),
+		EnvironmentBlueprintIdentifier: plan.EnvironmentBlueprintId.ValueStringPointer(),
 	}
 
 	if !plan.ManageAccessRoleArn.IsNull() {
-		in.ManageAccessRoleArn = aws.String(plan.ManageAccessRoleArn.ValueString())
+		in.ManageAccessRoleArn = plan.ManageAccessRoleArn.ValueStringPointer()
 	}
 
 	if !plan.ProvisioningRoleArn.IsNull() {
-		in.ProvisioningRoleArn = aws.String(plan.ProvisioningRoleArn.ValueString())
+		in.ProvisioningRoleArn = plan.ProvisioningRoleArn.ValueStringPointer()
 	}
 
 	if !plan.RegionalParameters.IsNull() {
@@ -187,17 +187,17 @@ func (r *resourceEnvironmentBlueprintConfiguration) Update(ctx context.Context, 
 		!plan.ProvisioningRoleArn.Equal(state.ProvisioningRoleArn) ||
 		!plan.RegionalParameters.Equal(state.RegionalParameters) {
 		in := &datazone.PutEnvironmentBlueprintConfigurationInput{
-			DomainIdentifier:               aws.String(plan.DomainId.ValueString()),
+			DomainIdentifier:               plan.DomainId.ValueStringPointer(),
 			EnabledRegions:                 flex.ExpandFrameworkStringValueList(ctx, plan.EnabledRegions),
-			EnvironmentBlueprintIdentifier: aws.String(plan.EnvironmentBlueprintId.ValueString()),
+			EnvironmentBlueprintIdentifier: plan.EnvironmentBlueprintId.ValueStringPointer(),
 		}
 
 		if !plan.ManageAccessRoleArn.IsNull() {
-			in.ManageAccessRoleArn = aws.String(plan.ManageAccessRoleArn.ValueString())
+			in.ManageAccessRoleArn = plan.ManageAccessRoleArn.ValueStringPointer()
 		}
 
 		if !plan.ProvisioningRoleArn.IsNull() {
-			in.ProvisioningRoleArn = aws.String(plan.ProvisioningRoleArn.ValueString())
+			in.ProvisioningRoleArn = plan.ProvisioningRoleArn.ValueStringPointer()
 		}
 
 		if !plan.RegionalParameters.IsNull() {
@@ -240,8 +240,8 @@ func (r *resourceEnvironmentBlueprintConfiguration) Delete(ctx context.Context, 
 	}
 
 	in := &datazone.DeleteEnvironmentBlueprintConfigurationInput{
-		DomainIdentifier:               aws.String(state.DomainId.ValueString()),
-		EnvironmentBlueprintIdentifier: aws.String(state.EnvironmentBlueprintId.ValueString()),
+		DomainIdentifier:               state.DomainId.ValueStringPointer(),
+		EnvironmentBlueprintIdentifier: state.EnvironmentBlueprintId.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteEnvironmentBlueprintConfiguration(ctx, in)

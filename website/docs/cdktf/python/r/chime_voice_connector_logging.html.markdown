@@ -79,4 +79,4 @@ Using `terraform import`, import Chime Voice Connector Logging using the `voice_
 % terraform import aws_chime_voice_connector_logging.default abcdef1ghij2klmno3pqr4
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-361c57bb71aad3cb46b58306335292d5a69d6d2855bbf5152806871405e9e3ff -->
+<!-- cache-key: cdktf-0.20.9 input-361c57bb71aad3cb46b58306335292d5a69d6d2855bbf5152806871405e9e3ff -->

@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `signingBehavior` - Specifies which requests CloudFront signs.
 * `signingProtocol` - The signing protocol of the origin access control, which determines how CloudFront signs (authenticates) requests.
 
-<!-- cache-key: cdktf-0.20.1 input-d5d6bf9fddc15f4e3279f7cb24d7a6a24a6521b6ab3281bd8fa47bc5b7bade5f -->
+<!-- cache-key: cdktf-0.20.9 input-d5d6bf9fddc15f4e3279f7cb24d7a6a24a6521b6ab3281bd8fa47bc5b7bade5f -->

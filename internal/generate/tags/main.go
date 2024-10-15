@@ -83,6 +83,7 @@ var (
 	updateTagsFunc             = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
 	waitTagsPropagatedFunc     = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
 	waitContinuousOccurence    = flag.Int("WaitContinuousOccurence", 0, "ContinuousTargetOccurence for Wait function")
+	waitFuncComparator         = flag.String("WaitFuncComparator", "Equal", "waitFuncComparator")
 	waitDelay                  = flag.Duration("WaitDelay", 0, "Delay for Wait function")
 	waitMinTimeout             = flag.Duration("WaitMinTimeout", 0, `"MinTimeout" (minimum poll interval) for Wait function`)
 	waitPollInterval           = flag.Duration("WaitPollInterval", 0, "PollInterval for Wait function")
@@ -92,8 +93,9 @@ var (
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
-	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS Go SDK to use i.e. 1 or 2")
+	sdkVersion        = flag.Int("AWSSDKVersion", sdkV2, "Version of the AWS Go SDK to use i.e. 1 or 2")
 	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	emptyMap          = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
 	skipAWSImp        = flag.Bool("SkipAWSImp", false, "Whether to skip importing the AWS Go SDK aws package") // nosemgrep:ci.aws-in-var-name
 	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
 	skipServiceImp    = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
@@ -163,6 +165,7 @@ type TemplateData struct {
 	ServicePackage         string
 
 	CreateTagsFunc             string
+	EmptyMap                   bool
 	GetTagFunc                 string
 	GetTagsInFunc              string
 	KeyValueTagsFunc           string
@@ -176,7 +179,6 @@ type TemplateData struct {
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
-	RetryCreateOnNotFound      string // is this used?
 	RetryTagsListTagsType      string
 	RetryTagsErrorCodes        []string
 	RetryTagsErrorMessages     []string
@@ -213,6 +215,7 @@ type TemplateData struct {
 	WaitTagsPropagatedFunc     string
 	WaitContinuousOccurence    int
 	WaitDelay                  string
+	WaitFuncComparator         string
 	WaitMinTimeout             string
 	WaitPollInterval           string
 	WaitTimeout                string
@@ -264,7 +267,7 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	awsPkg := service.GoPackageName(*sdkVersion)
+	awsPkg := service.GoPackageName()
 
 	var awsIntfPkg string
 	if *sdkVersion == sdkV1 && (*getTag || *listTags || *updateTags) {
@@ -322,6 +325,7 @@ func main() {
 		TimePkg:           *waitForPropagation || *retryTagsListTagsType != "",
 
 		CreateTagsFunc:             createTagsFunc,
+		EmptyMap:                   *emptyMap,
 		GetTagFunc:                 *getTagFunc,
 		GetTagsInFunc:              *getTagsInFunc,
 		KeyValueTagsFunc:           *keyValueTagsFunc,
@@ -368,6 +372,7 @@ func main() {
 		UpdateTagsFunc:             *updateTagsFunc,
 		UpdateTagsIgnoreSystem:     !*updateTagsNoIgnoreSystem,
 		WaitForPropagation:         *waitForPropagation,
+		WaitFuncComparator:         *waitFuncComparator,
 		WaitTagsPropagatedFunc:     *waitTagsPropagatedFunc,
 		WaitContinuousOccurence:    *waitContinuousOccurence,
 		WaitDelay:                  formatDuration(*waitDelay),

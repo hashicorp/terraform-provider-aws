@@ -8,26 +8,29 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksInstance_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
-	var opsinst opsworks.Instance
+	var opsinst awstypes.Instance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_instance.test"
 	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -72,13 +75,15 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_instance.test"
-	var before, after opsworks.Instance
+	var before, after awstypes.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -108,8 +113,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceRecreated(t *testing.T,
-	before, after *opsworks.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceRecreated(t *testing.T, before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.InstanceId == *after.InstanceId {
 			t.Fatalf("Expected change of OpsWorks Instance IDs, but both were %s", *before.InstanceId)
@@ -118,8 +122,31 @@ func testAccCheckInstanceRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckInstanceExists(ctx context.Context,
-	n string, opsinst *opsworks.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_instance" {
+				continue
+			}
+			_, err := tfopsworks.FindInstanceByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpsWorks Instance %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceExists(ctx context.Context, n string, opsinst *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -130,84 +157,41 @@ func testAccCheckInstanceExists(ctx context.Context,
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-		params := &opsworks.DescribeInstancesInput{
-			InstanceIds: []*string{&rs.Primary.ID},
-		}
-		resp, err := conn.DescribeInstancesWithContext(ctx, params)
+		output, err := tfopsworks.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if v := len(resp.Instances); v != 1 {
-			return fmt.Errorf("Expected 1 request returned, got %d", v)
-		}
-
-		*opsinst = *resp.Instances[0]
+		*opsinst = *output
 
 		return nil
 	}
 }
 
-func testAccCheckInstanceAttributes(
-	opsinst *opsworks.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceAttributes(opsinst *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Depending on the timing, the state could be requested or stopped
-		if *opsinst.Status != "stopped" && *opsinst.Status != "requested" {
+		if aws.ToString(opsinst.Status) != "stopped" && aws.ToString(opsinst.Status) != "requested" {
 			return fmt.Errorf("Unexpected request status: %s", *opsinst.Status)
 		}
-		if *opsinst.Architecture != "x86_64" {
-			return fmt.Errorf("Unexpected architecture: %s", *opsinst.Architecture)
+		if opsinst.Architecture != awstypes.ArchitectureX8664 {
+			return fmt.Errorf("Unexpected architecture: %s", opsinst.Architecture)
 		}
 		if *opsinst.Tenancy != "default" {
 			return fmt.Errorf("Unexpected tenancy: %s", *opsinst.Tenancy)
 		}
-		if *opsinst.InfrastructureClass != "ec2" {
-			return fmt.Errorf("Unexpected infrastructure class: %s", *opsinst.InfrastructureClass)
+		if aws.ToString(opsinst.InfrastructureClass) != "ec2" {
+			return fmt.Errorf("Unexpected infrastructure class: %s", aws.ToString(opsinst.InfrastructureClass))
 		}
-		if *opsinst.RootDeviceType != "ebs" {
-			return fmt.Errorf("Unexpected root device type: %s", *opsinst.RootDeviceType)
+		if opsinst.RootDeviceType != awstypes.RootDeviceTypeEbs {
+			return fmt.Errorf("Unexpected root device type: %s", opsinst.RootDeviceType)
 		}
-		if *opsinst.VirtualizationType != "hvm" {
-			return fmt.Errorf("Unexpected virtualization type: %s", *opsinst.VirtualizationType)
+		if opsinst.VirtualizationType != awstypes.VirtualizationTypeHvm {
+			return fmt.Errorf("Unexpected virtualization type: %s", opsinst.VirtualizationType)
 		}
-		return nil
-	}
-}
-
-func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_opsworks_instance" {
-				continue
-			}
-			req := &opsworks.DescribeInstancesInput{
-				InstanceIds: aws.StringSlice([]string{rs.Primary.ID}),
-			}
-
-			output, err := conn.DescribeInstancesWithContext(ctx, req)
-
-			if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			if output != nil && len(output.Instances) > 0 {
-				for _, instance := range output.Instances {
-					if aws.StringValue(instance.InstanceId) != rs.Primary.ID {
-						continue
-					}
-					return fmt.Errorf("Expected OpsWorks instance (%s) to be gone, but was still found", rs.Primary.ID)
-				}
-			}
-		}
-
 		return nil
 	}
 }

@@ -84,4 +84,4 @@ Using `terraform import`, import Service Discovery Public DNS Namespace using th
 % terraform import aws_service_discovery_public_dns_namespace.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3f12246f59ce121e0bff5235dbb078efa0ee1d1e73f30312abd5b446e223694a -->
+<!-- cache-key: cdktf-0.20.9 input-3f12246f59ce121e0bff5235dbb078efa0ee1d1e73f30312abd5b446e223694a -->

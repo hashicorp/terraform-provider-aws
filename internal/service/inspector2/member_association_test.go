@@ -88,10 +88,6 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Inspector2 Member Association ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)

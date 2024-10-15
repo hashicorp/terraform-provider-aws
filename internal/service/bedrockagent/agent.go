@@ -100,6 +100,19 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			"foundation_model": schema.StringAttribute{
 				Required: true,
 			},
+			"guardrail_configuration": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailConfigurationModel](ctx),
+				Optional:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[guardrailConfigurationModel](ctx),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			"idle_session_ttl_in_seconds": schema.Int64Attribute{
 				Optional: true,
@@ -212,6 +225,8 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 		}
 	}
 
+	removeDefaultPrompts(agent)
+
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &data)...)
 	if response.Diagnostics.HasError() {
@@ -252,6 +267,8 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
+	removeDefaultPrompts(agent)
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -274,33 +291,49 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !new.AgentName.Equal(old.AgentName) ||
+		!new.AgentResourceRoleARN.Equal(old.AgentResourceRoleARN) ||
 		!new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
 		!new.Description.Equal(old.Description) ||
 		!new.Instruction.Equal(old.Instruction) ||
+		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
+		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
 		input := &bedrockagent.UpdateAgentInput{
-			AgentId:                 fwflex.StringFromFramework(ctx, new.AgentID),
-			AgentName:               fwflex.StringFromFramework(ctx, new.AgentName),
-			AgentResourceRoleArn:    fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
-			Description:             fwflex.StringFromFramework(ctx, new.Description),
-			FoundationModel:         fwflex.StringFromFramework(ctx, new.FoundationModel),
-			IdleSessionTTLInSeconds: fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds),
-			Instruction:             fwflex.StringFromFramework(ctx, new.Instruction),
+			AgentId:                  fwflex.StringFromFramework(ctx, new.AgentID),
+			AgentName:                fwflex.StringFromFramework(ctx, new.AgentName),
+			AgentResourceRoleArn:     fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
+			CustomerEncryptionKeyArn: fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN),
+			Description:              fwflex.StringFromFramework(ctx, new.Description),
+			FoundationModel:          fwflex.StringFromFramework(ctx, new.FoundationModel),
+			IdleSessionTTLInSeconds:  fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds),
+			Instruction:              fwflex.StringFromFramework(ctx, new.Instruction),
 		}
 
 		if !new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) {
 			input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
 		}
 
-		if !new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
+		if !new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) && !new.GuardrailConfiguration.IsNull() {
+			guardrailConfiguration := &awstypes.GuardrailConfiguration{}
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.GuardrailConfiguration, guardrailConfiguration)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			input.GuardrailConfiguration = guardrailConfiguration
+		}
+
+		if !new.PromptOverrideConfiguration.IsNull() {
 			promptOverrideConfiguration := &awstypes.PromptOverrideConfiguration{}
 			response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, promptOverrideConfiguration)...)
 			if response.Diagnostics.HasError() {
 				return
 			}
 
-			input.PromptOverrideConfiguration = promptOverrideConfiguration
+			if len(promptOverrideConfiguration.PromptConfigurations) > 0 {
+				input.PromptOverrideConfiguration = promptOverrideConfiguration
+			}
 		}
 
 		_, err := conn.UpdateAgent(ctx, input)
@@ -328,6 +361,8 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 				return
 			}
 		}
+
+		removeDefaultPrompts(agent)
 
 		// Set values for unknowns.
 		response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &new)...)
@@ -539,6 +574,22 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 	return nil, err
 }
 
+func removeDefaultPrompts(agent *awstypes.Agent) {
+	pocm := agent.PromptOverrideConfiguration
+
+	overrides := pocm.PromptConfigurations
+
+	var filtered []awstypes.PromptConfiguration
+
+	for _, override := range overrides {
+		if override.PromptCreationMode == awstypes.CreationModeOverridden {
+			filtered = append(filtered, override)
+		}
+	}
+
+	pocm.PromptConfigurations = filtered
+}
+
 type agentResourceModel struct {
 	AgentARN                    types.String                                                      `tfsdk:"agent_arn"`
 	AgentID                     types.String                                                      `tfsdk:"agent_id"`
@@ -548,14 +599,15 @@ type agentResourceModel struct {
 	CustomerEncryptionKeyARN    fwtypes.ARN                                                       `tfsdk:"customer_encryption_key_arn"`
 	Description                 types.String                                                      `tfsdk:"description"`
 	FoundationModel             types.String                                                      `tfsdk:"foundation_model"`
+	GuardrailConfiguration      fwtypes.ListNestedObjectValueOf[guardrailConfigurationModel]      `tfsdk:"guardrail_configuration"`
 	ID                          types.String                                                      `tfsdk:"id"`
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
-	Tags                        types.Map                                                         `tfsdk:"tags"`
-	TagsAll                     types.Map                                                         `tfsdk:"tags_all"`
+	Tags                        tftags.Map                                                        `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                                        `tfsdk:"tags_all"`
 	Timeouts                    timeouts.Value                                                    `tfsdk:"timeouts"`
 }
 
@@ -567,6 +619,11 @@ func (m *agentResourceModel) InitFromID() error {
 
 func (m *agentResourceModel) setID() {
 	m.ID = m.AgentID
+}
+
+type guardrailConfigurationModel struct {
+	GuardrailIdentifier types.String `tfsdk:"guardrail_identifier"`
+	GuardrailVersion    types.String `tfsdk:"guardrail_version"`
 }
 
 type promptOverrideConfigurationModel struct {

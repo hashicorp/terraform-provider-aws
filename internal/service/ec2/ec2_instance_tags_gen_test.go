@@ -7,7 +7,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,7 +20,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -32,7 +30,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -63,7 +60,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -78,7 +74,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -114,7 +109,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -130,7 +124,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -161,7 +154,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -176,7 +168,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -197,7 +188,6 @@ func TestAccEC2Instance_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -215,7 +205,6 @@ func TestAccEC2Instance_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -226,7 +215,6 @@ func TestAccEC2Instance_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -250,7 +238,6 @@ func TestAccEC2Instance_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -265,7 +252,62 @@ func TestAccEC2Instance_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+				},
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_tags_EmptyMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"user_data_replace_on_change",
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
+				ConfigVariables: config.Variables{
 					acctest.CtResourceTags: nil,
 				},
 				PlanOnly:           true,
@@ -279,7 +321,6 @@ func TestAccEC2Instance_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -290,7 +331,6 @@ func TestAccEC2Instance_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -312,7 +352,6 @@ func TestAccEC2Instance_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -343,7 +382,6 @@ func TestAccEC2Instance_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -363,7 +401,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -374,7 +411,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -404,7 +440,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -419,7 +454,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -440,7 +474,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -458,7 +491,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -469,7 +501,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -500,7 +531,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -534,7 +564,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -550,7 +579,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -581,7 +609,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -601,7 +628,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -612,7 +638,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -643,7 +668,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -673,7 +697,6 @@ func TestAccEC2Instance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -693,7 +716,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -704,7 +726,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -733,7 +754,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -750,7 +770,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -782,7 +801,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -800,7 +818,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -829,7 +846,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -846,7 +862,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -868,7 +883,6 @@ func TestAccEC2Instance_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -886,7 +900,6 @@ func TestAccEC2Instance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -897,7 +910,6 @@ func TestAccEC2Instance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -934,7 +946,6 @@ func TestAccEC2Instance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -953,7 +964,6 @@ func TestAccEC2Instance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
@@ -995,7 +1005,6 @@ func TestAccEC2Instance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
@@ -1015,7 +1024,6 @@ func TestAccEC2Instance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1037,7 +1045,6 @@ func TestAccEC2Instance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -1055,7 +1062,6 @@ func TestAccEC2Instance_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1066,7 +1072,6 @@ func TestAccEC2Instance_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1101,7 +1106,6 @@ func TestAccEC2Instance_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1120,7 +1124,6 @@ func TestAccEC2Instance_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1161,7 +1164,6 @@ func TestAccEC2Instance_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1182,7 +1184,6 @@ func TestAccEC2Instance_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1217,7 +1218,6 @@ func TestAccEC2Instance_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1240,7 +1240,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1251,7 +1250,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1283,7 +1281,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1312,7 +1309,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1333,7 +1329,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1344,7 +1339,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1373,7 +1367,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1405,7 +1398,6 @@ func TestAccEC2Instance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1425,7 +1417,6 @@ func TestAccEC2Instance_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1436,7 +1427,6 @@ func TestAccEC2Instance_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1470,7 +1460,6 @@ func TestAccEC2Instance_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1493,7 +1482,6 @@ func TestAccEC2Instance_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1504,7 +1492,6 @@ func TestAccEC2Instance_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1532,7 +1519,6 @@ func TestAccEC2Instance_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1553,7 +1539,6 @@ func TestAccEC2Instance_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1564,7 +1549,6 @@ func TestAccEC2Instance_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1595,7 +1579,6 @@ func TestAccEC2Instance_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1618,7 +1601,6 @@ func TestAccEC2Instance_tags_DefaultTags_nullNonOverlappingResourceTag(t *testin
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1629,7 +1611,6 @@ func TestAccEC2Instance_tags_DefaultTags_nullNonOverlappingResourceTag(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1660,7 +1641,6 @@ func TestAccEC2Instance_tags_DefaultTags_nullNonOverlappingResourceTag(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1683,7 +1663,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1694,7 +1673,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1723,7 +1701,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:      resourceName,
@@ -1741,7 +1718,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1752,7 +1728,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1784,7 +1759,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1821,7 +1795,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1841,7 +1814,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1852,7 +1824,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1884,7 +1855,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1913,7 +1883,6 @@ func TestAccEC2Instance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,
