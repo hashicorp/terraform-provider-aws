@@ -87,7 +87,7 @@ func resourcePolicy() *schema.Resource {
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(6144),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
