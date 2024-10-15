@@ -25,7 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
+// @FrameworkResource("aws_servicecatalogappregistry_application", name="Application")
+// @Testing(tagsTest=false)
 func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplication{}, nil
 }
