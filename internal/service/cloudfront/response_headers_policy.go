@@ -150,7 +150,6 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 			},
 			"etag": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrName: {
