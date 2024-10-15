@@ -149,6 +149,7 @@ This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
+* `dedicated_tenancy` - (Optional) Whether the Workspaces directory will be running in a dedicated environment (required for BYOL Workspaces). Default `false`.
 * `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
