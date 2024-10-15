@@ -18,7 +18,7 @@ Terraform resource for maintaining exclusive management of customer managed poli
 ```terraform
 resource "aws_iam_role_policy_attachments_exclusive" "example" {
   role_name   = aws_iam_role.example.name
-  policy_arns = [aws_iam_role_policy.example.arn]
+  policy_arns = [aws_iam_policy.example.arn]
 }
 ```
 
