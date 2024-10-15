@@ -1,5 +1,26 @@
 ## 5.72.0 (Unreleased)
 
+NOTES:
+
+* This version contains all the features, enhancements, and bug fixes from the [v5.71.0 release](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5710-october-11-2024) which was removed from the Terraform Registry ([#39692](https://github.com/hashicorp/terraform-provider-aws/issues/39692))
+
+ENHANCEMENTS:
+
+* resource/aws_dynamodb_table: Add `on_demand_throughput`  and `global_secondary_index.on_demand_throughput` arguments ([#37799](https://github.com/hashicorp/terraform-provider-aws/issues/37799))
+* resource/aws_rds_cluster: Increase maximum value of `serverlessv2_scaling_configuration.max_capacity` and `serverlessv2_scaling_configuration.min_capacity` from `128` to `256` ([#39697](https://github.com/hashicorp/terraform-provider-aws/issues/39697))
+
+BUG FIXES:
+
+* data-source/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
+* resource/aws_cognito_user_pool: Fixes error when `schema` has empty `string_attribute_constraints` or `number_attribute_constraints` ([#20386](https://github.com/hashicorp/terraform-provider-aws/issues/20386))
+* resource/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
+
+## 5.71.0 (October 11, 2024)
+
+This Terraform AWS Provider version has been removed from the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) due to `archive has incorrect checksum` errors while installing the provider on some platforms.
+
+The next planned Terraform AWS Provider release is **v5.72.0**, scheduled for the morning (EST) of October 17, 2024.
+
 FEATURES:
 
 * **New Data Source:** `aws_bedrock_inference_profile` ([#39342](https://github.com/hashicorp/terraform-provider-aws/issues/39342))
@@ -39,9 +60,6 @@ BUG FIXES:
 * resource/aws_vpc_ipam_pool: Change `publicly_advertisable` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 * resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip` errors ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 
-## 5.71.0 (October 11, 2024)
-
-This Terraform AWS Provider version has been removed from the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) due to `archive has incorrect checksum` errors while installing the provider.
 
 ## 5.70.0 (October  4, 2024)
 
