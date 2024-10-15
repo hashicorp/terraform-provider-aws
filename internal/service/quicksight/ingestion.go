@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Ingestion")
+// @FrameworkResource("aws_quicksight_ingestion", name="Ingestion")
 func newIngestionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ingestionResource{}, nil
 }

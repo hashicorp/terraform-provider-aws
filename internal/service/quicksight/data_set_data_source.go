@@ -17,6 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_quicksight_data_set", name="Data Set")
+// @Testing(tagsTest=true)
 func dataSourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataSetRead,
@@ -70,8 +71,6 @@ func dataSourceDataSet() *schema.Resource {
 func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
@@ -116,6 +115,10 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("row_level_permission_tag_configuration", quicksightschema.FlattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_tag_configuration: %s", err)
 	}
+
+	// Cannot use transparent tagging because it has to handle `tags_all` as well
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 

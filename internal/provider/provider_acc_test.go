@@ -931,7 +931,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		defaultTagsConfig := providerClient.DefaultTagsConfig
+		defaultTagsConfig := providerClient.DefaultTagsConfig(ctx)
 
 		if defaultTagsConfig == nil || len(defaultTagsConfig.Tags) == 0 {
 			if len(expectedTags) != 0 {

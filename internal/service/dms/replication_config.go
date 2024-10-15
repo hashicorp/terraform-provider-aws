@@ -31,6 +31,8 @@ import (
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
+// @Testing(importIgnore="start_replication")
 func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,

@@ -78,18 +78,18 @@ func TestTagsResourceInterceptor(t *testing.T) {
 		ServicePackages: map[string]conns.ServicePackage{
 			"Test": &mockService{},
 		},
-		DefaultTagsConfig: expandDefaultTags(context.Background(), map[string]interface{}{
-			"tag": "",
-		}),
 		IgnoreTagsConfig: expandIgnoreTags(context.Background(), map[string]interface{}{
 			"tag2": "tag",
 		}),
 	}
+	conns.SetDefaultTagsConfig(conn, expandDefaultTags(context.Background(), map[string]interface{}{
+		"tag": "",
+	}))
 
 	bootstrapContext := func(ctx context.Context, meta any) context.Context {
 		ctx = conns.NewResourceContext(ctx, "Test", "aws_test")
 		if v, ok := meta.(*conns.AWSClient); ok {
-			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig)
 		}
 
 		return ctx
