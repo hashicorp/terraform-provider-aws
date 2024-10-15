@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_record: Fix to allow creation of records witth ttl=0
+```
