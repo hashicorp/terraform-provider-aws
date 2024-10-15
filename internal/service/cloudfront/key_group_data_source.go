@@ -224,7 +224,16 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	// TIP: -- 5. Set the tags
 	data.ID = flex.StringToFramework(ctx, out.KeyGroup.Id)
 	data.Name = flex.StringToFramework(ctx, out.KeyGroup.KeyGroupConfig.Name)
-	data.Comment = flex.StringToFramework(ctx, out.KeyGroup.KeyGroupConfig.Comment)
+
+	var comment *string
+	if out.KeyGroup.KeyGroupConfig.Comment != nil {
+		comment = out.KeyGroup.KeyGroupConfig.Comment
+	} else {
+		emptyString := ""
+		comment = &emptyString
+	}
+	data.Comment = flex.StringToFramework(ctx, comment)
+
 	data.LastModifiedTime = flex.TimeToFramework(ctx, out.KeyGroup.LastModifiedTime)
 
 	data.Etag = flex.StringToFramework(ctx, out.ETag)
