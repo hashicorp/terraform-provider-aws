@@ -6,6 +6,7 @@ NOTES:
 
 ENHANCEMENTS:
 
+* resource/aws_dynamodb_table: Add `on_demand_throughput`  and `global_secondary_index.on_demand_throughput` arguments ([#37799](https://github.com/hashicorp/terraform-provider-aws/issues/37799))
 * resource/aws_rds_cluster: Increase maximum value of `serverlessv2_scaling_configuration.max_capacity` and `serverlessv2_scaling_configuration.min_capacity` from `128` to `256` ([#39697](https://github.com/hashicorp/terraform-provider-aws/issues/39697))
 
 BUG FIXES:
