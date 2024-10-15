@@ -44,6 +44,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the application.
+* `tags` - A map of tags assigned to the Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
