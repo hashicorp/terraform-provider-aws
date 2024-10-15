@@ -72,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_reported_at` - The date and time that the information about this resource property was last updated.
 * `name` - Name of this property of the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-31144e670d147dab0360ec85b762177c41b0aa457f05a33d9d6901423f901b80 -->
+<!-- cache-key: cdktf-0.20.9 input-31144e670d147dab0360ec85b762177c41b0aa457f05a33d9d6901423f901b80 -->

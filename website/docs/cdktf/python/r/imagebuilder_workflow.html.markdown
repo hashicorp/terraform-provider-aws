@@ -87,4 +87,4 @@ Using `terraform import`, import EC2 Image Builder Workflow using the `example_i
 
 Certain resource arguments, such as `uri`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.1 input-df3dca53e5a160bb4c9e269233107f9f1b21a2706fb1eb2429250d7eac61aa1f -->
+<!-- cache-key: cdktf-0.20.9 input-df3dca53e5a160bb4c9e269233107f9f1b21a2706fb1eb2429250d7eac61aa1f -->

@@ -6,24 +6,23 @@ package quicksight_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightIngestion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ingestion quicksight.Ingestion
+	var ingestion awstypes.Ingestion
 	dataSetName := "aws_quicksight_data_set.test"
 	resourceName := "aws_quicksight_ingestion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -36,11 +35,11 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngestionConfig_basic(rId, rName, quicksight.IngestionTypeFullRefresh),
+				Config: testAccIngestionConfig_basic(rId, rName, string(awstypes.IngestionTypeFullRefresh)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "ingestion_type", quicksight.IngestionTypeFullRefresh),
+					resource.TestCheckResourceAttr(resourceName, "ingestion_type", string(awstypes.IngestionTypeFullRefresh)),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", dataSetName, "data_set_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%[1]s/ingestion/%[1]s", rId)),
 				),
@@ -62,7 +61,7 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 // disappearance of this upstream resource is tested instead.
 func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ingestion quicksight.Ingestion
+	var ingestion awstypes.Ingestion
 	dataSetName := "aws_quicksight_data_set.test"
 	resourceName := "aws_quicksight_ingestion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -75,7 +74,7 @@ func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngestionConfig_basic(rId, rName, quicksight.IngestionTypeFullRefresh),
+				Config: testAccIngestionConfig_basic(rId, rName, string(awstypes.IngestionTypeFullRefresh)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSet(), dataSetName),
@@ -86,20 +85,22 @@ func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 	})
 }
 
-func testAccCheckIngestionExists(ctx context.Context, resourceName string, ingestion *quicksight.Ingestion) resource.TestCheckFunc {
+func testAccCheckIngestionExists(ctx context.Context, n string, v *awstypes.Ingestion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-		output, err := tfquicksight.FindIngestionByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+
+		output, err := tfquicksight.FindIngestionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_set_id"], rs.Primary.Attributes["ingestion_id"])
+
 		if err != nil {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameIngestion, rs.Primary.ID, err)
+			return err
 		}
 
-		*ingestion = *output
+		*v = *output
 
 		return nil
 	}
@@ -107,46 +108,45 @@ func testAccCheckIngestionExists(ctx context.Context, resourceName string, inges
 
 func testAccCheckIngestionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_ingestion" {
 				continue
 			}
 
-			output, err := tfquicksight.FindIngestionByID(ctx, conn, rs.Primary.ID)
+			output, err := tfquicksight.FindIngestionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_set_id"], rs.Primary.Attributes["ingestion_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-					return nil
-				}
 				return err
 			}
 
-			if output != nil && !isDestroyedStatus(aws.StringValue(output.IngestionStatus)) {
-				return create.Error(names.QuickSight, create.ErrActionCheckingDestroyed, tfquicksight.ResNameIngestion, rs.Primary.ID, err)
+			if isDestroyedStatus(output.IngestionStatus) {
+				continue
 			}
+
+			return fmt.Errorf("QuickSight Ingestion (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func isDestroyedStatus(status string) bool {
-	targetStatuses := []string{
-		quicksight.IngestionStatusCancelled,
-		quicksight.IngestionStatusCompleted,
-		quicksight.IngestionStatusFailed,
-	}
-	for _, target := range targetStatuses {
-		if status == target {
-			return true
-		}
-	}
-	return false
+func isDestroyedStatus(status awstypes.IngestionStatus) bool {
+	return slices.Contains([]awstypes.IngestionStatus{
+		awstypes.IngestionStatusCancelled,
+		awstypes.IngestionStatusCompleted,
+		awstypes.IngestionStatusFailed,
+	}, status)
 }
 
-func testAccIngestionConfigBase(rId, rName string) string {
+func testAccIngestionConfig_base(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -172,7 +172,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccIngestionConfig_basic(rId, rName, ingestionType string) string {
 	return acctest.ConfigCompose(
-		testAccIngestionConfigBase(rId, rName),
+		testAccIngestionConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_ingestion" "test" {
   data_set_id    = aws_quicksight_data_set.test.data_set_id

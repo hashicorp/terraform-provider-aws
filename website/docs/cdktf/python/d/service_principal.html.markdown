@@ -48,4 +48,4 @@ class MyConvertedCode(TerraformStack):
 * `suffix` - Suffix of the SPN (e.g., `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
 *`region` - Region identifier of the generated SPN (e.g., `us-east-1` in AWS Commercial, `cn-north-1` in AWS China).
 
-<!-- cache-key: cdktf-0.20.1 input-3932e93e1c5f672775c843713c238fe3bfcb06a182cf1d9ffe2c0b830c2001d4 -->
+<!-- cache-key: cdktf-0.20.9 input-3932e93e1c5f672775c843713c238fe3bfcb06a182cf1d9ffe2c0b830c2001d4 -->

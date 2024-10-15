@@ -1126,6 +1126,8 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.account_url", fmt.Sprintf("https://%s.snowflakecomputing.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.buffering_interval", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.buffering_size", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
@@ -1193,6 +1195,8 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.account_url", fmt.Sprintf("https://%s.snowflakecomputing.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.buffering_interval", "900"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.buffering_size", "128"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
@@ -1267,6 +1271,8 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.account_url", fmt.Sprintf("https://%s.snowflakecomputing.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.buffering_interval", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.buffering_size", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
@@ -2681,7 +2687,7 @@ resource "aws_lambda_function" "lambda_function_test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName)
 }
@@ -3997,13 +4003,15 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "snowflake"
 
   snowflake_configuration {
-    account_url = "https://%[1]s.snowflakecomputing.com"
-    database    = "test-db"
-    private_key = "%[2]s"
-    role_arn    = aws_iam_role.firehose.arn
-    schema      = "test-schema"
-    table       = "test-table"
-    user        = "test-usr"
+    account_url        = "https://%[1]s.snowflakecomputing.com"
+    buffering_interval = 900
+    buffering_size     = 128
+    database           = "test-db"
+    private_key        = "%[2]s"
+    role_arn           = aws_iam_role.firehose.arn
+    schema             = "test-schema"
+    table              = "test-table"
+    user               = "test-usr"
 
     s3_configuration {
       role_arn           = aws_iam_role.firehose.arn
@@ -4043,6 +4051,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 }
+
 `, rName, acctest.TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(privateKey))))
 }
 

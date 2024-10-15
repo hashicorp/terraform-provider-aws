@@ -2759,6 +2759,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)SSMIncidents"
     severity: WARNING
+  - id: ssmquicksetup-in-func-name
+    languages:
+      - go
+    message: Do not use "SSMQuickSetup" in func name inside ssmquicksetup package
+    paths:
+      include:
+        - internal/service/ssmquicksetup
+      exclude:
+        - internal/service/ssmquicksetup/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMQuickSetup"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: ssmquicksetup-in-test-name
+    languages:
+      - go
+    message: Include "SSMQuickSetup" in test name
+    paths:
+      include:
+        - internal/service/ssmquicksetup/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccSSMQuickSetup"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ssmquicksetup-in-const-name
+    languages:
+      - go
+    message: Do not use "SSMQuickSetup" in const name inside ssmquicksetup package
+    paths:
+      include:
+        - internal/service/ssmquicksetup
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMQuickSetup"
+    severity: WARNING
+  - id: ssmquicksetup-in-var-name
+    languages:
+      - go
+    message: Do not use "SSMQuickSetup" in var name inside ssmquicksetup package
+    paths:
+      include:
+        - internal/service/ssmquicksetup
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMQuickSetup"
+    severity: WARNING
   - id: ssmsap-in-func-name
     languages:
       - go

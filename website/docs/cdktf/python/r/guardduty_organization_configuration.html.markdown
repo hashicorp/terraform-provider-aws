@@ -147,4 +147,4 @@ Using `terraform import`, import GuardDuty Organization Configurations using the
 % terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0204debd69a542a4ab875fac471e6f3104005ffcf7df6f2813bc3941f9df1990 -->
+<!-- cache-key: cdktf-0.20.9 input-0204debd69a542a4ab875fac471e6f3104005ffcf7df6f2813bc3941f9df1990 -->

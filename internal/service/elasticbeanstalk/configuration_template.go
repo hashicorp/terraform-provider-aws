@@ -54,7 +54,7 @@ func resourceConfigurationTemplate() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					Elem:     settingSchema(),
-					Set:      optionSettingValueHash,
+					Set:      hashSettingsValue,
 				},
 				"solution_stack_name": {
 					Type:     schema.TypeString,
@@ -85,7 +85,7 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
-		input.OptionSettings = expandConfigurationOptionSettings(v.(*schema.Set))
+		input.OptionSettings = expandConfigurationOptionSettings(v.(*schema.Set).List())
 	}
 
 	if attr, ok := d.GetOk("solution_stack_name"); ok {
@@ -148,7 +148,7 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChange("setting") {
 		o, n := d.GetChange("setting")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := expandConfigurationOptionSettings(ns.Difference(os)), expandConfigurationOptionSettings(os.Difference(ns))
+		add, del := expandConfigurationOptionSettings(ns.Difference(os).List()), expandConfigurationOptionSettings(os.Difference(ns).List())
 
 		// Additions and removals of options are done in a single API call, so we
 		// can't do our normal "remove these" and then later "add these", re-adding

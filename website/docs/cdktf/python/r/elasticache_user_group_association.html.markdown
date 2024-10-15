@@ -107,4 +107,4 @@ Using `terraform import`, import ElastiCache user group associations using the `
 % terraform import aws_elasticache_user_group_association.example userGoupId1,userId
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3339413e7f428981aaae7e8893e86bdecb98d0c269d68abccc1d0e2642de7dc7 -->
+<!-- cache-key: cdktf-0.20.9 input-3339413e7f428981aaae7e8893e86bdecb98d0c269d68abccc1d0e2642de7dc7 -->

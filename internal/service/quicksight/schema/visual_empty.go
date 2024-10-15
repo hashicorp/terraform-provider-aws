@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,7 +27,7 @@ func emptyVisualSchema() *schema.Schema {
 	}
 }
 
-func expandEmptyVisual(tfList []interface{}) *quicksight.EmptyVisual {
+func expandEmptyVisual(tfList []interface{}) *awstypes.EmptyVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -37,30 +37,31 @@ func expandEmptyVisual(tfList []interface{}) *quicksight.EmptyVisual {
 		return nil
 	}
 
-	visual := &quicksight.EmptyVisual{}
+	apiObject := &awstypes.EmptyVisual{}
 
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
-		visual.DataSetIdentifier = aws.String(v)
+		apiObject.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
+		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
 
-	return visual
+	return apiObject
 }
 
-func flattenEmptyVisual(apiObject *quicksight.EmptyVisual) []interface{} {
+func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"data_set_identifier": aws.StringValue(apiObject.DataSetIdentifier),
-		"visual_id":           aws.StringValue(apiObject.VisualId),
+		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
+		"visual_id":           aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}

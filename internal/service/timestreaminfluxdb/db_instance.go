@@ -456,7 +456,7 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
 		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
 		in := timestreaminfluxdb.UpdateDbInstanceInput{
-			Identifier: aws.String(plan.ID.ValueString()),
+			Identifier: plan.ID.ValueStringPointer(),
 		}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
@@ -507,7 +507,7 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &timestreaminfluxdb.DeleteDbInstanceInput{
-		Identifier: aws.String(state.ID.ValueString()),
+		Identifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteDbInstance(ctx, in)
@@ -647,8 +647,8 @@ type resourceDBInstanceData struct {
 	Password                      types.String                                                  `tfsdk:"password"`
 	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
 	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
-	Tags                          types.Map                                                     `tfsdk:"tags"`
-	TagsAll                       types.Map                                                     `tfsdk:"tags_all"`
+	Tags                          tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                `tfsdk:"timeouts"`
 	Username                      types.String                                                  `tfsdk:"username"`
 	VPCSecurityGroupIDs           fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_security_group_ids"`

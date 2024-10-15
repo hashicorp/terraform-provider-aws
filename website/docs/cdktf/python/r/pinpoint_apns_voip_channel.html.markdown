@@ -92,4 +92,4 @@ Using `terraform import`, import Pinpoint APNs VoIP Channel using the `applicati
 % terraform import aws_pinpoint_apns_voip_channel.apns_voip application-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0ffc83fe4540fc67436e7989e5cf3564705d88e89adc4f3fda68412be44cfc00 -->
+<!-- cache-key: cdktf-0.20.9 input-0ffc83fe4540fc67436e7989e5cf3564705d88e89adc4f3fda68412be44cfc00 -->

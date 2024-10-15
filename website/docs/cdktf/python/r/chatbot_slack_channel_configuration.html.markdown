@@ -98,4 +98,4 @@ Using `terraform import`, import Chatbot Slack Channel Configuration using the `
 % terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d07ae7b961314cae21a6f83a4b9eccb7336518081785d4347a33144d3e3f04d9 -->
+<!-- cache-key: cdktf-0.20.9 input-d07ae7b961314cae21a6f83a4b9eccb7336518081785d4347a33144d3e3f04d9 -->

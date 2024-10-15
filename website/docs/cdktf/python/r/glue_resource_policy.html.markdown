@@ -91,4 +91,4 @@ Using `terraform import`, import Glue Resource Policy using the account ID. For 
 % terraform import aws_glue_resource_policy.Test 12356789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-505ce1c4e38c338e6ee96c4f345643e93eb421593db3b74a6669f3f253de8617 -->
+<!-- cache-key: cdktf-0.20.9 input-505ce1c4e38c338e6ee96c4f345643e93eb421593db3b74a6669f3f253de8617 -->

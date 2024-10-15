@@ -94,4 +94,4 @@ Using `terraform import`, import S3 Access Grants locations using the `accountId
 % terraform import aws_s3control_access_grants_location.example 123456789012,default
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-00a08b277ec91e24309d1edae7d8df05172848de4d8e44b507d33423f4b4aa85 -->
+<!-- cache-key: cdktf-0.20.9 input-00a08b277ec91e24309d1edae7d8df05172848de4d8e44b507d33423f4b4aa85 -->

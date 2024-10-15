@@ -5,6 +5,7 @@ package elasticbeanstalk
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -106,7 +107,7 @@ func resourceEnvironment() *schema.Resource {
 					Type:     schema.TypeSet,
 					Computed: true,
 					Elem:     settingSchema(),
-					Set:      optionSettingValueHash,
+					Set:      hashSettingsValue,
 				},
 				"application": {
 					Type:     schema.TypeString,
@@ -179,7 +180,7 @@ func resourceEnvironment() *schema.Resource {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem:     settingSchema(),
-					Set:      optionSettingValueHash,
+					Set:      hashSettingsValue,
 				},
 				"solution_stack_name": {
 					Type:          schema.TypeString,
@@ -230,7 +231,6 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &elasticbeanstalk.CreateEnvironmentInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
-		OptionSettings:  expandConfigurationOptionSettings(d.Get("setting").(*schema.Set)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -240,6 +240,10 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v := d.Get("platform_arn"); v.(string) != "" {
 		input.PlatformArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
+		input.OptionSettings = expandConfigurationOptionSettings(v.(*schema.Set).List())
 	}
 
 	if v := d.Get("solution_stack_name"); v.(string) != "" {
@@ -387,54 +391,32 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("version_label", env.VersionLabel)
 
-	allSettings := &schema.Set{F: optionSettingValueHash}
-	for _, optionSetting := range configurationSettings.OptionSettings {
-		m := map[string]interface{}{}
-
-		if optionSetting.Namespace != nil {
-			m[names.AttrNamespace] = aws.ToString(optionSetting.Namespace)
-		}
-
-		if optionSetting.OptionName != nil {
-			m[names.AttrName] = aws.ToString(optionSetting.OptionName)
-		}
-
-		if aws.ToString(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
-			m["resource"] = aws.ToString(optionSetting.ResourceName)
-		}
-
-		if value := aws.ToString(optionSetting.Value); value != "" {
-			switch aws.ToString(optionSetting.OptionName) {
-			case "SecurityGroups":
-				m[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
-			case "Subnets", "ELBSubnets":
-				m[names.AttrValue] = sortValues(value)
-			default:
-				m[names.AttrValue] = value
-			}
-		}
-
-		allSettings.Add(m)
+	var configuredSettings []interface{}
+	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
+		configuredSettings = v.(*schema.Set).List()
 	}
-	settings := d.Get("setting").(*schema.Set)
+	apiSettings := flattenConfigurationOptionSettings(ctx, meta, configurationSettings.OptionSettings)
+	var settings []interface{}
 
-	// perform the set operation with only name/namespace as keys, excluding value
-	// this is so we override things in the settings resource data key with updated values
-	// from the api.  we skip values we didn't know about before because there are so many
-	// defaults set by the eb api that we would delete many useful defaults.
-	//
-	// there is likely a better way to do this
-	allSettingsKeySet := schema.NewSet(optionSettingKeyHash, allSettings.List())
-	settingsKeySet := schema.NewSet(optionSettingKeyHash, settings.List())
-	updatedSettingsKeySet := allSettingsKeySet.Intersection(settingsKeySet)
+	for _, apiSetting := range apiSettings {
+		tfMap := apiSetting.(map[string]interface{})
+		isMatch := func(v interface{}) bool {
+			m := v.(map[string]interface{})
 
-	updatedSettings := schema.NewSet(optionSettingValueHash, updatedSettingsKeySet.List())
+			return m[names.AttrNamespace].(string) == tfMap[names.AttrNamespace].(string) &&
+				m[names.AttrName].(string) == tfMap[names.AttrName].(string) &&
+				m["resource"].(string) == tfMap["resource"].(string)
+		}
+		if slices.ContainsFunc(configuredSettings, isMatch) {
+			settings = append(settings, apiSetting)
+		}
+	}
 
-	if err := d.Set("all_settings", allSettings.List()); err != nil {
+	if err := d.Set("all_settings", apiSettings); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting all_settings: %s", err)
 	}
 
-	if err := d.Set("setting", updatedSettings.List()); err != nil {
+	if err := d.Set("setting", settings); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
@@ -482,18 +464,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("setting") {
 			o, n := d.GetChange("setting")
-			if o == nil {
-				o = &schema.Set{F: optionSettingValueHash}
-			}
-			if n == nil {
-				n = &schema.Set{F: optionSettingValueHash}
-			}
-
-			os := o.(*schema.Set)
-			ns := n.(*schema.Set)
-
-			rm := expandConfigurationOptionSettings(os.Difference(ns))
-			add := expandConfigurationOptionSettings(ns.Difference(os))
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+			add, del := expandConfigurationOptionSettings(ns.Difference(os).List()), expandConfigurationOptionSettings(os.Difference(ns).List())
 
 			// Additions and removals of options are done in a single API call, so we
 			// can't do our normal "remove these" and then later "add these", re-adding
@@ -505,7 +477,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			// found in `rm` but not in `add`
 			var remove []awstypes.ConfigurationOptionSetting
 			if len(add) > 0 {
-				for _, r := range rm {
+				for _, r := range del {
 					var update = false
 					for _, a := range add {
 						// ResourceNames are optional. Some defaults come with it, some do
@@ -519,9 +491,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 								continue
 							}
 						}
-						if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) &&
-							aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
-							log.Printf("[DEBUG] Updating Beanstalk setting (%s::%s) \"%s\" => \"%s\"", *a.Namespace, *a.OptionName, *r.Value, *a.Value)
+						if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) && aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
 							update = true
 							break
 						}
@@ -532,13 +502,13 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 					}
 				}
 			} else {
-				remove = rm
+				remove = del
 			}
 
-			for _, elem := range remove {
+			for _, v := range remove {
 				input.OptionsToRemove = append(input.OptionsToRemove, awstypes.OptionSpecification{
-					Namespace:  elem.Namespace,
-					OptionName: elem.OptionName,
+					Namespace:  v.Namespace,
+					OptionName: v.OptionName,
 				})
 			}
 
@@ -788,65 +758,95 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 	return nil, err
 }
 
-// we use the following two functions to allow us to split out defaults
-// as they become overridden from within the template
-func optionSettingValueHash(v interface{}) int {
-	rd := v.(map[string]interface{})
-	namespace := rd[names.AttrNamespace].(string)
-	optionName := rd[names.AttrName].(string)
+func hashSettingsValue(v interface{}) int {
+	tfMap := v.(map[string]interface{})
+	var str strings.Builder
+
+	str.WriteString(tfMap[names.AttrNamespace].(string))
+	str.WriteRune(':')
+	str.WriteString(tfMap[names.AttrName].(string))
 	var resourceName string
-	if v, ok := rd["resource"].(string); ok {
+	if v, ok := tfMap["resource"].(string); ok {
 		resourceName = v
 	}
-	value, _ := rd[names.AttrValue].(string)
-	value, _ = structure.NormalizeJsonString(value)
-	hk := fmt.Sprintf("%s:%s%s=%s", namespace, optionName, resourceName, sortValues(value))
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingValueHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
-	return create.StringHashcode(hk)
-}
-
-func optionSettingKeyHash(v interface{}) int {
-	rd := v.(map[string]interface{})
-	namespace := rd[names.AttrNamespace].(string)
-	optionName := rd[names.AttrName].(string)
-	var resourceName string
-	if v, ok := rd["resource"].(string); ok {
-		resourceName = v
+	str.WriteString(resourceName)
+	str.WriteRune('=')
+	if value := tfMap[names.AttrValue].(string); json.Valid([]byte(value)) {
+		value, _ = structure.NormalizeJsonString(value)
+		str.WriteString(value)
+	} else {
+		values := strings.Split(value, ",")
+		sort.Strings(values)
+		str.WriteString(strings.Join(values, ","))
 	}
-	hk := fmt.Sprintf("%s:%s%s", namespace, optionName, resourceName)
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingKeyHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
-	return create.StringHashcode(hk)
+
+	return create.StringHashcode(str.String())
 }
 
-func sortValues(v string) string {
-	values := strings.Split(v, ",")
-	sort.Strings(values)
-	return strings.Join(values, ",")
-}
-
-func expandConfigurationOptionSettings(tfSet *schema.Set) []awstypes.ConfigurationOptionSetting {
+func expandConfigurationOptionSettings(tfList []interface{}) []awstypes.ConfigurationOptionSetting {
 	apiObjects := []awstypes.ConfigurationOptionSetting{}
 
-	if tfSet != nil {
-		for _, tfMapRaw := range tfSet.List() {
-			tfMap := tfMapRaw.(map[string]interface{})
-			apiObject := awstypes.ConfigurationOptionSetting{
-				Namespace:  aws.String(tfMap[names.AttrNamespace].(string)),
-				OptionName: aws.String(tfMap[names.AttrName].(string)),
-				Value:      aws.String(tfMap[names.AttrValue].(string)),
-			}
+	if tfList == nil {
+		return apiObjects
+	}
 
-			if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" {
-				if v, ok := tfMap["resource"].(string); ok && v != "" {
-					apiObject.ResourceName = aws.String(v)
-				}
-			}
-
-			apiObjects = append(apiObjects, apiObject)
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObject := awstypes.ConfigurationOptionSetting{
+			Namespace:  aws.String(tfMap[names.AttrNamespace].(string)),
+			OptionName: aws.String(tfMap[names.AttrName].(string)),
+			Value:      aws.String(tfMap[names.AttrValue].(string)),
 		}
+
+		if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" {
+			if v, ok := tfMap["resource"].(string); ok && v != "" {
+				apiObject.ResourceName = aws.String(v)
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
+}
+
+func flattenConfigurationOptionSettings(ctx context.Context, meta interface{}, apiObjects []awstypes.ConfigurationOptionSetting) []interface{} {
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if apiObject.Namespace != nil {
+			tfMap[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
+		}
+
+		if apiObject.OptionName != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.OptionName)
+		}
+
+		if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" && apiObject.ResourceName != nil {
+			tfMap["resource"] = aws.ToString(apiObject.ResourceName)
+		} else {
+			tfMap["resource"] = ""
+		}
+
+		if value := aws.ToString(apiObject.Value); value != "" {
+			switch aws.ToString(apiObject.OptionName) {
+			case "SecurityGroups":
+				tfMap[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
+			case "Subnets", "ELBSubnets":
+				values := strings.Split(value, ",")
+				sort.Strings(values)
+				tfMap[names.AttrValue] = strings.Join(values, ",")
+			default:
+				tfMap[names.AttrValue] = value
+			}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingValue string) string {

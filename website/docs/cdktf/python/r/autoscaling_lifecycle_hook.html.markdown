@@ -112,4 +112,4 @@ Using `terraform import`, import AutoScaling Lifecycle Hooks using the role auto
 % terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8ca53e0779c7b9f57e18da9406cc44b6560bf338b79f9897124efbb999b1bb41 -->
+<!-- cache-key: cdktf-0.20.9 input-8ca53e0779c7b9f57e18da9406cc44b6560bf338b79f9897124efbb999b1bb41 -->

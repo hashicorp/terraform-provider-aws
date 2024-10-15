@@ -92,6 +92,38 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 	})
 }
 
+func testAccWorkteam_cognitoOmitWorkforceName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workteam awstypes.Workteam
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_workteam.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkteamConfig_omitWorkforceName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
 func testAccWorkteam_oidcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
@@ -423,6 +455,43 @@ resource "aws_sagemaker_workteam" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWorkteamConfig_omitWorkforceName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name            = %[1]q
+  generate_secret = true
+  user_pool_id    = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_group" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_sagemaker_workteam" "test" {
+  workteam_name = %[1]q
+  description   = %[1]q
+
+  member_definition {
+    cognito_member_definition {
+      client_id  = aws_cognito_user_pool_client.test.id
+      user_pool  = aws_cognito_user_pool_domain.test.user_pool_id
+      user_group = aws_cognito_user_group.test.id
+    }
+  }
+}
+`, rName)
 }
 
 func testAccWorkteamConfig_cognitoUpdated(rName string) string {

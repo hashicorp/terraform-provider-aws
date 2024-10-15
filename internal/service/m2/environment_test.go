@@ -47,7 +47,7 @@ func TestAccM2Environment_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "bluage"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -128,7 +128,7 @@ func TestAccM2Environment_full(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test-1"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "microfocus"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0.10"),

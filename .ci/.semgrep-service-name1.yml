@@ -4234,3 +4234,64 @@ rules:
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
+  - id: iot-in-test-name
+    languages:
+      - go
+    message: Include "IoT" in test name
+    paths:
+      include:
+        - internal/service/iot/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccIoT"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: iot-in-const-name
+    languages:
+      - go
+    message: Do not use "IoT" in const name inside iot package
+    paths:
+      include:
+        - internal/service/iot
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)IoT"
+    severity: WARNING
+  - id: iot-in-var-name
+    languages:
+      - go
+    message: Do not use "IoT" in var name inside iot package
+    paths:
+      include:
+        - internal/service/iot
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)IoT"
+    severity: WARNING
+  - id: iotanalytics-in-func-name
+    languages:
+      - go
+    message: Do not use "IoTAnalytics" in func name inside iotanalytics package
+    paths:
+      include:
+        - internal/service/iotanalytics
+      exclude:
+        - internal/service/iotanalytics/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)IoTAnalytics"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING

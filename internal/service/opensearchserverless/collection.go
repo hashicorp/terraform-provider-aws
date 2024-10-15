@@ -5,6 +5,7 @@ package opensearchserverless
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -52,8 +53,8 @@ type resourceCollectionData struct {
 	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
 	Name               types.String   `tfsdk:"name"`
 	StandbyReplicas    types.String   `tfsdk:"standby_replicas"`
-	Tags               types.Map      `tfsdk:"tags"`
-	TagsAll            types.Map      `tfsdk:"tags_all"`
+	Tags               tftags.Map     `tfsdk:"tags"`
+	TagsAll            tftags.Map     `tfsdk:"tags_all"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 	Type               types.String   `tfsdk:"type"`
 }
@@ -283,7 +284,7 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 
 	_, err := conn.DeleteCollection(ctx, &opensearchserverless.DeleteCollectionInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Id:          aws.String(state.ID.ValueString()),
+		Id:          state.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -330,6 +331,10 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
+		if output.Status == awstypes.CollectionStatusFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
 		return output, err
 	}
 
@@ -349,6 +354,10 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
+		if output.Status == awstypes.CollectionStatusFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
 		return output, err
 	}
 

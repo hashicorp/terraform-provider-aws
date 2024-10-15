@@ -99,4 +99,4 @@ Using `terraform import`, import SNS Topic Policy using the topic ARN. For examp
 % terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5367b280c7c37833f246feb7e18158b32cf70822bccb3de74447a6068d898a1b -->
+<!-- cache-key: cdktf-0.20.9 input-5367b280c7c37833f246feb7e18158b32cf70822bccb3de74447a6068d898a1b -->

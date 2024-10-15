@@ -32,7 +32,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="App Authorization Connection")
+// @FrameworkResource("aws_appfabric_app_authorization_connection", name="App Authorization Connection")
+// @Testing(serialize=true)
 func newAppAuthorizationConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationConnectionResource{}
 
@@ -134,8 +135,12 @@ func (r *appAuthorizationConnectionResource) Create(ctx context.Context, request
 		return
 	}
 
-	// Set values for unknowns.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID AppFabric App Authorization (%s) Connection", data.AppAuthorizationARN.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	appAuthorization, err := waitConnectAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -166,7 +171,7 @@ func (r *appAuthorizationConnectionResource) Read(ctx context.Context, request r
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
+	if err := data.initFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
@@ -271,7 +276,7 @@ const (
 	appAuthorizationConnectionResourceIDPartCount = 2
 )
 
-func (m *appAuthorizationConnectionResourceModel) InitFromID() error {
+func (m *appAuthorizationConnectionResourceModel) initFromID() error {
 	parts, err := flex.ExpandResourceId(m.ID.ValueString(), appAuthorizationConnectionResourceIDPartCount, false)
 	if err != nil {
 		return err
@@ -283,8 +288,13 @@ func (m *appAuthorizationConnectionResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *appAuthorizationConnectionResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppAuthorizationARN.ValueString(), m.AppBundleARN.ValueString()}, appAuthorizationConnectionResourceIDPartCount, false)))
+func (m *appAuthorizationConnectionResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppAuthorizationARN.ValueString(),
+		m.AppBundleARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, appAuthorizationConnectionResourceIDPartCount, false)
 }
 
 type authRequestModel struct {

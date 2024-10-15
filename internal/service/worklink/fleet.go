@@ -34,6 +34,7 @@ func resourceFleet() *schema.Resource {
 		ReadWithoutTimeout:   resourceFleetRead,
 		UpdateWithoutTimeout: resourceFleetUpdate,
 		DeleteWithoutTimeout: resourceFleetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -134,6 +135,8 @@ func resourceFleet() *schema.Resource {
 				Default:  true,
 			},
 		},
+
+		DeprecationMessage: `The aws_worklink_fleet resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead`,
 	}
 }
 

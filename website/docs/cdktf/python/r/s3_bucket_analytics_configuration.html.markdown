@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         analytics = S3Bucket(self, "analytics",
-            bucket="analytics destination"
+            bucket="analytics-destination"
         )
         example = S3Bucket(self, "example",
             bucket="example"
@@ -146,4 +146,4 @@ Using `terraform import`, import S3 bucket analytics configurations using `bucke
 % terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2728c65e9310b798db450f104ac4301a6651e13ee77566ae83bf71307930d0dd -->
+<!-- cache-key: cdktf-0.20.9 input-ac9272d084b98ae18a21c15ccd5706b2f6fd6234153ee5a0769b2eaad3cad4f6 -->

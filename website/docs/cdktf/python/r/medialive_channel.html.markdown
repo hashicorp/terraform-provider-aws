@@ -811,4 +811,4 @@ Using `terraform import`, import MediaLive Channel using the `channel_id`. For e
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f35c6a1bbf589049ab28f3a0305defb739be70f1415e2fba48e986109eecf3e -->
+<!-- cache-key: cdktf-0.20.9 input-6f35c6a1bbf589049ab28f3a0305defb739be70f1415e2fba48e986109eecf3e -->

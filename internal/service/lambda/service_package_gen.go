@@ -21,6 +21,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceFunctionRecursionConfig,
+			Name:    "Function Recursion Config",
+		},
+		{
 			Factory: newResourceRuntimeManagementConfig,
 			Name:    "Runtime Management Config",
 		},
@@ -78,11 +82,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
 			Name:     "Code Signing Config",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  resourceEventSourceMapping,
 			TypeName: "aws_lambda_event_source_mapping",
 			Name:     "Event Source Mapping",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  resourceFunction,

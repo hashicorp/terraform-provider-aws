@@ -54,6 +54,7 @@ CodeArtifact
 CodeBuild
 CodeCatalyst
 CodeCommit
+CodeConnections
 CodeDeploy
 CodeGuru Profiler
 CodeGuru Reviewer
@@ -110,6 +111,7 @@ Elemental MediaLive
 Elemental MediaPackage
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging SMS
 EventBridge
 EventBridge Pipes
 EventBridge Scheduler
@@ -172,6 +174,7 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Parallel Computing Service
 Payment Cryptography Control Plane
 Pinpoint
 Polly
@@ -210,6 +213,7 @@ SQS (Simple Queue)
 SSM (Systems Manager)
 SSM Contacts
 SSM Incident Manager Incidents
+SSM Quick Setup
 SSO Admin
 SSO Identity Store
 STS (Security Token)

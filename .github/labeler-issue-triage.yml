@@ -153,6 +153,8 @@ service/codecatalyst:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
+service/codeconnections:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeconnections_'
 service/codeguruprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeguruprofiler_'
 service/codegurureviewer:
@@ -513,6 +515,8 @@ service/paymentcryptography:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
+service/pcs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcs_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:
@@ -527,6 +531,8 @@ service/pinpointemail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointemail_'
 service/pinpointsmsvoice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoice_'
+service/pinpointsmsvoicev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoicev2_'
 service/pipes:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pipes_'
 service/polly:
@@ -653,6 +659,8 @@ service/ssmcontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmcontacts_'
 service/ssmincidents:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmincidents_'
+service/ssmquicksetup:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmquicksetup_'
 service/ssmsap:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmsap_'
 service/sso:

@@ -98,4 +98,4 @@ Using `terraform import`, import ApplicationInsights Applications using the `res
 % terraform import aws_applicationinsights_application.some some-application
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-30b40f9adb8f133c3e275766d86e95f547219ce5038fa7751ad75a6d3c0db957 -->
+<!-- cache-key: cdktf-0.20.9 input-30b40f9adb8f133c3e275766d86e95f547219ce5038fa7751ad75a6d3c0db957 -->

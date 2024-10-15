@@ -32,6 +32,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newFoundationModelsDataSource,
 			Name:    "Foundation Models",
 		},
+		{
+			Factory: newInferenceProfileDataSource,
+			Name:    "Inference Profile",
+		},
+		{
+			Factory: newInferenceProfilesDataSource,
+			Name:    "Inference Profiles",
+		},
 	}
 }
 
@@ -43,6 +51,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			},
+		},
+		{
+			Factory: newGuardrailVersionResource,
+			Name:    "Guardrail Version",
 		},
 		{
 			Factory: newModelInvocationLoggingConfigurationResource,

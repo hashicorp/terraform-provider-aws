@@ -101,4 +101,4 @@ Using `terraform import`, import QuickSight IAM Policy Assignment using the AWS 
 % terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-97b3c767d8dd342d64374f0ab17a8d1552269f5e1150cc154507923f2000338e -->
+<!-- cache-key: cdktf-0.20.9 input-97b3c767d8dd342d64374f0ab17a8d1552269f5e1150cc154507923f2000338e -->

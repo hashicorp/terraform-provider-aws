@@ -529,7 +529,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   publish       = true
 }
 

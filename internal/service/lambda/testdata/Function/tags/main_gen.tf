@@ -6,7 +6,7 @@ resource "aws_lambda_function" "test" {
   function_name = var.rName
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   tags = var.resource_tags
 }

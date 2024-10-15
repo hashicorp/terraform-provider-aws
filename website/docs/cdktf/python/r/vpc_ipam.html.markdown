@@ -133,4 +133,4 @@ Using `terraform import`, import IPAMs using the IPAM `id`. For example:
 % terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-702fa54cd52e1c61197fa805eaebba584c89b52dda71e967bc6393a71cf8a184 -->
+<!-- cache-key: cdktf-0.20.9 input-702fa54cd52e1c61197fa805eaebba584c89b52dda71e967bc6393a71cf8a184 -->
