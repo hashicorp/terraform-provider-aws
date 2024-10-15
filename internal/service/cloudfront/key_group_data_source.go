@@ -217,6 +217,9 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	// TIP: -- 5. Set the tags
+	data.ID = flex.StringToFramework(ctx, out.KeyGroup.Id)
+	data.Name = flex.StringToFramework(ctx, out.KeyGroup.KeyGroupConfig.Name)
+	data.Comment = flex.StringToFramework(ctx, out.KeyGroup.KeyGroupConfig.Comment)
 	data.Etag = flex.StringToFramework(ctx, out.ETag)
 
 	// TIP: -- 6. Set the state
