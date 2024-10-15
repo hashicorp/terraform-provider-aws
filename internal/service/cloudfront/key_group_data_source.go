@@ -34,12 +34,16 @@ import (
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 	"context"
+	"fmt"
 
-	///	"github.com/aws/aws-sdk-go-v2/aws"
-	///	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	///	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -106,9 +110,17 @@ func (d *dataSourceKeyGroup) Schema(ctx context.Context, req datasource.SchemaRe
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(
+						path.MatchRelative().AtParent().AtName(names.AttrID),
+						path.MatchRelative().AtParent().AtName(names.AttrName),
+					),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
 			"items": schema.ListAttribute{
@@ -145,8 +157,50 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	var keyGroupID string
+
+	if !data.ID.IsNull() && !data.ID.IsUnknown() {
+		keyGroupID = data.ID.ValueString()
+	} else {
+		name := data.Name.ValueString()
+		input := &cloudfront.ListKeyGroupsInput{}
+
+		err := listKeyGroupsPages(ctx, conn, input, func(page *cloudfront.ListKeyGroupsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, policySummary := range page.KeyGroupList.Items {
+				if keyGroup := policySummary.KeyGroup; aws.ToString(keyGroup.KeyGroupConfig.Name) == name {
+					keyGroupID = aws.ToString(keyGroup.Id)
+
+					return false
+				}
+			}
+
+			return !lastPage
+		})
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameKeyGroup, data.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		if keyGroupID == "" {
+			err := fmt.Errorf("no matching CloudFront Key Group (%s)", name)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameKeyGroup, data.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
 	// TIP: -- 3. Get information about a resource from AWS
-	out, err := findKeyGroupByID(ctx, conn, data.ID.ValueString())
+	out, err := findKeyGroupByID(ctx, conn, keyGroupID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameKeyGroup, data.Name.String(), err),
