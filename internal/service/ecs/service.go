@@ -2004,19 +2004,8 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) 
 }
 
 func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
-	// to be backward compatible, should ForceNew almost always (previous behavior), unless:
-	//   force_new_deployment is true and
-	//   neither the old set nor new set is 0 length
+	// to be backward compatible, should ForceNew almost always (previous behavior), unless force_new_deployment is true
 	if v := d.Get("force_new_deployment").(bool); !v {
-		return capacityProviderStrategyForceNew(d)
-	}
-
-	old, new := d.GetChange(names.AttrCapacityProviderStrategy)
-
-	ol := old.(*schema.Set).Len()
-	nl := new.(*schema.Set).Len()
-
-	if (ol == 0 && nl > 0) || (ol > 0 && nl == 0) {
 		return capacityProviderStrategyForceNew(d)
 	}
 
