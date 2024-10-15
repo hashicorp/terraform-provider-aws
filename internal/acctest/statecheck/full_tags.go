@@ -95,6 +95,8 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 		return
 	}
 
+	tags = tags.IgnoreSystem(sp.ServicePackageName())
+
 	tagsMap := tfmaps.ApplyToAllValues(tags.Map(), func(s string) any {
 		return s
 	})
