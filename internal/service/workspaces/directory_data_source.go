@@ -212,7 +212,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
-	if err := d.Set("saml_properties", FlattenSAMLProperties(directory.SamlProperties)); err != nil {
+	if err := d.Set("saml_properties", flattenSAMLProperties(directory.SamlProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting saml_properties: %s", err)
 	}
 	d.Set(names.AttrSubnetIDs, directory.SubnetIds)
