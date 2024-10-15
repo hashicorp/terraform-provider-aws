@@ -794,7 +794,7 @@ func flattenSAMLProperties(apiObject *types.SamlProperties) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			"relay_state_parameter_name": aws.ToString(apiObject.RelayStateParameterName),
-			names.AttrStatus:                     apiObject.Status,
+			names.AttrStatus:             apiObject.Status,
 			"user_access_url":            aws.ToString(apiObject.UserAccessUrl),
 		},
 	}
