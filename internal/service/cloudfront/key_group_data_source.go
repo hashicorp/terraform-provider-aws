@@ -224,6 +224,7 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	// TIP: -- 5. Set the tags
 	data.ID = flex.StringToFramework(ctx, out.KeyGroup.Id)
 	data.Name = flex.StringToFramework(ctx, out.KeyGroup.KeyGroupConfig.Name)
+	data.Items = flex.FlattenFrameworkStringValueList(ctx, out.KeyGroup.KeyGroupConfig.Items)
 
 	var comment *string
 	if out.KeyGroup.KeyGroupConfig.Comment != nil {
