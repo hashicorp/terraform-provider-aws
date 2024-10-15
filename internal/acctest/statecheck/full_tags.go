@@ -67,8 +67,12 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 	var err error
 	if v, ok := sp.(tftags.ServiceTagLister); ok {
 		err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string)) // Sets tags in Context
-	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok && tagsSpec.ResourceType != "" {
-		err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string), tagsSpec.ResourceType) // Sets tags in Context
+	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
+		if tagsSpec.ResourceType == "" {
+			err = fmt.Errorf("ListTags method for service %s requires ResourceType, but none was set", sp.ServicePackageName())
+		} else {
+			err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string), tagsSpec.ResourceType) // Sets tags in Context
+		}
 	} else {
 		err = fmt.Errorf("no ListTags method found for service %s", sp.ServicePackageName())
 	}

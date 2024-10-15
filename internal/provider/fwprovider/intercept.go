@@ -485,8 +485,14 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 
 					if v, ok := sp.(tftags.ServiceTagLister); ok {
 						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-					} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok && r.tags.ResourceType != "" {
-						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
+						if r.tags.ResourceType == "" {
+							tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+							})
+						} else {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						}
 					} else {
 						tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
 							"ServicePackage": sp.ServicePackageName(),
