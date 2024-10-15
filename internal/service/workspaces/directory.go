@@ -93,7 +93,7 @@ func resourceDirectory() *schema.Resource {
 							Optional: true,
 							Default:  "RelayState",
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.SamlStatusEnumDisabled,
@@ -692,8 +692,8 @@ func expandSAMLProperties(tfList []interface{}) *types.SamlProperties {
 		apiObject.RelayStateParameterName = aws.String(tfMap["relay_state_parameter_name"].(string))
 	}
 
-	if tfMap["status"].(string) != "" {
-		apiObject.Status = types.SamlStatusEnum(tfMap["status"].(string))
+	if tfMap[names.AttrStatus].(string) != "" {
+		apiObject.Status = types.SamlStatusEnum(tfMap[names.AttrStatus].(string))
 	}
 
 	if tfMap["user_access_url"].(string) != "" {
@@ -794,7 +794,7 @@ func flattenSAMLProperties(apiObject *types.SamlProperties) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			"relay_state_parameter_name": aws.ToString(apiObject.RelayStateParameterName),
-			"status":                     apiObject.Status,
+			names.AttrStatus:                     apiObject.Status,
 			"user_access_url":            aws.ToString(apiObject.UserAccessUrl),
 		},
 	}
