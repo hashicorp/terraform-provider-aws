@@ -386,6 +386,7 @@ type ResourceDatum struct {
 	additionalTfVars                 map[string]string
 	AlternateRegionProvider          bool
 	TagsUpdateForceNew               bool
+	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
 	CheckDestroyNoop                 bool
 	IsDataSource                     bool
 	DataSourceResourceImplementation implementation
@@ -700,6 +701,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.TagsUpdateForceNew = b
+					}
+				}
+				if attr, ok := args.Keyword["tagsUpdateGetTagsIn"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsUpdateGetTagsIn value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.TagsUpdateGetTagsIn = b
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {

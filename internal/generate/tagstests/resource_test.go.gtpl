@@ -2579,7 +2579,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
 					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-                        acctest.CtProviderKey1: knownvalue.StringExact({{ if .TagsUpdateForceNew }}acctest.CtProviderValue1Again{{ else }}acctest.CtProviderValue1{{ end }}), // TODO: Should not be set
+                        acctest.CtProviderKey1: knownvalue.StringExact({{ if or .TagsUpdateForceNew .TagsUpdateGetTagsIn }}acctest.CtProviderValue1Again{{ else }}acctest.CtProviderValue1{{ end }}), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
 				},
@@ -2739,7 +2739,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-                        acctest.CtResourceKey1: knownvalue.StringExact({{ if .TagsUpdateForceNew }}acctest.CtResourceValue1Updated{{ else }}acctest.CtResourceValue1{{ end }}), // TODO: Should not be set
+                        acctest.CtResourceKey1: knownvalue.StringExact({{ if or .TagsUpdateForceNew .TagsUpdateGetTagsIn }}acctest.CtResourceValue1Updated{{ else }}acctest.CtResourceValue1{{ end }}), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
@@ -2829,7 +2829,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
 					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-                        acctest.CtResourceKey1: knownvalue.StringExact({{ if .TagsUpdateForceNew }}acctest.CtResourceValue1Again{{ else }}acctest.CtResourceValue1{{ end }}), // TODO: Should not be set
+                        acctest.CtResourceKey1: knownvalue.StringExact({{ if or .TagsUpdateForceNew .TagsUpdateGetTagsIn }}acctest.CtResourceValue1Again{{ else }}acctest.CtResourceValue1{{ end }}), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
 				},

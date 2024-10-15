@@ -563,6 +563,9 @@ Use the annotation `@Testing(checkDestroyNoop=true)`.
 For some resource types, tags cannot be modified without recreating the resource.
 Use the annotation `@Testing(tagsUpdateForceNew=true)`.
 
+Resource types which pass the result of `getTagsIn` directly onto their Update Input may have an error where ignored tags are not correctly excluded from the update.
+Use the annotation `@Testing(tagsUpdateGetTagsIn=true)`.
+
 Some tests read the tag values directly from the AWS API.
 If the resource type does not specify `identifierAttribute` in its `@Tags` annotation, specify a `@Testing(tagsIdentifierAttribute=<attribute name>)` annotation to identify which attribute value should be used by the `listTags` function.
 If a resource type is also needed for the `listTags` function, also specify the `tagsResourceType` annotation.
