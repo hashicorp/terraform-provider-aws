@@ -727,7 +727,7 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *awstypes.L
 	}
 
 	if v, ok := tfMap["default"].(bool); ok {
-		apiObject.SetDefaultVersion = v
+		apiObject.SetDefaultVersion = aws.Bool(v)
 	}
 
 	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
