@@ -18,6 +18,11 @@ import (
 
 type mockService struct{}
 
+var (
+	_ tftags.ServiceTagLister  = &mockService{}
+	_ tftags.ServiceTagUpdater = &mockService{}
+)
+
 func (t *mockService) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
 }
@@ -49,7 +54,7 @@ func (t *mockService) ListTags(ctx context.Context, meta any, identifier string)
 	return errors.New("test error")
 }
 
-func (t *mockService) UpdateTags(context.Context, any, string, string, any) error {
+func (t *mockService) UpdateTags(context.Context, any, string, any, any) error {
 	return nil
 }
 

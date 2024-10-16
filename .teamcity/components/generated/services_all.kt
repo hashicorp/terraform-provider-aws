@@ -13,7 +13,7 @@ val services = mapOf(
     "appconfig" to ServiceSpec("AppConfig"),
     "appfabric" to ServiceSpec("AppFabric", regionOverride = "us-east-1"),
     "appflow" to ServiceSpec("AppFlow"),
-    "appintegrations" to ServiceSpec("AppIntegrations"),
+    "appintegrations" to ServiceSpec("AppIntegrations", parallelismOverride = 10),
     "applicationinsights" to ServiceSpec("CloudWatch Application Insights"),
     "applicationsignals" to ServiceSpec("Application Signals"),
     "appmesh" to ServiceSpec("App Mesh"),

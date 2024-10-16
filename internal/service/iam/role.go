@@ -40,7 +40,7 @@ const (
 )
 
 // @SDKResource("aws_iam_role", name="Role")
-// @Tags(identifierAttribute="id", resourceType="Role")
+// @Tags(identifierAttribute="name", resourceType="Role")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{

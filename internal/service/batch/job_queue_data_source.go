@@ -18,6 +18,7 @@ import (
 
 // @SDKDataSource("aws_batch_job_queue", name="Job Queue")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,

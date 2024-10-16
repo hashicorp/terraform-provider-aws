@@ -37,7 +37,7 @@ import (
 
 // @SDKResource("aws_alb_listener", name="Listener")
 // @SDKResource("aws_lb_listener", name="Listener")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Listener")
 // @Testing(importIgnore="default_action.0.forward")
 func resourceListener() *schema.Resource {

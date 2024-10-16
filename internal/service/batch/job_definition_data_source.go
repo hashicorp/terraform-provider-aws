@@ -31,6 +31,7 @@ import (
 
 // @FrameworkDataSource("aws_batch_job_definition", name="Job Definition")
 // @Testing(tagsTest=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }
@@ -198,7 +199,10 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 
 	arnPrefix := strings.TrimSuffix(aws.ToString(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.ToInt32(jd.Revision)))
 	data.ARNPrefix = types.StringValue(arnPrefix)
-	data.Tags = tftags.FlattenStringValueMap(ctx, jd.Tags)
+
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	tags := KeyValueTags(ctx, jd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
