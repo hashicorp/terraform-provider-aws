@@ -154,84 +154,6 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkConfig_basePolicyDocumentWithoutRegion(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
-					resource.TestCheckNoResourceAttr(resourceName, "base_policy_region"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
-						"asn":                  "64512",
-						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": acctest.Ct0,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  acctest.Ct1,
-						"edge_locations.0":  acctest.Region(),
-						names.AttrName:      "segment",
-						"shared_segments.#": acctest.Ct0,
-					}),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_base_policy"},
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithRegion(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkConfig_basePolicyDocumentWithRegion(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "base_policy_region", acctest.AlternateRegion()),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
-						"asn":                  "64512",
-						"edge_location":        acctest.AlternateRegion(),
-						"inside_cidr_blocks.#": acctest.Ct0,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  acctest.Ct1,
-						"edge_locations.0":  acctest.AlternateRegion(),
-						names.AttrName:      "segment",
-						"shared_segments.#": acctest.Ct0,
-					}),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"base_policy_region", "create_base_policy"},
-			},
-		},
-	})
-}
-
 func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithMultiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network.test"
@@ -348,7 +270,6 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
-					resource.TestCheckNoResourceAttr(resourceName, "base_policy_region"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.Region(),
@@ -469,18 +390,6 @@ resource "aws_networkmanager_core_network" "test" {
   create_base_policy = true
 }
 `
-}
-
-func testAccCoreNetworkConfig_basePolicyDocumentWithRegion() string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {}
-
-resource "aws_networkmanager_core_network" "test" {
-  global_network_id  = aws_networkmanager_global_network.test.id
-  base_policy_region = %[1]q
-  create_base_policy = true
-}
-`, acctest.AlternateRegion())
 }
 
 func testAccCoreNetworkConfig_basePolicyDocumentWithMultiRegion() string {
