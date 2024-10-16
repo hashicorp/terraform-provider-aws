@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `default_policy` argument
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `copy_tags` argument to `policy_details`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `create_interval` argument to `policy_details`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `extend_deletion` argument to `policy_details`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `resource_type` argument to `policy_details`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `retain_interval` argument to `policy_details`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `policy_language` argument to `policy_details`
+```
