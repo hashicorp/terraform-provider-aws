@@ -221,6 +221,10 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 		Arn: fwflex.StringFromFramework(ctx, data.ARN),
 	})
 
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The index is DELETED") {
+		return
+	}
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
 
