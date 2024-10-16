@@ -777,6 +777,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tagged {
 		if !skip {
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				return
+			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
 				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
