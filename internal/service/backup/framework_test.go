@@ -32,6 +32,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccFrameworkDataSource_basic,
+			"tags":          testAccBackupFrameworkDataSource_tagsSerial,
 		},
 	}
 
