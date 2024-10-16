@@ -129,7 +129,7 @@ data "aws_imagebuilder_image" "test" {
 func testAccImageDataSourceConfig_arnSelf(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
 }
 
 data "aws_region" "current" {}
@@ -330,7 +330,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
