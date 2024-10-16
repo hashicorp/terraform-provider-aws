@@ -423,7 +423,7 @@ func testAccViewConfig_orgScopedView(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-	
+
 resource "aws_resourceexplorer2_index" "test" {
   type = "LOCAL"
 
