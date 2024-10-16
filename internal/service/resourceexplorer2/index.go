@@ -332,7 +332,7 @@ func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 	return nil, err
 }
 
-func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) { //nolint:unparam
+func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateDeleting),
 		Target:  []string{},
