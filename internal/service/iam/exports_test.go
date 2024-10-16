@@ -42,6 +42,7 @@ var (
 	FindEntitiesForPolicyByARN          = findEntitiesForPolicyByARN
 	FindGroupByName                     = findGroupByName
 	FindGroupPoliciesByName             = findGroupPoliciesByName
+	FindGroupPolicyAttachmentsByName    = findGroupPolicyAttachmentsByName
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
