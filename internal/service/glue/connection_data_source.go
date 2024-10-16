@@ -141,7 +141,6 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Connection (%s): %s", connectionArn, err)
 	}
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

@@ -128,7 +128,6 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

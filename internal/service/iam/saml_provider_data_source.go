@@ -84,7 +84,6 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 
 	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

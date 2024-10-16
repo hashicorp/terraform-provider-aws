@@ -195,7 +195,6 @@ func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, met
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, DSNameResponsePlan, d.Id(), err)
 	}
