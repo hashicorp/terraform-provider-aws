@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_backup_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,

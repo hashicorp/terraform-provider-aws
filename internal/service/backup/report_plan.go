@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_backup_report_plan", name="Report Plan")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportPlanCreate,

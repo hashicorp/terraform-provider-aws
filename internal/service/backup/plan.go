@@ -32,6 +32,7 @@ const (
 
 // @SDKResource("aws_backup_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,

@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_backup_vault", name="Vault")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
