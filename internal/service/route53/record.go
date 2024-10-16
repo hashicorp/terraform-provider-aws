@@ -904,8 +904,9 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		Type: rrType,
 	}
 
-	if v, ok := d.GetOk("ttl"); ok {
-		apiObject.TTL = aws.Int64(int64(v.(int)))
+	if v := d.GetRawConfig().GetAttr("ttl"); v.IsKnown() && !v.IsNull() {
+		v, _ := v.AsBigFloat().Int64()
+		apiObject.TTL = aws.Int64(v)
 	}
 
 	// Resource records
