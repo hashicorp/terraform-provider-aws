@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -115,8 +114,8 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 		_, err := conn.UpdateIndexType(ctx, input)
 		if err != nil {
-			//eventual consistency: in case an AGGREGATOR index cannot be created due to cool down period, delete the dangling LOCAL index created above
-			if tfawserr.ErrCodeEquals(err, errServiceQuotaExceededException) {
+			if errs.IsA[*awstypes.ServiceQuotaExceededException](err) {
+				//eventual consistency: in case an AGGREGATOR index cannot be created due to cool down period, delete the dangling LOCAL index created above
 				_, err := conn.DeleteIndex(ctx, &resourceexplorer2.DeleteIndexInput{
 					Arn: flex.StringFromFramework(ctx, data.ID),
 				})
