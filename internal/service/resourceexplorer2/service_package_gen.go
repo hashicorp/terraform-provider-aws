@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceView,
+			Factory: newViewResource,
 			Name:    "View",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
