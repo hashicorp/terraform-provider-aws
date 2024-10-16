@@ -24,7 +24,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	rName2 := randomReportPlanName()
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_backup_report_plan.test"
@@ -84,7 +84,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	rName2 := randomReportPlanName()
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
@@ -169,7 +169,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	rName2 := randomReportPlanName()
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
@@ -229,7 +229,7 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	rName2 := randomReportPlanName()
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
@@ -294,7 +294,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	rName2 := randomReportPlanName()
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -16,6 +16,8 @@ import (
 )
 
 // @SDKDataSource("aws_backup_framework", name="Framework")
+// @Testing(serialize=true)
+// @Testing(tagsTest=false)
 func dataSourceFramework() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFrameworkRead,
