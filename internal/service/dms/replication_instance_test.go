@@ -207,10 +207,10 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.4.7"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.4.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.2"),
 				),
 			},
 			{
@@ -220,10 +220,10 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrAllowMajorVersionUpgrade, names.AttrApplyImmediately},
 			},
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.3"),
 				),
 			},
 		},
