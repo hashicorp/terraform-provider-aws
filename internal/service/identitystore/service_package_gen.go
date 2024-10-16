@@ -17,6 +17,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newGroupMembershipsDataSource,
+			Name:    "Group Memberships",
+		},
+		{
 			Factory: newGroupsDataSource,
 			Name:    "Groups",
 		},
