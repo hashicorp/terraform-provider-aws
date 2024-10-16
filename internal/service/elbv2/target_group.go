@@ -38,7 +38,7 @@ import (
 
 // @SDKResource("aws_alb_target_group", name="Target Group")
 // @SDKResource("aws_lb_target_group", name="Target Group")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TargetGroup")
 // @Testing(importIgnore="lambda_multi_value_headers_enabled;proxy_protocol_v2")
 func resourceTargetGroup() *schema.Resource {

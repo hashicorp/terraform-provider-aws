@@ -324,6 +324,10 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 ##### SAPOData Source Properties
 
 * `object_path` - (Required) Object path specified in the SAPOData flow source.
+* `pagination_config` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
+    * `max_page_size` - (Optional) he maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
+* `parallelism_config` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
+    * `max_parallelism` - (Optional) The maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application.
 
 ##### Veeva Source Properties
 

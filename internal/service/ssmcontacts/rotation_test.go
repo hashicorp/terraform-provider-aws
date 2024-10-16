@@ -57,7 +57,7 @@ func testAccRotation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`rotation\/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`rotation/.+$`)),
 				),
 			},
 			{

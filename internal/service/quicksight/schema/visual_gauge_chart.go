@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,7 +58,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Optional: true,
 													},
-													"arc_thickness": stringSchema(false, enum.Validate[awstypes.ArcThicknessOptions]()),
+													"arc_thickness": stringEnumSchema[awstypes.ArcThicknessOptions](attrOptional),
 												},
 											},
 										},
@@ -96,7 +95,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 											},
 										},
 										"comparison":                       comparisonConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
-										"primary_value_display_type":       stringSchema(false, enum.Validate[awstypes.PrimaryValueDisplayType]()),
+										"primary_value_display_type":       stringEnumSchema[awstypes.PrimaryValueDisplayType](attrOptional),
 										"primary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 									},
 								},

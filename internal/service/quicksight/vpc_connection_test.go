@@ -77,59 +77,6 @@ func TestAccQuickSightVPCConnection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightVPCConnection_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var vpcConnection awstypes.VPCConnection
-	resourceName := "aws_quicksight_vpc_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCConnectionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCConnectionConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
-					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCConnectionConfig_tags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
-					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVPCConnectionConfig_tags1(rId, rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
-					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckVPCConnectionExists(ctx context.Context, n string, v *awstypes.VPCConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -234,45 +181,4 @@ resource "aws_quicksight_vpc_connection" "test" {
   subnet_ids = aws_subnet.test[*].id
 }
 `, rId, rName))
-}
-
-func testAccVPCConnectionConfig_tags1(rId, rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccBaseVPCConnectionConfig(rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_vpc_connection" "test" {
-  vpc_connection_id = %[1]q
-  name              = %[2]q
-  role_arn          = aws_iam_role.test.arn
-  security_group_ids = [
-    aws_security_group.test.id,
-  ]
-  subnet_ids = aws_subnet.test[*].id
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rId, rName, tagKey1, tagValue1))
-}
-
-func testAccVPCConnectionConfig_tags2(rId, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccBaseVPCConnectionConfig(rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_vpc_connection" "test" {
-  vpc_connection_id = %[1]q
-  name              = %[2]q
-  role_arn          = aws_iam_role.test.arn
-  security_group_ids = [
-    aws_security_group.test.id,
-  ]
-  subnet_ids = aws_subnet.test[*].id
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rId, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

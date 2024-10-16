@@ -34,7 +34,7 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 				Config: testAccClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/clientcertificates/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/clientcertificates/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Hello from TF acceptance test"),
 				),
 			},
@@ -47,7 +47,7 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 				Config: testAccClientCertificateConfig_basicUpdated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/clientcertificates/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/clientcertificates/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Hello from TF acceptance test - updated"),
 				),
 			},

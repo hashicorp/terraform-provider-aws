@@ -316,6 +316,7 @@ variable "service_labels" {
     "ssm",
     "ssmcontacts",
     "ssmincidents",
+    "ssmquicksetup",
     "ssmsap",
     "sso",
     "ssoadmin",

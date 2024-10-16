@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -33,6 +34,8 @@ import (
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
 func New(ctx context.Context) (*schema.Provider, error) {
+	log.Printf("Initializing Terraform AWS Provider...")
+
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
 		// Notably the attributes can have no Default values.
@@ -292,7 +295,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig)
 					ctx = v.RegisterLogger(ctx)
 				}
 
@@ -368,7 +371,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig)
 					ctx = v.RegisterLogger(ctx)
 				}
 

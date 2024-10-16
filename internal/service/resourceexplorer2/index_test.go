@@ -35,7 +35,7 @@ func testAccIndex_basic(t *testing.T) {
 				Config: testAccIndexConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`index/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`index/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LOCAL"),
 				),
 			},
@@ -151,6 +151,11 @@ func testAccIndex_type(t *testing.T) {
 					testAccCheckIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LOCAL"),
 				),
+			},
+			{
+				Config:      testAccIndexConfig_type("AGGREGATOR"),
+				ExpectError: regexache.MustCompile("cool down period has expired"),
+				Check:       testAccCheckIndexDestroy(ctx),
 			},
 		},
 	})

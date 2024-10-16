@@ -39,7 +39,7 @@ func testAccView_basic(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.Ct0),
@@ -147,7 +147,7 @@ func testAccView_filter(t *testing.T) {
 				Config: testAccViewConfig_filter(rName, "resourcetype:ec2:instance"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "resourcetype:ec2:instance"),
@@ -166,7 +166,7 @@ func testAccView_filter(t *testing.T) {
 				Config: testAccViewConfig_filter(rName, "region:global"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "region:global"),
@@ -224,6 +224,38 @@ func testAccView_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func testAccView_scope(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v resourceexplorer2.GetViewOutput
+	resourceName := "aws_resourceexplorer2_view.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_orgScopedView(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrScope),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -385,4 +417,26 @@ resource "aws_resourceexplorer2_view" "test" {
   depends_on = [aws_resourceexplorer2_index.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccViewConfig_orgScopedView(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_resourceexplorer2_index" "test" {
+  type = "LOCAL"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_resourceexplorer2_view" "test" {
+  name  = %[1]q
+  scope = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+
+  depends_on = [aws_resourceexplorer2_index.test]
+}
+`, rName)
 }
