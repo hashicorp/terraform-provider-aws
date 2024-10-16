@@ -75,6 +75,10 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
+			names.AttrScope: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -156,6 +160,7 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	// Set values for unknowns.
 	data.ViewARN = types.StringValue(arn)
+	data.Scope = types.StringValue(aws.ToString(output.View.Scope))
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -213,6 +218,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	if view.Filters != nil && len(aws.ToString(view.Filters.FilterString)) == 0 {
 		view.Filters = nil
 	}
+
 	response.Diagnostics.Append(flex.Flatten(ctx, view, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -238,6 +244,10 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if new.Scope.IsUnknown() {
+		new.Scope = types.StringValue(old.Scope.ValueString())
 	}
 
 	conn := r.Meta().ResourceExplorer2Client(ctx)
@@ -328,6 +338,7 @@ type viewResourceModel struct {
 	IncludedProperties fwtypes.ListNestedObjectValueOf[includedPropertyModel] `tfsdk:"included_property"`
 	ViewARN            types.String                                           `tfsdk:"arn"`
 	ViewName           types.String                                           `tfsdk:"name"`
+	Scope              types.String                                           `tfsdk:"scope"`
 	Tags               tftags.Map                                             `tfsdk:"tags"`
 	TagsAll            tftags.Map                                             `tfsdk:"tags_all"`
 }

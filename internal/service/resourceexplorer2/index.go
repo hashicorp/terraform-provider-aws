@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -113,10 +114,25 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		}
 
 		_, err := conn.UpdateIndexType(ctx, input)
-
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
+			//in case an AGGREGATED index cannot be created due to cool down period, delete the dangling LOCAL index created above.
+			if tfawserr.ErrCodeEquals(err, errServiceQuotaExceededException) {
+				_, err := conn.DeleteIndex(ctx, &resourceexplorer2.DeleteIndexInput{
+					Arn: flex.StringFromFramework(ctx, data.ID),
+				})
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("deleting Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
+					return
+				}
 
+				deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+				if _, err := waitIndexDeleted(ctx, conn, deleteTimeout); err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) delete", data.ID.ValueString()), err.Error())
+
+					return
+				}
+			}
+			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
 			return
 		}
 
