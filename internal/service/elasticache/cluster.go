@@ -627,6 +627,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			requestUpdate = true
 		}
 
+		if d.HasChange(names.AttrEngine) {
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+			requestUpdate = true
+		}
+
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 			requestUpdate = true
@@ -974,11 +979,16 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 	d.Set("node_type", c.CacheNodeType)
 
 	d.Set(names.AttrEngine, c.Engine)
-	if aws.ToString(c.Engine) == engineRedis {
+	switch aws.ToString(c.Engine) {
+	case engineValkey:
+		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
+			return err // nosemgrep:ci.bare-error-returns
+		}
+	case engineRedis:
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
-	} else {
+	default:
 		setEngineVersionMemcached(d, c.EngineVersion)
 	}
 	d.Set(names.AttrAutoMinorVersionUpgrade, strconv.FormatBool(aws.ToBool(c.AutoMinorVersionUpgrade)))
@@ -1010,13 +1020,14 @@ func clusterValidateAZMode(_ context.Context, diff *schema.ResourceDiff, v inter
 
 // clusterValidateNumCacheNodes validates that `num_cache_nodes` is 1 when `engine` is "redis"
 func clusterValidateNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineMemcached {
+	engine, ok := diff.GetOk(names.AttrEngine)
+	if !ok || engine.(string) == engineMemcached {
 		return nil
 	}
 	if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
 		return nil
 	}
-	return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
+	return fmt.Errorf(`engine "%s" does not support num_cache_nodes > 1`, engine.(string))
 }
 
 // clusterForceNewOnMemcachedNodeTypeChange causes re-creation when `node_type` is changed and `engine` is "memcached"
@@ -1026,7 +1037,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 	if diff.Id() == "" || !diff.HasChange("node_type") {
 		return nil
 	}
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
 		return nil
 	}
 	return diff.ForceNew("node_type")
@@ -1034,7 +1045,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 
 // clusterValidateMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
 func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
 		return nil
 	}
 	if _, ok := diff.GetOk(names.AttrFinalSnapshotIdentifier); !ok {

@@ -126,13 +126,16 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineRedis,
-				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
+				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 			},
 			names.AttrEngineVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validRedisVersionString,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validRedisVersionString,
+					validValkeyVersionString,
+				),
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -351,7 +354,7 @@ func resourceReplicationGroup() *schema.Resource {
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"transit_encryption_mode": {
 				Type:             schema.TypeString,
@@ -569,9 +572,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.SnapshotWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("transit_encryption_enabled"); ok {
-		input.TransitEncryptionEnabled = aws.Bool(v.(bool))
-	}
+	input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
 
 	if v, ok := d.GetOk("transit_encryption_mode"); ok {
 		input.TransitEncryptionMode = awstypes.TransitEncryptionMode(v.(string))
@@ -820,6 +821,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("cluster_mode") {
 			input.ClusterMode = awstypes.ClusterMode(d.Get("cluster_mode").(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange(names.AttrEngine) {
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 			requestUpdate = true
 		}
 

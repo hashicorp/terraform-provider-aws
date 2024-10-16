@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccElastiCacheParameterGroup_basic(t *testing.T) {
+func TestAccElastiCacheParameterGroup_Redis_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
@@ -35,12 +35,44 @@ func TestAccElastiCacheParameterGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_basic(rName),
+				Config: testAccParameterGroupConfig_Redis_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redis2.8"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheParameterGroup_Valkey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.CacheParameterGroup
+	resourceName := "aws_elasticache_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_Valkey_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "valkey7"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
@@ -67,7 +99,7 @@ func TestAccElastiCacheParameterGroup_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_basic(rName),
+				Config: testAccParameterGroupConfig_Redis_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceParameterGroup(), resourceName),
@@ -154,7 +186,7 @@ func TestAccElastiCacheParameterGroup_removeAllParameters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccParameterGroupConfig_basic(rName),
+				Config: testAccParameterGroupConfig_Redis_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
@@ -190,7 +222,7 @@ func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_allParameter
 				),
 			},
 			{
-				Config: testAccParameterGroupConfig_basic(rName),
+				Config: testAccParameterGroupConfig_Redis_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
@@ -431,7 +463,7 @@ func TestAccElastiCacheParameterGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccParameterGroupConfig_basic(rName),
+				Config: testAccParameterGroupConfig_Redis_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -511,10 +543,19 @@ func testAccCheckParameterGroupAttributes(v *awstypes.CacheParameterGroup, rName
 	}
 }
 
-func testAccParameterGroupConfig_basic(rName string) string {
+func testAccParameterGroupConfig_Redis_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_parameter_group" "test" {
   family = "redis2.8"
+  name   = %[1]q
+}
+`, rName)
+}
+
+func testAccParameterGroupConfig_Valkey_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_parameter_group" "test" {
+  family = "valkey7"
   name   = %[1]q
 }
 `, rName)

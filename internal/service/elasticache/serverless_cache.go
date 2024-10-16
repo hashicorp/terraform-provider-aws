@@ -357,7 +357,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		}
 	}
 
-	// AWS returns null values for certain values that are available on redis only.
+	// AWS returns null values for certain values that are available on redis/valkey only.
 	// always set these values to the state value to avoid unnecessary diff failures on computed values.
 	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
 

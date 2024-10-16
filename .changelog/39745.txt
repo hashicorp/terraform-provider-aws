@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_elasticache_global_replication_group: Add `valkey` as valid engine option.
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `valkey` as valid engine option.
+```
+
+```release-note:enhancement
+resource/aws_elasticache_serverless_cache: Add `valkey` as valid engine option.
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_reserved_cache_node_offering: Allow `valkey` as valid `product_description` value.
+```
