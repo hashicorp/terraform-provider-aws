@@ -221,30 +221,6 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"vpc_lattice_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  false,
-						},
-						"target_group_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  false,
-						},
-						"port_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
 			"ordered_placement_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -532,6 +508,32 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"vpc_lattice_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      false,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_group_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      false,
+							ValidateFunc: verify.ValidARN,
+						},
+						"port_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -756,30 +758,6 @@ func resourceService() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"vpc_lattice_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  false,
-						},
-						"target_group_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  false,
-						},
-						"port_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  false,
 						},
 					},
 				},
@@ -1129,6 +1107,32 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"vpc_lattice_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      false,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_group_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      false,
+							ValidateFunc: verify.ValidARN,
+						},
+						"port_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 		},
 
 		SchemaVersion: 1,
@@ -1188,10 +1192,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EnableECSManagedTags:     d.Get("enable_ecs_managed_tags").(bool),
 		EnableExecuteCommand:     d.Get("enable_execute_command").(bool),
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{})),
-		VpcLatticeConfigurations: expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set)),
 		SchedulingStrategy:       schedulingStrategy,
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
+		VpcLatticeConfigurations: expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -2161,45 +2165,46 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandVpcLatticeConfiguration(configured *schema.Set) []awstypes.VpcLatticeConfiguration {
-	if configured == nil || configured.Len() == 0 {
+func expandVpcLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
+	tfList := tfSet.List()
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var vpcLatticeConfigurations []awstypes.VpcLatticeConfiguration
+	apiObjects := make([]awstypes.VpcLatticeConfiguration, 0)
 
-	for _, rawConfig := range configured.List() {
-		config := rawConfig.(map[string]interface{})
+	for _, tfMapRaw := range tfSet.List() {
+		config := tfMapRaw.(map[string]interface{})
 
-		vpcLatticeConfiguration := awstypes.VpcLatticeConfiguration{
+		apiObject := awstypes.VpcLatticeConfiguration{
 			RoleArn:        aws.String(config["role_arn"].(string)),
 			TargetGroupArn: aws.String(config["target_group_arn"].(string)),
 			PortName:       aws.String(config["port_name"].(string)),
 		}
 
-		vpcLatticeConfigurations = append(vpcLatticeConfigurations, vpcLatticeConfiguration)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return vpcLatticeConfigurations
+	return apiObjects
 }
 
-func flattenVpcLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []map[string]interface{} {
+func flattenVpcLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var result []map[string]interface{}
+	tfList := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		resultItem := map[string]interface{}{
+		tfMap := map[string]interface{}{
 			"role_arn":         aws.ToString(apiObject.RoleArn),
 			"target_group_arn": aws.ToString(apiObject.TargetGroupArn),
 			"port_name":        aws.ToString(apiObject.PortName),
 		}
-		result = append(result, resultItem)
+		tfList = append(tfList, tfMap)
 	}
 
-	return result
+	return tfList
 }
 
 func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConstraint, error) {
