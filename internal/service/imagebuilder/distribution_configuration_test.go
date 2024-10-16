@@ -1315,7 +1315,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_launch_template" "test" {
   instance_type = "t2.micro"
-  name          = %[1]q
+  name          = "%[1]s-1"
 }
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
@@ -1346,7 +1346,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_launch_template" "test2" {
   instance_type = "t2.micro"
-  name          = %[1]q
+  name          = "%[1]s-2"
 }
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
