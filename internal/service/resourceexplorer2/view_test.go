@@ -433,8 +433,8 @@ resource "aws_resourceexplorer2_index" "test" {
 }
 
 resource "aws_resourceexplorer2_view" "test" {
-  name       = %[1]q
-  scope      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+  name  = %[1]q
+  scope = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
 
   depends_on = [aws_resourceexplorer2_index.test]
 }

@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_resourceexplorer2_index: create index type is AGGREGATOR during cool down period. The dangling LOCAL index is deleted for eventual consistency.
+```
+```release-note:enhancement
+resource/aws_resourceexplorer2_view:  Add `scope` argument
+```

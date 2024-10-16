@@ -115,7 +115,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 		_, err := conn.UpdateIndexType(ctx, input)
 		if err != nil {
-			//in case an AGGREGATED index cannot be created due to cool down period, delete the dangling LOCAL index created above.
+			//eventual consistency: in case an AGGREGATOR index cannot be created due to cool down period, delete the dangling LOCAL index created above
 			if tfawserr.ErrCodeEquals(err, errServiceQuotaExceededException) {
 				_, err := conn.DeleteIndex(ctx, &resourceexplorer2.DeleteIndexInput{
 					Arn: flex.StringFromFramework(ctx, data.ID),
@@ -354,7 +354,7 @@ func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 	return nil, err
 }
 
-func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
+func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateDeleting),
 		Target:  []string{},
