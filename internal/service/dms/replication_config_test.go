@@ -55,7 +55,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 							resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", acctest.Ct0),
 							resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
-							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_settings", defaultReplicationConfigSettings[migrationType]),
+							acctest.CheckResourceAttrJSONNoDiff(resourceName, "replication_settings", defaultReplicationConfigSettings[awstypes.MigrationTypeValue(migrationType)]),
 							resource.TestCheckResourceAttr(resourceName, "replication_type", migrationType),
 							resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
@@ -624,10 +624,10 @@ resource "aws_dms_replication_config" "test" {
 }
 
 var (
-	defaultReplicationConfigSettings = map[string]string{
-		"cdc":               defaultReplicationConfigCdcSettings,
-		"full-load":         defaultReplicationConfigFullLoadSettings,
-		"full-load-and-cdc": defaultReplicationConfigFullLoadAndCdcSettings,
+	defaultReplicationConfigSettings = map[awstypes.MigrationTypeValue]string{
+		awstypes.MigrationTypeValueCdc:            defaultReplicationConfigCdcSettings,
+		awstypes.MigrationTypeValueFullLoad:       defaultReplicationConfigFullLoadSettings,
+		awstypes.MigrationTypeValueFullLoadAndCdc: defaultReplicationConfigFullLoadAndCdcSettings,
 	}
 
 	//go:embed testdata/replication_config/defaults/cdc.json
