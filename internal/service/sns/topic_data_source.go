@@ -44,7 +44,7 @@ func dataSourceTopic() *schema.Resource {
 func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	topic, err := findTopicByName(ctx, conn, name)

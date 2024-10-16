@@ -1333,7 +1333,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		if err := d.Set("volume_tags", tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, "volume_tags", nil).Map()); err != nil {
@@ -2321,7 +2321,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	for _, vol := range volResp.Volumes {
 		instanceBd := instanceBlockDevices[aws.ToString(vol.VolumeId)]

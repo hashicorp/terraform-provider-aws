@@ -59,7 +59,7 @@ func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("channel_arn", out.ChannelArn)
 	d.Set(names.AttrValue, out.Value)
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

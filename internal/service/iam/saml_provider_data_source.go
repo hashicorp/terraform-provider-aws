@@ -53,7 +53,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	arn := d.Get(names.AttrARN).(string)
 	output, err := findSAMLProviderByARN(ctx, conn, arn)

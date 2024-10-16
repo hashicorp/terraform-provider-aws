@@ -108,7 +108,7 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, DSNameReplicationSet, d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

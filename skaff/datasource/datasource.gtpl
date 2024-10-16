@@ -245,7 +245,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// where possible.
 	{{- end }}
 	{{- if .IncludeTags }}
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

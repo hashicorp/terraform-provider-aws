@@ -295,7 +295,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 					ctx = v.RegisterLogger(ctx)
 				}
 
@@ -371,7 +371,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 					ctx = v.RegisterLogger(ctx)
 				}
 

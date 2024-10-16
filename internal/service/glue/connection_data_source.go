@@ -92,7 +92,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	id := d.Get(names.AttrID).(string)
 	catalogID, connectionName, err := DecodeConnectionID(id)

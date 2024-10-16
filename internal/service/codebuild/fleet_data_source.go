@@ -192,7 +192,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)

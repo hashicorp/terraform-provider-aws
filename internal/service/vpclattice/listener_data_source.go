@@ -154,7 +154,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Set tags
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 
 	if err != nil {

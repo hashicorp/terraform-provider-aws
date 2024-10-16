@@ -68,7 +68,7 @@ func dataSourceContactRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, DSNameContact, d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

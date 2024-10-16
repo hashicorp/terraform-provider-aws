@@ -123,7 +123,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)
 		}
 
-		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
