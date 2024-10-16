@@ -35,6 +35,7 @@ import (
 
 // @SDKResource("aws_budgets_budget")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
