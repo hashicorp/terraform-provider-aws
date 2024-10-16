@@ -1524,10 +1524,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
 		}
 
-		if d.HasChange("vpc_lattice_configuration") {
-			input.VpcLatticeConfigurations = expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set))
-		}
-
 		if d.HasChange("ordered_placement_strategy") {
 			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementStrategy
 			// To remove an existing placement strategy, specify an empty object.
@@ -1580,6 +1576,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("volume_configuration") {
 			input.VolumeConfigurations = expandVolumeConfigurations(ctx, d.Get("volume_configuration").([]interface{}))
+		}
+
+		if d.HasChange("vpc_lattice_configuration") {
+			input.VpcLatticeConfigurations = expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set))
 		}
 
 		// Retry due to IAM eventual consistency.
