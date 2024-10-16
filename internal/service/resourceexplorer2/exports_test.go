@@ -5,8 +5,9 @@ package resourceexplorer2
 
 // Exports for use in tests only.
 var (
+	ResourceIndex = newIndexResource
+	ResourceView  = newResourceView
+
 	FindIndex     = findIndex
 	FindViewByARN = findViewByARN
-	ResourceIndex = newResourceIndex
-	ResourceView  = newResourceView
 )
