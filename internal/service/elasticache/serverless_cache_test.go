@@ -21,49 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccElastiCacheServerlessCache_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elasticache_serverless_cache.test"
-	var serverlessElasticCache awstypes.ServerlessCache
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx),
-		),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServerlessCacheConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -449,6 +406,42 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheServerlessCache_update_RedisToValkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var v1, v2 awstypes.ServerlessCache
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckServerlessCacheDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_basicRedis(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+			},
+			{
+				Config: testAccServerlessCacheConfig_updateValkey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -624,6 +617,15 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName)
 }
 
+func testAccServerlessCacheConfig_updateValkey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine = "valkey"
+  name   = %[1]q
+}
+`, rName)
+}
+
 func testAccServerlessCacheConfig_full(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
@@ -739,7 +741,7 @@ resource "aws_elasticache_serverless_cache" "test" {
   }
 
   daily_snapshot_time      = "09:00"
-  description              = "Test Full Redis Attributes"
+  description              = "Test Full Valkey Attributes"
   kms_key_id               = aws_kms_key.test.arn
   major_engine_version     = "7"
   snapshot_retention_limit = 1
