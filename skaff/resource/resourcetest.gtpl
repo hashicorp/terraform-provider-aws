@@ -186,7 +186,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:.+$`)),
 				),
 			},
 			{
