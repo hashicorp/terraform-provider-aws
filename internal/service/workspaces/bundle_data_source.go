@@ -91,10 +91,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 	var err error
 
 	if v, ok := d.GetOk("bundle_id"); ok {
-		input := &workspaces.DescribeWorkspaceBundlesInput{
-			BundleIds: []string{v.(string)},
-		}
-		bundle, err = findBundle(ctx, conn, input, tfslices.PredicateTrue[*types.WorkspaceBundle]())
+		bundle, err = findBundleByID(ctx, conn, v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
@@ -149,6 +146,21 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
+func findBundleByID(ctx context.Context, conn *workspaces.Client, id string) (*types.WorkspaceBundle, error) {
+	input := &workspaces.DescribeWorkspaceBundlesInput{
+		BundleIds: []string{id},
+	}
+
+	output, err := findBundles(ctx, conn, input, tfslices.PredicateTrue[*types.WorkspaceBundle]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+// findBundle returns the first bundle that matches the filter.
 func findBundle(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceBundlesInput, filter tfslices.Predicate[*types.WorkspaceBundle]) (*types.WorkspaceBundle, error) {
 	output, err := findBundles(ctx, conn, input, filter)
 
@@ -156,7 +168,7 @@ func findBundle(ctx context.Context, conn *workspaces.Client, input *workspaces.
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return tfresource.AssertFirstValueResult(output)
 }
 
 func findBundles(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceBundlesInput, filter tfslices.Predicate[*types.WorkspaceBundle]) ([]types.WorkspaceBundle, error) {
