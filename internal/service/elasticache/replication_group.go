@@ -475,6 +475,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		input.CacheNodeType = aws.String(nodeType)
 		input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -579,8 +580,6 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("snapshot_window"); ok {
 		input.SnapshotWindow = aws.String(v.(string))
 	}
-
-	input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
 
 	if v, ok := d.GetOk("transit_encryption_mode"); ok {
 		input.TransitEncryptionMode = awstypes.TransitEncryptionMode(v.(string))
