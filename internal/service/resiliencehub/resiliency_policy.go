@@ -109,8 +109,8 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(
-						"^[A-Za-z0-9][A-Za-z0-9_\\-]{1,59}$"), "Must match ^[A-Za-z0-9][A-Za-z0-9_\\-]{1,59}$"),
+					stringvalidator.LengthBetween(2, 60),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]+$`), "Must start with an alphanumeric character and contain alphanumeric characters, underscores, or hyphens"),
 				},
 			},
 			"data_location_constraint": schema.StringAttribute{
