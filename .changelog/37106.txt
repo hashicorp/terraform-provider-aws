@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_user_profile: Add `domain_id` and `user_profile_name` in attributes
+```
