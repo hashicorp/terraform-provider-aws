@@ -38,7 +38,6 @@ func TestAccElastiCacheParameterGroup_Redis_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_Redis_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redis2.8"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -70,7 +69,6 @@ func TestAccElastiCacheParameterGroup_Valkey_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_Valkey_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "valkey7"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -524,20 +522,6 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *awstypes
 		}
 
 		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckParameterGroupAttributes(v *awstypes.CacheParameterGroup, rName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *v.CacheParameterGroupName != rName {
-			return fmt.Errorf("bad name: %#v", v.CacheParameterGroupName)
-		}
-
-		if *v.CacheParameterGroupFamily != "redis2.8" {
-			return fmt.Errorf("bad family: %#v", v.CacheParameterGroupFamily)
-		}
 
 		return nil
 	}
