@@ -177,7 +177,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .DataSource }}Exists(ctx, dataSourceName, &{{ .DataSourceLower }}),
 					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),

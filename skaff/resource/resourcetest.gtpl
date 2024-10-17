@@ -176,7 +176,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
@@ -221,7 +221,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
 					{{- if .PluginFramework }}
 					{{- if .IncludeComments }}
