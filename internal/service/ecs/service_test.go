@@ -103,6 +103,7 @@ func TestAccECSService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 				),
 			},
 
@@ -113,6 +114,7 @@ func TestAccECSService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 				),
 			},
 		},
@@ -1726,6 +1728,43 @@ func TestAccECSService_executeCommand(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingEnabled)),
+				),
+			},
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingEnabled)),
+				),
+			},
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingDisabled)),
 				),
 			},
 		},
@@ -5049,4 +5088,65 @@ resource "aws_ecs_service" "test" {
   desired_count   = 1
 }
 `, rName)
+}
+
+func testAccServiceConfig_availabilityZoneRebalancing(rName string, serviceRebalancing string) string {
+	return fmt.Sprintf(`
+  resource "aws_ecs_service" "test" {
+    name                          = %[1]q
+    cluster                       = aws_ecs_cluster.test.id
+    task_definition               = aws_ecs_task_definition.test.arn
+    availability_zone_rebalancing = %[2]q
+  }
+
+  resource "aws_ecs_cluster" "test" {
+    name = %[1]q
+  }
+  
+  resource "aws_ecs_task_definition" "test" {
+    family = %[1]q
+  
+    container_definitions = <<DEFINITION
+  [
+    {
+      "cpu": 128,
+      "essential": true,
+      "image": "ghost:latest",
+      "memory": 128,
+      "name": "ghost"
+    }
+  ]
+  DEFINITION
+  }
+  `, rName, serviceRebalancing)
+}
+
+func testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName string) string {
+	return fmt.Sprintf(`
+  resource "aws_ecs_service" "test" {
+    name                          = %[1]q
+    cluster                       = aws_ecs_cluster.test.id
+    task_definition               = aws_ecs_task_definition.test.arn
+  }
+
+  resource "aws_ecs_cluster" "test" {
+    name = %[1]q
+  }
+  
+  resource "aws_ecs_task_definition" "test" {
+    family = %[1]q
+  
+    container_definitions = <<DEFINITION
+  [
+    {
+      "cpu": 128,
+      "essential": true,
+      "image": "ghost:latest",
+      "memory": 128,
+      "name": "ghost"
+    }
+  ]
+  DEFINITION
+  }
+  `, rName)
 }
