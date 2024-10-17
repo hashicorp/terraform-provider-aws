@@ -616,14 +616,16 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if v, _ := d.GetChange("ttl"); v.(int) != 0 {
-		oldRec.TTL = aws.Int64(int64(v.(int)))
-	}
-
 	// Resource records
 	if v, _ := d.GetChange("records"); v != nil {
 		if v.(*schema.Set).Len() > 0 {
 			oldRec.ResourceRecords = expandResourceRecords(flex.ExpandStringValueSet(v.(*schema.Set)), awstypes.RRType(oldRRType.(string)))
+
+			// TTL and ResourceRecords
+			if v := d.GetRawState().GetAttr("ttl"); !v.IsNull() {
+				v, _ := v.AsBigFloat().Int64()
+				oldRec.TTL = aws.Int64(v)
+			}
 		}
 	}
 
@@ -904,13 +906,15 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		Type: rrType,
 	}
 
-	if v, ok := d.GetOk("ttl"); ok {
-		apiObject.TTL = aws.Int64(int64(v.(int)))
-	}
-
 	// Resource records
 	if v, ok := d.GetOk("records"); ok {
 		apiObject.ResourceRecords = expandResourceRecords(flex.ExpandStringValueSet(v.(*schema.Set)), rrType)
+
+		// TTL and ResourceRecords
+		if v := d.GetRawPlan().GetAttr("ttl"); v.IsKnown() && !v.IsNull() {
+			v, _ := v.AsBigFloat().Int64()
+			apiObject.TTL = aws.Int64(v)
+		}
 	}
 
 	// Alias record

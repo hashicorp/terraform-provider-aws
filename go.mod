@@ -12,10 +12,10 @@ require (
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/aws/aws-sdk-go-v2 v1.32.2
-	github.com/aws/aws-sdk-go-v2/config v1.27.43
+	github.com/aws/aws-sdk-go-v2/config v1.28.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.41
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.17
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.32
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.33
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.2
@@ -133,6 +133,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.2
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.2
@@ -212,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.21.2
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.65.3
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.163.2

@@ -1,4 +1,9 @@
 ## 5.73.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_route53_record: Allow creation of records with `ttl=0` ([#39728](https://github.com/hashicorp/terraform-provider-aws/issues/39728))
+
 ## 5.72.1 (October 16, 2024)
 
 FEATURES:
