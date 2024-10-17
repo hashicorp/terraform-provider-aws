@@ -1,5 +1,9 @@
 ## 5.73.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_imagebuilder_lifecycle_policy` ([#35674](https://github.com/hashicorp/terraform-provider-aws/issues/35674))
+
 BUG FIXES:
 
 * resource/aws_route53_record: Allow creation of records with `ttl=0` ([#39728](https://github.com/hashicorp/terraform-provider-aws/issues/39728))
