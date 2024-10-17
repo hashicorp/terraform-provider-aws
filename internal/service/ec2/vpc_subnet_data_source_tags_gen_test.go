@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -18,7 +17,6 @@ import (
 func TestAccVPCSubnetDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,7 +26,6 @@ func TestAccVPCSubnetDataSource_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Subnet/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -46,7 +43,6 @@ func TestAccVPCSubnetDataSource_tags(t *testing.T) {
 func TestAccVPCSubnetDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -56,7 +52,6 @@ func TestAccVPCSubnetDataSource_tags_NullMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Subnet/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -70,7 +65,6 @@ func TestAccVPCSubnetDataSource_tags_NullMap(t *testing.T) {
 func TestAccVPCSubnetDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -80,7 +74,6 @@ func TestAccVPCSubnetDataSource_tags_EmptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Subnet/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -94,7 +87,6 @@ func TestAccVPCSubnetDataSource_tags_EmptyMap(t *testing.T) {
 func TestAccVPCSubnetDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
@@ -104,7 +96,6 @@ func TestAccVPCSubnetDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/data.tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -126,7 +117,6 @@ func TestAccVPCSubnetDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
@@ -136,7 +126,6 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/data.tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -164,7 +153,6 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
@@ -174,7 +162,6 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/data.tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),

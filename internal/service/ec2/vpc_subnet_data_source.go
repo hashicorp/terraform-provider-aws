@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_subnet")
 // @Tags(identifierAttribute="id")
+// @Testing(generator=false)
 func dataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetRead,
