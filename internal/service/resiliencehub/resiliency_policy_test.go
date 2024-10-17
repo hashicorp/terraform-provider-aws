@@ -50,7 +50,7 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", "3600"),
@@ -105,7 +105,7 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", "3600"),
@@ -116,7 +116,7 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
 			},
@@ -202,24 +202,6 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccResiliencyPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Value", "Other"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
 			{
 				Config: testAccResiliencyPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
@@ -371,11 +353,7 @@ func testAccResiliencyPolicyConfig_basic(rName string) string {
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  description = %[1]q
-
   tier = "NotApplicable"
-
-  data_location_constraint = "AnyLocation"
 
   policy {
     region {
@@ -394,11 +372,6 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
       rpo_in_secs = 3600
       rto_in_secs = 3600
     }
-  }
-
-  tags = {
-    Name  = %[1]q
-    Value = "Other"
   }
 }
 `, rName)
