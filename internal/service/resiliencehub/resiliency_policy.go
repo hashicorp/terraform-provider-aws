@@ -56,7 +56,6 @@ const (
 
 type resourceResiliencyPolicy struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -92,7 +91,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"policy_name": schema.StringAttribute{
 				Description: "The name of the policy.",
@@ -281,13 +279,12 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 	}
 
 	plan.PolicyArn = flex.StringToFramework(ctx, out.Policy.PolicyArn)
-	plan.setId()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	created, err := waitResiliencyPolicyCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	created, err := waitResiliencyPolicyCreated(ctx, conn, plan.PolicyArn.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForCreation, ResNameResiliencyPolicy, plan.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForCreation, ResNameResiliencyPolicy, plan.PolicyArn.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -313,20 +310,20 @@ func (r *resourceResiliencyPolicy) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findResiliencyPolicyByID(ctx, conn, state.ID.ValueString())
+	out, err := findResiliencyPolicyByARN(ctx, conn, state.PolicyArn.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionSetting, ResNameResiliencyPolicy, state.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionSetting, ResNameResiliencyPolicy, state.PolicyArn.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.ID = flex.StringToFramework(ctx, out.PolicyArn)
+	state.PolicyArn = flex.StringToFramework(ctx, out.PolicyArn)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("Policy"))...)
 	if resp.Diagnostics.HasError() {
@@ -358,7 +355,7 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		!plan.Tier.Equal(state.Tier) ||
 		!plan.PolicyName.Equal(state.PolicyName) {
 		in := &resiliencehub.UpdateResiliencyPolicyInput{
-			PolicyArn: flex.StringFromFramework(ctx, plan.ID),
+			PolicyArn: flex.StringFromFramework(ctx, plan.PolicyArn),
 		}
 
 		if !plan.PolicyName.Equal(state.PolicyName) {
@@ -383,11 +380,10 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 			return
 		}
 
-		plan.ID = flex.StringToFramework(ctx, out.Policy.PolicyArn)
-		plan.setId()
+		plan.PolicyArn = flex.StringToFramework(ctx, out.Policy.PolicyArn)
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		updated, err := waitResiliencyPolicyUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		updated, err := waitResiliencyPolicyUpdated(ctx, conn, plan.PolicyArn.ValueString(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForUpdate, ResNameResiliencyPolicy, plan.PolicyArn.String(), err),
@@ -418,7 +414,7 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 	}
 
 	_, err := conn.DeleteResiliencyPolicy(ctx, &resiliencehub.DeleteResiliencyPolicyInput{
-		PolicyArn: flex.StringFromFramework(ctx, state.ID),
+		PolicyArn: flex.StringFromFramework(ctx, state.PolicyArn),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -431,10 +427,10 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitResiliencyPolicyDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitResiliencyPolicyDeleted(ctx, conn, state.PolicyArn.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForDeletion, ResNameResiliencyPolicy, state.ID.String(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForDeletion, ResNameResiliencyPolicy, state.PolicyArn.String(), err),
 			err.Error(),
 		)
 		return
@@ -442,7 +438,7 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 }
 
 func (r *resourceResiliencyPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
 func (r *resourceResiliencyPolicy) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -461,11 +457,11 @@ const (
 	statusCompleted              = "Completed"
 )
 
-func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client, id string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
+func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
-		Refresh:                   statusResiliencyPolicy(ctx, conn, id),
+		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -479,11 +475,11 @@ func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client
 	return nil, err
 }
 
-func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client, id string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
+func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
-		Refresh:                   statusResiliencyPolicy(ctx, conn, id),
+		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -497,11 +493,11 @@ func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client
 	return nil, err
 }
 
-func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client, id string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
+func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{},
-		Refresh: statusResiliencyPolicy(ctx, conn, id),
+		Refresh: statusResiliencyPolicy(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
@@ -513,9 +509,9 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 	return nil, err
 }
 
-func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, id string) retry.StateRefreshFunc {
+func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findResiliencyPolicyByID(ctx, conn, id)
+		out, err := findResiliencyPolicyByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -528,9 +524,9 @@ func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, id 
 	}
 }
 
-func findResiliencyPolicyByID(ctx context.Context, conn *resiliencehub.Client, id string) (*awstypes.ResiliencyPolicy, error) {
+func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, arn string) (*awstypes.ResiliencyPolicy, error) {
 	in := &resiliencehub.DescribeResiliencyPolicyInput{
-		PolicyArn: aws.String(id),
+		PolicyArn: aws.String(arn),
 	}
 
 	out, err := conn.DescribeResiliencyPolicy(ctx, in)
@@ -550,10 +546,6 @@ func findResiliencyPolicyByID(ctx context.Context, conn *resiliencehub.Client, i
 	}
 
 	return out.Policy, nil
-}
-
-func (m *resourceResiliencyPolicyData) setId() {
-	m.ID = m.PolicyArn
 }
 
 func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *resiliencehub.CreateResiliencyPolicyInput) (diags diag.Diagnostics) {
@@ -616,7 +608,6 @@ func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failur
 type resourceResiliencyPolicyData struct {
 	DataLocationConstraint fwtypes.StringEnum[awstypes.DataLocationConstraint]  `tfsdk:"data_location_constraint"`
 	EstimatedCostTier      fwtypes.StringEnum[awstypes.EstimatedCostTier]       `tfsdk:"estimated_cost_tier"`
-	ID                     types.String                                         `tfsdk:"id"`
 	Policy                 fwtypes.ObjectValueOf[resourceResiliencyPolicyModel] `tfsdk:"policy"`
 	PolicyArn              types.String                                         `tfsdk:"arn"`
 	PolicyDescription      types.String                                         `tfsdk:"policy_description"`

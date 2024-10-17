@@ -48,8 +48,7 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
@@ -62,13 +61,14 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", "3600"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -121,9 +121,11 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
 				Config: testAccResiliencyPolicyConfig_updatePolicyName(updatedPolicyName),
@@ -212,9 +214,11 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
 				Config: testAccResiliencyPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -284,7 +288,7 @@ func testAccCheckResiliencyPolicyDestroy(ctx context.Context) resource.TestCheck
 			}
 
 			input := &resiliencehub.DescribeResiliencyPolicyInput{
-				PolicyArn: aws.String(rs.Primary.ID),
+				PolicyArn: aws.String(rs.Primary.Attributes[names.AttrARN]),
 			}
 			_, err := conn.DescribeResiliencyPolicy(ctx, input)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -308,13 +312,13 @@ func testAccCheckResiliencyPolicyExists(ctx context.Context, name string, policy
 			return create.Error(names.ResilienceHub, create.ErrActionCheckingExistence, tfresiliencehub.ResNameResiliencyPolicy, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		if rs.Primary.Attributes[names.AttrARN] == "" {
 			return create.Error(names.ResilienceHub, create.ErrActionCheckingExistence, tfresiliencehub.ResNameResiliencyPolicy, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResilienceHubClient(ctx)
 		resp, err := conn.DescribeResiliencyPolicy(ctx, &resiliencehub.DescribeResiliencyPolicyInput{
-			PolicyArn: aws.String(rs.Primary.ID),
+			PolicyArn: aws.String(rs.Primary.Attributes[names.AttrARN]),
 		})
 
 		if err != nil {
@@ -324,6 +328,17 @@ func testAccCheckResiliencyPolicyExists(ctx context.Context, name string, policy
 		*policy = *resp
 
 		return nil
+	}
+}
+
+func testAccAttrImportStateIdFunc(resourceName, attrName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes[attrName], nil
 	}
 }
 
