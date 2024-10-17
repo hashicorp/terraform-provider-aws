@@ -57,8 +57,8 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", "3600"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", "3600"),
 				),
@@ -112,8 +112,8 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", "3600"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", "3600"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -356,10 +356,6 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   tier = "NotApplicable"
 
   policy {
-    region {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
     az {
       rpo_in_secs = 3600
       rto_in_secs = 3600
@@ -389,10 +385,6 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   data_location_constraint = "AnyLocation"
 
   policy {
-    region {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
     az {
       rpo_in_secs = 3600
       rto_in_secs = 3600
@@ -426,10 +418,6 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   data_location_constraint = "AnyLocation"
 
   policy {
-    region {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
     az {
       rpo_in_secs = 3600
       rto_in_secs = 3600
@@ -464,10 +452,6 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   data_location_constraint = %[2]q
 
   policy {
-    region {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
     az {
       rpo_in_secs = 3600
       rto_in_secs = 3600
@@ -502,10 +486,6 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   data_location_constraint = "AnyLocation"
 
   policy {
-    region {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
     az {
       rpo_in_secs = 3600
       rto_in_secs = 3600
