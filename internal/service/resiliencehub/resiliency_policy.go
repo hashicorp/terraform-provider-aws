@@ -92,6 +92,16 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
+				Description: "The description for the policy.",
+				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(500),
+				},
+			},
 			names.AttrName: schema.StringAttribute{
 				Description: "The name of the policy.",
 				Required:    true,
@@ -101,16 +111,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(
 						"^[A-Za-z0-9][A-Za-z0-9_\\-]{1,59}$"), "Must match ^[A-Za-z0-9][A-Za-z0-9_\\-]{1,59}$"),
-				},
-			},
-			"policy_description": schema.StringAttribute{
-				Description: "The description for the policy.",
-				Optional:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthAtMost(500),
 				},
 			},
 			"data_location_constraint": schema.StringAttribute{
@@ -610,7 +610,7 @@ type resourceResiliencyPolicyData struct {
 	EstimatedCostTier      fwtypes.StringEnum[awstypes.EstimatedCostTier]       `tfsdk:"estimated_cost_tier"`
 	Policy                 fwtypes.ObjectValueOf[resourceResiliencyPolicyModel] `tfsdk:"policy"`
 	PolicyArn              types.String                                         `tfsdk:"arn"`
-	PolicyDescription      types.String                                         `tfsdk:"policy_description"`
+	PolicyDescription      types.String                                         `tfsdk:"description"`
 	PolicyName             types.String                                         `tfsdk:"name"`
 	Tier                   fwtypes.StringEnum[awstypes.ResiliencyPolicyTier]    `tfsdk:"tier"`
 	Tags                   tftags.Map                                           `tfsdk:"tags"`

@@ -50,7 +50,7 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", "3600"),
@@ -105,7 +105,7 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", "3600"),
@@ -141,7 +141,7 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy3),
 					testAccCheckResiliencyPolicyNotRecreated(&policy2, &policy3),
-					resource.TestCheckResourceAttr(resourceName, "policy_description", updatedPolicyDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedPolicyDescription),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
 			},
@@ -371,7 +371,7 @@ func testAccResiliencyPolicyConfig_basic(rName string) string {
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = %[1]q
+  description = %[1]q
 
   tier = "NotApplicable"
 
@@ -409,7 +409,7 @@ func testAccResiliencyPolicyConfig_updatePolicyName(rName string) string {
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = "testAccResiliencyPolicyConfig_updatePolicyName"
+  description = "testAccResiliencyPolicyConfig_updatePolicyName"
 
   tier = "NotApplicable"
 
@@ -446,7 +446,7 @@ func testAccResiliencyPolicyConfig_updatePolicyDescription(rName, resPolicyDescV
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = %[2]q
+  description = %[2]q
 
   tier = "NotApplicable"
 
@@ -484,7 +484,7 @@ func testAccResiliencyPolicyConfig_updateDataLocationConstraint(rName, resDataLo
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = %[1]q
+  description = %[1]q
 
   tier = "NotApplicable"
 
@@ -522,7 +522,7 @@ func testAccResiliencyPolicyConfig_updateTier(rName, resTierValue string) string
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = %[1]q
+  description = %[1]q
 
   tier = %[2]q
 
@@ -560,7 +560,7 @@ func testAccResiliencyPolicyConfig_updatePolicy(rName, resPolicyObjValue string)
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = %[1]q
+  description = %[1]q
 
   tier = "NotApplicable"
 
@@ -598,7 +598,7 @@ func testAccResiliencyPolicyConfig_tags1(rName, tagKey1, tagValue1 string) strin
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = %[1]q
+  description = %[1]q
 
   tier = "NotApplicable"
 
@@ -635,7 +635,7 @@ func testAccResiliencyPolicyConfig_tag2(rName, tagKey1, tagValue1, tagKey2, tagV
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  policy_description = %[1]q
+  description = %[1]q
 
   tier = "NotApplicable"
 
