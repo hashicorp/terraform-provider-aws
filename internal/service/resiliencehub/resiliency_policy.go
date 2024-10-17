@@ -243,26 +243,27 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	// "Policy" cannot be handled by AutoFlex, since the parameter in the AWS API is a map
 	planPolicyModel, diags := plan.Policy.ToPtr(ctx)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	in := &resiliencehub.CreateResiliencyPolicyInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, flex.WithIgnoredFieldNamesAppend("Policy"))...)
+	var in resiliencehub.CreateResiliencyPolicyInput
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in, flex.WithIgnoredFieldNamesAppend("Policy"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(planPolicyModel.expandPolicy(ctx, in)...)
+	resp.Diagnostics.Append(planPolicyModel.expandPolicy(ctx, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateResiliencyPolicy(ctx, in)
+	out, err := conn.CreateResiliencyPolicy(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionCreating, ResNameResiliencyPolicy, "", err),
@@ -278,13 +279,14 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	plan.PolicyArn = flex.StringToFramework(ctx, out.Policy.PolicyArn)
+	// plan.PolicyARN = flex.StringToFramework(ctx, out.Policy.PolicyArn)
+	arn := aws.ToString(out.Policy.PolicyArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	created, err := waitResiliencyPolicyCreated(ctx, conn, plan.PolicyArn.ValueString(), createTimeout)
+	created, err := waitResiliencyPolicyCreated(ctx, conn, arn, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForCreation, ResNameResiliencyPolicy, plan.PolicyArn.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForCreation, ResNameResiliencyPolicy, plan.PolicyARN.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -310,20 +312,18 @@ func (r *resourceResiliencyPolicy) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findResiliencyPolicyByARN(ctx, conn, state.PolicyArn.ValueString())
+	out, err := findResiliencyPolicyByARN(ctx, conn, state.PolicyARN.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionSetting, ResNameResiliencyPolicy, state.PolicyArn.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionSetting, ResNameResiliencyPolicy, state.PolicyARN.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
-
-	state.PolicyArn = flex.StringToFramework(ctx, out.PolicyArn)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("Policy"))...)
 	if resp.Diagnostics.HasError() {
@@ -354,8 +354,8 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		!plan.DataLocationConstraint.Equal(state.DataLocationConstraint) ||
 		!plan.Tier.Equal(state.Tier) ||
 		!plan.PolicyName.Equal(state.PolicyName) {
-		in := &resiliencehub.UpdateResiliencyPolicyInput{
-			PolicyArn: flex.StringFromFramework(ctx, plan.PolicyArn),
+		in := resiliencehub.UpdateResiliencyPolicyInput{
+			PolicyArn: flex.StringFromFramework(ctx, plan.PolicyARN),
 		}
 
 		if !plan.PolicyName.Equal(state.PolicyName) {
@@ -374,19 +374,17 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 			in.Tier = plan.Tier.ValueEnum()
 		}
 
-		out, err := conn.UpdateResiliencyPolicy(ctx, in)
+		_, err := conn.UpdateResiliencyPolicy(ctx, &in)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("reading Resilience Hub policy ID (%s)", plan.PolicyArn.String()), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("reading Resilience Hub policy ID (%s)", plan.PolicyARN.String()), err.Error())
 			return
 		}
 
-		plan.PolicyArn = flex.StringToFramework(ctx, out.Policy.PolicyArn)
-
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		updated, err := waitResiliencyPolicyUpdated(ctx, conn, plan.PolicyArn.ValueString(), updateTimeout)
+		updated, err := waitResiliencyPolicyUpdated(ctx, conn, plan.PolicyARN.ValueString(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForUpdate, ResNameResiliencyPolicy, plan.PolicyArn.String(), err),
+				create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForUpdate, ResNameResiliencyPolicy, plan.PolicyARN.String(), err),
 				err.Error(),
 			)
 			return
@@ -414,7 +412,7 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 	}
 
 	_, err := conn.DeleteResiliencyPolicy(ctx, &resiliencehub.DeleteResiliencyPolicyInput{
-		PolicyArn: flex.StringFromFramework(ctx, state.PolicyArn),
+		PolicyArn: flex.StringFromFramework(ctx, state.PolicyARN),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -427,10 +425,10 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitResiliencyPolicyDeleted(ctx, conn, state.PolicyArn.ValueString(), deleteTimeout)
+	_, err = waitResiliencyPolicyDeleted(ctx, conn, state.PolicyARN.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForDeletion, ResNameResiliencyPolicy, state.PolicyArn.String(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForDeletion, ResNameResiliencyPolicy, state.PolicyARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -609,7 +607,7 @@ type resourceResiliencyPolicyData struct {
 	DataLocationConstraint fwtypes.StringEnum[awstypes.DataLocationConstraint]  `tfsdk:"data_location_constraint"`
 	EstimatedCostTier      fwtypes.StringEnum[awstypes.EstimatedCostTier]       `tfsdk:"estimated_cost_tier"`
 	Policy                 fwtypes.ObjectValueOf[resourceResiliencyPolicyModel] `tfsdk:"policy"`
-	PolicyArn              types.String                                         `tfsdk:"arn"`
+	PolicyARN              types.String                                         `tfsdk:"arn"`
 	PolicyDescription      types.String                                         `tfsdk:"description"`
 	PolicyName             types.String                                         `tfsdk:"name"`
 	Tier                   fwtypes.StringEnum[awstypes.ResiliencyPolicyTier]    `tfsdk:"tier"`
