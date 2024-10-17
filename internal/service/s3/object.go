@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -302,6 +301,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
+	d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
 	d.Set("metadata", output.Metadata)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
@@ -315,10 +315,6 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
-
-	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	return diags
 }
@@ -599,25 +595,6 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
-}
-
-func setObjectKMSKeyID(ctx context.Context, meta interface{}, d *schema.ResourceData, sseKMSKeyID string) error {
-	// Only set non-default KMS key ID (one that doesn't match default).
-	if sseKMSKeyID != "" {
-		// Read S3 KMS default master key.
-		keyMetadata, err := tfkms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSClient(ctx), defaultKMSKeyAlias)
-
-		if err != nil {
-			return fmt.Errorf("reading default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
-		}
-
-		if sseKMSKeyID != aws.ToString(keyMetadata.Arn) {
-			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS key: %s", sseKMSKeyID)
-			d.Set(names.AttrKMSKeyID, sseKMSKeyID)
-		}
-	}
-
-	return nil
 }
 
 func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors []error) {

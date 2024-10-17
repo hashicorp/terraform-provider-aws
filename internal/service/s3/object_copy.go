@@ -396,10 +396,6 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
 
-	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	return diags
 }
 

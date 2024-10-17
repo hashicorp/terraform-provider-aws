@@ -9,7 +9,7 @@ var (
 	DiffSuppressKeyOrAlias      = diffSuppressKeyOrAlias
 	FindAliasByName             = findAliasByName
 	FindDefaultKeyARNForService = findDefaultKeyARNForService
-	FindKeyByID                 = findKeyByID
+	FindKeyByID                 = findKeyByID // TODO Move to exports_test.go
 	ValidateKey                 = validateKey
 	ValidateKeyOrAlias          = validateKeyOrAlias
 )
