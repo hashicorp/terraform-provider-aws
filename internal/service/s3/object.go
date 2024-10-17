@@ -164,13 +164,6 @@ func resourceObject() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
-					if new == "" && d.Get("server_side_encryption") == types.ServerSideEncryptionAwsKms {
-						return true
-					}
-					return false
-				},
 			},
 			"metadata": {
 				Type:         schema.TypeMap,
