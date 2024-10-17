@@ -37,6 +37,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "BadRequestException", "not supported") {
 		return true
 	}
+	// Example (GovCloud): ForbiddenException: HTTP status code 403: Access forbidden. You do not have permission to perform this operation. Check your credentials and try your request again
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+		return true
+	}
 	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported") {
 		return true
